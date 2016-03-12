@@ -21,10 +21,12 @@ public:
 	bool safe_index(long i1,long i2,long i3,long i4,long i5,long i6);
 };
 
-Mda::Mda() {
+Mda::Mda(long N1, long N2, long N3, long N4, long N5, long N6)
+{
 	d=new MdaPrivate;
 	d->q=this;
 	d->do_construct();
+	this->allocate(N1,N2,N3,N4,N5,N6);
 }
 
 Mda::Mda(const Mda &other)
@@ -140,27 +142,32 @@ long Mda::N1() const
 
 long Mda::N2() const
 {
-	return d->m_data[1];
+	return d->m_dims[1];
 }
 
 long Mda::N3() const
 {
-	return d->m_data[2];
+	return d->m_dims[2];
 }
 
 long Mda::N4() const
 {
-	return d->m_data[3];
+	return d->m_dims[3];
 }
 
 long Mda::N5() const
 {
-	return d->m_data[4];
+	return d->m_dims[4];
 }
 
 long Mda::N6() const
 {
-	return d->m_data[5];
+	return d->m_dims[5];
+}
+
+long Mda::totalSize() const
+{
+	return d->m_total_size;
 }
 
 double Mda::get(long i) const
@@ -268,6 +275,88 @@ double *Mda::dataPtr(long i1, long i2, long i3, long i4, long i5, long i6)
 			N1()*N2()*N3()*N4()*i5+
 			N1()*N2()*N3()*N4()*N5()*i6
 			];
+}
+
+void Mda::getSubArray(Mda &ret, long i, long size)
+{
+	long a_begin=i; long x_begin=0;
+	long a_end=i+size-1; long x_end=size-1;
+
+	if (a_begin<0) {a_begin+=0-a_begin; x_begin+=0-a_begin;}
+	if (a_end>=d->m_total_size) {a_end+=d->m_total_size-1-a_end; x_end+=d->m_total_size-1-a_end;}
+
+	ret.allocate(1,size);
+
+	double *ptr1=this->dataPtr();
+	double *ptr2=ret.dataPtr();
+
+	long ii=0;
+	for (long a=a_begin; a<=a_end; a++) {
+		ptr2[x_begin+ii]=ptr1[a_begin+ii];
+	}
+}
+
+void Mda::getSubArray(Mda &ret, long i1, long i2, long size1, long size2)
+{
+	long a1_begin=i1; long x1_begin=0;
+	long a1_end=i1+size1-1; long x1_end=size1-1;
+	if (a1_begin<0) {a1_begin+=0-a1_begin; x1_begin+=0-a1_begin;}
+	if (a1_end>=N1()) {a1_end+=N1()-1-a1_end; x1_end+=N1()-1-a1_end;}
+
+	long a2_begin=i2; long x2_begin=0;
+	long a2_end=i2+size2-1; long x2_end=size2-1;
+	if (a2_begin<0) {a2_begin+=0-a2_begin; x2_begin+=0-a2_begin;}
+	if (a2_end>=N2()) {a2_end+=N2()-1-a2_end; x2_end+=N2()-1-a2_end;}
+
+	ret.allocate(size1,size2);
+
+	double *ptr1=this->dataPtr();
+	double *ptr2=ret.dataPtr();
+
+	for (long ind2=0; ind2<=a2_end-a2_begin; ind2++) {
+		long ii_out=(ind2+x2_begin)*size1;
+		long ii_in=(ind2+a2_begin)*N1();
+		for (long ind1=0; ind1<=a1_end-a1_begin; ind1++) {
+			ptr2[ii_out]=ptr1[ii_in];
+			ii_in++;
+			ii_out++;
+		}
+	}
+}
+
+void Mda::getSubArray(Mda &ret, long i1, long i2, long i3, long size1, long size2, long size3)
+{
+	long a1_begin=i1; long x1_begin=0;
+	long a1_end=i1+size1-1; long x1_end=size1-1;
+	if (a1_begin<0) {a1_begin+=0-a1_begin; x1_begin+=0-a1_begin;}
+	if (a1_end>=N1()) {a1_end+=N1()-1-a1_end; x1_end+=N1()-1-a1_end;}
+
+	long a2_begin=i2; long x2_begin=0;
+	long a2_end=i2+size2-1; long x2_end=size2-1;
+	if (a2_begin<0) {a2_begin+=0-a2_begin; x2_begin+=0-a2_begin;}
+	if (a2_end>=N2()) {a2_end+=N2()-1-a2_end; x2_end+=N2()-1-a2_end;}
+
+	long a3_begin=i3; long x3_begin=0;
+	long a3_end=i3+size3-1; long x3_end=size3-1;
+	if (a3_begin<0) {a2_begin+=0-a3_begin; x3_begin+=0-a3_begin;}
+	if (a3_end>=N3()) {a3_end+=N3()-1-a3_end; x3_end+=N3()-1-a3_end;}
+
+	ret.allocate(size1,size2,size3);
+
+	double *ptr1=this->dataPtr();
+	double *ptr2=ret.dataPtr();
+
+	for (long ind3=0; ind3<=a3_end-a3_begin; ind3++) {
+		for (long ind2=0; ind2<=a2_end-a2_begin; ind2++) {
+			long ii_out=(ind2+x2_begin)*size1+(ind3+x3_begin)*size1*size2;
+			long ii_in=(ind2+a2_begin)*N1()+(ind3+a3_begin)*N1()*N2();
+			for (long ind1=0; ind1<=a1_end-a1_begin; ind1++) {
+				ptr2[ii_out]=ptr1[ii_in];
+				ii_in++;
+				ii_out++;
+			}
+		}
+	}
 }
 
 void Mda::set(double val, long i)

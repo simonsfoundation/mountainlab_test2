@@ -1,3 +1,14 @@
+/******************************************************
+**
+** Copyright (C) 2016 by Jeremy Magland
+**
+** This file is part of the MountainSort C++ project
+**
+** Some rights reserved.
+** See accompanying LICENSE and README files.
+**
+*******************************************************/
+
 #ifndef MDAIO_H
 #define MDAIO_H
 

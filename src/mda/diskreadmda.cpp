@@ -1,6 +1,7 @@
 #include "diskreadmda.h"
 #include <stdio.h>
 #include "mdaio.h"
+#include <math.h>
 
 #define MAX_PATH_LEN 10000
 #define DEFAULT_CHUNK_SIZE 10e6
@@ -12,6 +13,7 @@ public:
 	FILE *m_file;
 	bool m_file_open_failed;
 	MDAIO_HEADER m_header;
+	long m_total_size;
 	Mda m_internal_chunk;
 	long m_current_internal_chunk_index;
 
@@ -20,10 +22,11 @@ public:
 	bool open_file_if_needed();
 };
 
-DiskReadMda::DiskReadMda() {
+DiskReadMda::DiskReadMda(const QString &path) {
 	d=new DiskReadMdaPrivate;
 	d->q=this;
 	d->do_construct();
+	if (!path.isEmpty()) this->setPath(path);
 }
 
 DiskReadMda::DiskReadMda(const DiskReadMda &other)
@@ -144,11 +147,15 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long i3, long size1, long 
 
 double DiskReadMda::value(long i) const
 {
-	if ((i<0)||(i>=N1())) return 0;
+	if ((i<0)||(i>=d->m_total_size)) return 0;
 	long chunk_index=i/DEFAULT_CHUNK_SIZE;
 	long offset=i-DEFAULT_CHUNK_SIZE*chunk_index;
 	if (d->m_current_internal_chunk_index!=chunk_index) {
-		this->readChunk(d->m_internal_chunk,chunk_index,DEFAULT_CHUNK_SIZE);
+		long size_to_read=DEFAULT_CHUNK_SIZE;
+		if (i+size_to_read>d->m_total_size) size_to_read=d->m_total_size-i;
+		if (size_to_read) {
+			this->readChunk(d->m_internal_chunk,chunk_index,size_to_read);
+		}
 		d->m_current_internal_chunk_index=chunk_index;
 	}
 	return d->m_internal_chunk.value(offset);
@@ -169,12 +176,43 @@ double DiskReadMda::value(long i1, long i2, long i3) const
 	return value(i1+N1()*i2+N1()*N2()*i3);
 }
 
+void DiskReadMda::getSubArray(Mda &ret, long i, long size)
+{
+	ret.allocate(1,size);
+	for (long j=0; j<size; j++) {
+		ret.set(this->value(i+j),j);
+	}
+}
+
+void DiskReadMda::getSubArray(Mda &ret, long i1, long i2, long size1, long size2)
+{
+	ret.allocate(size1,size2);
+	for (long j2=0; j2<size2; j2++) {
+		for (long j1=0; j1<size1; j1++) {
+			ret.setValue(this->value(i1+j1,i2+j2),j1,j2);
+		}
+	}
+}
+
+void DiskReadMda::getSubArray(Mda &ret, long i1, long i2, long i3, long size1, long size2, long size3)
+{
+	ret.allocate(size1,size2,size3);
+	for (long j3=0; j3<size3; j3++) {
+		for (long j2=0; j2<size2; j2++) {
+			for (long j1=0; j1<size1; j1++) {
+				ret.setValue(this->value(i1+j1,i2+j2,i3+j3),j1,j2,j3);
+			}
+		}
+	}
+}
+
 void DiskReadMdaPrivate::do_construct()
 {
 	strcpy(m_path,"");
 	m_file_open_failed=false;
 	m_file=0;
 	m_current_internal_chunk_index=-1;
+	m_total_size=0;
 }
 
 bool DiskReadMdaPrivate::open_file_if_needed()
@@ -184,6 +222,8 @@ bool DiskReadMdaPrivate::open_file_if_needed()
 	m_file=fopen(m_path,"rb");
 	if (m_file) {
 		mda_read_header(&m_header,m_file);
+		m_total_size=1;
+		for (int i=0; i<MDAIO_MAX_DIMS; i++) m_total_size*=m_header.dims[i];
 	}
 	else {
 		printf("Failed to open diskreadmda file: %s\n",m_path);
@@ -191,4 +231,82 @@ bool DiskReadMdaPrivate::open_file_if_needed()
 		return false;
 	}
 	return true;
+}
+
+void diskreadmda_unit_test()
+{
+	printf("diskreadmda_unit_test...\n");
+
+	int N1=20;
+	int N2=20;
+	int N3=20;
+
+	Mda X,Y;
+	X.allocate(N1,N2,N3);
+	double sum1=0;
+	for (int i3=0; i3<N3; i3++) {
+		for (int i2=0; i2<N2; i2++) {
+			for (int i1=0; i1<N1; i1++) {
+				double val=sin(i1+sin(i2)+cos(i3));
+				sum1+=val;
+				X.setValue(val,i1,i2,i3);
+			}
+		}
+	}
+
+	double sum2=0;
+	for (int i3=0; i3<N3; i3++) {
+		for (int i2=0; i2<N2; i2++) {
+			for (int i1=0; i1<N1; i1++) {
+				double val=X.value(i1,i2,i3);
+				sum2+=val;
+			}
+		}
+	}
+
+	X.write64("tmp_64.mda");
+	Y.read("tmp_64.mda");
+	double sum3=0;
+	for (int i3=0; i3<N3; i3++) {
+		for (int i2=0; i2<N2; i2++) {
+			for (int i1=0; i1<N1; i1++) {
+				double val=Y.value(i1,i2,i3);
+				sum3+=val;
+			}
+		}
+	}
+
+	printf("The following should match:\n");
+	printf("%.20f\n",sum1);
+	printf("%.20f\n",sum2);
+	printf("%.20f\n",sum3);
+
+	X.write32("tmp_32.mda");
+	Y.read("tmp_32.mda");
+	double sum4=0;
+	for (int i3=0; i3<N3; i3++) {
+		for (int i2=0; i2<N2; i2++) {
+			for (int i1=0; i1<N1; i1++) {
+				double val=Y.value(i1,i2,i3);
+				sum4+=val;
+			}
+		}
+	}
+
+	printf("The following should almost match up to 6 or so digits:\n");
+	printf("%.20f\n",sum4);
+
+	DiskReadMda Z;
+	Z.setPath("tmp_64.mda");
+	double sum5=0;
+	for (int i3=0; i3<N3; i3++) {
+		for (int i2=0; i2<N2; i2++) {
+			for (int i1=0; i1<N1; i1++) {
+				double val=Z.value(i1,i2,i3);
+				sum5+=val;
+			}
+		}
+	}
+	printf("The following should match (from diskreadmda):\n");
+	printf("%.20f\n",sum5);
 }

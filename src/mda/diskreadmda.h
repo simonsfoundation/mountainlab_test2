@@ -1,3 +1,14 @@
+/******************************************************
+**
+** Copyright (C) 2016 by Jeremy Magland
+**
+** This file is part of the MountainSort C++ project
+**
+** Some rights reserved.
+** See accompanying LICENSE and README files.
+**
+*******************************************************/
+
 #ifndef DISKREADMDA_H
 #define DISKREADMDA_H
 
@@ -8,7 +19,7 @@ class DiskReadMda
 {
 public:
 	friend class DiskReadMdaPrivate;
-	DiskReadMda();
+	DiskReadMda(const QString &path="");
 	DiskReadMda(const DiskReadMda &other);
 	virtual ~DiskReadMda();
 	#ifdef QT_CORE_LIB
@@ -27,9 +38,14 @@ public:
 	double value(long i) const;
 	double value(long i1,long i2) const;
 	double value(long i1,long i2,long i3) const;
+	void getSubArray(Mda &ret,long i,long size);
+	void getSubArray(Mda &ret,long i1,long i2,long size1,long size2);
+	void getSubArray(Mda &ret,long i1,long i2,long i3,long size1,long size2,long size3);
 private:
 	DiskReadMdaPrivate *d;
 };
+
+void diskreadmda_unit_test();
 
 #endif // DISKREADMDA_H
 

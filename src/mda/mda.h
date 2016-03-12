@@ -19,7 +19,7 @@ class Mda
 {
 public:
 	friend class MdaPrivate;
-	Mda();
+	Mda(long N1=1,long N2=1,long N3=1,long N4=1,long N5=1,long N6=1);
 	Mda(const Mda &other);
 	virtual ~Mda();
 	bool allocate(long N1,long N2,long N3=1,long N4=1,long N5=1,long N6=1);
@@ -39,6 +39,7 @@ public:
 	long N4() const;
 	long N5() const;
 	long N6() const;
+	long totalSize() const;
 
 	double get(long i) const;
 	double get(long i1,long i2) const;
@@ -65,6 +66,10 @@ public:
 	double *dataPtr(long i1,long i2);
 	double *dataPtr(long i1,long i2,long i3);
 	double *dataPtr(long i1,long i2,long i3,long i4,long i5=0,long i6=0);
+
+	void getSubArray(Mda &ret,long i,long size);
+	void getSubArray(Mda &ret,long i1,long i2,long size1,long size2);
+	void getSubArray(Mda &ret,long i1,long i2,long i3,long size1,long size2,long size3);
 private:
 	MdaPrivate *d;
 };

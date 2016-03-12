@@ -5,6 +5,7 @@
 #include <QTime>
 
 #include "example_processor.h"
+#include "bandpass_filter_processor.h"
 
 class MSProcessorManagerPrivate
 {
@@ -29,6 +30,7 @@ MSProcessorManager::~MSProcessorManager() {
 void MSProcessorManager::loadDefaultProcessors()
 {
 	loadProcessor(new example_Processor);
+	loadProcessor(new bandpass_filter_Processor);
 }
 
 bool MSProcessorManager::containsProcessor(const QString &processor_name) const

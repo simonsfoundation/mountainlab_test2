@@ -22,7 +22,7 @@ long mda_read_header(struct MDAIO_HEADER *HH,FILE *input_file) {
 		return 0;
 	}
 
-	if ((HH->data_type<-6)||(HH->data_type>=0)) {
+	if ((HH->data_type<-7)||(HH->data_type>=0)) {
 		printf("mda_read_header: Problem with data type:  %d.\n",HH->data_type);
 		return 0;
 	}
