@@ -10,14 +10,27 @@ MOC_DIR=../build
 TARGET = mountainsort
 TEMPLATE = app
 
-INCLUDEPATH += utils
-
-SOURCES += mountainsortmain.cpp \
-    utils/get_command_line_params.cpp \
-    processor_manager.cpp
+INCLUDEPATH += utils core processors
 
 HEADERS += \
     utils/get_command_line_params.h \
-    processor_manager.h
+    core/msprocessormanager.h \
+    core/mountainsort_version.h \
+    utils/textfile.h \
+    core/msprocessor.h \
+    processors/example_processor.h
+
+SOURCES += mountainsortmain.cpp \
+    utils/get_command_line_params.cpp \
+    core/msprocessormanager.cpp \
+    core/mountainsort_version.cpp \
+    utils/textfile.cpp \
+    core/msprocessor.cpp \
+    processors/example_processor.cpp
+
+DISTFILES += \
+    ../version.txt
+
+
 
 

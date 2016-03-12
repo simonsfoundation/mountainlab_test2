@@ -1,5 +1,6 @@
 #include "get_command_line_params.h"
 
+QVariant clp_string_to_variant(const QString &str);
 
 CLParams get_command_line_params(int argc,char *argv[]) {
 	CLParams ret;
@@ -18,7 +19,7 @@ CLParams get_command_line_params(int argc,char *argv[]) {
 				ret.error_message="Problem with parameter: "+str;
 				return ret;
 			}
-			ret.named_parameters[name]=val;
+			ret.named_parameters[name]=clp_string_to_variant(val);
 		}
 		else {
 			ret.unnamed_parameters << str;
@@ -27,4 +28,22 @@ CLParams get_command_line_params(int argc,char *argv[]) {
 
 	//we did it!
 	return ret;
+}
+
+bool clp_is_int(const QString &str) {
+	bool ok;
+	str.toInt(&ok);
+	return ok;
+}
+
+bool clp_is_float(const QString &str) {
+	bool ok;
+	str.toFloat(&ok);
+	return ok;
+}
+
+QVariant clp_string_to_variant(const QString &str) {
+	if (clp_is_int(str)) return str.toInt();
+	if (clp_is_float(str)) return str.toFloat();
+	return str;
 }

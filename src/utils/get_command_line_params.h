@@ -4,7 +4,8 @@
 **
 ** This file is part of the MountainSort C++ project
 **
-** Some rights reserved. See accompanying LICENSE file.
+** Some rights reserved.
+** See accompanying LICENSE and README files.
 **
 *******************************************************/
 
@@ -14,9 +15,10 @@
 #include <QMap>
 #include <QString>
 #include <QList>
+#include <QVariant>
 
 struct CLParams {
-	QMap<QString,QString> named_parameters;
+	QMap<QString,QVariant> named_parameters;
 	QList<QString> unnamed_parameters;
 	bool success;
 	QString error_message;
