@@ -1,6 +1,7 @@
 QT += core
 QT -= gui
-
+CONFIG += release
+CONFIG -= debug
 CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
 DESTDIR = ../bin
@@ -9,4 +10,14 @@ MOC_DIR=../build
 TARGET = mountainsort
 TEMPLATE = app
 
-SOURCES += mountainsortmain.cpp
+INCLUDEPATH += utils
+
+SOURCES += mountainsortmain.cpp \
+    utils/get_command_line_params.cpp \
+    processor_manager.cpp
+
+HEADERS += \
+    utils/get_command_line_params.h \
+    processor_manager.h
+
+
