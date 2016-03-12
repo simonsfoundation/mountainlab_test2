@@ -18,7 +18,11 @@ HEADERS += \
     core/mountainsort_version.h \
     utils/textfile.h \
     core/msprocessor.h \
-    processors/example_processor.h
+    processors/example_processor.h \
+    mda/mda.h \
+    mda/mdaio.h \
+    mda/usagetracking.h \
+    mda/diskreadmda.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -26,7 +30,11 @@ SOURCES += mountainsortmain.cpp \
     core/mountainsort_version.cpp \
     utils/textfile.cpp \
     core/msprocessor.cpp \
-    processors/example_processor.cpp
+    processors/example_processor.cpp \
+    mda/mda.cpp \
+    mda/mdaio.cpp \
+    mda/usagetracking.cpp \
+    mda/diskreadmda.cpp
 
 DISTFILES += \
     ../version.txt
