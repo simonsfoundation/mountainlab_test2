@@ -26,6 +26,7 @@ public:
 	DiskWriteMda(int data_type,const QString &path,long N1,long N2,long N3=1,long N4=1,long N5=1,long N6=1);
 	virtual ~DiskWriteMda();
 	bool open(int data_type,const QString &path,long N1,long N2,long N3=1,long N4=1,long N5=1,long N6=1);
+	void close();
 
 	long N1();
 	long N2();
@@ -38,8 +39,6 @@ public:
 	void writeSubArray(Mda &X,long i);
 	void writeSubArray(Mda &X,long i1,long i2);
 	void writeSubArray(Mda &X,long i1,long i2,long i3);
-
-
 private:
 	DiskWriteMdaPrivate *d;
 };

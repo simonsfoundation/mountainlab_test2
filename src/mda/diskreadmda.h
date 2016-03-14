@@ -22,6 +22,7 @@ public:
 	DiskReadMda(const QString &path="");
 	DiskReadMda(const DiskReadMda &other);
 	virtual ~DiskReadMda();
+	void operator=(const DiskReadMda &other);
 	#ifdef QT_CORE_LIB
 	void setPath(const QString &file_path);
 	#endif

@@ -12,6 +12,7 @@
 
 #ifdef QT_CORE_LIB
 #include <QString>
+#include <QDebug>
 #endif
 
 class MdaPrivate;
@@ -21,6 +22,7 @@ public:
 	friend class MdaPrivate;
 	Mda(long N1=1,long N2=1,long N3=1,long N4=1,long N5=1,long N6=1);
 	Mda(const Mda &other);
+	void operator=(const Mda &other);
 	virtual ~Mda();
 	bool allocate(long N1,long N2,long N3=1,long N4=1,long N5=1,long N6=1);
 	#ifdef QT_CORE_LIB

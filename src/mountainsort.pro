@@ -11,7 +11,7 @@ TARGET = mountainsort
 TEMPLATE = app
 
 
-INCLUDEPATH += utils core processors mda
+INCLUDEPATH += utils core processors mda unit_tests
 
 HEADERS += \
     utils/get_command_line_params.h \
@@ -27,7 +27,8 @@ HEADERS += \
     processors/bandpass_filter_processor.h \
     processors/bandpass_filter0.h \
     core/mstimeserieschunker.h \
-    mda/diskwritemda.h
+    mda/diskwritemda.h \
+    unit_tests/unit_tests.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -43,7 +44,8 @@ SOURCES += mountainsortmain.cpp \
     processors/bandpass_filter_processor.cpp \
     processors/bandpass_filter0.cpp \
     core/mstimeserieschunker.cpp \
-    mda/diskwritemda.cpp
+    mda/diskwritemda.cpp \
+    unit_tests/unit_tests.cpp
 
 DISTFILES += \
     ../version.txt

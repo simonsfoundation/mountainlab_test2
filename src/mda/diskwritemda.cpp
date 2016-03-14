@@ -32,16 +32,21 @@ DiskWriteMda::DiskWriteMda(int data_type,const QString &path, long N1, long N2, 
 }
 
 DiskWriteMda::~DiskWriteMda() {
-	if (d->m_file) {
-		fclose(d->m_file);
-		QFile::rename(d->m_path+".tmp",d->m_path);
-	}
+	close();
 	delete d;
 }
 
 bool DiskWriteMda::open(int data_type, const QString &path, long N1, long N2, long N3, long N4, long N5, long N6)
 {
 	if (d->m_file) return false; //can't open twice!
+
+	if (QFile::exists(path)) {
+		if (!QFile::remove(path)) {
+			qWarning() << "Unable to remove file in diskwritemda::open" << path;
+			return false;
+		}
+	}
+
 	d->m_path=path;
 
 	d->m_header.data_type=data_type;
@@ -69,13 +74,24 @@ bool DiskWriteMda::open(int data_type, const QString &path, long N1, long N2, lo
 	for (int i=0; i<buf_size; i++) zeros[i]=0;
 	long i=0;
 	while (i<NN) {
-		long num_to_write=NN-buf_size;
+		long num_to_write=NN-i;
 		if (num_to_write>buf_size) num_to_write=buf_size;
 		mda_write_float32(zeros,&d->m_header,num_to_write,d->m_file);
 		i+=buf_size;
 	}
 
 	return true;
+}
+
+void DiskWriteMda::close()
+{
+	if (d->m_file) {
+		fclose(d->m_file);
+		if (!QFile::rename(d->m_path+".tmp",d->m_path)) {
+			qWarning() << "Unable to rename file in diskwritemda::open" << d->m_path+".tmp" << d->m_path;
+		}
+		d->m_file=0;
+	}
 }
 
 long DiskWriteMda::N1()

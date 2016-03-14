@@ -37,6 +37,11 @@ Mda::Mda(const Mda &other)
 	d->copy_from(other);
 }
 
+void Mda::operator=(const Mda &other)
+{
+	d->copy_from(other);
+}
+
 Mda::~Mda() {
 	if (d->m_data) free(d->m_data);
 	delete d;
@@ -52,7 +57,8 @@ bool Mda::allocate(long N1, long N2, long N3, long N4, long N5, long N6)
 	d->m_dims[5]=N6;
 	d->m_total_size=N1*N2*N3*N4*N5*N6;
 
-	if (d->m_data) free(d->m_data); d->m_data=0;
+	if (d->m_data) free(d->m_data);
+	d->m_data=0;
 	if (d->m_total_size>0) {
 		d->m_data=(double *)malloc(sizeof(double)*d->m_total_size);
 		for (long i=0; i<d->m_total_size; i++) d->m_data[i]=0;
@@ -397,7 +403,8 @@ void MdaPrivate::do_construct() {
 
 void MdaPrivate::copy_from(const Mda &other)
 {
-	if (m_data) free(m_data); m_data=0;
+	if (m_data) free(m_data);
+	m_data=0;
 	m_total_size=other.d->m_total_size;
 	for (int i=0; i<MDA_MAX_DIMS; i++) m_dims[i]=other.d->m_dims[i];
 	if (m_total_size>0) {

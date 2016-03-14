@@ -15,6 +15,7 @@
 #include "msprocessormanager.h"
 #include <QDebug>
 #include "diskreadmda.h"
+#include "unit_tests.h"
 
 void print_usage(const MSProcessorManager &PM);
 
@@ -22,8 +23,6 @@ int main(int argc, char *argv[]) {
 	QCoreApplication app(argc,argv);
 
 	CLParams CLP=get_command_line_params(argc,argv);
-
-	qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << CLP.unnamed_parameters;
 
 	MSProcessorManager PM;
 	PM.loadDefaultProcessors();
@@ -37,10 +36,13 @@ int main(int argc, char *argv[]) {
 		diskreadmda_unit_test();
 		return 0;
 	}
+	if (CLP.unnamed_parameters.value(0)=="run_all_unit_tests") {
+		run_all_unit_tests();
+		return 0;
+	}
 
 	if (CLP.unnamed_parameters.count()==1) {
 		QString processor_name=CLP.unnamed_parameters[0];
-		qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << processor_name;
 		if (!PM.containsProcessor(processor_name)) {
 			printf("Unable to find processor: %s\n",processor_name.toLatin1().data());
 			return -1;

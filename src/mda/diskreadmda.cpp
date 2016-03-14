@@ -20,6 +20,7 @@ public:
 	char m_path[MAX_PATH_LEN];
 	void do_construct();
 	bool open_file_if_needed();
+	void copy_from(const DiskReadMda &other);
 };
 
 DiskReadMda::DiskReadMda(const QString &path) {
@@ -34,12 +35,17 @@ DiskReadMda::DiskReadMda(const DiskReadMda &other)
 	d=new DiskReadMdaPrivate;
 	d->q=this;
 	d->do_construct();
-	setPath(other.d->m_path);
+	d->copy_from(other);
 }
 
 DiskReadMda::~DiskReadMda() {
 	if (d->m_file) fclose(d->m_file);
 	delete d;
+}
+
+void DiskReadMda::operator=(const DiskReadMda &other)
+{
+	d->copy_from(other);
 }
 
 void DiskReadMda::setPath(const QString &file_path)
@@ -231,6 +237,11 @@ bool DiskReadMdaPrivate::open_file_if_needed()
 		return false;
 	}
 	return true;
+}
+
+void DiskReadMdaPrivate::copy_from(const DiskReadMda &other)
+{
+	q->setPath(other.d->m_path);
 }
 
 void diskreadmda_unit_test()
