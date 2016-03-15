@@ -1,0 +1,6 @@
+function ms_setup_path
+mfile_path=fileparts(mfilename('fullpath'));
+addpath([mfile_path,'/processing']);
+addpath([mfile_path,'/msutils']);
+addpath([mfile_path,'/unit_tests']);
+end
