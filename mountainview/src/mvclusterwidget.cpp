@@ -5,8 +5,9 @@
 #include <QLabel>
 #include <QList>
 #include "mvclipsview.h"
-#include "msutils.h"
+#include "msmisc.h"
 #include <math.h>
+#include "extract_clips.h"
 
 class MVClusterWidgetPrivate {
 public:
@@ -142,7 +143,7 @@ void MVClusterWidget::setData(const Mda &X)
     double max_abs_val=0;
     int NN=X.totalSize();
     for (int i=0; i<NN; i++) {
-        if (fabs(X.value1(i))>max_abs_val) max_abs_val=fabs(X.value1(i));
+		if (fabs(X.get(i))>max_abs_val) max_abs_val=fabs(X.get(i));
     }
     if (max_abs_val) {
         AffineTransformation T;
@@ -254,7 +255,7 @@ void MVClusterWidgetPrivate::update_clips_view()
 	MVEvent evt=q->currentEvent();
 	QString info_txt;
 	if (evt.time>=0) {
-		QList<long> times; times << (long)evt.time;
+		QList<double> times; times << evt.time;
 		Mda clip0=extract_clips(m_raw,times,m_clip_size);
 		double ppp=m_outlier_scores.value(current_event_index());
 		if (ppp) {

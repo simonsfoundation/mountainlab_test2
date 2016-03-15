@@ -131,7 +131,7 @@ Mda compute_features(const QList<DiskArrayModel *> &C) {
 		int ii=0;
 		for (int aa=0; aa<T*C[i]->dim3(); aa++) {
 			for (int m=0; m<M; m++) {
-				X.setValue1(tmp.value1(ii),jj);
+				X.set(tmp.get(ii),jj);
 				ii++;
 				jj++;
 			}

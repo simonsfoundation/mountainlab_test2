@@ -21,6 +21,7 @@ public:
 	friend class DiskReadMdaPrivate;
 	DiskReadMda(const QString &path="");
 	DiskReadMda(const DiskReadMda &other);
+	DiskReadMda(const Mda &X);
 	virtual ~DiskReadMda();
 	void operator=(const DiskReadMda &other);
 	#ifdef QT_CORE_LIB
@@ -33,6 +34,7 @@ public:
 	long N4() const;
 	long N5() const;
 	long N6() const;
+	long totalSize() const;
 	bool readChunk(Mda &X,long i,long size) const;
 	bool readChunk(Mda &X,long i1,long i2,long size1,long size2) const;
 	bool readChunk(Mda &X,long i1,long i2,long i3,long size1,long size2,long size3) const;

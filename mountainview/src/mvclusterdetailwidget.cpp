@@ -2,20 +2,21 @@
 
 #include <QPainter>
 #include "mvutils.h"
-#include "msutils.h"
+#include "msmisc.h"
 #include <QProgressDialog>
 #include <QTime>
 #include <QMap>
 #include <QDebug>
 #include <QMouseEvent>
 #include <QSet>
+#include "extract_clips.h"
 
 struct ClusterData {
     int k;
 	int channel;
     Mda template0;
     QList<int> inds;
-    QList<long> times;
+	QList<double> times;
 	QList<double> peaks;
 };
 
@@ -476,7 +477,7 @@ void MVClusterDetailWidgetPrivate::do_calculations()
 	int N=m_raw.N2();
 	int L=m_firings.N2();
 	int T=m_clip_size;
-	QList<long> times;
+	QList<double> times;
 	QList<int> channels,labels;
 	QList<double> peaks;
 
@@ -484,7 +485,7 @@ void MVClusterDetailWidgetPrivate::do_calculations()
 	Q_UNUSED(N)
 
 	for (int i=0; i<L; i++) {
-		times << (long)m_firings.value(1,i)-1; //convert to 0-based indexing
+		times << m_firings.value(1,i)-1; //convert to 0-based indexing
 		channels << (int)m_firings.value(0,i)-1; //convert to 0-based indexing
 		labels << (int)m_firings.value(2,i);
 		peaks << m_firings.value(3,i);

@@ -47,8 +47,8 @@ void MVCdfView::setTimesLabels(const Mda &times, const Mda &labels)
 {
 	QVector<int> times0,labels0;
 	for (int i=0; i<times.totalSize(); i++) {
-		times0 << (int)times.value1(i);
-		labels0 << (int)labels.value1(i);
+		times0 << times.get(i);
+		labels0 << (int)labels.get(i);
 	}
 	setTimesLabels(times0,labels0);
 }

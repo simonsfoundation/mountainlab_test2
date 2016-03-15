@@ -8,7 +8,7 @@
 #include <QMouseEvent>
 #include "sstimeseriesview.h"
 #include "mvutils.h"
-#include "msutils.h"
+#include "msmisc.h"
 
 class MVFiringRateViewPrivate {
 public:

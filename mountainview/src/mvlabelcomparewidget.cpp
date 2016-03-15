@@ -103,8 +103,8 @@ void MVLabelCompareWidget::setTimesLabels(const Mda &times1, const Mda &labels1,
         Mda TL; TL.allocate(2,NN);
         int jj=0;
         for (int ii=0; ii<times1.totalSize(); ii++) {
-            TL.setValue(times1.value1(ii),0,jj);
-            TL.setValue(labels1.value1(ii),1,jj);
+			TL.setValue(times1.get(ii),0,jj);
+			TL.setValue(labels1.get(ii),1,jj);
             jj++;
         }
         d->m_TL_1=TL;
@@ -114,8 +114,8 @@ void MVLabelCompareWidget::setTimesLabels(const Mda &times1, const Mda &labels1,
         Mda TL; TL.allocate(2,NN);
         int jj=0;
         for (int ii=0; ii<times2.totalSize(); ii++) {
-            TL.setValue(times2.value1(ii)-1,0,jj); //convert to zero-based indexing
-            TL.setValue(labels2.value1(ii),1,jj);
+			TL.setValue(times2.get(ii)-1,0,jj); //convert to zero-based indexing
+			TL.setValue(labels2.get(ii),1,jj);
             jj++;
         }
         d->m_TL_2=TL;

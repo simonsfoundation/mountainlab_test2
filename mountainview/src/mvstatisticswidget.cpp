@@ -157,7 +157,7 @@ void MVStatisticsWidgetPrivate::update_statistics()
 	int num=m_times.totalSize();
 	for (int ii=0; ii<num; ii++) {
 		//int t0=d->m_times.value1(ii);
-		int label0=m_labels.value1(ii);
+		int label0=m_labels.get(ii);
 		while (label0>=spike_stats.count()) {
 			SpikeStats X;
 			X.count=0;

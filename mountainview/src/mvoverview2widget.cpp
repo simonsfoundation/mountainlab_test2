@@ -10,6 +10,7 @@
 #include "mvclipsview.h"
 #include "mvclusterwidget.h"
 #include "mvfiringrateview.h"
+#include "extract_clips.h"
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -19,7 +20,7 @@
 #include <QTimer>
 #include <math.h>
 #include <QProgressDialog>
-#include "msutils.h"
+#include "msmisc.h"
 #include "mvutils.h"
 #include <QColor>
 #include <QStringList>
@@ -1060,7 +1061,6 @@ void MVOverview2WidgetPrivate::open_cluster_details()
 void MVOverview2WidgetPrivate::open_raw_data()
 {
     SSTimeSeriesWidget *X=new SSTimeSeriesWidget;
-    X->hideMenu();
     SSTimeSeriesView *V=new SSTimeSeriesView;
     V->initialize();
     V->setSamplingFrequency(m_sampling_frequency);
@@ -1199,12 +1199,12 @@ void normalize_features(Mda &F,bool individual_channels) {
         double sum=0;
 		int NN=F.totalSize();
         for (int i=0; i<NN; i++) {
-            sumsqr+=F.value1(i)*F.value1(i);
-            sum+=F.value1(i);
+			sumsqr+=F.get(i)*F.get(i);
+			sum+=F.get(i);
         }
 		double norm=1;
         if (NN>=2) norm=sqrt((sumsqr-sum*sum/NN)/(NN-1));
-		for (int i=0; i<NN; i++) F.setValue1(F.value1(i)/norm,i);
+		for (int i=0; i<NN; i++) F.set(F.get(i)/norm,i);
 	}
 }
 
@@ -1365,7 +1365,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
 		get_pca_features(M*T,L,3,features.dataPtr(),clips.dataPtr());
         //subtract_features_mean(features);
 		normalize_features(features,false);
-		features.write("/tmp/tmp_features.mda");
+		features.write32("/tmp/tmp_features.mda");
 		WW->setRaw(m_raw);
 		WW->setData(features);
 		WW->setTimes(times_kk);

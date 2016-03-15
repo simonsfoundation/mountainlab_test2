@@ -16,6 +16,8 @@ public:
 	long m_total_size;
 	Mda m_internal_chunk;
 	long m_current_internal_chunk_index;
+	Mda m_memory_mda;
+	bool m_use_memory_mda;
 
 	char m_path[MAX_PATH_LEN];
 	void do_construct();
@@ -36,6 +38,15 @@ DiskReadMda::DiskReadMda(const DiskReadMda &other)
 	d->q=this;
 	d->do_construct();
 	d->copy_from(other);
+}
+
+DiskReadMda::DiskReadMda(const Mda &X)
+{
+	d=new DiskReadMdaPrivate;
+	d->q=this;
+	d->do_construct();
+	d->m_use_memory_mda=true;
+	d->m_memory_mda=X;
 }
 
 DiskReadMda::~DiskReadMda() {
@@ -64,42 +75,57 @@ void DiskReadMda::setPath(const char *file_path)
 
 long DiskReadMda::N1() const
 {
+	if (d->m_use_memory_mda) return d->m_memory_mda.N1();
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[0];
 }
 
 long DiskReadMda::N2() const
 {
+	if (d->m_use_memory_mda) return d->m_memory_mda.N2();
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[1];
 }
 
 long DiskReadMda::N3() const
 {
+	if (d->m_use_memory_mda) return d->m_memory_mda.N3();
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[2];
 }
 
 long DiskReadMda::N4() const
 {
+	if (d->m_use_memory_mda) return d->m_memory_mda.N4();
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[3];
 }
 
 long DiskReadMda::N5() const
 {
+	if (d->m_use_memory_mda) return d->m_memory_mda.N5();
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[4];
 }
 
 long DiskReadMda::N6() const
 {
+	if (d->m_use_memory_mda) return d->m_memory_mda.N6();
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[5];
 }
 
+long DiskReadMda::totalSize() const
+{
+	return d->m_total_size;
+}
+
 bool DiskReadMda::readChunk(Mda &X, long i, long size) const
 {
+	if (d->m_use_memory_mda) {
+		d->m_memory_mda.getSubArray(X,i,size);
+		return true;
+	}
 	if (!d->open_file_if_needed()) return false;
 	X.allocate(1,size);
 	fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*i,SEEK_SET);
@@ -113,6 +139,10 @@ bool DiskReadMda::readChunk(Mda &X, long i, long size) const
 
 bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long size1, long size2) const
 {
+	if (d->m_use_memory_mda) {
+		d->m_memory_mda.getSubArray(X,i1,i2,size1,size2);
+		return true;
+	}
 	if (!d->open_file_if_needed()) return false;
 	if (size1==N1()) {
 		//easy case
@@ -133,6 +163,10 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long size1, long size2) co
 
 bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long i3, long size1, long size2, long size3) const
 {
+	if (d->m_use_memory_mda) {
+		d->m_memory_mda.getSubArray(X,i1,i2,i3,size1,size2,size3);
+		return true;
+	}
 	if (!d->open_file_if_needed()) return false;
 	if ((size1==N1())&&(size2==N2())) {
 		//easy case
@@ -153,6 +187,7 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long i3, long size1, long 
 
 double DiskReadMda::value(long i) const
 {
+	if (d->m_use_memory_mda) return d->m_memory_mda.value(i);
 	if ((i<0)||(i>=d->m_total_size)) return 0;
 	long chunk_index=i/DEFAULT_CHUNK_SIZE;
 	long offset=i-DEFAULT_CHUNK_SIZE*chunk_index;
@@ -169,6 +204,7 @@ double DiskReadMda::value(long i) const
 
 double DiskReadMda::value(long i1, long i2) const
 {
+	if (d->m_use_memory_mda) return d->m_memory_mda.value(i1,i2);
 	if ((i1<0)||(i1>=N1())) return 0;
 	if ((i2<0)||(i2>=N2())) return 0;
 	return value(i1+N1()*i2);
@@ -176,6 +212,7 @@ double DiskReadMda::value(long i1, long i2) const
 
 double DiskReadMda::value(long i1, long i2, long i3) const
 {
+	if (d->m_use_memory_mda) return d->m_memory_mda.value(i1,i2,i3);
 	if ((i1<0)||(i1>=N1())) return 0;
 	if ((i2<0)||(i2>=N2())) return 0;
 	if ((i3<0)||(i3>=N3())) return 0;
@@ -184,6 +221,10 @@ double DiskReadMda::value(long i1, long i2, long i3) const
 
 void DiskReadMda::getSubArray(Mda &ret, long i, long size)
 {
+	if (d->m_use_memory_mda) {
+		d->m_memory_mda.getSubArray(ret,i,size);
+		return;
+	}
 	ret.allocate(1,size);
 	for (long j=0; j<size; j++) {
 		ret.set(this->value(i+j),j);
@@ -192,6 +233,10 @@ void DiskReadMda::getSubArray(Mda &ret, long i, long size)
 
 void DiskReadMda::getSubArray(Mda &ret, long i1, long i2, long size1, long size2)
 {
+	if (d->m_use_memory_mda) {
+		d->m_memory_mda.getSubArray(ret,i1,i2,size1,size2);
+		return;
+	}
 	ret.allocate(size1,size2);
 	for (long j2=0; j2<size2; j2++) {
 		for (long j1=0; j1<size1; j1++) {
@@ -202,6 +247,10 @@ void DiskReadMda::getSubArray(Mda &ret, long i1, long i2, long size1, long size2
 
 void DiskReadMda::getSubArray(Mda &ret, long i1, long i2, long i3, long size1, long size2, long size3)
 {
+	if (d->m_use_memory_mda) {
+		d->m_memory_mda.getSubArray(ret,i1,i2,i3,size1,size2,size3);
+		return;
+	}
 	ret.allocate(size1,size2,size3);
 	for (long j3=0; j3<size3; j3++) {
 		for (long j2=0; j2<size2; j2++) {
@@ -219,6 +268,7 @@ void DiskReadMdaPrivate::do_construct()
 	m_file=0;
 	m_current_internal_chunk_index=-1;
 	m_total_size=0;
+	m_use_memory_mda=false;
 }
 
 bool DiskReadMdaPrivate::open_file_if_needed()
@@ -241,6 +291,11 @@ bool DiskReadMdaPrivate::open_file_if_needed()
 
 void DiskReadMdaPrivate::copy_from(const DiskReadMda &other)
 {
+	if (other.d->m_use_memory_mda) {
+		this->m_use_memory_mda=true;
+		this->m_memory_mda=other.d->m_memory_mda;
+		return;
+	}
 	q->setPath(other.d->m_path);
 }
 

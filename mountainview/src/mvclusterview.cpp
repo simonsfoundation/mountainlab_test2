@@ -8,7 +8,7 @@
 #include <QTimer>
 #include <math.h>
 #include "mvutils.h"
-#include "msutils.h"
+#include "msmisc.h"
 
 class MVClusterViewPrivate {
 public:
@@ -366,18 +366,18 @@ void MVClusterViewPrivate::update_grid()
 	int N1=m_grid_N1,N2=m_grid_N2;
 
 	m_point_grid.allocate(N1,N2);
-    for (int i=0; i<N1*N2; i++) m_point_grid.setValue1(-1,i);
+	for (int i=0; i<N1*N2; i++) m_point_grid.set(-1,i);
 	double *m_point_grid_ptr=m_point_grid.dataPtr();
 
     if (m_mode==MVCV_MODE_TIME_COLORS) {
         m_time_grid.allocate(N1,N2);
-        for (int i=0; i<N1*N2; i++) m_time_grid.setValue1(-1,i);
+		for (int i=0; i<N1*N2; i++) m_time_grid.set(-1,i);
     }
     double *m_time_grid_ptr=m_time_grid.dataPtr();
 
     if (m_mode==MVCV_MODE_AMPLITUDE_COLORS) {
         m_amplitude_grid.allocate(N1,N2);
-        for (int i=0; i<N1*N2; i++) m_amplitude_grid.setValue1(0,i);
+		for (int i=0; i<N1*N2; i++) m_amplitude_grid.set(0,i);
     }
     double *m_amplitude_grid_ptr=m_amplitude_grid.dataPtr();
 
@@ -395,7 +395,7 @@ void MVClusterViewPrivate::update_grid()
     double max_abs_val=0;
     int NN=m_data.totalSize();
     for (int i=0; i<NN; i++) {
-        if (fabs(m_data.value1(i))>max_abs_val) max_abs_val=fabs(m_data.value1(i));
+		if (fabs(m_data.get(i))>max_abs_val) max_abs_val=fabs(m_data.get(i));
     }
 
     QList<double> x0s,y0s,z0s;
