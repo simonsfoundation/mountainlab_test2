@@ -12,19 +12,19 @@
 #include <QCoreApplication>
 #include <stdio.h>
 #include "get_command_line_params.h"
-#include "msprocessormanager.h"
+#include "msprocessmanager.h"
 #include <QDebug>
 #include "diskreadmda.h"
 #include "unit_tests.h"
 
-void print_usage(const MSProcessorManager &PM);
+void print_usage(const MSProcessManager &PM);
 
 int main(int argc, char *argv[]) {
 	QCoreApplication app(argc,argv);
 
 	CLParams CLP=get_command_line_params(argc,argv);
 
-	MSProcessorManager PM;
+	MSProcessManager PM;
 	PM.loadDefaultProcessors();
 
 	if (CLP.unnamed_parameters.count()==0) {
@@ -40,6 +40,11 @@ int main(int argc, char *argv[]) {
 		run_all_unit_tests();
 		return 0;
 	}
+	if (CLP.unnamed_parameters.value(0)=="unit_test") {
+		QString test_name=CLP.unnamed_parameters.value(1);
+		run_unit_test(test_name);
+		return 0;
+	}
 
 	if (CLP.unnamed_parameters.count()==1) {
 		QString processor_name=CLP.unnamed_parameters[0];
@@ -47,13 +52,18 @@ int main(int argc, char *argv[]) {
 			printf("Unable to find processor: %s\n",processor_name.toLatin1().data());
 			return -1;
 		}
-		if (!PM.checkProcessor(processor_name,CLP.named_parameters)) {
+		if (!PM.checkProcess(processor_name,CLP.named_parameters)) {
 			printf("Problem checking processor: %s\n",processor_name.toLatin1().data());
 			return -1;
 		}
-		if (!PM.runProcessor(processor_name,CLP.named_parameters)) {
-			printf("Problem running processor: %s\n",processor_name.toLatin1().data());
-			return -1;
+		if (PM.findCompletedProcess(processor_name,CLP.named_parameters)) {
+			printf("Process already completed: %s\n",processor_name.toLatin1().data());
+		}
+		else {
+			if (!PM.runProcess(processor_name,CLP.named_parameters)) {
+				printf("Problem running processor: %s\n",processor_name.toLatin1().data());
+				return -1;
+			}
 		}
 	}
 	else {
@@ -63,7 +73,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void print_usage(const MSProcessorManager &PM) {
+void print_usage(const MSProcessManager &PM) {
 	QString str=PM.usageString();
 	printf("%s\n",str.toLatin1().data());
 }

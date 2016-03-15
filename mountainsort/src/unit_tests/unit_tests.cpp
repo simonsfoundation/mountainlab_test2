@@ -6,7 +6,9 @@
 #include <stdio.h>
 #include <QDebug>
 #include <diskwritemda.h>
+#include <QTime>
 #include "diskreadmda.h"
+#include "matrix_mda.h"
 
 double max_difference(Mda &X,Mda &Y);
 
@@ -65,4 +67,67 @@ double max_difference(Mda &X,Mda &Y) {
 		if (fabs(diff)>max_diff) max_diff=diff;
 	}
 	return max_diff;
+}
+
+#include "eigenvalue_decomposition.h"
+void run_unit_test_eigenvalue_decomposition() {
+	for (int pass=1; pass<=2; pass++) {
+		int M=4;
+		if (pass==2) M=1000;
+		Mda X(M,M);
+		for (int i=0; i<M; i++) {
+			for (int j=0; j<M; j++) {
+				X.set(sin(sin(i)+sin(j)+sin(i+j)),i,j);
+			}
+		}
+		Mda U,S;
+		QTime timer; timer.start();
+		eigenvalue_decomposition_sym(U,S,X);
+		double elapsed=timer.elapsed();
+		if (pass==1) {
+			Mda Sdiag(M,M);
+			for (int i=0; i<M; i++) Sdiag.set(S.get(i),i,i);
+			printf("\nSdiag:\n");
+			matrix_print(Sdiag);
+			printf("\nU:\n");
+			matrix_print(U);
+			Mda X2=matrix_multiply(matrix_multiply(U,Sdiag),matrix_transpose(U));
+			printf("\nX:\n");
+			matrix_print(X);
+			printf("\nX2:\n");
+			matrix_print(X2);
+		}
+		else if (pass==2) {
+			printf("Elapsed time for M=%d: %g sec\n",M,elapsed/1000);
+		}
+	}
+}
+
+#include "whiten.h"
+void run_unit_test_whiten() {
+	int M=4;
+	int N=12;
+	Mda X(M,N);
+	for (int n=0; n<N; n++) {
+		for (int m=0; m<M; m++) {
+			X.set(sin(sin(m)+sin(n)+sin(m+n)),m,n);
+		}
+	}
+	QString path1="tmp_ut1.mda";
+	QString path2="tmp_ut2.mda";
+	X.write32(path1);
+	whiten(path1,path2);
+	Mda Y; Y.read(path2);
+	printf("\nY:\n");
+	matrix_print(Y);
+}
+
+void run_unit_test(const QString &test_name)
+{
+	if (test_name=="eigenvalue_decomposition") {
+		run_unit_test_eigenvalue_decomposition();
+	}
+	else if (test_name=="whiten") {
+		run_unit_test_whiten();
+	}
 }

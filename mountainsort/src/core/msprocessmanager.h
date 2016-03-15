@@ -9,8 +9,8 @@
 **
 *******************************************************/
 
-#ifndef MSPROCESSORMANAGER_H
-#define MSPROCESSORMANAGER_H
+#ifndef MSPROCESSMANAGER_H
+#define MSPROCESSMANAGER_H
 
 #include "msprocessor.h"
 
@@ -18,24 +18,26 @@
 #include <QMap>
 #include <QVariant>
 
-class MSProcessorManagerPrivate;
-class MSProcessorManager {
+class MSProcessManagerPrivate;
+class MSProcessManager {
 public:
-	friend class MSProcessorManagerPrivate;
-	MSProcessorManager();
-	virtual ~MSProcessorManager();
+	friend class MSProcessManagerPrivate;
+	MSProcessManager();
+	virtual ~MSProcessManager();
 	void loadDefaultProcessors();
 	bool containsProcessor(const QString &processor_name) const;
-	bool checkProcessor(const QString &processor_name,const QMap<QString,QVariant> &parameters) const;
-	bool runProcessor(const QString &processor_name,const QMap<QString,QVariant> &parameters) const;
+	bool checkProcess(const QString &processor_name,const QMap<QString,QVariant> &parameters) const;
+	bool runProcess(const QString &processor_name,const QMap<QString,QVariant> &parameters);
+
+	bool findCompletedProcess(const QString &processor_name,const QMap<QString,QVariant> &parameters) const;
 
 	void loadProcessor(MSProcessor *P);
 	QStringList allProcessorNames() const;
 
 	QString usageString() const;
 private:
-	MSProcessorManagerPrivate *d;
+	MSProcessManagerPrivate *d;
 };
 
-#endif // MSPROCESSORMANAGER_H
+#endif // MSPROCESSMANAGER_H
 

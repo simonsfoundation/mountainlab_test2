@@ -11,6 +11,8 @@ example_Processor::example_Processor() {
 	d->q=this;
 
 	this->setName("example");
+	this->setRequiredParameters("param1");
+	this->setOptionalParameters("param2");
 }
 
 example_Processor::~example_Processor() {
@@ -19,9 +21,7 @@ example_Processor::~example_Processor() {
 
 bool example_Processor::check(const QMap<QString, QVariant> &params)
 {
-	QStringList required; required << "param1";
-	QStringList optional; optional << "param2";
-	if (!this->checkParameters(params,required,optional)) return false;
+	if (!this->checkParameters(params)) return false;
 	return true;
 }
 
