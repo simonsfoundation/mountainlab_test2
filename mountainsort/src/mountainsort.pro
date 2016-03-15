@@ -42,7 +42,16 @@ HEADERS += \
     isosplit/jisotonic.h \
     utils/get_principal_components.h \
     processors/extract_clips.h \
-    utils/msmisc.h
+    utils/msmisc.h \
+    processors/remove_duplicates_v1_processor.h \
+    processors/remove_duplicates_v1.h \
+    processors/remove_noise_subclusters_processor.h \
+    processors/remove_noise_subclusters.h \
+    processors/compute_outlier_scores_processor.h \
+    processors/compute_outlier_scores.h \
+    processors/copy_processor.h \
+    processors/mda2txt_processor.h \
+    core/process_msh.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -73,7 +82,16 @@ SOURCES += mountainsortmain.cpp \
     isosplit/jisotonic.cpp \
     utils/get_principal_components.cpp \
     processors/extract_clips.cpp \
-    utils/msmisc.cpp
+    utils/msmisc.cpp \
+    processors/remove_duplicates_v1_processor.cpp \
+    processors/remove_duplicates_v1.cpp \
+    processors/remove_noise_subclusters_processor.cpp \
+    processors/remove_noise_subclusters.cpp \
+    processors/compute_outlier_scores_processor.cpp \
+    processors/compute_outlier_scores.cpp \
+    processors/copy_processor.cpp \
+    processors/mda2txt_processor.cpp \
+    core/process_msh.cpp
 
 DISTFILES += \
     ../version.txt

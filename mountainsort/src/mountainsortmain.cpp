@@ -16,6 +16,7 @@
 #include <QDebug>
 #include "diskreadmda.h"
 #include "unit_tests.h"
+#include "process_msh.h"
 
 void print_usage(const MSProcessManager &PM);
 
@@ -44,6 +45,9 @@ int main(int argc, char *argv[]) {
 		QString test_name=CLP.unnamed_parameters.value(1);
 		run_unit_test(test_name);
 		return 0;
+	}
+	if (CLP.unnamed_parameters.value(0).endsWith(".msh")) {
+		return process_msh(CLP.unnamed_parameters.value(0),argc,argv);
 	}
 
 	if (CLP.unnamed_parameters.count()==1) {

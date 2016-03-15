@@ -9,7 +9,14 @@
 
 #include "example_processor.h"
 #include "bandpass_filter_processor.h"
+#include "whiten_processor.h"
 #include "detect_processor.h"
+#include "branch_cluster_v2_processor.h"
+#include "remove_duplicates_v1_processor.h"
+#include "remove_noise_subclusters_processor.h"
+#include "compute_outlier_scores_processor.h"
+#include "copy_processor.h"
+#include "mda2txt_processor.h"
 
 #include "qjson.h"
 #include "textfile.h"
@@ -42,7 +49,14 @@ void MSProcessManager::loadDefaultProcessors()
 {
 	loadProcessor(new example_Processor);
 	loadProcessor(new bandpass_filter_Processor);
+	loadProcessor(new whiten_Processor);
 	loadProcessor(new detect_Processor);
+	loadProcessor(new branch_cluster_v2_Processor);
+	loadProcessor(new remove_duplicates_v1_Processor);
+	loadProcessor(new remove_noise_subclusters_Processor);
+	loadProcessor(new compute_outlier_scores_Processor);
+	loadProcessor(new copy_Processor);
+	loadProcessor(new mda2txt_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString &processor_name) const
