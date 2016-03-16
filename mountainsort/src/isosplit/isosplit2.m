@@ -55,7 +55,7 @@ while 1
     [k1,k2]=find_next_comparison(active_labels,centers,counts,attempted_comparisons,opts.repeat_tolerance);
     if (k1<0) break; end;
     if (opts.verbose)
-        fprintf('Comparing %d (%d) with %d (%d)...',k1,counts(k1),k2,counts(k2));
+        fprintf('Iteration %d: Comparing %d (%d) with %d (%d)...',info.num_iterations,k1,counts(k1),k2,counts(k2));
     end;
     inds1=find(labels==k1);
     inds2=find(labels==k2);

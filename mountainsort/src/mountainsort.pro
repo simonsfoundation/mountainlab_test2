@@ -51,7 +51,9 @@ HEADERS += \
     processors/compute_outlier_scores.h \
     processors/copy_processor.h \
     processors/mda2txt_processor.h \
-    core/process_msh.h
+    core/process_msh.h \
+    processors/mask_out_artifacts_processor.h \
+    processors/mask_out_artifacts.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -91,7 +93,9 @@ SOURCES += mountainsortmain.cpp \
     processors/compute_outlier_scores.cpp \
     processors/copy_processor.cpp \
     processors/mda2txt_processor.cpp \
-    core/process_msh.cpp
+    core/process_msh.cpp \
+    processors/mask_out_artifacts_processor.cpp \
+    processors/mask_out_artifacts.cpp
 
 DISTFILES += \
     ../version.txt
