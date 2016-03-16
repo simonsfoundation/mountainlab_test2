@@ -13,7 +13,7 @@ Mda extract_clips(DiskReadMda &X, const QList<double> &times, int clip_size)
 		int t2=t1+T-1;
 		if ((t1>=0)&&(t2<N)) {
 			Mda tmp;
-			X.getSubArray(tmp,0,t1,M,T);
+			X.readChunk(tmp,0,t1,M,T);
 			for (int t=0; t<T; t++) {
 				for (int m=0; m<M; m++) {
 					clips.set(tmp.get(m,t),m,t,i);
@@ -39,7 +39,7 @@ Mda extract_clips(DiskReadMda &X, const QList<double> &times, const QList<int> &
 		int t2=t1+T-1;
 		if ((t1>=0)&&(t2<N)) {
 			Mda tmp;
-			X.getSubArray(tmp,0,t1,M,T);
+			X.readChunk(tmp,0,t1,M,T);
 			for (int t=0; t<T; t++) {
 				for (int m0=0; m0<M0; m0++) {
 					clips.set(tmp.get(channels[m0],t),m0,t,i);

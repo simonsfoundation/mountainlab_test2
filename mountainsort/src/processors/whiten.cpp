@@ -5,6 +5,7 @@
 #include "msprefs.h"
 #include <math.h>
 #include <QDebug>
+#include <QTime>
 #include "get_sort_indices.h"
 #include "eigenvalue_decomposition.h"
 #include "matrix_mda.h"
@@ -25,22 +26,43 @@ bool whiten(const QString &input, const QString &output)
 	}
 
 	{
-		Mda chunk;
-		long timepoint=0;
-		while (timepoint<N) {
-			X.getSubArray(chunk,0,timepoint,M,qMin(chunk_size,N-timepoint));
+		QTime timer; timer.start();
+		long num_timepoints_handled=0;
+		#pragma omp parallel for
+		for (long timepoint=0; timepoint<N; timepoint+=chunk_size) {
+			Mda chunk;
+			#pragma omp critical (lock1)
+			{
+				X.readChunk(chunk,0,timepoint,M,qMin(chunk_size,N-timepoint));
+			}
 			double *chunkptr=chunk.dataPtr();
+			Mda COV0(M,M);
+			double *COV0ptr=COV0.dataPtr();
 			for (long i=0; i<chunk.N2(); i++) {
 				long aa=M*i;
 				long bb=0;
 				for (int m1=0; m1<M; m1++) {
 					for (int m2=0; m2<M; m2++) {
-						COVptr[bb]+=chunkptr[aa+m1]*chunkptr[aa+m2];
+						COV0ptr[bb]+=chunkptr[aa+m1]*chunkptr[aa+m2];
 						bb++;
 					}
 				}
 			}
-			timepoint+=chunk_size;
+			#pragma omp critical (lock2)
+			{
+				long bb=0;
+				for (int m1=0; m1<M; m1++) {
+					for (int m2=0; m2<M; m2++) {
+						COVptr[bb]+=COV0ptr[bb];
+						bb++;
+					}
+				}
+				num_timepoints_handled+=qMin(chunk_size,N-timepoint);
+				if ((timer.elapsed()>1000)||(num_timepoints_handled==N)) {
+					printf("%ld/%ld (%d%%)\n",num_timepoints_handled,N,(int)(num_timepoints_handled*1.0/N*100));
+					timer.restart();
+				}
+			}
 		}
 	}
 	if (N>1) {
@@ -55,10 +77,15 @@ bool whiten(const QString &input, const QString &output)
 	DiskWriteMda Y;
 	Y.open(MDAIO_TYPE_FLOAT32,output,M,N);
 	{
-		Mda chunk_in;
-		long timepoint=0;
-		while (timepoint<N) {
-			X.getSubArray(chunk_in,0,timepoint,M,qMin(chunk_size,N-timepoint));
+		QTime timer; timer.start();
+		long num_timepoints_handled=0;
+		#pragma omp parallel for
+		for (long timepoint=0; timepoint<N; timepoint+=chunk_size) {
+			Mda chunk_in;
+			#pragma omp critical (lock1)
+			{
+				X.readChunk(chunk_in,0,timepoint,M,qMin(chunk_size,N-timepoint));
+			}
 			double *chunk_in_ptr=chunk_in.dataPtr();
 			Mda chunk_out(M,chunk_in.N2());
 			double *chunk_out_ptr=chunk_out.dataPtr();
@@ -72,8 +99,15 @@ bool whiten(const QString &input, const QString &output)
 					}
 				}
 			}
-			Y.writeSubArray(chunk_out,0,timepoint);
-			timepoint+=chunk_size;
+			#pragma omp critical (lock2)
+			{
+				Y.writeSubArray(chunk_out,0,timepoint);
+				num_timepoints_handled+=qMin(chunk_size,N-timepoint);
+				if ((timer.elapsed()>1000)||(num_timepoints_handled==N)) {
+					printf("%ld/%ld (%d%%)\n",num_timepoints_handled,N,(int)(num_timepoints_handled*1.0/N*100));
+					timer.restart();
+				}
+			}
 		}
 	}
 	Y.close();

@@ -41,9 +41,6 @@ public:
 	double value(long i) const;
 	double value(long i1,long i2) const;
 	double value(long i1,long i2,long i3) const;
-	void getSubArray(Mda &ret,long i,long size);
-	void getSubArray(Mda &ret,long i1,long i2,long size1,long size2);
-	void getSubArray(Mda &ret,long i1,long i2,long i3,long size1,long size2,long size3);
 private:
 	DiskReadMdaPrivate *d;
 };

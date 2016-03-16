@@ -128,11 +128,16 @@ bool DiskReadMda::readChunk(Mda &X, long i, long size) const
 	}
 	if (!d->open_file_if_needed()) return false;
 	X.allocate(1,size);
-	fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*i,SEEK_SET);
-	long bytes_read=mda_read_float64(X.dataPtr(),&d->m_header,size,d->m_file);
-	if (bytes_read!=size) {
-		printf("Warning: Problem reading 1d chunk in diskreadmda: %ld<>%ld\n",bytes_read,size);
-		return false;
+	long jA=qMax(i,0L);
+	long jB=qMin(i+size-1,d->m_total_size-1);
+	long size_to_read=jB-jA+1;
+	if (size_to_read>0) {
+		fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*(jA),SEEK_SET);
+		long bytes_read=mda_read_float64(&X.dataPtr()[jA-i],&d->m_header,size_to_read,d->m_file);
+		if (bytes_read!=size_to_read) {
+			printf("Warning problem reading chunk in diskreadmda: %ld<>%ld\n",bytes_read,size_to_read);
+			return false;
+		}
 	}
 	return true;
 }
@@ -147,11 +152,16 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long size1, long size2) co
 	if (size1==N1()) {
 		//easy case
 		X.allocate(size1,size2);
-		fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*(i1+N1()*i2),SEEK_SET);
-		long bytes_read=mda_read_float64(X.dataPtr(),&d->m_header,size1*size2,d->m_file);
-		if (bytes_read!=size1*size2) {
-			printf("Warning problem reading 2d chunk in diskreadmda: %ld<>%ld\n",bytes_read,size1*size2);
-			return false;
+		long jA=qMax(i2,0L);
+		long jB=qMin(i2+size2-1,N2()-1);
+		long size2_to_read=jB-jA+1;
+		if (size2_to_read>0) {
+			fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*(i1+N1()*jA),SEEK_SET);
+			long bytes_read=mda_read_float64(&X.dataPtr()[(jA-i2)*size1],&d->m_header,size1*size2_to_read,d->m_file);
+			if (bytes_read!=size1*size2_to_read) {
+				printf("Warning problem reading 2d chunk in diskreadmda: %ld<>%ld\n",bytes_read,size1*size2);
+				return false;
+			}
 		}
 		return true;
 	}
@@ -171,11 +181,16 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long i3, long size1, long 
 	if ((size1==N1())&&(size2==N2())) {
 		//easy case
 		X.allocate(size1,size2,size3);
-		fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*(i1+N1()*i2+N1()*N2()*i3),SEEK_SET);
-		long bytes_read=mda_read_float64(X.dataPtr(),&d->m_header,size1*size2*size3,d->m_file);
-		if (bytes_read!=size1*size2*size3) {
-			printf("Warning problem reading 3d chunk in diskreadmda: %ld<>%ld\n",bytes_read,size1*size2*size3);
-			return false;
+		long jA=qMax(i3,0L);
+		long jB=qMin(i3+size3-1,N3()-1);
+		long size3_to_read=jB-jA+1;
+		if (size3_to_read>0) {
+			fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*(i1+N1()*i2+N1()*N2()*jA),SEEK_SET);
+			long bytes_read=mda_read_float64(&X.dataPtr()[(jA-i3)*size1*size2],&d->m_header,size1*size2*size3_to_read,d->m_file);
+			if (bytes_read!=size1*size2*size3_to_read) {
+				printf("Warning problem reading 3d chunk in diskreadmda: %ld<>%ld\n",bytes_read,size1*size2*size3_to_read);
+				return false;
+			}
 		}
 		return true;
 	}
@@ -193,9 +208,9 @@ double DiskReadMda::value(long i) const
 	long offset=i-DEFAULT_CHUNK_SIZE*chunk_index;
 	if (d->m_current_internal_chunk_index!=chunk_index) {
 		long size_to_read=DEFAULT_CHUNK_SIZE;
-		if (i+size_to_read>d->m_total_size) size_to_read=d->m_total_size-i;
+		if (chunk_index*DEFAULT_CHUNK_SIZE+size_to_read>d->m_total_size) size_to_read=d->m_total_size-chunk_index*DEFAULT_CHUNK_SIZE;
 		if (size_to_read) {
-			this->readChunk(d->m_internal_chunk,chunk_index,size_to_read);
+			this->readChunk(d->m_internal_chunk,chunk_index*DEFAULT_CHUNK_SIZE,size_to_read);
 		}
 		d->m_current_internal_chunk_index=chunk_index;
 	}
@@ -217,48 +232,6 @@ double DiskReadMda::value(long i1, long i2, long i3) const
 	if ((i2<0)||(i2>=N2())) return 0;
 	if ((i3<0)||(i3>=N3())) return 0;
 	return value(i1+N1()*i2+N1()*N2()*i3);
-}
-
-void DiskReadMda::getSubArray(Mda &ret, long i, long size)
-{
-	if (d->m_use_memory_mda) {
-		d->m_memory_mda.getSubArray(ret,i,size);
-		return;
-	}
-	ret.allocate(1,size);
-	for (long j=0; j<size; j++) {
-		ret.set(this->value(i+j),j);
-	}
-}
-
-void DiskReadMda::getSubArray(Mda &ret, long i1, long i2, long size1, long size2)
-{
-	if (d->m_use_memory_mda) {
-		d->m_memory_mda.getSubArray(ret,i1,i2,size1,size2);
-		return;
-	}
-	ret.allocate(size1,size2);
-	for (long j2=0; j2<size2; j2++) {
-		for (long j1=0; j1<size1; j1++) {
-			ret.setValue(this->value(i1+j1,i2+j2),j1,j2);
-		}
-	}
-}
-
-void DiskReadMda::getSubArray(Mda &ret, long i1, long i2, long i3, long size1, long size2, long size3)
-{
-	if (d->m_use_memory_mda) {
-		d->m_memory_mda.getSubArray(ret,i1,i2,i3,size1,size2,size3);
-		return;
-	}
-	ret.allocate(size1,size2,size3);
-	for (long j3=0; j3<size3; j3++) {
-		for (long j2=0; j2<size2; j2++) {
-			for (long j1=0; j1<size1; j1++) {
-				ret.setValue(this->value(i1+j1,i2+j2,i3+j3),j1,j2,j3);
-			}
-		}
-	}
 }
 
 void DiskReadMdaPrivate::do_construct()

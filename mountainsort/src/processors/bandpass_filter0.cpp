@@ -4,6 +4,7 @@
 #include <diskwritemda.h>
 #include "omp.h"
 #include "fftw3.h"
+#include <QTime>
 #include <math.h>
 #include "msprefs.h"
 
@@ -28,15 +29,30 @@ bool bandpass_filter0(const QString &input_path, const QString &output_path, dou
 
 	DiskWriteMda Y(MDAIO_TYPE_FLOAT32,output_path,M,N);
 
-	Mda chunk;
-	long timepoint=0;
-	while (timepoint<N) {
-		X.getSubArray(chunk,0,timepoint-overlap_size,M,chunk_size+2*overlap_size);
-		chunk=do_bandpass_filter0(chunk,sampling_freq,freq_min,freq_max);
-		Mda chunk2;
-		chunk.getSubArray(chunk2,0,overlap_size,M,chunk_size);
-		Y.writeSubArray(chunk2,0,timepoint);
-		timepoint+=chunk_size;
+
+	{
+		QTime timer; timer.start();
+		long num_timepoints_handled=0;
+		#pragma omp parallel for
+		for (long timepoint=0; timepoint<N; timepoint+=chunk_size) {
+			Mda chunk;
+			#pragma omp critical (lock1)
+			{
+				X.readChunk(chunk,0,timepoint-overlap_size,M,chunk_size+2*overlap_size);
+			}
+			chunk=do_bandpass_filter0(chunk,sampling_freq,freq_min,freq_max);
+			Mda chunk2;
+			chunk.getSubArray(chunk2,0,overlap_size,M,chunk_size);
+			#pragma omp critical (lock2)
+			{
+				Y.writeSubArray(chunk2,0,timepoint);
+				num_timepoints_handled+=qMin(chunk_size,N-timepoint);
+				if ((timer.elapsed()>1000)||(num_timepoints_handled==N)) {
+					printf("%ld/%ld (%d%%)\n",num_timepoints_handled,N,(int)(num_timepoints_handled*1.0/N*100));
+					timer.restart();
+				}
+			}
+		}
 	}
 
 	return true;

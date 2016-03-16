@@ -140,7 +140,7 @@ void DiskWriteMda::writeSubArray(Mda &X, long i)
 	if (!d->m_file) return;
 	fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*i,SEEK_SET);
 	long size=X.totalSize();
-	if (i+size>this->totalSize()) size=X.totalSize()-i;
+	if (i+size>this->totalSize()) size=this->totalSize()-i;
 	if (size>0) {
 		mda_write_float64(X.dataPtr(),&d->m_header,size,d->m_file);
 	}

@@ -1,8 +1,10 @@
 #include "detect.h"
 
+#include <QTime>
 #include <math.h>
 #include "diskreadmda.h"
 #include "msprefs.h"
+#include "msmisc.h"
 
 QList<double> do_detect(const QList<double> &vals,int detect_interval,double detect_threshold,int sign);
 
@@ -17,32 +19,49 @@ bool detect(const QString &raw_path,const QString &detect_path,const Detect_Opts
 
 	QList<int> channels;
 	QList<double> times;
+	int Tmid=(int)((opts.clip_size+1)/2)-1;
+	{
 
-	int Tmid=(int)((N+1)/2)-1;
-
-	Mda chunk;
-	long timepoint=0;
-	while (timepoint<N) {
-		X.getSubArray(chunk,0,timepoint-overlap_size,M,chunk_size+2*overlap_size);
-
-		for (int m=0; m<M; m++) {
-			QList<double> vals;
-			for (int j=0; j<chunk.N2(); j++) {
-				vals << chunk.value(m,j);
+		QTime timer; timer.start();
+		long num_timepoints_handled=0;
+		#pragma omp parallel for
+		for (long timepoint=0; timepoint<N; timepoint+=chunk_size) {
+			Mda chunk;
+			#pragma omp critical (lock1)
+			{
+				X.readChunk(chunk,0,timepoint-overlap_size,M,chunk_size+2*overlap_size);
 			}
-			QList<double> times0=do_detect(vals,opts.detect_interval,opts.detect_threshold,opts.sign);
-			for (int i=0; i<times0.count(); i++) {
-				double time0=times0[i]+timepoint-overlap_size;
-				if ((time0>=timepoint)&&(time0<timepoint+chunk_size)) {
-					if ((time0>=Tmid)&&(time0+Tmid<N)) {
-						times << time0+1;
-						channels << m+1;
+
+			QList<double> times1;
+			QList<int> channels1;
+			for (int m=0; m<M; m++) {
+				QList<double> vals;
+				for (int j=0; j<chunk.N2(); j++) {
+					vals << chunk.value(m,j);
+				}
+				QList<double> times0=do_detect(vals,opts.detect_interval,opts.detect_threshold,opts.sign);
+
+				for (int i=0; i<times0.count(); i++) {
+					double time0=times0[i]+timepoint-overlap_size;
+					if ((time0>=timepoint)&&(time0<timepoint+chunk_size)) {
+						if ((time0>=Tmid)&&(time0+Tmid<N)) {
+							times1 << time0+1;
+							channels1 << m+1;
+						}
 					}
 				}
 			}
+			#pragma omp critical (lock2)
+			{
+				times.append(times1);
+				channels.append(channels1);
+				num_timepoints_handled+=qMin(chunk_size,N-timepoint);
+				if ((timer.elapsed()>1000)||(num_timepoints_handled==N)) {
+					printf("%ld/%ld (%d%%)\n",num_timepoints_handled,N,(int)(num_timepoints_handled*1.0/N*100));
+					timer.restart();
+				}
+			}
 		}
-
-		timepoint+=chunk_size;
 	}
 
 	Mda output(2,times.count());

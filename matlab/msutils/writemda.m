@@ -1,4 +1,4 @@
-function writemda(X,fname)
+function writemda(X,fname,dtype)
 %WRITEMDA - write to a .mda file. MDA stands for
 %multi-dimensional array.
 %
@@ -9,6 +9,7 @@ function writemda(X,fname)
 % Inputs:
 %    X - the multi-dimensional array
 %    fname - path to the output .mda file
+%    dtype - 'complex32', 'int32', 'float32','float64'
 %
 % Other m-files required: none
 %
@@ -21,12 +22,29 @@ if (size(X,3)~=1) num_dims=3; end; % ~=1 added by jfm on 11/5/2015 to handle cas
 if (size(X,4)~=1) num_dims=4; end;
 if (size(X,5)~=1) num_dims=5; end;
 if (size(X,6)~=1) num_dims=6; end;
+
+if nargin<3, dtype=''; end;
+
+if isempty(dtype)
+    %warning('Please use writemda32 or writemda64 rather than directly calling writemda. This way you have control on whether the file stores 32-bit or 64-bit floating points.');
+    is_complex=1;
+    if (isreal(X)) is_complex=0; end;
+
+    if (is_complex)
+        dtype='complex32';
+    else
+        is_integer=check_if_integer(X);
+        if (~is_integer)
+            dtype='float32';
+        else
+            dtype='int32';
+        end;
+    end;
+end;
+
 FF=fopen(fname,'w');
 
-is_complex=1;
-if (isreal(X)) is_complex=0; end;
-
-if (is_complex)
+if strcmp(dtype,'complex32')
     fwrite(FF,-1,'int32');
     fwrite(FF,8,'int32');
     fwrite(FF,num_dims,'int32');
@@ -40,33 +58,41 @@ if (is_complex)
     Y(1:2:dimprod*2-1)=real(XS);
     Y(2:2:dimprod*2)=imag(XS);
     fwrite(FF,Y,'float32');
-else
-    
-    is_integer=check_if_integer(X);
-    
-    if (~is_integer)
-        fwrite(FF,-3,'int32');
-        fwrite(FF,4,'int32');
-        fwrite(FF,num_dims,'int32');
-        dimprod=1;
-        for dd=1:num_dims
-            fwrite(FF,size(X,dd),'int32');
-            dimprod=dimprod*size(X,dd);
-        end;
-        Y=reshape(X,dimprod,1);
-        fwrite(FF,Y,'float32');
-    else
-        fwrite(FF,-5,'int32');
-        fwrite(FF,4,'int32');
-        fwrite(FF,num_dims,'int32');
-        dimprod=1;
-        for dd=1:num_dims
-            fwrite(FF,size(X,dd),'int32');
-            dimprod=dimprod*size(X,dd);
-        end;
-        Y=reshape(X,dimprod,1);
-        fwrite(FF,Y,'int32');
+elseif strcmp(dtype,'float32')
+    fwrite(FF,-3,'int32');
+    fwrite(FF,4,'int32');
+    fwrite(FF,num_dims,'int32');
+    dimprod=1;
+    for dd=1:num_dims
+        fwrite(FF,size(X,dd),'int32');
+        dimprod=dimprod*size(X,dd);
     end;
+    Y=reshape(X,dimprod,1);
+    fwrite(FF,Y,'float32');
+elseif strcmp(dtype,'float64')
+    fwrite(FF,-7,'int32');
+    fwrite(FF,8,'int32');
+    fwrite(FF,num_dims,'int32');
+    dimprod=1;
+    for dd=1:num_dims
+        fwrite(FF,size(X,dd),'int32');
+        dimprod=dimprod*size(X,dd);
+    end;
+    Y=reshape(X,dimprod,1);
+    fwrite(FF,Y,'float64');
+elseif strcmp(dtype,'int32')
+    fwrite(FF,-5,'int32');
+    fwrite(FF,4,'int32');
+    fwrite(FF,num_dims,'int32');
+    dimprod=1;
+    for dd=1:num_dims
+        fwrite(FF,size(X,dd),'int32');
+        dimprod=dimprod*size(X,dd);
+    end;
+    Y=reshape(X,dimprod,1);
+    fwrite(FF,Y,'int32');
+else
+    error('Unknown dtype %s',dtype);
 end;
 fclose(FF);
 end
