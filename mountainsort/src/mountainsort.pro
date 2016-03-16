@@ -43,8 +43,8 @@ HEADERS += \
     utils/get_principal_components.h \
     processors/extract_clips.h \
     utils/msmisc.h \
-    processors/remove_duplicates_v1_processor.h \
-    processors/remove_duplicates_v1.h \
+    processors/remove_duplicate_clusters_processor.h \
+    processors/remove_duplicate_clusters_v1.h \
     processors/remove_noise_subclusters_processor.h \
     processors/remove_noise_subclusters.h \
     processors/compute_outlier_scores_processor.h \
@@ -53,7 +53,8 @@ HEADERS += \
     processors/mda2txt_processor.h \
     core/process_msh.h \
     processors/mask_out_artifacts_processor.h \
-    processors/mask_out_artifacts.h
+    processors/mask_out_artifacts.h \
+    utils/get_pca_features.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -85,8 +86,8 @@ SOURCES += mountainsortmain.cpp \
     utils/get_principal_components.cpp \
     processors/extract_clips.cpp \
     utils/msmisc.cpp \
-    processors/remove_duplicates_v1_processor.cpp \
-    processors/remove_duplicates_v1.cpp \
+    processors/remove_duplicate_clusters_processor.cpp \
+    processors/remove_duplicate_clusters.cpp \
     processors/remove_noise_subclusters_processor.cpp \
     processors/remove_noise_subclusters.cpp \
     processors/compute_outlier_scores_processor.cpp \
@@ -95,13 +96,17 @@ SOURCES += mountainsortmain.cpp \
     processors/mda2txt_processor.cpp \
     core/process_msh.cpp \
     processors/mask_out_artifacts_processor.cpp \
-    processors/mask_out_artifacts.cpp
+    processors/mask_out_artifacts.cpp \
+    utils/get_pca_features.cpp
 
 DISTFILES += \
     ../version.txt
 
 
 #LAPACK
+#On Ubuntu: sudo apt-get install liblapacke-dev
+#On CentOS: sudo yum install lapack-devel.i686
+INCLUDEPATH += /usr/include/lapacke #this was needed on CentOS
 DEFINES += USE_LAPACK
 LIBS += -llapack -llapacke
 

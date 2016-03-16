@@ -27,9 +27,9 @@ bool eigenvalue_decomposition_sym(Mda &U, Mda &S,Mda &X)
 
 	//'V' means compute eigenvalues and eigenvectors (use 'N' for eigenvalues only)
 	//'U' means upper triangle of A is stored.
-	QTime timer; timer.start();
+    //QTime timer; timer.start();
 	int info=LAPACKE_dsyev(LAPACK_COL_MAJOR,'V','U',M,Uptr,M,Sptr);
-	printf("Time for call to LAPACKE_dsyev: %g sec\n",timer.elapsed()*1.0/1000);
+    //printf("Time for call to LAPACKE_dsyev: %g sec\n",timer.elapsed()*1.0/1000);
 	if (info!=0) {
 		qWarning() << "Error in LAPACKE_dsyev" << info;
 		return false;

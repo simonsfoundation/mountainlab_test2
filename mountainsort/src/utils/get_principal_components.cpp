@@ -120,6 +120,8 @@ void get_pca_components(int M, int N, int ncomp, float *components, float *data)
 	free(features2);
 	free(components2);
 }
+
+/*
 void get_pca_features(int M,int N,int ncomp,float *features,float *data) {
 	double *data2=(double *)malloc(sizeof(double)*M*N);
 	double *features2=(double *)malloc(sizeof(double)*N*ncomp);
@@ -131,8 +133,6 @@ void get_pca_features(int M,int N,int ncomp,float *features,float *data) {
 	free(features2);
 	free(components2);
 }
-
-/*
 void get_pca_features(int M, int N, int ncomp, double *features, double *data)
 {
 	double *components2=(double *)malloc(sizeof(double)*M*ncomp);
@@ -141,6 +141,8 @@ void get_pca_features(int M, int N, int ncomp, double *features, double *data)
 }
 */
 
+
+/*
 #ifdef USE_LAPACK
 #include "lapacke.h"
 void get_pca_features(int M,int N,int ncomp,double *features,double *data) {
@@ -249,6 +251,7 @@ void get_pca_features(int M, int N, int ncomp, double *features, double *data)
 }
 #endif
 #endif
+*/
 
 
 

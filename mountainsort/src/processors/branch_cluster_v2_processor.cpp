@@ -17,6 +17,7 @@ branch_cluster_v2_Processor::branch_cluster_v2_Processor() {
 	this->setOutputFileParameters("firings");
 	this->setRequiredParameters("clip_size","min_shell_size","shell_increment","num_features");
 	this->setRequiredParameters("detect_interval");
+    this->setOptionalParameters("num_pca_representatives");
 }
 
 branch_cluster_v2_Processor::~branch_cluster_v2_Processor() {
@@ -42,6 +43,7 @@ bool branch_cluster_v2_Processor::run(const QMap<QString, QVariant> &params)
 	opts.shell_increment=params["shell_increment"].toDouble();
 	opts.num_features=params["num_features"].toInt();
 	opts.detect_interval=params["detect_interval"].toInt();
+    opts.num_pca_representatives=params.value("num_pca_representatives",5000).toLongLong();
 
 	return branch_cluster_v2(raw_path,detect_path,adjacency_matrix_path,firings_path,opts);
 }

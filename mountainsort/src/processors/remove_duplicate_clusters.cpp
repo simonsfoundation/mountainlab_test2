@@ -1,18 +1,19 @@
-#include "remove_duplicates_v1.h"
+#include "remove_duplicate_clusters.h"
 #include "mda.h"
 #include <QList>
 #include <stdio.h>
 #include "get_sort_indices.h"
 
 typedef QList<long> IntList;
-bool remove_duplicates_v1(const QString &firings_in_path,const QString &firings_out_path,int max_dt,float overlap_threshold) {
+bool remove_duplicate_clusters(const QString &firings_in_path,const QString &firings_out_path,int max_dt,float overlap_threshold) {
 	Mda F; F.read(firings_in_path);
-	QList<long> times,labels;
+    QList<double> times;
+    QList<int> labels;
 
 	int L=F.N2();
 	int K=1;
 	for (int ii=0; ii<L; ii++) {
-		int time0=(int)F.value(1,ii);
+        double time0=F.value(1,ii);
 		int label0=(int)F.value(2,ii);
 		times << time0;
 		labels << label0;
@@ -29,8 +30,9 @@ bool remove_duplicates_v1(const QString &firings_in_path,const QString &firings_
 	}
 
 	printf("Sorting times/labels...\n");
-	QList<long> indices=get_sort_indices(times);
-	QList<long> times2,labels2;
+    QList<long> indices=get_sort_indices(times);
+    QList<double> times2;
+    QList<int> labels2;
 	for (int i=0; i<indices.count(); i++) {
 		times2 << times[indices[i]];
 		labels2 << labels[indices[i]];

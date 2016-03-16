@@ -12,11 +12,12 @@
 #include "whiten_processor.h"
 #include "detect_processor.h"
 #include "branch_cluster_v2_processor.h"
-#include "remove_duplicates_v1_processor.h"
+#include "remove_duplicate_clusters_processor.h"
 #include "remove_noise_subclusters_processor.h"
 #include "compute_outlier_scores_processor.h"
 #include "copy_processor.h"
 #include "mda2txt_processor.h"
+#include "mask_out_artifacts_processor.h"
 
 #include "qjson.h"
 #include "textfile.h"
@@ -52,11 +53,12 @@ void MSProcessManager::loadDefaultProcessors()
 	loadProcessor(new whiten_Processor);
 	loadProcessor(new detect_Processor);
 	loadProcessor(new branch_cluster_v2_Processor);
-	loadProcessor(new remove_duplicates_v1_Processor);
+    loadProcessor(new remove_duplicate_clusters_Processor);
 	loadProcessor(new remove_noise_subclusters_Processor);
 	loadProcessor(new compute_outlier_scores_Processor);
 	loadProcessor(new copy_Processor);
 	loadProcessor(new mda2txt_Processor);
+    loadProcessor(new mask_out_artifacts_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString &processor_name) const
@@ -120,14 +122,18 @@ QMap<QString,QVariant> MSProcessManagerPrivate::compute_process_info(const QStri
 	QMap<QString,QVariant> input_file_codes;
 	foreach (QString pp,input_file_parameters) {
 		QString path0=parameters[pp].toString();
-		QString code0=compute_file_code(path0);
-		input_file_codes[path0]=code0;
+        if (!path0.isEmpty()) {
+            QString code0=compute_file_code(path0);
+            input_file_codes[path0]=code0;
+        }
 	}
 	QMap<QString,QVariant> output_file_codes;
 	foreach (QString pp,output_file_parameters) {
 		QString path0=parameters[pp].toString();
-		QString code0=compute_file_code(path0);
-		output_file_codes[path0]=code0;
+        if (!path0.isEmpty()) {
+            QString code0=compute_file_code(path0);
+            output_file_codes[path0]=code0;
+        }
 	}
 	ret["processor_name"]=processor_name;
 	ret["version"]=version;

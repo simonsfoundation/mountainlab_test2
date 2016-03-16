@@ -1,7 +1,7 @@
 #include "remove_noise_subclusters.h"
 #include "diskreadmda.h"
 #include <math.h>
-#include "get_principal_components.h"
+#include "get_pca_features.h"
 #include <QTime>
 #include <stdio.h>
 #include <QDebug>
@@ -282,7 +282,11 @@ QList<Subcluster> compute_subcluster_detectability_scores(DiskReadMda &pre,Mda &
 	}
     Define_Shells_Opts opts2; opts2.min_shell_size=opts.min_shell_size; opts2.shell_increment=opts.shell_increment;
     QList<Shell> shells=define_shells(peaks,opts2);
-	Mda noise_shape=estimate_noise_shape(pre,T,channel);
+
+    Mda noise_shape;
+    #pragma omp critical
+    noise_shape=estimate_noise_shape(pre,T,channel);
+
 	QList<Subcluster> subclusters;
 	for (int s=0; s<shells.count(); s++) {
 		QList<int> inds_s=shells[s].inds;
@@ -346,27 +350,40 @@ bool remove_noise_subclusters(const QString &raw_path,const QString &firings_in_
 
 	QList<Subcluster> subclusters;
 
+    #pragma omp parallel for
 	for (int k=1; k<=K; k++) {
 		int count1=0;
 		int count2=0;
-		QList<int> inds_k=find_label_inds(labels,k);
-		if (inds_k.count()>0) {
-			printf("k=%d/%d\n",k,K);
-			int channel=channels[inds_k[0]];
-			Mda clips_k=get_subclips(clips,inds_k);
+
+        QList<int> inds_k;
+        #pragma omp critical
+        inds_k=find_label_inds(labels,k);
+
+        if (inds_k.count()>0) {
+            int channel;
+            Mda clips_k;
+            #pragma omp critical
+            {
+                printf("k=%d/%d\n",k,K);
+                channel=channels[inds_k[0]];
+                clips_k=get_subclips(clips,inds_k);
+            }
 			QList<Subcluster> subclusters0=compute_subcluster_detectability_scores(raw,clips_k,channel,opts);
-			for (int ii=0; ii<subclusters0.count(); ii++) {
-				Subcluster SC=subclusters0[ii];
-				QList<int> new_inds;
-				for (int j=0; j<SC.inds.count(); j++) {
-					new_inds << inds_k[SC.inds[j]];
-				}
-				SC.inds=new_inds;
-				SC.label=k;
-				subclusters << SC;
-				count1+=SC.inds.count();
-				if (SC.inds.count()>0) count2++;
-			}
+            #pragma omp critical
+            {
+                for (int ii=0; ii<subclusters0.count(); ii++) {
+                    Subcluster SC=subclusters0[ii];
+                    QList<int> new_inds;
+                    for (int j=0; j<SC.inds.count(); j++) {
+                        new_inds << inds_k[SC.inds[j]];
+                    }
+                    SC.inds=new_inds;
+                    SC.label=k;
+                    subclusters << SC;
+                    count1+=SC.inds.count();
+                    if (SC.inds.count()>0) count2++;
+                }
+            }
 		}
 	}
 

@@ -3,13 +3,15 @@
 #include "diskwritemda.h"
 #include <math.h>
 #include "msmisc.h"
+#include "mda.h"
 
 bool mask_out_artifacts(const QString &raw_in_path, const QString &raw_out_path, double threshold, int interval_size)
 {
 	DiskReadMda X(raw_in_path);
 	long M=X.N1();
-	long N=X.N2()
+    long N=X.N2();
 
+    //compute norms of chunks
 	Mda norms(M,N/interval_size);
 	for (long i=0; i<N/interval_size; i++) {
 		long timepoint=i*interval_size;
@@ -24,6 +26,7 @@ bool mask_out_artifacts(const QString &raw_in_path, const QString &raw_out_path,
 		}
 	}
 
+    //determine which chunks, on which channels, to use
 	Mda use_it(M,N/interval_size);
 	for (long i=0; i<use_it.totalSize(); i++) use_it.set(1,i);
 	for (int m=0; m<M; m++) {
@@ -34,21 +37,22 @@ bool mask_out_artifacts(const QString &raw_in_path, const QString &raw_out_path,
 		double sigma0=compute_stdev(vals);
 		for (int i=0; i<norms.N2(); i++) {
 			if (norms.value(m,i)>sigma0*threshold) {
-				use_it.setValue(0,m,i-1);
+                use_it.setValue(0,m,i-1); //don't use the neighbor chunks either
 				use_it.setValue(0,m,i);
-				use_it.setValue(0,m,i+1);
+                use_it.setValue(0,m,i+1); //don't use the neighbor chunks either
 			}
 		}
 	}
 
-	DiskWriteMda Y(); Y.open(MDAIO_TYPE_FLOAT32,raw_out_path,M,N);
+    //write the data
+    DiskWriteMda Y; Y.open(MDAIO_TYPE_FLOAT32,raw_out_path,M,N);
 	for (long i=0; i<N/interval_size; i++) {
 		long timepoint=i*interval_size;
 		Mda chunk;
 		X.readChunk(chunk,0,timepoint,M,interval_size);
 		for (int m=0; m<M; m++) {
 			if (use_it.value(m,i)) {
-
+                Y.writeSubArray(chunk,0,timepoint);
 			}
 		}
 	}
