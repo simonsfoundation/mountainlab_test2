@@ -11,7 +11,7 @@ The software suite (in flux) comprises the following:
 
 * (Future) A Python toolset for processing and visualization of spike sorting data and a set of Python wrappers to MountainSort and MountainView.
 
-## Licence
+## License
 
 This is open source software released under the terms of the GPLv3. A commercial version will also be available.
 
