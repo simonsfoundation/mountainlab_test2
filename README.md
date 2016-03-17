@@ -13,13 +13,13 @@ The software suite comprises the following:
 
 ## Licence
 
-This is open source software released under the terms of the GPLv3. A commercial version is also available.
+This is open source software released under the terms of the GPLv3. A commercial version will also be available.
 
 ## Installation and Basic Usage
 
-MountainView has been developed and tested in Linux (Ubuntu and CentOS), but should also run (with some expertise) on any operating sytem that supports Qt/C++ such as Windows or Mac OS. Much of the Matlab functionality is available without the need to install the C++ programs. The C++ programs may also run independently (without Matlab) from the command line.
+MountainView has been developed and tested in Linux (Ubuntu and CentOS), but should also run (with some expertise) on any operating sytem that supports Qt/C++ such as Windows or Mac OS X. Much of the Matlab functionality is available without needing to install the C++ programs. C++ programs also run independently (without Matlab) from the command line.
 
-General instructions for all operating systems:
+General instructions for all operating systems (see specifics below):
 
 * Install git and clone this repository.
 
@@ -35,18 +35,29 @@ Several demo command-line and Matlab scripts are found in /demo and /matlab/demo
 
 ##Installation on Linux
 
-Follow the above steps using the following hints along the way.
+Follow the above steps using the these hints along the way.
 
 Installation of git:
+> Ubuntu/Debian: > sudo apt-get install git
+> CentOS/Red Hat: > sudo yum install git
 
 Installation of Qt5:
+> https://www.qt.io/download-open-source/
+> Follow the instructions for installing the open source version of Qt5
 
 Installation of Lapack:
+> Ubuntu/Debian: > sudo apt-get install liblapack-dev
+> CentOS/Red Hat: > sudo yum install lapack-devel.x86_64
 
 Compilation:
+> > cd mountainsuite/mountainsort/src
+> > qmake
+> > make -j 8
+> (The "-j 8" tells make to use multiple cores to do the compilation, because we believe in speed)
 
 Opening Matlab:
-> matlab
+> Buy matlab
+> > matlab
 
 ##Methodology Used
 
