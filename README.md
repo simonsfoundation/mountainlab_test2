@@ -1,7 +1,7 @@
 # MountainLab
-MountainLab is a collection of tools for processing and visualising electrophysiological recordings and spike sorting results. It is under development by Jeremy Magland and Alex Barnett at the Simons Center for Data Analysis (SCDA).
+MountainLab is a collection of processing, visualization, and validation tools for spike sorting of electrophysiological recordings. It is under development by Jeremy Magland and Alex Barnett at the Simons Center for Data Analysis (SCDA).
 
-The software suite comprises the following:
+The software suite (in flux) comprises the following:
 
 * MountainSort -- Core C++ library for sorting of multi-electride recordings.
 
