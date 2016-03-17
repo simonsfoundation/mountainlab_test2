@@ -1,2 +1,2 @@
-# mountainsuite
+# mountainlab
 spike sorting software
