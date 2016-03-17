@@ -13,9 +13,9 @@ bandpass_filter_Processor::bandpass_filter_Processor() {
 
 	this->setName("bandpass_filter");
 	this->setVersion("0.1");
-	this->setInputFileParameters("input");
-	this->setOutputFileParameters("output");
-	this->setRequiredParameters("sampling_freq","freq_min","freq_max");
+    this->setInputFileParameters("raw");
+    this->setOutputFileParameters("raw_out");
+    this->setRequiredParameters("samplerate","freq_min","freq_max");
 }
 
 bandpass_filter_Processor::~bandpass_filter_Processor() {
@@ -30,11 +30,11 @@ bool bandpass_filter_Processor::check(const QMap<QString, QVariant> &params)
 
 bool bandpass_filter_Processor::run(const QMap<QString, QVariant> &params)
 {
-	QString input=params["input"].toString();
-	QString output=params["output"].toString();
-	double sampling_freq=params["sampling_freq"].toDouble();
+    QString input=params["raw"].toString();
+    QString output=params["raw_out"].toString();
+    double samplerate=params["samplerate"].toDouble();
 	double freq_min=params["freq_min"].toDouble();
 	double freq_max=params["freq_max"].toDouble();
-	return bandpass_filter0(input,output,sampling_freq,freq_min,freq_max);
+    return bandpass_filter0(input,output,samplerate,freq_min,freq_max);
 }
 

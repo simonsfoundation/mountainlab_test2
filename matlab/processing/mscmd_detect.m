@@ -31,7 +31,7 @@ if (nargin<3) opts=struct; end;
 if ~isfield(opts,'clip_size') opts.clip_size=100; end;
 if ~isfield(opts,'sign') opts.sign=0; end;
 
-cmd=sprintf('%s detect --raw=%s --detect=%s ',mscmd_exe,raw_path,detect_path);
+cmd=sprintf('%s detect --raw=%s --detect_out=%s ',mscmd_exe,raw_path,detect_path);
 cmd=[cmd,sprintf('--clip_size=%d ',opts.clip_size)];
 cmd=[cmd,sprintf('--detect_threshold=%g --detect_interval=%d ',opts.detect_threshold,opts.detect_interval)];
 cmd=[cmd,sprintf('--sign=%d ',opts.sign)];

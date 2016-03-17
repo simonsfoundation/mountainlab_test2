@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 		QString filt_path=CLP.named_parameters["filt"].toString();
 		QString raw_path=CLP.named_parameters["raw"].toString();
 		QString firings_path=CLP.named_parameters["firings"].toString();
-		double sampling_freq=CLP.named_parameters["sampling_freq"].toDouble();
+        double samplerate=CLP.named_parameters["samplerate"].toDouble();
 		QString epochs_path=CLP.named_parameters["epochs"].toString();
 		QString window_title=CLP.named_parameters["window_title"].toString();
 		MVOverview2Widget *W=new MVOverview2Widget;
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 		if (window_title.isEmpty()) window_title=raw_path;
 		W->setFiringsPath(firings_path);
 		W->show();
-		W->setSamplingFrequency(sampling_freq);
+        W->setSamplingFrequency(samplerate);
 		W->move(QApplication::desktop()->screen()->rect().topLeft()+QPoint(200,200));
 		int W0=1400,H0=600;
 		QRect geom=QApplication::desktop()->geometry();
@@ -121,10 +121,10 @@ int main(int argc, char *argv[]) {
 		printf("spikespy...\n");
 		QString raw_path=CLP.named_parameters["raw"].toString();
 		QString firings_path=CLP.named_parameters["firings"].toString();
-		double sampling_freq=CLP.named_parameters["sampling_freq"].toDouble();
+        double samplerate=CLP.named_parameters["samplerate"].toDouble();
 		SSTimeSeriesWidget *W=new SSTimeSeriesWidget;
 		SSTimeSeriesView *V=new SSTimeSeriesView;
-		V->setSamplingFrequency(sampling_freq);
+        V->setSamplingFrequency(samplerate);
 		DiskArrayModel *DAM=new DiskArrayModel;
 		DAM->setPath(raw_path);
 		V->setData(DAM,true);

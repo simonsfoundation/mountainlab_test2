@@ -46,10 +46,10 @@ void run_all_unit_tests()
 	Z1.read(path3);
 	printf("Max difference: %.16f\n",max_difference(X1,Z1));
 
-	double sampling_freq=10000;
+    double samplerate=10000;
 	double freq_min=300;
 	double freq_max=3000;
-	bandpass_filter0(path1,path3,sampling_freq,freq_min,freq_max);
+    bandpass_filter0(path1,path3,samplerate,freq_min,freq_max);
 
 	Mda tmp; tmp.read(path3);
 	for (long i=0; i<tmp.totalSize(); i++) tmp.set(tmp.get(i)/2,i);

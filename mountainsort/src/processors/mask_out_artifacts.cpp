@@ -35,8 +35,9 @@ bool mask_out_artifacts(const QString &raw_in_path, const QString &raw_out_path,
 			vals << norms.get(m,i);
 		}
 		double sigma0=compute_stdev(vals);
+        double mean0=compute_mean(vals);
 		for (int i=0; i<norms.N2(); i++) {
-			if (norms.value(m,i)>sigma0*threshold) {
+            if (norms.value(m,i)>mean0+sigma0*threshold) {
                 use_it.setValue(0,m,i-1); //don't use the neighbor chunks either
 				use_it.setValue(0,m,i);
                 use_it.setValue(0,m,i+1); //don't use the neighbor chunks either

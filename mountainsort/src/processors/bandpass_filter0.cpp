@@ -8,13 +8,13 @@
 #include <math.h>
 #include "msprefs.h"
 
-Mda do_bandpass_filter0(Mda &X, double sampling_freq, double freq_min, double freq_max);
+Mda do_bandpass_filter0(Mda &X, double samplerate, double freq_min, double freq_max);
 bool do_fft_1d_r2c(int M,int N,double *out,double *in);
 bool do_ifft_1d_c2r(int M,int N,double *out,double *in);
 void multiply_complex_by_real_kernel(int M,int N,double *Y,double *kernel);
 void define_kernel(int N,double *kernel,double samplefreq,double freq_min,double freq_max);
 
-bool bandpass_filter0(const QString &input_path, const QString &output_path, double sampling_freq, double freq_min, double freq_max)
+bool bandpass_filter0(const QString &input_path, const QString &output_path, double samplerate, double freq_min, double freq_max)
 {
 	DiskReadMda X(input_path);
 	long M=X.N1();
@@ -40,7 +40,7 @@ bool bandpass_filter0(const QString &input_path, const QString &output_path, dou
 			{
 				X.readChunk(chunk,0,timepoint-overlap_size,M,chunk_size+2*overlap_size);
 			}
-			chunk=do_bandpass_filter0(chunk,sampling_freq,freq_min,freq_max);
+            chunk=do_bandpass_filter0(chunk,samplerate,freq_min,freq_max);
 			Mda chunk2;
 			chunk.getSubArray(chunk2,0,overlap_size,M,chunk_size);
 			#pragma omp critical (lock2)
@@ -62,7 +62,7 @@ void multiply_by_factor(long N,double *X,double factor) {
 	for (long i=0; i<N; i++) X[i]*=factor;
 }
 
-Mda do_bandpass_filter0(Mda &X, double sampling_freq, double freq_min, double freq_max) {
+Mda do_bandpass_filter0(Mda &X, double samplerate, double freq_min, double freq_max) {
 	long M=X.N1();
 	long N=X.N2();
 	long MN=M*N;
@@ -71,7 +71,7 @@ Mda do_bandpass_filter0(Mda &X, double sampling_freq, double freq_min, double fr
 	double *Yptr=Y.dataPtr();
 
 	double *kernel0=(double *)malloc(sizeof(double)*N);
-	define_kernel(N,kernel0,sampling_freq,freq_min,freq_max);
+    define_kernel(N,kernel0,samplerate,freq_min,freq_max);
 
 	double *Xhat=(double *)malloc(sizeof(double)*MN*2);
 	do_fft_1d_r2c(M,N,Xhat,Xptr);

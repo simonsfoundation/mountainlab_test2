@@ -44,7 +44,7 @@ HEADERS += \
     processors/extract_clips.h \
     utils/msmisc.h \
     processors/remove_duplicate_clusters_processor.h \
-    processors/remove_duplicate_clusters_v1.h \
+    processors/remove_duplicate_clusters.h \
     processors/remove_noise_subclusters_processor.h \
     processors/remove_noise_subclusters.h \
     processors/compute_outlier_scores_processor.h \

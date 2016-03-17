@@ -196,7 +196,31 @@ QString MSProcessManager::usageString() const
 	}
 	str+="\n";
 
-	return str;
+    return str;
+}
+
+QString tostr(const QStringList &list) {
+    QString ret;
+    foreach (QString str,list) {
+        ret+=str+" ";
+    }
+    return ret;
+}
+
+void MSProcessManager::printDetails() const
+{
+    QStringList names=allProcessorNames();
+    for (int i=0; i<names.count(); i++) {
+        QString name=names[i];
+        MSProcessor *P=d->m_processors[name];
+        QString str;
+        str+=QString("***** Processor %1 *****").arg(P->name())+"\n";
+        str+=QString("    Input files: %1").arg(tostr(P->inputFileParameters()))+"\n";
+        str+=QString("    Output files: %1").arg(tostr(P->outputFileParameters()))+"\n";
+        str+=QString("    Required params: %1").arg(tostr(P->requiredParameters()))+"\n";
+        str+=QString("    Optional params: %1").arg(tostr(P->optionalParameters()))+"\n";
+        printf("%s\n",str.toLatin1().data());
+    }
 }
 
 MSProcessor *MSProcessManagerPrivate::find_processor(const QString &name)

@@ -33,22 +33,24 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	if (CLP.unnamed_parameters.value(0)=="diskreadmda_unit_test") {
+    QString arg1=CLP.unnamed_parameters.value(0);
+
+    if (arg1=="-diskreadmda_unit_test") {
 		diskreadmda_unit_test();
 		return 0;
 	}
-	if (CLP.unnamed_parameters.value(0)=="run_all_unit_tests") {
-		run_all_unit_tests();
-		return 0;
-	}
-	if (CLP.unnamed_parameters.value(0)=="unit_test") {
+    if (arg1=="-unit_test") {
 		QString test_name=CLP.unnamed_parameters.value(1);
 		run_unit_test(test_name);
 		return 0;
 	}
-	if (CLP.unnamed_parameters.value(0).endsWith(".msh")) {
+    if (arg1.endsWith(".msh")) {
 		return process_msh(CLP.unnamed_parameters.value(0),argc,argv);
 	}
+    if (arg1=="-details") {
+        PM.printDetails();
+        return 0;
+    }
 
 	if (CLP.unnamed_parameters.count()==1) {
 		QString processor_name=CLP.unnamed_parameters[0];

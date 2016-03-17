@@ -35,6 +35,7 @@ public:
 	QStringList allProcessorNames() const;
 
 	QString usageString() const;
+    void printDetails() const;
 private:
 	MSProcessManagerPrivate *d;
 };

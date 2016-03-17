@@ -13,7 +13,7 @@ mask_out_artifacts_Processor::mask_out_artifacts_Processor() {
 
 	this->setName("mask_out_artifacts");
 	this->setVersion("0.1");
-	this->setInputFileParameters("raw_in");
+    this->setInputFileParameters("raw");
 	this->setOutputFileParameters("raw_out");
 	this->setRequiredParameters("threshold");
 	this->setOptionalParameters("interval_size");
@@ -31,7 +31,7 @@ bool mask_out_artifacts_Processor::check(const QMap<QString, QVariant> &params)
 
 bool mask_out_artifacts_Processor::run(const QMap<QString, QVariant> &params)
 {
-	QString raw_in_path=params["raw_in"].toString();
+    QString raw_in_path=params["raw"].toString();
 	QString raw_out_path=params["raw_out"].toString();
 	double threshold=params["threshold"].toDouble();
 	int interval_size=params["interval_size"].toInt();

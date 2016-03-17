@@ -14,7 +14,7 @@ detect_Processor::detect_Processor() {
 	this->setName("detect");
 	this->setVersion("0.1");
 	this->setInputFileParameters("raw");
-	this->setOutputFileParameters("detect");
+    this->setOutputFileParameters("detect_out");
 	this->setRequiredParameters("clip_size","detect_interval","detect_threshold");
 	this->setOptionalParameters("sign");
 }
@@ -32,7 +32,7 @@ bool detect_Processor::check(const QMap<QString, QVariant> &params)
 bool detect_Processor::run(const QMap<QString, QVariant> &params)
 {
 	QString raw_path=params["raw"].toString();
-	QString detect_path=params["detect"].toString();
+    QString detect_path=params["detect_out"].toString();
 	Detect_Opts opts;
 	opts.clip_size=params["clip_size"].toInt();
 	opts.detect_interval=params["detect_interval"].toInt();

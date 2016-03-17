@@ -24,7 +24,7 @@ public:
 	double m_selected_xmin;
 	double m_selected_xmax;
 	int m_current_channel;
-	double m_sampling_freq;
+    double m_samplerate;
 	bool m_signals_enabled;
 	bool m_timeline_visible;
 	QString m_title;
@@ -56,7 +56,7 @@ SSAbstractView::SSAbstractView(QWidget *parent) : QWidget(parent) {
 	d=new SSAbstractViewPrivate;
 	d->q=this;
 
-	d->m_sampling_freq=0;
+    d->m_samplerate=0;
 	d->m_signals_enabled=true;
 	d->m_current_x=-1;
 	d->m_selected_xmin=-1;
@@ -519,10 +519,10 @@ void SSAbstractViewUnderlayPainter::draw_time_axis(QPainter *painter) {
 	double x2=range.y;
 
 	//now convert to milliseconds
-	double sampling_freq=d->m_sampling_freq;
-	if (sampling_freq) {
-		x1*=1000/sampling_freq;
-		x2*=1000/sampling_freq;
+    double samplerate=d->m_samplerate;
+    if (samplerate) {
+        x1*=1000/samplerate;
+        x2*=1000/samplerate;
 	}
 	else {
 		x1=x2=0;
@@ -549,8 +549,8 @@ void SSAbstractViewUnderlayPainter::draw_time_axis(QPainter *painter) {
 		}
 		for (int i=0; i<locations0.count(); i++) {
 			double xloc=0;
-			if (sampling_freq) {
-				xloc=locations0[i]*sampling_freq/1000; //in timepoints
+            if (samplerate) {
+                xloc=locations0[i]*samplerate/1000; //in timepoints
 			}
 			QString label=labels0[i];
 
@@ -611,8 +611,8 @@ double SSAbstractView::currentValue()
 }
 
 QString SSAbstractView::getTimeLabelForX(double x) {
-	if (!d->m_sampling_freq) return "";
-	return make_time_tick_label(getTimepointForX(x)*1000/d->m_sampling_freq);
+    if (!d->m_samplerate) return "";
+    return make_time_tick_label(getTimepointForX(x)*1000/d->m_samplerate);
 }
 
 long SSAbstractView::getTimepointForX(int x)
@@ -659,7 +659,7 @@ void SSAbstractView::setTimepointMapping(const DiskReadMda &X)
 
 void SSAbstractView::setSamplingFrequency(float val)
 {
-	d->m_sampling_freq=val;
+    d->m_samplerate=val;
 }
 
 QString SSAbstractView::title()

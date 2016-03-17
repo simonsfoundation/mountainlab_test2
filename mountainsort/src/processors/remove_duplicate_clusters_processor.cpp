@@ -13,7 +13,7 @@ remove_duplicate_clusters_Processor::remove_duplicate_clusters_Processor() {
 
     this->setName("remove_duplicate_clusters");
 	this->setVersion("0.1");
-	this->setInputFileParameters("firings_in");
+    this->setInputFileParameters("firings");
 	this->setOutputFileParameters("firings_out");
 	this->setRequiredParameters("max_dt","overlap_threshold");
 }
@@ -30,7 +30,7 @@ bool remove_duplicate_clusters_Processor::check(const QMap<QString, QVariant> &p
 
 bool remove_duplicate_clusters_Processor::run(const QMap<QString, QVariant> &params)
 {
-	QString firings_in_path=params["firings_in"].toString();
+    QString firings_in_path=params["firings"].toString();
     QString firings_out_path=params["firings_out"].toString();
 	int max_dt=params["max_dt"].toInt();
 	double overlap_threshold=params["overlap_threshold"].toDouble();

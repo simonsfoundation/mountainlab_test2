@@ -13,7 +13,7 @@ remove_noise_subclusters_Processor::remove_noise_subclusters_Processor() {
 
 	this->setName("remove_noise_subclusters");
 	this->setVersion("0.1");
-	this->setInputFileParameters("raw","firings_in");
+    this->setInputFileParameters("raw","firings");
 	this->setOutputFileParameters("firings_out");
 	this->setRequiredParameters("clip_size","detectability_threshold","shell_increment","min_shell_size");
 }
@@ -33,7 +33,7 @@ bool remove_noise_subclusters_Processor::run(const QMap<QString, QVariant> &para
 
 	Remove_noise_subclusters_opts opts;
 	QString raw_path=params["raw"].toString();
-	QString firings_in_path=params["firings_in"].toString();
+    QString firings_in_path=params["firings"].toString();
 	QString firings_out_path=params["firings_out"].toString();
 	opts.clip_size=params["clip_size"].toInt();
 	opts.detectability_threshold=params["detectability_threshold"].toDouble();

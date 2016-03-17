@@ -13,8 +13,8 @@ whiten_Processor::whiten_Processor() {
 
 	this->setName("whiten");
 	this->setVersion("0.1");
-	this->setInputFileParameters("input");
-	this->setOutputFileParameters("output");
+    this->setInputFileParameters("raw");
+    this->setOutputFileParameters("raw_out");
 }
 
 whiten_Processor::~whiten_Processor() {
@@ -29,8 +29,8 @@ bool whiten_Processor::check(const QMap<QString, QVariant> &params)
 
 bool whiten_Processor::run(const QMap<QString, QVariant> &params)
 {
-	QString input=params["input"].toString();
-	QString output=params["output"].toString();
+    QString input=params["raw"].toString();
+    QString output=params["raw_out"].toString();
 	return whiten(input,output);
 }
 

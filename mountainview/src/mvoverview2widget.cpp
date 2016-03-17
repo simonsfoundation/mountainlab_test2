@@ -40,7 +40,7 @@ public:
     QList<int> m_original_cluster_offsets;
 	int m_current_k;
 	QSet<int> m_selected_ks;
-	float m_sampling_frequency;
+    float m_samplerate;
 	MVEvent m_current_event;
 
 	MVOverview2WidgetControlPanel *m_control_panel;
@@ -125,7 +125,7 @@ MVOverview2Widget::MVOverview2Widget(QWidget *parent) : QWidget (parent)
 	d->q=this;
 
 	d->m_current_k=0;
-	d->m_sampling_frequency=0;
+    d->m_samplerate=0;
 
 	d->m_progress_dialog=0;
     d->m_cross_correlograms_data_update_needed=true;
@@ -224,7 +224,7 @@ void MVOverview2Widget::setFiringsPath(const QString &firings)
 
 void MVOverview2Widget::setSamplingFrequency(float freq)
 {
-	d->m_sampling_frequency=freq;
+    d->m_samplerate=freq;
 }
 
 void MVOverview2Widget::setDefaultInitialization()
@@ -1049,7 +1049,7 @@ void MVOverview2WidgetPrivate::open_cluster_details()
 	X->setChannelColors(m_channel_colors);
 	X->setRaw(m_raw);
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
-	X->setSamplingFrequency(m_sampling_frequency);
+    X->setSamplingFrequency(m_samplerate);
     QObject::connect(X,SIGNAL(signalTemplateActivated()),q,SLOT(slot_details_template_activated()));
 	QObject::connect(X,SIGNAL(signalCurrentKChanged()),q,SLOT(slot_details_current_k_changed()));
 	QObject::connect(X,SIGNAL(signalSelectedKsChanged()),q,SLOT(slot_details_selected_ks_changed()));
@@ -1063,7 +1063,7 @@ void MVOverview2WidgetPrivate::open_raw_data()
     SSTimeSeriesWidget *X=new SSTimeSeriesWidget;
     SSTimeSeriesView *V=new SSTimeSeriesView;
     V->initialize();
-    V->setSamplingFrequency(m_sampling_frequency);
+    V->setSamplingFrequency(m_samplerate);
     X->addView(V);
     X->setProperty("widget_type","raw_data");
 	add_tab(X,QString("Raw"));
@@ -1397,7 +1397,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
             firings2.setValue(amplitudes[i],3,i);
         }
         WW->setFirings(firings2);
-        WW->setSamplingFreq(m_sampling_frequency);
+        WW->setSamplingFreq(m_samplerate);
         WW->setEpochs(m_epochs);
     }
 	else if (widget_type=="raw_data") {

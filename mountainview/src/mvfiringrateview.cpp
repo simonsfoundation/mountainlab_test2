@@ -18,7 +18,7 @@ public:
 	QList<double> m_times;
 	QList<int> m_labels;
 	QList<double> m_amplitudes;
-    double m_sampling_freq;
+    double m_samplerate;
     QList<Epoch> m_epochs;
 
     //internal
@@ -46,7 +46,7 @@ MVFiringRateView::MVFiringRateView()
 {
     d=new MVFiringRateViewPrivate;
     d->q=this;
-    d->m_sampling_freq=30000; //Hz
+    d->m_samplerate=30000; //Hz
     d->m_max_timepoint=0;
     d->m_min_amplitude=0;
     d->m_max_amplitude=0;
@@ -80,7 +80,7 @@ void MVFiringRateView::setFirings(const Mda &firings)
 
 void MVFiringRateView::setSamplingFreq(double ff)
 {
-    d->m_sampling_freq=ff;
+    d->m_samplerate=ff;
     d->schedule_update();
 }
 

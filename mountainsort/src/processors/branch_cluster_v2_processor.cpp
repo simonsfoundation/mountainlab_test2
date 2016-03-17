@@ -14,7 +14,7 @@ branch_cluster_v2_Processor::branch_cluster_v2_Processor() {
 	this->setName("branch_cluster_v2");
 	this->setVersion("0.1");
 	this->setInputFileParameters("raw","detect","adjacency_matrix");
-	this->setOutputFileParameters("firings");
+    this->setOutputFileParameters("firings_out");
 	this->setRequiredParameters("clip_size","min_shell_size","shell_increment","num_features");
 	this->setRequiredParameters("detect_interval");
     this->setOptionalParameters("num_pca_representatives");
@@ -37,7 +37,7 @@ bool branch_cluster_v2_Processor::run(const QMap<QString, QVariant> &params)
 	QString raw_path=params["raw"].toString();
 	QString detect_path=params["detect"].toString();
 	QString adjacency_matrix_path=params["adjacency_matrix"].toString();
-	QString firings_path=params["firings"].toString();
+    QString firings_path=params["firings_out"].toString();
 	opts.clip_size=params["clip_size"].toInt();
 	opts.min_shell_size=params["min_shell_size"].toInt();
 	opts.shell_increment=params["shell_increment"].toDouble();

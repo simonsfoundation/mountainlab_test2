@@ -14,7 +14,7 @@
 
 #include <QString>
 
-bool bandpass_filter0(const QString &input,const QString &output,double sampling_freq,double freq_min,double freq_max);
+bool bandpass_filter0(const QString &input,const QString &output,double samplerate,double freq_min,double freq_max);
 
 #endif // BANDPASS_FILTER0_H
 

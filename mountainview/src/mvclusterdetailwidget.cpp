@@ -66,7 +66,7 @@ public:
 
 	DiskReadMda m_raw;
     DiskReadMda m_firings;
-	double m_sampling_freq;
+    double m_samplerate;
     QList<int> m_group_numbers;
 
 	bool m_calculations_needed;
@@ -113,7 +113,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget *parent) : QWidget(parent)
 	d->m_progress_dialog=0;
 	d->m_vscale_factor=2;
 	d->m_total_time_sec=1;
-	d->m_sampling_freq=0;
+    d->m_samplerate=0;
 	d->m_current_k=-1;
 	d->m_hovered_k=-1;
 	d->m_space_ratio=50;
@@ -173,7 +173,7 @@ void MVClusterDetailWidget::setGroupNumbers(const QList<int> &group_numbers)
 
 void MVClusterDetailWidget::setSamplingFrequency(double freq)
 {
-	d->m_sampling_freq=freq;
+    d->m_samplerate=freq;
 	d->compute_total_time();
 	this->update();
 }
@@ -550,7 +550,7 @@ void MVClusterDetailWidgetPrivate::set_progress(QString title, QString text, flo
 
 void MVClusterDetailWidgetPrivate::compute_total_time()
 {
-	m_total_time_sec=m_raw.N2()/m_sampling_freq;
+    m_total_time_sec=m_raw.N2()/m_samplerate;
 }
 
 void MVClusterDetailWidgetPrivate::set_current_k(int k)

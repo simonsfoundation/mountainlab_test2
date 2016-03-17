@@ -8,7 +8,7 @@ function mscmd_bandpass_filter(input_path,output_path,opts)
 % Inputs:
 %    input_path - mda file of MxN input raw data
 %    output_path - mda file of MxN output filtered data
-%    opts.sampling_freq - the sampling frequency corresponding to X, e.g.
+%    opts.samplerate - the sampling frequency corresponding to X, e.g.
 %                      30000
 %    opts.freq_min - the lower end of the bandpass filter
 %    opts.freq_max - the upper end of the bandpass filter
@@ -28,8 +28,8 @@ if nargin<1, test_mscmd_bandpass_filter; return; end;
 
 if isinf(opts.freq_max), opts.freq_max=0; end; %added 3/3/2016
 
-cmd=sprintf('%s bandpass_filter --input=%s --output=%s ',mscmd_exe,input_path,output_path);
-cmd=[cmd,sprintf('--sampling_freq=%g --freq_min=%g --freq_max=%g',opts.sampling_freq,opts.freq_min,opts.freq_max)];
+cmd=sprintf('%s bandpass_filter --raw=%s --raw_out=%s ',mscmd_exe,input_path,output_path);
+cmd=[cmd,sprintf('--samplerate=%g --freq_min=%g --freq_max=%g',opts.samplerate,opts.freq_min,opts.freq_max)];
 
 fprintf('\n*** BANDPASS FILTER ***\n');
 fprintf('%s\n',cmd);
@@ -52,7 +52,7 @@ X(:)=0; X(1,floor((N+1)/2))=1;
 path1=[ms_temp,'/tmp1.mda'];
 path2=[ms_temp,'/tmp2.mda'];
 writemda(X,path1);
-opts.sampling_freq=30000;
+opts.samplerate=30000;
 opts.freq_min=200;
 opts.freq_max=3000;
 mscmd_bandpass_filter(path1,path2,opts);
