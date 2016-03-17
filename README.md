@@ -37,24 +37,24 @@ Several demo command-line and Matlab scripts are found in /demo and /matlab/demo
 
 Follow the above steps using the these hints along the way.
 
-*Installation of git:*
+**Installation of git:**
 ```bash
 Ubuntu/Debian: sudo apt-get install git
 CentOS/Red Hat: sudo yum install git
 ```
 
-*Installation of Qt5:*
+**Installation of Qt5:**
 
 [Download Qt5](https://www.qt.io/download-open-source/)
 (Follow the instructions for installing the open source version)
 
-*Installation of Lapack:*
+**Installation of Lapack:**
 ```bash
 Ubuntu/Debian: sudo apt-get install liblapack-dev
 CentOS/Red Hat: sudo yum install lapack-devel.x86_64
 ```
 
-*Compilation:*
+**Compilation:**
 ```bash
 cd mountainsuite/mountainsort/src
 qmake
@@ -62,7 +62,7 @@ make -j 8
 ```
 > The "-j 8" tells make to use multiple cores to do the compilation, because we believe in speed
 
-*Opening Matlab:*
+**Opening Matlab:**
 ```
 # First buy matlab
 matlab
