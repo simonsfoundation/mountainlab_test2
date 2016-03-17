@@ -39,31 +39,39 @@ Follow the above steps using the these hints along the way.
 
 Installation of git:
 ```bash
-Ubuntu/Debian: > sudo apt-get install git
-CentOS/Red Hat: > sudo yum install git
+Ubuntu/Debian: sudo apt-get install git
+CentOS/Red Hat: sudo yum install git
 ```
 
 Installation of Qt5:
 > https://www.qt.io/download-open-source/
-> Follow the instructions for installing the open source version of Qt5
+> -- Follow the instructions for installing the open source version of Qt5
 
 Installation of Lapack:
-> Ubuntu/Debian: > sudo apt-get install liblapack-dev
-> CentOS/Red Hat: > sudo yum install lapack-devel.x86_64
+```bash
+Ubuntu/Debian: sudo apt-get install liblapack-dev
+CentOS/Red Hat: sudo yum install lapack-devel.x86_64
+```
 
 Compilation:
-> > cd mountainsuite/mountainsort/src
-> > qmake
-> > make -j 8
-> (The "-j 8" tells make to use multiple cores to do the compilation, because we believe in speed)
+```bash
+cd mountainsuite/mountainsort/src
+qmake
+make -j 8
+```
+> The "-j 8" tells make to use multiple cores to do the compilation, because we believe in speed
 
 Opening Matlab:
-> Buy matlab
-> > matlab
+```
+# First buy matlab
+matlab
+```
 
-##Methodology Used
+##Related Methodology
 
-References to manuscripts go here.
+[Validation of neural spike sorting algorithms without ground-truth information](http://arxiv.org/abs/1508.06936), Alex H. Barnett, Jeremy F. Magland, Leslie F. Greengard
+
+[Unimodal clustering using isotonic regression: ISO-SPLIT](http://arxiv.org/abs/1508.04841), Jeremy F. Magland and Alex H. Barnett
 
 ##Philosophy
 
