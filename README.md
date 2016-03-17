@@ -5,11 +5,11 @@ The software suite (in flux) comprises the following:
 
 * MountainSort -- Core C++ library for sorting of multi-electride recordings.
 
-* MountainView -- Collection of Qt/C++ widgets for visualising generic electrophysiological datasets and sorting results.
+* MountainView -- Collection of Qt/C++ widgets for visualizing generic electrophysiological datasets and sorting results.
 
-* A Matlab toolset for processing, visualising, and validating spike sorting data and a set of Matlab wrappers to MountainSort and MountainView.
+* A Matlab toolset for processing, visualizing, and validating spike sorting data and a set of Matlab wrappers to MountainSort and MountainView.
 
-* (Future) A Python toolset for processing and visualisation of spike sorting data and a set of Python wrappers to MountainSort and MountainView.
+* (Future) A Python toolset for processing and visualization of spike sorting data and a set of Python wrappers to MountainSort and MountainView.
 
 ## Licence
 
