@@ -45,8 +45,8 @@ CentOS/Red Hat: sudo yum install git
 
 *Installation of Qt5:*
 
-https://www.qt.io/download-open-source/
--- Follow the instructions for installing the open source version of Qt5
+[Download Qt5](https://www.qt.io/download-open-source/)
+(Follow the instructions for installing the open source version)
 
 *Installation of Lapack:*
 ```bash
