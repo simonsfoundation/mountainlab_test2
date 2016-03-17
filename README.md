@@ -9,15 +9,13 @@ The software suite (in flux) comprises the following:
 
 * A Matlab toolset for processing, visualizing, and validating spike sorting data and a set of Matlab wrappers to MountainSort and MountainView.
 
-* (Future) A Python toolset for processing and visualization of spike sorting data and a set of Python wrappers to MountainSort and MountainView.
-
 ## License
 
-This is open source software released under the terms of the GPLv3. A commercial version will also be available.
+This is open source software released under the terms of the GPLv3. For alternative licensing options, please contact scdainfo@simonsfoundation.org.
 
 ## Installation and Basic Usage
 
-MountainView has been developed and tested in Linux (Ubuntu and CentOS), but should also run (with some expertise) on any operating sytem that supports Qt/C++ such as Windows or Mac OS X. Much of the Matlab functionality is available without needing to install the C++ programs. C++ programs also run independently (without Matlab) from the command line.
+MountainLab has been developed and tested in Linux (Ubuntu and CentOS), but should also run (with some expertise) on any operating sytem that supports Qt/C++ such as Windows or Mac OS X. Much of the Matlab functionality is available without needing to install the C++ programs. C++ programs also run independently (without Matlab) from the command line.
 
 General instructions for all operating systems (see specifics below):
 
