@@ -68,7 +68,7 @@ matlab
 
 ##References
 
-[Barnett, Alex H., Jeremy F. Magland, and Leslie F. Greengard. "Validation of Neural Spike Sorting Algorithms without Ground-truth Information." Journal of Neuroscience Methods 264 (2016): 65-77.](http://www.ncbi.nlm.nih.gov/pubmed/26930629) [Link to arxiv](http://arxiv.org/abs/1508.06936)
+[Barnett, Alex H., Jeremy F. Magland, and Leslie F. Greengard. "Validation of Neural Spike Sorting Algorithms without Ground-truth Information." Journal of Neuroscience Methods 264 (2016): 65-77.](http://www.ncbi.nlm.nih.gov/pubmed/26930629) [Link to arXiv](http://arxiv.org/abs/1508.06936)
 
-[Unimodal clustering using isotonic regression: ISO-SPLIT](http://arxiv.org/abs/1508.04841), Jeremy F. Magland and Alex H. Barnett
+Unimodal clustering using isotonic regression: ISO-SPLIT], Jeremy F. Magland and Alex H. Barnett. [Link to arXiv](http://arxiv.org/abs/1508.04841)
 
