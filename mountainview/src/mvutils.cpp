@@ -1,7 +1,7 @@
 #include "mvutils.h"
 
 #include <QCoreApplication>
-#include "get_principal_components.h"
+#include "get_pca_features.h"
 #include <math.h>
 #include "textfile.h"
 #include <QDebug>

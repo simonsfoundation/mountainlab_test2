@@ -45,6 +45,8 @@ bool mask_out_artifacts(const QString &raw_in_path, const QString &raw_out_path,
 	}
 
     //write the data
+    long num_timepoints_used=0;
+    long num_timepoints_not_used=0;
     DiskWriteMda Y; Y.open(MDAIO_TYPE_FLOAT32,raw_out_path,M,N);
 	for (long i=0; i<N/interval_size; i++) {
 		long timepoint=i*interval_size;
@@ -52,11 +54,17 @@ bool mask_out_artifacts(const QString &raw_in_path, const QString &raw_out_path,
 		X.readChunk(chunk,0,timepoint,M,interval_size);
 		for (int m=0; m<M; m++) {
 			if (use_it.value(m,i)) {
+                num_timepoints_used+=interval_size;
                 Y.writeSubArray(chunk,0,timepoint);
 			}
+            else {
+                num_timepoints_not_used+=interval_size;
+            }
 		}
 	}
 	Y.close();
+
+    printf("Using %.2f%% of all timepoints\n",num_timepoints_used*100.0/(num_timepoints_used+num_timepoints_not_used));
 
 	return true;
 

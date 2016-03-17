@@ -71,8 +71,8 @@ DEPENDPATH += ../../mountainsort/src/utils
 VPATH += ../../mountainsort/src/utils
 HEADERS += get_sort_indices.h msmisc.h
 SOURCES += get_sort_indices.cpp msmisc.cpp
-HEADERS += get_principal_components.h
-SOURCES += get_principal_components.cpp
+HEADERS += get_pca_features.h eigenvalue_decomposition.h
+SOURCES += get_pca_features.cpp eigenvalue_decomposition.cpp
 HEADERS += get_command_line_params.h
 SOURCES += get_command_line_params.cpp
 HEADERS += affinetransformation.h
@@ -91,3 +91,10 @@ HEADERS += extract_clips.h
 SOURCES += extract_clips.cpp
 
 RESOURCES += mountainview.qrc
+
+#LAPACK
+#On Ubuntu: sudo apt-get install liblapacke-dev
+#On CentOS: sudo yum install lapack-devel.i686
+INCLUDEPATH += /usr/include/lapacke #this was needed on CentOS
+DEFINES += USE_LAPACK
+LIBS += -llapack -llapacke

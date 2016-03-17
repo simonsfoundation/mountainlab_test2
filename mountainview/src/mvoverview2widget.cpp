@@ -4,7 +4,7 @@
 #include "sstimeserieswidget.h"
 #include "mvcrosscorrelogramswidget.h"
 #include "mvoverview2widgetcontrolpanel.h"
-#include "get_principal_components.h"
+#include "get_pca_features.h"
 #include "get_sort_indices.h"
 #include "mvclusterdetailwidget.h"
 #include "mvclipsview.h"
