@@ -7,7 +7,7 @@ The software suite comprises the following:
 
 * MountainView -- Collection of Qt/C++ widgets for visualising generic electrophysiological datasets and sorting results.
 
-* A Matlab toolset for processing and visualisation of spike sorting data and a set of Matlab wrappers to MountainSort and MountainView.
+* A Matlab toolset for processing, visualising, and validating spike sorting data and a set of Matlab wrappers to MountainSort and MountainView.
 
 * (Future) A Python toolset for processing and visualisation of spike sorting data and a set of Python wrappers to MountainSort and MountainView.
 
@@ -56,7 +56,7 @@ References to manuscripts go here.
 
 * As much as possible spike sorting should be automatic to avoid user bias, enable validation, and facilitate processing of large amounts of data.
 
-* Sorting methodology should be transparent and involve a minimumal set of adjustable parameters.
+* Sorting methodology should be transparent and involve a minimal set of adjustable parameters.
 
 * Visualization tools should be independent of sorting methodology allowing results from multiple algorithms to be compared.
 
