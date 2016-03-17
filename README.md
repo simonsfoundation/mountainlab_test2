@@ -33,3 +33,32 @@ General instructions for all operating systems:
 
 Several demo command-line and Matlab scripts are found in /demo and /matlab/demo, respectively.
 
+##Installation on Linux
+
+Follow the above steps using the following hints along the way.
+
+Installation of git:
+
+Installation of Qt5:
+
+Installation of Lapack:
+
+Compilation:
+
+Opening Matlab:
+> matlab
+
+##Methodology Used
+
+References to manuscripts go here.
+
+##Philosophy
+
+* As much as possible spike sorting should be automatic to avoid user bias, enable validation, and facilitate processing of large amounts of data.
+
+* Sorting methodology should be transparent and involve a minimumal set of adjustable parameters.
+
+* Visualization tools should be independent of sorting methodology allowing results from multiple algorithms to be compared.
+
+
+
