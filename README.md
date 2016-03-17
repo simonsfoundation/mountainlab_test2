@@ -38,8 +38,10 @@ Several demo command-line and Matlab scripts are found in /demo and /matlab/demo
 Follow the above steps using the these hints along the way.
 
 Installation of git:
-> Ubuntu/Debian: > sudo apt-get install git
-> CentOS/Red Hat: > sudo yum install git
+```bash
+Ubuntu/Debian: > sudo apt-get install git
+CentOS/Red Hat: > sudo yum install git
+```
 
 Installation of Qt5:
 > https://www.qt.io/download-open-source/
