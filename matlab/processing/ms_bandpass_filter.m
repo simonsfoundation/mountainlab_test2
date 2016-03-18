@@ -28,7 +28,7 @@ function Y=ms_bandpass_filter(X,opts)
 
 % TODO: test routine
 
-Y=freqfilter(X,opts.samplefreq,opts.freq_min,opts.freq_max);
+Y=freqfilter(X,opts.samplerate,opts.freq_min,opts.freq_max);
 end
 
 function X = freqfilter(X,fs,flo,fhi)

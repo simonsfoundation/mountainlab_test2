@@ -21,7 +21,11 @@ function A=readmda(fname)
 
 F=fopen(fname,'rb');
 
+try
 code=fread(F,1,'long');
+catch
+    error('Problem reading file: %s',fname);
+end
 if (code>0) 
     num_dims=code;
     code=-1;
