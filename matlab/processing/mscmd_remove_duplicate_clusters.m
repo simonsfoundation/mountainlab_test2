@@ -1,5 +1,5 @@
 function mscmd_remove_duplicate_clusters(firings_in_path,firings_out_path,opts)
-
+% TODO: Docs
 if (nargin<3) opts=struct; end;
 
 if (~isfield(opts,'max_dt')) opts.max_dt=6; end;

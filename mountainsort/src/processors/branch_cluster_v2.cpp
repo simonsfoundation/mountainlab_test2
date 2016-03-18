@@ -13,9 +13,9 @@ QList<int> do_branch_cluster_v2(Mda &clips,const Branch_Cluster_V2_Opts &opts,in
 QList<double> compute_peaks_v2(Mda &clips,int ch);
 QList<int> consolidate_labels_v2(DiskReadMda &X,const QList<double> &times,const QList<int> &labels,int ch,int clip_size,int detect_interval);
 
-bool branch_cluster_v2(const QString &raw_path,const QString &detect_path,const QString &adjacency_matrix_path,const QString &output_firings_path,const Branch_Cluster_V2_Opts &opts)
+bool branch_cluster_v2(const QString &signal_path,const QString &detect_path,const QString &adjacency_matrix_path,const QString &output_firings_path,const Branch_Cluster_V2_Opts &opts)
 {
-    DiskReadMda X; X.setPath(raw_path);
+    DiskReadMda X; X.setPath(signal_path);
     int M=X.N1();
 
     DiskReadMda detect; detect.setPath(detect_path);
@@ -421,4 +421,3 @@ QList<int> do_branch_cluster_v2(Mda &clips,const Branch_Cluster_V2_Opts &opts,in
         }
     }
 }
-

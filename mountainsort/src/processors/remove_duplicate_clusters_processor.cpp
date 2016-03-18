@@ -30,11 +30,9 @@ bool remove_duplicate_clusters_Processor::check(const QMap<QString, QVariant> &p
 
 bool remove_duplicate_clusters_Processor::run(const QMap<QString, QVariant> &params)
 {
-    QString firings_in_path=params["firings"].toString();
+    QString firings_path=params["firings"].toString();
     QString firings_out_path=params["firings_out"].toString();
 	int max_dt=params["max_dt"].toInt();
 	double overlap_threshold=params["overlap_threshold"].toDouble();
-    return remove_duplicate_clusters(firings_in_path,firings_out_path,max_dt,overlap_threshold);
+    return remove_duplicate_clusters(firings_path,firings_out_path,max_dt,overlap_threshold);
 }
-
-

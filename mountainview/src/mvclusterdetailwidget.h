@@ -15,7 +15,7 @@ public:
 	friend class MVClusterDetailWidgetScrollArea;
 	MVClusterDetailWidget(QWidget *parent=0);
 	virtual ~MVClusterDetailWidget();
-	void setRaw(DiskReadMda &X);
+	void setSignal(DiskReadMda &X);
     void setFirings(const DiskReadMda &X);
     void setClipSize(int T);
     void setGroupNumbers(const QList<int> &group_numbers);

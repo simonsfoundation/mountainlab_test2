@@ -8,8 +8,8 @@
 
 QList<double> do_detect(const QList<double> &vals,int detect_interval,double detect_threshold,int sign);
 
-bool detect(const QString &raw_path,const QString &detect_path,const Detect_Opts &opts) {
-	DiskReadMda X(raw_path);
+bool detect(const QString &signal_path,const QString &detect_path,const Detect_Opts &opts) {
+	DiskReadMda X(signal_path);
 	long M=X.N1();
 	long N=X.N2();
 

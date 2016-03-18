@@ -146,7 +146,7 @@ MVOverview2WidgetControlPanel::MVOverview2WidgetControlPanel(QWidget *parent) : 
         QGridLayout *G=new QGridLayout;
         layout->addLayout(G);
         d->add_group_label(G,"Raw/Preprocessed Data");
-        d->add_combo_box(G,"raw_data_name","Use data:");
+        d->add_combo_box(G,"signal_name","Use data:");
         d->add_horizontal_divider(layout);
     }
 
@@ -204,7 +204,7 @@ MVOverview2WidgetControlPanel::MVOverview2WidgetControlPanel(QWidget *parent) : 
         //d->add_button(G,"open_templates","Open Templates")->setToolTip("Open a new window with auto-computed templates");
         d->add_button(G,"open_auto_correlograms","Auto-Correlograms")->setToolTip("Open a new auto-correlograms window");
         d->add_button(G,"open_matrix_of_cross_correlograms","Matrix of Cross-Correlograms")->setToolTip("Open a matrix of cross-correlograms for the set of selected clusters");
-        d->add_button(G,"open_raw_data","Raw Data")->setToolTip("Open a window of raw data");
+        d->add_button(G,"open_signal","Signal Data")->setToolTip("Open a window of raw/Preprocessed data");
         d->add_button(G,"open_clips","Clips")->setToolTip("Open clips for currently selected cluster.");
 		d->add_button(G,"open_clusters","Cluster(s)")->setToolTip("Open a view of cluster events in feature space.");
         d->add_button(G,"open_firing_rates","Firing Rates")->setToolTip("Open a view of firing rate as a function of time for the selected clusters.");
@@ -297,4 +297,3 @@ void MVOverview2WidgetControlPanel::slot_combobox_activated()
 {
     emit signalComboBoxActivated(sender()->property("name").toString());
 }
-

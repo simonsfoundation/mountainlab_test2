@@ -13,7 +13,7 @@ compute_outlier_scores_Processor::compute_outlier_scores_Processor() {
 
 	this->setName("compute_outlier_scores");
 	this->setVersion("0.1");
-    this->setInputFileParameters("raw","firings");
+    this->setInputFileParameters("signal","firings");
 	this->setOutputFileParameters("firings_out");
 	this->setRequiredParameters("clip_size","shell_increment","min_shell_size");
 }
@@ -31,13 +31,11 @@ bool compute_outlier_scores_Processor::check(const QMap<QString, QVariant> &para
 bool compute_outlier_scores_Processor::run(const QMap<QString, QVariant> &params)
 {
 	Compute_Outlier_Scores_Opts opts;
-	QString raw_path=params["raw"].toString();
-    QString firings_in_path=params["firings"].toString();
+	QString signal_path=params["signal"].toString();
+    QString firings_path=params["firings"].toString();
 	QString firings_out_path=params["firings_out"].toString();
 	opts.clip_size=params["clip_size"].toInt();
 	opts.shell_increment=params["shell_increment"].toDouble();
 	opts.min_shell_size=params["min_shell_size"].toInt();
-	return compute_outlier_scores(raw_path,firings_in_path,firings_out_path,opts);
+	return compute_outlier_scores(signal_path,firings_path,firings_out_path,opts);
 }
-
-

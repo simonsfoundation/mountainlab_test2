@@ -16,8 +16,8 @@ public:
 	friend class CustomTabWidget;
 	MVOverview2Widget(QWidget *parent=0);
 	virtual ~MVOverview2Widget();
-    void addRawPath(const QString &name,const QString &path);
-    void setCurrentRawDataName(const QString &name);
+    void addSignalPath(const QString &name,const QString &path);
+    void setCurrentSignalName(const QString &name);
 	void setFiringsPath(const QString &firings);
 	void setSamplingFrequency(float freq);
 	void setDefaultInitialization();

@@ -328,10 +328,10 @@ double compute_slope(const QList<double> &X,const QList<double> &Y) {
 	else return 0;
 }
 
-bool remove_noise_subclusters(const QString &raw_path,const QString &firings_in_path,const QString &firings_out_path,const Remove_noise_subclusters_opts &opts) {
+bool remove_noise_subclusters(const QString &signal_path,const QString &firings_path,const QString &firings_out_path,const Remove_noise_subclusters_opts &opts) {
 
-	DiskReadMda raw; raw.setPath(raw_path);
-	Mda firings; firings.read(firings_in_path);
+	DiskReadMda raw; raw.setPath(signal_path);
+	Mda firings; firings.read(firings_path);
 
 	int T=opts.clip_size;
 	int L=firings.N2();

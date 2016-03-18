@@ -5,8 +5,8 @@
 #include "get_sort_indices.h"
 
 typedef QList<long> IntList;
-bool remove_duplicate_clusters(const QString &firings_in_path,const QString &firings_out_path,int max_dt,float overlap_threshold) {
-	Mda F; F.read(firings_in_path);
+bool remove_duplicate_clusters(const QString &firings_path,const QString &firings_out_path,int max_dt,float overlap_threshold) {
+	Mda F; F.read(firings_path);
     QList<double> times;
     QList<int> labels;
 

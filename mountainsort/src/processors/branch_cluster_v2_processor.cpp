@@ -13,7 +13,7 @@ branch_cluster_v2_Processor::branch_cluster_v2_Processor() {
 
 	this->setName("branch_cluster_v2");
 	this->setVersion("0.1");
-	this->setInputFileParameters("raw","detect","adjacency_matrix");
+	this->setInputFileParameters("signal","detect","adjacency_matrix");
     this->setOutputFileParameters("firings_out");
 	this->setRequiredParameters("clip_size","min_shell_size","shell_increment","num_features");
 	this->setRequiredParameters("detect_interval");
@@ -34,7 +34,7 @@ bool branch_cluster_v2_Processor::run(const QMap<QString, QVariant> &params)
 {
 	Branch_Cluster_V2_Opts opts;
 
-	QString raw_path=params["raw"].toString();
+	QString signal_path=params["signal"].toString();
 	QString detect_path=params["detect"].toString();
 	QString adjacency_matrix_path=params["adjacency_matrix"].toString();
     QString firings_path=params["firings_out"].toString();
@@ -45,7 +45,5 @@ bool branch_cluster_v2_Processor::run(const QMap<QString, QVariant> &params)
 	opts.detect_interval=params["detect_interval"].toInt();
     opts.num_pca_representatives=params.value("num_pca_representatives",5000).toLongLong();
 
-	return branch_cluster_v2(raw_path,detect_path,adjacency_matrix_path,firings_path,opts);
+	return branch_cluster_v2(signal_path,detect_path,adjacency_matrix_path,firings_path,opts);
 }
-
-

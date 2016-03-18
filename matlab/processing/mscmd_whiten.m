@@ -24,7 +24,7 @@ function mscmd_whiten(input_path,output_path,opts)
 
 if (nargin<3) opts=struct; end;
 
-cmd=sprintf('%s whiten --raw=%s --raw_out=%s ',mscmd_exe,input_path,output_path);
+cmd=sprintf('%s whiten --signal=%s --signal_out=%s ',mscmd_exe,input_path,output_path);
 
 fprintf('\n*** WHITEN ***\n');
 fprintf('%s\n',cmd);

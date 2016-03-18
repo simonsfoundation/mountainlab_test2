@@ -10,10 +10,10 @@
 QList<double> grab_sublist(const QList<double> &X,const QList<int> &inds);
 QList<double> compute_outlier_scores(Mda &clips,Mda &random_clips);
 
-bool compute_outlier_scores(const QString &raw_path,const QString &firings_in_path, const QString &firings_out_path, const Compute_Outlier_Scores_Opts &opts)
+bool compute_outlier_scores(const QString &signal_path,const QString &firings_path, const QString &firings_out_path, const Compute_Outlier_Scores_Opts &opts)
 {
-    Mda firings; firings.read(firings_in_path);
-    DiskReadMda X; X.setPath(raw_path);
+    Mda firings; firings.read(firings_path);
+    DiskReadMda X; X.setPath(signal_path);
     int N=X.N2();
     int L=firings.N2();
     QList<double> times;

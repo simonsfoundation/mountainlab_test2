@@ -29,9 +29,9 @@
 class MVOverview2WidgetPrivate {
 public:
 	MVOverview2Widget *q;
-    QMap<QString,QString> m_raw_data_paths;
-    QString m_current_raw_data_name;
-	DiskReadMda m_raw;
+    QMap<QString,QString> m_signal_paths;
+    QString m_current_signal_name;
+	DiskReadMda m_signal;
 	DiskReadMda m_firings_original;
 	Mda m_firings_split;
 	Mda m_firings;
@@ -77,13 +77,13 @@ public:
     void open_matrix_of_cross_correlograms();
     //void open_templates();
 	void open_cluster_details();
-	void open_raw_data();
+	void open_signal();
     void open_clips();
 	void open_clusters();
     void open_firing_rates();
 
 	void update_cross_correlograms();
-	void update_raw_views();
+	void update_signal_views();
     void move_to_timepoint(double tp);
 	void update_widget(QWidget *W);
 
@@ -181,24 +181,24 @@ MVOverview2Widget::~MVOverview2Widget()
     delete d;
 }
 
-void MVOverview2Widget::addRawPath(const QString &name, const QString &path)
+void MVOverview2Widget::addSignalPath(const QString &name, const QString &path)
 {
-    d->m_raw_data_paths[name]=path;
-    QStringList choices=d->m_raw_data_paths.keys();
+    d->m_signal_paths[name]=path;
+    QStringList choices=d->m_signal_paths.keys();
     qSort(choices);
-    d->m_control_panel->setParameterChoices("raw_data_name",choices);
-    if (d->m_raw_data_paths.count()==1) {
-        this->setCurrentRawDataName(name);
+    d->m_control_panel->setParameterChoices("signal_name",choices);
+    if (d->m_signal_paths.count()==1) {
+        this->setCurrentSignalName(name);
     }
 
 }
 
-void MVOverview2Widget::setCurrentRawDataName(const QString &name)
+void MVOverview2Widget::setCurrentSignalName(const QString &name)
 {
-    d->m_current_raw_data_name=name;
-    d->m_raw.setPath(d->m_raw_data_paths[d->m_current_raw_data_name]);
-    d->m_control_panel->setParameterValue("raw_data_name",name);
-    d->update_raw_views();
+    d->m_current_signal_name=name;
+    d->m_signal.setPath(d->m_signal_paths[d->m_current_signal_name]);
+    d->m_control_panel->setParameterValue("signal_name",name);
+    d->update_signal_views();
     d->update_cluster_details();
 	d->update_clips();
 	d->update_cluster_views();
@@ -219,7 +219,7 @@ void MVOverview2Widget::setFiringsPath(const QString &firings)
 	d->do_shell_split();
 	d->update_cross_correlograms();
 	d->update_cluster_details();
-	d->update_raw_views();
+	d->update_signal_views();
 }
 
 void MVOverview2Widget::setSamplingFrequency(float freq)
@@ -287,8 +287,8 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
 	else if (str=="open_cluster_details") {
 		d->open_cluster_details();
 	}
-	else if (str=="open_raw_data") {
-		d->open_raw_data();
+	else if (str=="open_signal") {
+		d->open_signal();
 	}
     else if (str=="open_clips") {
         d->open_clips();
@@ -306,8 +306,8 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
 
 void MVOverview2Widget::slot_control_panel_combobox_activated(QString str)
 {
-    if (str=="raw_data_name") {
-        this->setCurrentRawDataName(d->m_control_panel->getParameterValue("raw_data_name").toString());
+    if (str=="signal_name") {
+        this->setCurrentSignalName(d->m_control_panel->getParameterValue("signal_name").toString());
     }
 }
 
@@ -474,7 +474,7 @@ void MVOverview2WidgetPrivate::create_cross_correlograms_data()
 //	set_progress("Computing","Creating templates",0);
 //	QList<long> times,labels;
 //	long L=m_firings.N2();
-//	int M=m_raw.N1();
+//	int M=m_signal.N1();
 //	int T=m_control_panel->getParameterValue("clip_size").toInt();
 
 //	printf("Setting up times and labels...\n");
@@ -495,7 +495,7 @@ void MVOverview2WidgetPrivate::create_cross_correlograms_data()
 //		for (int ii=0; ii<times.count(); ii++) {
 //			if (labels[ii]==k) times_k << times[ii];
 //		}
-//		Mda clips_k=extract_clips(m_raw,times_k,T);
+//		Mda clips_k=extract_clips(m_signal,times_k,T);
 //		Mda template_k;
 //		if (m_control_panel->getParameterValue("template_method").toString()=="centroids") {
 //			template_k=compute_centroid(clips_k);
@@ -1047,7 +1047,7 @@ void MVOverview2WidgetPrivate::open_cluster_details()
 {
 	MVClusterDetailWidget *X=new MVClusterDetailWidget;
 	X->setChannelColors(m_channel_colors);
-	X->setRaw(m_raw);
+	X->setSignal(m_signal);
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
     X->setSamplingFrequency(m_samplerate);
     QObject::connect(X,SIGNAL(signalTemplateActivated()),q,SLOT(slot_details_template_activated()));
@@ -1058,15 +1058,15 @@ void MVOverview2WidgetPrivate::open_cluster_details()
 	update_widget(X);
 }
 
-void MVOverview2WidgetPrivate::open_raw_data()
+void MVOverview2WidgetPrivate::open_signal()
 {
     SSTimeSeriesWidget *X=new SSTimeSeriesWidget;
     SSTimeSeriesView *V=new SSTimeSeriesView;
     V->initialize();
     V->setSamplingFrequency(m_samplerate);
     X->addView(V);
-    X->setProperty("widget_type","raw_data");
-	add_tab(X,QString("Raw"));
+    X->setProperty("widget_type","signal");
+	add_tab(X,QString("Signal"));
     update_widget(X);
 }
 
@@ -1139,12 +1139,12 @@ void MVOverview2WidgetPrivate::update_cross_correlograms()
 	}
 }
 
-void MVOverview2WidgetPrivate::update_raw_views()
+void MVOverview2WidgetPrivate::update_signal_views()
 {
 	QList<QWidget *> widgets=get_all_widgets();
 	foreach (QWidget *W,widgets) {
 		QString widget_type=W->property("widget_type").toString();
-		if (widget_type=="raw_data") {
+		if (widget_type=="signal") {
 			update_widget(W);
 		}
     }
@@ -1155,7 +1155,7 @@ void MVOverview2WidgetPrivate::move_to_timepoint(double tp)
     QList<QWidget *> widgets=get_all_widgets();
     foreach (QWidget *W,widgets) {
         QString widget_type=W->property("widget_type").toString();
-        if (widget_type=="raw_data") {
+        if (widget_type=="signal") {
             SSTimeSeriesWidget *V=(SSTimeSeriesWidget *)W;
             V->view(0)->setCurrentTimepoint(tp);
         }
@@ -1285,7 +1285,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
 		MVClusterDetailWidget *WW=(MVClusterDetailWidget *)W;
         int clip_size=m_control_panel->getParameterValue("clip_size").toInt();
 		WW->setColors(m_colors);
-        WW->setRaw(m_raw);
+        WW->setSignal(m_signal);
         WW->setClipSize(clip_size);
         WW->setFirings(DiskReadMda(m_firings));
         WW->setGroupNumbers(m_original_cluster_numbers);
@@ -1315,7 +1315,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
 			}
 		}
 		int clip_size=m_control_panel->getParameterValue("clip_size").toInt();
-		Mda clips=extract_clips(m_raw,times_kk,clip_size);
+		Mda clips=extract_clips(m_signal,times_kk,clip_size);
 		printf("Setting data...\n");
         //DiskArrayModel *DAM=new DiskArrayModel;
         //DAM->setFromMda(clips);
@@ -1357,7 +1357,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
 			}
 		}
 		int clip_size=m_control_panel->getParameterValue("clip_size").toInt();
-		Mda clips=extract_clips(m_raw,times_kk,clip_size);
+		Mda clips=extract_clips(m_signal,times_kk,clip_size);
 		int M=clips.N1(); int T=clips.N2(); int L=clips.N3();
 		Mda features; features.allocate(3,L);
 		set_progress("Computing features","Computing features",0);
@@ -1366,7 +1366,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
         //subtract_features_mean(features);
 		normalize_features(features,false);
 		features.write32("/tmp/tmp_features.mda");
-		WW->setRaw(m_raw);
+		WW->setSignal(m_signal);
 		WW->setData(features);
 		WW->setTimes(times_kk);
 		WW->setLabels(labels_kk);
@@ -1400,10 +1400,10 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
         WW->setSamplingFreq(m_samplerate);
         WW->setEpochs(m_epochs);
     }
-	else if (widget_type=="raw_data") {
+	else if (widget_type=="signal") {
         SSTimeSeriesWidget *WW=(SSTimeSeriesWidget *)W;
 		DiskArrayModel *X=new DiskArrayModel;
-        X->setPath(m_raw_data_paths[m_current_raw_data_name]);
+        X->setPath(m_signal_paths[m_current_signal_name]);
         ((SSTimeSeriesView *)(WW->view()))->setData(X,true);
         set_times_labels();
     }
@@ -1479,7 +1479,7 @@ void MVOverview2WidgetPrivate::set_times_labels()
     QList<QWidget *> widgets=get_all_widgets();
     foreach (QWidget *W,widgets) {
         QString widget_type=W->property("widget_type").toString();
-        if (widget_type=="raw_data") {
+        if (widget_type=="signal") {
             SSTimeSeriesWidget *WW=(SSTimeSeriesWidget *)W;
             SSTimeSeriesView *V=(SSTimeSeriesView *)WW->view();
             V->setTimesLabels(times,labels);
@@ -1722,7 +1722,7 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
 				WW->setCurrentK(evt.label);
 			}
 		}
-		else if (widget_type=="raw_data") {
+		else if (widget_type=="signal") {
 			SSTimeSeriesWidget *WW=(SSTimeSeriesWidget *)W;
 			SSTimeSeriesView *VV=(SSTimeSeriesView *)WW->view(0);
 			if (evt.time>=0) {

@@ -16,7 +16,7 @@ public:
 	MVClipsView *m_clips_view;
 	QLabel *m_info_bar;
     Mda m_data;
-	DiskReadMda m_raw;
+	DiskReadMda m_signal;
 	int m_clip_size;
 	QList<double> m_outlier_scores;
 
@@ -195,9 +195,9 @@ void MVClusterWidget::setClipSize(int clip_size)
 	d->m_clip_size=clip_size;
 }
 
-void MVClusterWidget::setRaw(const DiskReadMda &X)
+void MVClusterWidget::setSignal(const DiskReadMda &X)
 {
-	d->m_raw=X;
+	d->m_signal=X;
     d->update_clips_view();
 }
 
@@ -256,7 +256,7 @@ void MVClusterWidgetPrivate::update_clips_view()
 	QString info_txt;
 	if (evt.time>=0) {
 		QList<double> times; times << evt.time;
-		Mda clip0=extract_clips(m_raw,times,m_clip_size);
+		Mda clip0=extract_clips(m_signal,times,m_clip_size);
 		double ppp=m_outlier_scores.value(current_event_index());
 		if (ppp) {
 			info_txt=QString("Outlier score: %1").arg(ppp);

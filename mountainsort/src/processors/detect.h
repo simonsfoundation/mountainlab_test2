@@ -11,8 +11,7 @@ struct Detect_Opts {
 	bool individual_channels;
 };
 
-bool detect(const QString &raw_path,const QString &detect_path,const Detect_Opts &opts);
+bool detect(const QString &signal_path,const QString &detect_path,const Detect_Opts &opts);
 
 
 #endif // DETECT_H
-

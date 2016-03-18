@@ -27,7 +27,7 @@ if nargin<1, test_mscmd_bandpass_filter; return; end;
 
 if isinf(opts.freq_max), opts.freq_max=0; end; %added 3/3/2016
 
-cmd=sprintf('%s bandpass_filter --raw=%s --raw_out=%s ',mscmd_exe,input_path,output_path);
+cmd=sprintf('%s bandpass_filter --signal=%s --signal_out=%s ',mscmd_exe,input_path,output_path);
 cmd=[cmd,sprintf('--samplerate=%g --freq_min=%g --freq_max=%g',opts.samplerate,opts.freq_min,opts.freq_max)];
 
 fprintf('\n*** BANDPASS FILTER ***\n');

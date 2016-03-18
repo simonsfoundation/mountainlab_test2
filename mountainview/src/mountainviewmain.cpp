@@ -8,7 +8,6 @@
 #include <QStringList>
 #include "textfile.h"
 #include "usagetracking.h"
-#include "mountainviewwidget.h"
 #include "mda.h"
 #include <QDesktopServices>
 #include <QDesktopWidget>
@@ -63,20 +62,20 @@ int main(int argc, char *argv[]) {
 		printf("overview2...\n");
 		QString pre_path=CLP.named_parameters["pre"].toString();
 		QString filt_path=CLP.named_parameters["filt"].toString();
-		QString raw_path=CLP.named_parameters["raw"].toString();
+        QString signal_path=CLP.named_parameters["signal"].toString();
 		QString firings_path=CLP.named_parameters["firings"].toString();
         double samplerate=CLP.named_parameters["samplerate"].toDouble();
 		QString epochs_path=CLP.named_parameters["epochs"].toString();
 		QString window_title=CLP.named_parameters["window_title"].toString();
 		MVOverview2Widget *W=new MVOverview2Widget;
         if (!pre_path.isEmpty()) {
-            W->addRawPath("Preprocessed Data",pre_path);
+            W->addSignalPath("Preprocessed Data",pre_path);
         }
         if (!filt_path.isEmpty()) {
-            W->addRawPath("Filtered Data",filt_path);
+            W->addSignalPath("Filtered Data",filt_path);
         }
-        if (!raw_path.isEmpty()) {
-            W->addRawPath("Raw Data",raw_path);
+        if (!signal_path.isEmpty()) {
+            W->addSignalPath("Raw Data",signal_path);
         }
 
         if (!epochs_path.isEmpty()) {
@@ -85,7 +84,7 @@ int main(int argc, char *argv[]) {
         }
 		if (window_title.isEmpty()) window_title=pre_path;
 		if (window_title.isEmpty()) window_title=filt_path;
-		if (window_title.isEmpty()) window_title=raw_path;
+        if (window_title.isEmpty()) window_title=signal_path;
 		W->setFiringsPath(firings_path);
 		W->show();
         W->setSamplingFrequency(samplerate);
@@ -119,14 +118,14 @@ int main(int argc, char *argv[]) {
     }
 	else if (mode=="spikespy") {
 		printf("spikespy...\n");
-		QString raw_path=CLP.named_parameters["raw"].toString();
+		QString signal_path=CLP.named_parameters["signal"].toString();
 		QString firings_path=CLP.named_parameters["firings"].toString();
         double samplerate=CLP.named_parameters["samplerate"].toDouble();
 		SSTimeSeriesWidget *W=new SSTimeSeriesWidget;
 		SSTimeSeriesView *V=new SSTimeSeriesView;
         V->setSamplingFrequency(samplerate);
 		DiskArrayModel *DAM=new DiskArrayModel;
-		DAM->setPath(raw_path);
+		DAM->setPath(signal_path);
 		V->setData(DAM,true);
 		Mda firings; firings.read(firings_path);
 		QList<long> times,labels;

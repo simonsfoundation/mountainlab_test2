@@ -4,5 +4,6 @@ addpath([mfile_path,'/processing']);
 addpath([mfile_path,'/view']);
 addpath([mfile_path,'/msutils']);
 addpath([mfile_path,'/unit_tests']);
+addpath([mfile_path,'/validation']);
 addpath([mfile_path,'/../mountainsort/src/isosplit']);
 end

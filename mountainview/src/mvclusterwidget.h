@@ -20,7 +20,7 @@ public:
 	void setOutlierScores(const QList<double> &outlier_scores);
 	void setCurrentEvent(const MVEvent &evt);
 	void setClipSize(int clip_size);
-	void setRaw(const DiskReadMda &X);
+	void setSignal(const DiskReadMda &X);
     void setTransformation(const AffineTransformation &T);
 	MVEvent currentEvent();
 
@@ -36,4 +36,3 @@ private:
 };
 
 #endif // MVCLUSTERWIDGET_H
-
