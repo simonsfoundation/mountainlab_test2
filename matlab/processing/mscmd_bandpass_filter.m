@@ -8,8 +8,7 @@ function mscmd_bandpass_filter(input_path,output_path,opts)
 % Inputs:
 %    input_path - mda file of MxN input raw data
 %    output_path - mda file of MxN output filtered data
-%    opts.samplerate - the sampling frequency corresponding to X, e.g.
-%                      30000
+%    opts.samplerate - the sampling frequency corresponding to X, e.g. 30000
 %    opts.freq_min - the lower end of the bandpass filter
 %    opts.freq_max - the upper end of the bandpass filter
 %
