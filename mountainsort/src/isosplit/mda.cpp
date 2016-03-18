@@ -1,638 +1,454 @@
 #include "mda.h"
-
-#include <stdlib.h>
+#include "mdaio.h"
 #include <stdio.h>
-#define UNUSED(expr) do { (void)(expr); } while (0);
-#ifdef QT_CORE_LIB
-#include <QDebug>
-#include "usagetracking.h"
-#else
-#define jmalloc malloc
-#define jfree free
-#define jfread fread
-#define jfopen fopen
-#define jfclose fclose
-#endif
 
-class MdaPrivate {
+#define MDA_MAX_DIMS 6
+
+class MdaPrivate
+{
 public:
 	Mda *q;
+	double *m_data;
+	long m_dims[MDA_MAX_DIMS];
+	long m_total_size;
 
-    long *m_size;
-	double *m_data_real;
-	
-	void construct() {
-        m_size=(long *)jmalloc(sizeof(long)*MDA_MAX_DIMS);
-        for (long i=0; i<MDA_MAX_DIMS; i++) m_size[i]=1;
-		
-        m_data_real=(double *)jmalloc(sizeof(double)*1);
-		m_data_real[0]=0;
-	}
-	
-	bool do_read(FILE *inf);
-    int read_int(FILE *inf);
-	float read_float(FILE *inf);
-    double read_double(FILE *inf);
-	short read_short(FILE *inf);	
-	unsigned short read_unsigned_short(FILE *inf);
-	unsigned char read_unsigned_char(FILE *inf);
-    bool do_write(FILE *outf,long data_type);
-	void write_int(FILE *outf,int val);
-	void write_float(FILE *outf,float val);
-    void write_double(FILE *outf,double val);
-	void write_short(FILE *outf,short val);	
-	void write_unsigned_short(FILE *outf,unsigned short val);
-	void write_unsigned_char(FILE *outf,unsigned char val);
+	void do_construct();
+	void copy_from(const Mda &other);
+	int determine_num_dims(long N1,long N2,long N3,long N4,long N5,long N6);
+	bool safe_index(long i);
+	bool safe_index(long i1,long i2);
+	bool safe_index(long i1,long i2,long i3);
+	bool safe_index(long i1,long i2,long i3,long i4,long i5,long i6);
 };
 
-Mda::Mda() 
+Mda::Mda(long N1, long N2, long N3, long N4, long N5, long N6)
 {
 	d=new MdaPrivate;
 	d->q=this;
-	
-	d->construct();
+	d->do_construct();
+	this->allocate(N1,N2,N3,N4,N5,N6);
 }
 
-Mda::Mda(const Mda &X) {
+Mda::Mda(const Mda &other)
+{
 	d=new MdaPrivate;
 	d->q=this;
-	
-	d->construct();
-	
-    //setDataType(X.dataType());
-	allocate(X.dimCount(),X.d->m_size);
-	setValues(X.d->m_data_real);
+	d->do_construct();
+	d->copy_from(other);
 }
 
-Mda::~Mda()
+void Mda::operator=(const Mda &other)
 {
-	jfree(d->m_size);
-	jfree(d->m_data_real);
+	d->copy_from(other);
+}
+
+Mda::~Mda() {
+	if (d->m_data) free(d->m_data);
 	delete d;
 }
 
-void Mda::operator=(const Mda &X) {
-    //setDataType(X.dataType());
-	allocate(X.dimCount(),X.d->m_size);
-	setValues(X.d->m_data_real);
-}
-
-void Mda::allocate(long N1,long N2,long N3,long N4,long N5,long N6) {
-    long tmp[6];
-	tmp[0]=N1; tmp[1]=N2; tmp[2]=N3; tmp[3]=N4; tmp[4]=N5; tmp[5]=N6;
-	allocate(6,tmp);
-}
-void Mda::allocate(long num_dims,int *size) {
-    for (long i=0; i<MDA_MAX_DIMS; i++) d->m_size[i]=1;
-	
-    long NN=1;
-    for (long i = 0; i < num_dims; i++) {
-		if (size[i] <= 0) {
-			size[i] = 1;
-		}
-		d->m_size[i] = size[i];
-		NN *= size[i];
-	}
-	if (NN >MDA_MAX_SIZE) {
-        printf ("Unable to allocate mda. Size is too large: %ld.\n", NN);
-		allocate(1, 1);
-		return;
-	}
-	if (NN > 0) {
-		jfree(d->m_data_real);
-		d->m_data_real = (double *)jmalloc(sizeof(double)*NN);
-        for (long i=0; i<NN; i++) d->m_data_real[i]=0;
-	}
-}
-void Mda::allocate(long num_dims,long *size) {
-    for (long i=0; i<MDA_MAX_DIMS; i++) d->m_size[i]=1;
-
-    long NN=1;
-    for (long i = 0; i < num_dims; i++) {
-        if (size[i] <= 0) {
-            size[i] = 1;
-        }
-        d->m_size[i] = size[i];
-        NN *= size[i];
-    }
-    if (NN >MDA_MAX_SIZE) {
-        printf ("Unable to allocate mda. Size is too large: %ld.\n", NN);
-        allocate(1, 1);
-        return;
-    }
-    if (NN > 0) {
-        jfree(d->m_data_real);
-        d->m_data_real = (double *)jmalloc(sizeof(double)*NN);
-        for (long i=0; i<NN; i++) d->m_data_real[i]=0;
-    }
-}
-long Mda::size(long dim) const {
-	if (dim >= MDA_MAX_DIMS) {
-		return 1;
-	}
-	if (dim < 0) {
-		return 0;
-	}
-	return d->m_size[dim];
-}
-long Mda::N1() const {
-	return size(0);
-}
-long Mda::N2() const {
-	return size(1);
-}
-long Mda::N3() const {
-	return size(2);
-}
-long Mda::N4() const {
-	return size(3);
-}
-long Mda::N5() const {
-	return size(4);
-}
-long Mda::N6() const {
-	return size(5);
-}
-long Mda::dimCount() const {
-    long ret = 2;
-    for (long i = 2; i < MDA_MAX_DIMS; i++) {
-		if (d->m_size[i] > 1) {
-			ret = i + 1;
-		}
-	}
-	return ret;
-}
-long Mda::totalSize() const {
-    long ret = 1;
-    for (long j = 0; j < MDA_MAX_DIMS; j++) {
-		ret *= d->m_size[j];
-	}
-	return ret;
-}
-
-void Mda::reshape(long N1, long N2, long N3, long N4, long N5, long N6)
+bool Mda::allocate(long N1, long N2, long N3, long N4, long N5, long N6)
 {
-	if (N1*N2*N3*N4*N5*N6!=totalSize()) {
-        printf("WARNING: Unable to reshape. Inconsistent size. %ld,%ld,%ld,%ld,%ld,%ld %ld",N1,N2,N3,N4,N5,N6,totalSize());
-		return;
+	d->m_dims[0]=N1;
+	d->m_dims[1]=N2;
+	d->m_dims[2]=N3;
+	d->m_dims[3]=N4;
+	d->m_dims[4]=N5;
+	d->m_dims[5]=N6;
+	d->m_total_size=N1*N2*N3*N4*N5*N6;
+
+	if (d->m_data) free(d->m_data);
+	d->m_data=0;
+	if (d->m_total_size>0) {
+		d->m_data=(double *)malloc(sizeof(double)*d->m_total_size);
+		for (long i=0; i<d->m_total_size; i++) d->m_data[i]=0;
 	}
-	d->m_size[0]=N1;
-	d->m_size[1]=N2;
-	d->m_size[2]=N3;
-	d->m_size[3]=N4;
-	d->m_size[4]=N5;
-	d->m_size[5]=N6;
-    for (long j=6; j<MDA_MAX_DIMS; j++) d->m_size[j]=1;
+
+	return true;
+
 }
-double Mda::value1(long i) const {
-	return d->m_data_real[i];
+
+bool Mda::read(const QString &path)
+{
+	return read(path.toLatin1().data());
+}
+
+bool Mda::write32(const QString &path) const
+{
+	return write32(path.toLatin1().data());
+}
+
+bool Mda::write64(const QString &path) const
+{
+	return write64(path.toLatin1().data());
+}
+
+bool Mda::read(const char *path)
+{
+	FILE *input_file=fopen(path,"rb");
+	if (!input_file) {
+		printf("Warning: Unable to open mda file for reading: %s\n",path);
+		return false;
+	}
+	MDAIO_HEADER H;
+	mda_read_header(&H,input_file);
+	this->allocate(H.dims[0],H.dims[1],H.dims[2],H.dims[3],H.dims[4],H.dims[5]);
+	mda_read_float64(d->m_data,&H,d->m_total_size,input_file);
+	fclose(input_file);
+	return true;
+}
+
+bool Mda::write32(const char *path) const
+{
+	FILE *output_file=fopen(path,"wb");
+	if (!output_file) {
+		printf("Warning: Unable to open mda file for writing: %s\n",path);
+		return false;
+	}
+	MDAIO_HEADER H;
+	H.data_type=MDAIO_TYPE_FLOAT32;
+	H.num_bytes_per_entry=4;
+	for (int i=0; i<MDAIO_MAX_DIMS; i++) H.dims[i]=1;
+	for (int i=0; i<MDA_MAX_DIMS; i++) H.dims[i]=d->m_dims[i];
+	H.num_dims=d->determine_num_dims(N1(),N2(),N3(),N4(),N5(),N6());
+	mda_write_header(&H,output_file);
+	mda_write_float64(d->m_data,&H,d->m_total_size,output_file);
+	fclose(output_file);
+	return true;
+}
+
+bool Mda::write64(const char *path) const
+{
+	FILE *output_file=fopen(path,"wb");
+	if (!output_file) {
+		printf("Warning: Unable to open mda file for writing: %s\n",path);
+		return false;
+	}
+	MDAIO_HEADER H;
+	H.data_type=MDAIO_TYPE_FLOAT64;
+	H.num_bytes_per_entry=4;
+	for (int i=0; i<MDAIO_MAX_DIMS; i++) H.dims[i]=1;
+	for (int i=0; i<MDA_MAX_DIMS; i++) H.dims[i]=d->m_dims[i];
+	H.num_dims=d->determine_num_dims(N1(),N2(),N3(),N4(),N5(),N6());
+	mda_write_header(&H,output_file);
+	mda_write_float64(d->m_data,&H,d->m_total_size,output_file);
+	fclose(output_file);
+	return true;
+}
+
+int Mda::ndims() const
+{
+	return d->determine_num_dims(N1(),N2(),N3(),N4(),N5(),N6());
+}
+
+long Mda::N1() const
+{
+	return d->m_dims[0];
+}
+
+long Mda::N2() const
+{
+	return d->m_dims[1];
+}
+
+long Mda::N3() const
+{
+	return d->m_dims[2];
+}
+
+long Mda::N4() const
+{
+	return d->m_dims[3];
+}
+
+long Mda::N5() const
+{
+	return d->m_dims[4];
+}
+
+long Mda::N6() const
+{
+	return d->m_dims[5];
+}
+
+long Mda::totalSize() const
+{
+	return d->m_total_size;
+}
+
+double Mda::get(long i) const
+{
+	return d->m_data[i];
+}
+
+double Mda::get(long i1, long i2) const
+{
+	return d->m_data[i1+d->m_dims[0]*i2];
+}
+
+double Mda::get(long i1, long i2, long i3) const
+{
+	return d->m_data[i1+d->m_dims[0]*i2+d->m_dims[0]*d->m_dims[1]*i3];
+}
+
+double Mda::get(long i1, long i2, long i3, long i4, long i5, long i6) const
+{
+	return d->m_data[
+			i1+
+			d->m_dims[0]*i2+
+			d->m_dims[0]*d->m_dims[1]*i3+
+			d->m_dims[0]*d->m_dims[1]*d->m_dims[2]*i4+
+			d->m_dims[0]*d->m_dims[1]*d->m_dims[2]*d->m_dims[3]*i5+
+			d->m_dims[0]*d->m_dims[1]*d->m_dims[2]*d->m_dims[3]*d->m_dims[4]*i6
+			];
+}
+
+double Mda::value(long i) const
+{
+	if (!d->safe_index(i)) return 0;
+	return get(i);
 }
 
 double Mda::value(long i1, long i2) const
 {
-	if ((i1<0)||(i1>=size(0))) return 0;
-	if ((i2<0)||(i2>=size(1))) return 0;
-	return d->m_data_real[i1+size(0)*i2];
-}
-double Mda::value(long i1,long i2,long i3,long i4) const {
-	if ((i1<0)||(i1>=size(0))) return 0;
-	if ((i2<0)||(i2>=size(1))) return 0;
-	if ((i3<0)||(i3>=size(2))) return 0;
-	if ((i4<0)||(i4>=size(3))) return 0;
-	return d->m_data_real[i1+size(0)*i2+size(0)*size(1)*i3+size(0)*size(1)*size(2)*i4];
-}
-double Mda::value(long num_dims,int *ind) const {
-    long tmp=0;
-    long factor=1;
-    for (long i=0; i<num_dims; i++) {
-		if ((ind[i]<0)||(ind[i]>=size(i))) return 0;
-		tmp+=ind[i]*factor;
-		factor*=size(i);
-	}
-	return d->m_data_real[tmp];
-}
-double Mda::value(long num_dims,long *ind) const {
-    long tmp=0;
-    long factor=1;
-    for (long i=0; i<num_dims; i++) {
-        if ((ind[i]<0)||(ind[i]>=size(i))) return 0;
-        tmp+=ind[i]*factor;
-        factor*=size(i);
-    }
-    return d->m_data_real[tmp];
-}
-void Mda::setValue1(double val,long i) {
-	d->m_data_real[i]=val;
-}
-void Mda::setValue(double val,long i1,long i2,long i3,long i4) {
-	if ((i1<0)||(i1>=size(0))) return;
-	if ((i2<0)||(i2>=size(1))) return;
-	if ((i3<0)||(i3>=size(2))) return;
-	if ((i4<0)||(i4>=size(3))) return;
-	d->m_data_real[i1+size(0)*i2+size(0)*size(1)*i3+size(0)*size(1)*size(2)*i4]=val;
-}
-void Mda::setValue(double val,long num_dims,int *ind) {
-    long tmp=0;
-    long factor=1;
-    for (long i=0; i<num_dims; i++) {
-		if ((ind[i]<0)||(ind[i]>=size(i))) return;
-		tmp+=ind[i]*factor;
-		factor*=size(i);
-	}
-	d->m_data_real[tmp]=val;
-}
-void Mda::setValue(double val,long num_dims,long *ind) {
-    long tmp=0;
-    long factor=1;
-    for (long i=0; i<num_dims; i++) {
-        if ((ind[i]<0)||(ind[i]>=size(i))) return;
-        tmp+=ind[i]*factor;
-        factor*=size(i);
-    }
-    d->m_data_real[tmp]=val;
-}
-void Mda::setValues(double *vals) {
-    long ts=totalSize();
-    for (long i=0; i<ts; i++) {
-		d->m_data_real[i]=vals[i];
-	}
-}
-void Mda::setValues(int *vals) {
-    long ts=totalSize();
-    for (long i=0; i<ts; i++) {
-        d->m_data_real[i]=(double)vals[i];
-	}
-}
-void Mda::setValues(short *vals) {
-    long ts=totalSize();
-    for (long i=0; i<ts; i++) {
-        d->m_data_real[i]=(double)vals[i];
-	}
-}
-void Mda::setValues(unsigned char *vals) {
-    long ts=totalSize();
-    for (long i=0; i<ts; i++) {
-        d->m_data_real[i]=(double)vals[i];
-	}
+	if (!d->safe_index(i1,i2)) return 0;
+	return get(i1,i2);
 }
 
-Mda Mda::getDataXY(long num_inds,int *inds) const {
-	Mda ret;
-	ret.allocate(N1(), N2());
-    long *inds0=(long *)jmalloc(sizeof(long)*(num_inds+2));
-    for (long j = 0; j < num_inds; j++) {
-		inds0[j + 2] = inds[j];
-	}
-    long n1=size(0);
-    long n2=size(1);
-    for (long y = 0; y < n2; y++) {
-		inds0[1] = y;
-        for (long x = 0; x < n1; x++) {
-			inds0[0] = x;
-			ret.setValue(value((num_inds+2),inds0), x, y);
-		}
-	}
-	jfree(inds0);
-	return ret;
-}
-Mda Mda::getDataXZ(long num_inds,int *inds) const {
-	Mda ret;
-	ret.allocate(N1(), N3());
-    long *inds0=(long *)jmalloc(sizeof(long)*(num_inds+2));
-	inds0[1]=inds[0];
-    for (long j = 1; j < num_inds; j++) {
-		inds0[j + 2] = inds[j];
-	}
-    long n1=size(0);
-    long n2=size(2);
-    for (long z = 0; z < n2; z++) {
-		inds0[2] = z;
-        for (long x = 0; x < n1; x++) {
-			inds0[0] = x;
-			ret.setValue(value((num_inds+2),inds0), x, z);
-		}
-	}
-	jfree(inds0);
-	return ret;
-}
-Mda Mda::getDataYZ(long num_inds,int *inds) const {
-	Mda ret;
-	ret.allocate(N2(), N3());
-    long *inds0=(long *)jmalloc(sizeof(long)*(num_inds+2));
-	inds0[0]=inds[0];
-    for (long j = 1; j < num_inds; j++) {
-		inds0[j + 2] = inds[j];
-	}
-    long n1=size(1);
-    long n2=size(2);
-    for (long z = 0; z < n2; z++) {
-		inds0[2] = z;
-        for (long y = 0; y < n1; y++) {
-			inds0[1] = y;
-			ret.setValue(value((num_inds+2),inds0), y, z);
-		}
-	}
-	jfree(inds0);
-	return ret;
-}
-Mda Mda::transpose() const {
-	Mda ret;
-    long *size=(long *)jmalloc(sizeof(long)*MDA_MAX_DIMS);
-    for (long i=0; i<MDA_MAX_DIMS; i++) size[i]=d->m_size[i];
-    long s1=size[0];
-    long s2=size[1];
-	size[0] = s2;
-	size[1] = s1;
-	ret.allocate(MDA_MAX_DIMS,size);
-    long tot_size = totalSize();
-    long num_planes = tot_size / (size[0] * size[1]);
-    for (long i = 0; i < num_planes; i++) {
-        long offset = i * size[0] * size[1];
-        for (long y = 0; y < d->m_size[1]; y++) {
-            for (long x = 0; x < d->m_size[0]; x++) {
-				ret.setValue1(value1(offset + x + y * d->m_size[0]), offset + y + x * d->m_size[1]);
-			}
-		}
-	}
-	jfree(size);
-	return ret;
-}
-bool Mda::read(const char *path) {
-	allocate(1, 1);
-
-	FILE *inf=jfopen(path,"rb");
-	if (!inf) return false;
-	
-	bool ret=d->do_read(inf);
-	
-	jfclose(inf);
-	
-	return ret;
-	
-}
-bool MdaPrivate::do_read(FILE *inf) {
-    long hold_num_dims;
-    long hold_dims[MDA_MAX_DIMS];
-    for (long i=0; i<MDA_MAX_DIMS; i++) hold_dims[i]=1;
-	
-	hold_num_dims = read_int(inf);
-	
-    long data_type;
-	if (hold_num_dims < 0) {
-		data_type = hold_num_dims;
-        long num_bytes = read_int(inf);
-		UNUSED(num_bytes)
-		hold_num_dims = read_int(inf);
-	} else {
-		data_type = MDA_TYPE_COMPLEX;
-	}
-	if (hold_num_dims > MDA_MAX_DIMS) {
-        printf ("number of dimensions exceeds maximum: %ld\n", hold_num_dims);
-		return false;
-	}
-	if (hold_num_dims <= 0) {
-        printf ("unexpected number of dimensions: %ld\n", hold_num_dims);
-		return false;
-	}
-    for (long j = 0; j < hold_num_dims; j++) {
-        long holdval = read_int(inf);
-		hold_dims[j] = holdval;
-	}
-	{
-        //q->setDataType(data_type);
-		q->allocate(hold_num_dims,hold_dims);
-        long N = q->totalSize();
-		if (data_type == MDA_TYPE_COMPLEX) {
-            for (long ii = 0; ii < N; ii++) {
-				float re0 = read_float(inf);
-				float im0 = read_float(inf);
-				UNUSED(im0);
-				m_data_real[ii] = re0;
-			}
-        } else if (data_type == MDA_TYPE_FLOAT32) {
-            for (long ii = 0; ii < N; ii++) {
-				float re0 = read_float(inf);
-				m_data_real[ii] = re0;
-			}
-		} else if (data_type == MDA_TYPE_SHORT) {
-            for (long ii = 0; ii < N; ii++) {
-				float re0 = read_short(inf);
-				m_data_real[ii] = re0;
-			}
-		} else if (data_type == MDA_TYPE_UINT16) {
-            for (long ii = 0; ii < N; ii++) {
-                long re0 = read_unsigned_short(inf);
-				m_data_real[ii] = re0;
-			}
-		} else if (data_type == MDA_TYPE_INT32) {
-            for (long ii = 0; ii < N; ii++) {
-                long re0 = read_int(inf);
-				m_data_real[ii] = re0;
-			}
-		} else if (data_type == MDA_TYPE_BYTE) {
-            for (long ii = 0; ii < N; ii++) {
-				unsigned char re0 = read_unsigned_char(inf);
-				m_data_real[ii] = re0;
-			}
-        } else if (data_type == MDA_TYPE_FLOAT64) {
-            for (long ii = 0; ii < N; ii++) {
-                double re0 = read_double(inf);
-                m_data_real[ii] = re0;
-            }
-		} else {
-            printf ("Unrecognized data type %ld\n", data_type);
-			return false;
-		}
-	}
-	
-	return true;
-}
-int MdaPrivate::read_int(FILE *inf) {
-	int ret=0;
-    long b0=jfread(&ret,4,1,inf);
-	UNUSED(b0)
-	return ret;
-}
-float MdaPrivate::read_float(FILE *inf) {
-	float ret=0;
-    long b0=jfread(&ret,4,1,inf);
-	UNUSED(b0)
-	return ret;
-}
-double MdaPrivate::read_double(FILE *inf) {
-    double ret=0;
-    long b0=jfread(&ret,8,1,inf);
-    UNUSED(b0)
-    return ret;
-}
-short MdaPrivate::read_short(FILE *inf) {
-	short ret=0;
-    long b0=jfread(&ret,2,1,inf);
-	UNUSED(b0)
-	return ret;
-}
-unsigned short MdaPrivate::read_unsigned_short(FILE *inf) {
-	unsigned short ret=0;
-    long b0=jfread(&ret,2,1,inf);
-	UNUSED(b0)
-	return ret;
-}
-unsigned char MdaPrivate::read_unsigned_char(FILE *inf) {
-	unsigned char ret=0;
-    long b0=jfread(&ret,1,1,inf);
-	UNUSED(b0)
-	return ret;
-}
-
-bool Mda::write(const char *path) {
-
-    return write32(path);
-}
-
-bool Mda::write32(const char *path)
+double Mda::value(long i1, long i2, long i3) const
 {
-    FILE *outf=jfopen(path,"wb");
-    if (!outf) {
-        printf ("Unable to write mda file: %s\n",path);
-        return false;
-    }
-
-    bool ret=d->do_write(outf,MDA_TYPE_FLOAT32);
-
-    jfclose(outf);
-
-    return ret;
+	if (!d->safe_index(i1,i2,i3)) return 0;
+	return get(i1,i2,i3);
 }
 
-bool Mda::write64(const char *path)
+double Mda::value(long i1, long i2, long i3, long i4, long i5, long i6) const
 {
-    FILE *outf=jfopen(path,"wb");
-    if (!outf) {
-        printf ("Unable to write mda file: %s\n",path);
-        return false;
-    }
-
-    bool ret=d->do_write(outf,MDA_TYPE_FLOAT64);
-
-    jfclose(outf);
-
-    return ret;
+	if (!d->safe_index(i1,i2,i3,i4,i5,i6)) return 0;
+	return get(i1,i2,i3,i4,i5,i6);
 }
 
-#ifdef QT_CORE_LIB
-bool Mda::read(const QString &path)
+void Mda::setValue(double val,long i)
 {
-    return read(path.toLatin1().data());
+	if (!d->safe_index(i)) return;
+	set(val,i);
 }
 
-bool Mda::write(const QString &path)
+void Mda::setValue(double val,long i1, long i2)
 {
-    return write(path.toLatin1().data());
+	if (!d->safe_index(i1,i2)) return;
+	set(val,i1,i2);
 }
 
-bool Mda::write32(const QString &path)
+void Mda::setValue(double val,long i1, long i2, long i3)
 {
-    return write32(path.toLatin1().data());
+	if (!d->safe_index(i1,i2,i3)) return;
+	set(val,i1,i2,i3);
 }
 
-bool Mda::write64(const QString &path)
+void Mda::setValue(double val,long i1, long i2, long i3, long i4, long i5, long i6)
 {
-    return write64(path.toLatin1().data());
+	if (!d->safe_index(i1,i2,i3,i4,i5,i6)) return;
+	set(val,i1,i2,i3,i4,i5,i6);
 }
-#endif
 
 double *Mda::dataPtr()
 {
-    return d->m_data_real;
+	return d->m_data;
 }
 
-bool MdaPrivate::do_write(FILE *outf,long data_type) {
+double *Mda::dataPtr(long i)
+{
+	return &d->m_data[i];
+}
 
-    write_int(outf, data_type);
-    long num_bytes = 4;
-    if (data_type == MDA_TYPE_COMPLEX) {
-		num_bytes = 8;
-    } else if (data_type == MDA_TYPE_BYTE) {
-		num_bytes = 1;
-    } else if (data_type == MDA_TYPE_SHORT) {
-		num_bytes = 2;
-    } else if (data_type == MDA_TYPE_UINT16) {
-		num_bytes = 2;
-    } else if (data_type == MDA_TYPE_FLOAT64 ) {
-        num_bytes = 8;
-    }
+double *Mda::dataPtr(long i1, long i2)
+{
+	return &d->m_data[i1+N1()*i2];
+}
 
-	write_int(outf, num_bytes);
-    long num_dims = 2;
-    for (long i = 2; i < MDA_MAX_DIMS; i++) {
-		if (m_size[i] > 1) {
-			num_dims = i + 1;
+double *Mda::dataPtr(long i1, long i2, long i3)
+{
+	return &d->m_data[i1+N1()*i2+N1()*N2()*i3];
+}
+
+double *Mda::dataPtr(long i1, long i2, long i3, long i4, long i5, long i6)
+{
+	return &d->m_data[
+			i1+
+			N1()*i2+
+			N1()*N2()*i3+
+			N1()*N2()*N3()*i4+
+			N1()*N2()*N3()*N4()*i5+
+			N1()*N2()*N3()*N4()*N5()*i6
+			];
+}
+
+void Mda::getSubArray(Mda &ret, long i, long size)
+{
+	long a_begin=i; long x_begin=0;
+	long a_end=i+size-1; long x_end=size-1;
+
+	if (a_begin<0) {a_begin+=0-a_begin; x_begin+=0-a_begin;}
+	if (a_end>=d->m_total_size) {a_end+=d->m_total_size-1-a_end; x_end+=d->m_total_size-1-a_end;}
+
+	ret.allocate(1,size);
+
+	double *ptr1=this->dataPtr();
+	double *ptr2=ret.dataPtr();
+
+	long ii=0;
+	for (long a=a_begin; a<=a_end; a++) {
+		ptr2[x_begin+ii]=ptr1[a_begin+ii];
+	}
+}
+
+void Mda::getSubArray(Mda &ret, long i1, long i2, long size1, long size2)
+{
+	long a1_begin=i1; long x1_begin=0;
+	long a1_end=i1+size1-1; long x1_end=size1-1;
+	if (a1_begin<0) {a1_begin+=0-a1_begin; x1_begin+=0-a1_begin;}
+	if (a1_end>=N1()) {a1_end+=N1()-1-a1_end; x1_end+=N1()-1-a1_end;}
+
+	long a2_begin=i2; long x2_begin=0;
+	long a2_end=i2+size2-1; long x2_end=size2-1;
+	if (a2_begin<0) {a2_begin+=0-a2_begin; x2_begin+=0-a2_begin;}
+	if (a2_end>=N2()) {a2_end+=N2()-1-a2_end; x2_end+=N2()-1-a2_end;}
+
+	ret.allocate(size1,size2);
+
+	double *ptr1=this->dataPtr();
+	double *ptr2=ret.dataPtr();
+
+	for (long ind2=0; ind2<=a2_end-a2_begin; ind2++) {
+		long ii_out=(ind2+x2_begin)*size1;
+		long ii_in=(ind2+a2_begin)*N1();
+		for (long ind1=0; ind1<=a1_end-a1_begin; ind1++) {
+			ptr2[ii_out]=ptr1[ii_in];
+			ii_in++;
+			ii_out++;
 		}
 	}
-	write_int(outf, num_dims);
-    for (long ii = 0; ii < num_dims; ii++) {
-		write_int(outf, m_size[ii]);
-	}
-    long N = q->totalSize();
-    if (data_type == MDA_TYPE_COMPLEX) {
-        for (long i = 0; i < N; i++) {
-			float re0 = (float) m_data_real[i];
-			write_float(outf, re0);
-			write_float(outf, 0);
-		}
-    } else if (data_type == MDA_TYPE_FLOAT32) {
-        for (long i = 0; i < N; i++) {
-			float re0 = (float) m_data_real[i];
-			write_float(outf, re0);
-		}
-    } else if (data_type == MDA_TYPE_BYTE) {
-        for (long i = 0; i < N; i++) {
-			unsigned char re0 = (unsigned char) m_data_real[i];
-			write_unsigned_char(outf,re0);
-		}
-    } else if (data_type == MDA_TYPE_SHORT) {
-        for (long i = 0; i < N; i++) {
-			short re0 = (short) m_data_real[i];
-			write_short(outf, (short) re0);
-		}
-    } else if (data_type == MDA_TYPE_UINT16) {
-        for (long i = 0; i < N; i++) {
-			unsigned short re0 = (unsigned short) m_data_real[i];
-			write_unsigned_short(outf, (unsigned short) re0);
-		}
-    } else if (data_type == MDA_TYPE_INT32) {
-        for (long i = 0; i < N; i++) {
-			int re0 = (int) m_data_real[i];
-			write_int(outf, re0);
+}
+
+void Mda::getSubArray(Mda &ret, long i1, long i2, long i3, long size1, long size2, long size3)
+{
+	long a1_begin=i1; long x1_begin=0;
+	long a1_end=i1+size1-1; long x1_end=size1-1;
+	if (a1_begin<0) {a1_begin+=0-a1_begin; x1_begin+=0-a1_begin;}
+	if (a1_end>=N1()) {a1_end+=N1()-1-a1_end; x1_end+=N1()-1-a1_end;}
+
+	long a2_begin=i2; long x2_begin=0;
+	long a2_end=i2+size2-1; long x2_end=size2-1;
+	if (a2_begin<0) {a2_begin+=0-a2_begin; x2_begin+=0-a2_begin;}
+	if (a2_end>=N2()) {a2_end+=N2()-1-a2_end; x2_end+=N2()-1-a2_end;}
+
+	long a3_begin=i3; long x3_begin=0;
+	long a3_end=i3+size3-1; long x3_end=size3-1;
+	if (a3_begin<0) {a2_begin+=0-a3_begin; x3_begin+=0-a3_begin;}
+	if (a3_end>=N3()) {a3_end+=N3()-1-a3_end; x3_end+=N3()-1-a3_end;}
+
+	ret.allocate(size1,size2,size3);
+
+	double *ptr1=this->dataPtr();
+	double *ptr2=ret.dataPtr();
+
+	for (long ind3=0; ind3<=a3_end-a3_begin; ind3++) {
+		for (long ind2=0; ind2<=a2_end-a2_begin; ind2++) {
+			long ii_out=(ind2+x2_begin)*size1+(ind3+x3_begin)*size1*size2;
+			long ii_in=(ind2+a2_begin)*N1()+(ind3+a3_begin)*N1()*N2();
+			for (long ind1=0; ind1<=a1_end-a1_begin; ind1++) {
+				ptr2[ii_out]=ptr1[ii_in];
+				ii_in++;
+				ii_out++;
+			}
 		}
 	}
-    else if (data_type == MDA_TYPE_FLOAT64) {
-        for (long i = 0; i < N; i++) {
-            double re0 = m_data_real[i];
-            write_double(outf, re0);
-        }
-    }
-	else {
-        printf ("Problem in do_write... unexpected data type: %ld\n",data_type);
-		return false;
+}
+
+void Mda::set(double val, long i)
+{
+	d->m_data[i]=val;
+}
+
+void Mda::set(double val, long i1, long i2)
+{
+	d->m_data[i1+d->m_dims[0]*i2]=val;
+}
+
+void Mda::set(double val, long i1, long i2, long i3)
+{
+	d->m_data[i1+d->m_dims[0]*i2+d->m_dims[0]*d->m_dims[1]*i3]=val;
+}
+
+void Mda::set(double val, long i1, long i2, long i3, long i4, long i5, long i6)
+{
+	d->m_data[
+			i1+
+			d->m_dims[0]*i2+
+			d->m_dims[0]*d->m_dims[1]*i3+
+			d->m_dims[0]*d->m_dims[1]*d->m_dims[2]*i4+
+			d->m_dims[0]*d->m_dims[1]*d->m_dims[2]*d->m_dims[3]*i5+
+			d->m_dims[0]*d->m_dims[1]*d->m_dims[2]*d->m_dims[3]*d->m_dims[4]*i6
+			]
+	=val;
+}
+
+void MdaPrivate::do_construct() {
+	m_data=(double *)malloc(sizeof(double)*1);
+	for (int i=0; i<MDA_MAX_DIMS; i++) {
+		m_dims[i]=1;
 	}
-	return true;
+	m_total_size=1;
 }
-void MdaPrivate::write_int(FILE *outf,int val) {
-	fwrite(&val,4,1,outf);
+
+void MdaPrivate::copy_from(const Mda &other)
+{
+	if (m_data) free(m_data);
+	m_data=0;
+	m_total_size=other.d->m_total_size;
+	for (int i=0; i<MDA_MAX_DIMS; i++) m_dims[i]=other.d->m_dims[i];
+	if (m_total_size>0) {
+		m_data=(double *)malloc(sizeof(double)*m_total_size);
+		memcpy(m_data,other.d->m_data,sizeof(double)*m_total_size);
+	}
 }
-void MdaPrivate::write_float(FILE *outf,float val) {
-	fwrite(&val,4,1,outf);
+
+int MdaPrivate::determine_num_dims(long N1, long N2, long N3, long N4, long N5, long N6)
+{
+	#ifdef QT_CORE_LIB
+	Q_UNUSED(N1)
+	Q_UNUSED(N2)
+	#endif
+	if (N6>1) return 6;
+	if (N5>1) return 5;
+	if (N4>1) return 4;
+	if (N3>1) return 3;
+	return 2;
 }
-void MdaPrivate::write_double(FILE *outf,double val) {
-    fwrite(&val,8,1,outf);
+
+bool MdaPrivate::safe_index(long i)
+{
+	return ((0<=i)&&(i<m_total_size));
 }
-void MdaPrivate::write_short(FILE *outf,short val) {
-	fwrite(&val,2,1,outf);
+
+bool MdaPrivate::safe_index(long i1, long i2)
+{
+	return ((0<=i1)&&(i1<m_dims[0])&&(0<=i2)&&(i2<m_dims[1]));
 }
-void MdaPrivate::write_unsigned_short(FILE *outf,unsigned short val) {
-	fwrite(&val,2,1,outf);
+
+bool MdaPrivate::safe_index(long i1, long i2, long i3)
+{
+	return ((0<=i1)&&(i1<m_dims[0])&&(0<=i2)&&(i2<m_dims[1])&&(0<=i3)&&(i3<m_dims[2]));
 }
-void MdaPrivate::write_unsigned_char(FILE *outf,unsigned char val) {
-	fwrite(&val,1,1,outf);
+
+bool MdaPrivate::safe_index(long i1, long i2, long i3, long i4, long i5, long i6)
+{
+	return (
+		(0<=i1)&&(i1<m_dims[0])&&
+		(0<=i2)&&(i2<m_dims[1])&&
+		(0<=i3)&&(i3<m_dims[2])&&
+		(0<=i4)&&(i4<m_dims[3])&&
+		(0<=i5)&&(i5<m_dims[4])&&
+		(0<=i6)&&(i6<m_dims[5])
+	);
 }
