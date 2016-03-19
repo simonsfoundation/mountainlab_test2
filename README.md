@@ -64,7 +64,15 @@ CentOS/Red Hat: sudo yum install lapack-devel.x86_64
 matlab
 ```
 
-##References
+## Users Guide
+
+[Preliminary version of Users Guide](doc/usersguide.md)
+
+## API Docs
+
+[Preliminary version of API Docs](http://magland.github.io/mountainlab/)
+
+## References
 
 [Barnett, Alex H., Jeremy F. Magland, and Leslie F. Greengard. "Validation of Neural Spike Sorting Algorithms without Ground-truth Information." Journal of Neuroscience Methods 264 (2016): 65-77.](http://www.ncbi.nlm.nih.gov/pubmed/26930629) [Link to arXiv](http://arxiv.org/abs/1508.06936)
 
