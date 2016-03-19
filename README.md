@@ -27,7 +27,7 @@ General instructions for all operating systems (see specifics below):
 
 * Compile MountainView by running qmake and make from a terminal inside the mountainlab/mountainview/src directory.
 
-* (Optional) From within Matlab navigate to mountainlab/matlab and run ms_setup_path.m.
+* (Optional) From within Matlab navigate to mountainlab/matlab and run mountainlab_setup.m.
 
 Several demo command-line and Matlab scripts are found in /demo and /matlab/demo, respectively.
 
@@ -63,6 +63,10 @@ CentOS/Red Hat: sudo yum install lapack-devel.x86_64
 ```
 # First buy matlab
 matlab
+```
+```matlab
+cd mountainlab/matlab
+mountainlab_setup
 ```
 
 ## Users Guide
