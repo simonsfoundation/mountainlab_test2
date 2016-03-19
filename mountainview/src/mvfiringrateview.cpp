@@ -78,7 +78,7 @@ void MVFiringRateView::setFirings(const Mda &firings)
     d->schedule_update();
 }
 
-void MVFiringRateView::setSamplingFreq(double ff)
+void MVFiringRateView::setSampleRate(double ff)
 {
     d->m_samplerate=ff;
     d->schedule_update();

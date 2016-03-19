@@ -7,6 +7,10 @@
 #include "diskarraymodel.h"
 #include "mda.h"
 
+/** \class MVLabelCompareWidget
+ *  \brief Not used right now, but may be useful, probably needs to be rewritten
+ */
+
 class MVLabelCompareWidgetPrivate;
 
 class MVLabelCompareWidget : public QWidget

@@ -14,3 +14,13 @@ public:
 //DiskArrayModel_New::~DiskArrayModel_New() {
 //	delete d;
 //}
+
+DiskArrayModel_New::DiskArrayModel_New()
+{
+
+}
+
+DiskArrayModel_New::~DiskArrayModel_New()
+{
+
+}

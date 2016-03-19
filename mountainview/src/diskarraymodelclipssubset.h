@@ -3,6 +3,11 @@
 
 #include "diskarraymodel.h"
 
+/** \class DiskArrayModelClipsSubset
+ *  \brief A hack to display clips in the time series viewer
+ *
+ * TODO: Instead, modify DiskArrayModel to handle case of clips.
+ */
 class DiskArrayModelClipsSubsetPrivate;
 class DiskArrayModelClipsSubset : public DiskArrayModel
 {

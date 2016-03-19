@@ -5,6 +5,10 @@
 #include "mda.h"
 #include "diskarraymodel.h"
 
+/** \class MVStatisticsWidget
+ *  \brief -- Not used anymore
+ */
+
 class QTreeWidgetItem;
 class MVStatisticsWidgetPrivate;
 class MVStatisticsWidget : public QWidget
@@ -20,15 +24,15 @@ public:
 	void setRaw(DiskArrayModel *X);
 	void updateStatistics();
 
-	QList<int> selectedUnits();
-	void setSelectedUnits(const QList<int> &units);
-	int currentUnit();
-	void setCurrentUnit(int unit);
+	QList<int> selectedLabels();
+	void setSelectedLabels(const QList<int> &labels);
+	int currentLabel();
+	void setCurrentLabel(int label);
 
 signals:
-	void selectedUnitsChanged();
-	void currentUnitChanged();
-	void unitActivated(int num);
+	void selectedLabelsChanged();
+	void currentLabelChanged();
+	void labelActivated(int num);
 
 private slots:
 	void slot_item_clicked();

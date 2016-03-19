@@ -3,6 +3,9 @@
 
 #include <QWidget>
 
+/** \class MVOverview2WidgetControlPanel
+ *  \brief The main control panel of MVOverview2Widget where the user can request to open views and change settings
+ */
 
 class MVOverview2WidgetControlPanelPrivate;
 class MVOverview2WidgetControlPanel : public QWidget
@@ -13,12 +16,18 @@ public:
 	MVOverview2WidgetControlPanel(QWidget *parent=0);
 	virtual ~MVOverview2WidgetControlPanel();
 
+	///Get parameter value for a particular control defined internally
 	QVariant getParameterValue(QString name);
+	///Set parameter value for a particular control defined internally
     void setParameterValue(QString name,QVariant val);
+	///Corresponds to certain types of controls
     void setParameterLabel(QString name,QString text);
+	///Corresponds to certain types of controls
     void setParameterChoices(QString name,QStringList choices);
 signals:
+	///A button has clicked.... the name of the button is in str
 	void signalButtonClicked(QString str);
+	///A combo box has been activated.... the name of the combobox is in str
     void signalComboBoxActivated(QString str);
 private slots:
 	void slot_button_clicked();

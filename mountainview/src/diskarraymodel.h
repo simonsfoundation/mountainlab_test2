@@ -6,6 +6,12 @@
 
 //changed all ints to longs!!! 3/10/2016 (hope it didn't cause problems!)
 
+/** \class DiskArrayModel
+ *  \brief Used by SSTimeSeriesView to efficiently display a huge timeseries dataset.
+ *
+ * TODO: replace this by more efficient code, see diskarraymodel_new.h
+ */
+
 class DiskArrayModelPrivate;
 class DiskArrayModel : public QObject
 {

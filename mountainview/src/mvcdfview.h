@@ -4,6 +4,10 @@
 #include <QWidget>
 #include "mda.h"
 
+/** \class MVCdfView
+ *  \brief Not used, I don't think it was very useful.
+ */
+
 class MVCdfViewPrivate;
 class MVCdfView : public QWidget
 {

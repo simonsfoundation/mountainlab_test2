@@ -29,9 +29,9 @@
 class MVOverview2WidgetPrivate {
 public:
 	MVOverview2Widget *q;
-    QMap<QString,QString> m_signal_paths;
-    QString m_current_signal_name;
-	DiskReadMda m_signal;
+    QMap<QString,QString> m_timeseries_paths;
+    QString m_current_timeseries_name;
+	DiskReadMda m_timeseries;
 	DiskReadMda m_firings_original;
 	Mda m_firings_split;
 	Mda m_firings;
@@ -77,13 +77,13 @@ public:
     void open_matrix_of_cross_correlograms();
     //void open_templates();
 	void open_cluster_details();
-	void open_signal();
+	void open_timeseries();
     void open_clips();
 	void open_clusters();
     void open_firing_rates();
 
 	void update_cross_correlograms();
-	void update_signal_views();
+	void update_timeseries_views();
     void move_to_timepoint(double tp);
 	void update_widget(QWidget *W);
 
@@ -181,24 +181,24 @@ MVOverview2Widget::~MVOverview2Widget()
     delete d;
 }
 
-void MVOverview2Widget::addSignalPath(const QString &name, const QString &path)
+void MVOverview2Widget::addTimeseriesPath(const QString &name, const QString &path)
 {
-    d->m_signal_paths[name]=path;
-    QStringList choices=d->m_signal_paths.keys();
+    d->m_timeseries_paths[name]=path;
+    QStringList choices=d->m_timeseries_paths.keys();
     qSort(choices);
-    d->m_control_panel->setParameterChoices("signal_name",choices);
-    if (d->m_signal_paths.count()==1) {
-        this->setCurrentSignalName(name);
+    d->m_control_panel->setParameterChoices("timeseries_name",choices);
+    if (d->m_timeseries_paths.count()==1) {
+        this->setCurrentTimeseriesName(name);
     }
 
 }
 
-void MVOverview2Widget::setCurrentSignalName(const QString &name)
+void MVOverview2Widget::setCurrentTimeseriesName(const QString &name)
 {
-    d->m_current_signal_name=name;
-    d->m_signal.setPath(d->m_signal_paths[d->m_current_signal_name]);
-    d->m_control_panel->setParameterValue("signal_name",name);
-    d->update_signal_views();
+    d->m_current_timeseries_name=name;
+    d->m_timeseries.setPath(d->m_timeseries_paths[d->m_current_timeseries_name]);
+    d->m_control_panel->setParameterValue("timeseries_name",name);
+    d->update_timeseries_views();
     d->update_cluster_details();
 	d->update_clips();
 	d->update_cluster_views();
@@ -219,10 +219,10 @@ void MVOverview2Widget::setFiringsPath(const QString &firings)
 	d->do_shell_split();
 	d->update_cross_correlograms();
 	d->update_cluster_details();
-	d->update_signal_views();
+	d->update_timeseries_views();
 }
 
-void MVOverview2Widget::setSamplingFrequency(float freq)
+void MVOverview2Widget::setSampleRate(float freq)
 {
     d->m_samplerate=freq;
 }
@@ -287,8 +287,8 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
 	else if (str=="open_cluster_details") {
 		d->open_cluster_details();
 	}
-	else if (str=="open_signal") {
-		d->open_signal();
+	else if (str=="open_timeseries") {
+		d->open_timeseries();
 	}
     else if (str=="open_clips") {
         d->open_clips();
@@ -306,8 +306,8 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
 
 void MVOverview2Widget::slot_control_panel_combobox_activated(QString str)
 {
-    if (str=="signal_name") {
-        this->setCurrentSignalName(d->m_control_panel->getParameterValue("signal_name").toString());
+    if (str=="timeseries_name") {
+        this->setCurrentTimeseriesName(d->m_control_panel->getParameterValue("timeseries_name").toString());
     }
 }
 
@@ -351,20 +351,20 @@ void MVOverview2Widget::slot_details_template_activated()
     d->open_clips();
 }
 
-void MVOverview2Widget::slot_cross_correlogram_current_unit_changed()
+void MVOverview2Widget::slot_cross_correlogram_current_label_changed()
 {
     MVCrossCorrelogramsWidget *X=(MVCrossCorrelogramsWidget *)sender();
-	d->m_current_k=X->currentUnit();
-    d->set_cross_correlograms_current_number(X->currentUnit());
-	d->set_templates_current_number(X->currentUnit());
+	d->m_current_k=X->currentLabel();
+    d->set_cross_correlograms_current_number(X->currentLabel());
+	d->set_templates_current_number(X->currentLabel());
 }
 
-void MVOverview2Widget::slot_cross_correlogram_selected_units_changed()
+void MVOverview2Widget::slot_cross_correlogram_selected_labels_changed()
 {
 	MVCrossCorrelogramsWidget *X=(MVCrossCorrelogramsWidget *)sender();
-	d->m_selected_ks=X->selectedUnits().toSet();
-	d->set_cross_correlograms_selected_numbers(X->selectedUnits());
-	d->set_templates_selected_numbers(X->selectedUnits());
+	d->m_selected_ks=X->selectedLabels().toSet();
+	d->set_cross_correlograms_selected_numbers(X->selectedLabels());
+	d->set_templates_selected_numbers(X->selectedLabels());
 }
 
 void MVOverview2Widget::slot_clips_view_current_event_changed()
@@ -474,7 +474,7 @@ void MVOverview2WidgetPrivate::create_cross_correlograms_data()
 //	set_progress("Computing","Creating templates",0);
 //	QList<long> times,labels;
 //	long L=m_firings.N2();
-//	int M=m_signal.N1();
+//	int M=m_timeseries.N1();
 //	int T=m_control_panel->getParameterValue("clip_size").toInt();
 
 //	printf("Setting up times and labels...\n");
@@ -495,7 +495,7 @@ void MVOverview2WidgetPrivate::create_cross_correlograms_data()
 //		for (int ii=0; ii<times.count(); ii++) {
 //			if (labels[ii]==k) times_k << times[ii];
 //		}
-//		Mda clips_k=extract_clips(m_signal,times_k,T);
+//		Mda clips_k=extract_clips(m_timeseries,times_k,T);
 //		Mda template_k;
 //		if (m_control_panel->getParameterValue("template_method").toString()=="centroids") {
 //			template_k=compute_centroid(clips_k);
@@ -986,9 +986,9 @@ void MVOverview2WidgetPrivate::open_auto_correlograms()
 	MVCrossCorrelogramsWidget *X=new MVCrossCorrelogramsWidget;
 	X->setProperty("widget_type","auto_correlograms");
 	add_tab(X,"Auto-Correlograms");
-	QObject::connect(X,SIGNAL(unitActivated(int)),q,SLOT(slot_auto_correlogram_activated(int)));
-    QObject::connect(X,SIGNAL(currentUnitChanged()),q,SLOT(slot_cross_correlogram_current_unit_changed()));
-	QObject::connect(X,SIGNAL(selectedUnitsChanged()),q,SLOT(slot_cross_correlogram_selected_units_changed()));
+	QObject::connect(X,SIGNAL(labelActivated(int)),q,SLOT(slot_auto_correlogram_activated(int)));
+    QObject::connect(X,SIGNAL(currentLabelChanged()),q,SLOT(slot_cross_correlogram_current_label_changed()));
+	QObject::connect(X,SIGNAL(selectedLabelsChanged()),q,SLOT(slot_cross_correlogram_selected_labels_changed()));
 	update_widget(X);
 }
 
@@ -1002,7 +1002,7 @@ void MVOverview2WidgetPrivate::open_cross_correlograms(int k)
 	X->setProperty("widget_type","cross_correlograms");
 	X->setProperty("kk",k);
     add_tab(X,QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k)+1));
-    QObject::connect(X,SIGNAL(currentUnitChanged()),q,SLOT(slot_cross_correlogram_current_unit_changed()));
+    QObject::connect(X,SIGNAL(currentLabelChanged()),q,SLOT(slot_cross_correlogram_current_label_changed()));
     update_widget(X);
 }
 
@@ -1047,9 +1047,9 @@ void MVOverview2WidgetPrivate::open_cluster_details()
 {
 	MVClusterDetailWidget *X=new MVClusterDetailWidget;
 	X->setChannelColors(m_channel_colors);
-	X->setSignal(m_signal);
+	X->setTimeseries(m_timeseries);
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
-    X->setSamplingFrequency(m_samplerate);
+    X->setSampleRate(m_samplerate);
     QObject::connect(X,SIGNAL(signalTemplateActivated()),q,SLOT(slot_details_template_activated()));
 	QObject::connect(X,SIGNAL(signalCurrentKChanged()),q,SLOT(slot_details_current_k_changed()));
 	QObject::connect(X,SIGNAL(signalSelectedKsChanged()),q,SLOT(slot_details_selected_ks_changed()));
@@ -1058,15 +1058,15 @@ void MVOverview2WidgetPrivate::open_cluster_details()
 	update_widget(X);
 }
 
-void MVOverview2WidgetPrivate::open_signal()
+void MVOverview2WidgetPrivate::open_timeseries()
 {
     SSTimeSeriesWidget *X=new SSTimeSeriesWidget;
     SSTimeSeriesView *V=new SSTimeSeriesView;
     V->initialize();
-    V->setSamplingFrequency(m_samplerate);
+    V->setSampleRate(m_samplerate);
     X->addView(V);
-    X->setProperty("widget_type","signal");
-	add_tab(X,QString("Signal"));
+    X->setProperty("widget_type","timeseries");
+	add_tab(X,QString("Timeseries"));
     update_widget(X);
 }
 
@@ -1139,12 +1139,12 @@ void MVOverview2WidgetPrivate::update_cross_correlograms()
 	}
 }
 
-void MVOverview2WidgetPrivate::update_signal_views()
+void MVOverview2WidgetPrivate::update_timeseries_views()
 {
 	QList<QWidget *> widgets=get_all_widgets();
 	foreach (QWidget *W,widgets) {
 		QString widget_type=W->property("widget_type").toString();
-		if (widget_type=="signal") {
+		if (widget_type=="timeseries") {
 			update_widget(W);
 		}
     }
@@ -1155,7 +1155,7 @@ void MVOverview2WidgetPrivate::move_to_timepoint(double tp)
     QList<QWidget *> widgets=get_all_widgets();
     foreach (QWidget *W,widgets) {
         QString widget_type=W->property("widget_type").toString();
-        if (widget_type=="signal") {
+        if (widget_type=="timeseries") {
             SSTimeSeriesWidget *V=(SSTimeSeriesWidget *)W;
             V->view(0)->setCurrentTimepoint(tp);
         }
@@ -1223,7 +1223,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
             }
             else labels << "";
         }
-        WW->setLabels(labels);
+		WW->setTextLabels(labels);
 		WW->updateWidget();
 	}
 	else if (widget_type=="cross_correlograms") {
@@ -1231,7 +1231,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
         int k=W->property("kk").toInt();
 		WW->setColors(m_colors);
 		WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
-		WW->setBaseUnit(k);
+		WW->setBaseLabel(k);
         QStringList labels;
         for (int i=0; i<m_original_cluster_numbers.count(); i++) {
             if ((i==0)||(m_original_cluster_numbers[i]!=m_original_cluster_numbers[i-1])) {
@@ -1239,7 +1239,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
             }
             else labels << "";
         }
-        WW->setLabels(labels);
+		WW->setTextLabels(labels);
 		WW->updateWidget();
 	}
     else if (widget_type=="matrix_of_cross_correlograms") {
@@ -1247,7 +1247,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
         QList<int> ks=string_list_to_int_list(W->property("ks").toStringList());
 		WW->setColors(m_colors);
         WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
-        WW->setUnitNumbers(ks);
+        WW->setLabelNumbers(ks);
         QStringList labels;
         for (int a1=0; a1<ks.count(); a1++) {
             QString str1=QString("%1(%2)").arg(m_original_cluster_numbers[ks[a1]]).arg(m_original_cluster_offsets[ks[a1]]+1);
@@ -1256,7 +1256,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
                 labels << QString("%1/%2").arg(str1).arg(str2);
             }
         }
-        WW->setLabels(labels);
+		WW->setTextLabels(labels);
         WW->updateWidget();
     }
     /*else if (widget_type=="templates") {
@@ -1285,7 +1285,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
 		MVClusterDetailWidget *WW=(MVClusterDetailWidget *)W;
         int clip_size=m_control_panel->getParameterValue("clip_size").toInt();
 		WW->setColors(m_colors);
-        WW->setSignal(m_signal);
+        WW->setTimeseries(m_timeseries);
         WW->setClipSize(clip_size);
         WW->setFirings(DiskReadMda(m_firings));
         WW->setGroupNumbers(m_original_cluster_numbers);
@@ -1315,7 +1315,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
 			}
 		}
 		int clip_size=m_control_panel->getParameterValue("clip_size").toInt();
-		Mda clips=extract_clips(m_signal,times_kk,clip_size);
+		Mda clips=extract_clips(m_timeseries,times_kk,clip_size);
 		printf("Setting data...\n");
         //DiskArrayModel *DAM=new DiskArrayModel;
         //DAM->setFromMda(clips);
@@ -1357,7 +1357,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
 			}
 		}
 		int clip_size=m_control_panel->getParameterValue("clip_size").toInt();
-		Mda clips=extract_clips(m_signal,times_kk,clip_size);
+		Mda clips=extract_clips(m_timeseries,times_kk,clip_size);
 		int M=clips.N1(); int T=clips.N2(); int L=clips.N3();
 		Mda features; features.allocate(3,L);
 		set_progress("Computing features","Computing features",0);
@@ -1366,7 +1366,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
         //subtract_features_mean(features);
 		normalize_features(features,false);
 		features.write32("/tmp/tmp_features.mda");
-		WW->setSignal(m_signal);
+		WW->setTimeseries(m_timeseries);
 		WW->setData(features);
 		WW->setTimes(times_kk);
 		WW->setLabels(labels_kk);
@@ -1397,13 +1397,13 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
             firings2.setValue(amplitudes[i],3,i);
         }
         WW->setFirings(firings2);
-        WW->setSamplingFreq(m_samplerate);
+        WW->setSampleRate(m_samplerate);
         WW->setEpochs(m_epochs);
     }
-	else if (widget_type=="signal") {
+	else if (widget_type=="timeseries") {
         SSTimeSeriesWidget *WW=(SSTimeSeriesWidget *)W;
 		DiskArrayModel *X=new DiskArrayModel;
-        X->setPath(m_signal_paths[m_current_signal_name]);
+        X->setPath(m_timeseries_paths[m_current_timeseries_name]);
         ((SSTimeSeriesView *)(WW->view()))->setData(X,true);
         set_times_labels();
     }
@@ -1416,7 +1416,7 @@ void MVOverview2WidgetPrivate::set_cross_correlograms_current_number(int kk)
         QString widget_type=W->property("widget_type").toString();
         if ((widget_type=="auto_correlograms")||(widget_type=="cross_correlograms")) {
             MVCrossCorrelogramsWidget *WW=(MVCrossCorrelogramsWidget *)W;
-			WW->setCurrentUnit(kk);
+			WW->setCurrentLabel(kk);
         }
 	}
 }
@@ -1428,7 +1428,7 @@ void MVOverview2WidgetPrivate::set_cross_correlograms_selected_numbers(const QLi
 		QString widget_type=W->property("widget_type").toString();
 		if ((widget_type=="auto_correlograms")||(widget_type=="cross_correlograms")) {
 			MVCrossCorrelogramsWidget *WW=(MVCrossCorrelogramsWidget *)W;
-			WW->setSelectedUnits(kks);
+			WW->setSelectedLabels(kks);
 		}
 	}
 }
@@ -1479,7 +1479,7 @@ void MVOverview2WidgetPrivate::set_times_labels()
     QList<QWidget *> widgets=get_all_widgets();
     foreach (QWidget *W,widgets) {
         QString widget_type=W->property("widget_type").toString();
-        if (widget_type=="signal") {
+        if (widget_type=="timeseries") {
             SSTimeSeriesWidget *WW=(SSTimeSeriesWidget *)W;
             SSTimeSeriesView *V=(SSTimeSeriesView *)WW->view();
             V->setTimesLabels(times,labels);
@@ -1722,7 +1722,7 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
 				WW->setCurrentK(evt.label);
 			}
 		}
-		else if (widget_type=="signal") {
+		else if (widget_type=="timeseries") {
 			SSTimeSeriesWidget *WW=(SSTimeSeriesWidget *)W;
 			SSTimeSeriesView *VV=(SSTimeSeriesView *)WW->view(0);
 			if (evt.time>=0) {

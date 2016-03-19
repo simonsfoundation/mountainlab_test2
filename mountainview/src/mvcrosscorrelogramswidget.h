@@ -6,6 +6,10 @@
 #include <QMap>
 #include <QColor>
 
+/** \class MVCrossCorrelogramsWidget
+ *  \brief Presents a grid of cross-correlograms as histogram views
+ */
+
 class MVCrossCorrelogramsWidgetPrivate;
 class MVCrossCorrelogramsWidget : public QWidget
 {
@@ -15,25 +19,40 @@ public:
 	MVCrossCorrelogramsWidget();
 	virtual ~MVCrossCorrelogramsWidget();
 
+	///Set the cross-correlogram data computed, for example, in MVOverview2Widget
 	void setCrossCorrelogramsPath(const QString &path);
+	///Set the cross-correlogram data computed, for example, in MVOverview2Widget
 	void setCrossCorrelogramsData(const DiskReadMda &X);
-    void setLabels(const QStringList &labels);
+	///Set the string labels for display
+	void setTextLabels(const QStringList &labels);
+	///To make a uniform look. TODO: handle this properly
 	void setColors(const QMap<QString,QColor> &colors);
+	///Recreate all the subwidgets
 	void updateWidget();
 
-	int currentUnit();
-	QList<int> selectedUnits();
-	void setCurrentUnit(int num);
-	void setSelectedUnits(const QList<int> &nums);
-	int baseUnit();
-	void setBaseUnit(int num);
+	///The current label (or cluster number)
+	int currentLabel();
+	///The selected labels (or cluster numbers)
+	QList<int> selectedLabels();
+	///Set current label (or cluster number)
+	void setCurrentLabel(int num);
+	///Set selected labels (or cluster numbers)
+	void setSelectedLabels(const QList<int> &nums);
+	///Not to be explained at this time for lack of a clear explanation
+	int baseLabel();
+	///Not to be explained at this time for lack of a clear explanation
+	void setBaseLabel(int num);
 
-	void setUnitNumbers(const QList<int> &numbers);
+	///Hmmmm....
+	void setLabelNumbers(const QList<int> &numbers);
 
 signals:
-	void currentUnitChanged();
-	void unitActivated(int num);
-	void selectedUnitsChanged();
+	///The current label (or cluster number) has changed
+	void currentLabelChanged();
+	///The current label (or cluster number) has been double clicked (or enter pressed?)
+	void labelActivated(int num);
+	///The set of selected labels (or cluster numbers) have changed
+	void selectedLabelsChanged();
 
 private slots:
 	void slot_histogram_view_clicked();

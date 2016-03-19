@@ -62,20 +62,20 @@ int main(int argc, char *argv[]) {
 		printf("overview2...\n");
 		QString pre_path=CLP.named_parameters["pre"].toString();
 		QString filt_path=CLP.named_parameters["filt"].toString();
-        QString signal_path=CLP.named_parameters["signal"].toString();
+        QString timeseries_path=CLP.named_parameters["timeseries"].toString();
 		QString firings_path=CLP.named_parameters["firings"].toString();
         double samplerate=CLP.named_parameters["samplerate"].toDouble();
 		QString epochs_path=CLP.named_parameters["epochs"].toString();
 		QString window_title=CLP.named_parameters["window_title"].toString();
 		MVOverview2Widget *W=new MVOverview2Widget;
         if (!pre_path.isEmpty()) {
-            W->addSignalPath("Preprocessed Data",pre_path);
+            W->addTimeseriesPath("Preprocessed Data",pre_path);
         }
         if (!filt_path.isEmpty()) {
-            W->addSignalPath("Filtered Data",filt_path);
+            W->addTimeseriesPath("Filtered Data",filt_path);
         }
-        if (!signal_path.isEmpty()) {
-            W->addSignalPath("Raw Data",signal_path);
+        if (!timeseries_path.isEmpty()) {
+            W->addTimeseriesPath("Raw Data",timeseries_path);
         }
 
         if (!epochs_path.isEmpty()) {
@@ -84,10 +84,10 @@ int main(int argc, char *argv[]) {
         }
 		if (window_title.isEmpty()) window_title=pre_path;
 		if (window_title.isEmpty()) window_title=filt_path;
-        if (window_title.isEmpty()) window_title=signal_path;
+        if (window_title.isEmpty()) window_title=timeseries_path;
 		W->setFiringsPath(firings_path);
 		W->show();
-        W->setSamplingFrequency(samplerate);
+        W->setSampleRate(samplerate);
 		W->move(QApplication::desktop()->screen()->rect().topLeft()+QPoint(200,200));
 		int W0=1400,H0=600;
 		QRect geom=QApplication::desktop()->geometry();
@@ -118,14 +118,14 @@ int main(int argc, char *argv[]) {
     }
 	else if (mode=="spikespy") {
 		printf("spikespy...\n");
-		QString signal_path=CLP.named_parameters["signal"].toString();
+		QString timeseries_path=CLP.named_parameters["timeseries"].toString();
 		QString firings_path=CLP.named_parameters["firings"].toString();
         double samplerate=CLP.named_parameters["samplerate"].toDouble();
 		SSTimeSeriesWidget *W=new SSTimeSeriesWidget;
 		SSTimeSeriesView *V=new SSTimeSeriesView;
-        V->setSamplingFrequency(samplerate);
+        V->setSampleRate(samplerate);
 		DiskArrayModel *DAM=new DiskArrayModel;
-		DAM->setPath(signal_path);
+		DAM->setPath(timeseries_path);
 		V->setData(DAM,true);
 		Mda firings; firings.read(firings_path);
 		QList<long> times,labels;

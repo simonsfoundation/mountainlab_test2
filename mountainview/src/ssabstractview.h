@@ -22,7 +22,7 @@ public:
 	Q_INVOKABLE void setTitle(QString title);
 	Q_INVOKABLE void initialize();
 	Q_INVOKABLE void setTimepointMapping(const DiskReadMda &X);
-	Q_INVOKABLE void setSamplingFrequency(float val);
+	Q_INVOKABLE void setSampleRate(float val);
 
 	QString title();
 	void setCurrentX(double x);

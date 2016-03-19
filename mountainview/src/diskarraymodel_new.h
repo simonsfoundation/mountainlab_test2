@@ -11,6 +11,7 @@ public:
 	friend class DiskArrayModel_NewPrivate;
 	DiskArrayModel_New();
 	~DiskArrayModel_New();
+	/*
 	void setPath(QString path);
 	void setFromMda(const Mda &X);
 	QString path();
@@ -21,6 +22,7 @@ public:
 	long numChannels() const; //size of first dimension
 	long numTimepoints() const; //product of 2nd and 3rd dimensions!
 	long clipSize() const; //2nd dimension
+	*/
 private:
 	DiskArrayModel_NewPrivate *d;
 };

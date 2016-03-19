@@ -6,22 +6,30 @@
 #include <QList>
 #include <QColor>
 
+///A firing event defined by a time and a label
 struct MVEvent {
 	double time;
 	int label;
 };
 
+///An epoch or time interval within a timeseries. t_begin and t_end are in timepoint units
 struct Epoch {
     QString name;
     double t_begin;
     double t_end;
 };
+///Read a set of epochs from a text file (special format)
 QList<Epoch> read_epochs(const QString &path);
 
+///Utility
 Mda compute_mean_waveform(DiskArrayModel *C);
+///Utility
 Mda compute_mean_stdev_waveform(DiskArrayModel *C);
+///Utility
 Mda compute_features(DiskArrayModel *C);
+///Utility
 Mda compute_features(const QList<DiskArrayModel *> &C);
+///TODO: Handle this properly
 QColor get_heat_map_color(double val);
 
 

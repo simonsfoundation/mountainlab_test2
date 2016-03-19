@@ -6,6 +6,12 @@
 #include <QTabWidget>
 #include "mvutils.h"
 
+/** \class MVOverview2Widget
+ *  \brief The main window (for now) showing an overview of the results of sorting by providing a number of interactive and synchronized views.
+ *
+ *  Presents user with a rich set of views. Cross-correlograms, raw data, cluster details, rotatable 3D views, firing rate vs. time view, etc.
+ */
+
 class MVOverview2WidgetPrivate;
 class CustomTabWidget;
 class MVOverview2Widget : public QWidget
@@ -16,11 +22,17 @@ public:
 	friend class CustomTabWidget;
 	MVOverview2Widget(QWidget *parent=0);
 	virtual ~MVOverview2Widget();
-    void addSignalPath(const QString &name,const QString &path);
-    void setCurrentSignalName(const QString &name);
+	///The path to the timeseries that was sorted. For example, raw, filtered, or pre-processed. Usually all three of these are set, so user can choose between them in dropdown selection box
+    void addTimeseriesPath(const QString &name,const QString &path);
+	///The name of the timeseries being viewed... corresponds to name in addTimeseriesPath()
+    void setCurrentTimeseriesName(const QString &name);
+	///Set the path to the results of sorting. TODO: refer to docs for info on firings array
 	void setFiringsPath(const QString &firings);
-	void setSamplingFrequency(float freq);
+	///The sample rate for the dataset
+	void setSampleRate(float freq);
+	///Open the initial views
 	void setDefaultInitialization();
+	///Corresponds to MVFiringRateView::setEpochs()
     void setEpochs(const QList<Epoch> &epochs);
 
 protected:
@@ -38,14 +50,18 @@ private slots:
 	void slot_details_current_k_changed();
 	void slot_details_selected_ks_changed();
     void slot_details_template_activated();
-    void slot_cross_correlogram_current_unit_changed();
-	void slot_cross_correlogram_selected_units_changed();
+    void slot_cross_correlogram_current_label_changed();
+	void slot_cross_correlogram_selected_labels_changed();
 	void slot_clips_view_current_event_changed();
 	void slot_cluster_view_current_event_changed();
 
 private:
 	MVOverview2WidgetPrivate *d;
 };
+
+/** \class CustomTabWidget
+ *  \brief Responds to clicking and double clicking of tabs. Used by MVOverview2Widget
+ */
 
 class CustomTabWidget : public QTabWidget {
 	Q_OBJECT

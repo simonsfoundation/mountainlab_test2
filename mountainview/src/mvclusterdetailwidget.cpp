@@ -64,7 +64,7 @@ class MVClusterDetailWidgetPrivate {
 public:
 	MVClusterDetailWidget *q;
 
-	DiskReadMda m_signal;
+	DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     double m_samplerate;
     QList<int> m_group_numbers;
@@ -141,9 +141,9 @@ MVClusterDetailWidget::~MVClusterDetailWidget()
 	delete d;
 }
 
-void MVClusterDetailWidget::setSignal(DiskReadMda &X)
+void MVClusterDetailWidget::setTimeseries(DiskReadMda &X)
 {
-	d->m_signal=X;
+	d->m_timeseries=X;
 	d->m_calculations_needed=true;
 	d->compute_total_time();
 	this->update();
@@ -171,7 +171,7 @@ void MVClusterDetailWidget::setGroupNumbers(const QList<int> &group_numbers)
     this->update();
 }
 
-void MVClusterDetailWidget::setSamplingFrequency(double freq)
+void MVClusterDetailWidget::setSampleRate(double freq)
 {
     d->m_samplerate=freq;
 	d->compute_total_time();
@@ -473,8 +473,8 @@ void MVClusterDetailWidget::wheelEvent(QWheelEvent *evt)
 void MVClusterDetailWidgetPrivate::do_calculations()
 {
 
-	int M=m_signal.N1();
-	int N=m_signal.N2();
+	int M=m_timeseries.N1();
+	int N=m_timeseries.N2();
 	int L=m_firings.N2();
 	int T=m_clip_size;
 	QList<double> times;
@@ -513,7 +513,7 @@ void MVClusterDetailWidgetPrivate::do_calculations()
                 CD.peaks << peaks[i];
             }
         }
-        Mda clips_k=extract_clips(m_signal,CD.times,T);
+        Mda clips_k=extract_clips(m_timeseries,CD.times,T);
         CD.template0=compute_mean_clip(clips_k);
 		m_cluster_data << CD;
 	}
@@ -550,7 +550,7 @@ void MVClusterDetailWidgetPrivate::set_progress(QString title, QString text, flo
 
 void MVClusterDetailWidgetPrivate::compute_total_time()
 {
-    m_total_time_sec=m_signal.N2()/m_samplerate;
+    m_total_time_sec=m_timeseries.N2()/m_samplerate;
 }
 
 void MVClusterDetailWidgetPrivate::set_current_k(int k)

@@ -4,6 +4,14 @@
 #include "mda.h"
 #include <QWidget>
 
+/**
+ * \class CorrelationMatrixView
+ * \brief Not used for now.
+ *
+ * It used to be a valuable view and we may use it again.
+ *
+ **/
+
 class CorrelationMatrixViewPrivate;
 class CorrelationMatrixView : public QWidget
 {

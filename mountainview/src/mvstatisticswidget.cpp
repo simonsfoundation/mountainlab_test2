@@ -80,7 +80,7 @@ void MVStatisticsWidget::updateStatistics()
 	d->update_statistics();
 }
 
-QList<int> MVStatisticsWidget::selectedUnits()
+QList<int> MVStatisticsWidget::selectedLabels()
 {
 	QList<QTreeWidgetItem *> items=d->m_tree->selectedItems();
 	QList<int> ret;
@@ -90,9 +90,9 @@ QList<int> MVStatisticsWidget::selectedUnits()
 	return ret;
 }
 
-void MVStatisticsWidget::setSelectedUnits(const QList<int> &units)
+void MVStatisticsWidget::setSelectedLabels(const QList<int> &labels)
 {
-	QSet<int> the_set=units.toSet();
+	QSet<int> the_set=labels.toSet();
 	for (int j=0; j<d->m_tree->topLevelItemCount(); j++) {
 		QTreeWidgetItem *item=d->m_tree->topLevelItem(j);
 		if (the_set.contains(item->data(0,Qt::UserRole).toInt())) {
@@ -104,20 +104,20 @@ void MVStatisticsWidget::setSelectedUnits(const QList<int> &units)
 	}
 }
 
-int MVStatisticsWidget::currentUnit()
+int MVStatisticsWidget::currentLabel()
 {
 	QTreeWidgetItem *item=d->m_tree->currentItem();
 	if (!item) return 0;
-	int unit_number=item->data(0,Qt::UserRole).toInt();
-	return unit_number;
+	int label_number=item->data(0,Qt::UserRole).toInt();
+	return label_number;
 }
 
-void MVStatisticsWidget::setCurrentUnit(int unit)
+void MVStatisticsWidget::setCurrentLabel(int label)
 {
-	if (unit==currentUnit()) return;
+	if (label==currentLabel()) return;
 	for (int j=0; j<d->m_tree->topLevelItemCount(); j++) {
 		QTreeWidgetItem *item=d->m_tree->topLevelItem(j);
-		if (item->data(0,Qt::UserRole).toInt()==unit) {
+		if (item->data(0,Qt::UserRole).toInt()==label) {
 			d->m_tree->setCurrentItem(item);
 		}
 	}
@@ -125,17 +125,17 @@ void MVStatisticsWidget::setCurrentUnit(int unit)
 
 void MVStatisticsWidget::slot_item_clicked()
 {
-	emit currentUnitChanged();
+	emit currentLabelChanged();
 }
 
 void MVStatisticsWidget::slot_item_activated(QTreeWidgetItem *item)
 {
-	emit unitActivated(item->data(0,Qt::UserRole).toInt());
+	emit labelActivated(item->data(0,Qt::UserRole).toInt());
 }
 
 void MVStatisticsWidget::slot_item_selection_changed()
 {
-	emit selectedUnitsChanged();
+	emit selectedLabelsChanged();
 }
 
 QString read_text_file_2(QString path) {

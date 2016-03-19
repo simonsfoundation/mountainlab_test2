@@ -657,7 +657,7 @@ void SSAbstractView::setTimepointMapping(const DiskReadMda &X)
 	plot()->setTimepointMapping(X);
 }
 
-void SSAbstractView::setSamplingFrequency(float val)
+void SSAbstractView::setSampleRate(float val)
 {
     d->m_samplerate=val;
 }
@@ -856,4 +856,3 @@ void SSAbstractViewPrivate::on_left_right_arrow(bool left)
 	do_translate((coord2.x-coord1.x)*tmp);
 	*/
 }
-
