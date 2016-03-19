@@ -31,7 +31,7 @@ The output of sorting is stored in a "**firings**" matrix of dimension $R\times 
 
 ## File I/O
 
-All matrices and arrays are stored in .mda file format. This is an *almost pure* binary format containing a minimalistic header containing information about the data storage type, number of dimensions, and dimension sizes. More information on this file format is available [here](http://magland.github.io/html/2015-07-31-mda-format.html).
+All matrices and arrays are stored in .mda file format. This is a binary format with a minimalistic header containing information about the data storage type, number of dimensions, and dimension sizes. The data is then stored in a simple raw binary format. More information on this file format is available [here](http://magland.github.io/html/2015-07-31-mda-format.html).
 
 In Matlab, MDA files may be read/written using the following functions:
 * readmda.m -- read array from file
