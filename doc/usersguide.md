@@ -83,3 +83,5 @@ mscmd_cluster('detect.mda','firings.mda');
 Note that these codes are provided to illustrate the concepts of processing pipelines and will not necessarily run due to changes in the API. For more detailed sorting examples see the demo directories.
 
 A third way to specify processing scripts is to use bash scripts with special syntax interpreted by mountainsort. In this case, Matlab is not required. Usage of these **.msh** scripts is described below.
+
+## Needs to be completed
