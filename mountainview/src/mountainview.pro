@@ -28,6 +28,7 @@ HEADERS += \
     mvclusterwidget.h \
     mvfiringrateview.h \
     diskarraymodel.h \
+    diskarraymodel_new.h \
     sstimeserieswidget.h \
     sstimeseriesview.h \
     sstimeseriesplot.h \
@@ -56,6 +57,7 @@ SOURCES += mountainviewmain.cpp \
     mvclusterwidget.cpp \
     mvfiringrateview.cpp \
     diskarraymodel.cpp \
+    diskarraymodel_new.cpp \
     sstimeserieswidget.cpp \
     sstimeseriesview.cpp \
     sstimeseriesplot.cpp \
@@ -81,8 +83,8 @@ SOURCES += affinetransformation.cpp
 INCLUDEPATH += ../../mountainsort/src/mda
 DEPENDPATH += ../../mountainsort/src/mda
 VPATH += ../../mountainsort/src/mda
-HEADERS += mda.h textfile.h diskreadmda.h mdaio.h usagetracking.h
-SOURCES += mda.cpp textfile.cpp diskreadmda.cpp mdaio.cpp usagetracking.cpp
+HEADERS += mda.h textfile.h diskreadmda.h diskwritemda.h mdaio.h usagetracking.h
+SOURCES += mda.cpp textfile.cpp diskreadmda.cpp diskwritemda.cpp mdaio.cpp usagetracking.cpp
 
 INCLUDEPATH += ../../mountainsort/src/processors
 DEPENDPATH += ../../mountainsort/src/processors
