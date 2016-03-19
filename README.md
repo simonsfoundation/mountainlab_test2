@@ -54,11 +54,9 @@ CentOS/Red Hat: sudo yum install lapack-devel.x86_64
 
 **Compilation:**
 ```bash
-cd mountainsuite/mountainsort/src
-qmake
-make -j 8
+./compile_mountainsort.sh
+./compile_mountainview.sh
 ```
-> The "-j 8" tells make to use multiple cores to do the compilation, because we believe in speed
 
 **Opening Matlab:**
 ```
