@@ -35,10 +35,11 @@ Several demo command-line and Matlab scripts are found in /demo and /matlab/demo
 
 Follow the above steps using the these hints along the way.
 
-**Installation of git:**
+**Installation of git and cloning this repository:**
 ```bash
 Ubuntu/Debian: sudo apt-get install git
 CentOS/Red Hat: sudo yum install git
+git clone https://github.com/magland/mountainlab.git
 ```
 
 **Installation of Qt5:**
