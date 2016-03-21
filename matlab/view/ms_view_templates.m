@@ -8,13 +8,14 @@ function ms_view_templates(templates,opts)
 %    clips
 %    opts.Tpad - the spacing between templates, (default floor(T*0.2))
 %    opts.stdev - optional MxTxK array of standard deviations to be viewed
+%    opts.showcenter - optional, if true plot fiducial lines at the "center" time
 %
 % Other m-files required: none
 %
 % See also: mscmd_templates, ms_templates, ms_view_templates_from_clips
 
 % Author: Jeremy Magland
-% Jan 2015; Last revision: 15-Feb-2106
+% Jan 2015; Last revision: 21-Mar-2016, Barnett
 
 if (nargin<1) test_ms_view_templates; return; end;
 
@@ -22,6 +23,7 @@ if (nargin<1) test_ms_view_templates; return; end;
 
 if (nargin<2) opts=struct; end;
 if (~isfield(opts,'Tpad')) opts.Tpad=floor(T*0.2); end;
+if ~isfield(opts,'showcenter'), opts.showcenter = 0; end
 
 Tpad=opts.Tpad;
 
@@ -33,6 +35,14 @@ colors={...
     [0.1250,0.2500,0.1250],... %"#204020"
     [0.1250,0.1250,0.4375],... %"#202070"
 };
+
+if opts.showcenter   % fiduciary lines (plot behind everything else)
+  Tcen = floor((T+1)/2);   % center time in samples
+  for k=1:K
+    plot(Tcen*[1 1]+(k-1)*(T+Tpad), vspread*[-M+.5 .5],'-','color',.9*[1 1 1]);
+    hold on;
+  end
+end
 
 if isfield(opts,'stdev')
     for sgn=-1:2:1
@@ -66,8 +76,7 @@ ylim([-vspread*(M-1)-vmargin,vmargin]);
 set(gca,'xtick',[]); set(gca,'ytick',[]);
 %set(gca,'position',[0,0,1,1]);
 
-label_color=[0.7,0.7,0.7];
-
+label_color=[0.7,0.7,0.7];  % now do text number labels...
 for k=1:K
     hh=text((T+Tpad)*(k-1)+T/2,vspread/2,sprintf('%d',k));
     set(hh,'HorizontalAlignment','center');

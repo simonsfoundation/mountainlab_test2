@@ -22,6 +22,9 @@ function times=ms_detect3(X,opts)
 %    opts.beta - (optional, integer) sub-sampling factor for real-valued time
 %                estimation.
 %    opts.Tsub - clip size used for sub-sample time estimation
+%    opts.polarity - 'b' (both + and -), 'p' (+ only), 'm' (- only)
+%                controls which signs of peaks used. Note: the mean must be
+%                close to zero for all of these to be meaningful.
 %
 % Outputs:
 %    times - 1xL array of real-valued timepoints where an event has been
@@ -43,6 +46,7 @@ function times=ms_detect3(X,opts)
 % See also: mscmd_detect, ms_extract_clips, spikespy, test_detect_accuracy
 
 % based on ms_detect, Jeremy Magland Jan 2016. Alex Barnett 3/11/16-3/16/16
+% 3/21/16: polarity options (ahb)
 
 if nargin==0, test_ms_detect3; return; end
 
@@ -51,9 +55,18 @@ detect_threshold=opts.detect_threshold;
 T = opts.clip_size;
 if isfield(opts,'beta'), beta = opts.beta; else, beta = 10; end
 if ~isfield(opts,'meth'), opts.meth = 'p'; end                  % default
+if ~isfield(opts,'polarity'), opts.polarity = 'b'; end          % default
 
-absX=abs(X);
-absX=max(absX,[],1); %max over channels (but best to put in one channel at a time)
+% create absX which is a "detection signal" restricted to certain polarities...
+if strcmp(opts.polarity,'b')
+  absX=abs(X);
+elseif strcmp(opts.polarity,'p')
+  absX = max(0,X);
+elseif strcmp(opts.polarity,'m')
+  absX = max(0,-X);
+else, error('unknown opts.polarity!');
+end
+absX=max(absX,[],1); % now max over channels (but best to put in one channel at a time)
 
 [M,N] = size(X);
 use_it=zeros(1,N);
@@ -95,13 +108,16 @@ if beta>1
     Z = reshape(reshape(subspace,[M*Tu opts.num_features])*FF, [M Tu NC]);
     maxjit = 2.0*beta;           % allow larger jitter adjustment (make param)
   end
-  for i=1:NC    % now find location of max abs in the subsampled clips...
-    if M>1
-      [~,peakchan] = max(max(abs(Z(:,:,i)),[],2),[],1); % or not upsampled?
-    else, peakchan = 1;
-    end
-    z = Z(peakchan,:,i);               % signal only on the peak channel
-    [~,ind] = max(abs(z));
+  % create a detection signal vs time for each clip...
+  if strcmp(opts.polarity,'b')
+    Zdet = max(abs(Z),[],1);   % collapse along channel axis
+  elseif strcmp(opts.polarity,'p')
+    Zdet = max(max(0,Z),[],1);   % collapse along channel axis
+  else
+    Zdet = max(max(0,-Z),[],1);   % collapse along channel axis
+  end  
+  for i=1:NC    % now find location of max subsampled det signal...
+    [~,ind] = max(abs(Zdet(:,i)));   % or don't use upsampled here?
     jit = max(-maxjit,min(maxjit, ind-Tcen));   % limit |jitter| to maxjit
     times(i) = times(i) + jit/beta;   % jitter by # subsamples
   end
