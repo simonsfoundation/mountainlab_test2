@@ -283,7 +283,7 @@ double *Mda::dataPtr(long i1, long i2, long i3, long i4, long i5, long i6)
 			];
 }
 
-void Mda::getSubArray(Mda &ret, long i, long size)
+void Mda::getChunk(Mda &ret, long i, long size)
 {
 	long a_begin=i; long x_begin=0;
 	long a_end=i+size-1; long x_end=size-1;
@@ -302,7 +302,7 @@ void Mda::getSubArray(Mda &ret, long i, long size)
 	}
 }
 
-void Mda::getSubArray(Mda &ret, long i1, long i2, long size1, long size2)
+void Mda::getChunk(Mda &ret, long i1, long i2, long size1, long size2)
 {
 	long a1_begin=i1; long x1_begin=0;
 	long a1_end=i1+size1-1; long x1_end=size1-1;
@@ -330,7 +330,7 @@ void Mda::getSubArray(Mda &ret, long i1, long i2, long size1, long size2)
 	}
 }
 
-void Mda::getSubArray(Mda &ret, long i1, long i2, long i3, long size1, long size2, long size3)
+void Mda::getChunk(Mda &ret, long i1, long i2, long i3, long size1, long size2, long size3)
 {
 	long a1_begin=i1; long x1_begin=0;
 	long a1_end=i1+size1-1; long x1_end=size1-1;

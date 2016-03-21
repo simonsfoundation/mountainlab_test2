@@ -123,7 +123,7 @@ long DiskReadMda::totalSize() const
 bool DiskReadMda::readChunk(Mda &X, long i, long size) const
 {
 	if (d->m_use_memory_mda) {
-		d->m_memory_mda.getSubArray(X,i,size);
+		d->m_memory_mda.getChunk(X,i,size);
 		return true;
 	}
 	if (!d->open_file_if_needed()) return false;
@@ -145,7 +145,7 @@ bool DiskReadMda::readChunk(Mda &X, long i, long size) const
 bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long size1, long size2) const
 {
 	if (d->m_use_memory_mda) {
-		d->m_memory_mda.getSubArray(X,i1,i2,size1,size2);
+		d->m_memory_mda.getChunk(X,i1,i2,size1,size2);
 		return true;
 	}
 	if (!d->open_file_if_needed()) return false;
@@ -174,7 +174,7 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long size1, long size2) co
 bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long i3, long size1, long size2, long size3) const
 {
 	if (d->m_use_memory_mda) {
-		d->m_memory_mda.getSubArray(X,i1,i2,i3,size1,size2,size3);
+		d->m_memory_mda.getChunk(X,i1,i2,i3,size1,size2,size3);
 		return true;
 	}
 	if (!d->open_file_if_needed()) return false;

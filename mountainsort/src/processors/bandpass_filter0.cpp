@@ -42,7 +42,7 @@ bool bandpass_filter0(const QString &input_path, const QString &output_path, dou
 			}
             chunk=do_bandpass_filter0(chunk,samplerate,freq_min,freq_max);
 			Mda chunk2;
-			chunk.getSubArray(chunk2,0,overlap_size,M,chunk_size);
+			chunk.getChunk(chunk2,0,overlap_size,M,chunk_size);
 			#pragma omp critical (lock2)
 			{
 				Y.writeSubArray(chunk2,0,timepoint);

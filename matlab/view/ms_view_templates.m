@@ -60,7 +60,8 @@ end;
 
 Tmargin=T+Tpad;
 vmargin=vspread*1.5;
-xlim([-Tmargin,(T+Tpad)*K+Tmargin]);
+additional_left_margin=T*0.5;
+xlim([-Tmargin-additional_left_margin,(T+Tpad)*K+Tmargin]);
 ylim([-vspread*(M-1)-vmargin,vmargin]);
 set(gca,'xtick',[]); set(gca,'ytick',[]);
 %set(gca,'position',[0,0,1,1]);
@@ -84,7 +85,7 @@ for k=1:K
 end;
 
 for m=1:M
-    hh=text(-Tpad,-(m-1)*vspread,sprintf('%d',m));
+    hh=text(-Tpad,-(m-1)*vspread,sprintf('Chan %d',m));
     set(hh,'HorizontalAlignment','right');
     set(hh,'VerticalAlignment','middle');
     set(hh,'FontSize',8);
