@@ -43,6 +43,8 @@ public:
 	void setCurrentK(int k);
 	///Set selected label numbers (affects highlighting)
 	void setSelectedKs(const QList<int> &ks);
+	///Create an image of the current view
+	QImage renderImage(int W,int H);
 protected:
 	void paintEvent(QPaintEvent *evt);
 	void keyPressEvent(QKeyEvent *evt);

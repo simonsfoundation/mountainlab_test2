@@ -1,6 +1,7 @@
 #ifndef MVOVERVIEW2WIDGETCONTROLPANEL_H
 #define MVOVERVIEW2WIDGETCONTROLPANEL_H
 
+#include <QScrollArea>
 #include <QWidget>
 
 /** \class MVOverview2WidgetControlPanel

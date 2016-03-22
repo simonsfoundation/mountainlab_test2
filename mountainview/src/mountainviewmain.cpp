@@ -89,10 +89,11 @@ int main(int argc, char *argv[]) {
 		W->show();
         W->setSampleRate(samplerate);
 		W->move(QApplication::desktop()->screen()->rect().topLeft()+QPoint(200,200));
-		int W0=1400,H0=600;
+		int W0=1400,H0=1000;
 		QRect geom=QApplication::desktop()->geometry();
 		if ((geom.width()-100<W0)||(geom.height()-100<H0)) {
 			//W->showMaximized();
+			W->resize(geom.width()-100,geom.height()-100);
 		}
 		else {
 			W->resize(W0,H0);

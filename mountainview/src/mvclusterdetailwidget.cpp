@@ -102,6 +102,7 @@ public:
     QString group_label_for_k(int k);
     bool has_nontrivial_group_numbers();
 	int get_current_view_index();
+	void do_paint(QPainter &painter,int W,int H);
 };
 
 MVClusterDetailWidget::MVClusterDetailWidget(QWidget *parent) : QWidget(parent)
@@ -222,6 +223,15 @@ void MVClusterDetailWidget::setSelectedKs(const QList<int> &ks)
 	update();
 }
 
+QImage MVClusterDetailWidget::renderImage(int W, int H)
+{
+	QImage ret=QImage(W,H,QImage::Format_RGB32);
+	QPainter painter(&ret);
+	d->do_paint(painter,W,H);
+	this->update(); //make sure we update, because some internal stuff has changed!
+	return ret;
+}
+
 ChannelSpacingInfo compute_channel_spacing_info(QList<ClusterData> &cdata,double vscale_factor) {
 	ChannelSpacingInfo info;
 	info.vert_scaling_factor=1;
@@ -258,46 +268,8 @@ void MVClusterDetailWidget::paintEvent(QPaintEvent *evt)
 	}
 
 	QPainter painter(this);
-	painter.fillRect(0,0,width(),height(),d->m_colors["background"]);
 
-	qDeleteAll(d->m_views);
-	d->m_views.clear();
-	for (int i=0; i<d->m_cluster_data.count(); i++) {
-		ClusterData *CD=&d->m_cluster_data[i];
-		ClusterView *V=new ClusterView(this,d);
-        V->setHighlighted(CD->k==d->m_current_k);
-		V->setSelected(d->m_selected_ks.contains(CD->k));
-		V->setHovered(CD->k==d->m_hovered_k);
-		V->setClusterData(CD);
-		d->m_views << V;
-	}
-
-	double total_space_needed=0;
-	for (int i=0; i<d->m_views.count(); i++) {
-		total_space_needed+=d->m_views[i]->spaceNeeded();
-	}
-	if (d->m_scroll_x<0) d->m_scroll_x=0;
-	if (total_space_needed*d->m_space_ratio-d->m_scroll_x<this->width()) {
-		d->m_scroll_x=total_space_needed*d->m_space_ratio-this->width();
-		if (d->m_scroll_x<0) d->m_scroll_x=0;
-	}
-	if ((d->m_scroll_x==0)&&(total_space_needed*d->m_space_ratio<this->width())) {
-		d->m_space_ratio=this->width()/total_space_needed;
-		if (d->m_space_ratio>300) d->m_space_ratio=300;
-	}
-
-
-	ChannelSpacingInfo csi=compute_channel_spacing_info(d->m_cluster_data,d->m_vscale_factor);
-
-	float x0_before_scaling=0;
-	for (int i=0; i<d->m_views.count(); i++) {
-		ClusterView *V=d->m_views[i];
-		QRectF rect(x0_before_scaling*d->m_space_ratio-d->m_scroll_x,0,V->spaceNeeded()*d->m_space_ratio,height());
-		V->setChannelSpacingInfo(csi);
-		V->paint(&painter,rect);
-		V->x_position_before_scaling=x0_before_scaling;
-		x0_before_scaling+=V->spaceNeeded();
-	}
+	d->do_paint(painter,width(),height());
 }
 
 void MVClusterDetailWidget::keyPressEvent(QKeyEvent *evt)
@@ -735,7 +707,51 @@ void ClusterView::paint(QPainter *painter, QRectF rect)
 
 double ClusterView::spaceNeeded()
 {
-    return 1;
+	return 1;
+}
+
+void MVClusterDetailWidgetPrivate::do_paint(QPainter &painter, int W, int H)
+{
+	painter.fillRect(0,0,W,H,m_colors["background"]);
+
+	qDeleteAll(m_views);
+	m_views.clear();
+	for (int i=0; i<m_cluster_data.count(); i++) {
+		ClusterData *CD=&m_cluster_data[i];
+		ClusterView *V=new ClusterView(q,this);
+		V->setHighlighted(CD->k==m_current_k);
+		V->setSelected(m_selected_ks.contains(CD->k));
+		V->setHovered(CD->k==m_hovered_k);
+		V->setClusterData(CD);
+		m_views << V;
+	}
+
+	double total_space_needed=0;
+	for (int i=0; i<m_views.count(); i++) {
+		total_space_needed+=m_views[i]->spaceNeeded();
+	}
+	if (m_scroll_x<0) m_scroll_x=0;
+	if (total_space_needed*m_space_ratio-m_scroll_x<W) {
+		m_scroll_x=total_space_needed*m_space_ratio-W;
+		if (m_scroll_x<0) m_scroll_x=0;
+	}
+	if ((m_scroll_x==0)&&(total_space_needed*m_space_ratio<W)) {
+		m_space_ratio=W/total_space_needed;
+		if (m_space_ratio>300) m_space_ratio=300;
+	}
+
+
+	ChannelSpacingInfo csi=compute_channel_spacing_info(m_cluster_data,m_vscale_factor);
+
+	float x0_before_scaling=0;
+	for (int i=0; i<m_views.count(); i++) {
+		ClusterView *V=m_views[i];
+		QRectF rect(x0_before_scaling*m_space_ratio-m_scroll_x,0,V->spaceNeeded()*m_space_ratio,H);
+		V->setChannelSpacingInfo(csi);
+		V->paint(&painter,rect);
+		V->x_position_before_scaling=x0_before_scaling;
+		x0_before_scaling+=V->spaceNeeded();
+	}
 }
 
 QPointF ClusterView::template_coord2pix(int m, double t, double val)

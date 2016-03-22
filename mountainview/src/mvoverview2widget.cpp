@@ -143,7 +143,10 @@ MVOverview2Widget::MVOverview2Widget(QWidget *parent) : QWidget (parent)
 	splitter2->setOrientation(Qt::Vertical);
 	d->m_splitter2=splitter2;
 
-	splitter1->addWidget(d->m_control_panel);
+	QScrollArea *CP=new QScrollArea;
+	CP->setWidget(d->m_control_panel);
+	CP->setWidgetResizable(true);
+	splitter1->addWidget(CP);
 	splitter1->addWidget(splitter2);
 
 	d->m_tabs1=new CustomTabWidget(this);
