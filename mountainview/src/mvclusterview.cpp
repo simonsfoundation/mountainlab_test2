@@ -10,7 +10,8 @@
 #include "mvutils.h"
 #include "msmisc.h"
 
-class MVClusterViewPrivate {
+class MVClusterViewPrivate : public QObject {
+	Q_OBJECT
 public:
 	MVClusterView *q;
 	Mda m_data;
@@ -56,7 +57,10 @@ public:
 	int find_closest_event_index(double x,double y,const QSet<int> &inds_to_exclude);
 	void set_current_event_index(int ind,bool do_emit=true);
 	void schedule_emit_transformation_changed();
+public slots:
+	void slot_emit_transformation_changed();
 };
+#include "mvclusterview.moc"
 
 MVClusterView::MVClusterView(QWidget *parent) : QWidget(parent)
 {
@@ -289,10 +293,10 @@ void MVClusterView::wheelEvent(QWheelEvent *evt)
 	}
 }
 
-void MVClusterView::slot_emit_transformation_changed()
+void MVClusterViewPrivate::slot_emit_transformation_changed()
 {
-	d->m_emit_transformation_changed_scheduled=false;
-	emit transformationChanged();
+	m_emit_transformation_changed_scheduled=false;
+	emit q->transformationChanged();
 }
 
 
@@ -658,6 +662,6 @@ void MVClusterViewPrivate::schedule_emit_transformation_changed()
 {
 	if (m_emit_transformation_changed_scheduled) return;
 	m_emit_transformation_changed_scheduled=true;
-	QTimer::singleShot(100,q,SLOT(slot_emit_transformation_changed()));
+	QTimer::singleShot(100,this,SLOT(slot_emit_transformation_changed()));
 }
 

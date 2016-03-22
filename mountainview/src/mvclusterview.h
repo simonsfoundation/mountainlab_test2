@@ -58,8 +58,6 @@ protected:
 	void mousePressEvent(QMouseEvent *evt);
 	void mouseReleaseEvent(QMouseEvent *evt);
 	void wheelEvent(QWheelEvent *evt);
-private slots:
-	void slot_emit_transformation_changed();
 private:
 	MVClusterViewPrivate *d;
 };

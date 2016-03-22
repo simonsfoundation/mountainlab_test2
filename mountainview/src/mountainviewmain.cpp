@@ -60,9 +60,9 @@ int main(int argc, char *argv[]) {
 
 	if (mode=="overview2") {
 		printf("overview2...\n");
+		QString raw_path=CLP.named_parameters["raw"].toString();
 		QString pre_path=CLP.named_parameters["pre"].toString();
 		QString filt_path=CLP.named_parameters["filt"].toString();
-        QString timeseries_path=CLP.named_parameters["timeseries"].toString();
 		QString firings_path=CLP.named_parameters["firings"].toString();
         double samplerate=CLP.named_parameters["samplerate"].toDouble();
 		QString epochs_path=CLP.named_parameters["epochs"].toString();
@@ -74,9 +74,9 @@ int main(int argc, char *argv[]) {
         if (!filt_path.isEmpty()) {
             W->addTimeseriesPath("Filtered Data",filt_path);
         }
-        if (!timeseries_path.isEmpty()) {
-            W->addTimeseriesPath("Raw Data",timeseries_path);
-        }
+		if (!raw_path.isEmpty()) {
+			W->addTimeseriesPath("Raw Data",raw_path);
+		}
 
         if (!epochs_path.isEmpty()) {
             QList<Epoch> epochs=read_epochs(epochs_path);
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
         }
 		if (window_title.isEmpty()) window_title=pre_path;
 		if (window_title.isEmpty()) window_title=filt_path;
-        if (window_title.isEmpty()) window_title=timeseries_path;
+		if (window_title.isEmpty()) window_title=raw_path;
 		W->setFiringsPath(firings_path);
 		W->show();
         W->setSampleRate(samplerate);
