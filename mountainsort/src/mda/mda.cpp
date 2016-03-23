@@ -188,7 +188,7 @@ double Mda::get(long i1, long i2) const
 
 double Mda::get(long i1, long i2, long i3) const
 {
-	return d->m_data[i1+d->m_dims[0]*i2+d->m_dims[0]*d->m_dims[1]*i3];
+    return d->m_data[i1+d->m_dims[0]*i2+d->m_dims[0]*d->m_dims[1]*i3];
 }
 
 double Mda::get(long i1, long i2, long i3, long i4, long i5, long i6) const
@@ -362,7 +362,108 @@ void Mda::getChunk(Mda &ret, long i1, long i2, long i3, long size1, long size2, 
 				ii_out++;
 			}
 		}
-	}
+    }
+}
+
+void Mda::setChunk(Mda &X, long i)
+{
+    long size=X.totalSize();
+
+    long a_begin=i; long x_begin=0;
+    long a_end=i+size-1; long x_end=size-1;
+
+    if (a_begin<0) {a_begin+=0-a_begin; x_begin+=0-a_begin;}
+    if (a_end>=d->m_total_size) {a_end+=d->m_total_size-1-a_end; x_end+=d->m_total_size-1-a_end;}
+
+    double *ptr1=this->dataPtr();
+    double *ptr2=X.dataPtr();
+
+    long ii=0;
+    for (long a=a_begin; a<=a_end; a++) {
+        ptr1[a_begin+ii]=ptr2[x_begin+ii];
+    }
+}
+
+void Mda::setChunk(Mda &X, long i1, long i2)
+{
+    long size1=X.N1();
+    long size2=X.N2();
+
+    long a1_begin=i1; long x1_begin=0;
+    long a1_end=i1+size1-1; long x1_end=size1-1;
+    if (a1_begin<0) {a1_begin+=0-a1_begin; x1_begin+=0-a1_begin;}
+    if (a1_end>=N1()) {a1_end+=N1()-1-a1_end; x1_end+=N1()-1-a1_end;}
+
+    long a2_begin=i2; long x2_begin=0;
+    long a2_end=i2+size2-1; long x2_end=size2-1;
+    if (a2_begin<0) {a2_begin+=0-a2_begin; x2_begin+=0-a2_begin;}
+    if (a2_end>=N2()) {a2_end+=N2()-1-a2_end; x2_end+=N2()-1-a2_end;}
+
+    double *ptr1=this->dataPtr();
+    double *ptr2=X.dataPtr();
+
+    for (long ind2=0; ind2<=a2_end-a2_begin; ind2++) {
+        long ii_out=(ind2+x2_begin)*size1;
+        long ii_in=(ind2+a2_begin)*N1();
+        for (long ind1=0; ind1<=a1_end-a1_begin; ind1++) {
+            ptr1[ii_in]=ptr2[ii_out];
+            ii_in++;
+            ii_out++;
+        }
+    }
+}
+
+void Mda::setChunk(Mda &X, long i1, long i2, long i3)
+{
+    long size1=X.N1();
+    long size2=X.N2();
+    long size3=X.N3();
+
+    long a1_begin=i1; long x1_begin=0;
+    long a1_end=i1+size1-1; long x1_end=size1-1;
+    if (a1_begin<0) {a1_begin+=0-a1_begin; x1_begin+=0-a1_begin;}
+    if (a1_end>=N1()) {a1_end+=N1()-1-a1_end; x1_end+=N1()-1-a1_end;}
+
+    long a2_begin=i2; long x2_begin=0;
+    long a2_end=i2+size2-1; long x2_end=size2-1;
+    if (a2_begin<0) {a2_begin+=0-a2_begin; x2_begin+=0-a2_begin;}
+    if (a2_end>=N2()) {a2_end+=N2()-1-a2_end; x2_end+=N2()-1-a2_end;}
+
+    long a3_begin=i3; long x3_begin=0;
+    long a3_end=i3+size3-1; long x3_end=size3-1;
+    if (a3_begin<0) {a2_begin+=0-a3_begin; x3_begin+=0-a3_begin;}
+    if (a3_end>=N3()) {a3_end+=N3()-1-a3_end; x3_end+=N3()-1-a3_end;}
+
+    double *ptr1=this->dataPtr();
+    double *ptr2=X.dataPtr();
+
+    for (long ind3=0; ind3<=a3_end-a3_begin; ind3++) {
+        for (long ind2=0; ind2<=a2_end-a2_begin; ind2++) {
+            long ii_out=(ind2+x2_begin)*size1+(ind3+x3_begin)*size1*size2;
+            long ii_in=(ind2+a2_begin)*N1()+(ind3+a3_begin)*N1()*N2();
+            for (long ind1=0; ind1<=a1_end-a1_begin; ind1++) {
+                ptr1[ii_in]=ptr2[ii_out];
+                ii_in++;
+                ii_out++;
+            }
+        }
+    }
+}
+
+void Mda::reshape(int N1b, int N2b, int N3b, int N4b, int N5b, int N6b)
+{
+    if (N1b*N2b*N3b*N4b*N5b*N6b!=this->totalSize()) {
+        qWarning() << "Unable to reshape, wrong total size";
+        qWarning() << N1b << N2b << N3b << N4b << N5b << N6b;
+        qWarning() << N1() << N2() << N3() << N4() << N5() << N6();
+        return;
+    }
+    d->m_dims[0]=N1b;
+    d->m_dims[1]=N2b;
+    d->m_dims[2]=N3b;
+    d->m_dims[3]=N4b;
+    d->m_dims[4]=N5b;
+    d->m_dims[5]=N6b;
 }
 
 void Mda::set(double val, long i)

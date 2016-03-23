@@ -9,7 +9,11 @@
 #include <QDebug>
 #include <QMouseEvent>
 #include <QSet>
+#include <QSettings>
+#include <QImageWriter>
 #include "extract_clips.h"
+#include <QFileDialog>
+#include <QMessageBox>
 
 struct ClusterData {
     int k;
@@ -227,8 +231,16 @@ QImage MVClusterDetailWidget::renderImage(int W, int H)
 {
 	QImage ret=QImage(W,H,QImage::Format_RGB32);
 	QPainter painter(&ret);
+
+	int current_k=d->m_current_k;
+	QSet<int> selected_ks=d->m_selected_ks;
+	d->m_current_k=-1;
+	d->m_selected_ks.clear();
 	d->do_paint(painter,W,H);
+	d->m_current_k=current_k;
+	d->m_selected_ks=selected_ks;
 	this->update(); //make sure we update, because some internal stuff has changed!
+
 	return ret;
 }
 
@@ -320,6 +332,19 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent *evt)
 			}
 			this->setSelectedKs(ks);
 			this->setCurrentK(k);
+		}
+	}
+	else if (evt->key()==Qt::Key_I) {
+		QImage img=this->renderImage(1600,800);
+		QSettings settings("SCDA","mountainview");
+		QString last_image_save_dir=settings.value("last_image_save_dir",QDir::homePath()).toString();
+		QString fname=QFileDialog::getSaveFileName(this,"Save cluster detail image",last_image_save_dir,tr("Image Files (*.png *.jpg *.bmp)"));
+		if (!fname.isEmpty()) {
+			settings.setValue("last_image_save_dir",QFileInfo(fname).path());
+			QImageWriter writer(fname);
+			if (!writer.write(img)) {
+				QMessageBox::critical(this,"Error writing image","Unable to write image. Please contact us for help with this option.");
+			}
 		}
 	}
 }

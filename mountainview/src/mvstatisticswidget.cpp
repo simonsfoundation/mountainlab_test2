@@ -1,7 +1,7 @@
 #include "mvstatisticswidget.h"
 #include <QFile>
 #include <QHBoxLayout>
-#include "diskarraymodel.h"
+#include "diskarraymodel_new.h"
 #include <QTreeWidget>
 #include <QDebug>
 
@@ -12,7 +12,7 @@ public:
 	Mda m_times;
 	Mda m_labels;
 	Mda m_primary_channels;
-	DiskArrayModel *m_raw;
+	DiskArrayModel_New *m_raw;
 
 	void update_statistics();
 };
@@ -70,7 +70,7 @@ void MVStatisticsWidget::setPrimaryChannels(const Mda &primary_channels)
 	d->m_primary_channels=primary_channels;
 }
 
-void MVStatisticsWidget::setRaw(DiskArrayModel *X)
+void MVStatisticsWidget::setRaw(DiskArrayModel_New *X)
 {
 	d->m_raw=X;
 }
@@ -172,7 +172,7 @@ void MVStatisticsWidgetPrivate::update_statistics()
 	for (int k=1; k<spike_stats.count(); k++) {
 		SpikeStats X=spike_stats[k];
 		int primary_channel=(int)m_primary_channels.value(0,k-1);
-		float frequency=X.count*1.0/(m_raw->size(1)*1.0/30000/60);
+        float frequency=X.count*1.0/(m_raw->N2()*1.0/30000/60);
 
 		QTreeWidgetItem *item=new TreeWidgetItem;
 		item->setData(0,Qt::UserRole,k);

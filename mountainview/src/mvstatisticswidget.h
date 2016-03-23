@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include "mda.h"
-#include "diskarraymodel.h"
+#include "diskarraymodel_new.h"
 
 /** \class MVStatisticsWidget
  *  \brief -- Not used anymore
@@ -21,7 +21,7 @@ public:
 
 	void setTimesLabels(const Mda &times,const Mda &labels);
 	void setPrimaryChannels(const Mda &primary_channels);
-	void setRaw(DiskArrayModel *X);
+    void setRaw(DiskArrayModel_New *X);
 	void updateStatistics();
 
 	QList<int> selectedLabels();

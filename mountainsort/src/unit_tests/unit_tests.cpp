@@ -41,7 +41,7 @@ void run_all_unit_tests()
 
 	DiskWriteMda X2;
 	X2.open(MDAIO_TYPE_FLOAT64,path3,M,N);
-	X2.writeSubArray(X1,0,0);
+    X2.writeChunk(X1,0,0);
 	X2.close();
 	Z1.read(path3);
 	printf("Max difference: %.16f\n",max_difference(X1,Z1));

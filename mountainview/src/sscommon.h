@@ -10,9 +10,9 @@
 //This becomes expecially noticable for multiscale factors>=10
 #define MULTISCALE_FACTOR 2
 
-#include "diskarraymodel.h"
+#include "diskarraymodel_new.h"
 #include "usagetracking.h"
-#define SSARRAY DiskArrayModel
+#define SSARRAY DiskArrayModel_New
 
 struct Vec2 {
 	double x,y;
@@ -24,4 +24,3 @@ QString ssTempPath();
 #include <QDebug>  // ahb
 
 #endif // SSCOMMON_H
-

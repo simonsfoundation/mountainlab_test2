@@ -31,7 +31,7 @@ MVClipsView::~MVClipsView()
 void MVClipsView::setClips(const Mda &clips)
 {
     d->m_clips=clips;
-    DiskArrayModel *DAM=new DiskArrayModel;
+    DiskArrayModel_New *DAM=new DiskArrayModel_New;
     DAM->setFromMda(d->m_clips);
     this->setData(DAM,true);
 }

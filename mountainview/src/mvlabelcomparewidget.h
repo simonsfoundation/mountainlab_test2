@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QThread>
 #include <QWheelEvent>
-#include "diskarraymodel.h"
+#include "diskarraymodel_new.h"
 #include "mda.h"
 
 /** \class MVLabelCompareWidget
@@ -24,7 +24,7 @@ public:
 	void setElectrodeLocations(const Mda &L);
     void setTemplates1(const Mda &X);
     void setTemplates2(const Mda &X);
-    void setRaw(DiskArrayModel *X,bool own_it);
+    void setRaw(DiskArrayModel_New *X,bool own_it);
     void setTimesLabels(const Mda &times1,const Mda &labels1,const Mda &times2,const Mda &labels2);
 
 	void updateWidgets();

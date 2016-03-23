@@ -102,10 +102,7 @@ void SSTimeSeriesView::keyPressEvent(QKeyEvent *evt)
 }
 
 void SSTimeSeriesView::setData(SSARRAY *data,bool is_owner) {
-    if (!data->fileHierarchyExists()) {
-		qWarning() << "File hierarchy does not exist. Creating.";
-		data->createFileHierarchyIfNeeded();
-    }
+    data->createFileHierarchyIfNeeded();
 
 	if ((d->m_data)&&(d->m_data_is_owner)) {
 		delete d->m_data; d->m_data=0;
@@ -113,7 +110,7 @@ void SSTimeSeriesView::setData(SSARRAY *data,bool is_owner) {
 
 	d->m_data=data;
 	d->m_data_is_owner=is_owner;
-	setMaxTimepoint(data->size(1)-1);
+    setMaxTimepoint(data->N2()-1);
 
 	d->m_plot->setData(d->m_data);
 
@@ -184,7 +181,9 @@ double SSTimeSeriesView::currentValue()
 	if (!d->m_data) return 0;
 	int ch0=currentChannel();
 	if (ch0>=0) {
-		return d->m_data->value(ch0,(int)currentX());
+        //disabledfor now
+        //return d->m_data->value(ch0,(int)currentX());
+        return 0;
 	}
 	else return 0;
 
@@ -198,7 +197,7 @@ SSARRAY *SSTimeSeriesView::data() {
 void SSTimeSeriesViewPrivate::advance_to_clip(bool backwards)
 {
 	if (!m_data) return;
-	int N=m_data->size(1);
+    int N=m_data->N2();
 	//int ch0=0;
 	int x=q->currentX();
 	if (x<0) x=0;

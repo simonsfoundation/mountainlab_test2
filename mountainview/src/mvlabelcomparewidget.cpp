@@ -23,7 +23,7 @@ public:
     MVLabelCompareWidget *q;
 
 	Mda m_locations;
-	DiskArrayModel *m_raw;
+	DiskArrayModel_New *m_raw;
 	bool m_own_raw;
     Mda m_templates_1;
     Mda m_templates_2;
@@ -81,7 +81,7 @@ void MVLabelCompareWidget::setTemplates2(const Mda &X)
     d->m_templates_2=X;
 }
 
-void MVLabelCompareWidget::setRaw(DiskArrayModel *X,bool own_it)
+void MVLabelCompareWidget::setRaw(DiskArrayModel_New *X,bool own_it)
 {
 	if ((d->m_raw)&&(d->m_own_raw)) delete d->m_raw;
 	d->m_raw=X;

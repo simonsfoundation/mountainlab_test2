@@ -56,7 +56,7 @@ bool mask_out_artifacts(const QString &signal_path, const QString &signal_out_pa
 		for (int m=0; m<M; m++) {
 			if (use_it.value(m,i)) {
                 num_timepoints_used+=interval_size;
-                Y.writeSubArray(chunk,0,timepoint);
+                Y.writeChunk(chunk,0,timepoint);
 			}
             else {
                 num_timepoints_not_used+=interval_size;

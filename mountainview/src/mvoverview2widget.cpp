@@ -1266,7 +1266,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
 		printf("Setting templates data...\n");
 		SSTimeSeriesView *WW=(SSTimeSeriesView *)W;
 		Mda TD=m_templates_data;
-		DiskArrayModel *MM=new DiskArrayModel;
+		DiskArrayModel_New *MM=new DiskArrayModel_New;
 		MM->setFromMda(TD);
 		int KK=TD.N3();
 		QList<long> times,labels;
@@ -1320,7 +1320,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
 		int clip_size=m_control_panel->getParameterValue("clip_size").toInt();
 		Mda clips=extract_clips(m_timeseries,times_kk,clip_size);
 		printf("Setting data...\n");
-        //DiskArrayModel *DAM=new DiskArrayModel;
+        //DiskArrayModel_New *DAM=new DiskArrayModel_New;
         //DAM->setFromMda(clips);
         //WW->setData(DAM,true);
         WW->setClips(clips);
@@ -1405,7 +1405,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget *W)
     }
 	else if (widget_type=="timeseries") {
         SSTimeSeriesWidget *WW=(SSTimeSeriesWidget *)W;
-		DiskArrayModel *X=new DiskArrayModel;
+		DiskArrayModel_New *X=new DiskArrayModel_New;
         X->setPath(m_timeseries_paths[m_current_timeseries_name]);
         ((SSTimeSeriesView *)(WW->view()))->setData(X,true);
         set_times_labels();

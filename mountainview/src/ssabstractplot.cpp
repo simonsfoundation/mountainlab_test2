@@ -14,6 +14,8 @@ public:
 	float m_vertical_zoom_factor;
 	bool m_channel_flip;
 	DiskReadMda m_timepoint_mapping;
+
+	void do_paint(QPainter &painter,int W,int H);
 };
 
 SSAbstractPlot::SSAbstractPlot(QWidget *parent) : QWidget(parent)
@@ -91,21 +93,7 @@ void SSAbstractPlot::paintEvent(QPaintEvent *evt)
 
 	QPainter painter(this);
 
-	painter.fillRect(0,0,width(),height(),QColor(230,230,230));
-
-	painter.setRenderHint( QPainter::Antialiasing );
-
-	updateSize();
-
-	paintPlot(&painter);
-
-	if (d->m_underlay_painter) {
-		d->m_underlay_painter->paint(&painter);
-	}
-
-	if (d->m_overlay_painter) {
-		d->m_overlay_painter->paint(&painter);
-	}
+	d->do_paint(painter,width(),height());
 }
 
 bool SSAbstractPlot::channelFlip()
@@ -130,3 +118,22 @@ void SSAbstractPlot::setChannelFlip(bool val)
 	emit replotNeeded();
 }
 
+
+void SSAbstractPlotPrivate::do_paint(QPainter &painter, int W, int H)
+{
+	painter.fillRect(0,0,W,H,QColor(230,230,230));
+
+	painter.setRenderHint( QPainter::Antialiasing );
+
+	q->updateSize(W,H);
+
+	q->paintPlot(&painter,W,H);
+
+	if (m_underlay_painter) {
+		m_underlay_painter->paint(&painter,W,H);
+	}
+
+	if (m_overlay_painter) {
+		m_overlay_painter->paint(&painter,W,H);
+	}
+}

@@ -15,7 +15,7 @@ public:
 	explicit SSAbstractPlot(QWidget *parent = 0);
 	~SSAbstractPlot();
 
-	virtual void updateSize()=0;
+	virtual void updateSize(int W,int H)=0;
 	virtual Vec2 coordToPix(Vec2 coord)=0;
 	virtual Vec2 pixToCoord(Vec2 pix)=0;
 	virtual void initialize()=0;
@@ -40,7 +40,7 @@ signals:
 
 protected:
 	void paintEvent(QPaintEvent *evt);
-	virtual void paintPlot(QPainter *painter)=0;
+	virtual void paintPlot(QPainter *painter,int W,int H)=0;
 
 private:
 	SSAbstractPlotPrivate *d;
@@ -52,7 +52,7 @@ public slots:
 
 class OverlayPainter {
 public:
-	virtual void paint(QPainter *painter)=0;
+	virtual void paint(QPainter *painter,int W,int H)=0;
 };
 
 

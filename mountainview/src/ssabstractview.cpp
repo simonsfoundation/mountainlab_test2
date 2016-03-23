@@ -12,7 +12,7 @@ class SSAbstractViewUnderlayPainter : public OverlayPainter {
 public:
 	SSAbstractViewPrivate *d;
 	SSAbstractView *q;
-	void paint(QPainter *painter);
+	void paint(QPainter *painter,int W,int H);
 	void draw_time_axis(QPainter *painter);
 };
 
@@ -90,8 +90,8 @@ void SSAbstractView::setTitle(QString title)
 }
 
 
-void SSAbstractViewUnderlayPainter::paint(QPainter *painter) {
-	q->plot()->updateSize();
+void SSAbstractViewUnderlayPainter::paint(QPainter *painter,int W_in,int H_in) {
+	q->plot()->updateSize(W_in,H_in);
 
 	int H=q->plot()->height();
 

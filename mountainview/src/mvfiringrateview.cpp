@@ -212,7 +212,7 @@ void MVFiringRateView::slot_update()
             data.setValue(val,k,i);
         }
     }
-    DiskArrayModel *DAM=new DiskArrayModel();
+    DiskArrayModel_New *DAM=new DiskArrayModel_New();
     DAM->setFromMda(data);
     d->m_view->setData(DAM,this);*/
 }
@@ -223,8 +223,6 @@ void MVFiringRateView::slot_update()
 void MVFiringRateView::paintEvent(QPaintEvent *evt)
 {
     Q_UNUSED(evt);
-
-    qDebug() << "paintEvent" << d->m_times.count() << d->m_amplitudes.count();
 
     QPainter painter(this);
     painter.fillRect(0,0,width(),height(),QColor(160,160,160));
@@ -259,7 +257,6 @@ void MVFiringRateView::mouseReleaseEvent(QMouseEvent *evt)
 {
 	QPointF pt=evt->pos();
 	int index=d->find_closest_event_index(pt);
-	qDebug() << index;
 }
 
 
@@ -320,7 +317,6 @@ int MVFiringRateViewPrivate::find_closest_event_index(int i1, int i2)
 			}
 		}
 	}
-	qDebug() << i1 << i2 << best_x << best_y;
 	return best_ind;
 }
 

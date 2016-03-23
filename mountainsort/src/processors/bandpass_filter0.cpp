@@ -45,7 +45,7 @@ bool bandpass_filter0(const QString &input_path, const QString &output_path, dou
 			chunk.getChunk(chunk2,0,overlap_size,M,chunk_size);
 			#pragma omp critical (lock2)
 			{
-				Y.writeSubArray(chunk2,0,timepoint);
+                Y.writeChunk(chunk2,0,timepoint);
 				num_timepoints_handled+=qMin(chunk_size,N-timepoint);
 				if ((timer.elapsed()>1000)||(num_timepoints_handled==N)) {
 					printf("%ld/%ld (%d%%)\n",num_timepoints_handled,N,(int)(num_timepoints_handled*1.0/N*100));

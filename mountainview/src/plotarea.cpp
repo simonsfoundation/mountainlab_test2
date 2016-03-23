@@ -109,8 +109,6 @@ void PlotAreaPrivate::do_refresh(QPainter *P) {
 
 	P->fillRect(QRect(m_left_panel_width,m_plot_rect.top(),m_plot_rect.width()-m_left_panel_width-m_right_panel_width,m_plot_rect.height()),QBrush(QColor(240,240,240)));
 
-
-
     //left/right panel
     for (int pass=1; pass<=2; pass++) {
         for (int ss=0; ss<m_series.count(); ss++) {

@@ -120,6 +120,15 @@ public:
 	void getChunk(Mda &ret,long i1,long i2,long N1,long N2);
 	///Retrieve a chunk of the vectorized data of size N1xN2xN3 starting at position (i1,i2,i3)
 	void getChunk(Mda &ret,long i1,long i2,long i3,long size1,long size2,long size3);
+
+    ///Set a chunk of the vectorized data starting at position i
+    void setChunk(Mda &X,long i);
+    ///Set a chunk of the vectorized data starting at position (i1,i2)
+    void setChunk(Mda &X,long i1,long i2);
+    ///Set a chunk of the vectorized data of size N1xN2xN3 starting at position (i1,i2,i3)
+    void setChunk(Mda &X,long i1,long i2,long i3);
+
+    void reshape(int N1b,int N2b,int N3b=1,int N4b=1,int N5b=1,int N6b=1);
 private:
 	MdaPrivate *d;
 };

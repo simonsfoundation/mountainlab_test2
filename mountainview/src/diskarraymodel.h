@@ -4,34 +4,35 @@
 #include <QObject>
 #include "mda.h"
 
-//changed all ints to longs!!! 3/10/2016 (hope it didn't cause problems!)
+// changed all ints to longs!!! 3/10/2016 (hope it didn't cause problems!)
 
 /** \class DiskArrayModel
- *  \brief Used by SSTimeSeriesView to efficiently display a huge timeseries dataset.
+ *  \brief Used by SSTimeSeriesView to efficiently display a huge timeseries
+ *dataset.
  *
  * TODO: replace this by more efficient code, see diskarraymodel_new.h
  */
 
 class DiskArrayModelPrivate;
-class DiskArrayModel : public QObject
-{
-	Q_OBJECT
+class DiskArrayModel : public QObject {
+    Q_OBJECT
 public:
-	friend class DiskArrayModelPrivate;
-	explicit DiskArrayModel(QObject *parent = 0);
-	~DiskArrayModel();
-	void setPath(QString path);
-	void setFromMda(const Mda &X);
-	QString path();
-	bool fileHierarchyExists();
-	void createFileHierarchyIfNeeded();
-    double value(long ch,long t);
+    friend class DiskArrayModelPrivate;
+    explicit DiskArrayModel(QObject* parent = 0);
+    ~DiskArrayModel();
+    void setPath(QString path);
+    void setFromMda(const Mda& X);
+    QString path();
+    bool fileHierarchyExists();
+    void createFileHierarchyIfNeeded();
+    double value(long ch, long t);
 
-    virtual Mda loadData(long scale,long t1,long t2);
+    virtual Mda loadData(long scale, long t1, long t2);
     virtual long size(long dim);
     virtual long dim3();
+
 private:
-	DiskArrayModelPrivate *d;
+    DiskArrayModelPrivate* d;
 
 signals:
 

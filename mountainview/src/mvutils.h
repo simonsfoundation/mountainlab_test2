@@ -1,7 +1,7 @@
 #ifndef MVUTILS_H
 #define MVUTILS_H
 
-#include "diskarraymodel.h"
+#include "diskarraymodel_new.h"
 #include "diskreadmda.h"
 #include <QList>
 #include <QColor>
@@ -22,16 +22,15 @@ struct Epoch {
 QList<Epoch> read_epochs(const QString &path);
 
 ///Utility
-Mda compute_mean_waveform(DiskArrayModel *C);
+Mda compute_mean_waveform(DiskArrayModel_New *C);
 ///Utility
-Mda compute_mean_stdev_waveform(DiskArrayModel *C);
+Mda compute_mean_stdev_waveform(DiskArrayModel_New *C);
 ///Utility
-Mda compute_features(DiskArrayModel *C);
+Mda compute_features(DiskArrayModel_New *C);
 ///Utility
-Mda compute_features(const QList<DiskArrayModel *> &C);
+Mda compute_features(const QList<DiskArrayModel_New *> &C);
 ///TODO: Handle this properly
 QColor get_heat_map_color(double val);
 
 
 #endif // MVUTILS_H
-

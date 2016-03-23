@@ -6,8 +6,10 @@
 #include "textfile.h"
 #include <QDebug>
 
-Mda compute_mean_waveform(DiskArrayModel *C) {
+Mda compute_mean_waveform(DiskArrayModel_New *C) {
 	Mda ret;
+    return ret; //disabled for now.
+    /*
 	if (!C->dim3()) return ret;
 	int M=C->size(0);
 	int T=C->size(1)/C->dim3();
@@ -42,10 +44,13 @@ Mda compute_mean_waveform(DiskArrayModel *C) {
 		}
 	}
 	return ret;
+    */
 }
 
-Mda compute_mean_stdev_waveform(DiskArrayModel *C) {
+Mda compute_mean_stdev_waveform(DiskArrayModel_New *C) {
 	Mda ret;
+    return ret; //disabled for now
+    /*
 	if (!C->dim3()) return ret;
 	int M=C->size(0);
 	int T=C->size(1)/C->dim3();
@@ -95,10 +100,13 @@ Mda compute_mean_stdev_waveform(DiskArrayModel *C) {
 		}
 	}
 	return ret;
+    */
 }
 
-Mda compute_features(DiskArrayModel *C) {
+Mda compute_features(DiskArrayModel_New *C) {
 	Mda ret;
+    return ret; //disabled for now
+    /*
 	if (!C->dim3()) return ret;
 	int M=C->size(0);
 	int T=C->size(1)/C->dim3();
@@ -110,10 +118,13 @@ Mda compute_features(DiskArrayModel *C) {
 	get_pca_features(M*T,NC,3,ret.dataPtr(),X.dataPtr());
 
 	return ret;
+    */
 }
 
-Mda compute_features(const QList<DiskArrayModel *> &C) {
+Mda compute_features(const QList<DiskArrayModel_New *> &C) {
 	Mda ret;
+    return ret; //disabled for now
+    /*
 	if (C.isEmpty()) return ret;
 	if (!C[0]->dim3()) return ret;
 	int M=C[0]->size(0);
@@ -141,6 +152,7 @@ Mda compute_features(const QList<DiskArrayModel *> &C) {
 	get_pca_features(M*T,NC,3,ret.dataPtr(),X.dataPtr());
 
 	return ret;
+    */
 }
 
 QColor get_heat_map_color(double val)

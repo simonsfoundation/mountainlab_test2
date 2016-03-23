@@ -18,14 +18,14 @@ public:
 	~SSTimeSeriesPlot();
 
 	//virtual from base class
-	void updateSize();
+	void updateSize(int W,int H);
 	Vec2 coordToPix(Vec2 coord);
 	Vec2 pixToCoord(Vec2 pix);
 	void setXRange(const Vec2 &range);
 	void setYRange(const Vec2 &range);
 	void initialize();
 
-	DiskArrayModel *data();
+	DiskArrayModel_New *data();
 
 	void setChannelLabels(const QStringList &labels);
 	void setUniformVerticalChannelSpacing(bool val);
@@ -51,7 +51,7 @@ private:
 	SSTimeSeriesPlotPrivate *d;
 
 protected:
-	virtual void paintPlot(QPainter *painter);
+	virtual void paintPlot(QPainter *painter,int W,int H);
 	void mousePressEvent(QMouseEvent *evt);
 	void mouseReleaseEvent(QMouseEvent *evt);
 	void mouseMoveEvent(QMouseEvent *evt);

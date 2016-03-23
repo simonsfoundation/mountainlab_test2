@@ -12,7 +12,7 @@
 #include <QDesktopServices>
 #include <QDesktopWidget>
 #include "get_command_line_params.h"
-#include "diskarraymodel.h"
+#include "diskarraymodel_new.h"
 #include "histogramview.h"
 #include "mvlabelcomparewidget.h"
 #include "mvoverview2widget.h"
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
 		SSTimeSeriesWidget *W=new SSTimeSeriesWidget;
 		SSTimeSeriesView *V=new SSTimeSeriesView;
         V->setSampleRate(samplerate);
-		DiskArrayModel *DAM=new DiskArrayModel;
+		DiskArrayModel_New *DAM=new DiskArrayModel_New;
 		DAM->setPath(timeseries_path);
 		V->setData(DAM,true);
 		Mda firings; firings.read(firings_path);
