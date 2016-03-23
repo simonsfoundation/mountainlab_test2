@@ -13,13 +13,11 @@
  */
 
 class MVOverview2WidgetPrivate;
-class CustomTabWidget;
 class MVOverview2Widget : public QWidget
 {
 	Q_OBJECT
 public:
 	friend class MVOverview2WidgetPrivate;
-	friend class CustomTabWidget;
 	MVOverview2Widget(QWidget *parent=0);
 	virtual ~MVOverview2Widget();
 	///The path to the timeseries that was sorted. For example, raw, filtered, or pre-processed. Usually all three of these are set, so user can choose between them in dropdown selection box
@@ -59,10 +57,7 @@ private:
 	MVOverview2WidgetPrivate *d;
 };
 
-/** \class CustomTabWidget
- *  \brief Responds to clicking and double clicking of tabs. Used by MVOverview2Widget
- */
-
+/*
 class CustomTabWidget : public QTabWidget {
 	Q_OBJECT
 public:
@@ -76,6 +71,7 @@ private slots:
 	void slot_tab_bar_double_clicked();
 	void slot_switch_to_other_tab_widget();
 };
+*/
 
 
 #endif // MVOVERVIEW2WIDGET_H

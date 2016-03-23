@@ -47,9 +47,8 @@ public:
 	MVOverview2WidgetControlPanel *m_control_panel;
 
 	QSplitter *m_splitter1,*m_splitter2;
-	CustomTabWidget *m_tabs1,*m_tabs2;
+    TabberTabWidget *m_tabs1,*m_tabs2;
 	Tabber *m_tabber;
-	CustomTabWidget *m_current_tab_widget;
 	QProgressDialog *m_progress_dialog;
 
 	Mda m_cross_correlograms_data;
@@ -97,9 +96,7 @@ public:
     void set_times_labels();
 
 	QList<QWidget *> get_all_widgets();
-	CustomTabWidget *current_tab_widget();
-	CustomTabWidget *get_other_tab_widget(CustomTabWidget *W);
-    CustomTabWidget *tab_widget_of(QWidget *W);
+    TabberTabWidget *tab_widget_of(QWidget *W);
 
 	void remove_widgets_of_type(QString widget_type);
 
@@ -151,12 +148,9 @@ MVOverview2Widget::MVOverview2Widget(QWidget *parent) : QWidget (parent)
 	splitter1->addWidget(CP);
 	splitter1->addWidget(splitter2);
 
-	d->m_tabs1=new CustomTabWidget(this);
-	d->m_tabs2=new CustomTabWidget(this);
-	d->m_tabber=new Tabber;
-	d->m_tabber->addTabWidget("north",d->m_tabs1);
-	d->m_tabber->addTabWidget("south",d->m_tabs2);
-	d->m_current_tab_widget=d->m_tabs1;
+    d->m_tabber=new Tabber;
+    d->m_tabs2=d->m_tabber->createTabWidget("south");
+    d->m_tabs1=d->m_tabber->createTabWidget("north");
 
 	splitter2->addWidget(d->m_tabs1);
 	splitter2->addWidget(d->m_tabs2);
@@ -239,7 +233,6 @@ void MVOverview2Widget::setDefaultInitialization()
 {
 	//d->open_templates();
 	d->open_cluster_details();
-	d->m_current_tab_widget=d->m_tabs2;
     d->open_auto_correlograms();
 }
 
@@ -321,7 +314,8 @@ void MVOverview2Widget::slot_control_panel_combobox_activated(QString str)
 
 void MVOverview2Widget::slot_auto_correlogram_activated(int k)
 {
-    d->m_current_tab_widget=d->get_other_tab_widget(d->tab_widget_of((QWidget *)sender()));
+    //d->m_current_tab_widget=d->get_other_tab_widget(d->tab_widget_of((QWidget *)sender()));
+    d->m_tabber->switchCurrentContainer();
     d->open_cross_correlograms(k);
 }
 
@@ -356,6 +350,7 @@ void MVOverview2Widget::slot_details_template_activated()
     MVClusterDetailWidget *X=(MVClusterDetailWidget *)sender();
     int k=X->currentK();
     if (k<0) return;
+    d->m_tabber->switchCurrentContainer();
     d->open_clips();
 }
 
@@ -982,7 +977,7 @@ void MVOverview2WidgetPrivate::add_tab(QWidget *W,QString label)
 	W->setFocusPolicy(Qt::StrongFocus);
 	//current_tab_widget()->addTab(W,label);
 	//current_tab_widget()->setCurrentIndex(current_tab_widget()->count()-1);
-	m_tabber->addWidget(current_tab_widget(),label,W);
+    m_tabber->addWidget(m_tabber->currentContainerName(),label,W);
 	W->setProperty("tab_label",label); //won't be needed in future, once Tabber is fully implemented
 }
 
@@ -1511,18 +1506,7 @@ QList<QWidget *> MVOverview2WidgetPrivate::get_all_widgets()
 	*/
 }
 
-CustomTabWidget *MVOverview2WidgetPrivate::current_tab_widget()
-{
-	return m_current_tab_widget;
-}
-
-CustomTabWidget *MVOverview2WidgetPrivate::get_other_tab_widget(CustomTabWidget *W)
-{
-	if (W==m_tabs1) return m_tabs2;
-    else return m_tabs1;
-}
-
-CustomTabWidget *MVOverview2WidgetPrivate::tab_widget_of(QWidget *W)
+TabberTabWidget *MVOverview2WidgetPrivate::tab_widget_of(QWidget *W)
 {
     for (int i=0; i<m_tabs1->count(); i++) {
         if (m_tabs1->widget(i)==W) return m_tabs1;
@@ -1744,6 +1728,7 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
 	}
 }
 
+/*
 CustomTabWidget::CustomTabWidget(MVOverview2Widget *q) {
 	this->setTabsClosable(true);
 	this->setMovable(true);
@@ -1784,3 +1769,4 @@ void CustomTabWidget::slot_switch_to_other_tab_widget()
 {
 	q->d->m_current_tab_widget=q->d->get_other_tab_widget(this);
 }
+*/
