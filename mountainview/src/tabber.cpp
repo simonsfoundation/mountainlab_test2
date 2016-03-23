@@ -12,14 +12,19 @@ struct TabberWidget {
 class TabberPrivate {
 public:
     Tabber* q;
-    QMap<QString, TabberTabWidget*> m_tab_widgets;
-    QList<TabberWidget> m_widgets;
-    QString m_current_container_name;
+    QMap<QString, TabberTabWidget*> m_tab_widgets; //the tab widgets we are handling
+    QList<TabberWidget> m_widgets; //the TabberWidget structs of widgets within the tab widgets
+    QString m_current_container_name; //the name of the last selected container
 
+    ///Put the widget in the specified tab widget (removing from existing tab widget if necessary)
     void put_widget_in_container(QString container_name, QWidget* W);
+    ///Find the struct (TabberWidget) that corresponds to W
     TabberWidget* find_tabber_widget(QWidget* W);
+    ///Find the index of a widget within a particular tab widget
     int find_widget_index_in_container(QString container_name, QWidget* W);
+    ///Remove widget (but don't delete) from its container (or tab widget)
     void remove_widget(QWidget* W);
+    ///Get the name of a different container, or "" if none
     QString find_other_container_name(QString name);
 };
 
@@ -89,7 +94,6 @@ QList<QWidget*> Tabber::allWidgets()
 
 void Tabber::slot_tab_close_requested(int index)
 {
-    qDebug() << __FUNCTION__ << __LINE__;
     Q_UNUSED(index)
     TabberTabWidget* TW = (TabberTabWidget*)sender();
     QWidget* W = TW->widget(index);

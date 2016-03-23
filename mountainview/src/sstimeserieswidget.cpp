@@ -214,7 +214,6 @@ void SSTimeSeriesWidget::slot_view_clicked()
 
 int get_num_clips_from_process_output(QString output)
 {
-    qDebug() << output;
     int ind1 = output.indexOf("Number of clips: ");
     if (ind1 < 0)
         return 0;

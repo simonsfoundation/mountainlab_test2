@@ -81,7 +81,6 @@ void CleanupObject::closing()
         QString timestamp = time.toString("yyyy-mm-dd-hh-mm-ss");
         QString tmp = QFileInfo(path).path() + "/spikespy." + QFileInfo(path).completeBaseName() + "." + timestamp;
         if (QDir(tmp).exists()) {
-            qDebug() << "Removing directory: " << tmp;
             QStringList list = QDir(tmp).entryList(QStringList("*.mda"), QDir::Files | QDir::NoDotAndDotDot);
             foreach(QString A, list)
             {
@@ -89,8 +88,6 @@ void CleanupObject::closing()
             }
             QDir(QFileInfo(tmp).path()).rmdir(QFileInfo(tmp).fileName());
         }
-
-        qDebug() << "Removing file: " << path;
         QFile(path).remove();
     }
 }
