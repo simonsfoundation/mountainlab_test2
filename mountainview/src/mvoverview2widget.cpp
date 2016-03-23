@@ -11,11 +11,11 @@
 #include "mvclusterwidget.h"
 #include "mvfiringrateview.h"
 #include "extract_clips.h"
+#include "tabber.h"
 
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QSplitter>
-#include <QTabWidget>
 #include <QTime>
 #include <QTimer>
 #include <math.h>
@@ -25,6 +25,7 @@
 #include <QColor>
 #include <QStringList>
 #include <QSet>
+
 
 class MVOverview2WidgetPrivate {
 public:
@@ -47,6 +48,7 @@ public:
 
 	QSplitter *m_splitter1,*m_splitter2;
 	CustomTabWidget *m_tabs1,*m_tabs2;
+	Tabber *m_tabber;
 	CustomTabWidget *m_current_tab_widget;
 	QProgressDialog *m_progress_dialog;
 
@@ -151,6 +153,9 @@ MVOverview2Widget::MVOverview2Widget(QWidget *parent) : QWidget (parent)
 
 	d->m_tabs1=new CustomTabWidget(this);
 	d->m_tabs2=new CustomTabWidget(this);
+	d->m_tabber=new Tabber;
+	d->m_tabber->addTabWidget("north",d->m_tabs1);
+	d->m_tabber->addTabWidget("south",d->m_tabs2);
 	d->m_current_tab_widget=d->m_tabs1;
 
 	splitter2->addWidget(d->m_tabs1);
@@ -975,9 +980,10 @@ void MVOverview2WidgetPrivate::do_amplitude_split_old()
 void MVOverview2WidgetPrivate::add_tab(QWidget *W,QString label)
 {
 	W->setFocusPolicy(Qt::StrongFocus);
-	current_tab_widget()->addTab(W,label);
-	current_tab_widget()->setCurrentIndex(current_tab_widget()->count()-1);
-	W->setProperty("tab_label",label);
+	//current_tab_widget()->addTab(W,label);
+	//current_tab_widget()->setCurrentIndex(current_tab_widget()->count()-1);
+	m_tabber->addWidget(current_tab_widget(),label,W);
+	W->setProperty("tab_label",label); //won't be needed in future, once Tabber is fully implemented
 }
 
 void MVOverview2WidgetPrivate::open_auto_correlograms()
@@ -1492,6 +1498,8 @@ void MVOverview2WidgetPrivate::set_times_labels()
 
 QList<QWidget *> MVOverview2WidgetPrivate::get_all_widgets()
 {
+	return m_tabber->allWidgets();
+	/*
 	QList<QWidget *> ret;
 	for (int i=0; i<m_tabs1->count(); i++) {
 		ret << m_tabs1->widget(i);
@@ -1500,6 +1508,7 @@ QList<QWidget *> MVOverview2WidgetPrivate::get_all_widgets()
 		ret << m_tabs2->widget(i);
 	}
 	return ret;
+	*/
 }
 
 CustomTabWidget *MVOverview2WidgetPrivate::current_tab_widget()
