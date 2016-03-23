@@ -122,7 +122,7 @@ void TabberPrivate::remove_widgets_that_are_no_longer_in_their_containers()
 		if (!cname.isEmpty()) {
 			int index=find_widget_index_in_container(cname,m_widgets[i].widget);
 			if (index<0) {
-				m_widgets.removeAt(index);
+                m_widgets.removeAt(i);
 				i--;
 			}
 		}
