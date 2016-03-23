@@ -14,33 +14,34 @@
  */
 
 class MVClipsViewPrivate;
-class MVClipsView : public SSTimeSeriesView
-{
+class MVClipsView : public SSTimeSeriesView {
     Q_OBJECT
 public:
     friend class MVClipsViewPrivate;
     MVClipsView();
     virtual ~MVClipsView();
-	///Set MxTxL array of clips to view
-    void setClips(const Mda &clips);
-	///Set the associated times, for purpose of currentEvent()
-    void setTimes(const QList<double> &times);
-	///Set the associated labels, for purpose of currentEvent()
-	void setLabels(const QList<int> &labels);
-	///The index of the currently selected clip
+    ///Set MxTxL array of clips to view
+    void setClips(const Mda& clips);
+    ///Set the associated times, for purpose of currentEvent()
+    void setTimes(const QList<double>& times);
+    ///Set the associated labels, for purpose of currentEvent()
+    void setLabels(const QList<int>& labels);
+    ///The index of the currently selected clip
     int currentClipIndex();
-	//double currentClipTimepoint();
-	///The currently selected event -- this has the time/label
-	MVEvent currentEvent();
-	///Set the current event, which searches times/labels to move the cursor to the corresponding clip
-	void setCurrentEvent(MVEvent evt);
+    //double currentClipTimepoint();
+    ///The currently selected event -- this has the time/label
+    MVEvent currentEvent();
+    ///Set the current event, which searches times/labels to move the cursor to the corresponding clip
+    void setCurrentEvent(MVEvent evt);
 signals:
-	///The user has selected a new current clip, which affects the outputs of currentClipIndex() and currentEvent()
-	void currentEventChanged();
-public slots:
-	void slot_current_x_changed();
+    ///The user has selected a new current clip, which affects the outputs of currentClipIndex() and currentEvent()
+    void currentEventChanged();
+public
+slots:
+    void slot_current_x_changed();
+
 private:
-    MVClipsViewPrivate *d;
+    MVClipsViewPrivate* d;
 };
 
 #endif // MVCLIPSVIEW_H

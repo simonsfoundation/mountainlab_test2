@@ -6,8 +6,9 @@
 #include "textfile.h"
 #include <QDebug>
 
-Mda compute_mean_waveform(DiskArrayModel_New *C) {
-	Mda ret;
+Mda compute_mean_waveform(DiskArrayModel_New* C)
+{
+    Mda ret;
     return ret; //disabled for now.
     /*
 	if (!C->dim3()) return ret;
@@ -47,8 +48,9 @@ Mda compute_mean_waveform(DiskArrayModel_New *C) {
     */
 }
 
-Mda compute_mean_stdev_waveform(DiskArrayModel_New *C) {
-	Mda ret;
+Mda compute_mean_stdev_waveform(DiskArrayModel_New* C)
+{
+    Mda ret;
     return ret; //disabled for now
     /*
 	if (!C->dim3()) return ret;
@@ -103,8 +105,9 @@ Mda compute_mean_stdev_waveform(DiskArrayModel_New *C) {
     */
 }
 
-Mda compute_features(DiskArrayModel_New *C) {
-	Mda ret;
+Mda compute_features(DiskArrayModel_New* C)
+{
+    Mda ret;
     return ret; //disabled for now
     /*
 	if (!C->dim3()) return ret;
@@ -121,8 +124,9 @@ Mda compute_features(DiskArrayModel_New *C) {
     */
 }
 
-Mda compute_features(const QList<DiskArrayModel_New *> &C) {
-	Mda ret;
+Mda compute_features(const QList<DiskArrayModel_New*>& C)
+{
+    Mda ret;
     return ret; //disabled for now
     /*
 	if (C.isEmpty()) return ret;
@@ -157,57 +161,53 @@ Mda compute_features(const QList<DiskArrayModel_New *> &C) {
 
 QColor get_heat_map_color(double val)
 {
-    double r=0,g=0,b=0;
-    if (val<0.2) {
-        double tmp=(val-0)/0.2;
-        r=200*(1-tmp)+150*tmp;
-        b=200*(1-tmp)+255*tmp;
-        g=0*(1-tmp)+0*tmp;
-    }
-    else if (val<0.4) {
-        double tmp=(val-0.2)/0.2;
-        r=150*(1-tmp)+0*tmp;
-        b=255*(1-tmp)+255*tmp;
-        g=0*(1-tmp)+100*tmp;
-    }
-    else if (val<0.6) {
-        double tmp=(val-0.4)/0.2;
-        r=0*(1-tmp)+255*tmp;
-        b=255*(1-tmp)+0*tmp;
-        g=100*(1-tmp)+20*tmp;
-    }
-    else if (val<0.8) {
-        double tmp=(val-0.6)/0.2;
-        r=255*(1-tmp)+255*tmp;
-        b=0*(1-tmp)+0*tmp;
-        g=20*(1-tmp)+255*tmp;
-    }
-    else if (val<=1.0) {
-        double tmp=(val-0.8)/0.2;
-        r=255*(1-tmp)+255*tmp;
-        b=0*(1-tmp)+255*tmp;
-        g=255*(1-tmp)+255*tmp;
+    double r = 0, g = 0, b = 0;
+    if (val < 0.2) {
+        double tmp = (val - 0) / 0.2;
+        r = 200 * (1 - tmp) + 150 * tmp;
+        b = 200 * (1 - tmp) + 255 * tmp;
+        g = 0 * (1 - tmp) + 0 * tmp;
+    } else if (val < 0.4) {
+        double tmp = (val - 0.2) / 0.2;
+        r = 150 * (1 - tmp) + 0 * tmp;
+        b = 255 * (1 - tmp) + 255 * tmp;
+        g = 0 * (1 - tmp) + 100 * tmp;
+    } else if (val < 0.6) {
+        double tmp = (val - 0.4) / 0.2;
+        r = 0 * (1 - tmp) + 255 * tmp;
+        b = 255 * (1 - tmp) + 0 * tmp;
+        g = 100 * (1 - tmp) + 20 * tmp;
+    } else if (val < 0.8) {
+        double tmp = (val - 0.6) / 0.2;
+        r = 255 * (1 - tmp) + 255 * tmp;
+        b = 0 * (1 - tmp) + 0 * tmp;
+        g = 20 * (1 - tmp) + 255 * tmp;
+    } else if (val <= 1.0) {
+        double tmp = (val - 0.8) / 0.2;
+        r = 255 * (1 - tmp) + 255 * tmp;
+        b = 0 * (1 - tmp) + 255 * tmp;
+        g = 255 * (1 - tmp) + 255 * tmp;
     }
 
-    return QColor((int)r,(int)g,(int)b);
+    return QColor((int)r, (int)g, (int)b);
 }
 
-QList<Epoch> read_epochs(const QString &path)
+QList<Epoch> read_epochs(const QString& path)
 {
     QList<Epoch> ret;
-    QString txt=read_text_file(path);
-    QStringList lines=txt.split("\n");
-    foreach (QString line,lines) {
-        QList<QString> vals=line.split(QRegExp("\\s+"));
-        if (vals.value(0)=="EPOCH") {
-            if (vals.count()==4) {
+    QString txt = read_text_file(path);
+    QStringList lines = txt.split("\n");
+    foreach(QString line, lines)
+    {
+        QList<QString> vals = line.split(QRegExp("\\s+"));
+        if (vals.value(0) == "EPOCH") {
+            if (vals.count() == 4) {
                 Epoch E;
-                E.name=vals.value(1);
-                E.t_begin=vals.value(2).toDouble()-1;
-                E.t_end=vals.value(3).toDouble()-1;
+                E.name = vals.value(1);
+                E.t_begin = vals.value(2).toDouble() - 1;
+                E.t_end = vals.value(3).toDouble() - 1;
                 ret << E;
-            }
-            else {
+            } else {
                 qWarning() << "Problem parsing epochs file:" << path;
             }
         }

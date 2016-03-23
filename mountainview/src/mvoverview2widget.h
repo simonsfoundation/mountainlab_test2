@@ -13,48 +13,49 @@
  */
 
 class MVOverview2WidgetPrivate;
-class MVOverview2Widget : public QWidget
-{
-	Q_OBJECT
+class MVOverview2Widget : public QWidget {
+    Q_OBJECT
 public:
-	friend class MVOverview2WidgetPrivate;
-	MVOverview2Widget(QWidget *parent=0);
-	virtual ~MVOverview2Widget();
-	///The path to the timeseries that was sorted. For example, raw, filtered, or pre-processed. Usually all three of these are set, so user can choose between them in dropdown selection box
-    void addTimeseriesPath(const QString &name,const QString &path);
-	///The name of the timeseries being viewed... corresponds to name in addTimeseriesPath()
-    void setCurrentTimeseriesName(const QString &name);
-	///Set the path to the results of sorting. TODO: refer to docs for info on firings array
-	void setFiringsPath(const QString &firings);
-	///The sample rate for the dataset
-	void setSampleRate(float freq);
-	///Open the initial views
-	void setDefaultInitialization();
-	///Corresponds to MVFiringRateView::setEpochs()
-    void setEpochs(const QList<Epoch> &epochs);
+    friend class MVOverview2WidgetPrivate;
+    MVOverview2Widget(QWidget* parent = 0);
+    virtual ~MVOverview2Widget();
+    ///The path to the timeseries that was sorted. For example, raw, filtered, or pre-processed. Usually all three of these are set, so user can choose between them in dropdown selection box
+    void addTimeseriesPath(const QString& name, const QString& path);
+    ///The name of the timeseries being viewed... corresponds to name in addTimeseriesPath()
+    void setCurrentTimeseriesName(const QString& name);
+    ///Set the path to the results of sorting. TODO: refer to docs for info on firings array
+    void setFiringsPath(const QString& firings);
+    ///The sample rate for the dataset
+    void setSampleRate(float freq);
+    ///Open the initial views
+    void setDefaultInitialization();
+    ///Corresponds to MVFiringRateView::setEpochs()
+    void setEpochs(const QList<Epoch>& epochs);
 
 protected:
-	void resizeEvent(QResizeEvent *evt);
+    void resizeEvent(QResizeEvent* evt);
 
 signals:
 
-public slots:
+public
+slots:
 
-private slots:
-	void slot_control_panel_button_clicked(QString str);
+private
+slots:
+    void slot_control_panel_button_clicked(QString str);
     void slot_control_panel_combobox_activated(QString str);
-	void slot_auto_correlogram_activated(int k);
+    void slot_auto_correlogram_activated(int k);
     //void slot_templates_clicked();
-	void slot_details_current_k_changed();
-	void slot_details_selected_ks_changed();
+    void slot_details_current_k_changed();
+    void slot_details_selected_ks_changed();
     void slot_details_template_activated();
     void slot_cross_correlogram_current_label_changed();
-	void slot_cross_correlogram_selected_labels_changed();
-	void slot_clips_view_current_event_changed();
-	void slot_cluster_view_current_event_changed();
+    void slot_cross_correlogram_selected_labels_changed();
+    void slot_clips_view_current_event_changed();
+    void slot_cluster_view_current_event_changed();
 
 private:
-	MVOverview2WidgetPrivate *d;
+    MVOverview2WidgetPrivate* d;
 };
 
 /*
@@ -72,6 +73,5 @@ private slots:
 	void slot_switch_to_other_tab_widget();
 };
 */
-
 
 #endif // MVOVERVIEW2WIDGET_H

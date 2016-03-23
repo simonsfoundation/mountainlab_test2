@@ -36,7 +36,8 @@ private:
 
 signals:
 
-public slots:
+public
+slots:
 };
 
 #endif // DISKARRAYMODEL_H

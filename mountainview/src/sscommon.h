@@ -15,12 +15,12 @@
 #define SSARRAY DiskArrayModel_New
 
 struct Vec2 {
-	double x,y;
+    double x, y;
 };
-Vec2 vec2(double x,double y);
+Vec2 vec2(double x, double y);
 
 QString ssTempPath();
 
-#include <QDebug>  // ahb
+#include <QDebug> // ahb
 
 #endif // SSCOMMON_H

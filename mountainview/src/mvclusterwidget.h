@@ -11,44 +11,45 @@
  */
 
 class MVClusterWidgetPrivate;
-class MVClusterWidget : public QWidget
-{
-	Q_OBJECT
+class MVClusterWidget : public QWidget {
+    Q_OBJECT
 public:
-	friend class MVClusterWidgetPrivate;
-	MVClusterWidget();
-	virtual ~MVClusterWidget();
-	///Just as in MVClusterView::setData()
-	void setData(const Mda &X);
-	///Just as in MVClusterView::setTimes()
-	void setTimes(const QList<double> &times);
-	///Just as in MVClusterView::setLabels()
-	void setLabels(const QList<int> &labels);
-	///Just as in MVClusterView::setAmplitudes()
-    void setAmplitudes(const QList<double> &amps);
-	///For purpose of info display
-	void setOutlierScores(const QList<double> &outlier_scores);
-	///Just as in MVClusterView::setCurrentEvent()
-	void setCurrentEvent(const MVEvent &evt);
-	///For purpose of displaying the clip associated with the current datapoint computed from array of setTimeSeries()
-	void setClipSize(int clip_size);
-	///Set the time series for purpose of computing the clip to display when corresponding datapoint is selected
-	void setTimeseries(const DiskReadMda &X);
-	///Just as in MVClusterView::setTransformation()
-    void setTransformation(const AffineTransformation &T);
-	///Just as in MVClusterView::currentEvent()
-	MVEvent currentEvent();
+    friend class MVClusterWidgetPrivate;
+    MVClusterWidget();
+    virtual ~MVClusterWidget();
+    ///Just as in MVClusterView::setData()
+    void setData(const Mda& X);
+    ///Just as in MVClusterView::setTimes()
+    void setTimes(const QList<double>& times);
+    ///Just as in MVClusterView::setLabels()
+    void setLabels(const QList<int>& labels);
+    ///Just as in MVClusterView::setAmplitudes()
+    void setAmplitudes(const QList<double>& amps);
+    ///For purpose of info display
+    void setOutlierScores(const QList<double>& outlier_scores);
+    ///Just as in MVClusterView::setCurrentEvent()
+    void setCurrentEvent(const MVEvent& evt);
+    ///For purpose of displaying the clip associated with the current datapoint computed from array of setTimeSeries()
+    void setClipSize(int clip_size);
+    ///Set the time series for purpose of computing the clip to display when corresponding datapoint is selected
+    void setTimeseries(const DiskReadMda& X);
+    ///Just as in MVClusterView::setTransformation()
+    void setTransformation(const AffineTransformation& T);
+    ///Just as in MVClusterView::currentEvent()
+    MVEvent currentEvent();
 
 signals:
-	///Just as in MVClusterView::currentEventChanged()
-	void currentEventChanged();
-private slots:
-	void slot_view_current_event_changed();
-	void slot_view_transformation_changed();
+    ///Just as in MVClusterView::currentEventChanged()
+    void currentEventChanged();
+private
+slots:
+    void slot_view_current_event_changed();
+    void slot_view_transformation_changed();
     void slot_show_clip_view_toggled(bool val);
     void slot_show_view_toggled(bool val);
+
 private:
-	MVClusterWidgetPrivate *d;
+    MVClusterWidgetPrivate* d;
 };
 
 #endif // MVCLUSTERWIDGET_H

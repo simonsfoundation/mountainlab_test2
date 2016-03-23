@@ -13,24 +13,24 @@
  **/
 
 class CorrelationMatrixViewPrivate;
-class CorrelationMatrixView : public QWidget
-{
+class CorrelationMatrixView : public QWidget {
 public:
-	friend class CorrelationMatrixViewPrivate;
-	CorrelationMatrixView(QWidget *parent=0);
-	virtual ~CorrelationMatrixView();
-	void setMatrix(const Mda &CM);
+    friend class CorrelationMatrixViewPrivate;
+    CorrelationMatrixView(QWidget* parent = 0);
+    virtual ~CorrelationMatrixView();
+    void setMatrix(const Mda& CM);
 
 protected:
-	void paintEvent(QPaintEvent *evt);
-	void mouseMoveEvent(QMouseEvent *evt);
+    void paintEvent(QPaintEvent* evt);
+    void mouseMoveEvent(QMouseEvent* evt);
 
 signals:
 
-public slots:
+public
+slots:
 
 private:
-	CorrelationMatrixViewPrivate *d;
+    CorrelationMatrixViewPrivate* d;
 };
 
 #endif // CORRELATIONMATRIXVIEW_H

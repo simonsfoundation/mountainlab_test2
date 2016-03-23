@@ -11,36 +11,36 @@
 
 class QTreeWidgetItem;
 class MVStatisticsWidgetPrivate;
-class MVStatisticsWidget : public QWidget
-{
-	Q_OBJECT
+class MVStatisticsWidget : public QWidget {
+    Q_OBJECT
 public:
-	friend class MVStatisticsWidgetPrivate;
-	MVStatisticsWidget();
-	virtual ~MVStatisticsWidget();
+    friend class MVStatisticsWidgetPrivate;
+    MVStatisticsWidget();
+    virtual ~MVStatisticsWidget();
 
-	void setTimesLabels(const Mda &times,const Mda &labels);
-	void setPrimaryChannels(const Mda &primary_channels);
-    void setRaw(DiskArrayModel_New *X);
-	void updateStatistics();
+    void setTimesLabels(const Mda& times, const Mda& labels);
+    void setPrimaryChannels(const Mda& primary_channels);
+    void setRaw(DiskArrayModel_New* X);
+    void updateStatistics();
 
-	QList<int> selectedLabels();
-	void setSelectedLabels(const QList<int> &labels);
-	int currentLabel();
-	void setCurrentLabel(int label);
+    QList<int> selectedLabels();
+    void setSelectedLabels(const QList<int>& labels);
+    int currentLabel();
+    void setCurrentLabel(int label);
 
 signals:
-	void selectedLabelsChanged();
-	void currentLabelChanged();
-	void labelActivated(int num);
+    void selectedLabelsChanged();
+    void currentLabelChanged();
+    void labelActivated(int num);
 
-private slots:
-	void slot_item_clicked();
-	void slot_item_activated(QTreeWidgetItem *item);
-	void slot_item_selection_changed();
+private
+slots:
+    void slot_item_clicked();
+    void slot_item_activated(QTreeWidgetItem* item);
+    void slot_item_selection_changed();
 
 private:
-	MVStatisticsWidgetPrivate *d;
+    MVStatisticsWidgetPrivate* d;
 };
 
 #endif // MVSTATISTICSWIDGET_H

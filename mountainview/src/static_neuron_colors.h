@@ -6,4 +6,3 @@
 QColor static_neuron_color(int ind);
 
 #endif // STATIC_NEURON_COLORS_H
-

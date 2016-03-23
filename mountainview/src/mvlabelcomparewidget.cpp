@@ -20,11 +20,11 @@
 
 class MVLabelCompareWidgetPrivate {
 public:
-    MVLabelCompareWidget *q;
+    MVLabelCompareWidget* q;
 
-	Mda m_locations;
-	DiskArrayModel_New *m_raw;
-	bool m_own_raw;
+    Mda m_locations;
+    DiskArrayModel_New* m_raw;
+    bool m_own_raw;
     Mda m_templates_1;
     Mda m_templates_2;
     Mda m_times_1;
@@ -34,111 +34,109 @@ public:
     Mda m_labels_2;
     Mda m_TL_2;
 
-	SSTimeSeriesView *m_labeled_raw_view;
+    SSTimeSeriesView* m_labeled_raw_view;
 
-	QSplitter *m_vsplitter;
+    QSplitter* m_vsplitter;
 
-	void update_sizes();
+    void update_sizes();
 };
 
-
-MVLabelCompareWidget::MVLabelCompareWidget(QWidget *parent) : QWidget(parent)
+MVLabelCompareWidget::MVLabelCompareWidget(QWidget* parent)
+    : QWidget(parent)
 {
-    d=new MVLabelCompareWidgetPrivate;
-	d->q=this;
+    d = new MVLabelCompareWidgetPrivate;
+    d->q = this;
 
-	d->m_raw=0;
-	d->m_own_raw=false;
+    d->m_raw = 0;
+    d->m_own_raw = false;
 
-	d->m_labeled_raw_view=new SSTimeSeriesView;
-	d->m_labeled_raw_view->initialize();
-	//connect(d->m_labeled_raw_view,SIGNAL(currentXChanged()),this,SLOT(slot_current_raw_timepoint_changed()));
+    d->m_labeled_raw_view = new SSTimeSeriesView;
+    d->m_labeled_raw_view->initialize();
+    //connect(d->m_labeled_raw_view,SIGNAL(currentXChanged()),this,SLOT(slot_current_raw_timepoint_changed()));
 
-	{
-		QSplitter *vsplitter=new QSplitter(Qt::Vertical);
-		vsplitter->setHandleWidth(15);
-		vsplitter->addWidget(d->m_labeled_raw_view);
-		d->m_vsplitter=vsplitter;
-	}
+    {
+        QSplitter* vsplitter = new QSplitter(Qt::Vertical);
+        vsplitter->setHandleWidth(15);
+        vsplitter->addWidget(d->m_labeled_raw_view);
+        d->m_vsplitter = vsplitter;
+    }
 
-	QHBoxLayout *hlayout=new QHBoxLayout;
+    QHBoxLayout* hlayout = new QHBoxLayout;
     hlayout->addWidget(d->m_vsplitter);
-	this->setLayout(hlayout);
+    this->setLayout(hlayout);
 }
 
-void MVLabelCompareWidget::setElectrodeLocations(const Mda &L)
+void MVLabelCompareWidget::setElectrodeLocations(const Mda& L)
 {
-	d->m_locations=L;
+    d->m_locations = L;
 }
 
-void MVLabelCompareWidget::setTemplates1(const Mda &X)
+void MVLabelCompareWidget::setTemplates1(const Mda& X)
 {
-    d->m_templates_1=X;
+    d->m_templates_1 = X;
 }
 
-void MVLabelCompareWidget::setTemplates2(const Mda &X)
+void MVLabelCompareWidget::setTemplates2(const Mda& X)
 {
-    d->m_templates_2=X;
+    d->m_templates_2 = X;
 }
 
-void MVLabelCompareWidget::setRaw(DiskArrayModel_New *X,bool own_it)
+void MVLabelCompareWidget::setRaw(DiskArrayModel_New* X, bool own_it)
 {
-	if ((d->m_raw)&&(d->m_own_raw)) delete d->m_raw;
-	d->m_raw=X;
-	d->m_own_raw=own_it;
+    if ((d->m_raw) && (d->m_own_raw))
+        delete d->m_raw;
+    d->m_raw = X;
+    d->m_own_raw = own_it;
 
-	d->m_labeled_raw_view->setData(X,false);
+    d->m_labeled_raw_view->setData(X, false);
 }
 
-void MVLabelCompareWidget::setTimesLabels(const Mda &times1, const Mda &labels1,const Mda &times2, const Mda &labels2)
+void MVLabelCompareWidget::setTimesLabels(const Mda& times1, const Mda& labels1, const Mda& times2, const Mda& labels2)
 {
-    d->m_times_1=times1;
-    d->m_labels_1=labels1;
-    d->m_times_2=times2;
-    d->m_labels_2=labels2;
-
+    d->m_times_1 = times1;
+    d->m_labels_1 = labels1;
+    d->m_times_2 = times2;
+    d->m_labels_2 = labels2;
 
     {
-        int NN=times1.totalSize();
-        Mda TL; TL.allocate(2,NN);
-        int jj=0;
-        for (int ii=0; ii<times1.totalSize(); ii++) {
-			TL.setValue(times1.get(ii),0,jj);
-			TL.setValue(labels1.get(ii),1,jj);
+        int NN = times1.totalSize();
+        Mda TL;
+        TL.allocate(2, NN);
+        int jj = 0;
+        for (int ii = 0; ii < times1.totalSize(); ii++) {
+            TL.setValue(times1.get(ii), 0, jj);
+            TL.setValue(labels1.get(ii), 1, jj);
             jj++;
         }
-        d->m_TL_1=TL;
+        d->m_TL_1 = TL;
     }
     {
-        int NN=times2.totalSize();
-        Mda TL; TL.allocate(2,NN);
-        int jj=0;
-        for (int ii=0; ii<times2.totalSize(); ii++) {
-			TL.setValue(times2.get(ii)-1,0,jj); //convert to zero-based indexing
-			TL.setValue(labels2.get(ii),1,jj);
+        int NN = times2.totalSize();
+        Mda TL;
+        TL.allocate(2, NN);
+        int jj = 0;
+        for (int ii = 0; ii < times2.totalSize(); ii++) {
+            TL.setValue(times2.get(ii) - 1, 0, jj); //convert to zero-based indexing
+            TL.setValue(labels2.get(ii), 1, jj);
             jj++;
         }
-        d->m_TL_2=TL;
+        d->m_TL_2 = TL;
     }
 
-    d->m_labeled_raw_view->setLabels(new DiskReadMda(d->m_TL_1),true);
-    d->m_labeled_raw_view->setCompareLabels(new DiskReadMda(d->m_TL_2),true);
+    d->m_labeled_raw_view->setLabels(new DiskReadMda(d->m_TL_1), true);
+    d->m_labeled_raw_view->setCompareLabels(new DiskReadMda(d->m_TL_2), true);
 }
-
 
 void MVLabelCompareWidget::updateWidgets()
 {
-
 }
 
-void MVLabelCompareWidget::resizeEvent(QResizeEvent *evt)
+void MVLabelCompareWidget::resizeEvent(QResizeEvent* evt)
 {
-	Q_UNUSED(evt);
+    Q_UNUSED(evt);
 
-	d->update_sizes();
+    d->update_sizes();
 }
-
-
 
 void MVLabelCompareWidgetPrivate::update_sizes()
 {
@@ -170,11 +168,11 @@ void MVLabelCompareWidgetPrivate::update_sizes()
 		m_left_vsplitter->setSizes(sizes);
 	}
     */
-
 }
 
 MVLabelCompareWidget::~MVLabelCompareWidget()
 {
-	if ((d->m_raw)&&(d->m_own_raw)) delete d->m_raw;
-	delete d;
+    if ((d->m_raw) && (d->m_own_raw))
+        delete d->m_raw;
+    delete d;
 }

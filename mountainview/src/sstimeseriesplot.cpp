@@ -191,8 +191,7 @@ void SSTimeSeriesPlot::paintPlot(QPainter* painter, int W, int H)
 void SSTimeSeriesPlot::mousePressEvent(QMouseEvent* evt)
 {
     if (evt->pos().y() <= d->m_control_panel_height) {
-    }
-    else {
+    } else {
         SSAbstractPlot::mousePressEvent(evt);
     }
 }
@@ -203,8 +202,7 @@ void SSTimeSeriesPlot::mouseReleaseEvent(QMouseEvent* evt)
         float frac0 = evt->pos().x() * 1.0 / d->m_bar_width;
         int t0 = (int)((d->m_max_timepoint + 1) * frac0);
         emit requestMoveToTimepoint(t0);
-    }
-    else {
+    } else {
         SSAbstractPlot::mouseReleaseEvent(evt);
     }
 }
@@ -212,8 +210,7 @@ void SSTimeSeriesPlot::mouseReleaseEvent(QMouseEvent* evt)
 void SSTimeSeriesPlot::mouseMoveEvent(QMouseEvent* evt)
 {
     if (evt->pos().y() <= d->m_control_panel_height) {
-    }
-    else {
+    } else {
         SSAbstractPlot::mouseMoveEvent(evt);
     }
 }
@@ -349,11 +346,11 @@ void SSTimeSeriesPlotPrivate::set_data2()
     //fixed on 12/4/15
     if (data0->N2() > 1) {
         for (int ch = 0; ch < M; ch++) {
-            m_minvals[ch] = data0->value(ch, 0L,0L);
-            m_maxvals[ch] = data0->value(ch, 0L,0L);
-            for (long i3=0; i3<data0->N3(); i3++) {
-                for (long i2=0; i2<data0->N2(); i2++) {
-                    double val=data0->value(ch,i2,i3);
+            m_minvals[ch] = data0->value(ch, 0L, 0L);
+            m_maxvals[ch] = data0->value(ch, 0L, 0L);
+            for (long i3 = 0; i3 < data0->N3(); i3++) {
+                for (long i2 = 0; i2 < data0->N2(); i2++) {
+                    double val = data0->value(ch, i2, i3);
                     if (val < m_minvals[ch]) {
                         m_minvals[ch] = val;
                     }
@@ -363,8 +360,7 @@ void SSTimeSeriesPlotPrivate::set_data2()
                 }
             }
         }
-    }
-    else {
+    } else {
         for (int ch = 0; ch < M; ch++) {
             m_minvals[ch] = 0;
             m_maxvals[ch] = 1;
@@ -410,8 +406,7 @@ void SSTimeSeriesPlotPrivate::setup_plot_area()
             m_plot_minvals[i] = m_yrange_minvals[i] / q->verticalZoomFactor();
             m_plot_maxvals[i] = m_yrange_maxvals[i] / q->verticalZoomFactor();
         }
-    }
-    else if ((M > 0) && (m_minvals.size() > 0)) {
+    } else if ((M > 0) && (m_minvals.size() > 0)) {
         for (int i = 0; i < M; i++) {
             m_plot_minvals[i] = m_minvals.value(i) / q->verticalZoomFactor();
             m_plot_maxvals[i] = m_maxvals.value(i) / q->verticalZoomFactor();
@@ -452,38 +447,33 @@ void SSTimeSeriesPlotPrivate::setup_plot_area()
             if (m_use_fixed_vertical_channel_spacing) {
                 m_plot_y1[ch] = offset + m_plot_minvals[ch] - max00;
                 offset += m_fixed_vertical_channel_spacing;
-            }
-            else {
+            } else {
                 m_plot_y1[ch] = offset;
                 offset += (-m_plot_minvals[ch]);
             }
             m_plot_offsets[ch] = offset;
             if (m_use_fixed_vertical_channel_spacing) {
                 m_plot_y1[ch] = offset + m_plot_maxvals[ch] + max00;
-            }
-            else {
+            } else {
                 offset += m_plot_maxvals[ch];
                 offset += max00 / 20;
                 m_plot_y2[ch] = offset;
             }
         }
-    }
-    else {
+    } else {
         for (int ch = M - 1; ch >= 0; ch--) { // downwards ordering
 
             if (m_use_fixed_vertical_channel_spacing) {
                 m_plot_y1[ch] = offset + m_plot_minvals[ch] - max00;
                 offset -= m_fixed_vertical_channel_spacing;
-            }
-            else {
+            } else {
                 m_plot_y1[ch] = offset;
                 offset += (-m_plot_minvals[ch]);
             }
             m_plot_offsets[ch] = offset;
             if (m_use_fixed_vertical_channel_spacing) {
                 m_plot_y2[ch] = offset + m_plot_maxvals[ch] + max00;
-            }
-            else {
+            } else {
                 offset += m_plot_maxvals[ch];
                 offset += max00 / 20;
                 m_plot_y2[ch] = offset;
@@ -514,8 +504,7 @@ void SSTimeSeriesPlotPrivate::setup_plot_area()
     if (msfactor == 1) {
         x1 = xrange_min;
         x2 = xrange_max;
-    }
-    else {
+    } else {
         x1 = (xrange_min / msfactor) * msfactor;
         x2 = (xrange_max / msfactor) * msfactor;
     }
@@ -546,8 +535,7 @@ void SSTimeSeriesPlotPrivate::setup_plot_area()
                 label0 = QString("%1").arg(ch + 1);
             SS.name = label0;
             m_plot_area.addSeries(SS);
-        }
-        else {
+        } else {
 
             Mda xvals;
             xvals.allocate(1, (x2 - x1) / msfactor * 2);
@@ -558,8 +546,8 @@ void SSTimeSeriesPlotPrivate::setup_plot_area()
             Mda yvals;
             yvals.allocate(1, (x2 - x1) / msfactor * 2);
             for (int ii = x1; ii < x2; ii += msfactor) {
-                double val1 = tmp.value(ch, ((ii - x1) / msfactor)*2);
-                double val2 = tmp.value(ch, ((ii - x1) / msfactor)*2+1);
+                double val1 = tmp.value(ch, ((ii - x1) / msfactor) * 2);
+                double val2 = tmp.value(ch, ((ii - x1) / msfactor) * 2 + 1);
                 yvals.setValue(val1, 0, (ii - x1) / msfactor * 2);
                 yvals.setValue(val2, 0, (ii - x1) / msfactor * 2 + 1);
             }
@@ -652,8 +640,7 @@ void SSTimeSeriesPlotPrivate::draw_control_panel(QPainter* P)
     int t0 = tmp.x, t1 = tmp.y;
     if ((t0 < 0) || (t0 < 0)) {
         P->fillRect(RR1, col2);
-    }
-    else {
+    } else {
         int num_timepoints = m_max_timepoint + 1;
         int xpix0 = bar_width * 1.0 * t0 / num_timepoints;
         int xpix1 = bar_width * 1.0 * t1 / num_timepoints;
