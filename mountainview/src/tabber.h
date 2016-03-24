@@ -44,6 +44,7 @@ slots:
     void slot_tab_close_requested(int index);
     void slot_tab_bar_clicked(int index);
     void slot_tab_bar_double_clicked(int index);
+    void slot_widget_destroyed(QObject *obj);
 
 private:
     TabberPrivate* d;

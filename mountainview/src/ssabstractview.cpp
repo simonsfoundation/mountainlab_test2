@@ -631,6 +631,16 @@ void SSAbstractView::centerOnCursor()
     d->scroll_to_current_x_if_needed(true);
 }
 
+void SSAbstractView::setCursorVisible(bool val)
+{
+    d->m_cursor_visible=val;
+}
+
+bool SSAbstractView::cursorVisible()
+{
+    return d->m_cursor_visible;
+}
+
 double SSAbstractView::currentValue()
 {
     return 0;

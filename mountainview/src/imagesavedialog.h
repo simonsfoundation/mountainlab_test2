@@ -22,6 +22,7 @@ public:
 private slots:
     void slot_save();
     void slot_save_as();
+    void slot_cancel();
 private:
     ImageSaveDialogPrivate *d;
 };

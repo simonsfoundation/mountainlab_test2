@@ -43,6 +43,11 @@ ImageSaveDialog::ImageSaveDialog()
     save_as_button->setToolTip("Save image as...");
     connect(save_as_button,SIGNAL(clicked(bool)),this,SLOT(slot_save_as()));
 
+    QToolButton *cancel_button=new QToolButton;
+    cancel_button->setText("Cancel");
+    cancel_button->setToolTip("Cancel image export");
+    connect(cancel_button,SIGNAL(clicked(bool)),this,SLOT(slot_cancel()));
+
     QVBoxLayout* vlayout = new QVBoxLayout;
     vlayout->addWidget(d->m_label);
     QHBoxLayout *hlayout=new QHBoxLayout;
@@ -51,6 +56,7 @@ ImageSaveDialog::ImageSaveDialog()
     hlayout->addWidget(d->m_file_edit);
     hlayout->addWidget(save_button);
     hlayout->addWidget(save_as_button);
+    hlayout->addWidget(cancel_button);
     this->setLayout(vlayout);
 }
 
@@ -98,4 +104,9 @@ void ImageSaveDialog::slot_save_as()
 {
     d->m_file_edit->setText("");
     slot_save();
+}
+
+void ImageSaveDialog::slot_cancel()
+{
+    this->reject();
 }

@@ -24,6 +24,7 @@ class MVClipsView : public SSTimeSeriesView {
 public:
     ///Create a new instance
     static MVClipsView *newInstance();
+    virtual ~MVClipsView() {}
 
     ///Set MxTxL array of clips to view
     virtual void setClips(const Mda& clips)=0;

@@ -1,6 +1,9 @@
 #include "histogramview.h"
 #include <QPaintEvent>
 #include <QPainter>
+#include <QImage>
+#include "mvutils.h"
+#include <QMenu>
 
 class HistogramViewPrivate {
 public:
@@ -23,9 +26,11 @@ public:
     bool m_selected;
 
     void update_bin_counts();
-    QPointF coord2pix(QPointF pt);
-    QPointF pix2coord(QPointF pt);
+    QPointF coord2pix(QPointF pt, int W = 0, int H = 0);
+    QPointF pix2coord(QPointF pt, int W = 0, int H = 0);
     int get_bin_index_at(QPointF pt);
+    void export_image();
+    void do_paint(QPainter& painter, int W, int H);
 };
 
 HistogramView::HistogramView(QWidget* parent)
@@ -49,6 +54,8 @@ HistogramView::HistogramView(QWidget* parent)
     d->m_line_color = QColor(150, 150, 150);
 
     this->setMouseTracking(true);
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
 }
 
 HistogramView::~HistogramView()
@@ -158,6 +165,31 @@ void HistogramView::setSelected(bool val)
     }
 }
 
+QImage HistogramView::renderImage(int W, int H)
+{
+    QImage ret = QImage(W, H, QImage::Format_RGB32);
+    QPainter painter(&ret);
+
+    bool selected = d->m_selected;
+    bool hovered = d->m_hovered;
+    bool current = d->m_current;
+    int hovered_bin_index = d->m_hovered_bin_index;
+
+    d->m_selected = false;
+    d->m_hovered = false;
+    d->m_hovered_bin_index = -1;
+    d->m_current = false;
+
+    d->do_paint(painter, W, H);
+
+    d->m_selected = selected;
+    d->m_hovered = hovered;
+    d->m_hovered_bin_index = hovered_bin_index;
+    d->m_current = current;
+
+    return ret;
+}
+
 QRectF make_rect(QPointF p1, QPointF p2)
 {
     float x = qMin(p1.x(), p2.x());
@@ -192,61 +224,7 @@ void HistogramView::paintEvent(QPaintEvent* evt)
     Q_UNUSED(evt)
     QPainter painter(this);
 
-    //d->m_colors["view_background"]=QColor(245,245,245);
-    //d->m_colors["view_background_highlighted"]=QColor(250,220,200);
-    //d->m_colors["view_background_hovered"]=QColor(240,245,240);
-
-    //	QColor hover_color=QColor(150,150,150,80);
-    //	QColor current_color=QColor(150,200,200,80);
-    //	QColor hover_current_color=QColor(170,200,200,80);
-
-    QRect R(0, 0, width(), height());
-
-    if (d->m_current) {
-        painter.fillRect(R, d->m_colors["view_background_highlighted"]);
-    } else if (d->m_selected) {
-        painter.fillRect(R, d->m_colors["view_background_selected"]);
-    } else if (d->m_hovered) {
-        painter.fillRect(R, d->m_colors["view_background_hovered"]);
-    } else {
-        painter.fillRect(R, d->m_colors["view_background"]);
-    }
-
-    if (d->m_selected) {
-        painter.setPen(QPen(d->m_colors["view_frame_selected"], 4));
-        painter.drawRect(R);
-    }
-
-    if (d->m_update_required) {
-        d->update_bin_counts();
-        d->m_update_required = false;
-    }
-
-    if (d->m_num_bins <= 1)
-        return;
-    float spacing = d->m_bin_centers[1] - d->m_bin_centers[0];
-    for (int i = 0; i < d->m_num_bins; i++) {
-        QPointF pt1 = d->coord2pix(QPointF(d->m_bin_centers[i] - spacing / 2, 0));
-        QPointF pt2 = d->coord2pix(QPointF(d->m_bin_centers[i] + spacing / 2, d->m_bin_counts[i]));
-        QRectF R = make_rect(pt1, pt2);
-        QColor col = d->m_fill_color;
-        if (i == d->m_hovered_bin_index)
-            col = lighten(col, 15, 15, 15);
-        painter.fillRect(R, col);
-        painter.setPen(d->m_line_color);
-        painter.drawRect(R);
-    }
-
-    if (!d->m_title.isEmpty()) {
-        int text_height = 14;
-        QRect R(d->m_margin_left, 5, this->width() - d->m_margin_left - d->m_margin_right, text_height);
-        QFont font = painter.font();
-        font.setFamily("Arial");
-        font.setPixelSize(text_height);
-        painter.setFont(font);
-        painter.setPen(QColor(100, 60, 60));
-        painter.drawText(R, d->m_title, Qt::AlignLeft | Qt::AlignTop);
-    }
+    d->do_paint(painter, width(), height());
 }
 
 void HistogramView::mousePressEvent(QMouseEvent* evt)
@@ -289,6 +267,20 @@ void HistogramView::mouseDoubleClickEvent(QMouseEvent* evt)
     emit activated();
 }
 
+void HistogramView::slot_context_menu(const QPoint& pos)
+{
+    QMenu M;
+    QAction* export_image = M.addAction("Export Histogram Image");
+    QAction* export_matrix_image = M.addAction("Export Histogram Matrix Image");
+    QAction* selected = M.exec(this->mapToGlobal(pos));
+    if (selected == export_image) {
+        d->export_image();
+    }
+    else if (selected == export_matrix_image) {
+        emit this->signalExportHistogramMatrixImage();
+    }
+}
+
 void HistogramViewPrivate::update_bin_counts()
 {
     for (int i = 0; i < m_num_bins; i++) {
@@ -319,10 +311,12 @@ void HistogramViewPrivate::update_bin_counts()
     }
 }
 
-QPointF HistogramViewPrivate::coord2pix(QPointF pt)
+QPointF HistogramViewPrivate::coord2pix(QPointF pt, int W, int H)
 {
-    float W = q->width();
-    float H = q->height();
+    if (!W)
+        W = q->width();
+    if (!H)
+        H = q->height();
 
     if (m_num_bins <= 1) {
         return QPointF(0, 0);
@@ -353,11 +347,13 @@ QPointF HistogramViewPrivate::coord2pix(QPointF pt)
     return QPointF(x0, y0);
 }
 
-QPointF HistogramViewPrivate::pix2coord(QPointF pt)
+QPointF HistogramViewPrivate::pix2coord(QPointF pt, int W, int H)
 {
 
-    float W = q->width();
-    float H = q->height();
+    if (!W)
+        W = q->width();
+    if (!H)
+        H = q->height();
 
     if (m_num_bins <= 1) {
         return QPointF(0, 0);
@@ -399,4 +395,69 @@ int HistogramViewPrivate::get_bin_index_at(QPointF pt_pix)
         }
     }
     return -1;
+}
+
+void HistogramViewPrivate::export_image()
+{
+    QImage img = q->renderImage(800, 600);
+    user_save_image(img);
+}
+
+void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
+{
+    //d->m_colors["view_background"]=QColor(245,245,245);
+    //d->m_colors["view_background_highlighted"]=QColor(250,220,200);
+    //d->m_colors["view_background_hovered"]=QColor(240,245,240);
+
+    //	QColor hover_color=QColor(150,150,150,80);
+    //	QColor current_color=QColor(150,200,200,80);
+    //	QColor hover_current_color=QColor(170,200,200,80);
+
+    QRect R(0, 0, W, H);
+
+    if (m_current) {
+        painter.fillRect(R, m_colors["view_background_highlighted"]);
+    } else if (m_selected) {
+        painter.fillRect(R, m_colors["view_background_selected"]);
+    } else if (m_hovered) {
+        painter.fillRect(R, m_colors["view_background_hovered"]);
+    } else {
+        painter.fillRect(R, m_colors["view_background"]);
+    }
+
+    if (m_selected) {
+        painter.setPen(QPen(m_colors["view_frame_selected"], 4));
+        painter.drawRect(R);
+    }
+
+    if (m_update_required) {
+        update_bin_counts();
+        m_update_required = false;
+    }
+
+    if (m_num_bins <= 1)
+        return;
+    float spacing = m_bin_centers[1] - m_bin_centers[0];
+    for (int i = 0; i < m_num_bins; i++) {
+        QPointF pt1 = coord2pix(QPointF(m_bin_centers[i] - spacing / 2, 0), W, H);
+        QPointF pt2 = coord2pix(QPointF(m_bin_centers[i] + spacing / 2, m_bin_counts[i]), W, H);
+        QRectF R = make_rect(pt1, pt2);
+        QColor col = m_fill_color;
+        if (i == m_hovered_bin_index)
+            col = lighten(col, 15, 15, 15);
+        painter.fillRect(R, col);
+        painter.setPen(m_line_color);
+        painter.drawRect(R);
+    }
+
+    if (!m_title.isEmpty()) {
+        int text_height = 14;
+        QRect R(m_margin_left, 5, W - m_margin_left - m_margin_right, text_height);
+        QFont font = painter.font();
+        font.setFamily("Arial");
+        font.setPixelSize(text_height);
+        painter.setFont(font);
+        painter.setPen(QColor(100, 60, 60));
+        painter.drawText(R, m_title, Qt::AlignLeft | Qt::AlignTop);
+    }
 }

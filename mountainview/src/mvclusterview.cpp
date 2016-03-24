@@ -9,6 +9,7 @@
 #include <math.h>
 #include "mvutils.h"
 #include "msmisc.h"
+#include <QMenu>
 
 class MVClusterViewPrivate : public QObject {
     Q_OBJECT
@@ -57,6 +58,8 @@ public:
     int find_closest_event_index(double x, double y, const QSet<int>& inds_to_exclude);
     void set_current_event_index(int ind, bool do_emit = true);
     void schedule_emit_transformation_changed();
+    void do_paint(QPainter &painter,int W,int H);
+    void export_image();
 public
 slots:
     void slot_emit_transformation_changed();
@@ -103,6 +106,9 @@ MVClusterView::MVClusterView(QWidget* parent)
     for (int i = 0; i < color_strings.size(); i++) {
         d->m_label_colors << QColor(color_strings[i]);
     }
+
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(slot_context_menu(QPoint)));
 }
 
 MVClusterView::~MVClusterView()
@@ -204,6 +210,31 @@ void MVClusterView::setTransformation(const AffineTransformation& T)
     //do not emit to avoid excessive signals
 }
 
+QImage MVClusterView::renderImage(int W, int H)
+{
+    QImage ret=QImage(W,H,QImage::Format_RGB32);
+    QPainter painter(&ret);
+
+    int current_event_index=d->m_current_event_index;
+    d->m_current_event_index=-1;
+
+    d->do_paint(painter,W,H);
+
+    d->m_current_event_index=current_event_index;
+
+    return ret;
+}
+
+void MVClusterView::slot_context_menu(const QPoint &pos)
+{
+    QMenu M;
+    QAction *export_image=M.addAction("Export Image");
+    QAction *selected=M.exec(this->mapToGlobal(pos));
+    if (selected==export_image) {
+        d->export_image();
+    }
+}
+
 QRectF compute_centered_square(QRectF R)
 {
     int margin = 15;
@@ -219,27 +250,8 @@ QRectF compute_centered_square(QRectF R)
 void MVClusterView::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt)
-    if (d->m_grid_update_needed) {
-        d->update_grid();
-        d->m_grid_update_needed = false;
-    }
-
     QPainter painter(this);
-    painter.fillRect(0, 0, width(), height(), QColor(40, 40, 40));
-    QRectF target = compute_centered_square(QRectF(0, 0, width(), height()));
-    painter.drawImage(target, d->m_grid_image.scaled(target.width(), target.height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-    d->m_image_target = target;
-    //QPen pen; pen.setColor(Qt::yellow);
-    //painter.setPen(pen);
-    //painter.drawRect(target);
-
-    if (d->m_current_event_index >= 0) {
-        double x = d->m_data_trans.value(0, d->m_current_event_index);
-        double y = d->m_data_trans.value(1, d->m_current_event_index);
-        QPointF pix = d->coord2pixel(QPointF(x, y));
-        painter.setBrush(QBrush(Qt::darkGreen));
-        painter.drawEllipse(pix, 6, 6);
-    }
+    d->do_paint(painter,width(),height());
 }
 
 void MVClusterView::mouseMoveEvent(QMouseEvent* evt)
@@ -266,26 +278,30 @@ void MVClusterView::mouseMoveEvent(QMouseEvent* evt)
 
 void MVClusterView::mousePressEvent(QMouseEvent* evt)
 {
-    QPointF pt = evt->pos();
-    d->m_anchor_point = pt;
-    d->m_anchor_transformation = d->m_transformation;
-    d->m_moved_from_anchor = false;
+    if (evt->button()==Qt::LeftButton) {
+        QPointF pt = evt->pos();
+        d->m_anchor_point = pt;
+        d->m_anchor_transformation = d->m_transformation;
+        d->m_moved_from_anchor = false;
+    }
 }
 
 void MVClusterView::mouseReleaseEvent(QMouseEvent* evt)
 {
     Q_UNUSED(evt)
-    d->m_anchor_point = QPointF(-1, -1);
-    if (evt->pos() != d->m_last_mouse_release_point)
-        d->m_closest_inds_to_exclude.clear();
-    if (!d->m_moved_from_anchor) {
-        QPointF coord = d->pixel2coord(evt->pos());
-        int ind = d->find_closest_event_index(coord.x(), coord.y(), d->m_closest_inds_to_exclude);
-        if (ind >= 0)
-            d->m_closest_inds_to_exclude.insert(ind);
-        d->set_current_event_index(ind);
+    if (evt->button()==Qt::LeftButton) {
+        d->m_anchor_point = QPointF(-1, -1);
+        if (evt->pos() != d->m_last_mouse_release_point)
+            d->m_closest_inds_to_exclude.clear();
+        if (!d->m_moved_from_anchor) {
+            QPointF coord = d->pixel2coord(evt->pos());
+            int ind = d->find_closest_event_index(coord.x(), coord.y(), d->m_closest_inds_to_exclude);
+            if (ind >= 0)
+                d->m_closest_inds_to_exclude.insert(ind);
+            d->set_current_event_index(ind);
+        }
+        d->m_last_mouse_release_point = evt->pos();
     }
-    d->m_last_mouse_release_point = evt->pos();
 }
 
 void MVClusterView::wheelEvent(QWheelEvent* evt)
@@ -461,6 +477,8 @@ void MVClusterViewPrivate::update_grid()
                     y0s << pt2.y;
                     z0s << pt2.z;
                     label0s << -2;
+                    time0s << -1;
+                    amp0s << 0;
                 }
                 {
                     CVPoint pt1 = cvpoint(0, aa, 0);
@@ -469,6 +487,8 @@ void MVClusterViewPrivate::update_grid()
                     y0s << pt2.y;
                     z0s << pt2.z;
                     label0s << -2;
+                    time0s << -1;
+                    amp0s << 0;
                 }
                 {
                     CVPoint pt1 = cvpoint(0, 0, aa);
@@ -477,6 +497,8 @@ void MVClusterViewPrivate::update_grid()
                     y0s << pt2.y;
                     z0s << pt2.z;
                     label0s << -2;
+                    time0s << -1;
+                    amp0s << 0;
                 }
             }
         }
@@ -710,4 +732,34 @@ void MVClusterViewPrivate::schedule_emit_transformation_changed()
         return;
     m_emit_transformation_changed_scheduled = true;
     QTimer::singleShot(100, this, SLOT(slot_emit_transformation_changed()));
+}
+
+void MVClusterViewPrivate::do_paint(QPainter &painter, int W, int H)
+{
+    if (m_grid_update_needed) {
+        update_grid();
+        m_grid_update_needed = false;
+    }
+
+    painter.fillRect(0, 0, W,H, QColor(40, 40, 40));
+    QRectF target = compute_centered_square(QRectF(0, 0, W,H));
+    painter.drawImage(target, m_grid_image.scaled(W,H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+    m_image_target = target;
+    //QPen pen; pen.setColor(Qt::yellow);
+    //painter.setPen(pen);
+    //painter.drawRect(target);
+
+    if (m_current_event_index >= 0) {
+        double x = m_data_trans.value(0, m_current_event_index);
+        double y = m_data_trans.value(1, m_current_event_index);
+        QPointF pix = coord2pixel(QPointF(x, y));
+        painter.setBrush(QBrush(Qt::darkGreen));
+        painter.drawEllipse(pix, 6, 6);
+    }
+}
+
+void MVClusterViewPrivate::export_image()
+{
+    QImage img=q->renderImage(1000,800);
+    user_save_image(img);
 }

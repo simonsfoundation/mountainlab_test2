@@ -48,6 +48,8 @@ public:
     float verticalZoomFactor();
     void setActivated(bool val);
     void centerOnCursor();
+    void setCursorVisible(bool val);
+    bool cursorVisible();
 
     virtual double currentValue();
     virtual QString viewType() = 0;

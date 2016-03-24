@@ -13,6 +13,7 @@
 #include <QImageWriter>
 #include "extract_clips.h"
 #include <QFileDialog>
+#include <QMenu>
 #include <QMessageBox>
 
 struct ClusterData {
@@ -143,6 +144,7 @@ public:
     bool has_nontrivial_group_numbers();
     int get_current_view_index();
     void do_paint(QPainter& painter, int W, int H);
+    void export_image();
 };
 
 MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
@@ -175,6 +177,8 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
 
     this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(slot_context_menu(QPoint)));
 }
 
 MVClusterDetailWidget::~MVClusterDetailWidget()
@@ -375,9 +379,6 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    } else if (evt->key() == Qt::Key_I) {
-        QImage img = this->renderImage(1600, 800);
-        user_save_image(img);
     }
 }
 
@@ -491,6 +492,16 @@ void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
     else
         factor = 1 / 1.1;
     d->zoom(factor);
+}
+
+void MVClusterDetailWidget::slot_context_menu(const QPoint &pos)
+{
+    QMenu M;
+    QAction *export_image=M.addAction("Export Image");
+    QAction *selected=M.exec(this->mapToGlobal(pos));
+    if (selected==export_image) {
+        d->export_image();
+    }
 }
 
 void MVClusterDetailWidgetPrivate::do_calculations()
@@ -832,6 +843,12 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
         V->x_position_before_scaling = x0_before_scaling;
         x0_before_scaling += V->spaceNeeded();
     }
+}
+
+void MVClusterDetailWidgetPrivate::export_image()
+{
+    QImage img = q->renderImage(1600, 800);
+    user_save_image(img);
 }
 
 QPointF ClusterView::template_coord2pix(int m, double t, double val)
