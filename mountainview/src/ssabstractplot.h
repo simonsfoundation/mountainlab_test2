@@ -38,7 +38,7 @@ public:
     void setTimepointMapping(const DiskReadMda& TM);
     DiskReadMda timepointMapping();
 
-    QImage renderImage(int W,int H);
+    QImage renderImage(int W, int H);
 
 signals:
     void xRangeChanged();

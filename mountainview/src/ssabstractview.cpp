@@ -633,7 +633,7 @@ void SSAbstractView::centerOnCursor()
 
 void SSAbstractView::setCursorVisible(bool val)
 {
-    d->m_cursor_visible=val;
+    d->m_cursor_visible = val;
 }
 
 bool SSAbstractView::cursorVisible()

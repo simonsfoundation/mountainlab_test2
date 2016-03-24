@@ -29,7 +29,7 @@ public:
     void setCurrentEvent(MVEvent evt);
     ///Controls display. Not explained in detail right now.
     void setEpochs(const QList<Epoch>& epochs);
-    QImage renderImage(int W,int H);
+    QImage renderImage(int W, int H);
 signals:
 
 protected:
@@ -39,7 +39,8 @@ protected:
 private
 slots:
     void slot_update();
-    void slot_context_menu(const QPoint &pos);
+    void slot_context_menu(const QPoint& pos);
+
 private:
     MVFiringRateViewPrivate* d;
 };

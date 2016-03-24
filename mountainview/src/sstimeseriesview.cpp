@@ -53,7 +53,7 @@ SSTimeSeriesView::SSTimeSeriesView(QWidget* parent)
     layout->addWidget(plot());
 
     this->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(slot_context_menu(QPoint)));
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
 }
 
 SSTimeSeriesView::~SSTimeSeriesView()
@@ -75,12 +75,12 @@ void SSTimeSeriesView::slot_request_move_to_timepoint(int t0)
     this->setCurrentX(t0);
 }
 
-void SSTimeSeriesView::slot_context_menu(const QPoint &pos)
+void SSTimeSeriesView::slot_context_menu(const QPoint& pos)
 {
     QMenu M;
-    QAction *export_image=M.addAction("Export Image");
-    QAction *selected=M.exec(this->mapToGlobal(pos));
-    if (selected==export_image) {
+    QAction* export_image = M.addAction("Export Image");
+    QAction* selected = M.exec(this->mapToGlobal(pos));
+    if (selected == export_image) {
         d->export_image();
     }
 }
@@ -99,10 +99,11 @@ void SSTimeSeriesView::setMarkerLinesVisible(bool val)
 
 QImage SSTimeSeriesView::renderImage(int W, int H)
 {
-    if (!d->m_plot) return QImage(W,H,QImage::Format_RGB32);
-    bool cursor_visible=this->cursorVisible();
+    if (!d->m_plot)
+        return QImage(W, H, QImage::Format_RGB32);
+    bool cursor_visible = this->cursorVisible();
     this->setCursorVisible(false);
-    QImage ret=d->m_plot->renderImage(W,H);
+    QImage ret = d->m_plot->renderImage(W, H);
     this->setCursorVisible(cursor_visible);
     return ret;
 }
@@ -279,7 +280,7 @@ void SSTimeSeriesViewPrivate::advance_to_clip(bool backwards)
 
 void SSTimeSeriesViewPrivate::export_image()
 {
-    QImage img=q->renderImage(1600,800);
+    QImage img = q->renderImage(1600, 800);
     user_save_image(img);
 }
 

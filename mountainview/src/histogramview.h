@@ -41,7 +41,7 @@ public:
     ///Set this as among the selected histograms (affects highlighting)
     void setSelected(bool val);
 
-    QImage renderImage(int W,int H);
+    QImage renderImage(int W, int H);
 
 protected:
     void paintEvent(QPaintEvent* evt);
@@ -62,7 +62,7 @@ signals:
 
 private
 slots:
-    void slot_context_menu(const QPoint &pos);
+    void slot_context_menu(const QPoint& pos);
 
 private:
     HistogramViewPrivate* d;

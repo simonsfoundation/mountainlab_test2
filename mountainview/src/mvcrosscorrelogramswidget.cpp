@@ -260,11 +260,11 @@ void MVCrossCorrelogramsWidget::updateWidget()
             }
         }
         HV->setTitle(title0);
-        int row0=(k1 - 1) / num_cols;
-        int col0=(k1 - 1) % num_cols;
+        int row0 = (k1 - 1) / num_cols;
+        int col0 = (k1 - 1) % num_cols;
         GL->addWidget(HV, row0, col0);
-        HV->setProperty("row",row0);
-        HV->setProperty("col",col0);
+        HV->setProperty("row", row0);
+        HV->setProperty("col", col0);
         if (d->m_label_numbers.isEmpty()) {
             HV->setProperty("label_number", k1);
         }
@@ -339,32 +339,34 @@ void MVCrossCorrelogramsWidget::setLabelNumbers(const QList<int>& numbers)
 
 QImage MVCrossCorrelogramsWidget::renderImage(int W, int H)
 {
-    int max_row=0,max_col=0;
-    for (int i=0; i<d->m_histogram_views.count(); i++) {
-        HistogramView *HV=d->m_histogram_views[i];
-        int row=HV->property("row").toInt();
-        int col=HV->property("col").toInt();
-        if (row>max_row) max_row=row;
-        if (col>max_col) max_col=col;
+    int max_row = 0, max_col = 0;
+    for (int i = 0; i < d->m_histogram_views.count(); i++) {
+        HistogramView* HV = d->m_histogram_views[i];
+        int row = HV->property("row").toInt();
+        int col = HV->property("col").toInt();
+        if (row > max_row)
+            max_row = row;
+        if (col > max_col)
+            max_col = col;
     }
-    int NR=max_row+1,NC=max_col+1;
-    int spacingx=10;
-    int spacingy=10;
-    int W0=(W-spacingx*(NC+1))/NC;
-    int H0=(H-spacingy*(NR+1))/NR;
+    int NR = max_row + 1, NC = max_col + 1;
+    int spacingx = 10;
+    int spacingy = 10;
+    int W0 = (W - spacingx * (NC + 1)) / NC;
+    int H0 = (H - spacingy * (NR + 1)) / NR;
 
-    QImage ret=QImage(W,H,QImage::Format_RGB32);
+    QImage ret = QImage(W, H, QImage::Format_RGB32);
     QPainter painter(&ret);
-    painter.fillRect(0,0,ret.width(),ret.height(),Qt::white);
+    painter.fillRect(0, 0, ret.width(), ret.height(), Qt::white);
 
-    for (int i=0; i<d->m_histogram_views.count(); i++) {
-        HistogramView *HV=d->m_histogram_views[i];
-        int row=HV->property("row").toInt();
-        int col=HV->property("col").toInt();
-        QImage img=HV->renderImage(W0,H0);
-        int x0=spacingx+(W0+spacingx)*col;
-        int y0=spacingy+(H0+spacingy)*row;
-        painter.drawImage(x0,y0,img);
+    for (int i = 0; i < d->m_histogram_views.count(); i++) {
+        HistogramView* HV = d->m_histogram_views[i];
+        int row = HV->property("row").toInt();
+        int col = HV->property("col").toInt();
+        QImage img = HV->renderImage(W0, H0);
+        int x0 = spacingx + (W0 + spacingx) * col;
+        int y0 = spacingy + (H0 + spacingy) * row;
+        painter.drawImage(x0, y0, img);
     }
 
     return ret;
@@ -411,7 +413,7 @@ void MVCrossCorrelogramsWidget::slot_histogram_view_activated()
 
 void MVCrossCorrelogramsWidget::slot_export_image()
 {
-    QImage img=this->renderImage(1800,900);
+    QImage img = this->renderImage(1800, 900);
     user_save_image(img);
 }
 

@@ -178,7 +178,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
     this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
     this->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(slot_context_menu(QPoint)));
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
 }
 
 MVClusterDetailWidget::~MVClusterDetailWidget()
@@ -494,12 +494,12 @@ void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
     d->zoom(factor);
 }
 
-void MVClusterDetailWidget::slot_context_menu(const QPoint &pos)
+void MVClusterDetailWidget::slot_context_menu(const QPoint& pos)
 {
     QMenu M;
-    QAction *export_image=M.addAction("Export Image");
-    QAction *selected=M.exec(this->mapToGlobal(pos));
-    if (selected==export_image) {
+    QAction* export_image = M.addAction("Export Image");
+    QAction* selected = M.exec(this->mapToGlobal(pos));
+    if (selected == export_image) {
         d->export_image();
     }
 }

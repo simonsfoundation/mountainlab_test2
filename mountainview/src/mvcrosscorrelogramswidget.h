@@ -50,7 +50,7 @@ public:
     ///Hmmmm....
     void setLabelNumbers(const QList<int>& numbers);
 
-    QImage renderImage(int W,int H);
+    QImage renderImage(int W, int H);
 
 signals:
     ///The current label (or cluster number) has changed

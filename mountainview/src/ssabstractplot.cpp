@@ -115,9 +115,9 @@ DiskReadMda SSAbstractPlot::timepointMapping()
 
 QImage SSAbstractPlot::renderImage(int W, int H)
 {
-    QImage ret=QImage(W,H,QImage::Format_RGB32);
+    QImage ret = QImage(W, H, QImage::Format_RGB32);
     QPainter painter(&ret);
-    d->do_paint(painter,W,H);
+    d->do_paint(painter, W, H);
     this->update();
     return ret;
 }

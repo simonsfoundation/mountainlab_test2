@@ -58,7 +58,7 @@ void Tabber::addWidget(const QString& container_name, const QString& label, QWid
     X.label = label;
     d->m_widgets << X;
     d->put_widget_in_container(container_name, X.widget);
-    connect(W,SIGNAL(destroyed(QObject*)),this,SLOT(slot_widget_destroyed(QObject *)));
+    connect(W, SIGNAL(destroyed(QObject*)), this, SLOT(slot_widget_destroyed(QObject*)));
 }
 
 void Tabber::addWidget(TabberTabWidget* TW, const QString& label, QWidget* W)
@@ -123,9 +123,9 @@ void Tabber::slot_tab_bar_double_clicked(int index)
     d->put_widget_in_container(cname2, W);
 }
 
-void Tabber::slot_widget_destroyed(QObject *obj)
+void Tabber::slot_widget_destroyed(QObject* obj)
 {
-    d->remove_widget((QWidget *)obj);
+    d->remove_widget((QWidget*)obj);
 }
 
 void TabberPrivate::put_widget_in_container(QString container_name, QWidget* W)
