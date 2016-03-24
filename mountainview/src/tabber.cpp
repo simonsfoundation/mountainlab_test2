@@ -79,6 +79,13 @@ void Tabber::setCurrentContainerName(const QString& container_name)
     d->m_current_container_name = container_name;
 }
 
+void Tabber::setCurrentContainer(TabberTabWidget* TW)
+{
+    if (!TW)
+        return;
+    d->m_current_container_name = TW->property("container_name").toString();
+}
+
 void Tabber::switchCurrentContainer()
 {
     d->m_current_container_name = d->find_other_container_name(d->m_current_container_name);

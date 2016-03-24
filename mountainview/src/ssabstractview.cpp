@@ -297,7 +297,8 @@ void SSAbstractView::keyPressEvent(QKeyEvent* evt)
         this->topLevelWidget()->close();
     } else if (evt->key() == Qt::Key_Space) {
         d->scroll_to_current_x_if_needed(true /*force_center*/);
-    }
+    } else
+        evt->ignore();
 }
 void SSAbstractView::wheelEvent(QWheelEvent* evt)
 {

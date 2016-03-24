@@ -7,6 +7,7 @@
 #define MVOVERVIEW2WIDGETCONTROLPANEL_H
 
 #include <QScrollArea>
+#include <QVariant>
 #include <QWidget>
 
 /** \class MVOverview2WidgetControlPanel
@@ -22,7 +23,7 @@ public:
     virtual ~MVOverview2WidgetControlPanel();
 
     ///Get parameter value for a particular control defined internally
-    QVariant getParameterValue(QString name);
+    QVariant getParameterValue(QString name, const QVariant& defaultval = QVariant());
     ///Set parameter value for a particular control defined internally
     void setParameterValue(QString name, QVariant val);
     ///Corresponds to certain types of controls

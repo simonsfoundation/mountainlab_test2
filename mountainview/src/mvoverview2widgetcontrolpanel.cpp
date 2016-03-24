@@ -230,7 +230,7 @@ MVOverview2WidgetControlPanel::~MVOverview2WidgetControlPanel()
     delete d;
 }
 
-QVariant MVOverview2WidgetControlPanel::getParameterValue(QString name)
+QVariant MVOverview2WidgetControlPanel::getParameterValue(QString name, const QVariant& defaultval)
 {
     if (d->m_lineedit_parameters.contains(name))
         return d->m_lineedit_parameters[name]->text();
@@ -250,7 +250,7 @@ QVariant MVOverview2WidgetControlPanel::getParameterValue(QString name)
             }
         }
     }
-    return "";
+    return defaultval;
 }
 
 void MVOverview2WidgetControlPanel::setParameterValue(QString name, QVariant val)

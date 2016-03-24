@@ -46,7 +46,7 @@ public:
     ///Set selected label numbers (affects highlighting)
     void setSelectedKs(const QList<int>& ks);
     ///Create an image of the current view
-    QImage renderImage(int W, int H);
+    QImage renderImage(int W = 0, int H = 0);
 
 protected:
     void paintEvent(QPaintEvent* evt);

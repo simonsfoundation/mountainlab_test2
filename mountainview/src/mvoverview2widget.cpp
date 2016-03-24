@@ -25,6 +25,7 @@
 #include <QColor>
 #include <QStringList>
 #include <QSet>
+#include <QKeyEvent>
 
 class MVOverview2WidgetPrivate {
 public:
@@ -72,11 +73,11 @@ public:
     void do_event_filter();
     void add_tab(QWidget* W, QString label);
 
-    void open_auto_correlograms();
-    void open_cross_correlograms(int k);
-    void open_matrix_of_cross_correlograms();
+    MVCrossCorrelogramsWidget* open_auto_correlograms();
+    MVCrossCorrelogramsWidget* open_cross_correlograms(int k);
+    MVCrossCorrelogramsWidget* open_matrix_of_cross_correlograms();
     //void open_templates();
-    void open_cluster_details();
+    MVClusterDetailWidget* open_cluster_details();
     void open_timeseries();
     void open_clips();
     void open_clusters();
@@ -245,6 +246,7 @@ void MVOverview2Widget::setDefaultInitialization()
 {
     //d->open_templates();
     d->open_cluster_details();
+    d->m_tabber->switchCurrentContainer();
     d->open_auto_correlograms();
 }
 
@@ -253,10 +255,63 @@ void MVOverview2Widget::setEpochs(const QList<Epoch>& epochs)
     d->m_epochs = epochs;
 }
 
+void MVOverview2Widget::setParameterValue(const QString& name, const QVariant& value)
+{
+    d->m_control_panel->setParameterValue(name, value);
+}
+
+QVariant MVOverview2Widget::getParameterValue(const QString& name, const QVariant& defaultval)
+{
+    return d->m_control_panel->getParameterValue(name, defaultval);
+}
+
+void MVOverview2Widget::clickButton(const QString& name)
+{
+    slot_control_panel_button_clicked(name);
+}
+
+QImage MVOverview2Widget::generateImage(const QMap<QString, QVariant>& params)
+{
+    QString type0 = params.value("type").toString();
+    if (type0 == "templates") {
+        MVClusterDetailWidget* X = d->open_cluster_details();
+        return X->renderImage();
+    } else if (type0 == "auto_correlograms") {
+        MVCrossCorrelogramsWidget* X = d->open_auto_correlograms();
+        return X->renderImage();
+    } else if (type0 == "cross_correlograms") {
+        int k = params.value("k", 0).toInt();
+        MVCrossCorrelogramsWidget* X = d->open_cross_correlograms(k);
+        return X->renderImage();
+    } else {
+        qWarning() << "Unknown type in generateImage: " << type0;
+        return QImage();
+    }
+}
+
+int MVOverview2Widget::getMaxLabel()
+{
+    int ret = 0;
+    for (long i = 0; i < d->m_firings.N2(); i++) {
+        int label = (int)d->m_firings.value(i);
+        if (label > ret)
+            ret = label;
+    }
+    return ret;
+}
+
 void MVOverview2Widget::resizeEvent(QResizeEvent* evt)
 {
     Q_UNUSED(evt)
     d->update_sizes();
+}
+
+void MVOverview2Widget::keyPressEvent(QKeyEvent* evt)
+{
+    if ((evt->key() == Qt::Key_W) && (evt->modifiers() & Qt::ControlModifier)) {
+        this->close();
+    } else
+        evt->ignore();
 }
 
 void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
@@ -315,7 +370,8 @@ void MVOverview2Widget::slot_control_panel_combobox_activated(QString str)
 
 void MVOverview2Widget::slot_auto_correlogram_activated(int k)
 {
-    //d->m_current_tab_widget=d->get_other_tab_widget(d->tab_widget_of((QWidget *)sender()));
+    TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
+    d->m_tabber->setCurrentContainer(TW);
     d->m_tabber->switchCurrentContainer();
     d->open_cross_correlograms(k);
 }
@@ -352,6 +408,8 @@ void MVOverview2Widget::slot_details_template_activated()
     int k = X->currentK();
     if (k < 0)
         return;
+    TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
+    d->m_tabber->setCurrentContainer(TW);
     d->m_tabber->switchCurrentContainer();
     d->open_clips();
 }
@@ -1016,7 +1074,7 @@ void MVOverview2WidgetPrivate::add_tab(QWidget* W, QString label)
     W->setProperty("tab_label", label); //won't be needed in future, once Tabber is fully implemented
 }
 
-void MVOverview2WidgetPrivate::open_auto_correlograms()
+MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_auto_correlograms()
 {
     if (m_cross_correlograms_data_update_needed) {
         create_cross_correlograms_data();
@@ -1029,9 +1087,10 @@ void MVOverview2WidgetPrivate::open_auto_correlograms()
     QObject::connect(X, SIGNAL(currentLabelChanged()), q, SLOT(slot_cross_correlogram_current_label_changed()));
     QObject::connect(X, SIGNAL(selectedLabelsChanged()), q, SLOT(slot_cross_correlogram_selected_labels_changed()));
     update_widget(X);
+    return X;
 }
 
-void MVOverview2WidgetPrivate::open_cross_correlograms(int k)
+MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_cross_correlograms(int k)
 {
     if (m_cross_correlograms_data_update_needed) {
         create_cross_correlograms_data();
@@ -1043,6 +1102,7 @@ void MVOverview2WidgetPrivate::open_cross_correlograms(int k)
     add_tab(X, QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k) + 1));
     QObject::connect(X, SIGNAL(currentLabelChanged()), q, SLOT(slot_cross_correlogram_current_label_changed()));
     update_widget(X);
+    return X;
 }
 
 QStringList int_list_to_string_list(const QList<int>& list)
@@ -1061,7 +1121,7 @@ QList<int> string_list_to_int_list(const QList<QString>& list)
     return list2;
 }
 
-void MVOverview2WidgetPrivate::open_matrix_of_cross_correlograms()
+MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_matrix_of_cross_correlograms()
 {
     if (m_cross_correlograms_data_update_needed) {
         create_cross_correlograms_data();
@@ -1071,10 +1131,11 @@ void MVOverview2WidgetPrivate::open_matrix_of_cross_correlograms()
     X->setProperty("widget_type", "matrix_of_cross_correlograms");
     QList<int> ks = m_selected_ks.toList();
     if (ks.isEmpty())
-        return;
+        return X;
     X->setProperty("ks", int_list_to_string_list(ks));
     add_tab(X, QString("CC Matrix"));
     update_widget(X);
+    return X;
 }
 
 //void MVOverview2WidgetPrivate::open_templates()
@@ -1087,7 +1148,7 @@ void MVOverview2WidgetPrivate::open_matrix_of_cross_correlograms()
 //	update_widget(X);
 //}
 
-void MVOverview2WidgetPrivate::open_cluster_details()
+MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget;
     X->setChannelColors(m_channel_colors);
@@ -1100,6 +1161,7 @@ void MVOverview2WidgetPrivate::open_cluster_details()
     X->setProperty("widget_type", "cluster_details");
     add_tab(X, QString("Details"));
     update_widget(X);
+    return X;
 }
 
 void MVOverview2WidgetPrivate::open_timeseries()

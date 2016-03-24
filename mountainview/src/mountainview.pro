@@ -1,4 +1,4 @@
-QT += core gui
+QT += core gui script
 
 CONFIG -= app_bundle #Please apple, don't make a bundle today
 
@@ -40,7 +40,8 @@ HEADERS += \
     sscommon.h \
     cvcommon.h \
     tabber.h \
-    imagesavedialog.h
+    imagesavedialog.h \
+    run_mountainview_script.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -70,7 +71,8 @@ SOURCES += mountainviewmain.cpp \
     sscommon.cpp \
     cvcommon.cpp \
     tabber.cpp \
-    imagesavedialog.cpp
+    imagesavedialog.cpp \
+    run_mountainview_script.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils

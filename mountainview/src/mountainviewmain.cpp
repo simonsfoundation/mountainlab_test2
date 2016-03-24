@@ -11,6 +11,7 @@
 #include "mda.h"
 #include <QDesktopServices>
 #include <QDesktopWidget>
+#include <QImageWriter>
 #include "get_command_line_params.h"
 #include "diskarraymodel_new.h"
 #include "histogramview.h"
@@ -19,6 +20,7 @@
 #include "sstimeserieswidget.h"
 #include "sstimeseriesview.h"
 #include "mvclusterwidget.h"
+#include "run_mountainview_script.h"
 
 /*
  * TO DO:
@@ -54,14 +56,21 @@ void test_histogramview()
     W->show();
 }
 
+void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions);
+
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
 
     CLParams CLP = get_command_line_params(argc, argv);
-    QString mode = CLP.named_parameters.value("mode", "overview2").toString();
 
-    if (mode == "overview2") {
+    if (CLP.unnamed_parameters.value(0).endsWith(".js")) {
+        QString script = read_text_file(CLP.unnamed_parameters.value(0));
+        return run_mountainview_script(script, CLP.named_parameters);
+    }
+
+    QString mode = CLP.named_parameters.value("mode", "overview2").toString();
+    if ((mode == "overview2") || (mode == "export_image") || (mode == "export_images")) {
         printf("overview2...\n");
         QString raw_path = CLP.named_parameters["raw"].toString();
         QString pre_path = CLP.named_parameters["pre"].toString();
@@ -92,9 +101,8 @@ int main(int argc, char* argv[])
         if (window_title.isEmpty())
             window_title = raw_path;
         W->setFiringsPath(firings_path);
-        W->show();
         W->setSampleRate(samplerate);
-        W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
+
         int W0 = 1400, H0 = 1000;
         QRect geom = QApplication::desktop()->geometry();
         if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
@@ -103,9 +111,43 @@ int main(int argc, char* argv[])
         } else {
             W->resize(W0, H0);
         }
-        W->setDefaultInitialization();
-        W->setWindowTitle(window_title);
+        QStringList keys = CLP.named_parameters.keys();
+        foreach(QString key, keys)
+        {
+            if (key.startsWith("P")) {
+                QString pname = key.mid(1);
+                QVariant pvalue = CLP.named_parameters[key];
+                W->setParameterValue(pname, pvalue);
+            }
+        }
 
+        if (mode == "overview2") {
+            W->setDefaultInitialization();
+            W->setWindowTitle(window_title);
+            W->show();
+            W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
+        } else if (mode == "export_image") {
+            QString output_fname = CLP.named_parameters.value("output").toString();
+            if (output_fname.isEmpty()) {
+                printf("Missing --output parameter.\n");
+                return -1;
+            }
+            QImage img = W->generateImage(CLP.named_parameters);
+            QImageWriter IW(output_fname);
+            printf("Writing image %s... ", output_fname.toLatin1().data());
+            if (!IW.write(img)) {
+                printf("Error writing image.\n");
+            } else {
+                printf("OK.\n");
+            }
+
+            return 0;
+        } else if (mode == "export_images") {
+            QString instructions_fname = CLP.named_parameters.value("instructions").toString();
+            QString instructions = read_text_file(instructions_fname);
+            run_export_instructions(W, instructions.split("\n"));
+            return 0;
+        }
     } else if (mode == "view_clusters") {
         MVClusterWidget* W = new MVClusterWidget;
         QString data_path = CLP.named_parameters.value("data").toString();
@@ -154,4 +196,31 @@ int main(int argc, char* argv[])
     printf("Number of files open: %d, number of unfreed mallocs: %d, number of unfreed megabytes: %g\n", jnumfilesopen(), jmalloccount(), (int)jbytesallocated() * 1.0 / 1000000);
 
     return ret;
+}
+
+void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions)
+{
+    foreach(QString instruction, instructions)
+    {
+        QStringList vals = instruction.split(QRegExp("\\s"));
+        CLParams params = get_command_line_params(vals);
+        QString val0 = params.unnamed_parameters.value(0);
+        if (val0 == "EXPORT") {
+            QImage img = W->generateImage(params.named_parameters);
+            QString output_fname = params.named_parameters["output"].toString();
+            QImageWriter IW(output_fname);
+            printf("Writing image %s... ", output_fname.toLatin1().data());
+            if (!IW.write(img)) {
+                printf("Error writing image.\n");
+            } else {
+                printf("OK.\n");
+            }
+        } else if (val0 == "SET") {
+            QStringList keys = params.named_parameters.keys();
+            foreach(QString key, keys)
+            {
+                W->setParameterValue(key, params.named_parameters[key]);
+            }
+        }
+    }
 }

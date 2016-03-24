@@ -35,6 +35,8 @@ public:
     QString currentContainerName();
     ///Set the current container by name (see currentContainerName)
     void setCurrentContainerName(const QString& container_name);
+    ///Set the current container
+    void setCurrentContainer(TabberTabWidget* TW);
     ///Move the current container to another one -- or if there are only to, the "other" one. Useful for popping up a view on a different view.
     void switchCurrentContainer();
     ///Retrieve all widgets that have been added and have not been removed and deleted

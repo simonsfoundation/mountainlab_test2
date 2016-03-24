@@ -25,20 +25,26 @@ public:
     MVOverview2Widget(QWidget* parent = 0);
     virtual ~MVOverview2Widget();
     ///The path to the timeseries that was sorted. For example, raw, filtered, or pre-processed. Usually all three of these are set, so user can choose between them in dropdown selection box
-    void addTimeseriesPath(const QString& name, const QString& path);
+    Q_INVOKABLE void addTimeseriesPath(const QString& name, const QString& path);
     ///The name of the timeseries being viewed... corresponds to name in addTimeseriesPath()
-    void setCurrentTimeseriesName(const QString& name);
+    Q_INVOKABLE void setCurrentTimeseriesName(const QString& name);
     ///Set the path to the results of sorting. TODO: refer to docs for info on firings array
-    void setFiringsPath(const QString& firings);
+    Q_INVOKABLE void setFiringsPath(const QString& firings);
     ///The sample rate for the dataset
-    void setSampleRate(float freq);
+    Q_INVOKABLE void setSampleRate(float freq);
     ///Open the initial views
-    void setDefaultInitialization();
+    Q_INVOKABLE void setDefaultInitialization();
     ///Corresponds to MVFiringRateView::setEpochs()
-    void setEpochs(const QList<Epoch>& epochs);
+    Q_INVOKABLE void setEpochs(const QList<Epoch>& epochs);
+    Q_INVOKABLE void setParameterValue(const QString& name, const QVariant& value);
+    Q_INVOKABLE QVariant getParameterValue(const QString& name, const QVariant& defaultval);
+    Q_INVOKABLE void clickButton(const QString& name);
+    Q_INVOKABLE QImage generateImage(const QMap<QString, QVariant>& params);
+    Q_INVOKABLE int getMaxLabel();
 
 protected:
     void resizeEvent(QResizeEvent* evt);
+    void keyPressEvent(QKeyEvent* evt);
 
 signals:
 

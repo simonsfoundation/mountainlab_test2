@@ -3,12 +3,19 @@
 QVariant clp_string_to_variant(const QString &str);
 
 CLParams get_command_line_params(int argc,char *argv[]) {
+    QStringList args;
+    for (int i=1; i<argc; i++) {
+        args << argv[i];
+    }
+    return get_command_line_params(args);
+}
+
+CLParams get_command_line_params(const QStringList &args) {
 	CLParams ret;
 	ret.success=true; //let's be optimistic!
 
 	//find the named and unnamed parameters checking for errors along the way
-	for (int i=1; i<argc; i++) {
-		QString str=QString(argv[i]);
+    foreach (QString str,args) {
 		if (str.startsWith("--")) {
 			int ind2=str.indexOf("=");
 			QString name=str.mid(2,ind2-2);
@@ -47,3 +54,5 @@ QVariant clp_string_to_variant(const QString &str) {
 	if (clp_is_float(str)) return str.toFloat();
 	return str;
 }
+
+

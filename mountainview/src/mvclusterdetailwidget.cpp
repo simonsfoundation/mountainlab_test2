@@ -277,6 +277,10 @@ void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks)
 
 QImage MVClusterDetailWidget::renderImage(int W, int H)
 {
+    if (!W)
+        W = 1600;
+    if (!H)
+        H = 800;
     QImage ret = QImage(W, H, QImage::Format_RGB32);
     QPainter painter(&ret);
 
@@ -326,11 +330,6 @@ void MVClusterDetailWidget::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt)
 
-    if (d->m_calculations_needed) {
-        d->do_calculations();
-        d->m_calculations_needed = false;
-    }
-
     QPainter painter(this);
 
     d->do_paint(painter, width(), height());
@@ -379,7 +378,8 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    }
+    } else
+        evt->ignore();
 }
 
 void MVClusterDetailWidget::mousePressEvent(QMouseEvent* evt)
@@ -801,6 +801,11 @@ double ClusterView::spaceNeeded()
 
 void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
 {
+    if (m_calculations_needed) {
+        do_calculations();
+        m_calculations_needed = false;
+    }
+
     painter.fillRect(0, 0, W, H, m_colors["background"]);
 
     qDeleteAll(m_views);
@@ -847,7 +852,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
 
 void MVClusterDetailWidgetPrivate::export_image()
 {
-    QImage img = q->renderImage(1600, 800);
+    QImage img = q->renderImage();
     user_save_image(img);
 }
 

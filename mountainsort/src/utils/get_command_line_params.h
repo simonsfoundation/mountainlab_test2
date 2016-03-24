@@ -19,5 +19,6 @@ struct CLParams {
 };
 
 CLParams get_command_line_params(int argc,char *argv[]);
+CLParams get_command_line_params(const QStringList &args);
 
 #endif // GET_COMMAND_LINE_PARAMS_H

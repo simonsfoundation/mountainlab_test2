@@ -339,6 +339,10 @@ void MVCrossCorrelogramsWidget::setLabelNumbers(const QList<int>& numbers)
 
 QImage MVCrossCorrelogramsWidget::renderImage(int W, int H)
 {
+    if (!W)
+        W = 1800;
+    if (!H)
+        H = 900;
     int max_row = 0, max_col = 0;
     for (int i = 0; i < d->m_histogram_views.count(); i++) {
         HistogramView* HV = d->m_histogram_views[i];
@@ -413,7 +417,7 @@ void MVCrossCorrelogramsWidget::slot_histogram_view_activated()
 
 void MVCrossCorrelogramsWidget::slot_export_image()
 {
-    QImage img = this->renderImage(1800, 900);
+    QImage img = this->renderImage();
     user_save_image(img);
 }
 
@@ -427,7 +431,8 @@ void MVCrossCorrelogramsWidget::keyPressEvent(QKeyEvent* evt)
         setCurrentLabel(this->currentLabel() - d->m_num_columns);
     } else if (evt->key() == Qt::Key_Down) {
         setCurrentLabel(this->currentLabel() + d->m_num_columns);
-    }
+    } else
+        evt->ignore();
 }
 
 void MVCrossCorrelogramsWidgetPrivate::do_highlighting()

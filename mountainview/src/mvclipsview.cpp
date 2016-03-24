@@ -100,7 +100,6 @@ void MVClipsViewImpl::slot_current_x_changed()
     int clip_index = (int)(tp / T);
     set_current_clip_index(clip_index);
     //double offset=tp-(clip_index*T)-Tmid;
-    //qDebug() << tp << clip_index << offset;
     //return m_times.value(clip_index)+offset;
 }
 
