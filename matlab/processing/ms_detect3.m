@@ -17,7 +17,7 @@ function times=ms_detect3(X,opts)
 %                     Makes sure we allow enough space to
 %                     later extract a clip of size clip_size.
 %    opts.meth - (optional) string giving method for sub-sample alignment:
-%                'x' - plane upsampled signal peak
+%                'x' - plain upsampled signal peak
 %                'p' - peak from projection to PCA space (default)
 %    opts.beta - (optional, integer) sub-sampling factor for real-valued time
 %                estimation.
@@ -108,14 +108,14 @@ if beta>1
     Z = reshape(reshape(subspace,[M*Tu opts.num_features])*FF, [M Tu NC]);
     maxjit = 2.0*beta;           % allow larger jitter adjustment (make param)
   end
-  % create a detection signal vs time for each clip...
+  % create a detection signal vs time for each clip by collapsing on chan axis..
   if strcmp(opts.polarity,'b')
-    Zdet = max(abs(Z),[],1);   % collapse along channel axis
+    Zdet = squeeze(max(abs(Z),[],1));
   elseif strcmp(opts.polarity,'p')
-    Zdet = max(max(0,Z),[],1);   % collapse along channel axis
-  else
-    Zdet = max(max(0,-Z),[],1);   % collapse along channel axis
-  end  
+    Zdet = squeeze(max(max(0,Z),[],1));
+  else           % polarity is 'm'
+    Zdet = squeeze(max(max(0,-Z),[],1));
+  end
   for i=1:NC    % now find location of max subsampled det signal...
     [~,ind] = max(abs(Zdet(:,i)));   % or don't use upsampled here?
     jit = max(-maxjit,min(maxjit, ind-Tcen));   % limit |jitter| to maxjit
