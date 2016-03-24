@@ -37,15 +37,14 @@ public:
     double currentValue();
     QString viewType();
     void setMarkerLinesVisible(bool val);
-    QImage renderImage(int W,int H);
+    QImage renderImage(int W, int H);
 
     SSTimeSeriesPlot* plot();
-
-
 
 private
 slots:
     void slot_request_move_to_timepoint(int t0);
+    void slot_context_menu(const QPoint& pos);
 
 signals:
     void requestCenterOnCursor();

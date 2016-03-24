@@ -51,11 +51,17 @@ public:
     AffineTransformation transformation();
     ////Set the current rotation (affine transformation) for purpose of synchronizing multiple cluster views
     void setTransformation(const AffineTransformation& T);
+
+    QImage renderImage(int W, int H);
 signals:
     ///The current data point has changed!
     void currentEventChanged();
     ///The current rotation (affine transformation) has changed - useful for synchronizing multiple cluster views
     void transformationChanged();
+
+private
+slots:
+    void slot_context_menu(const QPoint& pos);
 
 protected:
     void paintEvent(QPaintEvent* evt);

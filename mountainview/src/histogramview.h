@@ -41,6 +41,8 @@ public:
     ///Set this as among the selected histograms (affects highlighting)
     void setSelected(bool val);
 
+    QImage renderImage(int W, int H);
+
 protected:
     void paintEvent(QPaintEvent* evt);
     void mousePressEvent(QMouseEvent* evt);
@@ -56,8 +58,11 @@ signals:
     ///The histogram was somewhere double-clicked (or enter was pressed, not sure??)
     void activated();
 
-public
+    void signalExportHistogramMatrixImage();
+
+private
 slots:
+    void slot_context_menu(const QPoint& pos);
 
 private:
     HistogramViewPrivate* d;

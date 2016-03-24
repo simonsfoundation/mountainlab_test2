@@ -50,6 +50,8 @@ public:
     ///Hmmmm....
     void setLabelNumbers(const QList<int>& numbers);
 
+    QImage renderImage(int W, int H);
+
 signals:
     ///The current label (or cluster number) has changed
     void currentLabelChanged();
@@ -63,6 +65,7 @@ slots:
     void slot_histogram_view_clicked();
     void slot_histogram_view_control_clicked();
     void slot_histogram_view_activated();
+    void slot_export_image();
 
 protected:
     void keyPressEvent(QKeyEvent*);

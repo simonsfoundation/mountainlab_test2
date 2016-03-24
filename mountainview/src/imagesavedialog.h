@@ -9,21 +9,23 @@
 #include <QDialog>
 
 class ImageSaveDialogPrivate;
-class ImageSaveDialog : public QDialog
-{
+class ImageSaveDialog : public QDialog {
     Q_OBJECT
 public:
     friend class ImageSaveDialogPrivate;
     ImageSaveDialog();
     virtual ~ImageSaveDialog();
-    static void presentImage(const QImage &img);
+    static void presentImage(const QImage& img);
 
-    void setImage(const QImage &img);
-private slots:
+    void setImage(const QImage& img);
+private
+slots:
     void slot_save();
     void slot_save_as();
+    void slot_cancel();
+
 private:
-    ImageSaveDialogPrivate *d;
+    ImageSaveDialogPrivate* d;
 };
 
 #endif // IMAGESAVEDIALOG_H

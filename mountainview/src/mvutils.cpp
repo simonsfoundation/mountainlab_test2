@@ -222,8 +222,7 @@ QList<Epoch> read_epochs(const QString& path)
     return ret;
 }
 
-void user_save_image(const QImage &img)
+void user_save_image(const QImage& img)
 {
     ImageSaveDialog::presentImage(img);
-
 }

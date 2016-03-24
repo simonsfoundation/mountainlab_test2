@@ -5,6 +5,7 @@
 #include <QPixmap>
 #include <QMouseEvent>
 #include <QDebug>
+#include <QMenu>
 #include "sslabelsmodel1.h"
 #include <math.h>
 #include <QStringList>
@@ -23,6 +24,7 @@ public:
     bool m_clip_mode;
 
     void advance_to_clip(bool backwards);
+    void export_image();
 };
 
 SSTimeSeriesView::SSTimeSeriesView(QWidget* parent)
@@ -49,6 +51,9 @@ SSTimeSeriesView::SSTimeSeriesView(QWidget* parent)
     layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
     layout->addWidget(plot());
+
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
 }
 
 SSTimeSeriesView::~SSTimeSeriesView()
@@ -70,6 +75,16 @@ void SSTimeSeriesView::slot_request_move_to_timepoint(int t0)
     this->setCurrentX(t0);
 }
 
+void SSTimeSeriesView::slot_context_menu(const QPoint& pos)
+{
+    QMenu M;
+    QAction* export_image = M.addAction("Export Image");
+    QAction* selected = M.exec(this->mapToGlobal(pos));
+    if (selected == export_image) {
+        d->export_image();
+    }
+}
+
 QString SSTimeSeriesView::viewType()
 {
     return "SSTimeSeriesView";
@@ -84,8 +99,13 @@ void SSTimeSeriesView::setMarkerLinesVisible(bool val)
 
 QImage SSTimeSeriesView::renderImage(int W, int H)
 {
-    if (!d->m_plot) return QImage(W,H,QImage::Format_RGB32);
-    return d->m_plot->renderImage(W,H);
+    if (!d->m_plot)
+        return QImage(W, H, QImage::Format_RGB32);
+    bool cursor_visible = this->cursorVisible();
+    this->setCursorVisible(false);
+    QImage ret = d->m_plot->renderImage(W, H);
+    this->setCursorVisible(cursor_visible);
+    return ret;
 }
 
 void SSTimeSeriesView::keyPressEvent(QKeyEvent* evt)
@@ -105,10 +125,6 @@ void SSTimeSeriesView::keyPressEvent(QKeyEvent* evt)
     } else if (evt->key() == Qt::Key_V) {
         d->m_plot->setUniformVerticalChannelSpacing(!d->m_plot->uniformVerticalChannelSpacing());
         return;
-    }
-    else if (evt->key()==Qt::Key_I) {
-        QImage img=this->renderImage(1600,800);
-        user_save_image(img);
     }
     SSAbstractView::keyPressEvent(evt);
 }
@@ -260,6 +276,12 @@ void SSTimeSeriesViewPrivate::advance_to_clip(bool backwards)
 
     q->setCurrentX((x0 + x1) / 2);
     emit q->requestCenterOnCursor();
+}
+
+void SSTimeSeriesViewPrivate::export_image()
+{
+    QImage img = q->renderImage(1600, 800);
+    user_save_image(img);
 }
 
 /*

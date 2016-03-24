@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include <QTimer>
 #include <QMouseEvent>
+#include <QMenu>
 #include "sstimeseriesview.h"
 #include "mvutils.h"
 #include "msmisc.h"
@@ -40,6 +41,8 @@ public:
     int find_closest_event_index(const QPointF& pt);
     int find_closest_event_index(int i1, int i2);
     void set_current_event_index(int ind);
+    void export_image();
+    void do_paint(QPainter& painter, int W, int H);
 };
 
 MVFiringRateView::MVFiringRateView()
@@ -55,6 +58,9 @@ MVFiringRateView::MVFiringRateView()
 
     d->m_hmargin = 25;
     d->m_vmargin = 25;
+
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
 }
 
 MVFiringRateView::~MVFiringRateView()
@@ -96,6 +102,14 @@ void MVFiringRateView::setEpochs(const QList<Epoch>& epochs)
 {
     d->m_epochs = epochs;
     update();
+}
+
+QImage MVFiringRateView::renderImage(int W, int H)
+{
+    QImage ret = QImage(W, H, QImage::Format_RGB32);
+    QPainter painter(&ret);
+    d->do_paint(painter, W, H);
+    return ret;
 }
 
 void apply_kernel(int N, double* X, int kernel_rad, double* kernel)
@@ -224,37 +238,22 @@ void MVFiringRateView::slot_update()
     d->m_view->setData(DAM,this);*/
 }
 
+void MVFiringRateView::slot_context_menu(const QPoint& pos)
+{
+    QMenu M;
+    QAction* export_image = M.addAction("Export Image");
+    QAction* selected = M.exec(this->mapToGlobal(pos));
+    if (selected == export_image) {
+        d->export_image();
+    }
+}
+
 void MVFiringRateView::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt);
 
     QPainter painter(this);
-    painter.fillRect(0, 0, width(), height(), QColor(160, 160, 160));
-
-    QRectF target = QRectF(d->m_hmargin, d->m_vmargin, width() - 2 * d->m_hmargin, height() - 2 * d->m_vmargin);
-    d->m_target_rect = target;
-
-    QFont font = painter.font();
-    font.setPixelSize(24);
-    painter.setFont(font);
-    QColor epoch_color = QColor(150, 150, 150);
-    //double margin=(d->m_max_amplitude-d->m_min_amplitude)*0.3;
-    double margin = 0;
-    for (int i = 0; i < d->m_epochs.count(); i++) {
-        Epoch epoch = d->m_epochs[i];
-        QPointF pt1 = d->coord2imagepix(QPointF(epoch.t_begin, d->m_max_amplitude + margin), target.width(), target.height());
-        QPointF pt2 = d->coord2imagepix(QPointF(epoch.t_end, d->m_min_amplitude - margin), target.width(), target.height());
-        QRect RR(target.x() + pt1.x(), target.y() + pt1.y(), pt2.x() - pt1.x(), pt2.y() - pt1.y());
-        painter.fillRect(RR, epoch_color);
-        RR.adjust(0, d->m_vmargin, 0, 0);
-        if (fabs(d->m_max_amplitude) > fabs(d->m_min_amplitude)) {
-            painter.drawText(RR, Qt::AlignTop | Qt::AlignHCenter, epoch.name);
-        } else {
-            painter.drawText(RR, Qt::AlignBottom | Qt::AlignHCenter, epoch.name);
-        }
-    }
-
-    painter.drawImage(target, d->m_image.scaled(target.width(), target.height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+    d->do_paint(painter, width(), height());
 }
 
 void MVFiringRateView::mouseReleaseEvent(QMouseEvent* evt)
@@ -333,4 +332,40 @@ void MVFiringRateViewPrivate::set_current_event_index(int ind)
     m_current_event_index = ind;
     //emit!!!!!
     q->update();
+}
+
+void MVFiringRateViewPrivate::export_image()
+{
+    QImage img = q->renderImage(1800, 900);
+    user_save_image(img);
+}
+
+void MVFiringRateViewPrivate::do_paint(QPainter& painter, int W, int H)
+{
+    painter.fillRect(0, 0, W, H, QColor(160, 160, 160));
+
+    QRectF target = QRectF(m_hmargin, m_vmargin, W - 2 * m_hmargin, H - 2 * m_vmargin);
+    m_target_rect = target;
+
+    QFont font = painter.font();
+    font.setPixelSize(24);
+    painter.setFont(font);
+    QColor epoch_color = QColor(150, 150, 150);
+    //double margin=(m_max_amplitude-m_min_amplitude)*0.3;
+    double margin = 0;
+    for (int i = 0; i < m_epochs.count(); i++) {
+        Epoch epoch = m_epochs[i];
+        QPointF pt1 = coord2imagepix(QPointF(epoch.t_begin, m_max_amplitude + margin), target.width(), target.height());
+        QPointF pt2 = coord2imagepix(QPointF(epoch.t_end, m_min_amplitude - margin), target.width(), target.height());
+        QRect RR(target.x() + pt1.x(), target.y() + pt1.y(), pt2.x() - pt1.x(), pt2.y() - pt1.y());
+        painter.fillRect(RR, epoch_color);
+        RR.adjust(0, m_vmargin, 0, 0);
+        if (fabs(m_max_amplitude) > fabs(m_min_amplitude)) {
+            painter.drawText(RR, Qt::AlignTop | Qt::AlignHCenter, epoch.name);
+        } else {
+            painter.drawText(RR, Qt::AlignBottom | Qt::AlignHCenter, epoch.name);
+        }
+    }
+
+    painter.drawImage(target, m_image.scaled(target.width(), target.height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 }

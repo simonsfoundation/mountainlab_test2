@@ -9,7 +9,6 @@
 #include "diskreadmda.h"
 #include "mda.h"
 #include <QWidget>
-#include <QScrollArea>
 
 /** \class MVClusterDetailWidget
  *  \brief Display a view of each cluster -- mainly the template shapes and some stats
@@ -22,7 +21,6 @@ class MVClusterDetailWidget : public QWidget {
     Q_OBJECT
 public:
     friend class MVClusterDetailWidgetPrivate;
-    friend class MVClusterDetailWidgetScrollArea;
     MVClusterDetailWidget(QWidget* parent = 0);
     virtual ~MVClusterDetailWidget();
     ///Set the time series, from which the templates and stats will be derived
@@ -67,6 +65,9 @@ signals:
     void signalSelectedKsChanged();
     ///The user has zoomed in (or out?). TODO: Is this needed?
     void signalZoomedIn();
+private
+slots:
+    void slot_context_menu(const QPoint& pos);
 
 private:
     MVClusterDetailWidgetPrivate* d;
