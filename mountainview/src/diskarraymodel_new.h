@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef DISKARRAYMODEL_NEW_H
 #define DISKARRAYMODEL_NEW_H
 

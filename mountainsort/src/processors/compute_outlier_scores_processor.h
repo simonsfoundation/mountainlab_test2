@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef COMPUTE_OUTLIER_SCORES_PROCESSOR_H
 #define COMPUTE_OUTLIER_SCORES_PROCESSOR_H
 
@@ -18,4 +23,3 @@ private:
 };
 
 #endif // COMPUTE_OUTLIER_SCORES_PROCESSOR_H
-

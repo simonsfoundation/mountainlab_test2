@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MVCROSSCORRELOGRAMSWIDGET_H
 #define MVCROSSCORRELOGRAMSWIDGET_H
 

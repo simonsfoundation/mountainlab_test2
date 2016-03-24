@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MSMISC_H
 #define MSMISC_H
 
@@ -14,4 +19,3 @@ double compute_stdev(const QList<double> &X);
 Mda grab_clips_subset(Mda &clips,const QList<int> &inds);
 
 #endif // MSMISC_H
-

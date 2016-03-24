@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef STATIC_NEURON_COLORS_H
 #define STATIC_NEURON_COLORS_H
 

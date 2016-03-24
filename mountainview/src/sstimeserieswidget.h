@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef SSTIMESERIESWIDGET_H
 #define SSTIMESERIESWIDGET_H
 

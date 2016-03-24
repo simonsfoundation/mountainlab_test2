@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MASK_OUT_ARTIFACTS_H
 #define MASK_OUT_ARTIFACTS_H
 

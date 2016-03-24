@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MVOVERVIEW2WIDGETCONTROLPANEL_H
 #define MVOVERVIEW2WIDGETCONTROLPANEL_H
 

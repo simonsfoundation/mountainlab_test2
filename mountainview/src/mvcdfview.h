@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MVCDFVIEW_H
 #define MVCDFVIEW_H
 #include <QVector>

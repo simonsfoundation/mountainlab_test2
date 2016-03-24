@@ -17,6 +17,7 @@ public:
 public
 slots:
     void slot_current_x_changed();
+
 private:
     Mda m_clips;
     QList<double> m_times;

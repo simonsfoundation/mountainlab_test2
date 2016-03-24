@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef OUTLIER_SCORES_V1_H
 #define OUTLIER_SCORES_V1_H
 

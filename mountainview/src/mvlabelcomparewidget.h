@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MVLABELCOMPAREWIDGET_H
 #define MVLABELCOMPAREWIDGET_H
 

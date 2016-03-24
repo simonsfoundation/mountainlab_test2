@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef REMOVE_DUPLICATE_CLUSTERS_H
 #define REMOVE_DUPLICATE_CLUSTERS_H
 

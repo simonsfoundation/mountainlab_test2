@@ -1,12 +1,6 @@
 /******************************************************
-**
-** Copyright (C) 2016 by Jeremy Magland
-**
-** This file is part of the MountainSort C++ project
-**
-** Some rights reserved.
-** See accompanying LICENSE and README files.
-**
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
 *******************************************************/
 
 #ifndef GET_COMMAND_LINE_PARAMS_H
@@ -27,4 +21,3 @@ struct CLParams {
 CLParams get_command_line_params(int argc,char *argv[]);
 
 #endif // GET_COMMAND_LINE_PARAMS_H
-

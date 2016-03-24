@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef IMAGESAVEDIALOG_H
 #define IMAGESAVEDIALOG_H
 
@@ -22,4 +27,3 @@ private:
 };
 
 #endif // IMAGESAVEDIALOG_H
-

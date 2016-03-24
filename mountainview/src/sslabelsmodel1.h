@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef SSLABELSMODEL1_H
 #define SSLABELSMODEL1_H
 

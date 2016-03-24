@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef WHITEN_PROCESSOR_H
 #define WHITEN_PROCESSOR_H
 
@@ -18,4 +23,3 @@ private:
 };
 
 #endif // WHITEN_PROCESSOR_H
-

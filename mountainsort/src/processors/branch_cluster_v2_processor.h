@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef BRANCH_CLUSTER_V2_PROCESSOR_H
 #define BRANCH_CLUSTER_V2_PROCESSOR_H
 
@@ -18,4 +23,3 @@ private:
 };
 
 #endif // BRANCH_CLUSTER_V2_PROCESSOR_H
-

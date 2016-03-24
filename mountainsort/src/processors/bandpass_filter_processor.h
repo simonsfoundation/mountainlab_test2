@@ -1,12 +1,6 @@
 /******************************************************
-**
-** Copyright (C) 2016 by Jeremy Magland
-**
-** This file is part of the MountainSort C++ project
-**
-** Some rights reserved.
-** See accompanying LICENSE and README files.
-**
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
 *******************************************************/
 
 #ifndef BANDPASS_FILTER_PROCESSOR_H
@@ -29,4 +23,3 @@ private:
 };
 
 #endif // BANDPASS_FILTER_PROCESSOR_H
-

@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MVCLUSTERWIDGET_H
 #define MVCLUSTERWIDGET_H
 

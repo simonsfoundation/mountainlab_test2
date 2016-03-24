@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef COPY_PROCESSOR_H
 #define COPY_PROCESSOR_H
 
@@ -18,4 +23,3 @@ private:
 };
 
 #endif // COPY_PROCESSOR_H
-

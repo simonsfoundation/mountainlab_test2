@@ -1,12 +1,6 @@
 /******************************************************
-**
-** Copyright (C) 2016 by Jeremy Magland
-**
-** This file is part of the MountainSort C++ project
-**
-** Some rights reserved.
-** See accompanying LICENSE and README files.
-**
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
 *******************************************************/
 
 #ifndef MDAIO_H
@@ -88,4 +82,3 @@ long mda_write_float64(double *data,struct MDAIO_HEADER *H,long n,FILE *output_f
 void transpose_array(char *infile_path,char *outfile_path);
 
 #endif // MDAIO_H
-

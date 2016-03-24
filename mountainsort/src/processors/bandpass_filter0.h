@@ -1,12 +1,6 @@
 /******************************************************
-**
-** Copyright (C) 2016 by Jeremy Magland
-**
-** This file is part of the MountainSort C++ project
-**
-** Some rights reserved.
-** See accompanying LICENSE and README files.
-**
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
 *******************************************************/
 
 #ifndef BANDPASS_FILTER0_H
@@ -17,4 +11,3 @@
 bool bandpass_filter0(const QString &input,const QString &output,double samplerate,double freq_min,double freq_max);
 
 #endif // BANDPASS_FILTER0_H
-

@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MVOVERVIEW2WIDGET_H
 #define MVOVERVIEW2WIDGET_H
 

@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef SSABSTRACTPLOT_H
 #define SSABSTRACTPLOT_H
 

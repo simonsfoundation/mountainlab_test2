@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MVFIRINGRATEVIEW_H
 #define MVFIRINGRATEVIEW_H
 

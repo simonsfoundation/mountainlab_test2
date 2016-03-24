@@ -1,3 +1,8 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
 #ifndef MDA2TXT_PROCESSOR_H
 #define MDA2TXT_PROCESSOR_H
 
@@ -18,4 +23,3 @@ private:
 };
 
 #endif // MDA2TXT_PROCESSOR_H
-
