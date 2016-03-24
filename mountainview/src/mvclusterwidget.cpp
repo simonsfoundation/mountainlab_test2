@@ -33,7 +33,7 @@ MVClusterWidget::MVClusterWidget()
 
     d->m_clip_size = 200;
 
-    d->m_clips_view = new MVClipsView;
+    d->m_clips_view = MVClipsView::newInstance();
 
     {
         MVClusterView* X = new MVClusterView;

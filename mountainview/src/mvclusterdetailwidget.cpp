@@ -377,16 +377,7 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
         }
     } else if (evt->key() == Qt::Key_I) {
         QImage img = this->renderImage(1600, 800);
-        QSettings settings("SCDA", "mountainview");
-        QString last_image_save_dir = settings.value("last_image_save_dir", QDir::homePath()).toString();
-        QString fname = QFileDialog::getSaveFileName(this, "Save cluster detail image", last_image_save_dir, tr("Image Files (*.png *.jpg *.bmp)"));
-        if (!fname.isEmpty()) {
-            settings.setValue("last_image_save_dir", QFileInfo(fname).path());
-            QImageWriter writer(fname);
-            if (!writer.write(img)) {
-                QMessageBox::critical(this, "Error writing image", "Unable to write image. Please contact us for help with this option.");
-            }
-        }
+        user_save_image(img);
     }
 }
 

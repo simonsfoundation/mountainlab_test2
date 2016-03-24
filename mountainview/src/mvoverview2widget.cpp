@@ -1122,7 +1122,7 @@ void MVOverview2WidgetPrivate::open_clips()
         QMessageBox::information(q, "Unable to open clips", "You must select at least one cluster.");
         return;
     }
-    MVClipsView* X = new MVClipsView;
+    MVClipsView* X = MVClipsView::newInstance();
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_view_current_event_changed()));

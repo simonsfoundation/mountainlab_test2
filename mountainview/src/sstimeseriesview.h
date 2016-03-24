@@ -32,8 +32,11 @@ public:
     double currentValue();
     QString viewType();
     void setMarkerLinesVisible(bool val);
+    QImage renderImage(int W,int H);
 
     SSTimeSeriesPlot* plot();
+
+
 
 private
 slots:

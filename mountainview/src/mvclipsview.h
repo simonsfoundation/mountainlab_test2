@@ -13,35 +13,35 @@
  * TODO: do we want to handle huge arrays? (e.g., like DiskArrayModel?)
  */
 
-class MVClipsViewPrivate;
+
 class MVClipsView : public SSTimeSeriesView {
     Q_OBJECT
 public:
-    friend class MVClipsViewPrivate;
-    MVClipsView();
-    virtual ~MVClipsView();
+    ///Create a new instance
+    static MVClipsView *newInstance();
+
     ///Set MxTxL array of clips to view
-    void setClips(const Mda& clips);
+    virtual void setClips(const Mda& clips)=0;
+
     ///Set the associated times, for purpose of currentEvent()
-    void setTimes(const QList<double>& times);
+    virtual void setTimes(const QList<double>& times)=0;
+
     ///Set the associated labels, for purpose of currentEvent()
-    void setLabels(const QList<int>& labels);
+    virtual void setLabels(const QList<int>& labels)=0;
+
     ///The index of the currently selected clip
-    int currentClipIndex();
-    //double currentClipTimepoint();
+    virtual int currentClipIndex()=0;
+
     ///The currently selected event -- this has the time/label
-    MVEvent currentEvent();
+    virtual MVEvent currentEvent()=0;
+
     ///Set the current event, which searches times/labels to move the cursor to the corresponding clip
-    void setCurrentEvent(MVEvent evt);
+    virtual void setCurrentEvent(MVEvent evt)=0;
+
 signals:
+
     ///The user has selected a new current clip, which affects the outputs of currentClipIndex() and currentEvent()
     void currentEventChanged();
-public
-slots:
-    void slot_current_x_changed();
-
-private:
-    MVClipsViewPrivate* d;
 };
 
 #endif // MVCLIPSVIEW_H

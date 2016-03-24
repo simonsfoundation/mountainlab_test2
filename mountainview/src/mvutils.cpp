@@ -5,6 +5,13 @@
 #include <math.h>
 #include "textfile.h"
 #include <QDebug>
+#include <QSettings>
+#include <QDir>
+#include <QFileDialog>
+#include <QString>
+#include <QImageWriter>
+#include <QMessageBox>
+#include "imagesavedialog.h"
 
 Mda compute_mean_waveform(DiskArrayModel_New* C)
 {
@@ -213,4 +220,10 @@ QList<Epoch> read_epochs(const QString& path)
         }
     }
     return ret;
+}
+
+void user_save_image(const QImage &img)
+{
+    ImageSaveDialog::presentImage(img);
+
 }

@@ -8,6 +8,7 @@
 #include "sslabelsmodel1.h"
 #include <math.h>
 #include <QStringList>
+#include "mvutils.h"
 
 class SSTimeSeriesViewPrivate {
 public:
@@ -81,6 +82,12 @@ void SSTimeSeriesView::setMarkerLinesVisible(bool val)
     d->m_plot->setShowMarkerLines(val);
 }
 
+QImage SSTimeSeriesView::renderImage(int W, int H)
+{
+    if (!d->m_plot) return QImage(W,H,QImage::Format_RGB32);
+    return d->m_plot->renderImage(W,H);
+}
+
 void SSTimeSeriesView::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->modifiers() & Qt::ControlModifier) {
@@ -98,6 +105,10 @@ void SSTimeSeriesView::keyPressEvent(QKeyEvent* evt)
     } else if (evt->key() == Qt::Key_V) {
         d->m_plot->setUniformVerticalChannelSpacing(!d->m_plot->uniformVerticalChannelSpacing());
         return;
+    }
+    else if (evt->key()==Qt::Key_I) {
+        QImage img=this->renderImage(1600,800);
+        user_save_image(img);
     }
     SSAbstractView::keyPressEvent(evt);
 }

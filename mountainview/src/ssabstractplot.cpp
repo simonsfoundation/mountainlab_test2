@@ -113,6 +113,15 @@ DiskReadMda SSAbstractPlot::timepointMapping()
     return d->m_timepoint_mapping;
 }
 
+QImage SSAbstractPlot::renderImage(int W, int H)
+{
+    QImage ret=QImage(W,H,QImage::Format_RGB32);
+    QPainter painter(&ret);
+    d->do_paint(painter,W,H);
+    this->update();
+    return ret;
+}
+
 void SSAbstractPlot::setChannelFlip(bool val)
 {
     if (d->m_channel_flip == val)

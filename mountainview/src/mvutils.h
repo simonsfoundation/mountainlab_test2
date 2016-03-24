@@ -32,4 +32,6 @@ Mda compute_features(const QList<DiskArrayModel_New*>& C);
 ///TODO: Handle this properly
 QColor get_heat_map_color(double val);
 
+void user_save_image(const QImage &img);
+
 #endif // MVUTILS_H

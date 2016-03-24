@@ -39,7 +39,8 @@ HEADERS += \
     sslabelsmodel1.h \
     sscommon.h \
     cvcommon.h \
-    tabber.h
+    tabber.h \
+    imagesavedialog.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -68,7 +69,8 @@ SOURCES += mountainviewmain.cpp \
     sslabelsmodel1.cpp \
     sscommon.cpp \
     cvcommon.cpp \
-    tabber.cpp
+    tabber.cpp \
+    imagesavedialog.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils
