@@ -53,3 +53,49 @@ bool get_pca_features(long M, long N, int num_features, double *features_out, do
 
     return true;
 }
+
+bool pca_denoise(long M, long N, int num_features, double *X_out, double *X_in, long num_representatives)
+{
+    long increment=1;
+    if (num_representatives) increment=qMax(1L,N/num_representatives);
+    QTime timer; timer.start();
+    Mda XXt(M,M);
+    double *XXt_ptr=XXt.dataPtr();
+    for (long i=0; i<N; i+=increment) {
+        double *tmp=&X_in[i*M];
+        long aa=0;
+        for (long m2=0; m2<M; m2++) {
+            for (long m1=0; m1<M; m1++) {
+                XXt_ptr[aa]+=tmp[m1]*tmp[m2];
+                aa++;
+            }
+        }
+    }
+
+    Mda U;
+    Mda S;
+    eigenvalue_decomposition_sym(U,S,XXt);
+    QList<double> eigenvals;
+    for (int i=0; i<S.totalSize(); i++) eigenvals << S.get(i);
+    QList<long> inds=get_sort_indices(eigenvals);
+
+    for (long i=0; i<N; i++) {
+        double *tmp_in=&X_in[i*M];
+        double *tmp_out=&X_out[i*M];
+        for (int m=0; m<M; m++) tmp_out[m]=0;
+        for (int j=0; j<num_features; j++) {
+            if (inds.count()-1-j>=0) {
+                long k=inds.value(inds.count()-1-j);
+                double val=0;
+                for (long m=0; m<M; m++) {
+                    val+=U.get(m,k)*tmp_in[m];
+                }
+                for (long m=0; m<M; m++) {
+                    tmp_out[m]+=U.get(m,k)*val;
+                }
+            }
+        }
+    }
+
+    return true;
+}

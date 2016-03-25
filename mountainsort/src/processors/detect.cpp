@@ -43,7 +43,7 @@ bool detect(const QString &timeseries_path,const QString &detect_path,const Dete
 					double time0=times0[i]+timepoint-overlap_size;
 					if ((time0>=timepoint)&&(time0<timepoint+chunk_size)) {
 						if ((time0>=Tmid)&&(time0+Tmid<N)) {
-							times1 << time0+1;
+                            times1 << time0+1; //convert to 1-based indexing
 							channels1 << m+1;
 						}
 					}
@@ -65,7 +65,7 @@ bool detect(const QString &timeseries_path,const QString &detect_path,const Dete
 	Mda output(2,times.count());
 	for (int i=0; i<times.count(); i++) {
 		output.set(channels[i],0,i);
-		output.set(times[i],1,i);
+        output.set(times[i],1,i);
 	}
 	output.write64(detect_path);
 

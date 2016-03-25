@@ -12,6 +12,7 @@
 #include "whiten_processor.h"
 #include "detect_processor.h"
 #include "detect3_processor.h"
+#include "adjust_times_processor.h"
 #include "branch_cluster_v2_processor.h"
 #include "remove_duplicate_clusters_processor.h"
 #include "remove_noise_subclusters_processor.h"
@@ -54,6 +55,7 @@ void MSProcessManager::loadDefaultProcessors()
 	loadProcessor(new whiten_Processor);
 	loadProcessor(new detect_Processor);
 	loadProcessor(new detect3_Processor);
+    loadProcessor(new adjust_times_Processor);
 	loadProcessor(new branch_cluster_v2_Processor);
     loadProcessor(new remove_duplicate_clusters_Processor);
 	loadProcessor(new remove_noise_subclusters_Processor);
