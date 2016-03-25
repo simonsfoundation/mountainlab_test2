@@ -8,6 +8,6 @@
 
 #include <QString>
 
-bool mask_out_artifacts(const QString &signal_path,const QString &signal_out_path,double threshold,int interval_size);
+bool mask_out_artifacts(const QString &timeseries_path,const QString &timeseries_out_path,double threshold,int interval_size);
 
 #endif // MASK_OUT_ARTIFACTS_H

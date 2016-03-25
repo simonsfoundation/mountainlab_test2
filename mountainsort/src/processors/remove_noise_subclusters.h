@@ -16,7 +16,7 @@ struct Remove_noise_subclusters_opts {
     int min_shell_size;
 };
 
-bool remove_noise_subclusters(const QString &signal_path,const QString &firings_path,const QString &firings_out_path,const Remove_noise_subclusters_opts &opts);
+bool remove_noise_subclusters(const QString &timeseries_path,const QString &firings_path,const QString &firings_out_path,const Remove_noise_subclusters_opts &opts);
 
 struct Shell {
     QList<int> inds;

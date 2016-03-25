@@ -6,7 +6,7 @@ function mscmd_bandpass_filter(input_path,output_path,opts)
 % Syntax:  mscmd_bandpass_filter(input_path,output_path,opts)
 %
 % Inputs:
-%    input_path - mda file of MxN input raw data
+%    input_path - mda file of MxN input timeseries data
 %    output_path - mda file of MxN output filtered data
 %    opts.samplerate - the sampling frequency corresponding to X, e.g. 30000
 %    opts.freq_min - the lower end of the bandpass filter
@@ -27,7 +27,7 @@ if nargin<1, test_mscmd_bandpass_filter; return; end;
 
 if isinf(opts.freq_max), opts.freq_max=0; end; %added 3/3/2016
 
-cmd=sprintf('%s bandpass_filter --signal=%s --signal_out=%s ',mscmd_exe,input_path,output_path);
+cmd=sprintf('%s bandpass_filter --timeseries=%s --timeseries_out=%s ',mscmd_exe,input_path,output_path);
 cmd=[cmd,sprintf('--samplerate=%g --freq_min=%g --freq_max=%g',opts.samplerate,opts.freq_min,opts.freq_max)];
 
 fprintf('\n*** BANDPASS FILTER ***\n');

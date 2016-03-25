@@ -1,4 +1,4 @@
-function mscmd_remove_noise_subclusters(signal_path,firings_in_path,firings_out_path,opts)
+function mscmd_remove_noise_subclusters(timeseries_path,firings_in_path,firings_out_path,opts)
 %MSCMD_REMOVE_NOISE_SUBCLUSTERS - Remove noise subclusters by splitting clusters
 %into shells and comparing the subcluster template waveforms with the
 %expected waveform shape in the situation of pure noise detected via
@@ -27,8 +27,8 @@ function mscmd_remove_noise_subclusters(signal_path,firings_in_path,firings_out_
 
 if (nargin<4) opts=struct; end;
 
-cmd=sprintf('%s remove_noise_subclusters --signal=%s --firings=%s --firings_out=%s --clip_size=%d --detectability_threshold=%g --shell_increment=%g --min_shell_size=%d',mscmd_exe,...
-    signal_path,firings_in_path,firings_out_path,opts.clip_size,opts.detectability_threshold,opts.shell_increment,opts.min_shell_size);
+cmd=sprintf('%s remove_noise_subclusters --timeseries=%s --firings=%s --firings_out=%s --clip_size=%d --detectability_threshold=%g --shell_increment=%g --min_shell_size=%d',mscmd_exe,...
+    timeseries_path,firings_in_path,firings_out_path,opts.clip_size,opts.detectability_threshold,opts.shell_increment,opts.min_shell_size);
 
 fprintf('\n*** REMOVE NOISE SUBCLUSTERS ***\n');
 fprintf('%s\n',cmd);

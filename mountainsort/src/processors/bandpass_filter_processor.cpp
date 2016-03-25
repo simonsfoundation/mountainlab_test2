@@ -13,8 +13,8 @@ bandpass_filter_Processor::bandpass_filter_Processor() {
 
 	this->setName("bandpass_filter");
 	this->setVersion("0.1");
-    this->setInputFileParameters("signal");
-    this->setOutputFileParameters("signal_out");
+    this->setInputFileParameters("timeseries");
+    this->setOutputFileParameters("timeseries_out");
     this->setRequiredParameters("samplerate","freq_min","freq_max");
 }
 
@@ -30,8 +30,8 @@ bool bandpass_filter_Processor::check(const QMap<QString, QVariant> &params)
 
 bool bandpass_filter_Processor::run(const QMap<QString, QVariant> &params)
 {
-    QString input=params["signal"].toString();
-    QString output=params["signal_out"].toString();
+    QString input=params["timeseries"].toString();
+    QString output=params["timeseries_out"].toString();
     double samplerate=params["samplerate"].toDouble();
 	double freq_min=params["freq_min"].toDouble();
 	double freq_max=params["freq_max"].toDouble();

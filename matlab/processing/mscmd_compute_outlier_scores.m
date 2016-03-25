@@ -1,9 +1,9 @@
-function mscmd_compute_outlier_scores(signal_path,firings_in_path,firings_out_path,opts)
+function mscmd_compute_outlier_scores(timeseries_path,firings_in_path,firings_out_path,opts)
 % TODO: Docs
 if (nargin<4) opts=struct; end;
 
-cmd=sprintf('%s compute_outlier_scores --signal=%s --firings=%s --firings_out=%s --clip_size=%d --shell_increment=%g --min_shell_size=%d',mscmd_exe,...
-    signal_path,firings_in_path,firings_out_path,opts.clip_size,opts.shell_increment,opts.min_shell_size);
+cmd=sprintf('%s compute_outlier_scores --timeseries=%s --firings=%s --firings_out=%s --clip_size=%d --shell_increment=%g --min_shell_size=%d',mscmd_exe,...
+    timeseries_path,firings_in_path,firings_out_path,opts.clip_size,opts.shell_increment,opts.min_shell_size);
 
 fprintf('\n*** COMPUTE OUTLIER SCORES ***\n');
 fprintf('%s\n',cmd);

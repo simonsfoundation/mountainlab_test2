@@ -13,8 +13,8 @@ mask_out_artifacts_Processor::mask_out_artifacts_Processor() {
 
 	this->setName("mask_out_artifacts");
 	this->setVersion("0.1");
-    this->setInputFileParameters("signal");
-	this->setOutputFileParameters("signal_out");
+    this->setInputFileParameters("timeseries");
+	this->setOutputFileParameters("timeseries_out");
 	this->setRequiredParameters("threshold");
 	this->setOptionalParameters("interval_size");
 }
@@ -31,9 +31,9 @@ bool mask_out_artifacts_Processor::check(const QMap<QString, QVariant> &params)
 
 bool mask_out_artifacts_Processor::run(const QMap<QString, QVariant> &params)
 {
-    QString signal_path=params["signal"].toString();
-	QString signal_out_path=params["signal_out"].toString();
+    QString timeseries_path=params["timeseries"].toString();
+	QString timeseries_out_path=params["timeseries_out"].toString();
 	double threshold=params["threshold"].toDouble();
 	int interval_size=params["interval_size"].toInt();
-	return mask_out_artifacts(signal_path,signal_out_path,threshold,interval_size);
+	return mask_out_artifacts(timeseries_path,timeseries_out_path,threshold,interval_size);
 }

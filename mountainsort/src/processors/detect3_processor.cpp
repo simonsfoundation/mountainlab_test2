@@ -13,7 +13,7 @@ detect3_Processor::detect3_Processor() {
 
 	this->setName("detect3");
 	this->setVersion("0.1");
-	this->setInputFileParameters("signal");
+	this->setInputFileParameters("timeseries");
 	this->setOutputFileParameters("detect_out");
 	this->setRequiredParameters("clip_size","detect_interval","detect_threshold");
 	this->setOptionalParameters("sign");
@@ -32,7 +32,7 @@ bool detect3_Processor::check(const QMap<QString, QVariant> &params)
 
 bool detect3_Processor::run(const QMap<QString, QVariant> &params)
 {
-	QString signal_path=params["signal"].toString();
+	QString timeseries_path=params["timeseries"].toString();
 	QString detect_path=params["detect_out"].toString();
 	Detect3_Opts opts;
 	opts.clip_size=params["clip_size"].toInt();
@@ -40,8 +40,5 @@ bool detect3_Processor::run(const QMap<QString, QVariant> &params)
 	opts.detect_threshold=params["detect_threshold"].toDouble();
 	opts.sign=params.value("sign",0).toInt();
 	opts.beta=params.value("beta",1).toInt();
-	return detect3(signal_path,detect_path,opts);
+	return detect3(timeseries_path,detect_path,opts);
 }
-
-
-

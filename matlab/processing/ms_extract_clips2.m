@@ -123,7 +123,7 @@ function Y = upsample(X,t,kerpars)
 %  Y is also a 3D array.
 %
 % Inputs:
-%   X = signal row vector, matrix, or 3D array.
+%   X = timeseries row vector, matrix, or 3D array.
 %   tout = vector of output times
 %   kerpars = kernel parameters struct with fields:
 %             Tf = half-width of filter in units of sample timesteps
@@ -251,4 +251,3 @@ N=1e6; Y = randn(10,N); tj = rand(1,5e4)*N; T = 50;
 tic; X = ms_extract_clips2(Y,round(tj),T); toc   % int (7x faster than fast real)
 tic; X = ms_extract_clips2(Y,tj,T,1,inf); toc   % slow real
 tic; X = ms_extract_clips2(Y,tj,T,1,10); toc   % fast real, about 5x faster
-

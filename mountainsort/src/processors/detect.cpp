@@ -6,8 +6,8 @@
 #include "msprefs.h"
 #include "msmisc.h"
 
-bool detect(const QString &signal_path,const QString &detect_path,const Detect_Opts &opts) {
-	DiskReadMda X(signal_path);
+bool detect(const QString &timeseries_path,const QString &detect_path,const Detect_Opts &opts) {
+	DiskReadMda X(timeseries_path);
 	long M=X.N1();
 	long N=X.N2();
 

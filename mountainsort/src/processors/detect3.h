@@ -18,8 +18,7 @@ struct Detect3_Opts {
 	int beta;
 };
 
-bool detect3(const QString &signal_path,const QString &detect_path,const Detect3_Opts &opts);
+bool detect3(const QString &timeseries_path,const QString &detect_path,const Detect3_Opts &opts);
 
 
 #endif // DETECT3_H
-

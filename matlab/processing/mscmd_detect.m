@@ -1,4 +1,4 @@
-function mscmd_detect(signal_path,detect_out_path,opts)
+function mscmd_detect(timeseries_path,detect_out_path,opts)
 %MSCMD_DETECT - Detect super-threshold events in a raw/preprocessed dataset
 %
 %This is a wrapper to a command-line call to mountainsort. The
@@ -7,7 +7,7 @@ function mscmd_detect(signal_path,detect_out_path,opts)
 % Syntax:  mscmd_detect(input_path,output_path,opts)
 %
 % Inputs:
-%    signal_path - path to input MxN array of raw or preprocessed data
+%    timeseries_path - path to input MxN array of raw or preprocessed data
 %    detect_out_path - path to output 2xL array of detected event channels and
 %                  times. The first row contains the primary channels of
 %                  the detected events and the second row contains the
@@ -31,7 +31,7 @@ if (nargin<3) opts=struct; end;
 if ~isfield(opts,'clip_size') opts.clip_size=100; end;
 if ~isfield(opts,'sign') opts.sign=0; end;
 
-cmd=sprintf('%s detect --signal=%s --detect_out=%s ',mscmd_exe,signal_path,detect_out_path);
+cmd=sprintf('%s detect --timeseries=%s --detect_out=%s ',mscmd_exe,timeseries_path,detect_out_path);
 cmd=[cmd,sprintf('--clip_size=%d ',opts.clip_size)];
 cmd=[cmd,sprintf('--detect_threshold=%g --detect_interval=%d ',opts.detect_threshold,opts.detect_interval)];
 cmd=[cmd,sprintf('--sign=%d ',opts.sign)];

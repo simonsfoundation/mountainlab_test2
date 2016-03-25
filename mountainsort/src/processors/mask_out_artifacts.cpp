@@ -5,9 +5,9 @@
 #include "msmisc.h"
 #include "mda.h"
 
-bool mask_out_artifacts(const QString &signal_path, const QString &signal_out_path, double threshold, int interval_size)
+bool mask_out_artifacts(const QString &timeseries_path, const QString &timeseries_out_path, double threshold, int interval_size)
 {
-	DiskReadMda X(signal_path);
+	DiskReadMda X(timeseries_path);
 	long M=X.N1();
     long N=X.N2();
 
@@ -48,7 +48,7 @@ bool mask_out_artifacts(const QString &signal_path, const QString &signal_out_pa
     //write the data
     long num_timepoints_used=0;
     long num_timepoints_not_used=0;
-    DiskWriteMda Y; Y.open(MDAIO_TYPE_FLOAT32,signal_out_path,M,N);
+    DiskWriteMda Y; Y.open(MDAIO_TYPE_FLOAT32,timeseries_out_path,M,N);
 	for (long i=0; i<N/interval_size; i++) {
 		long timepoint=i*interval_size;
 		Mda chunk;

@@ -1,4 +1,4 @@
-function mscmd_branch_cluster_v2(signal_path,detect_path,adjacency_matrix_path,out_firings_path,opts)
+function mscmd_branch_cluster_v2(timeseries_path,detect_path,adjacency_matrix_path,out_firings_path,opts)
 % TODO: Docs
 if (nargin<5) opts=struct; end;
 
@@ -8,7 +8,7 @@ if (~isfield(opts,'shell_increment')) opts.shell_increment=0.5; end;
 if (~isfield(opts,'num_features')) opts.num_features=3; end;
 if (~isfield(opts,'detect_interval')) opts.detect_interval=10; end;
 
-cmd=sprintf('%s branch_cluster_v2 --signal=%s --detect=%s --adjacency_matrix=%s --firings_out=%s --clip_size=%d --min_shell_size=%d --shell_increment=%g --num_features=%d --detect_interval=%d',mscmd_exe,signal_path,detect_path,adjacency_matrix_path,out_firings_path,...
+cmd=sprintf('%s branch_cluster_v2 --timeseries=%s --detect=%s --adjacency_matrix=%s --firings_out=%s --clip_size=%d --min_shell_size=%d --shell_increment=%g --num_features=%d --detect_interval=%d',mscmd_exe,timeseries_path,detect_path,adjacency_matrix_path,out_firings_path,...
     opts.clip_size,opts.min_shell_size,opts.shell_increment,opts.num_features,opts.detect_interval);
 
 fprintf('\n*** BRANCH CLUSTER V2 ***\n');

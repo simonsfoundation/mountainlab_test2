@@ -17,8 +17,8 @@
 QList<double> do_detect3(const QList<double> &vals,int detect_interval,double detect_threshold,int sign);
 void adjust_detect_times(const QList<double> &vals,QList<double> &times,int beta);
 
-bool detect3(const QString &signal_path,const QString &detect_path,const Detect3_Opts &opts) {
-	DiskReadMda X(signal_path);
+bool detect3(const QString &timeseries_path,const QString &detect_path,const Detect3_Opts &opts) {
+	DiskReadMda X(timeseries_path);
 	long M=X.N1();
 	long N=X.N2();
 
