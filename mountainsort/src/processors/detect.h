@@ -7,6 +7,7 @@
 #define DETECT_H
 
 #include <QString>
+#include <QList>
 
 struct Detect_Opts {
 	double detect_threshold;
@@ -17,6 +18,7 @@ struct Detect_Opts {
 };
 
 bool detect(const QString &signal_path,const QString &detect_path,const Detect_Opts &opts);
-
+//the following used by detect3()
+QList<double> do_detect(const QList<double> &vals,int detect_interval,double detect_threshold,int sign);
 
 #endif // DETECT_H

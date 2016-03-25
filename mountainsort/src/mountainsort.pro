@@ -54,7 +54,9 @@ HEADERS += \
     core/process_msh.h \
     processors/mask_out_artifacts_processor.h \
     processors/mask_out_artifacts.h \
-    utils/get_pca_features.h
+    utils/get_pca_features.h \
+    processors/detect3_processor.h \
+    processors/detect3.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -97,7 +99,9 @@ SOURCES += mountainsortmain.cpp \
     core/process_msh.cpp \
     processors/mask_out_artifacts_processor.cpp \
     processors/mask_out_artifacts.cpp \
-    utils/get_pca_features.cpp
+    utils/get_pca_features.cpp \
+    processors/detect3_processor.cpp \
+    processors/detect3.cpp
 
 DISTFILES += \
     ../version.txt

@@ -1,3 +1,10 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+** Created: 3/24/2016
+*******************************************************/
+
+#include "detect3.h"
 #include "detect.h"
 
 #include <QTime>
@@ -5,8 +12,12 @@
 #include "diskreadmda.h"
 #include "msprefs.h"
 #include "msmisc.h"
+#include <math.h>
 
-bool detect(const QString &signal_path,const QString &detect_path,const Detect_Opts &opts) {
+QList<double> do_detect3(const QList<double> &vals,int detect_interval,double detect_threshold,int sign);
+void adjust_detect_times(const QList<double> &vals,QList<double> &times,int beta);
+
+bool detect3(const QString &signal_path,const QString &detect_path,const Detect3_Opts &opts) {
 	DiskReadMda X(signal_path);
 	long M=X.N1();
 	long N=X.N2();
@@ -38,6 +49,7 @@ bool detect(const QString &signal_path,const QString &detect_path,const Detect_O
 					vals << chunk.value(m,j);
 				}
 				QList<double> times0=do_detect(vals,opts.detect_interval,opts.detect_threshold,opts.sign);
+				adjust_detect_times(vals,times0,opts.beta);
 
 				for (int i=0; i<times0.count(); i++) {
 					double time0=times0[i]+timepoint-overlap_size;
@@ -72,38 +84,48 @@ bool detect(const QString &signal_path,const QString &detect_path,const Detect_O
 	return true;
 }
 
-QList<double> do_detect(const QList<double> &vals,int detect_interval,double detect_threshold,int sign) {
-	int N=vals.count();
-	QList<int> to_use;
-	for (int n=0; n<N; n++) to_use << 0;
-	int last_best_ind=0;
-	double last_best_val=0;
-	for (int n=0; n<N; n++) {
-		double val=vals[n];
-		if (sign==0) val=fabs(val);
-		else if (sign<0) val=-val;
-		if (n-last_best_ind>detect_interval) last_best_val=0;
-		if (val>=detect_threshold) {
-			if (last_best_val>0) {
-				if (val>last_best_val) {
-					to_use[n]=1;
-					to_use[last_best_ind]=0;
-					last_best_ind=n;
-					last_best_val=val;
+double eval_kernel(double t,int Tf) {
+	//from ahb
+	//sin(pi*t)./(pi*t) .* cos((pi/2/pars.Tf)*t).^2
+	if (t==0) return 1;
+	if (t>=Tf) return 0;
+	if (t<=-Tf) return 0;
+	double cos_term=cos((M_PI/2)/Tf*t);
+	return sin(M_PI*t)/(M_PI*t)*cos_term*cos_term;
+}
+
+void adjust_detect_times(const QList<double> &vals,QList<double> &times,int beta) {
+	int Tf=5;
+	Mda kernel(beta,Tf*2+1);
+	for (int t=-Tf; t<=Tf; t++) {
+		for (int b=0; b<beta; b++) {
+			double diff=t-b*1.0/beta;
+			kernel.setValue(eval_kernel(diff,Tf),b,t+Tf);
+		}
+	}
+	for (long i=0; i<times.count(); i++) {
+		long t0=(long)times[i];
+		if ((t0-Tf-5>=0)&&(t0+Tf+5<vals.count())) {
+			double bestval=0;
+			double best_offset=0;
+			for (int dt=0; dt<=0; dt++) {
+				for (int db=0; db<beta; db++) {
+					double offset0=dt+db*1.0/beta;
+					double val0=0;
+					for (int j=-Tf; j<=Tf; j++) {
+						val0+=vals[t0+dt+j]*kernel.value(db,j+Tf);
+					}
+					if (val0>bestval) {
+						bestval=val0;
+						best_offset=offset0;
+					}
 				}
 			}
-			else {
-				to_use[n]=1;
-				last_best_ind=n;
-				last_best_val=val;
-			}
+			printf("best offset is %g, t0=%ld\n",best_offset,t0);
+			times[i]+=best_offset;
+		}
+		else {
+			printf("No offset\n");
 		}
 	}
-	QList<double> times;
-	for (int n=0; n<N; n++) {
-		if (to_use[n]) {
-			times << n;
-		}
-	}
-	return times;
 }
