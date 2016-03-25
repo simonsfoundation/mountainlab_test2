@@ -41,7 +41,8 @@ HEADERS += \
     cvcommon.h \
     tabber.h \
     imagesavedialog.h \
-    run_mountainview_script.h
+    run_mountainview_script.h \
+    closemehandler.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -72,7 +73,8 @@ SOURCES += mountainviewmain.cpp \
     cvcommon.cpp \
     tabber.cpp \
     imagesavedialog.cpp \
-    run_mountainview_script.cpp
+    run_mountainview_script.cpp \
+    closemehandler.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils

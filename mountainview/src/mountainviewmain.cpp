@@ -21,6 +21,7 @@
 #include "sstimeseriesview.h"
 #include "mvclusterwidget.h"
 #include "run_mountainview_script.h"
+#include "closemehandler.h"
 
 /*
  * TO DO:
@@ -61,6 +62,7 @@ void run_export_instructions(MVOverview2Widget* W, const QStringList& instructio
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
+    CloseMeHandler::start();
 
     CLParams CLP = get_command_line_params(argc, argv);
 
