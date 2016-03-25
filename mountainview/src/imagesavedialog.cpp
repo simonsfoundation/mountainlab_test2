@@ -88,6 +88,7 @@ void ImageSaveDialog::slot_save()
     QString full_fname;
     if (fname.isEmpty()) {
         full_fname = QFileDialog::getSaveFileName(0, "Save image", dirname, "Image Files (*.png *.jpg *.bmp)");
+        if (full_fname.isEmpty()) return;
     } else {
         full_fname = dirname + "/" + fname;
     }
