@@ -76,6 +76,7 @@ bool fit_stage(const QString &timeseries_path, const QString &firings_path, cons
                 int k0=labels[i];
                 if (k0>0) {
                     double score0=compute_score(M*T,X.dataPtr(0,t0-Tmid),templates.dataPtr(0,0,k0));
+                    if (score0<template_norms[k0]*template_norms[k0]*0.5) score0=0; //the norm of the improvement needs to be at least 0.5 times the norm of the template
                     if (score0>0) {
                         scores_to_try << score0;
                         times_to_try << t0;
@@ -136,7 +137,7 @@ double compute_score(long N,double *X,double *template0) {
     for (long i=0; i<N; i++) resid_ptr[i]=X[i]-template0[i];
     double norm1=compute_norm(N,X);
     double norm2=compute_norm(N,resid_ptr);
-    return norm1-norm2;
+    return norm1*norm1-norm2*norm2;
 }
 
 QList<int> find_events_to_use(const QList<long> &times,const QList<double> &scores,const fit_stage_opts &opts) {

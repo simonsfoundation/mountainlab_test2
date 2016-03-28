@@ -695,10 +695,18 @@ int MVClusterDetailWidgetPrivate::get_current_view_index()
     return find_view_index_for_k(k);
 }
 
+QColor lighten(QColor col,float val) {
+    int r=col.red()*val; if (r>255) r=255;
+    int g=col.green()*val; if (g>255) g=255;
+    int b=col.blue()*val; if (b>255) b=255;
+    return QColor(r,g,b);
+}
+
 void ClusterView::paint(QPainter* painter, QRectF rect)
 {
-    int mm = 2;
-    QRectF rect2(rect.x() + mm, rect.y() + mm, rect.width() - mm * 2, rect.height() - mm * 2);
+    int xmargin = 4;
+    int ymargin=8;
+    QRectF rect2(rect.x() + xmargin, rect.y() + ymargin, rect.width() - xmargin * 2, rect.height() - ymargin * 2);
     painter->setClipRect(rect);
 
     QColor background_color = d->m_colors["view_background"];
@@ -708,6 +716,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         background_color = d->m_colors["view_background_selected"];
     else if (m_hovered)
         background_color = d->m_colors["view_background_hovered"];
+    painter->fillRect(rect,QColor(220,220,225));
     painter->fillRect(rect2, background_color);
 
     QPen pen_frame;
@@ -721,6 +730,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     Mda template0 = m_CD->template0;
     int M = template0.N1();
     int T = template0.N2();
+    int Tmid=(int)((T+1)/2)-1;
     m_T = T;
 
     int top_height = 20, bottom_height = 40;
@@ -729,10 +739,22 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     m_template_rect = QRectF(rect2.x(), rect2.y() + top_height, rect2.width(), rect2.height() - bottom_height - top_height);
     m_bottom_rect = QRectF(rect2.x(), rect2.y() + rect2.height() - bottom_height, rect2.width(), bottom_height);
 
-    QPen pen;
-    pen.setWidth(1);
+    {
+        //the midline
+        QColor midline_color=lighten(background_color,0.9);
+        QPointF pt0=template_coord2pix(0,Tmid,0);
+        QPen pen;
+        pen.setWidth(1);
+        pen.setColor(midline_color);
+        painter->setPen(pen);
+        painter->drawLine(pt0.x(),rect2.bottom()-bottom_height,pt0.x(),rect2.top()+top_height);
+    }
+
+
     for (int m = 0; m < M; m++) {
         QColor col = d->m_channel_colors.value(m % d->m_channel_colors.count());
+        QPen pen;
+        pen.setWidth(1);
         pen.setColor(col);
         painter->setPen(pen);
         QPainterPath path;
@@ -756,19 +778,25 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
 
     QString group_label = d->group_label_for_k(m_CD->k);
     if ((!group_label.isEmpty()) && (d->has_nontrivial_group_numbers())) {
+        QPen pen;
+        pen.setWidth(1);
         pen.setColor(d->m_colors["divider_line"]);
         pen.setStyle(Qt::DashLine);
         painter->setPen(pen);
         painter->drawLine(rect2.x(), rect2.y(), rect2.x(), rect2.y() + rect2.height());
     }
-    txt = QString("%1").arg(group_label);
-    font.setPixelSize(16);
-    if (compressed_info)
-        font.setPixelSize(12);
-    pen.setColor(Qt::darkBlue);
-    painter->setFont(font);
-    painter->setPen(pen);
-    painter->drawText(m_top_rect, Qt::AlignCenter | Qt::AlignBottom, txt);
+    {
+        txt = QString("%1").arg(group_label);
+        font.setPixelSize(16);
+        if (compressed_info)
+            font.setPixelSize(12);
+        QPen pen;
+        pen.setWidth(1);
+        pen.setColor(Qt::darkBlue);
+        painter->setFont(font);
+        painter->setPen(pen);
+        painter->drawText(m_top_rect, Qt::AlignCenter | Qt::AlignBottom, txt);
+    }
 
     font.setPixelSize(11);
     int text_height = 13;
@@ -776,22 +804,28 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     if (!compressed_info) {
         RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height, m_bottom_rect.width(), text_height);
         txt = QString("%1 spikes").arg(m_CD->inds.count());
+        QPen pen;
+        pen.setWidth(1);
         pen.setColor(d->m_colors["info_text"]);
         painter->setFont(font);
         painter->setPen(pen);
         painter->drawText(RR, Qt::AlignCenter | Qt::AlignBottom, txt);
     }
 
-    RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height * 2, m_bottom_rect.width(), text_height);
-    double rate = m_CD->inds.count() * 1.0 / d->m_total_time_sec;
-    pen.setColor(get_firing_rate_text_color(rate));
-    if (!compressed_info)
-        txt = QString("%1 sp/sec").arg(QString::number(rate, 'g', 2));
-    else
-        txt = QString("%1").arg(QString::number(rate, 'g', 2));
-    painter->setFont(font);
-    painter->setPen(pen);
-    painter->drawText(RR, Qt::AlignCenter | Qt::AlignBottom, txt);
+    {
+        QPen pen;
+        pen.setWidth(1);
+        RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height * 2, m_bottom_rect.width(), text_height);
+        double rate = m_CD->inds.count() * 1.0 / d->m_total_time_sec;
+        pen.setColor(get_firing_rate_text_color(rate));
+        if (!compressed_info)
+            txt = QString("%1 sp/sec").arg(QString::number(rate, 'g', 2));
+        else
+            txt = QString("%1").arg(QString::number(rate, 'g', 2));
+        painter->setFont(font);
+        painter->setPen(pen);
+        painter->drawText(RR, Qt::AlignCenter | Qt::AlignBottom, txt);
+    }
 }
 
 double ClusterView::spaceNeeded()
