@@ -36,8 +36,7 @@ protected:
     void paintEvent(QPaintEvent* evt);
     void mouseReleaseEvent(QMouseEvent* evt);
 
-private
-slots:
+private slots:
     void slot_update();
     void slot_context_menu(const QPoint& pos);
 

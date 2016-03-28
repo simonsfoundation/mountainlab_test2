@@ -142,8 +142,7 @@ void SSTimeSeriesWidget::slot_current_x_changed()
     SSAbstractView* V = (SSAbstractView*)sender();
     d->update_info(V);
 
-    foreach(SSAbstractView * V2, d->m_views)
-    {
+    foreach (SSAbstractView* V2, d->m_views) {
         if (V != V2) {
             if (d->m_views.indexOf(V) >= 0)
                 V2->disableSignals();
@@ -163,8 +162,7 @@ void SSTimeSeriesWidget::slot_x_range_changed()
     SSAbstractView* V = (SSAbstractView*)sender();
     d->update_info(V);
 
-    foreach(SSAbstractView * V2, d->m_views)
-    {
+    foreach (SSAbstractView* V2, d->m_views) {
         if (V != V2) {
             V2->disableSignals();
             V2->setXRange(V->xRange());
@@ -193,8 +191,7 @@ void SSTimeSeriesWidget::slot_selection_range_changed()
     SSAbstractView* V = (SSAbstractView*)sender();
     d->update_info(V);
 
-    foreach(SSAbstractView * V2, d->m_views)
-    {
+    foreach (SSAbstractView* V2, d->m_views) {
         if (V != V2) {
             V2->disableSignals();
             V2->setSelectionRange(V->selectionRange());
@@ -262,7 +259,8 @@ void SSTimeSeriesWidgetPrivate::update_info(SSAbstractView* V)
     Vec2 SR = V->selectionRange();
     if (SR.x >= 0) {
         str = QString("Duration = %1").arg(V->getTimeLabelForX(SR.y - SR.x));
-    } else {
+    }
+    else {
         double x0 = V->currentX();
         double t0 = V->currentTimepoint();
         if ((x0 >= 0) && (t0 >= 0)) {
@@ -283,7 +281,8 @@ void SSTimeSeriesWidgetPrivate::tell_current_view()
     for (int i = 0; i < m_views.count(); i++) {
         if (m_views[i] == m_current_view) {
             m_views[i]->setActivated(true);
-        } else {
+        }
+        else {
             m_views[i]->setActivated(false);
         }
     }

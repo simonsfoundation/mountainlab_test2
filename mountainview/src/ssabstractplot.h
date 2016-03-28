@@ -53,8 +53,7 @@ private:
 
 signals:
 
-public
-slots:
+public slots:
 };
 
 class OverlayPainter {

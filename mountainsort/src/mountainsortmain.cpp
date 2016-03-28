@@ -65,13 +65,15 @@ int main(int argc, char* argv[])
         }
         if (PM.findCompletedProcess(processor_name, CLP.named_parameters)) {
             printf("Process already completed: %s\n", processor_name.toLatin1().data());
-        } else {
+        }
+        else {
             if (!PM.runProcess(processor_name, CLP.named_parameters)) {
                 printf("Problem running processor: %s\n", processor_name.toLatin1().data());
                 return -1;
             }
         }
-    } else {
+    }
+    else {
         printf("Unexpected number of unnamed parameters: %d\n", CLP.unnamed_parameters.count());
     }
 

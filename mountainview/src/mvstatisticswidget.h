@@ -38,8 +38,7 @@ signals:
     void currentLabelChanged();
     void labelActivated(int num);
 
-private
-slots:
+private slots:
     void slot_item_clicked();
     void slot_item_activated(QTreeWidgetItem* item);
     void slot_item_selection_changed();

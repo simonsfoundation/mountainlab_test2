@@ -42,8 +42,7 @@ QString make_random_id(int numchars);
 class CleanupObject : public QObject {
 public:
     Q_OBJECT
-public
-slots:
+public slots:
     void closing();
 };
 

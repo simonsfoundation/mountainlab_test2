@@ -10,8 +10,7 @@
 #include <QObject>
 
 class CloseMeHandlerPrivate;
-class CloseMeHandler : public QObject
-{
+class CloseMeHandler : public QObject {
     Q_OBJECT
 public:
     friend class CloseMeHandlerPrivate;
@@ -20,10 +19,9 @@ public:
     static void start();
 private slots:
     void slot_timer();
+
 private:
-    CloseMeHandlerPrivate *d;
+    CloseMeHandlerPrivate* d;
 };
 
-
 #endif // CLOSEMEHANDLER_H
-

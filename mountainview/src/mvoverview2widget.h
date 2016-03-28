@@ -48,11 +48,9 @@ protected:
 
 signals:
 
-public
-slots:
+public slots:
 
-private
-slots:
+private slots:
     void slot_control_panel_button_clicked(QString str);
     void slot_control_panel_combobox_activated(QString str);
     void slot_auto_correlogram_activated(int k);

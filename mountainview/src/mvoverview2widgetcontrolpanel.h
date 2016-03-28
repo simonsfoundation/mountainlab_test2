@@ -35,8 +35,7 @@ signals:
     void signalButtonClicked(QString str);
     ///A combo box has been activated.... the name of the combobox is in str
     void signalComboBoxActivated(QString str);
-private
-slots:
+private slots:
     void slot_button_clicked();
     void slot_checkbox_clicked(bool val);
     void slot_radio_button_clicked();

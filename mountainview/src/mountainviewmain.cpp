@@ -110,12 +110,12 @@ int main(int argc, char* argv[])
         if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
             //W->showMaximized();
             W->resize(geom.width() - 100, geom.height() - 100);
-        } else {
+        }
+        else {
             W->resize(W0, H0);
         }
         QStringList keys = CLP.named_parameters.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             if (key.startsWith("P")) {
                 QString pname = key.mid(1);
                 QVariant pvalue = CLP.named_parameters[key];
@@ -128,7 +128,8 @@ int main(int argc, char* argv[])
             W->setWindowTitle(window_title);
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
-        } else if (mode == "export_image") {
+        }
+        else if (mode == "export_image") {
             QString output_fname = CLP.named_parameters.value("output").toString();
             if (output_fname.isEmpty()) {
                 printf("Missing --output parameter.\n");
@@ -139,18 +140,21 @@ int main(int argc, char* argv[])
             printf("Writing image %s... ", output_fname.toLatin1().data());
             if (!IW.write(img)) {
                 printf("Error writing image.\n");
-            } else {
+            }
+            else {
                 printf("OK.\n");
             }
 
             return 0;
-        } else if (mode == "export_images") {
+        }
+        else if (mode == "export_images") {
             QString instructions_fname = CLP.named_parameters.value("instructions").toString();
             QString instructions = read_text_file(instructions_fname);
             run_export_instructions(W, instructions.split("\n"));
             return 0;
         }
-    } else if (mode == "view_clusters") {
+    }
+    else if (mode == "view_clusters") {
         MVClusterWidget* W = new MVClusterWidget;
         QString data_path = CLP.named_parameters.value("data").toString();
         QString labels_path = CLP.named_parameters.value("labels").toString();
@@ -168,7 +172,8 @@ int main(int argc, char* argv[])
         }
         W->resize(1000, 500);
         W->show();
-    } else if (mode == "spikespy") {
+    }
+    else if (mode == "spikespy") {
         printf("spikespy...\n");
         QString timeseries_path = CLP.named_parameters["timeseries"].toString();
         QString firings_path = CLP.named_parameters["firings"].toString();
@@ -202,8 +207,7 @@ int main(int argc, char* argv[])
 
 void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions)
 {
-    foreach(QString instruction, instructions)
-    {
+    foreach (QString instruction, instructions) {
         QStringList vals = instruction.split(QRegExp("\\s"));
         CLParams params = get_command_line_params(vals);
         QString val0 = params.unnamed_parameters.value(0);
@@ -214,13 +218,14 @@ void run_export_instructions(MVOverview2Widget* W, const QStringList& instructio
             printf("Writing image %s... ", output_fname.toLatin1().data());
             if (!IW.write(img)) {
                 printf("Error writing image.\n");
-            } else {
+            }
+            else {
                 printf("OK.\n");
             }
-        } else if (val0 == "SET") {
+        }
+        else if (val0 == "SET") {
             QStringList keys = params.named_parameters.keys();
-            foreach(QString key, keys)
-            {
+            foreach (QString key, keys) {
                 W->setParameterValue(key, params.named_parameters[key]);
             }
         }

@@ -1,6 +1,8 @@
 #/bin/bash
-clang-format -i -style=WebKit ../mountainview/src/*.h
-clang-format -i -style=WebKit ../mountainview/src/*.cpp
+exe=clang-format-3.6
 
-clang-format -i -style=WebKit ../mountainsort/src/*.h
-clang-format -i -style=WebKit ../mountainsort/src/*.cpp
+$exe -i -style=WebKit ../mountainview/src/*.h
+$exe -i -style=WebKit ../mountainview/src/*.cpp
+
+$exe -i -style=WebKit ../mountainsort/src/*.h
+$exe -i -style=WebKit ../mountainsort/src/*.cpp

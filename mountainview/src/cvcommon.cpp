@@ -82,8 +82,7 @@ void CleanupObject::closing()
         QString tmp = QFileInfo(path).path() + "/spikespy." + QFileInfo(path).completeBaseName() + "." + timestamp;
         if (QDir(tmp).exists()) {
             QStringList list = QDir(tmp).entryList(QStringList("*.mda"), QDir::Files | QDir::NoDotAndDotDot);
-            foreach(QString A, list)
-            {
+            foreach (QString A, list) {
                 QFile::remove(tmp + "/" + A);
             }
             QDir(QFileInfo(tmp).path()).rmdir(QFileInfo(tmp).fileName());

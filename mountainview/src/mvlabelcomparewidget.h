@@ -37,16 +37,14 @@ signals:
 protected:
     void resizeEvent(QResizeEvent* evt);
 
-private
-slots:
+private slots:
 
 private:
     MVLabelCompareWidgetPrivate* d;
 
 signals:
 
-public
-slots:
+public slots:
 };
 
 #endif // MVLABELCOMPAREWIDGET_H

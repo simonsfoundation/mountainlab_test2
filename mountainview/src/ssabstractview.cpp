@@ -139,8 +139,8 @@ void SSAbstractViewUnderlayPainter::paint(QPainter* painter, int W_in, int H_in)
 
             //painter->setPen(QPen(QBrush(QColor(50,50,220,180)),1));
             //painter->drawPath(path2);
-
-        } else {
+        }
+        else {
         }
     }
 
@@ -187,7 +187,8 @@ void SSAbstractView::mousePressEvent(QMouseEvent* evt)
         d->m_click_anchor_pix = evt->pos();
         d->m_selected_x_anchor = -1;
         setSelectionRange(vec2(-1, -1));
-    } else if (evt->button() == Qt::RightButton) {
+    }
+    else if (evt->button() == Qt::RightButton) {
         this->setSelectionRange(vec2(-1, -1));
         d->m_selected_x_anchor = x0;
     }
@@ -211,7 +212,8 @@ void SSAbstractView::mouseReleaseEvent(QMouseEvent* evt)
             //int channel=plot()->pixToChannel(vec2(pos.x(), pos.y()));
             //setCurrentChannel(channel);
         }
-    } else {
+    }
+    else {
         d->m_is_moving = false;
         setCursor(Qt::ArrowCursor);
     }
@@ -230,7 +232,8 @@ void SSAbstractView::mouseMoveEvent(QMouseEvent* evt)
             d->m_is_moving = true;
             setCursor(Qt::OpenHandCursor);
         }
-    } else if (evt->buttons() & Qt::RightButton) {
+    }
+    else if (evt->buttons() & Qt::RightButton) {
         if (d->m_selected_x_anchor >= 0) {
             double x1 = qMin(d->m_selected_x_anchor, qMax(x0, 0.0));
             double x2 = qMax(d->m_selected_x_anchor, qMax(x0, 0.0));
@@ -243,13 +246,17 @@ void SSAbstractView::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->key() == Qt::Key_Equal) {
         d->zoom_in();
-    } else if (evt->key() == Qt::Key_Return) {
+    }
+    else if (evt->key() == Qt::Key_Return) {
         d->zoom_in();
-    } else if (evt->key() == Qt::Key_Minus) {
+    }
+    else if (evt->key() == Qt::Key_Minus) {
         d->zoom_out();
-    } else if (evt->key() == Qt::Key_0) {
+    }
+    else if (evt->key() == Qt::Key_0) {
         setXRange(vec2(0, d->m_max_timepoint));
-    } else if (evt->key() == Qt::Key_Left) {
+    }
+    else if (evt->key() == Qt::Key_Left) {
         if ((evt->modifiers() & Qt::ControlModifier) || (evt->modifiers() & Qt::ShiftModifier)) {
             float numpix = 0.5;
             if (evt->modifiers() & Qt::ShiftModifier)
@@ -262,10 +269,12 @@ void SSAbstractView::keyPressEvent(QKeyEvent* evt)
             if (x0 < 0)
                 return;
             setCurrentX(x0);
-        } else {
+        }
+        else {
             d->on_left_right_arrow(true);
         }
-    } else if (evt->key() == Qt::Key_Right) {
+    }
+    else if (evt->key() == Qt::Key_Right) {
         if ((evt->modifiers() & Qt::ControlModifier) || (evt->modifiers() & Qt::ShiftModifier)) {
             float numpix = 0.5;
             if (evt->modifiers() & Qt::ShiftModifier)
@@ -278,26 +287,36 @@ void SSAbstractView::keyPressEvent(QKeyEvent* evt)
             if (x0 < 0)
                 return;
             setCurrentX(x0);
-        } else {
+        }
+        else {
             d->on_left_right_arrow(false);
         }
-    } else if (evt->key() == Qt::Key_Up) {
+    }
+    else if (evt->key() == Qt::Key_Up) {
         plot()->setVerticalZoomFactor(plot()->verticalZoomFactor() * 1.2);
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         plot()->setVerticalZoomFactor(plot()->verticalZoomFactor() / 1.2);
-    } else if (evt->key() == Qt::Key_Backspace) {
+    }
+    else if (evt->key() == Qt::Key_Backspace) {
         plot()->setVerticalZoomFactor(1);
-    } else if (evt->matches(QKeySequence::MoveToStartOfLine)) {
+    }
+    else if (evt->matches(QKeySequence::MoveToStartOfLine)) {
         setCurrentX(0);
-    } else if (evt->matches(QKeySequence::MoveToEndOfLine)) {
+    }
+    else if (evt->matches(QKeySequence::MoveToEndOfLine)) {
         setCurrentX(d->m_max_timepoint);
-    } else if (evt->key() == Qt::Key_F) { //ahb
+    }
+    else if (evt->key() == Qt::Key_F) { //ahb
         plot()->setChannelFlip(!plot()->channelFlip()); // toggle channelFlip
-    } else if ((evt->key() == Qt::Key_W) && (evt->modifiers() & Qt::ControlModifier)) {
+    }
+    else if ((evt->key() == Qt::Key_W) && (evt->modifiers() & Qt::ControlModifier)) {
         this->topLevelWidget()->close();
-    } else if (evt->key() == Qt::Key_Space) {
+    }
+    else if (evt->key() == Qt::Key_Space) {
         d->scroll_to_current_x_if_needed(true /*force_center*/);
-    } else
+    }
+    else
         evt->ignore();
 }
 void SSAbstractView::wheelEvent(QWheelEvent* evt)
@@ -306,10 +325,12 @@ void SSAbstractView::wheelEvent(QWheelEvent* evt)
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
             d->zoom_out();
-        } else if (delta > 0) {
+        }
+        else if (delta > 0) {
             d->zoom_in();
         }
-    } else {
+    }
+    else {
         float frac = 1;
         if (delta < 0)
             frac = 1 / 0.8;
@@ -367,7 +388,8 @@ QString format_seconds(double x, bool leading_zero = true)
             return QString("%1%2").arg(zz).arg(x);
         else
             return QString("%1%2").arg(zz).arg(x, 0, 'f', 3);
-    } else {
+    }
+    else {
         if (ms_part == 0)
             return QString("%1").arg(x);
         else
@@ -380,39 +402,47 @@ QString make_time_tick_label(double val)
 
     if (val < 1000) {
         return QString("%1 ms").arg(val);
-    } else if (val < 60 * 1000) {
+    }
+    else if (val < 60 * 1000) {
         int n_sec = (int)(val / 1000);
         double n_ms = val - n_sec * 1000;
         if (n_ms == 0)
             return QString("%1 s").arg(format_seconds(n_sec, false));
         else
             return QString("%1 s").arg(format_seconds(val / 1000, false));
-    } else if (val < 60 * 60 * 1000) {
+    }
+    else if (val < 60 * 60 * 1000) {
         int n_min = (int)(val / (60 * 1000));
         int n_sec = (int)((val - n_min * 60 * 1000) / 1000);
         double n_ms = val - n_min * 60 * 1000 - n_sec * 1000;
         if (n_ms == 0) {
             if (n_sec == 0) {
                 return QString("%1 m").arg(n_min);
-            } else {
+            }
+            else {
                 if (n_min == 0) {
                     return QString("%1 s").arg(format_seconds(n_sec, false));
-                } else {
+                }
+                else {
                     return QString("%1:%2").arg(n_min).arg(format_seconds(n_sec));
                 }
             }
-        } else {
+        }
+        else {
             if (n_min == 0) {
                 if (n_sec == 0) {
                     return QString("%1 ms").arg(n_ms);
-                } else {
+                }
+                else {
                     return QString("%1 s").arg(format_seconds(val / 1000, false));
                 }
-            } else {
+            }
+            else {
                 return QString("%1:%2").arg(n_min).arg(format_seconds(n_sec + n_ms / 1000));
             }
         }
-    } else {
+    }
+    else {
         int n_hr = (int)(val / (60 * 60 * 1000));
         double hold = val - n_hr * 60 * 60 * 1000;
         if (hold == 0) {
@@ -459,61 +489,80 @@ TickLocations get_time_tick_locations(double x1, double x2)
     if (diff < 0.08) {
         interval = 0.01;
         minor_interval = 0.01;
-    } else if (diff < 0.15) {
+    }
+    else if (diff < 0.15) {
         interval = 0.02;
         minor_interval = 0.01;
-    } else if (diff < 0.3) {
+    }
+    else if (diff < 0.3) {
         interval = 0.05;
         minor_interval = 0.01;
-    } else if (diff < 0.8) {
+    }
+    else if (diff < 0.8) {
         interval = 0.1;
         minor_interval = 0.02;
-    } else if (diff < 1.5) {
+    }
+    else if (diff < 1.5) {
         interval = 0.2;
         minor_interval = 0.1;
-    } else if (diff < 3) {
+    }
+    else if (diff < 3) {
         interval = 0.5;
         minor_interval = 0.1;
-    } else if (diff < 8) {
+    }
+    else if (diff < 8) {
         interval = 1;
         minor_interval = 0.2;
-    } else if (diff < 15) {
+    }
+    else if (diff < 15) {
         interval = 2;
         minor_interval = 0.5;
-    } else if (diff < 20) {
+    }
+    else if (diff < 20) {
         interval = 3;
         minor_interval = 0.5;
-    } else if (diff < 25) {
+    }
+    else if (diff < 25) {
         interval = 4;
         minor_interval = 1;
-    } else if (diff < 40) {
+    }
+    else if (diff < 40) {
         interval = 5;
         minor_interval = 1;
-    } else if (diff < 80) {
+    }
+    else if (diff < 80) {
         interval = 10;
         minor_interval = 2;
-    } else if (diff < 150) {
+    }
+    else if (diff < 150) {
         interval = 20;
         minor_interval = 5;
-    } else if (diff < 200) {
+    }
+    else if (diff < 200) {
         interval = 30;
         minor_interval = 10;
-    } else if (diff < 250) {
+    }
+    else if (diff < 250) {
         interval = 40;
         minor_interval = 10;
-    } else if (diff < 500) {
+    }
+    else if (diff < 500) {
         interval = 50;
         minor_interval = 10;
-    } else if (diff < 800) {
+    }
+    else if (diff < 800) {
         interval = 100;
         minor_interval = 20;
-    } else if (diff < 1500) {
+    }
+    else if (diff < 1500) {
         interval = 200;
         minor_interval = 50;
-    } else if (diff < 2000) {
+    }
+    else if (diff < 2000) {
         interval = 300;
         minor_interval = 50;
-    } else {
+    }
+    else {
         interval = 1000;
         minor_interval = 200;
     }
@@ -548,7 +597,8 @@ void SSAbstractViewUnderlayPainter::draw_time_axis(QPainter* painter)
     if (samplerate) {
         x1 *= 1000 / samplerate;
         x2 *= 1000 / samplerate;
-    } else {
+    }
+    else {
         x1 = x2 = 0;
     }
 
@@ -659,9 +709,11 @@ long SSAbstractView::getTimepointForX(int x)
     if (d->m_timepoint_mapping.totalSize() > 1) {
         if ((0 <= x) && (x < d->m_timepoint_mapping.totalSize())) {
             return d->m_timepoint_mapping.value(x);
-        } else
+        }
+        else
             return -1;
-    } else {
+    }
+    else {
         return x;
     }
 }
@@ -796,7 +848,8 @@ void SSAbstractViewPrivate::zoom_in()
 {
     if (m_selected_xmin < 0) {
         do_zoom(m_current_x, 0.8);
-    } else {
+    }
+    else {
         do_zoom2(m_selected_xmin, m_selected_xmax);
         q->setSelectionRange(vec2(-1, -1));
     }
@@ -867,21 +920,25 @@ void SSAbstractViewPrivate::scroll_to_current_x_if_needed(bool force_center)
     double dx = 0;
     if (force_center) {
         dx = x0 - (XR.x + XR.y) / 2;
-    } else {
+    }
+    else {
         if ((XR.x <= x0) && (x0 <= XR.y))
             return;
         if (x0 < XR.x) {
             float dist = qAbs(x0 - XR.x);
             if (dist > 1) {
                 dx = x0 - (XR.x + XR.y) / 2;
-            } else {
+            }
+            else {
                 dx = x0 - XR.x;
             }
-        } else if (x0 > XR.y) {
+        }
+        else if (x0 > XR.y) {
             float dist = qAbs(x0 - XR.y);
             if (dist > 1) {
                 dx = x0 - (XR.x + XR.y) / 2;
-            } else {
+            }
+            else {
                 dx = x0 - XR.y;
             }
         }

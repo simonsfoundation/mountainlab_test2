@@ -18,8 +18,7 @@ public:
     static void presentImage(const QImage& img);
 
     void setImage(const QImage& img);
-private
-slots:
+private slots:
     void slot_save();
     void slot_save_as();
     void slot_cancel();

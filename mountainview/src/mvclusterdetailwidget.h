@@ -65,8 +65,7 @@ signals:
     void signalSelectedKsChanged();
     ///The user has zoomed in (or out?). TODO: Is this needed?
     void signalZoomedIn();
-private
-slots:
+private slots:
     void slot_context_menu(const QPoint& pos);
 
 private:

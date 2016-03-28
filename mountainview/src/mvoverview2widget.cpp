@@ -1258,7 +1258,7 @@ void MVOverview2WidgetPrivate::find_nearby_events()
 {
     QList<int> ks = m_selected_ks.toList();
     qSort(ks);
-    if (ks.count()<2) {
+    if (ks.count() < 2) {
         QMessageBox::information(q, "Problem finding nearby events", "You must select at least two clusters.");
         return;
     }
@@ -1269,11 +1269,13 @@ void MVOverview2WidgetPrivate::find_nearby_events()
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_view_current_event_changed()));
     QString tab_title = "Nearby Clips";
     if (ks.count() == 2) {
-        int kk1=ks[0];
-        int kk2=ks[1];
+        int kk1 = ks[0];
+        int kk2 = ks[1];
         tab_title = QString("Clips %1(%2) : Clips %3(%4)")
-                .arg(m_original_cluster_numbers.value(kk1)).arg(m_original_cluster_offsets.value(kk1) + 1)
-                .arg(m_original_cluster_numbers.value(kk2)).arg(m_original_cluster_offsets.value(kk2) + 1);
+                        .arg(m_original_cluster_numbers.value(kk1))
+                        .arg(m_original_cluster_offsets.value(kk1) + 1)
+                        .arg(m_original_cluster_numbers.value(kk2))
+                        .arg(m_original_cluster_offsets.value(kk2) + 1);
     }
     add_tab(X, tab_title);
     update_widget(X);
@@ -1460,7 +1462,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setFirings(DiskReadMda(m_firings));
         WW->setGroupNumbers(m_original_cluster_numbers);
     }
-    else if ((widget_type == "clips")||(widget_type=="find_nearby_events")) {
+    else if ((widget_type == "clips") || (widget_type == "find_nearby_events")) {
         printf("Extracting clips...\n");
         MVClipsView* WW = (MVClipsView*)W;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
@@ -1473,7 +1475,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
             labels << (int)m_firings.value(2, n);
         }
 
-        int clip_size=this->m_control_panel->getParameterValue("clip_size").toInt();
+        int clip_size = this->m_control_panel->getParameterValue("clip_size").toInt();
 
         QList<long> inds;
         if (widget_type == "clips") {
@@ -1486,32 +1488,34 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
                 }
             }
         }
-        else if (widget_type=="find_nearby_events") {
-            long max_time=(long)(compute_max(times)+1);
-            Mda occupied(ks.count(),max_time+1);
+        else if (widget_type == "find_nearby_events") {
+            long max_time = (long)(compute_max(times) + 1);
+            Mda occupied(ks.count(), max_time + 1);
             for (int ik = 0; ik < ks.count(); ik++) {
                 int kk = ks[ik];
                 for (int n = 0; n < labels.count(); n++) {
                     if (labels[n] == kk) {
-                        occupied.setValue(1,ik,(long)times[n]);
+                        occupied.setValue(1, ik, (long)times[n]);
                     }
                 }
             }
-            int radius=clip_size/2-1;
-            int kk1=ks.value(0);
-            for (long n=0; n<labels.count(); n++) {
-                if (labels[n]==kk1) {
-                    bool okay=true;
-                    for (int ik=1; (ik<ks.count())&&(okay); ik++) {
-                        bool found=false;
-                        for (int dt=-radius; dt<=radius; dt++) {
-                            if (occupied.value(ik,(long)times[n]+dt)) {
-                                found=true;
+            int radius = clip_size / 2 - 1;
+            int kk1 = ks.value(0);
+            for (long n = 0; n < labels.count(); n++) {
+                if (labels[n] == kk1) {
+                    bool okay = true;
+                    for (int ik = 1; (ik < ks.count()) && (okay); ik++) {
+                        bool found = false;
+                        for (int dt = -radius; dt <= radius; dt++) {
+                            if (occupied.value(ik, (long)times[n] + dt)) {
+                                found = true;
                             }
                         }
-                        if (!found) okay=false;
+                        if (!found)
+                            okay = false;
                     }
-                    if (okay) inds << n;
+                    if (okay)
+                        inds << n;
                 }
             }
         }
@@ -1519,8 +1523,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
 
         QList<double> times_kk;
         QList<int> labels_kk;
-        for (long i=0; i<inds.count(); i++) {
-            long n=inds[i];
+        for (long i = 0; i < inds.count(); i++) {
+            long n = inds[i];
             times_kk << times[n];
             labels_kk << labels[n];
         }
@@ -1924,7 +1928,7 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
     QList<QWidget*> widgets = get_all_widgets();
     foreach (QWidget* W, widgets) {
         QString widget_type = W->property("widget_type").toString();
-        if ((widget_type == "clips")||(widget_type == "find_nearby_events")) {
+        if ((widget_type == "clips") || (widget_type == "find_nearby_events")) {
             MVClipsView* WW = (MVClipsView*)W;
             WW->setCurrentEvent(evt);
         }

@@ -82,8 +82,7 @@ void MVCrossCorrelogramsWidget::setTextLabels(const QStringList& labels)
 void MVCrossCorrelogramsWidget::setColors(const QMap<QString, QColor>& colors)
 {
     d->m_colors = colors;
-    foreach(HistogramView * V, d->m_histogram_views)
-    {
+    foreach (HistogramView* V, d->m_histogram_views) {
         V->setColors(d->m_colors);
     }
 }
@@ -217,7 +216,8 @@ void MVCrossCorrelogramsWidget::updateWidget()
     QList<FloatList> data0;
     if (d->m_label_numbers.isEmpty()) {
         data0 = get_cross_correlogram_datas_2(d->m_data, d->m_base_label_num);
-    } else {
+    }
+    else {
         data0 = get_cross_correlogram_datas_3(d->m_data, d->m_label_numbers);
     }
 
@@ -252,10 +252,12 @@ void MVCrossCorrelogramsWidget::updateWidget()
         QString title0;
         if (!d->m_text_labels.isEmpty()) {
             title0 = d->m_text_labels.value(k1);
-        } else {
+        }
+        else {
             if (!d->m_label_numbers.isEmpty()) {
                 title0 = QString("%1/%2").arg(d->m_label_numbers.value((k1 - 1) / num_cols)).arg(d->m_label_numbers.value((k1 - 1) % num_cols));
-            } else {
+            }
+            else {
                 title0 = QString("%1/%2").arg(k1).arg(k2);
             }
         }
@@ -308,8 +310,12 @@ void MVCrossCorrelogramsWidget::setCurrentLabel(int num)
 
 bool sets_match(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach(int a, S1) if (!S2.contains(a)) return false;
-    foreach(int a, S2) if (!S1.contains(a)) return false;
+    foreach (int a, S1)
+        if (!S2.contains(a))
+            return false;
+    foreach (int a, S2)
+        if (!S1.contains(a))
+            return false;
     return true;
 }
 
@@ -381,7 +387,8 @@ void MVCrossCorrelogramsWidget::slot_histogram_view_clicked()
     int num = sender()->property("label_number").toInt();
     d->m_selected_label_nums.clear();
     if (d->m_current_label_num == num) {
-    } else {
+    }
+    else {
         setCurrentLabel(num);
         d->m_selected_label_nums.clear();
         d->m_selected_label_nums << num;
@@ -403,7 +410,8 @@ void MVCrossCorrelogramsWidget::slot_histogram_view_control_clicked()
         d->do_highlighting();
         if (d->m_current_label_num <= 0)
             setCurrentLabel(num);
-    } else {
+    }
+    else {
         d->m_selected_label_nums.remove(num);
         d->do_highlighting();
     }
@@ -425,13 +433,17 @@ void MVCrossCorrelogramsWidget::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->key() == Qt::Key_Left) {
         setCurrentLabel(this->currentLabel() - 1);
-    } else if (evt->key() == Qt::Key_Right) {
+    }
+    else if (evt->key() == Qt::Key_Right) {
         setCurrentLabel(this->currentLabel() + 1);
-    } else if (evt->key() == Qt::Key_Up) {
+    }
+    else if (evt->key() == Qt::Key_Up) {
         setCurrentLabel(this->currentLabel() - d->m_num_columns);
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         setCurrentLabel(this->currentLabel() + d->m_num_columns);
-    } else
+    }
+    else
         evt->ignore();
 }
 
@@ -442,12 +454,14 @@ void MVCrossCorrelogramsWidgetPrivate::do_highlighting()
         int k = HV->property("label_number").toInt();
         if (k == m_current_label_num) {
             HV->setCurrent(true);
-        } else {
+        }
+        else {
             HV->setCurrent(false);
         }
         if (m_selected_label_nums.contains(k)) {
             HV->setSelected(true);
-        } else {
+        }
+        else {
             HV->setSelected(false);
         }
     }

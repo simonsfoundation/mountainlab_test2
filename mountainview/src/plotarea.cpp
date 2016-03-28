@@ -134,7 +134,8 @@ void PlotAreaPrivate::do_refresh(QPainter* P)
             QRect RR;
             if (pass == 1) {
                 RR = QRect(0, pix.y - 30, m_left_panel_width, 60);
-            } else if (pass == 2) {
+            }
+            else if (pass == 2) {
                 RR = QRect(m_plot_rect.width() - m_right_panel_width, pix.y - 30, m_right_panel_width, 60);
             }
             P->setPen(QPen(QColor(150, 150, 255)));
@@ -164,7 +165,8 @@ void PlotAreaPrivate::do_refresh(QPainter* P)
             QColor col = QColor(0, 0, 0);
             if (l0 == 0) {
                 col = Qt::gray;
-            } else {
+            }
+            else {
                 if (m_marker_colors.count() > 0) {
                     col = m_marker_colors.value((l0 - 1) % m_marker_colors.count());
                 }
@@ -193,7 +195,8 @@ void PlotAreaPrivate::do_refresh(QPainter* P)
                     QRect RR;
                     if (pass == 1) {
                         RR = QRect(x0 - 50, m_plot_rect.bottom() + 15 * vpos0, 100, 15);
-                    } else if (pass == 2) {
+                    }
+                    else if (pass == 2) {
                         RR = QRect(x0 - 50, m_plot_rect.top() - 15 * vpos0 - 15, 100, 15);
                     }
                     marker_x_positions.insert(x0);
@@ -230,18 +233,21 @@ void PlotAreaPrivate::do_refresh(QPainter* P)
                     path.moveTo(pix1.x, pix1.y);
                     //is_first=false;
                     is_first = true;
-                } else {
+                }
+                else {
                     if (is_first) {
                         is_first = false;
                         path.moveTo(pix1.x, pix1.y);
-                    } else {
+                    }
+                    else {
                         path.lineTo(pix1.x, pix1.y);
                         num_line_segments++;
                     }
                 }
                 //last_val=val;
             }
-        } else {
+        }
+        else {
             for (int i = 0; i + 1 < SS.xvals.N2(); i += 2) {
                 double x1 = SS.xvals.value(0, i);
                 double val1 = SS.yvals.value(0, i);

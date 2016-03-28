@@ -35,8 +35,7 @@ signals:
     void currentLabelChanged();
     void currentTimepointChanged();
 
-private
-slots:
+private slots:
 
 private:
     MVCdfViewPrivate* d;

@@ -97,8 +97,7 @@ QGroupBox* MVOverview2WidgetControlPanelPrivate::add_radio_button_group(QGridLay
     int r = G->rowCount();
     QGroupBox* box = new QGroupBox;
     QHBoxLayout* hlayout = new QHBoxLayout;
-    foreach(QString option, options)
-    {
+    foreach (QString option, options) {
         QRadioButton* B = new QRadioButton(option);
         if (option == val)
             B->setChecked(true);
@@ -242,8 +241,7 @@ QVariant MVOverview2WidgetControlPanel::getParameterValue(QString name, const QV
     if (d->m_groupbox_parameters.contains(name)) {
         QGroupBox* G = d->m_groupbox_parameters[name];
         QList<QObject*> ch = G->children();
-        foreach(QObject * obj, ch)
-        {
+        foreach (QObject* obj, ch) {
             QRadioButton* R = dynamic_cast<QRadioButton*>(obj);
             if (R) {
                 if (R->isChecked())
@@ -265,8 +263,7 @@ void MVOverview2WidgetControlPanel::setParameterValue(QString name, QVariant val
     if (d->m_groupbox_parameters.contains(name)) {
         QGroupBox* G = d->m_groupbox_parameters[name];
         QList<QObject*> ch = G->children();
-        foreach(QObject * obj, ch)
-        {
+        foreach (QObject* obj, ch) {
             QRadioButton* R = dynamic_cast<QRadioButton*>(obj);
             if (R) {
                 if (R->text() == val) {
@@ -291,8 +288,7 @@ void MVOverview2WidgetControlPanel::setParameterChoices(QString name, QStringLis
         QComboBox* CB = d->m_combobox_parameters[name];
         QString txt = CB->currentText();
         CB->clear();
-        foreach(QString choice, choices)
-        {
+        foreach (QString choice, choices) {
             CB->addItem(choice);
         }
         CB->setCurrentText(txt);

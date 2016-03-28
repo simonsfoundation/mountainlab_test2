@@ -46,8 +46,7 @@ public:
 signals:
     ///Just as in MVClusterView::currentEventChanged()
     void currentEventChanged();
-private
-slots:
+private slots:
     void slot_view_current_event_changed();
     void slot_view_transformation_changed();
     void slot_show_clip_view_toggled(bool val);

@@ -60,8 +60,7 @@ signals:
     ///The set of selected labels (or cluster numbers) have changed
     void selectedLabelsChanged();
 
-private
-slots:
+private slots:
     void slot_histogram_view_clicked();
     void slot_histogram_view_control_clicked();
     void slot_histogram_view_activated();

@@ -253,13 +253,11 @@ void MVClusterDetailWidget::setCurrentK(int k)
 
 bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach(int val, S1)
-    {
+    foreach (int val, S1) {
         if (!S2.contains(val))
             return false;
     }
-    foreach(int val, S2)
-    {
+    foreach (int val, S2) {
         if (!S1.contains(val))
             return false;
     }
@@ -341,20 +339,25 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_vscale_factor *= factor;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_vscale_factor /= factor;
         update();
-    } else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
+    }
+    else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
         d->zoom(1.1);
-    } else if (evt->key() == Qt::Key_Minus) {
+    }
+    else if (evt->key() == Qt::Key_Minus) {
         d->zoom(1 / 1.1);
-    } else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
+    }
+    else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
         QList<int> ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             ks << d->m_views[i]->k();
         }
         this->setSelectedKs(ks);
-    } else if (evt->key() == Qt::Key_Left) {
+    }
+    else if (evt->key() == Qt::Key_Left) {
         int view_index = d->get_current_view_index();
         if (view_index > 0) {
             int k = d->m_views[view_index - 1]->k();
@@ -366,7 +369,8 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    } else if (evt->key() == Qt::Key_Right) {
+    }
+    else if (evt->key() == Qt::Key_Right) {
         int view_index = d->get_current_view_index();
         if ((view_index >= 0) && (view_index + 1 < d->m_views.count())) {
             int k = d->m_views[view_index + 1]->k();
@@ -378,7 +382,8 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    } else
+    }
+    else
         evt->ignore();
 }
 
@@ -413,14 +418,16 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 d->m_selected_ks.remove(k);
                 emit signalSelectedKsChanged();
                 update();
-            } else {
+            }
+            else {
                 d->m_anchor_view_index = view_index;
                 d->m_selected_ks.insert(k);
                 emit signalSelectedKsChanged();
                 update();
             }
         }
-    } else if (evt->modifiers() & Qt::ShiftModifier) {
+    }
+    else if (evt->modifiers() & Qt::ShiftModifier) {
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             if (d->m_anchor_view_index >= 0) {
@@ -436,22 +443,24 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 update();
             }
         }
-    } else {
+    }
+    else {
         d->m_anchor_view_index = -1;
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             d->m_anchor_view_index = view_index;
             int k = d->m_views[view_index]->k();
             if (d->m_current_k == k) {
-
-            } else {
+            }
+            else {
                 d->set_current_k(k);
                 d->m_selected_ks.clear();
                 d->m_selected_ks.insert(k);
                 emit signalSelectedKsChanged();
                 update();
             }
-        } else {
+        }
+        else {
             d->set_current_k(-1);
             d->m_selected_ks.clear();
             emit signalSelectedKsChanged();
@@ -472,7 +481,8 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
     int view_index = d->find_view_index_at(pt);
     if (view_index >= 0) {
         d->set_hovered_k(d->m_views[view_index]->k());
-    } else {
+    }
+    else {
         d->set_hovered_k(-1);
     }
 }
@@ -644,7 +654,8 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
         m_scroll_x = x0 - 100;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    } else if (x0 > m_scroll_x + q->width()) {
+    }
+    else if (x0 > m_scroll_x + q->width()) {
         m_scroll_x = x0 - q->width() + 100;
     }
 }
@@ -658,7 +669,8 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
         m_scroll_x = view->x_position_before_scaling * m_space_ratio - current_screen_x;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    } else {
+    }
+    else {
         m_space_ratio *= factor;
     }
     q->update();
@@ -695,17 +707,24 @@ int MVClusterDetailWidgetPrivate::get_current_view_index()
     return find_view_index_for_k(k);
 }
 
-QColor lighten(QColor col,float val) {
-    int r=col.red()*val; if (r>255) r=255;
-    int g=col.green()*val; if (g>255) g=255;
-    int b=col.blue()*val; if (b>255) b=255;
-    return QColor(r,g,b);
+QColor lighten(QColor col, float val)
+{
+    int r = col.red() * val;
+    if (r > 255)
+        r = 255;
+    int g = col.green() * val;
+    if (g > 255)
+        g = 255;
+    int b = col.blue() * val;
+    if (b > 255)
+        b = 255;
+    return QColor(r, g, b);
 }
 
 void ClusterView::paint(QPainter* painter, QRectF rect)
 {
     int xmargin = 4;
-    int ymargin=8;
+    int ymargin = 8;
     QRectF rect2(rect.x() + xmargin, rect.y() + ymargin, rect.width() - xmargin * 2, rect.height() - ymargin * 2);
     painter->setClipRect(rect);
 
@@ -716,7 +735,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         background_color = d->m_colors["view_background_selected"];
     else if (m_hovered)
         background_color = d->m_colors["view_background_hovered"];
-    painter->fillRect(rect,QColor(220,220,225));
+    painter->fillRect(rect, QColor(220, 220, 225));
     painter->fillRect(rect2, background_color);
 
     QPen pen_frame;
@@ -730,7 +749,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     Mda template0 = m_CD->template0;
     int M = template0.N1();
     int T = template0.N2();
-    int Tmid=(int)((T+1)/2)-1;
+    int Tmid = (int)((T + 1) / 2) - 1;
     m_T = T;
 
     int top_height = 20, bottom_height = 40;
@@ -741,15 +760,14 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
 
     {
         //the midline
-        QColor midline_color=lighten(background_color,0.9);
-        QPointF pt0=template_coord2pix(0,Tmid,0);
+        QColor midline_color = lighten(background_color, 0.9);
+        QPointF pt0 = template_coord2pix(0, Tmid, 0);
         QPen pen;
         pen.setWidth(1);
         pen.setColor(midline_color);
         painter->setPen(pen);
-        painter->drawLine(pt0.x(),rect2.bottom()-bottom_height,pt0.x(),rect2.top()+top_height);
+        painter->drawLine(pt0.x(), rect2.bottom() - bottom_height, pt0.x(), rect2.top() + top_height);
     }
-
 
     for (int m = 0; m < M; m++) {
         QColor col = d->m_channel_colors.value(m % d->m_channel_colors.count());

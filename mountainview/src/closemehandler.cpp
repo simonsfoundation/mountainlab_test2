@@ -12,43 +12,44 @@
 #include <QApplication>
 #include <QFileInfo>
 
-class CloseMeHandlerPrivate
-{
+class CloseMeHandlerPrivate {
 public:
-    CloseMeHandler *q;
+    CloseMeHandler* q;
     QDateTime m_start_time;
     void do_start();
 };
 
-CloseMeHandler::CloseMeHandler() {
-    d=new CloseMeHandlerPrivate;
-    d->q=this;
+CloseMeHandler::CloseMeHandler()
+{
+    d = new CloseMeHandlerPrivate;
+    d->q = this;
 }
 
-CloseMeHandler::~CloseMeHandler() {
+CloseMeHandler::~CloseMeHandler()
+{
     delete d;
 }
 
 void CloseMeHandler::start()
 {
-    CloseMeHandler *X=new CloseMeHandler();
+    CloseMeHandler* X = new CloseMeHandler();
     X->d->do_start();
 }
 
 void CloseMeHandler::slot_timer()
 {
-    QString fname=qApp->applicationDirPath()+"/closeme.tmp";
+    QString fname = qApp->applicationDirPath() + "/closeme.tmp";
     if (QFile::exists(fname)) {
-        QDateTime dt=QFileInfo(fname).created();
-        if (dt>d->m_start_time) {
+        QDateTime dt = QFileInfo(fname).created();
+        if (dt > d->m_start_time) {
             exit(0);
         }
     }
-    QTimer::singleShot(1000,this,SLOT(slot_timer()));
+    QTimer::singleShot(1000, this, SLOT(slot_timer()));
 }
 
 void CloseMeHandlerPrivate::do_start()
 {
-    m_start_time=QDateTime::currentDateTime();
-    QTimer::singleShot(2000,q,SLOT(slot_timer()));
+    m_start_time = QDateTime::currentDateTime();
+    QTimer::singleShot(2000, q, SLOT(slot_timer()));
 }

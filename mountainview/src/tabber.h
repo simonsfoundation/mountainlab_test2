@@ -41,8 +41,7 @@ public:
     void switchCurrentContainer();
     ///Retrieve all widgets that have been added and have not been removed and deleted
     QList<QWidget*> allWidgets();
-private
-slots:
+private slots:
     void slot_tab_close_requested(int index);
     void slot_tab_bar_clicked(int index);
     void slot_tab_bar_double_clicked(int index);

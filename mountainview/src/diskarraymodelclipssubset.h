@@ -28,8 +28,7 @@ public:
     void setRange(long t1, long t2);
 signals:
 
-private
-slots:
+private slots:
 
 private:
     DiskArrayModelClipsSubsetPrivate* d;

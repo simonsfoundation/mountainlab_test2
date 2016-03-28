@@ -31,8 +31,7 @@ protected:
 
 signals:
 
-public
-slots:
+public slots:
 
 private:
     CorrelationMatrixViewPrivate* d;

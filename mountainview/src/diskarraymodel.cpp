@@ -52,8 +52,7 @@ DiskArrayModel::DiskArrayModel(QObject* parent)
 
 DiskArrayModel::~DiskArrayModel()
 {
-    foreach(Mda * X, d->m_loaded_chunks)
-    {
+    foreach (Mda* X, d->m_loaded_chunks) {
         delete X;
     }
     delete d;
@@ -110,7 +109,8 @@ Mda DiskArrayModel::loadData(long scale, long t1, long t2)
                     X.setValue(safe_value1(d->m_mda, mm + tt * M), mm, tt - t1, 1);
                 }
             }
-        } else {
+        }
+        else {
             for (long tt = t1; tt <= t2; tt++) {
                 for (long mm = 0; mm < d->m_num_channels; mm++) {
                     double minval = safe_value1(d->m_mda, mm + tt * scale * M);
@@ -139,13 +139,15 @@ Mda DiskArrayModel::loadData(long scale, long t1, long t2)
         long tA2, tB2;
         if (i > chunk_ind) {
             tA1 = 0; // where it's coming from
-        } else {
+        }
+        else {
             tA1 = t1 - i * d->m_chunk_size; // where it's coming from
         }
 
         if ((i + 1) * d->m_chunk_size <= t2) {
             tB1 = d->m_chunk_size - 1; // where it's coming from
-        } else {
+        }
+        else {
             tB1 = t2 - i * d->m_chunk_size; // where it's coming from
         }
         tA2 = tA1 + i * d->m_chunk_size - t1; // where it's going to
@@ -188,7 +190,7 @@ bool DiskArrayModel::fileHierarchyExists()
 }
 
 bool do_minmax_downsample(QString path1, QString path2, long factor,
-                          QProgressDialog* dlg, bool first)
+    QProgressDialog* dlg, bool first)
 {
     FILE* inf = jfopen(path1.toLatin1().data(), "rb");
     if (!inf) {
@@ -236,7 +238,7 @@ bool do_minmax_downsample(QString path1, QString path2, long factor,
         for (long kk = 0; kk < 2; kk++) { // determines min or max
             if (dim3 == 1) {
                 fseek(inf, header_size,
-                      SEEK_SET); // need to go back to first part in this case
+                    SEEK_SET); // need to go back to first part in this case
             }
             for (long i = 0; i < dim2b; i++) {
                 if ((i % 100 == 0) && (timer.elapsed() >= 500)) {
@@ -276,12 +278,13 @@ bool do_minmax_downsample(QString path1, QString path2, long factor,
             }
         }
         jfree(buf);
-    } else if (data_type == MDAIO_TYPE_INT32) {
+    }
+    else if (data_type == MDAIO_TYPE_INT32) {
         qint32* buf = (qint32*)jmalloc(sizeof(qint32) * factor * dim1);
         for (int kk = 0; kk < 2; kk++) { // determines min or max
             if (dim3 == 1) {
                 fseek(inf, header_size,
-                      SEEK_SET); // need to go back to first part in this case
+                    SEEK_SET); // need to go back to first part in this case
             }
             for (long i = 0; i < dim2b; i++) {
                 if ((i % 100 == 0) && (timer.elapsed() >= 500)) {
@@ -321,12 +324,13 @@ bool do_minmax_downsample(QString path1, QString path2, long factor,
             }
         }
         jfree(buf);
-    } else if (data_type == MDAIO_TYPE_FLOAT32) {
+    }
+    else if (data_type == MDAIO_TYPE_FLOAT32) {
         float* buf = (float*)jmalloc(sizeof(float) * factor * dim1);
         for (int kk = 0; kk < 2; kk++) { // determines min or max
             if (dim3 == 1) {
                 fseek(inf, header_size,
-                      SEEK_SET); // need to go back to first part in this case
+                    SEEK_SET); // need to go back to first part in this case
             }
             for (long i = 0; i < dim2b; i++) {
                 if ((i % 100 == 0) && (timer.elapsed() >= 500)) {
@@ -366,12 +370,13 @@ bool do_minmax_downsample(QString path1, QString path2, long factor,
             }
         }
         jfree(buf);
-    } else if (data_type == MDAIO_TYPE_FLOAT64) {
+    }
+    else if (data_type == MDAIO_TYPE_FLOAT64) {
         double* buf = (double*)jmalloc(sizeof(double) * factor * dim1);
         for (int kk = 0; kk < 2; kk++) { // determines min or max
             if (dim3 == 1) {
                 fseek(inf, header_size,
-                      SEEK_SET); // need to go back to first part in this case
+                    SEEK_SET); // need to go back to first part in this case
             }
             for (long i = 0; i < dim2b; i++) {
                 if ((i % 100 == 0) && (timer.elapsed() >= 500)) {
@@ -411,12 +416,13 @@ bool do_minmax_downsample(QString path1, QString path2, long factor,
             }
         }
         jfree(buf);
-    } else if (data_type == MDAIO_TYPE_INT16) {
+    }
+    else if (data_type == MDAIO_TYPE_INT16) {
         qint16* buf = (qint16*)jmalloc(sizeof(qint16) * factor * dim1);
         for (int kk = 0; kk < 2; kk++) { // determines min or max
             if (dim3 == 1) {
                 fseek(inf, header_size,
-                      SEEK_SET); // need to go back to first part in this case
+                    SEEK_SET); // need to go back to first part in this case
             }
             for (long i = 0; i < dim2b; i++) {
                 if ((i % 100 == 0) && (timer.elapsed() >= 500)) {
@@ -456,12 +462,13 @@ bool do_minmax_downsample(QString path1, QString path2, long factor,
             }
         }
         jfree(buf);
-    } else if (data_type == MDAIO_TYPE_UINT16) {
+    }
+    else if (data_type == MDAIO_TYPE_UINT16) {
         quint16* buf = (quint16*)jmalloc(sizeof(quint16) * factor * dim1);
         for (int kk = 0; kk < 2; kk++) { // determines min or max
             if (dim3 == 1) {
                 fseek(inf, header_size,
-                      SEEK_SET); // need to go back to first part in this case
+                    SEEK_SET); // need to go back to first part in this case
             }
             for (long i = 0; i < dim2b; i++) {
                 if ((i % 100 == 0) && (timer.elapsed() >= 500)) {
@@ -501,7 +508,8 @@ bool do_minmax_downsample(QString path1, QString path2, long factor,
             }
         }
         jfree(buf);
-    } else {
+    }
+    else {
         qWarning() << "Unsupported data type in do_minmax_downsample" << data_type;
     }
 
@@ -535,7 +543,7 @@ void DiskArrayModel::createFileHierarchyIfNeeded()
                 .mkdir(QFileInfo(QFileInfo(new_path).path()).fileName());
         }
         if (!do_minmax_downsample(last_path, new_path, MULTISCALE_FACTOR, &dlg,
-                                  (scale0 == MULTISCALE_FACTOR))) {
+                (scale0 == MULTISCALE_FACTOR))) {
             exit(-1);
             return;
         }
@@ -598,7 +606,7 @@ void DiskArrayModelPrivate::read_header()
     m_dim3 = dim3;
 }
 QString DiskArrayModelPrivate::get_code(long scale, long chunk_size,
-                                        long chunk_ind)
+    long chunk_ind)
 {
     return QString("%1-%2-%3").arg(scale).arg(chunk_size).arg(chunk_ind);
 }
@@ -622,11 +630,11 @@ Mda* DiskArrayModelPrivate::load_chunk(long scale, long chunk_ind)
 }
 
 Mda* DiskArrayModelPrivate::load_chunk_from_file(QString path, long scale,
-                                                 long chunk_ind)
+    long chunk_ind)
 {
     if (scale == 1) {
         QVector<double> d0 = load_data_from_mda(path, m_num_channels * m_chunk_size,
-                                                0, chunk_ind * m_chunk_size, 0);
+            0, chunk_ind * m_chunk_size, 0);
         if (d0.isEmpty())
             return 0;
         Mda* ret = new Mda();
@@ -644,11 +652,12 @@ Mda* DiskArrayModelPrivate::load_chunk_from_file(QString path, long scale,
             }
         }
         return ret;
-    } else {
+    }
+    else {
         QVector<double> d0 = load_data_from_mda(path, m_num_channels * m_chunk_size,
-                                                0, chunk_ind * m_chunk_size, 0);
+            0, chunk_ind * m_chunk_size, 0);
         QVector<double> d1 = load_data_from_mda(path, m_num_channels * m_chunk_size,
-                                                0, chunk_ind * m_chunk_size, 1);
+            0, chunk_ind * m_chunk_size, 1);
 
         if (d0.isEmpty())
             return 0;
@@ -675,8 +684,8 @@ Mda* DiskArrayModelPrivate::load_chunk_from_file(QString path, long scale,
 }
 
 QVector<double> DiskArrayModelPrivate::load_data_from_mda(QString path, long n,
-                                                          long i1, long i2,
-                                                          long i3)
+    long i1, long i2,
+    long i3)
 {
     QVector<double> ret;
     FILE* inf = jfopen(path.toLatin1().data(), "rb");
@@ -706,7 +715,8 @@ QVector<double> DiskArrayModelPrivate::load_data_from_mda(QString path, long n,
             ret[i] = (double)X[i];
         }
         jfree(X);
-    } else if (data_type == MDAIO_TYPE_INT32) {
+    }
+    else if (data_type == MDAIO_TYPE_INT32) {
         qint32* X = (qint32*)jmalloc(sizeof(qint32) * n);
         int b0 = mda_read_int32(X, &HH, n, inf);
         // int b0=fread(X,sizeof(qint32),n,inf);
@@ -715,7 +725,8 @@ QVector<double> DiskArrayModelPrivate::load_data_from_mda(QString path, long n,
             ret[i] = (double)X[i];
         }
         jfree(X);
-    } else if (data_type == MDAIO_TYPE_FLOAT32) {
+    }
+    else if (data_type == MDAIO_TYPE_FLOAT32) {
         float* X = (float*)jmalloc(sizeof(float) * n);
         int bytes_read = mda_read_float32(X, &HH, n, inf);
         // int bytes_read=fread(X,sizeof(float),n,inf);
@@ -724,7 +735,8 @@ QVector<double> DiskArrayModelPrivate::load_data_from_mda(QString path, long n,
             ret[i] = (double)X[i];
         }
         jfree(X);
-    } else if (data_type == MDAIO_TYPE_FLOAT64) {
+    }
+    else if (data_type == MDAIO_TYPE_FLOAT64) {
         double* X = (double*)jmalloc(sizeof(double) * n);
         int bytes_read = mda_read_float64(X, &HH, n, inf);
         // int bytes_read=fread(X,sizeof(double),n,inf);
@@ -733,7 +745,8 @@ QVector<double> DiskArrayModelPrivate::load_data_from_mda(QString path, long n,
             ret[i] = (double)X[i];
         }
         jfree(X);
-    } else if (data_type == MDAIO_TYPE_INT16) {
+    }
+    else if (data_type == MDAIO_TYPE_INT16) {
         short* X = (short*)jmalloc(sizeof(short) * n);
         int bytes_read = mda_read_int16(X, &HH, n, inf);
         // int bytes_read=fread(X,sizeof(short),n,inf);
@@ -742,7 +755,8 @@ QVector<double> DiskArrayModelPrivate::load_data_from_mda(QString path, long n,
             ret[i] = (double)X[i];
         }
         jfree(X);
-    } else if (data_type == MDAIO_TYPE_UINT16) {
+    }
+    else if (data_type == MDAIO_TYPE_UINT16) {
         quint16* X = (quint16*)jmalloc(sizeof(quint16) * n);
         int bytes_read = mda_read_uint16(X, &HH, n, inf);
         // int bytes_read=fread(X,sizeof(quint16),n,inf);
@@ -751,7 +765,8 @@ QVector<double> DiskArrayModelPrivate::load_data_from_mda(QString path, long n,
             ret[i] = (double)X[i];
         }
         jfree(X);
-    } else {
+    }
+    else {
         qWarning() << "Unsupported data type: " << data_type;
         ret.clear();
     }
@@ -805,8 +820,7 @@ void remove_spikespy_directory(QString path)
     }
 
     QStringList list = QDir(path).entryList(QStringList("*.mda"), QDir::Files, QDir::Name);
-    foreach(QString fname, list)
-    {
+    foreach (QString fname, list) {
         if (!QFile::remove(path + "/" + fname)) {
             qWarning() << "Problem removing file: " << fname;
         }
@@ -820,8 +834,7 @@ void DiskArrayModelPrivate::clean_up_file_hierarchies_in_path(
     const QString& path)
 {
     QStringList list = QDir(path).entryList(QStringList("spikespy.*"));
-    foreach(QString dirname, list)
-    {
+    foreach (QString dirname, list) {
         long ind1 = dirname.indexOf(".");
         long ind2 = dirname.lastIndexOf(".");
         if ((ind1 > 0) && (ind2 > ind1)) {

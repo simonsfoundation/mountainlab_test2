@@ -45,8 +45,7 @@ public:
     void setMargins(int left, int right, int top, int bottom);
     void setConnectZeros(bool val);
 
-private
-slots:
+private slots:
     void slot_replot_needed();
     void slot_setup_plot_area();
 
@@ -62,8 +61,7 @@ protected:
 signals:
     void requestMoveToTimepoint(int t0);
 
-public
-slots:
+public slots:
 };
 
 #endif // SSTIMESERIESPLOT_H

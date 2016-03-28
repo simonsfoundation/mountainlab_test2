@@ -101,7 +101,8 @@ void MVStatisticsWidget::setSelectedLabels(const QList<int>& labels)
         QTreeWidgetItem* item = d->m_tree->topLevelItem(j);
         if (the_set.contains(item->data(0, Qt::UserRole).toInt())) {
             item->setSelected(true);
-        } else {
+        }
+        else {
             item->setSelected(false);
         }
     }

@@ -64,8 +64,7 @@ protected:
     void setMaxTimepoint(int t);
     virtual SSAbstractPlot* plot() = 0;
 
-private
-slots:
+private slots:
     void on_x_range_changed();
     void on_replot_needed();
 
@@ -80,8 +79,7 @@ signals:
     void replotNeeded();
     void clicked();
 
-private
-slots:
+private slots:
 };
 
 #endif // SSAbstractView_H

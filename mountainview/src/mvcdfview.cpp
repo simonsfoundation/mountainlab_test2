@@ -138,7 +138,8 @@ void MVCdfView::paintEvent(QPaintEvent* evt)
                 if (k == d->m_current_label) {
                     pen.setColor(Qt::black);
                     pen.setWidth(4);
-                } else {
+                }
+                else {
                     QColor col = static_neuron_color(k);
                     pen.setColor(col);
                     pen.setWidth(0);
