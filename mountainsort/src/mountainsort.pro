@@ -58,7 +58,9 @@ HEADERS += \
     processors/detect3_processor.h \
     processors/detect3.h \
     processors/adjust_times_processor.h \
-    processors/adjust_times.h
+    processors/adjust_times.h \
+    processors/fit_stage_processor.h \
+    processors/fit_stage.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -105,7 +107,9 @@ SOURCES += mountainsortmain.cpp \
     processors/detect3_processor.cpp \
     processors/detect3.cpp \
     processors/adjust_times_processor.cpp \
-    processors/adjust_times.cpp
+    processors/adjust_times.cpp \
+    processors/fit_stage_processor.cpp \
+    processors/fit_stage.cpp
 
 DISTFILES += \
     ../version.txt

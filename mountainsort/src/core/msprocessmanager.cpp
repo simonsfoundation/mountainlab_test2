@@ -20,6 +20,7 @@
 #include "copy_processor.h"
 #include "mda2txt_processor.h"
 #include "mask_out_artifacts_processor.h"
+#include "fit_stage_processor.h"
 
 #include "qjson.h"
 #include "textfile.h"
@@ -63,6 +64,7 @@ void MSProcessManager::loadDefaultProcessors()
 	loadProcessor(new copy_Processor);
 	loadProcessor(new mda2txt_Processor);
     loadProcessor(new mask_out_artifacts_Processor);
+    loadProcessor(new fit_stage_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString &processor_name) const

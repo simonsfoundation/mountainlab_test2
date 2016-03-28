@@ -10,6 +10,7 @@
 #include <QString>
 #include <QList>
 #include <QVariant>
+#include <QStringList>
 
 struct CLParams {
 	QMap<QString,QVariant> named_parameters;

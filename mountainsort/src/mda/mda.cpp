@@ -26,7 +26,15 @@ Mda::Mda(long N1, long N2, long N3, long N4, long N5, long N6)
 	d=new MdaPrivate;
 	d->q=this;
 	d->do_construct();
-	this->allocate(N1,N2,N3,N4,N5,N6);
+    this->allocate(N1,N2,N3,N4,N5,N6);
+}
+
+Mda::Mda(const QString mda_filename)
+{
+    d=new MdaPrivate;
+    d->q=this;
+    d->do_construct();
+    this->read(mda_filename);
 }
 
 Mda::Mda(const Mda &other)

@@ -23,6 +23,8 @@ public:
 	friend class MdaPrivate;
 	///Construct an array of size N1xN2x...xN6
 	Mda(long N1=1,long N2=1,long N3=1,long N4=1,long N5=1,long N6=1);
+    ///Construct an array and read the .mda file
+    Mda(const QString mda_filename);
 	///Copy constructor
 	Mda(const Mda &other);
 	///Assignment operator
