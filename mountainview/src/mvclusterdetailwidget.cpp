@@ -723,7 +723,7 @@ QColor lighten(QColor col, float val)
 
 void ClusterView::paint(QPainter* painter, QRectF rect)
 {
-    int xmargin = 4;
+    int xmargin = 1;
     int ymargin = 8;
     QRectF rect2(rect.x() + xmargin, rect.y() + ymargin, rect.width() - xmargin * 2, rect.height() - ymargin * 2);
     painter->setClipRect(rect);

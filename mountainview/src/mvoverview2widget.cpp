@@ -1250,7 +1250,7 @@ void MVOverview2WidgetPrivate::open_firing_rates()
     X->setProperty("widget_type", "firing_rates");
     X->setProperty("ks", int_list_to_string_list(ks));
     //q->connect(X,SIGNAL(currentEventChanged()),q,SLOT(slot_firing_rate_view_current_event_changed()));
-    add_tab(X, QString("Firing Rates"));
+    add_tab(X, QString("Firing Events"));
     update_widget(X);
 }
 

@@ -19,6 +19,11 @@ int compute_max(const QList<int> &X) {
 	return ret;
 }
 
+double compute_norm(long N,double *X) {
+    double sumsqr=0;
+    for (long i=0; i<N; i++) sumsqr+=X[i]*X[i];
+    return sqrt(sumsqr);
+}
 
 Mda compute_mean_clip(Mda &clips) {
 	int M=clips.N1();

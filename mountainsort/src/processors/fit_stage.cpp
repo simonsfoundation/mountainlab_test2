@@ -9,8 +9,8 @@
 #include "msmisc.h"
 #include "diskreadmda.h"
 #include <math.h>
+#include "compute_templates.h"
 
-double compute_norm(long N,double *X);
 double compute_score(long N,double *X,double *template0);
 QList<int> find_events_to_use(const QList<long> &times,const QList<double> &scores,const fit_stage_opts &opts);
 void subtract_template(long N,double *X,double *template0);
@@ -23,6 +23,7 @@ bool fit_stage(const QString &timeseries_path, const QString &firings_path, cons
     int T=opts.clip_size;
     int Tmid=(int)((T+1)/2)-1;
     long L=firings.N2();
+
     QList<long> times;
     QList<int> labels;
     for (long i=0; i<L; i++) {
@@ -30,33 +31,13 @@ bool fit_stage(const QString &timeseries_path, const QString &firings_path, cons
         labels << (int)firings.value(2,i);
     }
     int K=compute_max(labels);
-    Mda templates(M,T,K+1);
-    QList<long> counts; for (int k=0; k<=K; k++) counts << k;
-    for (long i=0; i<L; i++) {
-        int k=labels[i];
-        long t0=times[i];
-        if (k>0) {
-            for (int t=0; t<T; t++) {
-                for (int m=0; m<M; m++) {
-                    templates.set(templates.get(m,t,k)+X.value(m,t0+t-Tmid),m,t,k);
-                }
-            }
-            counts[k]++;
-        }
-    }
-    for (int k=0; k<=K; k++) {
-        for (int t=0; t<T; t++) {
-            for (int m=0; m<M; m++) {
-                if (counts[k]) {
-                    templates.set(templates.get(m,t,k)/counts[k],m,t,k);
-                }
-            }
-        }
-    }
 
-    QList<double> template_norms;
-    for (int k=0; k<=K; k++) {
-        template_norms << compute_norm(M*T,templates.dataPtr(0,0,k));
+    DiskReadMda X0(timeseries_path);
+    Mda templates=compute_templates(X0,firings,T); //MxNxK
+
+    QList<double> template_norms; template_norms << 0;
+    for (int k=1; k<=K; k++) {
+        template_norms << compute_norm(M*T,templates.dataPtr(0,0,k-1));
     }
 
     bool something_changed=true;
@@ -75,7 +56,7 @@ bool fit_stage(const QString &timeseries_path, const QString &firings_path, cons
                 long t0=times[i];
                 int k0=labels[i];
                 if (k0>0) {
-                    double score0=compute_score(M*T,X.dataPtr(0,t0-Tmid),templates.dataPtr(0,0,k0));
+                    double score0=compute_score(M*T,X.dataPtr(0,t0-Tmid),templates.dataPtr(0,0,k0-1));
                     if (score0<template_norms[k0]*template_norms[k0]*0.5) score0=0; //the norm of the improvement needs to be at least 0.5 times the norm of the template
                     if (score0>0) {
                         scores_to_try << score0;
@@ -96,7 +77,7 @@ bool fit_stage(const QString &timeseries_path, const QString &firings_path, cons
             if (to_use[i]==1) {
                 something_changed=true;
                 num_added++;
-                subtract_template(M*T,X.dataPtr(0,times_to_try[i]-Tmid),templates.dataPtr(0,0,labels_to_try[i]));
+                subtract_template(M*T,X.dataPtr(0,times_to_try[i]-Tmid),templates.dataPtr(0,0,labels_to_try[i]-1));
                 all_to_use[inds_to_try[i]]=1;
             }
         }
@@ -126,11 +107,7 @@ bool fit_stage(const QString &timeseries_path, const QString &firings_path, cons
     return true;
 }
 
-double compute_norm(long N,double *X) {
-    double sumsqr=0;
-    for (long i=0; i<N; i++) sumsqr+=X[i]*X[i];
-    return sqrt(sumsqr);
-}
+
 double compute_score(long N,double *X,double *template0) {
     Mda resid(1,N);
     double *resid_ptr=resid.dataPtr();

@@ -17,5 +17,6 @@ Mda compute_mean_clip(Mda &clips);
 double compute_mean(const QList<double> &X);
 double compute_stdev(const QList<double> &X);
 Mda grab_clips_subset(Mda &clips,const QList<int> &inds);
+double compute_norm(long N,double *X);
 
 #endif // MSMISC_H

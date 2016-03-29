@@ -73,11 +73,13 @@ bool remove_duplicate_clusters(const QString &firings_path,const QString &firing
 		for (int k2=k1+1; k2<=K; k2++) {
 			if (counts[k1]>=counts[k2]) {
 				if (cross_counts[k1][k2]>=overlap_threshold*counts[k2]) {
+                    printf("cross_counts[%d][%d]=%d >= %g=%g*counts[%d]\n",k1,k2,cross_counts[k1][k2],overlap_threshold*counts[k2],overlap_threshold,k2);
 					to_use[k2]=false;
 				}
 			}
 			else {
 				if (cross_counts[k1][k2]>=overlap_threshold*counts[k1]) {
+                    printf("cross_counts[%d][%d]=%d >= %g=%g*counts[%d]\n",k1,k2,cross_counts[k1][k2],overlap_threshold*counts[k1],overlap_threshold,k1);
 					to_use[k1]=false;
 				}
 			}
