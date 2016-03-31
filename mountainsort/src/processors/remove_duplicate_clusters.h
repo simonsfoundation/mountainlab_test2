@@ -8,6 +8,10 @@
 
 #include <QString>
 
-bool remove_duplicate_clusters(const QString &firings_path,const QString &firings_out_path,int max_dt=6,float overlap_threshold=0.25);
+struct remove_duplicate_clusters_Opts {
+    int clip_size;
+};
+
+bool remove_duplicate_clusters(const QString &timeseries_path,const QString &firings_path,const QString &firings_out_path,const remove_duplicate_clusters_Opts &opts);
 
 #endif // REMOVE_DUPLICATE_CLUSTERS_H

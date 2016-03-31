@@ -10,7 +10,7 @@
 #include <QMap>
 #include <QString>
 #include "textfile.h"
-#include <QApplication>
+#include <QCoreApplication>
 
 class MdaClientPrivate {
 public:

@@ -29,8 +29,7 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
     Mda AM;
     if (!adjacency_matrix_path.isEmpty()) {
         AM.read(adjacency_matrix_path);
-    }
-    else {
+    } else {
         AM.allocate(M, M);
         for (int i = 0; i < M; i++) {
             for (int j = 0; j < M; j++) {
@@ -113,26 +112,28 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
                 channels[k - 1] = (int)firings.value(0, i);
             }
         }
-        int T_for_peaks=3;
-        int Tmid_for_peaks=(int)((T_for_peaks+1)/2)-1;
+        int T_for_peaks = 3;
+        int Tmid_for_peaks = (int)((T_for_peaks + 1) / 2) - 1;
         Mda templates = compute_templates(X, firings, T_for_peaks); //MxTxK
         QList<double> template_peaks;
         for (int k = 0; k < K; k++) {
-            if (channels[k]>=1) {
-                template_peaks << templates.value(channels[k]-1,Tmid_for_peaks,k);
-            }
-            else {
+            if (channels[k] >= 1) {
+                template_peaks << templates.value(channels[k] - 1, Tmid_for_peaks, k);
+            } else {
                 template_peaks << 0;
             }
         }
         QList<long> sort_inds = get_sort_indices(channels, template_peaks);
-        QList<long> label_map; for (int k=0; k<=K; k++) label_map << 0;
-        for (int j=0; j<sort_inds.count(); j++) label_map[sort_inds[j]+1]=j+1;
-        for (long i=0; i<L; i++) {
+        QList<long> label_map;
+        for (int k = 0; k <= K; k++)
+            label_map << 0;
+        for (int j = 0; j < sort_inds.count(); j++)
+            label_map[sort_inds[j] + 1] = j + 1;
+        for (long i = 0; i < L; i++) {
             int k = (int)firings.value(2, i);
-            if (k>=1) {
-                k=label_map[k];
-                firings.setValue(k,2,i);
+            if (k >= 1) {
+                k = label_map[k];
+                firings.setValue(k, 2, i);
             }
         }
     }
@@ -159,8 +160,7 @@ struct template_comparer {
                 return (a.index < b.index);
             else
                 return false;
-        }
-        else
+        } else
             return false;
     }
 };
@@ -231,8 +231,7 @@ QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, con
         if (okay) {
             label_mapping[k] = kk;
             kk++;
-        }
-        else
+        } else
             label_mapping[k] = 0;
     }
     QList<int> ret;
@@ -445,8 +444,7 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
             kk_offset += compute_max(labels_k);
         }
         return labels;
-    }
-    else {
+    } else {
         //otherwise, we have only one cluster
         //so we need to increase the threshold to see if we can get things to split at higher amplitude
         double abs_peak_threshold = 0;
@@ -469,8 +467,7 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
             for (int i = 0; i < L; i++)
                 labels << 1;
             return labels;
-        }
-        else {
+        } else {
             //we now split things into two categories based on abs_peak_threshold
             QList<int> inds_below = find_peaks_below_threshold_v2(abs_peaks, abs_peak_threshold);
             QList<int> inds_above = find_peaks_above_threshold_v2(abs_peaks, abs_peak_threshold);
@@ -486,8 +483,7 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
                 for (int i = 0; i < L; i++)
                     labels << 1;
                 return labels;
-            }
-            else {
+            } else {
                 //there is more than one cluster. Let's divide up the based on the nearest
                 //let's consider only the next shell above
                 QList<double> abs_peaks_above;

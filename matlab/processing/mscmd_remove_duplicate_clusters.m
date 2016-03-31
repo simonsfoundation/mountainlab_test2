@@ -1,12 +1,12 @@
-function mscmd_remove_duplicate_clusters(firings_in_path,firings_out_path,opts)
+function mscmd_remove_duplicate_clusters(timeseries_in_path,firings_in_path,firings_out_path,opts)
 % TODO: Docs
 if (nargin<3) opts=struct; end;
 
-if (~isfield(opts,'max_dt')) opts.max_dt=6; end;
-if (~isfield(opts,'overlap_threshold')) opts.overlap_threshold=0.25; end;
+if (~isfield(opts,'clip_size')) opts.clip_size=100; end;
 
-cmd=sprintf('%s remove_duplicate_clusters --firings=%s --firings_out=%s --max_dt=%d --overlap_threshold=%g',mscmd_exe,firings_in_path,firings_out_path,...
-    opts.max_dt,opts.overlap_threshold);
+cmd=sprintf('%s remove_duplicate_clusters --timeseries=%s --firings=%s --firings_out=%s --clip_size=%d',mscmd_exe,...
+    timeseries_in_path,firings_in_path,firings_out_path,...
+    opts.clip_size);
 
 fprintf('\n*** REMOVE DUPLICATE CLUSTERS ***\n');
 fprintf('%s\n',cmd);

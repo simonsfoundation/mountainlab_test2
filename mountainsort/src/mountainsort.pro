@@ -61,7 +61,8 @@ HEADERS += \
     processors/adjust_times.h \
     processors/fit_stage_processor.h \
     processors/fit_stage.h \
-    utils/compute_templates.h
+    utils/compute_templates.h \
+    mda/mdaclient.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -111,7 +112,8 @@ SOURCES += mountainsortmain.cpp \
     processors/adjust_times.cpp \
     processors/fit_stage_processor.cpp \
     processors/fit_stage.cpp \
-    utils/compute_templates.cpp
+    utils/compute_templates.cpp \
+    mda/mdaclient.cpp
 
 DISTFILES += \
     ../version.txt

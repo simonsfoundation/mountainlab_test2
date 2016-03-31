@@ -10,6 +10,7 @@
 #include "diskreadmda.h"
 
 Mda compute_templates(DiskReadMda &X,Mda &firings,int clip_size);
+Mda compute_templates(DiskReadMda &X,const QList<double> &times,const QList<int> &labels,int clip_size);
 
 #endif // COMPUTE_TEMPLATES_H
 

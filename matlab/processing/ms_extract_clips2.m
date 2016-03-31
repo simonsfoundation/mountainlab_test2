@@ -105,7 +105,8 @@ Tmid=floor((T+1)/2);
 tt1=-Tmid+1; %changed by jfm on 2/26/2016 to conform with docs
 tt2=tt1+T-1;
 inds=find((times+tt1>=1)&(times+tt2<=N));
-for j=inds
+for ii=1:length(inds)
+    j=inds(ii); %fixed by jfm 3/30/16
 	X(:,:,j)=Y(:,times(j)+tt1:times(j)+tt2);
 end;
 

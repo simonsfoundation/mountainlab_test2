@@ -13,9 +13,9 @@ remove_duplicate_clusters_Processor::remove_duplicate_clusters_Processor() {
 
     this->setName("remove_duplicate_clusters");
 	this->setVersion("0.1");
-    this->setInputFileParameters("firings");
+    this->setInputFileParameters("timeseries","firings");
 	this->setOutputFileParameters("firings_out");
-	this->setRequiredParameters("max_dt","overlap_threshold");
+    this->setRequiredParameters("clip_size");
 }
 
 remove_duplicate_clusters_Processor::~remove_duplicate_clusters_Processor() {
@@ -30,9 +30,12 @@ bool remove_duplicate_clusters_Processor::check(const QMap<QString, QVariant> &p
 
 bool remove_duplicate_clusters_Processor::run(const QMap<QString, QVariant> &params)
 {
+    QString timeseries_path=params["timeseries"].toString();
     QString firings_path=params["firings"].toString();
     QString firings_out_path=params["firings_out"].toString();
-	int max_dt=params["max_dt"].toInt();
-	double overlap_threshold=params["overlap_threshold"].toDouble();
-    return remove_duplicate_clusters(firings_path,firings_out_path,max_dt,overlap_threshold);
+
+    remove_duplicate_clusters_Opts opts;
+    opts.clip_size=params["clip_size"].toInt();
+
+    return remove_duplicate_clusters(timeseries_path,firings_path,firings_out_path,opts);
 }
