@@ -42,7 +42,8 @@ HEADERS += \
     tabber.h \
     imagesavedialog.h \
     run_mountainview_script.h \
-    closemehandler.h
+    closemehandler.h \
+    ../../mountainsort/src/mda/mdaclient.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -74,7 +75,8 @@ SOURCES += mountainviewmain.cpp \
     tabber.cpp \
     imagesavedialog.cpp \
     run_mountainview_script.cpp \
-    closemehandler.cpp
+    closemehandler.cpp \
+    ../../mountainsort/src/mda/mdaclient.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils

@@ -22,6 +22,7 @@
 #include "mvclusterwidget.h"
 #include "run_mountainview_script.h"
 #include "closemehandler.h"
+#include "mdaclient.h"
 
 /*
  * TO DO:
@@ -70,6 +71,11 @@ int main(int argc, char* argv[])
         QString script = read_text_file(CLP.unnamed_parameters.value(0));
         return run_mountainview_script(script, CLP.named_parameters);
     }
+
+	if (CLP.unnamed_parameters.value(0)=="unit_test") {
+		mdaclient_unit_test();
+		return 0;
+	}
 
     QString mode = CLP.named_parameters.value("mode", "overview2").toString();
     if ((mode == "overview2") || (mode == "export_image") || (mode == "export_images")) {
