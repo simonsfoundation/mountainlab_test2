@@ -156,12 +156,12 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long size1, long size2) co
 		long jB=qMin(i2+size2-1,N2()-1);
 		long size2_to_read=jB-jA+1;
 		if (size2_to_read>0) {
-			fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*(i1+N1()*jA),SEEK_SET);
+            fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*(i1+N1()*jA),SEEK_SET);
 			long bytes_read=mda_read_float64(&X.dataPtr()[(jA-i2)*size1],&d->m_header,size1*size2_to_read,d->m_file);
 			if (bytes_read!=size1*size2_to_read) {
 				printf("Warning problem reading 2d chunk in diskreadmda: %ld<>%ld\n",bytes_read,size1*size2);
 				return false;
-			}
+            }
 		}
 		return true;
 	}

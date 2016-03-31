@@ -15,6 +15,9 @@
 #include <QFileDialog>
 #include <QMenu>
 #include <QMessageBox>
+#include <QTimer>
+#include "compute_templates.h"
+#include "computationthread.h"
 
 struct ClusterData {
     int k;
@@ -28,6 +31,19 @@ struct ClusterData {
 struct ChannelSpacingInfo {
     QList<double> channel_locations;
     double vert_scaling_factor;
+};
+
+class MVClusterDetailWidgetCalculator : public ComputationThread {
+public:
+    //input
+    DiskReadMda timeseries;
+    DiskReadMda firings;
+    int clip_size;
+
+    virtual void compute();
+
+    //output
+    QList<ClusterData> cluster_data;
 };
 
 class ClusterView {
@@ -109,7 +125,6 @@ public:
     double m_samplerate;
     QList<int> m_group_numbers;
 
-    bool m_calculations_needed;
     int m_clip_size;
     QList<ClusterData> m_cluster_data;
 
@@ -127,11 +142,10 @@ public:
     double m_anchor_x;
     double m_anchor_scroll_x;
     int m_anchor_view_index;
+    MVClusterDetailWidgetCalculator m_calculator;
 
     QList<ClusterView*> m_views;
 
-    void do_calculations();
-    void set_progress(QString title, QString text, float frac);
     void compute_total_time();
     void set_current_k(int k);
     void set_hovered_k(int k);
@@ -145,6 +159,7 @@ public:
     int get_current_view_index();
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
+    void start_calculation();
 };
 
 MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
@@ -152,7 +167,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
 {
     d = new MVClusterDetailWidgetPrivate;
     d->q = this;
-    d->m_calculations_needed = true;
     d->m_clip_size = 100;
     d->m_progress_dialog = 0;
     d->m_vscale_factor = 2;
@@ -179,10 +193,13 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
     this->setMouseTracking(true);
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
+
+    connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
 }
 
 MVClusterDetailWidget::~MVClusterDetailWidget()
 {
+    d->m_calculator.stopComputation();
     qDeleteAll(d->m_views);
     delete d;
 }
@@ -190,17 +207,14 @@ MVClusterDetailWidget::~MVClusterDetailWidget()
 void MVClusterDetailWidget::setTimeseries(DiskReadMda& X)
 {
     d->m_timeseries = X;
-    d->m_calculations_needed = true;
     d->compute_total_time();
-    this->update();
+    d->start_calculation();
 }
 
 void MVClusterDetailWidget::setFirings(const DiskReadMda& X)
 {
     d->m_firings = X;
-    d->m_space_ratio = 0; //this is a hack to scale things back to fit into the window
-    d->m_calculations_needed = true;
-    this->update();
+    d->start_calculation();
 }
 
 void MVClusterDetailWidget::setClipSize(int T)
@@ -208,8 +222,7 @@ void MVClusterDetailWidget::setClipSize(int T)
     if (d->m_clip_size == T)
         return;
     d->m_clip_size = T;
-    d->m_calculations_needed = true;
-    this->update();
+    d->start_calculation();
 }
 
 void MVClusterDetailWidget::setGroupNumbers(const QList<int>& group_numbers)
@@ -253,11 +266,13 @@ void MVClusterDetailWidget::setCurrentK(int k)
 
 bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach (int val, S1) {
+    foreach(int val, S1)
+    {
         if (!S2.contains(val))
             return false;
     }
-    foreach (int val, S2) {
+    foreach(int val, S2)
+    {
         if (!S1.contains(val))
             return false;
     }
@@ -339,25 +354,20 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_vscale_factor *= factor;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_vscale_factor /= factor;
         update();
-    }
-    else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
+    } else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
         d->zoom(1.1);
-    }
-    else if (evt->key() == Qt::Key_Minus) {
+    } else if (evt->key() == Qt::Key_Minus) {
         d->zoom(1 / 1.1);
-    }
-    else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
+    } else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
         QList<int> ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             ks << d->m_views[i]->k();
         }
         this->setSelectedKs(ks);
-    }
-    else if (evt->key() == Qt::Key_Left) {
+    } else if (evt->key() == Qt::Key_Left) {
         int view_index = d->get_current_view_index();
         if (view_index > 0) {
             int k = d->m_views[view_index - 1]->k();
@@ -369,8 +379,7 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    }
-    else if (evt->key() == Qt::Key_Right) {
+    } else if (evt->key() == Qt::Key_Right) {
         int view_index = d->get_current_view_index();
         if ((view_index >= 0) && (view_index + 1 < d->m_views.count())) {
             int k = d->m_views[view_index + 1]->k();
@@ -382,8 +391,7 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    }
-    else
+    } else
         evt->ignore();
 }
 
@@ -418,16 +426,14 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 d->m_selected_ks.remove(k);
                 emit signalSelectedKsChanged();
                 update();
-            }
-            else {
+            } else {
                 d->m_anchor_view_index = view_index;
                 d->m_selected_ks.insert(k);
                 emit signalSelectedKsChanged();
                 update();
             }
         }
-    }
-    else if (evt->modifiers() & Qt::ShiftModifier) {
+    } else if (evt->modifiers() & Qt::ShiftModifier) {
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             if (d->m_anchor_view_index >= 0) {
@@ -443,24 +449,21 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 update();
             }
         }
-    }
-    else {
+    } else {
         d->m_anchor_view_index = -1;
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             d->m_anchor_view_index = view_index;
             int k = d->m_views[view_index]->k();
             if (d->m_current_k == k) {
-            }
-            else {
+            } else {
                 d->set_current_k(k);
                 d->m_selected_ks.clear();
                 d->m_selected_ks.insert(k);
                 emit signalSelectedKsChanged();
                 update();
             }
-        }
-        else {
+        } else {
             d->set_current_k(-1);
             d->m_selected_ks.clear();
             emit signalSelectedKsChanged();
@@ -481,8 +484,7 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
     int view_index = d->find_view_index_at(pt);
     if (view_index >= 0) {
         d->set_hovered_k(d->m_views[view_index]->k());
-    }
-    else {
+    } else {
         d->set_hovered_k(-1);
     }
 }
@@ -514,84 +516,11 @@ void MVClusterDetailWidget::slot_context_menu(const QPoint& pos)
     }
 }
 
-void MVClusterDetailWidgetPrivate::do_calculations()
+void MVClusterDetailWidget::slot_calculator_finished()
 {
-
-    int M = m_timeseries.N1();
-    int N = m_timeseries.N2();
-    int L = m_firings.N2();
-    int T = m_clip_size;
-    QList<double> times;
-    QList<int> channels, labels;
-    QList<double> peaks;
-
-    Q_UNUSED(M)
-    Q_UNUSED(N)
-
-    for (int i = 0; i < L; i++) {
-        times << m_firings.value(1, i) - 1; //convert to 0-based indexing
-        channels << (int)m_firings.value(0, i) - 1; //convert to 0-based indexing
-        labels << (int)m_firings.value(2, i);
-        peaks << m_firings.value(3, i);
-    }
-
-    m_cluster_data.clear();
-    //if we clear the cluster data, we need to make sure we delete the views! because there are pointers involved!
-    //therefore this do_calculations() should only be called shortly before the views are redefined
-    qDeleteAll(m_views);
-    m_views.clear();
-
-    int K = 0;
-    for (int i = 0; i < L; i++)
-        if (labels[i] > K)
-            K = labels[i];
-
-    for (int k = 1; k <= K; k++) {
-        set_progress("Computing Cluster Data", "Computing Cluster Data", k * 1.0 / K);
-        ClusterData CD;
-        CD.k = k;
-        CD.channel = 0;
-        for (int i = 0; i < L; i++) {
-            if (labels[i] == k) {
-                CD.inds << i;
-                CD.times << times[i];
-                CD.channel = channels[i];
-                CD.peaks << peaks[i];
-            }
-        }
-        Mda clips_k = extract_clips(m_timeseries, CD.times, T);
-        CD.template0 = compute_mean_clip(clips_k);
-        m_cluster_data << CD;
-    }
-}
-
-void MVClusterDetailWidgetPrivate::set_progress(QString title, QString text, float frac)
-{
-    if (!m_progress_dialog) {
-        m_progress_dialog = new QProgressDialog;
-        m_progress_dialog->setCancelButton(0);
-    }
-    static QTime* timer = 0;
-    if (!timer) {
-        timer = new QTime;
-        timer->start();
-        m_progress_dialog->show();
-        m_progress_dialog->repaint();
-    }
-    if (timer->elapsed() > 500) {
-        timer->restart();
-        if (!m_progress_dialog->isVisible()) {
-            m_progress_dialog->show();
-        }
-        m_progress_dialog->setLabelText(text);
-        m_progress_dialog->setWindowTitle(title);
-        m_progress_dialog->setValue((int)(frac * 100));
-        m_progress_dialog->repaint();
-    }
-    if (frac >= 1) {
-        delete m_progress_dialog;
-        m_progress_dialog = 0;
-    }
+    d->m_calculator.stopComputation(); //because I'm paranoid!
+    d->m_cluster_data = d->m_calculator.cluster_data;
+    this->update();
 }
 
 void MVClusterDetailWidgetPrivate::compute_total_time()
@@ -654,8 +583,7 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
         m_scroll_x = x0 - 100;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    }
-    else if (x0 > m_scroll_x + q->width()) {
+    } else if (x0 > m_scroll_x + q->width()) {
         m_scroll_x = x0 - q->width() + 100;
     }
 }
@@ -669,8 +597,7 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
         m_scroll_x = view->x_position_before_scaling * m_space_ratio - current_screen_x;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    }
-    else {
+    } else {
         m_space_ratio *= factor;
     }
     q->update();
@@ -853,12 +780,15 @@ double ClusterView::spaceNeeded()
 
 void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
 {
-    if (m_calculations_needed) {
-        do_calculations();
-        m_calculations_needed = false;
-    }
-
     painter.fillRect(0, 0, W, H, m_colors["background"]);
+
+    if (m_calculator.isComputing()) {
+        QFont font = painter.font();
+        font.setPointSize(30);
+        painter.setFont(font);
+        painter.drawText(QRectF(0, 0, W, H), Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
+        return;
+    }
 
     qDeleteAll(m_views);
     m_views.clear();
@@ -908,6 +838,16 @@ void MVClusterDetailWidgetPrivate::export_image()
     user_save_image(img);
 }
 
+void MVClusterDetailWidgetPrivate::start_calculation()
+{
+    m_calculator.stopComputation();
+    m_calculator.timeseries = m_timeseries;
+    m_calculator.firings = m_firings;
+    m_calculator.clip_size = m_clip_size;
+    m_calculator.startComputation();
+    q->update();
+}
+
 QPointF ClusterView::template_coord2pix(int m, double t, double val)
 {
     double pcty = m_csi.channel_locations.value(m) - val * m_csi.vert_scaling_factor; //negative because (0,0) is top-left, not bottom-right
@@ -931,3 +871,59 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
         return QColor(0, 50, 0);
     return QColor(50, 0, 0);
 }
+
+void MVClusterDetailWidgetCalculator::compute()
+{
+    QTime timer;
+    timer.start();
+
+    int M = timeseries.N1();
+    int N = timeseries.N2();
+    int L = firings.N2();
+    int T = clip_size;
+    QList<double> times;
+    QList<int> channels, labels;
+    QList<double> peaks;
+
+    Q_UNUSED(M)
+    Q_UNUSED(N)
+
+    for (int i = 0; i < L; i++) {
+        times << firings.value(1, i) - 1; //convert to 0-based indexing
+        channels << (int)firings.value(0, i) - 1; //convert to 0-based indexing
+        labels << (int)firings.value(2, i);
+        peaks << firings.value(3, i);
+    }
+
+    if (this->stopRequested())
+        return; ////////////////////////////
+    cluster_data.clear();
+
+    int K = 0;
+    for (int i = 0; i < L; i++)
+        if (labels[i] > K)
+            K = labels[i];
+
+    Mda templates0 = compute_templates(timeseries, times, labels, T);
+
+    for (int k = 1; k <= K; k++) {
+        if (this->stopRequested())
+            return; ////////////////////////////
+        ClusterData CD;
+        CD.k = k;
+        CD.channel = 0;
+        for (int i = 0; i < L; i++) {
+            if (labels[i] == k) {
+                CD.inds << i;
+                CD.times << times[i];
+                CD.channel = channels[i];
+                CD.peaks << peaks[i];
+            }
+        }
+        if (this->stopRequested())
+            return; ////////////////////////////
+        templates0.getChunk(CD.template0, 0, 0, k - 1, M, T, 1);
+        cluster_data << CD;
+    }
+}
+

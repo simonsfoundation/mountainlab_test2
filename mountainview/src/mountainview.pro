@@ -43,7 +43,8 @@ HEADERS += \
     imagesavedialog.h \
     run_mountainview_script.h \
     closemehandler.h \
-    ../../mountainsort/src/mda/mdaclient.h
+    ../../mountainsort/src/mda/mdaclient.h \
+    computationthread.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -76,7 +77,8 @@ SOURCES += mountainviewmain.cpp \
     imagesavedialog.cpp \
     run_mountainview_script.cpp \
     closemehandler.cpp \
-    ../../mountainsort/src/mda/mdaclient.cpp
+    ../../mountainsort/src/mda/mdaclient.cpp \
+    computationthread.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils
@@ -89,6 +91,8 @@ HEADERS += get_command_line_params.h
 SOURCES += get_command_line_params.cpp
 HEADERS += affinetransformation.h
 SOURCES += affinetransformation.cpp
+HEADERS += compute_templates.h
+SOURCES += compute_templates.cpp
 
 INCLUDEPATH += ../../mountainsort/src/mda
 DEPENDPATH += ../../mountainsort/src/mda
@@ -110,3 +114,8 @@ RESOURCES += mountainview.qrc
 INCLUDEPATH += /usr/include/lapacke #this was needed on CentOS
 DEFINES += USE_LAPACK
 LIBS += -llapack -llapacke
+
+#OPENMP
+QMAKE_LFLAGS += -fopenmp
+QMAKE_CXXFLAGS += -fopenmp
+#-std=c++11   # AHB removed since not in GNU gcc 4.6.3

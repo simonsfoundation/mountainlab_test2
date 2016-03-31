@@ -248,7 +248,7 @@ void MVOverview2Widget::setDefaultInitialization()
     //d->open_templates();
     d->open_cluster_details();
     d->m_tabber->switchCurrentContainer();
-    d->open_auto_correlograms();
+    //d->open_auto_correlograms();
 }
 
 void MVOverview2Widget::setEpochs(const QList<Epoch>& epochs)
@@ -346,7 +346,7 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
     }
     else if ((str == "update_event_filter") || (str == "use_event_filter")) {
         d->do_event_filter();
-        d->create_cross_correlograms_data();
+        d->m_cross_correlograms_data_update_needed=true;
         d->update_all_widgets();
     }
     else if (str == "open_auto_correlograms") {
@@ -467,6 +467,8 @@ void MVOverview2Widget::slot_cluster_view_current_event_changed()
 typedef QList<long> IntList;
 void MVOverview2WidgetPrivate::create_cross_correlograms_data()
 {
+    m_cross_correlograms_data_update_needed = false;
+
     set_progress("Computing", "Creating cross correlograms data", 0);
     QList<long> times, labels;
     long L = m_firings.N2();
@@ -1099,10 +1101,6 @@ void MVOverview2WidgetPrivate::add_tab(QWidget* W, QString label)
 
 MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_auto_correlograms()
 {
-    if (m_cross_correlograms_data_update_needed) {
-        create_cross_correlograms_data();
-        m_cross_correlograms_data_update_needed = false;
-    }
     MVCrossCorrelogramsWidget* X = new MVCrossCorrelogramsWidget;
     X->setProperty("widget_type", "auto_correlograms");
     add_tab(X, "Auto-Correlograms");
@@ -1115,10 +1113,6 @@ MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_auto_correlograms()
 
 MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_cross_correlograms(int k)
 {
-    if (m_cross_correlograms_data_update_needed) {
-        create_cross_correlograms_data();
-        m_cross_correlograms_data_update_needed = false;
-    }
     MVCrossCorrelogramsWidget* X = new MVCrossCorrelogramsWidget;
     X->setProperty("widget_type", "cross_correlograms");
     X->setProperty("kk", k);
@@ -1146,10 +1140,6 @@ QList<int> string_list_to_int_list(const QList<QString>& list)
 
 MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_matrix_of_cross_correlograms()
 {
-    if (m_cross_correlograms_data_update_needed) {
-        create_cross_correlograms_data();
-        m_cross_correlograms_data_update_needed = false;
-    }
     MVCrossCorrelogramsWidget* X = new MVCrossCorrelogramsWidget;
     X->setProperty("widget_type", "matrix_of_cross_correlograms");
     QList<int> ks = m_selected_ks.toList();
@@ -1284,10 +1274,6 @@ void MVOverview2WidgetPrivate::find_nearby_events()
 
 void MVOverview2WidgetPrivate::update_cross_correlograms()
 {
-    if (m_cross_correlograms_data_update_needed) {
-        create_cross_correlograms_data();
-        m_cross_correlograms_data_update_needed = false;
-    }
     QList<QWidget*> widgets = get_all_widgets();
     foreach (QWidget* W, widgets) {
         QString widget_type = W->property("widget_type").toString();
@@ -1379,6 +1365,9 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
 {
     QString widget_type = W->property("widget_type").toString();
     if (widget_type == "auto_correlograms") {
+        if (m_cross_correlograms_data_update_needed) {
+            create_cross_correlograms_data();
+        }
         MVCrossCorrelogramsWidget* WW = (MVCrossCorrelogramsWidget*)W;
         WW->setColors(m_colors);
         WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
@@ -1394,6 +1383,9 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->updateWidget();
     }
     else if (widget_type == "cross_correlograms") {
+        if (m_cross_correlograms_data_update_needed) {
+            create_cross_correlograms_data();
+        }
         MVCrossCorrelogramsWidget* WW = (MVCrossCorrelogramsWidget*)W;
         int k = W->property("kk").toInt();
         WW->setColors(m_colors);
@@ -1411,6 +1403,9 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->updateWidget();
     }
     else if (widget_type == "matrix_of_cross_correlograms") {
+        if (m_cross_correlograms_data_update_needed) {
+            create_cross_correlograms_data();
+        }
         MVCrossCorrelogramsWidget* WW = (MVCrossCorrelogramsWidget*)W;
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         qDebug() << ks;
@@ -1902,6 +1897,7 @@ void MVOverview2WidgetPrivate::set_progress(QString title, QString text, float f
         timer->start();
         m_progress_dialog->show();
         m_progress_dialog->repaint();
+        qApp->processEvents();
     }
     if (timer->elapsed() > 500) {
         timer->restart();
@@ -1912,6 +1908,7 @@ void MVOverview2WidgetPrivate::set_progress(QString title, QString text, float f
         m_progress_dialog->setWindowTitle(title);
         m_progress_dialog->setValue((int)(frac * 100));
         m_progress_dialog->repaint();
+        qApp->processEvents();
     }
     if (frac >= 1) {
         delete m_progress_dialog;

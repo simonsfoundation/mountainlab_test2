@@ -37,10 +37,10 @@ Mda compute_templates(DiskReadMda &X, const QList<double> &times, const QList<in
         if (k>=1) {
             Mda X0;
             X.readChunk(X0,0,t0-Tmid,M,T);
-            for (int t=0; t<T; t++) {
-                for (int m=0; m<M; m++) {
-                    templates.set(templates.get(m,t,k-1)+X0.get(m,t),m,t,k-1);
-                }
+            double *Xptr=X0.dataPtr();
+            double *Tptr=templates.dataPtr(0,0,k-1);
+            for (int i=0; i<M*T; i++) {
+                Tptr[i]+=Xptr[i];
             }
             counts[k-1]++;
         }

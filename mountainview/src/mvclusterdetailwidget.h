@@ -67,6 +67,7 @@ signals:
     void signalZoomedIn();
 private slots:
     void slot_context_menu(const QPoint& pos);
+    void slot_calculator_finished();
 
 private:
     MVClusterDetailWidgetPrivate* d;
