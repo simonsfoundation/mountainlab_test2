@@ -379,6 +379,8 @@ void LoadChunkThread::put_in_local_cache_or_remove(const QString &fname_in, cons
 
 void mdaclient_unit_test(const QString &url)
 {
+    // run this test by calling
+    // > mountainview unit_test mdaclient
 	MdaClient X(url);
 
 	setMdaClientLocalCachePath("/tmp/mdaclient_local_cache");
