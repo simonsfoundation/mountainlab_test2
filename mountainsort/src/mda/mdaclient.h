@@ -16,7 +16,7 @@ enum MdaClientStatus {
 	NotStarted,Loading,Finished,Error
 };
 
-void mdaclient_unit_test();
+void mdaclient_unit_test(const QString &url);
 
 class ChunkParams {
 public:

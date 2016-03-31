@@ -73,7 +73,14 @@ int main(int argc, char* argv[])
     }
 
 	if (CLP.unnamed_parameters.value(0)=="unit_test") {
-		mdaclient_unit_test();
+        QString arg2=CLP.unnamed_parameters.value(1);
+        if (arg2=="mdaclient") {
+            QString arg3=CLP.unnamed_parameters.value(2,"http://magland.org:8000/firings.mda");
+            mdaclient_unit_test(arg3);
+        }
+        else {
+            qWarning() << "No such unit test: "+arg2;
+        }
 		return 0;
 	}
 

@@ -377,9 +377,8 @@ void LoadChunkThread::put_in_local_cache_or_remove(const QString &fname_in, cons
 }
 
 
-void mdaclient_unit_test()
+void mdaclient_unit_test(const QString &url)
 {
-    QString url="http://magland.org:8000/firings.mda";
 	MdaClient X(url);
 
 	setMdaClientLocalCachePath("/tmp/mdaclient_local_cache");
