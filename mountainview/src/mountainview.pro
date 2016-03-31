@@ -1,4 +1,4 @@
-QT += core gui script
+QT += core gui script network
 
 CONFIG -= app_bundle #Please apple, don't make a bundle today
 
@@ -44,7 +44,9 @@ HEADERS += \
     run_mountainview_script.h \
     closemehandler.h \
     ../../mountainsort/src/mda/mdaclient.h \
-    computationthread.h
+    computationthread.h \
+    set_progress.h \
+    mvcrosscorrelogramswidget2.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -78,7 +80,9 @@ SOURCES += mountainviewmain.cpp \
     run_mountainview_script.cpp \
     closemehandler.cpp \
     ../../mountainsort/src/mda/mdaclient.cpp \
-    computationthread.cpp
+    computationthread.cpp \
+    set_progress.cpp \
+    mvcrosscorrelogramswidget2.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils

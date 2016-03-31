@@ -31,6 +31,7 @@ public:
     void setTextLabels(const QStringList& labels);
     ///To make a uniform look. TODO: handle this properly
     void setColors(const QMap<QString, QColor>& colors);
+    void setSampleRate(double rate);
     ///Recreate all the subwidgets
     void updateWidget();
 
@@ -65,6 +66,7 @@ private slots:
     void slot_histogram_view_control_clicked();
     void slot_histogram_view_activated();
     void slot_export_image();
+    void slot_computer_finished();
 
 protected:
     void keyPressEvent(QKeyEvent*);

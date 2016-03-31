@@ -9,7 +9,23 @@
 #include <QKeyEvent>
 #include <QLabel>
 #include <QPainter>
+#include <QTime>
+#include "computationthread.h"
 #include "mvutils.h"
+#include "set_progress.h"
+
+typedef QList<float> FloatList;
+class MVCrossCorrelogramsWidgetComputer : public ComputationThread {
+public:
+    DiskReadMda the_data;
+    int the_base_label_num;
+    QList<int> the_label_numbers;
+
+    void compute();
+
+    //output
+    QList<FloatList> data0;
+};
 
 class MVCrossCorrelogramsWidgetPrivate {
 public:
@@ -29,6 +45,10 @@ public:
     QStringList m_text_labels;
     QMap<QString, QColor> m_colors;
 
+    double m_samplerate;
+
+    MVCrossCorrelogramsWidgetComputer m_computer;
+
     void do_highlighting();
 };
 
@@ -40,6 +60,7 @@ MVCrossCorrelogramsWidget::MVCrossCorrelogramsWidget()
     d->m_base_label_num = 0;
     d->m_label_numbers.clear();
     d->m_num_columns = -1;
+    d->m_samplerate=20000;
 
     QGridLayout* GL = new QGridLayout;
     GL->setHorizontalSpacing(20);
@@ -57,6 +78,8 @@ MVCrossCorrelogramsWidget::MVCrossCorrelogramsWidget()
     d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
 
     this->setFocusPolicy(Qt::StrongFocus);
+
+    connect(&d->m_computer,SIGNAL(computationFinished()),this,SLOT(slot_computer_finished()));
 }
 
 MVCrossCorrelogramsWidget::~MVCrossCorrelogramsWidget()
@@ -87,8 +110,6 @@ void MVCrossCorrelogramsWidget::setColors(const QMap<QString, QColor>& colors)
     }
 }
 
-typedef QList<float> FloatList;
-
 QList<FloatList> get_cross_correlogram_datas_2(DiskReadMda& X, int k)
 {
     int K = 0;
@@ -114,6 +135,7 @@ QList<FloatList> get_cross_correlogram_datas_2(DiskReadMda& X, int k)
             }
         }
     }
+
     return ret;
 }
 
@@ -199,36 +221,45 @@ float compute_max(const QList<FloatList>& data0)
     return ret;
 }
 
+
+void MVCrossCorrelogramsWidgetComputer::compute() {
+
+    if (the_label_numbers.isEmpty()) {
+        data0 = get_cross_correlogram_datas_2(the_data, the_base_label_num);
+    }
+    else {
+        data0 = get_cross_correlogram_datas_3(the_data, the_label_numbers);
+    }
+}
+
 void MVCrossCorrelogramsWidget::updateWidget()
 {
-    QGridLayout* GL = d->m_grid_layout;
     qDeleteAll(d->m_histogram_views);
     d->m_histogram_views.clear();
 
     qDeleteAll(d->m_child_widgets);
     d->m_child_widgets.clear();
 
-    QProgressDialog dlg;
-    dlg.show();
-    dlg.setLabelText("Loading cross correlograms...");
-    dlg.repaint();
-    qApp->processEvents();
-    QList<FloatList> data0;
-    if (d->m_label_numbers.isEmpty()) {
-        data0 = get_cross_correlogram_datas_2(d->m_data, d->m_base_label_num);
-    }
-    else {
-        data0 = get_cross_correlogram_datas_3(d->m_data, d->m_label_numbers);
-    }
+    d->m_computer.the_data=d->m_data;
+    d->m_computer.the_base_label_num=d->m_base_label_num;
+    d->m_computer.the_label_numbers=d->m_label_numbers;
+    qDebug() << __FILE__ << __LINE__;
+    d->m_computer.startComputation();
+}
+void MVCrossCorrelogramsWidget::slot_computer_finished() {
 
-    int K = data0.count() - 1;
-    int num_rows = (int)sqrt(K);
-    if (num_rows < 1)
-        num_rows = 1;
-    int num_cols = (K + num_rows - 1) / num_rows;
-    d->m_num_columns = num_cols;
+    qDebug() << __FILE__ << __LINE__;
+    d->m_computer.stopComputation(); //because I'm paranoid
+    QList<FloatList> data0=d->m_computer.data0;
 
-    float sample_freq = 30000; //FIX: this is hard-coded!!!
+    qDeleteAll(d->m_histogram_views);
+    d->m_histogram_views.clear();
+
+    qDeleteAll(d->m_child_widgets);
+    d->m_child_widgets.clear();
+
+    QGridLayout* GL = d->m_grid_layout;
+    float sample_freq = d->m_samplerate;
     float bin_max = compute_max(data0);
     float bin_min = -bin_max;
     //int num_bins=100;
@@ -240,7 +271,14 @@ void MVCrossCorrelogramsWidget::updateWidget()
         num_bins = 2000;
     float time_width = (bin_max - bin_min) / sample_freq * 1000;
 
+    int K = data0.count() - 1;
+    int num_rows = (int)sqrt(K);
+    if (num_rows < 1)
+        num_rows = 1;
+    int num_cols = (K + num_rows - 1) / num_rows;
+    d->m_num_columns = num_cols;
     for (int k1 = 1; k1 <= K; k1++) {
+        set_progress("Computing cross correlograms ***","",k1*1.0/K);
         HistogramView* HV = new HistogramView;
         HV->setData(data0[k1]);
         HV->setColors(d->m_colors);
@@ -277,11 +315,17 @@ void MVCrossCorrelogramsWidget::updateWidget()
         d->m_histogram_views << HV;
     }
 
+    qDebug() << __FILE__ << __LINE__;
+
     TimeScaleWidget* TSW = new TimeScaleWidget;
     TSW->m_time_width = time_width;
     GL->addWidget(TSW, num_rows, 0);
 
     d->m_child_widgets << TSW;
+
+    set_progress("Loading cross correlograms...","",1);
+
+    qDebug() << __FILE__ << __LINE__;
 }
 
 int MVCrossCorrelogramsWidget::currentLabel()
@@ -336,6 +380,11 @@ int MVCrossCorrelogramsWidget::baseLabel()
 void MVCrossCorrelogramsWidget::setBaseLabel(int num)
 {
     d->m_base_label_num = num;
+}
+
+void MVCrossCorrelogramsWidget::setSampleRate(double samplerate)
+{
+    d->m_samplerate=samplerate;
 }
 
 void MVCrossCorrelogramsWidget::setLabelNumbers(const QList<int>& numbers)

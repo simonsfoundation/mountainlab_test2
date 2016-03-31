@@ -12,6 +12,7 @@
 #include "mvfiringrateview.h"
 #include "extract_clips.h"
 #include "tabber.h"
+#include "computationthread.h"
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -26,6 +27,17 @@
 #include <QStringList>
 #include <QSet>
 #include <QKeyEvent>
+
+class CrossCorrelogramComputer : public ComputationThread {
+public:
+    //inputs
+    DiskReadMda firings;
+    int max_dt;
+
+    void compute();
+
+    Mda cross_correlograms_data;
+};
 
 class MVOverview2WidgetPrivate {
 public:
@@ -57,7 +69,7 @@ public:
     QList<QColor> m_channel_colors;
     QMap<QString, QColor> m_colors;
 
-    bool m_cross_correlograms_data_update_needed;
+    CrossCorrelogramComputer m_cross_correlogram_computer;
 
     void create_cross_correlograms_data();
     //void create_templates_data();
@@ -107,6 +119,8 @@ public:
 
     void set_progress(QString title, QString text, float frac);
     void set_current_event(MVEvent evt);
+
+    void start_cross_correlograms_computer();
 };
 
 QColor brighten(QColor col, int amount)
@@ -139,7 +153,6 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     d->m_samplerate = 0;
 
     d->m_progress_dialog = 0;
-    d->m_cross_correlograms_data_update_needed = true;
     d->m_current_event.time = -1;
     d->m_current_event.label = -1;
 
@@ -191,6 +204,8 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
 
     d->m_colors["view_frame_selected"] = QColor(50, 20, 20);
     d->m_colors["divider_line"] = QColor(255, 100, 150);
+
+    connect(&d->m_cross_correlogram_computer,SIGNAL(computationFinished()),this,SLOT(slot_cross_correlogram_computer_finished()));
 }
 
 MVOverview2Widget::~MVOverview2Widget()
@@ -236,11 +251,13 @@ void MVOverview2Widget::setFiringsPath(const QString& firings)
     d->update_cross_correlograms();
     d->update_cluster_details();
     d->update_timeseries_views();
+    d->start_cross_correlograms_computer();
 }
 
 void MVOverview2Widget::setSampleRate(float freq)
 {
     d->m_samplerate = freq;
+    d->start_cross_correlograms_computer();
 }
 
 void MVOverview2Widget::setDefaultInitialization()
@@ -322,7 +339,7 @@ void MVOverview2Widget::keyPressEvent(QKeyEvent* evt)
 void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
 {
     if (str == "update_cross_correlograms") {
-        d->m_cross_correlograms_data_update_needed = true;
+        d->start_cross_correlograms_computer();
         d->update_cross_correlograms();
     }
     else if (str == "update_templates") {
@@ -346,7 +363,7 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
     }
     else if ((str == "update_event_filter") || (str == "use_event_filter")) {
         d->do_event_filter();
-        d->m_cross_correlograms_data_update_needed=true;
+        d->start_cross_correlograms_computer();
         d->update_all_widgets();
     }
     else if (str == "open_auto_correlograms") {
@@ -464,7 +481,16 @@ void MVOverview2Widget::slot_cluster_view_current_event_changed()
     d->set_current_event(evt);
 }
 
-typedef QList<long> IntList;
+void MVOverview2Widget::slot_cross_correlogram_computer_finished()
+{
+    d->m_cross_correlogram_computer.stopComputation(); //because I'm paranoid
+    d->m_cross_correlograms_data=d->m_cross_correlogram_computer.cross_correlograms_data;
+    d->update_cross_correlograms();
+}
+
+
+
+/*
 void MVOverview2WidgetPrivate::create_cross_correlograms_data()
 {
     m_cross_correlograms_data_update_needed = false;
@@ -557,6 +583,7 @@ void MVOverview2WidgetPrivate::create_cross_correlograms_data()
 
     set_progress("Computing", "Creating cross correlograms data", 1);
 }
+*/
 
 //void MVOverview2WidgetPrivate::create_templates_data()
 //{
@@ -846,7 +873,6 @@ void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<d
 
 void MVOverview2WidgetPrivate::do_shell_split()
 {
-    m_cross_correlograms_data_update_needed = true;
     m_current_k = 0;
     if (!m_control_panel->getParameterValue("use_shell_split").toBool()) {
         m_firings_split.allocate(m_firings_original.N1(), m_firings_original.N2());
@@ -946,6 +972,7 @@ void MVOverview2WidgetPrivate::do_shell_split()
     this->set_templates_selected_numbers(QList<int>());
 
     do_event_filter();
+    start_cross_correlograms_computer();
 }
 
 void MVOverview2WidgetPrivate::do_event_filter()
@@ -1102,6 +1129,7 @@ void MVOverview2WidgetPrivate::add_tab(QWidget* W, QString label)
 MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_auto_correlograms()
 {
     MVCrossCorrelogramsWidget* X = new MVCrossCorrelogramsWidget;
+    X->setSampleRate(m_samplerate);
     X->setProperty("widget_type", "auto_correlograms");
     add_tab(X, "Auto-Correlograms");
     QObject::connect(X, SIGNAL(labelActivated(int)), q, SLOT(slot_auto_correlogram_activated(int)));
@@ -1114,6 +1142,7 @@ MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_auto_correlograms()
 MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_cross_correlograms(int k)
 {
     MVCrossCorrelogramsWidget* X = new MVCrossCorrelogramsWidget;
+    X->setSampleRate(m_samplerate);
     X->setProperty("widget_type", "cross_correlograms");
     X->setProperty("kk", k);
     add_tab(X, QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k) + 1));
@@ -1141,6 +1170,7 @@ QList<int> string_list_to_int_list(const QList<QString>& list)
 MVCrossCorrelogramsWidget* MVOverview2WidgetPrivate::open_matrix_of_cross_correlograms()
 {
     MVCrossCorrelogramsWidget* X = new MVCrossCorrelogramsWidget;
+    X->setSampleRate(m_samplerate);
     X->setProperty("widget_type", "matrix_of_cross_correlograms");
     QList<int> ks = m_selected_ks.toList();
     qSort(ks);
@@ -1365,12 +1395,12 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
 {
     QString widget_type = W->property("widget_type").toString();
     if (widget_type == "auto_correlograms") {
-        if (m_cross_correlograms_data_update_needed) {
-            create_cross_correlograms_data();
-        }
+        qDebug() << __FILE__ << __LINE__;
         MVCrossCorrelogramsWidget* WW = (MVCrossCorrelogramsWidget*)W;
         WW->setColors(m_colors);
+        qDebug() << __FILE__ << __LINE__;
         WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
+        qDebug() << __FILE__ << __LINE__;
         QStringList labels;
         for (int i = 0; i < m_original_cluster_numbers.count(); i++) {
             if ((i == 0) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
@@ -1379,13 +1409,13 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
             else
                 labels << "";
         }
+        qDebug() << __FILE__ << __LINE__;
         WW->setTextLabels(labels);
+        qDebug() << __FILE__ << __LINE__;
         WW->updateWidget();
+        qDebug() << __FILE__ << __LINE__;
     }
     else if (widget_type == "cross_correlograms") {
-        if (m_cross_correlograms_data_update_needed) {
-            create_cross_correlograms_data();
-        }
         MVCrossCorrelogramsWidget* WW = (MVCrossCorrelogramsWidget*)W;
         int k = W->property("kk").toInt();
         WW->setColors(m_colors);
@@ -1403,9 +1433,6 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->updateWidget();
     }
     else if (widget_type == "matrix_of_cross_correlograms") {
-        if (m_cross_correlograms_data_update_needed) {
-            create_cross_correlograms_data();
-        }
         MVCrossCorrelogramsWidget* WW = (MVCrossCorrelogramsWidget*)W;
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         qDebug() << ks;
@@ -1953,6 +1980,15 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
     }
 }
 
+void MVOverview2WidgetPrivate::start_cross_correlograms_computer()
+{
+    if (!m_samplerate) return;
+    m_cross_correlogram_computer.stopComputation();
+    m_cross_correlogram_computer.firings=this->m_firings;
+    m_cross_correlogram_computer.max_dt=(int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
+    m_cross_correlogram_computer.startComputation();
+}
+
 /*
 CustomTabWidget::CustomTabWidget(MVOverview2Widget *q) {
 	this->setTabsClosable(true);
@@ -1995,3 +2031,93 @@ void CustomTabWidget::slot_switch_to_other_tab_widget()
 	q->d->m_current_tab_widget=q->d->get_other_tab_widget(this);
 }
 */
+
+
+
+
+typedef QList<long> IntList;
+void CrossCorrelogramComputer::compute()
+{
+    QList<long> times, labels;
+    long L = firings.N2();
+
+    printf("Setting up times and labels...\n");
+    for (int n = 0; n < L; n++) {
+        times << (long)firings.value(1, n);
+        labels << (long)firings.value(2, n);
+    }
+    int K = 0;
+    for (int n = 0; n < labels.count(); n++) {
+        if (labels[n] > K)
+            K = labels[n];
+    }
+
+    printf("Sorting by times...\n");
+    QList<long> indices = get_sort_indices(times);
+    QList<long> times2, labels2;
+    for (int i = 0; i < indices.count(); i++) {
+        times2 << times[indices[i]];
+        labels2 << labels[indices[i]];
+    }
+    times = times2;
+    labels = labels2;
+
+    printf("Initializing output...\n");
+    QList<IntList> out;
+    IntList empty_list;
+    for (int k1 = 1; k1 <= K; k1++) {
+        for (int k2 = 1; k2 <= K; k2++) {
+            out << empty_list;
+        }
+    }
+
+    printf("Setting time differences...\n");
+    int i1 = 0;
+    for (int i2 = 0; i2 < L; i2++) {
+        if (i2 % 100 == 0) {
+            //set_progress("Computing", "Creating cross correlograms data", i2 * 1.0 / L);
+        }
+        while ((i1 + 1 < L) && (times[i1] < times[i2] - max_dt))
+            i1++;
+        int k2 = labels[i2];
+        int t2 = times[i2];
+        if (k2 >= 1) {
+            for (int jj = i1; jj < i2; jj++) {
+                int k1 = labels[jj];
+                int t1 = times[jj];
+                if (k1 >= 1) {
+                    out[(k1 - 1) + K * (k2 - 1)] << t2 - t1;
+                    out[(k2 - 1) + K * (k1 - 1)] << t1 - t2;
+                }
+            }
+        }
+    }
+
+    printf("Counting...\n");
+    int ct = 0;
+    for (int k1 = 1; k1 <= K; k1++) {
+        for (int k2 = 1; k2 <= K; k2++) {
+            ct += out[(k1 - 1) + K * (k2 - 1)].count();
+        }
+    }
+
+    printf("Creating mda...\n");
+    Mda ret;
+    ret.allocate(3, ct);
+
+    ct = 0;
+    for (int k1 = 1; k1 <= K; k1++) {
+        for (int k2 = 1; k2 <= K; k2++) {
+            IntList* tmp = &out[(k1 - 1) + K * (k2 - 1)];
+            for (int jj = 0; jj < tmp->count(); jj++) {
+                ret.setValue(k1, 0, ct);
+                ret.setValue(k2, 1, ct);
+                ret.setValue((*tmp)[jj], 2, ct);
+                ct++;
+            }
+        }
+    }
+    printf(".\n");
+
+    cross_correlograms_data = ret;
+}
