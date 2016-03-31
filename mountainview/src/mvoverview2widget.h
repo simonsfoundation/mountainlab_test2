@@ -58,11 +58,11 @@ private slots:
     void slot_details_current_k_changed();
     void slot_details_selected_ks_changed();
     void slot_details_template_activated();
-    void slot_cross_correlogram_current_label_changed();
-    void slot_cross_correlogram_selected_labels_changed();
+    void slot_cross_correlogram_current_index_changed();
+    void slot_cross_correlogram_selected_indices_changed();
     void slot_clips_view_current_event_changed();
     void slot_cluster_view_current_event_changed();
-    void slot_cross_correlogram_computer_finished();
+    //void slot_cross_correlogram_computer_finished();
 
 private:
     MVOverview2WidgetPrivate* d;

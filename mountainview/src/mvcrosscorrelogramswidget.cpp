@@ -243,12 +243,9 @@ void MVCrossCorrelogramsWidget::updateWidget()
     d->m_computer.the_data=d->m_data;
     d->m_computer.the_base_label_num=d->m_base_label_num;
     d->m_computer.the_label_numbers=d->m_label_numbers;
-    qDebug() << __FILE__ << __LINE__;
     d->m_computer.startComputation();
 }
 void MVCrossCorrelogramsWidget::slot_computer_finished() {
-
-    qDebug() << __FILE__ << __LINE__;
     d->m_computer.stopComputation(); //because I'm paranoid
     QList<FloatList> data0=d->m_computer.data0;
 
@@ -315,8 +312,6 @@ void MVCrossCorrelogramsWidget::slot_computer_finished() {
         d->m_histogram_views << HV;
     }
 
-    qDebug() << __FILE__ << __LINE__;
-
     TimeScaleWidget* TSW = new TimeScaleWidget;
     TSW->m_time_width = time_width;
     GL->addWidget(TSW, num_rows, 0);
@@ -324,8 +319,6 @@ void MVCrossCorrelogramsWidget::slot_computer_finished() {
     d->m_child_widgets << TSW;
 
     set_progress("Loading cross correlograms...","",1);
-
-    qDebug() << __FILE__ << __LINE__;
 }
 
 int MVCrossCorrelogramsWidget::currentLabel()
