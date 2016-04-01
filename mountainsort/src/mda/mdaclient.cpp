@@ -257,6 +257,7 @@ QString http_get_text(QString url)
 {
     QString tmp_fname = get_temp_fname();
     QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
+    qDebug()  << cmd;
     int exit_code = system(cmd.toLatin1().data());
     if (exit_code != 0) {
         qWarning() << "Problem with system call: " + cmd;
@@ -272,6 +273,7 @@ QString http_get_binary_mda_file(QString url)
 {
     QString tmp_fname = get_temp_fname() + ".mda";
     QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
+    qDebug()  << cmd;
     int exit_code = system(cmd.toLatin1().data());
     if (exit_code != 0) {
         qWarning() << "Problem with system call: " + cmd;

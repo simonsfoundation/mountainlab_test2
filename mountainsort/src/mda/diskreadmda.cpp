@@ -136,8 +136,7 @@ long DiskReadMda::N6() const
 
 long DiskReadMda::totalSize() const
 {
-    if (!d->open_file_if_needed()) return 0;
-    return d->m_mda_header_total_size;
+    return d->total_size();
 }
 
 bool DiskReadMda::readChunk(Mda &X, long i, long size) const
@@ -155,7 +154,7 @@ bool DiskReadMda::readChunk(Mda &X, long i, long size) const
         return true;
     }
 	if (!d->open_file_if_needed()) return false;
-	X.allocate(1,size);
+    X.allocate(size,1);
 	long jA=qMax(i,0L);
     long jB=qMin(i+size-1,d->total_size()-1);
 	long size_to_read=jB-jA+1;
@@ -257,7 +256,6 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long i3, long size1, long 
 
 double DiskReadMda::value(long i) const
 {
-    qWarning() << "Don't use DiskReadMda::value dude";
 	if (d->m_use_memory_mda) return d->m_memory_mda.value(i);
     if ((i<0)||(i>=d->total_size())) return 0;
 	long chunk_index=i/DEFAULT_CHUNK_SIZE;
@@ -340,7 +338,7 @@ long DiskReadMdaPrivate::total_size()
 {
     if (m_use_memory_mda) return m_memory_mda.totalSize();
     if (m_use_mda_client) return m_mda_client.totalSize();
-
+    return m_mda_header_total_size;
 }
 
 void diskreadmda_unit_test()
