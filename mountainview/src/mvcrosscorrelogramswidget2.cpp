@@ -59,7 +59,7 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2()
 {
     d = new MVCrossCorrelogramsWidget2Private;
     d->q = this;
-    d->m_samplerate = 0;
+    d->m_samplerate = 20000;
     d->m_current_index = -1;
     d->m_num_columns = -1;
     d->m_current_index = -1;
@@ -224,6 +224,7 @@ void MVCrossCorrelogramsWidget2::setSelectedIndices(const QList<int>& X)
     if (sets_match2(d->m_selected_indices, X.toSet()))
         return;
     d->m_selected_indices = X.toSet();
+    d->do_highlighting();
     emit selectedIndicesChanged();
 }
 

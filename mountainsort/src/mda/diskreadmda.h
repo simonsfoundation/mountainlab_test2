@@ -8,6 +8,8 @@
 
 #include "mda.h"
 
+#include <QUrl>
+
 class DiskReadMdaPrivate;
 /**
  * \class DiskReadMda
@@ -25,6 +27,8 @@ public:
 	DiskReadMda(const DiskReadMda &other);
 	///Constructor based on an in-memory array. This enables passing an Mda into a function that expects a DiskReadMda.
 	DiskReadMda(const Mda &X);
+    ///Constructor based on url.
+    DiskReadMda(const QUrl &url);
 	///Destructor
 	virtual ~DiskReadMda();
 	///Assignment operator

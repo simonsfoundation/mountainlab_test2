@@ -17,6 +17,7 @@ enum MdaClientStatus {
 };
 
 void mdaclient_unit_test(const QString &url);
+void mdaclient_unit_test_2(const QString &url);
 
 class ChunkParams {
 public:
@@ -45,6 +46,7 @@ public:
 	long N1();
 	long N2();
 	long N3();
+    long totalSize();
 
 	MdaClientStatus loadChunk(int timeout,const ChunkParams &params);
 	Mda getChunk(const ChunkParams &params);

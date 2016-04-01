@@ -101,8 +101,8 @@ public:
     void move_to_timepoint(double tp);
     void update_widget(QWidget* W);
 
-    void set_cross_correlograms_current_number(int kk);
-    void set_cross_correlograms_selected_numbers(const QList<int>& kks);
+    void set_cross_correlograms_current_index(int index);
+    void set_cross_correlograms_selected_indices(const QList<int>& indices);
     void set_templates_current_number(int kk);
     void set_templates_selected_numbers(const QList<int>& kks);
 
@@ -150,7 +150,7 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     d->q = this;
 
     d->m_current_k = 0;
-    d->m_samplerate = 0;
+    d->m_samplerate = 20000;
 
     d->m_progress_dialog = 0;
     d->m_current_event.time = -1;
@@ -405,12 +405,12 @@ void MVOverview2Widget::slot_control_panel_combobox_activated(QString str)
     }
 }
 
-void MVOverview2Widget::slot_auto_correlogram_activated(int k)
+void MVOverview2Widget::slot_auto_correlogram_activated(int index)
 {
     TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
     d->m_tabber->setCurrentContainer(TW);
     d->m_tabber->switchCurrentContainer();
-    d->open_cross_correlograms(k);
+    d->open_cross_correlograms(index+1);
 }
 
 //void MVOverview2Widget::slot_templates_clicked()
@@ -426,17 +426,18 @@ void MVOverview2Widget::slot_auto_correlogram_activated(int k)
 void MVOverview2Widget::slot_details_current_k_changed()
 {
     MVClusterDetailWidget* X = (MVClusterDetailWidget*)sender();
-    int k = X->currentK();
-    d->m_current_k = k;
-    d->set_cross_correlograms_current_number(k);
+    int index = X->currentK()-1;
+    d->m_current_k = X->currentK();
+    d->set_cross_correlograms_current_index(index);
 }
 
 void MVOverview2Widget::slot_details_selected_ks_changed()
 {
     MVClusterDetailWidget* X = (MVClusterDetailWidget*)sender();
     QList<int> ks = X->selectedKs();
+    QList<int> indices; foreach (int k,ks) indices << k-1;
     d->m_selected_ks = ks.toSet();
-    d->set_cross_correlograms_selected_numbers(ks);
+    d->set_cross_correlograms_selected_indices(indices);
 }
 
 void MVOverview2Widget::slot_details_template_activated()
@@ -455,16 +456,16 @@ void MVOverview2Widget::slot_cross_correlogram_current_index_changed()
 {
     MVCrossCorrelogramsWidget2* X = (MVCrossCorrelogramsWidget2*)sender();
     d->m_current_k = X->currentLabel1();
-    d->set_cross_correlograms_current_number(X->currentLabel1());
-    d->set_templates_current_number(X->currentLabel1());
+    d->set_cross_correlograms_current_index(X->currentIndex());
+    d->set_templates_current_number(X->currentLabel2());
 }
 
 void MVOverview2Widget::slot_cross_correlogram_selected_indices_changed()
 {
     MVCrossCorrelogramsWidget2* X = (MVCrossCorrelogramsWidget2*)sender();
     d->m_selected_ks = X->selectedLabels1().toSet();
-    d->set_cross_correlograms_selected_numbers(X->selectedLabels1());
-    d->set_templates_selected_numbers(X->selectedLabels1());
+    d->set_cross_correlograms_selected_indices(X->selectedIndices());
+    d->set_templates_selected_numbers(X->selectedLabels2());
 }
 
 void MVOverview2Widget::slot_clips_view_current_event_changed()
@@ -1148,7 +1149,8 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_cross_correlograms(in
     X->setProperty("widget_type", "cross_correlograms");
     X->setProperty("kk", k);
     add_tab(X, QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k) + 1));
-    QObject::connect(X, SIGNAL(currentLabelChanged()), q, SLOT(slot_cross_correlogram_current_label_changed()));
+    QObject::connect(X, SIGNAL(currentIndexChanged()), q, SLOT(slot_cross_correlogram_current_index_changed()));
+    QObject::connect(X, SIGNAL(selectedIndicesChanged()), q, SLOT(slot_cross_correlogram_selected_indices_changed()));
     update_widget(X);
     return X;
 }
@@ -1405,10 +1407,10 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         QStringList text_labels;
         QList<int> labels1,labels2;
-        for (int i = 0; i < m_original_cluster_numbers.count(); i++) {
-            labels1 << i+1;
-            labels2 << i+1;
-            if ((i == 0) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
+        for (int i = 1; i < m_original_cluster_numbers.count(); i++) {
+            labels1 << i;
+            labels2 << i;
+            if ((i == 1) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
                 text_labels << QString("Auto %1").arg(m_original_cluster_numbers[i]);
             }
             else
@@ -1428,11 +1430,11 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         //WW->setBaseLabel(k);
         QStringList text_labels;
         QList<int> labels1,labels2;
-        for (int i = 0; i < m_original_cluster_numbers.count(); i++) {
+        for (int i = 1; i < m_original_cluster_numbers.count(); i++) {
             labels1 << k;
-            labels2 << i+1;
-            if ((i == 0) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
-                text_labels << QString("Cross %1").arg(m_original_cluster_numbers[i]);
+            labels2 << i;
+            if ((i == 1) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
+                text_labels << QString("Cross %1(%2)/%3").arg(m_original_cluster_numbers[k+1]).arg(m_original_cluster_offsets.value(k+1)+1).arg(m_original_cluster_numbers[i]);
             }
             else
                 text_labels << "";
@@ -1660,26 +1662,26 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
     }
 }
 
-void MVOverview2WidgetPrivate::set_cross_correlograms_current_number(int kk)
+void MVOverview2WidgetPrivate::set_cross_correlograms_current_index(int index)
 {
     QList<QWidget*> widgets = get_all_widgets();
     foreach (QWidget* W, widgets) {
         QString widget_type = W->property("widget_type").toString();
         if ((widget_type == "auto_correlograms") || (widget_type == "cross_correlograms")) {
             MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
-            WW->setCurrentLabel1(kk);
+            WW->setCurrentIndex(index);
         }
     }
 }
 
-void MVOverview2WidgetPrivate::set_cross_correlograms_selected_numbers(const QList<int>& kks)
+void MVOverview2WidgetPrivate::set_cross_correlograms_selected_indices(const QList<int>& indices)
 {
     QList<QWidget*> widgets = get_all_widgets();
     foreach (QWidget* W, widgets) {
         QString widget_type = W->property("widget_type").toString();
         if ((widget_type == "auto_correlograms") || (widget_type == "cross_correlograms")) {
             MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
-            WW->setSelectedLabels1(kks);
+            WW->setSelectedIndices(indices);
         }
     }
 }

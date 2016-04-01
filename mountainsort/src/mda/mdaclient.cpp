@@ -63,6 +63,9 @@ void MdaClient::setUrl(const QString& url)
 MdaClientStatus MdaClient::loadHeader(int timeout)
 {
     if (d->m_header_loader) {
+        if ((d->m_header_loader->status()==Finished)||(d->m_header_loader->status()==Error)) {
+            return d->m_header_loader->status();
+        }
         d->m_header_loader->waitUntilFinished(timeout);
         return d->m_header_loader->status();
     } else {
@@ -76,6 +79,7 @@ MdaClientStatus MdaClient::loadHeader(int timeout)
 
 long MdaClient::N1()
 {
+    loadHeader(-1);
     if (!d->m_header_loader)
         return 0;
     return d->m_header_loader->N1();
@@ -83,6 +87,7 @@ long MdaClient::N1()
 
 long MdaClient::N2()
 {
+    loadHeader(-1);
     if (!d->m_header_loader)
         return 0;
     return d->m_header_loader->N2();
@@ -90,15 +95,27 @@ long MdaClient::N2()
 
 long MdaClient::N3()
 {
+    loadHeader(-1);
     if (!d->m_header_loader)
         return 0;
     return d->m_header_loader->N3();
+}
+
+long MdaClient::totalSize()
+{
+    loadHeader(-1);
+    if (!d->m_header_loader)
+        return 0;
+    return d->m_header_loader->N1()*d->m_header_loader->N2()*d->m_header_loader->N3();
 }
 
 MdaClientStatus MdaClient::loadChunk(int timeout, const ChunkParams& params)
 {
     QString code = d->chunk_code(params);
     if (d->m_chunk_loaders.contains(code)) {
+        if ((d->m_chunk_loaders[code]->status()==Finished)||(d->m_chunk_loaders[code]->status()==Error)) {
+            return d->m_chunk_loaders[code]->status();
+        }
         d->m_chunk_loaders[code]->waitUntilFinished(timeout);
         return d->m_chunk_loaders[code]->status();
     } else {
@@ -113,6 +130,7 @@ MdaClientStatus MdaClient::loadChunk(int timeout, const ChunkParams& params)
 
 Mda MdaClient::getChunk(const ChunkParams& params)
 {
+    loadChunk(-1,params);
     QString code = d->chunk_code(params);
     if (!d->m_chunk_loaders.contains(code)) {
         return Mda();
@@ -472,6 +490,21 @@ void mdaclient_unit_test(const QString& url)
     qDebug() << A.value(2, 0) << A.value(2, 1) << A.value(2, 2);
 }
 
+#include "diskreadmda.h"
+void mdaclient_unit_test_2(const QString& url)
+{
+    // run this test by calling
+    // > mountainview unit_test mdaclient2
+
+    setMdaClientLocalCachePath("/tmp/mdaclient_local_cache");
+
+    QUrl url0(url);
+    DiskReadMda X(url0);
+    qDebug()  << X.N1() << X.N2() << X.N3();
+    qDebug()  << X.value(1, 0) << X.value(1, 1) << X.value(1, 2);
+    qDebug()  << X.value(2, 0) << X.value(2, 1) << X.value(2, 2);
+}
+
 ChunkParams::ChunkParams(QString dtype_in, long i1_in, long i2_in, long s1_in, long s2_in)
 {
     i1 = i1_in;
@@ -515,3 +548,5 @@ void ChunkParams::operator=(const ChunkParams& other)
     s3 = other.s3;
     dtype = other.dtype;
 }
+
+

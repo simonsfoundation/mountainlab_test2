@@ -78,6 +78,10 @@ int main(int argc, char* argv[])
             QString arg3=CLP.unnamed_parameters.value(2,"http://magland.org:8000/firings.mda");
             mdaclient_unit_test(arg3);
         }
+        else if (arg2=="mdaclient2") {
+            QString arg3=CLP.unnamed_parameters.value(2,"http://magland.org:8000/firings.mda");
+            mdaclient_unit_test_2(arg3);
+        }
         else {
             qWarning() << "No such unit test: "+arg2;
         }
@@ -91,7 +95,7 @@ int main(int argc, char* argv[])
         QString pre_path = CLP.named_parameters["pre"].toString();
         QString filt_path = CLP.named_parameters["filt"].toString();
         QString firings_path = CLP.named_parameters["firings"].toString();
-        double samplerate = CLP.named_parameters["samplerate"].toDouble();
+        double samplerate = CLP.named_parameters.value("samplerate",20000).toDouble();
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         MVOverview2Widget* W = new MVOverview2Widget;
