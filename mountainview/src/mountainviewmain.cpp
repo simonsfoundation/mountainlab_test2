@@ -11,6 +11,7 @@
 #include "mda.h"
 #include <QDesktopServices>
 #include <QDesktopWidget>
+#include <QDir>
 #include <QImageWriter>
 #include "get_command_line_params.h"
 #include "diskarraymodel_new.h"
@@ -64,6 +65,8 @@ int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
     CloseMeHandler::start();
+
+    MdaClient::setLocalCachePath(QDir::tempPath()+"/mdaclient_local_cache");
 
     CLParams CLP = get_command_line_params(argc, argv);
 

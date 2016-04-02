@@ -122,7 +122,6 @@ long DiskReadMda::N1() const
 {
 	if (d->m_use_memory_mda) return d->m_memory_mda.N1();
 	if (d->m_use_mda_client) {
-		qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << d->m_mda_client.url();
 		return d->m_mda_client.N1();
 	}
 	if (!d->open_file_if_needed()) return 0;

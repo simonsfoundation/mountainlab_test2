@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QMap>
 #include <QMutex>
+#include <QSettings>
 #include <QString>
 #include <QTemporaryFile>
 #include <QUrl>
@@ -32,15 +33,6 @@ public:
     QString chunk_code(const ChunkParams& CP);
 };
 
-static QString s_local_cache_path;
-void setMdaClientLocalCachePath(const QString& path)
-{
-    if (!QDir(path).exists()) {
-        QDir(QFileInfo(path).path()).mkdir(QFileInfo(path).fileName());
-    }
-    s_local_cache_path = path;
-}
-
 MdaClient::MdaClient(const QString& url)
 {
     d = new MdaClientPrivate;
@@ -54,6 +46,21 @@ MdaClient::~MdaClient()
 {
     d->clear();
     delete d;
+}
+
+void MdaClient::setLocalCachePath(const QString &path)
+{
+    if (!QDir(path).exists()) {
+        QDir(QFileInfo(path).path()).mkdir(QFileInfo(path).fileName());
+    }
+    QSettings settings("SCDA","MountainLab");
+    settings.setValue("mdaclient_local_cache_path",path);
+}
+
+QString MdaClient::getLocalCachePath()
+{
+    QSettings settings("SCDA","MountainLab");
+    return settings.value("mdaclient_local_cache_path").toString();
 }
 
 void MdaClient::setUrl(const QString& url)
@@ -180,8 +187,6 @@ MdaClientLoader::MdaClientLoader()
 
     d->m_loading_header = false;
     d->m_loading_chunk = false;
-
-    d->m_load_chunk_thread.setLocalCachePath(s_local_cache_path);
 }
 
 MdaClientLoader::~MdaClientLoader()
@@ -339,8 +344,11 @@ QString http_get_binary_mda_file(const QString& url)
 }
 */
 
-bool check_correct_size(Mda& X, const ChunkParams& P)
+bool check_correct_size(Mda& X, const ChunkParams& P_in)
 {
+    ChunkParams P=P_in;
+    if (P.s2==0) P.s2=1;
+    if (P.s3==0) P.s3=1;
     if (X.N1() != P.s1)
         return false;
     if (X.N2() != P.s2)
@@ -387,15 +395,18 @@ void LoadChunkThread::run()
     this->setChunk(chunk0);
     if (!check_correct_size(chunk0, this->chunkParams())) {
         if (mda_fname == local_fname) {
-            this->setError(QString("ERROR Problem with locally cached mda file dimensions."));
+            this->setError(QString("ERROR Problem with locally cached mda file dimensions %1x%2x%3 <> %4x%5x%6.").arg(chunk0.N1()).arg(chunk0.N2()).arg(chunk0.N3()).arg(this->chunkParams().s1).arg(this->chunkParams().s2).arg(this->chunkParams().s3));
         } else {
-            this->setError(QString("ERROR Problem with downloaded mda file dimensions."));
+            this->setError(QString("ERROR Problem with downloaded mda file dimensions %1x%2x%3 <> %4x%5x%6.").arg(chunk0.N1()).arg(chunk0.N2()).arg(chunk0.N3()).arg(this->chunkParams().s1).arg(this->chunkParams().s2).arg(this->chunkParams().s3));
         }
+        qWarning() << this->error();
         QFile::remove(mda_fname);
         return;
     }
     //here is where we should put it in the local cache.
-    put_in_local_cache_or_remove(mda_fname, result_url);
+    if (mda_fname!=local_fname) {
+        put_in_local_cache_or_remove(mda_fname, result_url);
+    }
 }
 
 void LoadHeaderThread::run()
@@ -535,13 +546,7 @@ void LoadChunkThread::setChunkParams(const ChunkParams &p)
 QString LoadChunkThread::localCachePath()
 {
     QMutexLocker locker(&m_mutex);
-    return m_local_cache_path;
-}
-
-void LoadChunkThread::setLocalCachePath(const QString &path)
-{
-    QMutexLocker locker(&m_mutex);
-    m_local_cache_path=path;
+    return MdaClient::getLocalCachePath();
 }
 
 Mda LoadChunkThread::chunk()
@@ -600,32 +605,24 @@ void mdaclient_unit_test(const QString& url)
     // > mountainview unit_test mdaclient
     MdaClient X(url);
 
-    setMdaClientLocalCachePath("/tmp/mdaclient_local_cache");
-
     MdaClientStatus status;
 
     QTime timer;
     timer.start();
     status = X.loadHeader(-1);
-    qDebug() << "Elapsed:" << timer.elapsed();
     if (status != Finished) {
         printf("Problem loading header.\n");
         return;
     }
-    qDebug() << X.N1() << X.N2() << X.N3();
 
     ChunkParams CP("float32", 0, 0, 5, 30);
     timer.start();
     status = X.loadChunk(-1, CP);
-    qDebug() << "Elapsed:" << timer.elapsed();
     if (status != Finished) {
         printf("Problem loading chunk.\n");
         return;
     }
     Mda A = X.getChunk(CP);
-    qDebug() << A.N1() << A.N2();
-    qDebug() << A.value(1, 0) << A.value(1, 1) << A.value(1, 2);
-    qDebug() << A.value(2, 0) << A.value(2, 1) << A.value(2, 2);
 }
 
 #include "diskreadmda.h"
@@ -633,8 +630,6 @@ void mdaclient_unit_test_2(const QString& url)
 {
     // run this test by calling
     // > mountainview unit_test mdaclient2
-
-    setMdaClientLocalCachePath("/tmp/mdaclient_local_cache");
 
     QUrl url0(url);
     DiskReadMda X(url0);

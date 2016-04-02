@@ -31,8 +31,6 @@ public:
 	long s1,s2,s3;
 };
 
-void setMdaClientLocalCachePath(const QString &path);
-
 class MdaClientPrivate;
 class MdaClient
 {
@@ -40,6 +38,11 @@ public:
 	friend class MdaClientPrivate;
 	MdaClient(const QString &url="");
 	virtual ~MdaClient();
+
+
+    static void setLocalCachePath(const QString &path);
+    static QString getLocalCachePath();
+
 	void setUrl(const QString &url);
 	QString url();
 
@@ -115,6 +118,9 @@ public:
 	void run();
 	MdaClientStatus status();
 
+
+
+
 	QString error();
 	void setError(QString err);
 	QString url();
@@ -122,7 +128,6 @@ public:
 	ChunkParams chunkParams();
 	void setChunkParams(const ChunkParams &p);
 	QString localCachePath();
-	void setLocalCachePath(const QString &path);
 	Mda chunk();
 	void setChunk(const Mda &chunk);
 

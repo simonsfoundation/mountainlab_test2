@@ -42,10 +42,7 @@ ComputationThread::~ComputationThread()
 
 void ComputationThread::startComputation()
 {
-
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     stopComputation();
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
 	{
 		QMutexLocker locker(&d->m_mutex);
 		d->m_is_computing=true;
@@ -53,9 +50,7 @@ void ComputationThread::startComputation()
 		d->m_is_finished=false;
 		d->m_error_message="";
 	}
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     d->schedule_start();
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
 }
 
 void ComputationThread::stopComputation()
@@ -128,25 +123,19 @@ void ComputationThread::run()
 
 void ComputationThread::slot_start()
 {
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     {
         QMutexLocker locker(&d->m_mutex);
         if (d->m_stop_requested) return;
         d->m_start_scheduled=false;
     }
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     this->start();
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
 }
 
 void ComputationThreadPrivate::schedule_start()
 {
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     QMutexLocker locker(&m_mutex);
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     if (m_start_scheduled) return;
     m_stop_requested=false;
     QTimer::singleShot(100,q,SLOT(slot_start()));
     m_start_scheduled=true;
-	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
 }
