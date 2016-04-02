@@ -181,7 +181,7 @@ MdaClientLoader::MdaClientLoader()
     d->m_loading_header = false;
     d->m_loading_chunk = false;
 
-    d->m_load_chunk_thread.local_cache_path = s_local_cache_path;
+    d->m_load_chunk_thread.setLocalCachePath(s_local_cache_path);
 }
 
 MdaClientLoader::~MdaClientLoader()
@@ -237,8 +237,8 @@ long MdaClientLoader::N3()
 
 void MdaClientLoader::startLoadingChunk(const ChunkParams& CP)
 {
-    d->m_load_chunk_thread.url = d->m_url;
-    d->m_load_chunk_thread.chunk_params = CP;
+    d->m_load_chunk_thread.setUrl(d->m_url);
+    d->m_load_chunk_thread.setChunkParams(CP);
     d->m_loading_chunk = true;
     d->m_load_chunk_thread.start();
 }
@@ -247,7 +247,7 @@ Mda MdaClientLoader::chunk()
 {
     if (d->m_load_chunk_thread.isRunning())
         return Mda();
-    return d->m_load_chunk_thread.chunk;
+    return d->m_load_chunk_thread.chunk();
 }
 
 bool MdaClientLoader::waitUntilFinished(int timeout)
@@ -352,13 +352,14 @@ bool check_correct_size(Mda& X, const ChunkParams& P)
 
 void LoadChunkThread::run()
 {
-    QString str = this->url + "?a=readChunk&";
-    str += QString("index=%1,%2,%3&").arg(this->chunk_params.i1).arg(this->chunk_params.i2).arg(this->chunk_params.i3);
-    str += QString("size=%1,%2,%3&").arg(this->chunk_params.s1).arg(this->chunk_params.s2).arg(this->chunk_params.s3);
-    str += QString("datatype=%1&").arg(this->chunk_params.dtype);
+    QString str = this->url() + "?a=readChunk&";
+    ChunkParams CP=this->chunkParams();
+    str += QString("index=%1,%2,%3&").arg(CP.i1).arg(CP.i2).arg(CP.i3);
+    str += QString("size=%1,%2,%3&").arg(CP.s1).arg(CP.s2).arg(CP.s3);
+    str += QString("datatype=%1&").arg(CP.dtype);
     QString result = http_get_text(str).trimmed();
     if (!result.startsWith("http")) {
-        this->error = QString("ERROR in %1: %2").arg(str).arg(result);
+        this->setError(QString("ERROR in %1: %2").arg(str).arg(result));
         return;
     }
     QString result_url = result;
@@ -370,23 +371,25 @@ void LoadChunkThread::run()
         mda_fname = http_get_binary_mda_file(result_url);
     }
     if (mda_fname.isEmpty()) {
-        this->error = "Error getting binary file: " + result_url;
+        this->setError("Error getting binary file: " + result_url);
     }
-    if (!this->chunk.read(mda_fname)) {
+    Mda chunk0;
+    if (!chunk0.read(mda_fname)) {
         if (mda_fname == local_fname) {
-            this->error = QString("ERROR reading locally cached mda file.");
+            this->setError(QString("ERROR reading locally cached mda file."));
             QFile::remove(mda_fname);
         } else {
-            this->error = QString("ERROR reading downloaded mda file.");
+            this->setError(QString("ERROR reading downloaded mda file."));
             QFile::remove(mda_fname);
         }
         return;
     }
-    if (!check_correct_size(this->chunk, this->chunk_params)) {
+    this->setChunk(chunk0);
+    if (!check_correct_size(chunk0, this->chunkParams())) {
         if (mda_fname == local_fname) {
-            this->error = QString("ERROR Problem with locally cached mda file dimensions.");
+            this->setError(QString("ERROR Problem with locally cached mda file dimensions."));
         } else {
-            this->error = QString("ERROR Problem with downloaded mda file dimensions.");
+            this->setError(QString("ERROR Problem with downloaded mda file dimensions."));
         }
         QFile::remove(mda_fname);
         return;
@@ -485,7 +488,7 @@ MdaClientStatus LoadChunkThread::status()
     if (this->isRunning())
         return Loading;
     if (this->isFinished()) {
-        if (error.isEmpty())
+        if (error().isEmpty())
             return Finished;
         else
             return Error;
@@ -493,15 +496,76 @@ MdaClientStatus LoadChunkThread::status()
     return NotStarted;
 }
 
+QString LoadChunkThread::error()
+{
+    QMutexLocker locker(&m_mutex);
+    return m_error;
+}
+
+void LoadChunkThread::setError(QString err)
+{
+    QMutexLocker locker(&m_mutex);
+    m_error=err;
+}
+
+QString LoadChunkThread::url()
+{
+    QMutexLocker locker(&m_mutex);
+    return m_url;
+}
+
+void LoadChunkThread::setUrl(QString url)
+{
+    QMutexLocker locker(&m_mutex);
+    m_url=url;
+}
+
+ChunkParams LoadChunkThread::chunkParams()
+{
+    QMutexLocker locker(&m_mutex);
+    return m_chunk_params;
+}
+
+void LoadChunkThread::setChunkParams(const ChunkParams &p)
+{
+    QMutexLocker locker(&m_mutex);
+    m_chunk_params=p;
+}
+
+QString LoadChunkThread::localCachePath()
+{
+    QMutexLocker locker(&m_mutex);
+    return m_local_cache_path;
+}
+
+void LoadChunkThread::setLocalCachePath(const QString &path)
+{
+    QMutexLocker locker(&m_mutex);
+    m_local_cache_path=path;
+}
+
+Mda LoadChunkThread::chunk()
+{
+    QMutexLocker locker(&m_mutex);
+    return m_chunk;
+}
+
+void LoadChunkThread::setChunk(const Mda &chunk)
+{
+    QMutexLocker locker(&m_mutex);
+    m_chunk=chunk;
+}
+
 QString LoadChunkThread::find_in_local_cache(const QString& url)
 {
-    if (this->local_cache_path.isEmpty())
+    QString local_cache_path=this->localCachePath();
+    if (local_cache_path.isEmpty())
         return "";
     QString fname = url;
     int ind = fname.lastIndexOf("/");
     if (ind >= 0)
         fname = fname.mid(ind + 1);
-    fname = this->local_cache_path + "/" + fname;
+    fname = local_cache_path + "/" + fname;
     if (QFile::exists(fname)) {
         return fname;
     } else
@@ -510,7 +574,8 @@ QString LoadChunkThread::find_in_local_cache(const QString& url)
 
 void LoadChunkThread::put_in_local_cache_or_remove(const QString& fname_in, const QString& url)
 {
-    if (this->local_cache_path.isEmpty()) {
+    QString local_cache_path=this->localCachePath();
+    if (local_cache_path.isEmpty()) {
         QFile::remove(fname_in);
         return;
     }
@@ -518,7 +583,7 @@ void LoadChunkThread::put_in_local_cache_or_remove(const QString& fname_in, cons
     int ind = fname.lastIndexOf("/");
     if (ind >= 0)
         fname = fname.mid(ind + 1);
-    fname = this->local_cache_path + "/" + fname;
+    fname = local_cache_path + "/" + fname;
     if (fname == fname_in)
         return;
     if (QFile::exists(fname)) {

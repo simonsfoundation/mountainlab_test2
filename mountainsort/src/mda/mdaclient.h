@@ -115,7 +115,6 @@ public:
 	void run();
 	MdaClientStatus status();
 
-
 	QString error();
 	void setError(QString err);
 	QString url();
@@ -127,7 +126,6 @@ public:
 	Mda chunk();
 	void setChunk(const Mda &chunk);
 
-
 private:
 	//input
 	QString m_url;
@@ -137,6 +135,8 @@ private:
 	//output
 	Mda m_chunk;
 	QString m_error;
+
+    QMutex m_mutex;
 
 private:
 	QString find_in_local_cache(const QString &url);
