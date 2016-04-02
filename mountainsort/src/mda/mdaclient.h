@@ -4,12 +4,12 @@
 ** Created: 3/30/2016
 *******************************************************/
 
-
 #ifndef MDACLIENT_H
 #define MDACLIENT_H
 
 #include "mda.h"
 
+#include <QMutex>
 #include <QThread>
 
 enum MdaClientStatus {
@@ -41,6 +41,7 @@ public:
 	MdaClient(const QString &url="");
 	virtual ~MdaClient();
 	void setUrl(const QString &url);
+	QString url();
 
 	MdaClientStatus loadHeader(int timeout);
 	long N1();
@@ -82,15 +83,30 @@ private:
 class LoadHeaderThread : public QThread {
 	Q_OBJECT
 public:
+	LoadHeaderThread() {m_N1=m_N2=m_N3=0;}
 	void run();
 	MdaClientStatus status();
 
+	void setUrl(QString url);
+	long N1();
+	long N2();
+	long N3();
+	QString error();
+	QString url();
+	void setN1(long val);
+	void setN2(long val);
+	void setN3(long val);
+	void setError(QString err);
+
+private:
 	//input
-	QString url;
+	QString m_url;
 
 	//output
-	int N1,N2,N3;
-	QString error;
+	int m_N1,m_N2,m_N3;
+	QString m_error;
+
+	QMutex m_mutex;
 };
 
 class LoadChunkThread : public QThread {
@@ -99,18 +115,34 @@ public:
 	void run();
 	MdaClientStatus status();
 
+
+	QString error();
+	void setError(QString err);
+	QString url();
+	void setUrl(QString url);
+	ChunkParams chunkParams();
+	void setChunkParams(const ChunkParams &p);
+	QString localCachePath();
+	void setLocalCachePath(const QString &path);
+	Mda chunk();
+	void setChunk(const Mda &chunk);
+
+
+private:
 	//input
-	QString url;
-	ChunkParams chunk_params;
-	QString local_cache_path;
+	QString m_url;
+	ChunkParams m_chunk_params;
+	QString m_local_cache_path;
 
 	//output
-	Mda chunk;
-	QString error;
+	Mda m_chunk;
+	QString m_error;
+
 private:
 	QString find_in_local_cache(const QString &url);
 	void put_in_local_cache_or_remove(const QString &fname,const QString &url);
 };
 
-#endif // MDACLIENT_H
+#endif
+
 

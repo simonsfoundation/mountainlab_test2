@@ -29,6 +29,8 @@ Mda compute_templates(DiskReadMda &X, const QList<double> &times, const QList<in
 
     int Tmid=(int)((T+1)/2)-1;
 
+	qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << M << T << L << K;
+
     Mda templates(M,T,K);
     QList<long> counts; for (int k=0; k<K; k++) counts << k;
     for (long i=0; i<L; i++) {

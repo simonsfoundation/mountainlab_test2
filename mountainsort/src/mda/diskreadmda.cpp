@@ -3,6 +3,7 @@
 #include "mdaclient.h"
 #include "mdaio.h"
 #include <math.h>
+#include <QUrl>
 
 #define MAX_PATH_LEN 10000
 #define DEFAULT_CHUNK_SIZE 10e6
@@ -29,11 +30,18 @@ public:
     long total_size();
 };
 
-DiskReadMda::DiskReadMda(const QString &path) {
+DiskReadMda::DiskReadMda(const QString &path_or_url) {
 	d=new DiskReadMdaPrivate;
 	d->q=this;
 	d->do_construct();
-	if (!path.isEmpty()) this->setPath(path);
+	if (!path_or_url.isEmpty()) {
+		if (path_or_url.startsWith("http")) {
+			this->setUrl(QUrl(path_or_url));
+		}
+		else {
+			this->setPath(path_or_url);
+		}
+	}
 }
 
 DiskReadMda::DiskReadMda(const DiskReadMda &other)
@@ -72,24 +80,51 @@ void DiskReadMda::operator=(const DiskReadMda &other)
 	d->copy_from(other);
 }
 
-void DiskReadMda::setPath(const QString &file_path)
+void DiskReadMda::setPath(const QString &file_path_or_url)
 {
-	setPath(file_path.toLatin1().data());
+	setPath(file_path_or_url.toLatin1().data());
 }
 
-void DiskReadMda::setPath(const char *file_path)
+void DiskReadMda::setPath(const char *file_path_or_url)
 {
-	strcpy(d->m_path,file_path);
+	if (QString(file_path_or_url).startsWith("http")) {
+		this->setUrl(QUrl(file_path_or_url));
+		return;
+	}
+	strcpy(d->m_path,file_path_or_url);
 	if (d->m_file) {
 		fclose(d->m_file);
 		d->m_file=0;
 	}
+	d->m_use_mda_client=false;
+	d->m_use_memory_mda=false;
+	d->m_memory_mda.allocate(1,1);
+	d->m_current_internal_chunk_index=-1;
+}
+
+void DiskReadMda::setUrl(const QUrl &url)
+{
+	if (d->m_file) {
+		fclose(d->m_file);
+		d->m_file=0;
+	}
+
+	d->m_use_mda_client=true;
+	d->m_mda_client.setUrl(url.toString());
+
+	d->m_use_memory_mda=false;
+	d->m_memory_mda.allocate(1,1);
+
+	d->m_current_internal_chunk_index=-1;
 }
 
 long DiskReadMda::N1() const
 {
 	if (d->m_use_memory_mda) return d->m_memory_mda.N1();
-    if (d->m_use_mda_client) return d->m_mda_client.N1();
+	if (d->m_use_mda_client) {
+		qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << d->m_mda_client.url();
+		return d->m_mda_client.N1();
+	}
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[0];
 }
@@ -327,9 +362,8 @@ void DiskReadMdaPrivate::copy_from(const DiskReadMda &other)
 		return;
 	}
     if (other.d->m_use_mda_client) {
-        this->m_use_mda_client=true;
-        this->m_use_memory_mda=false;
-        this->m_mda_client=other.d->m_mda_client;
+		q->setUrl(QUrl(other.d->m_mda_client.url()));
+		return;
     }
     q->setPath(other.d->m_path);
 }

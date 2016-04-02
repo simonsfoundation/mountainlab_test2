@@ -194,12 +194,12 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
 
-    connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
+	connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
 }
 
 MVClusterDetailWidget::~MVClusterDetailWidget()
 {
-    d->m_calculator.stopComputation();
+	d->m_calculator.stopComputation();
     qDeleteAll(d->m_views);
     delete d;
 }
@@ -518,8 +518,8 @@ void MVClusterDetailWidget::slot_context_menu(const QPoint& pos)
 
 void MVClusterDetailWidget::slot_calculator_finished()
 {
-    d->m_calculator.stopComputation(); //because I'm paranoid!
-    d->m_cluster_data = d->m_calculator.cluster_data;
+	d->m_calculator.stopComputation(); //because I'm paranoid!
+	d->m_cluster_data = d->m_calculator.cluster_data;
     this->update();
 }
 
@@ -840,11 +840,13 @@ void MVClusterDetailWidgetPrivate::export_image()
 
 void MVClusterDetailWidgetPrivate::start_calculation()
 {
-    m_calculator.stopComputation();
-    m_calculator.timeseries = m_timeseries;
-    m_calculator.firings = m_firings;
-    m_calculator.clip_size = m_clip_size;
-    m_calculator.startComputation();
+	m_calculator.stopComputation();
+	m_calculator.timeseries = m_timeseries;
+	m_calculator.firings = m_firings;
+	m_calculator.clip_size = m_clip_size;
+	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
+	m_calculator.startComputation();
+	qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     q->update();
 }
 
@@ -881,12 +883,15 @@ void MVClusterDetailWidgetCalculator::compute()
     int N = timeseries.N2();
     int L = firings.N2();
     int T = clip_size;
+
     QList<double> times;
     QList<int> channels, labels;
     QList<double> peaks;
 
     Q_UNUSED(M)
     Q_UNUSED(N)
+
+	qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << firings.N1() << firings.N2();
 
     for (int i = 0; i < L; i++) {
         times << firings.value(1, i) - 1; //convert to 0-based indexing

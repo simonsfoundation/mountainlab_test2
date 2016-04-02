@@ -22,7 +22,7 @@ class DiskReadMda
 public:
 	friend class DiskReadMdaPrivate;
 	///Constructor pointing to the .mda file specified by path (file name).
-	DiskReadMda(const QString &path="");
+	DiskReadMda(const QString &path_or_url="");
 	///Copy constructor
 	DiskReadMda(const DiskReadMda &other);
 	///Constructor based on an in-memory array. This enables passing an Mda into a function that expects a DiskReadMda.
@@ -36,10 +36,12 @@ public:
 
 	#ifdef QT_CORE_LIB
 	///Set the path (file name) of the .mda file to read.
-	void setPath(const QString &file_path);
+	void setPath(const QString &file_path_or_url);
 	#endif
 	///Set the path (file name) of the .mda file to read.
-	void setPath(const char *file_path);
+	void setPath(const char *file_path_or_url);
+	///Set the path (file name) of the .mda file to read.
+	void setUrl(const QUrl &url);
 
 	///The first dimension of the array
 	long N1() const;

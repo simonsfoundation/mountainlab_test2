@@ -263,9 +263,9 @@ void MVOverview2Widget::setSampleRate(float freq)
 void MVOverview2Widget::setDefaultInitialization()
 {
     //d->open_templates();
-    d->open_cluster_details();
+	d->open_cluster_details();
     d->m_tabber->switchCurrentContainer();
-    d->open_auto_correlograms();
+	//d->open_auto_correlograms();
 }
 
 void MVOverview2Widget::setEpochs(const QList<Epoch>& epochs)
@@ -1207,7 +1207,7 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
     QObject::connect(X, SIGNAL(signalCurrentKChanged()), q, SLOT(slot_details_current_k_changed()));
     QObject::connect(X, SIGNAL(signalSelectedKsChanged()), q, SLOT(slot_details_selected_ks_changed()));
-    X->setProperty("widget_type", "cluster_details");
+	X->setProperty("widget_type", "cluster_details");
     add_tab(X, QString("Details"));
     update_widget(X);
     return X;
@@ -1492,11 +1492,11 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
     else if (widget_type == "cluster_details") {
         MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
         int clip_size = m_control_panel->getParameterValue("clip_size").toInt();
-        WW->setColors(m_colors);
-        WW->setTimeseries(m_timeseries);
-        WW->setClipSize(clip_size);
-        WW->setFirings(DiskReadMda(m_firings));
-        WW->setGroupNumbers(m_original_cluster_numbers);
+		WW->setColors(m_colors);
+		WW->setTimeseries(m_timeseries);
+		WW->setClipSize(clip_size);
+		WW->setFirings(DiskReadMda(m_firings));
+		//WW->setGroupNumbers(m_original_cluster_numbers);
     }
     else if ((widget_type == "clips") || (widget_type == "find_nearby_events")) {
         printf("Extracting clips...\n");

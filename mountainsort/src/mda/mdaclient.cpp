@@ -8,15 +8,18 @@
 #include <QDateTime>
 #include <QDir>
 #include <QMap>
-#include <QNetworkReply>
-#include <QNetworkReply>
-#include <QNetworkRequest>
+#include <QMutex>
 #include <QString>
 #include <QTemporaryFile>
 #include <QUrl>
 #include "textfile.h"
 #include <QCoreApplication>
+
+#ifdef USE_NETWORK
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QtNetwork/QNetworkAccessManager>
+#endif
 
 class MdaClientPrivate {
 public:
@@ -57,7 +60,12 @@ void MdaClient::setUrl(const QString& url)
 {
     d->m_url = url;
     d->clear();
-    this->loadHeader(0);
+	//this->loadHeader(0); //this causes crash, not sure why
+}
+
+QString MdaClient::url()
+{
+	return d->m_url;
 }
 
 MdaClientStatus MdaClient::loadHeader(int timeout)
@@ -71,8 +79,8 @@ MdaClientStatus MdaClient::loadHeader(int timeout)
     } else {
         d->m_header_loader = new MdaClientLoader;
         d->m_header_loader->setUrl(d->m_url);
-        d->m_header_loader->startLoadingHeader();
-        d->m_header_loader->waitUntilFinished(timeout);
+		d->m_header_loader->startLoadingHeader();
+		d->m_header_loader->waitUntilFinished(timeout);
         return d->m_header_loader->status();
     }
 }
@@ -197,7 +205,11 @@ void MdaClientLoader::setUrl(const QString& url)
 
 void MdaClientLoader::startLoadingHeader()
 {
-    d->m_load_header_thread.url = d->m_url;
+	if (d->m_load_header_thread.isRunning()) {
+		qWarning("Not supposed to happen. Aborting.");
+		exit(-1);
+	}
+	d->m_load_header_thread.setUrl(d->m_url);
     d->m_loading_header = true;
     d->m_load_header_thread.start();
 }
@@ -206,21 +218,21 @@ long MdaClientLoader::N1()
 {
     if (d->m_load_header_thread.isRunning())
         return 0;
-    return d->m_load_header_thread.N1;
+	return d->m_load_header_thread.N1();
 }
 
 long MdaClientLoader::N2()
 {
     if (d->m_load_header_thread.isRunning())
         return 0;
-    return d->m_load_header_thread.N2;
+	return d->m_load_header_thread.N2();
 }
 
 long MdaClientLoader::N3()
 {
     if (d->m_load_header_thread.isRunning())
         return 0;
-    return d->m_load_header_thread.N3;
+	return d->m_load_header_thread.N3();
 }
 
 void MdaClientLoader::startLoadingChunk(const ChunkParams& CP)
@@ -256,7 +268,7 @@ QString get_temp_fname()
 QString http_get_text(QString url)
 {
     QString tmp_fname = get_temp_fname();
-    QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
+	QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
     qDebug()  << cmd;
     int exit_code = system(cmd.toLatin1().data());
     if (exit_code != 0) {
@@ -266,13 +278,14 @@ QString http_get_text(QString url)
     }
     QString ret = read_text_file(tmp_fname);
     QFile::remove(tmp_fname);
+	qDebug()  << "RESPONSE: " << ret;
     return ret;
 }
 
 QString http_get_binary_mda_file(QString url)
 {
     QString tmp_fname = get_temp_fname() + ".mda";
-    QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
+	QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
     qDebug()  << cmd;
     int exit_code = system(cmd.toLatin1().data());
     if (exit_code != 0) {
@@ -384,16 +397,16 @@ void LoadChunkThread::run()
 
 void LoadHeaderThread::run()
 {
-    QString str = this->url + "?a=size";
+	QString str = this->url() + "?a=size";
     QString result = http_get_text(str);
     QStringList list = result.split(",");
     if (list.count() >= 3) {
-        this->N1 = list.value(0).toLong();
-        this->N2 = list.value(1).toLong();
-        this->N3 = list.value(2).toLong();
-        this->error = "";
+		this->setN1(list.value(0).toLong());
+		this->setN2(list.value(1).toLong());
+		this->setN3(list.value(2).toLong());
+		this->setError("");
     } else {
-        this->error = QString("ERROR in %1: %2").arg(str).arg(result);
+		this->setError(QString("ERROR in %1: %2").arg(str).arg(result));
     }
 }
 
@@ -402,12 +415,70 @@ MdaClientStatus LoadHeaderThread::status()
     if (this->isRunning())
         return Loading;
     if (this->isFinished()) {
-        if (error.isEmpty())
+		if (error().isEmpty())
             return Finished;
         else
             return Error;
     }
-    return NotStarted;
+	return NotStarted;
+}
+
+void LoadHeaderThread::setUrl(QString url)
+{
+	QMutexLocker locker(&m_mutex);
+	m_url=url;
+}
+
+long LoadHeaderThread::N1()
+{
+	QMutexLocker locker(&m_mutex);
+	return m_N1;
+}
+long LoadHeaderThread::N2()
+{
+	QMutexLocker locker(&m_mutex);
+	return m_N2;
+}
+long LoadHeaderThread::N3()
+{
+	QMutexLocker locker(&m_mutex);
+	return m_N3;
+}
+
+QString LoadHeaderThread::error()
+{
+	QMutexLocker locker(&m_mutex);
+	return m_error;
+}
+
+QString LoadHeaderThread::url()
+{
+	QMutexLocker locker(&m_mutex);
+	return m_url;
+}
+
+void LoadHeaderThread::setN1(long val)
+{
+	QMutexLocker locker(&m_mutex);
+	m_N1=val;
+}
+
+void LoadHeaderThread::setN2(long val)
+{
+	QMutexLocker locker(&m_mutex);
+	m_N2=val;
+}
+
+void LoadHeaderThread::setN3(long val)
+{
+	QMutexLocker locker(&m_mutex);
+	m_N3=val;
+}
+
+void LoadHeaderThread::setError(QString err)
+{
+	QMutexLocker locker(&m_mutex);
+	m_error=err;
 }
 MdaClientStatus LoadChunkThread::status()
 {
@@ -550,5 +621,3 @@ void ChunkParams::operator=(const ChunkParams& other)
     s3 = other.s3;
     dtype = other.dtype;
 }
-
-
