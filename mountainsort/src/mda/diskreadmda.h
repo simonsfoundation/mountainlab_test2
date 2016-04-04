@@ -8,7 +8,6 @@
 
 #include "mda.h"
 
-#include <QUrl>
 
 class DiskReadMdaPrivate;
 /**
@@ -22,13 +21,11 @@ class DiskReadMda
 public:
 	friend class DiskReadMdaPrivate;
 	///Constructor pointing to the .mda file specified by path (file name).
-	DiskReadMda(const QString &path_or_url="");
+    DiskReadMda(const QString &path="");
 	///Copy constructor
 	DiskReadMda(const DiskReadMda &other);
 	///Constructor based on an in-memory array. This enables passing an Mda into a function that expects a DiskReadMda.
-	DiskReadMda(const Mda &X);
-    ///Constructor based on url.
-    DiskReadMda(const QUrl &url);
+    DiskReadMda(const Mda &X);
 	///Destructor
 	virtual ~DiskReadMda();
 	///Assignment operator
@@ -36,15 +33,13 @@ public:
 
 	#ifdef QT_CORE_LIB
 	///Set the path (file name) of the .mda file to read.
-	void setPath(const QString &file_path_or_url);
+    void setPath(const QString &file_path);
 	#endif
 	///Set the path (file name) of the .mda file to read.
-	void setPath(const char *file_path_or_url);
-	///Set the path (file name) of the .mda file to read.
-	void setUrl(const QUrl &url);
+    void setPath(const char *file_path);
 
-    QString pathOrUrl();
-    QString makePathOrUrl();
+    QString path();
+    QString makePath();
 
 	///The first dimension of the array
 	long N1() const;

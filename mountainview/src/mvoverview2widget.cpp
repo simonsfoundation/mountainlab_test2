@@ -13,6 +13,7 @@
 #include "extract_clips.h"
 #include "tabber.h"
 #include "computationthread.h"
+#include "mountainsortthread.h"
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -47,7 +48,7 @@ public:
     DiskReadMda m_timeseries;
     DiskReadMda m_firings_original;
     Mda m_firings_split;
-    Mda m_firings;
+    DiskReadMda m_firings;
     QList<Epoch> m_epochs;
     QList<int> m_original_cluster_numbers;
     QList<int> m_original_cluster_offsets;
@@ -81,8 +82,9 @@ public:
     void update_clips();
     void update_cluster_views();
     void update_firing_rate_views();
+    void do_shell_split_old();
+    void do_event_filter_old();
     void do_shell_split();
-    void do_event_filter();
     void add_tab(QWidget* W, QString label);
 
     MVCrossCorrelogramsWidget2* open_auto_correlograms();
@@ -364,7 +366,8 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
         d->update_cross_correlograms();
     }
     else if ((str == "update_event_filter") || (str == "use_event_filter")) {
-        d->do_event_filter();
+        d->do_shell_split();
+        //d->do_event_filter();
         //d->start_cross_correlograms_computer();
         d->update_all_widgets();
     }
@@ -874,7 +877,7 @@ void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<d
     }
 }
 
-void MVOverview2WidgetPrivate::do_shell_split()
+void MVOverview2WidgetPrivate::do_shell_split_old()
 {
     m_current_k = 0;
     if (!m_control_panel->getParameterValue("use_shell_split").toBool()) {
@@ -896,7 +899,7 @@ void MVOverview2WidgetPrivate::do_shell_split()
             m_original_cluster_offsets << 0;
         }
 
-        do_event_filter();
+        //do_event_filter();
         return;
     }
 
@@ -974,11 +977,12 @@ void MVOverview2WidgetPrivate::do_shell_split()
     this->set_templates_current_number(-1);
     this->set_templates_selected_numbers(QList<int>());
 
-    do_event_filter();
+    //do_event_filter();
     //start_cross_correlograms_computer();
 }
 
-void MVOverview2WidgetPrivate::do_event_filter()
+/*
+void MVOverview2WidgetPrivate::do_event_filter_old()
 {
     if (!m_control_panel->getParameterValue("use_event_filter").toBool()) {
         m_firings = m_firings_split;
@@ -1007,6 +1011,48 @@ void MVOverview2WidgetPrivate::do_event_filter()
             m_firings.setValue(m_firings_split.value(j, inds[i]), j, i); //speed this up?
         }
     }
+}
+*/
+
+void MVOverview2WidgetPrivate::do_shell_split()
+{
+    MountainsortThread MT;
+    QString processor_name="mv_firings_filter";
+    MT.setProcessorName(processor_name);
+    QMap<QString,QVariant> params;
+    params["use_shell_split"]=m_control_panel->getParameterValue("use_shell_split").toInt();
+    params["shell_width"]=m_control_panel->getParameterValue("shell_width").toDouble();
+    params["min_per_shell"]=m_control_panel->getParameterValue("min_per_shell").toInt();
+    params["use_event_filter"]=m_control_panel->getParameterValue("use_event_filter").toInt();
+    params["min_amplitude"]=m_control_panel->getParameterValue("min_amplitude").toDouble();
+    params["max_outlier_score"]=m_control_panel->getParameterValue("max_outlier_score").toDouble();
+    params["firings"]=m_firings_original.makePath();
+    QString firings_out=create_temporary_output_file_name(processor_name,params,"firings_out");
+    QString original_cluster_numbers_out=create_temporary_output_file_name(processor_name,params,"original_cluster_numbers");
+    params["firings_out"]=firings_out;
+    params["original_cluster_numbers"]=original_cluster_numbers_out;
+    MT.setParameters(params);
+    MT.setRemoteName(remote_name_of_path(m_firings_original.path()));
+    MT.compute();
+    m_firings.setPath(firings_out);
+    m_original_cluster_numbers.clear();
+    m_original_cluster_offsets.clear();
+    Mda AA(original_cluster_numbers_out);
+    int offset=0;
+    for (int i=0; i<AA.totalSize(); i++) {
+        offset++;
+        m_original_cluster_numbers << AA.value(i);
+        m_original_cluster_offsets << offset;
+        if (AA.value(i)!=AA.value(i-1)) {
+            offset=0;
+        }
+    }
+    qDebug() << m_original_cluster_numbers;
+    qDebug() << m_original_cluster_offsets;
+
+    this->set_templates_current_number(-1);
+    this->set_templates_selected_numbers(QList<int>());
+
 }
 
 /*
@@ -1496,8 +1542,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
 		WW->setColors(m_colors);
 		WW->setTimeseries(m_timeseries);
 		WW->setClipSize(clip_size);
-		WW->setFirings(DiskReadMda(m_firings));
-		//WW->setGroupNumbers(m_original_cluster_numbers);
+        WW->setFirings(DiskReadMda(m_firings));
+        WW->setGroupNumbers(m_original_cluster_numbers);
     }
     else if ((widget_type == "clips") || (widget_type == "find_nearby_events")) {
         printf("Extracting clips...\n");

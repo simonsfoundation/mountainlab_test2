@@ -888,19 +888,20 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
 
 Mda mscmd_compute_templates(const QString &timeseries,const QString &firings,int clip_size) {
     MountainsortThread X;
-    if (timeseries.startsWith("http")) {
-        X.setMscmdServerUrl("http://localhost:8001");
-    }
-    X.setProcessorName("compute_templates");
+    QString remote_name=remote_name_of_path(timeseries);
+    qDebug() << "mscmd_compute_templates....." << timeseries << firings << clip_size;
+    X.setRemoteName(remote_name);
+    QString processor_name="compute_templates";
+    X.setProcessorName(processor_name);
     QMap<QString,QVariant> params;
     params["timeseries"]=timeseries;
     params["firings"]=firings;
-    QString templates="/tmp/temp_templates.mda";
-    params["templates"]=templates;
     params["clip_size"]=clip_size;
+    QString templates_fname=create_temporary_output_file_name(processor_name,params,"templates");
+    params["templates"]=templates_fname;
     X.setParameters(params);
     X.compute();
-    Mda ret(templates);
+    Mda ret(templates_fname);
     return ret;
 }
 
@@ -937,7 +938,9 @@ void MVClusterDetailWidgetCalculator::compute()
         if (labels[i] > K)
             K = labels[i];
 
-    Mda templates0=mscmd_compute_templates(timeseries.makePathOrUrl(),firings.makePathOrUrl(),T);
+    QString timeseries_path=timeseries.makePath();
+    QString firings_path=firings.makePath();
+    Mda templates0=mscmd_compute_templates(timeseries_path,firings_path,T);
     //Mda templates0 = compute_templates_0(timeseries, times, labels, T);
 
     for (int k = 1; k <= K; k++) {

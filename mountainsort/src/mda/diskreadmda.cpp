@@ -3,9 +3,9 @@
 #include "remotereadmda.h"
 #include "mdaio.h"
 #include <math.h>
-#include <QUrl>
 #include <QFile>
 #include <QCryptographicHash>
+#include <QDir>
 
 #define MAX_PATH_LEN 10000
 #define DEFAULT_CHUNK_SIZE 1e6
@@ -25,24 +25,19 @@ public:
     bool m_use_remote_mda;
     RemoteReadMda m_remote_mda;
 
-	char m_path[MAX_PATH_LEN];
+    QString m_path;
 	void do_construct();
 	bool open_file_if_needed();
 	void copy_from(const DiskReadMda &other);
     long total_size();
 };
 
-DiskReadMda::DiskReadMda(const QString &path_or_url) {
+DiskReadMda::DiskReadMda(const QString &path) {
 	d=new DiskReadMdaPrivate;
 	d->q=this;
 	d->do_construct();
-	if (!path_or_url.isEmpty()) {
-		if (path_or_url.startsWith("http")) {
-			this->setUrl(QUrl(path_or_url));
-		}
-		else {
-			this->setPath(path_or_url);
-		}
+    if (!path.isEmpty()) {
+        this->setPath(path);
 	}
 }
 
@@ -56,20 +51,11 @@ DiskReadMda::DiskReadMda(const DiskReadMda &other)
 
 DiskReadMda::DiskReadMda(const Mda &X)
 {
-	d=new DiskReadMdaPrivate;
-	d->q=this;
-	d->do_construct();
-	d->m_use_memory_mda=true;
-    d->m_memory_mda=X;
-}
-
-DiskReadMda::DiskReadMda(const QUrl &url)
-{
     d=new DiskReadMdaPrivate;
     d->q=this;
     d->do_construct();
-    d->m_use_remote_mda=true;
-    d->m_remote_mda.setUrl(url.toString());
+    d->m_use_memory_mda=true;
+    d->m_memory_mda=X;
 }
 
 DiskReadMda::~DiskReadMda() {
@@ -82,48 +68,33 @@ void DiskReadMda::operator=(const DiskReadMda &other)
 	d->copy_from(other);
 }
 
-void DiskReadMda::setPath(const QString &file_path_or_url)
+void DiskReadMda::setPath(const QString &file_path)
 {
-	setPath(file_path_or_url.toLatin1().data());
+    setPath(file_path.toLatin1().data());
 }
 
-void DiskReadMda::setPath(const char *file_path_or_url)
+void DiskReadMda::setPath(const char *file_path)
 {
-	if (QString(file_path_or_url).startsWith("http")) {
-		this->setUrl(QUrl(file_path_or_url));
-		return;
-	}
-	strcpy(d->m_path,file_path_or_url);
-	if (d->m_file) {
-		fclose(d->m_file);
-		d->m_file=0;
-	}
+    d->m_path=file_path;
+
+    d->m_use_memory_mda=false;
     d->m_use_remote_mda=false;
-	d->m_use_memory_mda=false;
-	d->m_memory_mda.allocate(1,1);
-	d->m_current_internal_chunk_index=-1;
-}
-
-void DiskReadMda::setUrl(const QUrl &url)
-{
-	if (d->m_file) {
-		fclose(d->m_file);
-		d->m_file=0;
-	}
-
-    d->m_use_remote_mda=true;
-    d->m_remote_mda.setUrl(url.toString());
-
-	d->m_use_memory_mda=false;
-	d->m_memory_mda.allocate(1,1);
-
+    d->m_memory_mda.allocate(1,1);
     d->m_current_internal_chunk_index=-1;
+    if (d->m_file) {
+        fclose(d->m_file);
+        d->m_file=0;
+    }
+
+    if (QString(file_path).startsWith("remote://")) {
+        d->m_use_remote_mda=true;
+        d->m_remote_mda.setPath(file_path);
+    }
 }
 
-QString DiskReadMda::pathOrUrl()
+QString DiskReadMda::path()
 {
-    if (d->m_use_remote_mda) return d->m_remote_mda.url();
-    else return d->m_path;
+    return d->m_path;
 }
 
 QString compute_memory_checksum(long nbytes,void *ptr) {
@@ -143,13 +114,13 @@ QString compute_mda_checksum(Mda &X) {
     return ret;
 }
 
-QString DiskReadMda::makePathOrUrl()
+QString DiskReadMda::makePath()
 {
-    QString ret=pathOrUrl();
+    QString ret=path();
     if (!ret.isEmpty()) return ret;
     if (d->m_use_memory_mda) {
         QString checksum=compute_mda_checksum(d->m_memory_mda);
-        QString fname="/tmp/"+checksum+".mda";
+        QString fname=QDir::tempPath()+"/"+checksum+".mda";
         if (QFile::exists(fname)) return fname;
         if (d->m_memory_mda.write64(fname+".tmp")) {
             if (QFile::rename(fname+".tmp",fname)) {
@@ -376,7 +347,6 @@ double DiskReadMda::value(long i1, long i2, long i3) const
 
 void DiskReadMdaPrivate::do_construct()
 {
-	strcpy(m_path,"");
 	m_file_open_failed=false;
 	m_file=0;
 	m_current_internal_chunk_index=-1;
@@ -390,14 +360,14 @@ bool DiskReadMdaPrivate::open_file_if_needed()
     if (m_use_memory_mda) return true;
 	if (m_file) return true;
 	if (m_file_open_failed) return false;
-	m_file=fopen(m_path,"rb");
+    m_file=fopen(m_path.toLatin1().data(),"rb");
 	if (m_file) {
 		mda_read_header(&m_header,m_file);
         m_mda_header_total_size=1;
         for (int i=0; i<MDAIO_MAX_DIMS; i++) m_mda_header_total_size*=m_header.dims[i];
 	}
 	else {
-		printf("Failed to open diskreadmda file: %s\n",m_path);
+        printf("Failed to open diskreadmda file: %s\n",m_path.toLatin1().data());
 		m_file_open_failed=true;
 		return false;
 	}
@@ -409,15 +379,10 @@ void DiskReadMdaPrivate::copy_from(const DiskReadMda &other)
 	if (other.d->m_use_memory_mda) {
 		this->m_use_memory_mda=true;
         this->m_use_remote_mda=false;
+        this->m_path="";
 		this->m_memory_mda=other.d->m_memory_mda;
 		return;
 	}
-    if (other.d->m_use_remote_mda) {
-        this->m_use_memory_mda=false;
-        this->m_use_remote_mda=true;
-        this->m_remote_mda=other.d->m_remote_mda;
-		return;
-    }
     q->setPath(other.d->m_path);
 }
 

@@ -548,18 +548,19 @@ void mdaclient_unit_test(const QString& url)
     Mda A = X.getChunk(CP);
 }
 
+/*
 #include "diskreadmda.h"
-void mdaclient_unit_test_2(const QString& url)
+void mdaclient_unit_test_2(const QString& path)
 {
     // run this test by calling
     // > mountainview unit_test mdaclient2
 
-    QUrl url0(url);
-    DiskReadMda X(url0);
+    DiskReadMda X(path);
     qDebug()  << X.N1() << X.N2() << X.N3();
     qDebug()  << X.value(1, 0) << X.value(1, 1) << X.value(1, 2);
     qDebug()  << X.value(2, 0) << X.value(2, 1) << X.value(2, 2);
 }
+*/
 
 ChunkParams::ChunkParams(QString dtype_in, long i1_in, long i2_in, long s1_in, long s2_in)
 {

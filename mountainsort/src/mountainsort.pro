@@ -65,7 +65,9 @@ HEADERS += \
     mda/mdaclient.h \
     mda/remotereadmda.h \
     processors/compute_templates.h \
-    processors/compute_templates_processor.h
+    processors/compute_templates_processor.h \
+    processors/mv_firings_filter_processor.h \
+    processors/mv_firings_filter.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -119,7 +121,9 @@ SOURCES += mountainsortmain.cpp \
     mda/mdaclient.cpp \
     mda/remotereadmda.cpp \
     processors/compute_templates.cpp \
-    processors/compute_templates_processor.cpp
+    processors/compute_templates_processor.cpp \
+    processors/mv_firings_filter_processor.cpp \
+    processors/mv_firings_filter.cpp
 
 DISTFILES += \
     ../version.txt

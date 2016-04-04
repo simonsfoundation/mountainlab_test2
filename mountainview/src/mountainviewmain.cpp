@@ -79,18 +79,18 @@ int main(int argc, char* argv[])
 	if (CLP.unnamed_parameters.value(0)=="unit_test") {
         QString arg2=CLP.unnamed_parameters.value(1);
         if (arg2=="mdaclient") {
-            QString arg3=CLP.unnamed_parameters.value(2,"http://magland.org:8000/firings.mda");
+            QString arg3=CLP.unnamed_parameters.value(2,"remote://magland/firings.mda");
             mdaclient_unit_test(arg3);
         }
-        else if (arg2=="mdaclient2") {
-            QString arg3=CLP.unnamed_parameters.value(2,"http://magland.org:8000/firings.mda");
-            mdaclient_unit_test_2(arg3);
-        }
+        //else if (arg2=="mdaclient2") {
+        //    QString arg3=CLP.unnamed_parameters.value(2,"remote://magland/firings.mda");
+        //    mdaclient_unit_test_2(arg3);
+        //}
         else if (arg2=="remotereadmda") {
             unit_test_remote_read_mda();
         }
         else if (arg2=="remotereadmda2") {
-            QString arg3=CLP.unnamed_parameters.value(2,"http://localhost:8000/firings.mda");
+            QString arg3=CLP.unnamed_parameters.value(2,"remote://localhost/firings.mda");
             unit_test_remote_read_mda_2(arg3);
         }
         else {

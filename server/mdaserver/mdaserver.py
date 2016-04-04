@@ -30,10 +30,10 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_GET(self): #handle a GET request
         mdachunk_exe        = self.cfg("mdachunk_exe")
-        mda_path            = self.cfg("mda_path")
+        mdaserver_basepath  = self.cfg("mdaserver_basepath")
         mdachunk_data_path  = self.cfg("mdachunk_data_path")
-        mdachunk_data_url   = self.cfg("mdachunk_data_url")
-    	mda_fname=mda_path+"/"+urlparse.urlparse(self.path).path
+        mdaserver_url   = self.cfg("mdaserver_url")
+    	mda_fname=mdaserver_basepath+"/"+urlparse.urlparse(self.path).path
         if self.query("a")=="size": #need to return the dimensions of the .mda
             (str,exit_code)=self.call_and_read_output(" ".join([mdachunk_exe, "size", mda_fname]))
             self.send_plain_text(str)
@@ -60,7 +60,7 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 ])
     		(str,exit_code)=self.call_and_read_output(cmd)
                 if not exit_code:
-    			url0=mdachunk_data_url+"/"+str
+    			url0=mdaserver_url+"/"+str
     			self.send_plain_text(url0)
     		else:
     			self.send_plain_text("ERROR: "+str)

@@ -15,13 +15,13 @@ class RemoteReadMda
 {
 public:
     friend class RemoteReadMdaPrivate;
-    RemoteReadMda(const QString &url="");
+    RemoteReadMda(const QString &path="");
     RemoteReadMda(const RemoteReadMda &other);
     void operator=(const RemoteReadMda &other);
     virtual ~RemoteReadMda();
 
-    void setUrl(const QString &url);
-    QString url() const;
+    void setPath(const QString &path);
+    QString path() const;
 
     long N1();
     long N2();
@@ -35,7 +35,7 @@ private:
     RemoteReadMdaPrivate *d;
 };
 
-void unit_test_remote_read_mda_2(const QString& url);
+void unit_test_remote_read_mda_2(const QString& path);
 void unit_test_remote_read_mda();
 
 #endif // REMOTEREADMDA_H

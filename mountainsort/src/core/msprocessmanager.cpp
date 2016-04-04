@@ -22,6 +22,8 @@
 #include "mask_out_artifacts_processor.h"
 #include "fit_stage_processor.h"
 #include "compute_templates_processor.h"
+#include "msmisc.h"
+#include "mv_firings_filter_processor.h"
 
 #include "qjson.h"
 #include "textfile.h"
@@ -67,6 +69,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new mask_out_artifacts_Processor);
     loadProcessor(new fit_stage_Processor);
     loadProcessor(new compute_templates_Processor);
+    loadProcessor(new mv_firings_filter_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString &processor_name) const
@@ -79,11 +82,6 @@ bool MSProcessManager::checkProcess(const QString &processor_name, const QMap<QS
 	return d->find_processor(processor_name)->check(parameters);
 }
 
-QString compute_hash(const QString &str) {
-	QCryptographicHash hash(QCryptographicHash::Sha1);
-	hash.addData(str.toLatin1());
-	return QString(hash.result().toHex());
-}
 
 QString compute_process_code(const QString &processor_name,const QMap<QString,QVariant> &parameters) {
 	QMap<QString,QVariant> X;
@@ -160,8 +158,24 @@ void MSProcessManagerPrivate::write_process_record(const QString &processor_name
 	write_text_file(fname,toJSON(info));
 }
 
-bool MSProcessManager::runProcess(const QString &processor_name, const QMap<QString, QVariant> &parameters)
+bool MSProcessManager::runProcess(const QString &processor_name, const QMap<QString, QVariant> &parameters_in)
 {
+    QMap<QString,QVariant> parameters=parameters_in;
+
+    //preprocess the parameters
+    /*
+    QString tmp_path=QDir::tempPath()+"/mountainsort";
+    if (!QDir(tmp_path).exists()) QDir(QFileInfo(tmp_path).path()).mkdir(QFileInfo(tmp_path).fileName());
+    QStringList pkeys=parameters.keys();
+    foreach (QString key,pkeys) {
+        QVariant val=parameters[key];
+        if (val.toString().indexOf("(MSTMP)")>=0) {
+            val=val.toString().replace("(MSTMP)",tmp_path);
+            parameters[key]=val;
+        }
+    }
+    */
+
 	printf("RUNNING %s\n",processor_name.toLatin1().data());
 	QTime timer; timer.start();
 	bool ret=d->find_processor(processor_name)->run(parameters);

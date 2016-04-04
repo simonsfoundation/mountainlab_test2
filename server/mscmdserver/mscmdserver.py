@@ -21,14 +21,15 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_GET(self): #handle a GET request
         mountainsort_exe        = self.cfg("mountainsort_exe")
         mdaserver_basepath            = self.cfg("mdaserver_basepath")
-        mdaserver_url   = self.cfg("mdaserver_url")
-        processor_name=self.query("processor");
+        remote_name   = self.cfg("remote_name")
+        processor_name=self.query("processor")
         keys0=self.query_keys()
+        print(remote_name)
         cmd = mountainsort_exe+" "+processor_name
         for j in range(0,len(keys0)):
             if not keys0[j]=="processor":
                 val=self.query(keys0[j])
-                val=val.replace(mdaserver_url,mdaserver_basepath)
+                val=val.replace("remote://"+remote_name,mdaserver_basepath)
                 cmd=cmd+" --"+keys0[j]+"="+val
         (str,exit_code)=self.call_and_read_output(cmd)
         if not exit_code:

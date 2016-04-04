@@ -18,7 +18,7 @@ public:
     MountainsortThread *q;
     QString m_processor_name;
     QMap<QString,QVariant> m_parameters;
-    QString m_mscmd_server_url;
+    QString m_remote_name;
 };
 
 MountainsortThread::MountainsortThread() {
@@ -40,14 +40,15 @@ void MountainsortThread::setParameters(const QMap<QString,QVariant> &parameters)
     d->m_parameters=parameters;
 }
 
-void MountainsortThread::setMscmdServerUrl(const QString &url)
+void MountainsortThread::setRemoteName(const QString &name)
 {
-    d->m_mscmd_server_url=url;
+    d->m_remote_name=name;
 }
 
 void MountainsortThread::compute()
 {
-    if (d->m_mscmd_server_url.isEmpty()) {
+    qDebug() << "----------------------------" << d->m_remote_name << d->m_processor_name;
+    if (d->m_remote_name.isEmpty()) {
         QString mountainsort_exe=qApp->applicationDirPath()+"/../../mountainsort/bin/mountainsort";
         QStringList args;
         args << d->m_processor_name;
@@ -61,13 +62,25 @@ void MountainsortThread::compute()
         }
     }
     else {
-        QString url=d->m_mscmd_server_url+"/?";
+        QString url=mscmd_url_for_remote(d->m_remote_name)+"/?";
+        qDebug() << "URL=" << url << d->m_remote_name;
         url+="processor="+d->m_processor_name+"&";
         QStringList keys=d->m_parameters.keys();
         foreach (QString key,keys) {
             url+=QString("%1=%2&").arg(key).arg(d->m_parameters.value(key).toString());
         }
+        qDebug() << "URL=" << url;
         http_get_text(url);
     }
 }
 
+
+QString create_temporary_output_file_name(const QString &processor_name,const QMap<QString,QVariant> &params,const QString &parameter_name) {
+    QString str=processor_name+":";
+    QStringList keys=params.keys();
+    qSort(keys);
+    foreach (QString key,keys) {
+        str+=key+"="+params["key"].toString()+"&";
+    }
+    return QString("/tmp/%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
+}

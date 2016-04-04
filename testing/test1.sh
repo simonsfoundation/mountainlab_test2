@@ -1,8 +1,8 @@
 #!/bin/bash
 
-base1=/home/magland/dev/mdaserver/testdata
-base2=http://localhost:8000
-base3=http://magland.org:8000
+base1=/home/magland/dev/mountainlab/mdaserver_data
+base2=remote://localhost
+base3=remote://magland
 
 base=$base2
 

@@ -24,7 +24,7 @@ class RemoteReadMdaPrivate
 public:
     RemoteReadMda *q;
 
-    QString m_url;
+    QString m_path;
     RemoteReadMdaInfo m_info;
     bool m_info_downloaded;
 
@@ -33,38 +33,38 @@ public:
 
 };
 
-RemoteReadMda::RemoteReadMda(const QString &url) {
+RemoteReadMda::RemoteReadMda(const QString &path) {
     d=new RemoteReadMdaPrivate;
     d->q=this;
-    this->setUrl(url);
+    this->setPath(path);
 }
 
 RemoteReadMda::RemoteReadMda(const RemoteReadMda &other)
 {
     d=new RemoteReadMdaPrivate;
     d->q=this;
-    this->setUrl(other.d->m_url);
+    this->setPath(other.d->m_path);
 }
 
 void RemoteReadMda::operator=(const RemoteReadMda &other)
 {
-    this->setUrl(other.d->m_url);
+    this->setPath(other.d->m_path);
 }
 
 RemoteReadMda::~RemoteReadMda() {
     delete d;
 }
 
-void RemoteReadMda::setUrl(const QString &url)
+void RemoteReadMda::setPath(const QString &path)
 {
     d->m_info.N1=d->m_info.N2=d->m_info.N3=0;
     d->m_info_downloaded=false;
-    d->m_url=url;
+    d->m_path=path;
 }
 
-QString RemoteReadMda::url() const
+QString RemoteReadMda::path() const
 {
-    return d->m_url;
+    return d->m_path;
 }
 
 long RemoteReadMda::N1()
@@ -152,7 +152,8 @@ void RemoteReadMdaPrivate::download_info_if_needed()
 {
     if (m_info_downloaded) return;
     m_info_downloaded=true;
-    QString url2=m_url+"?a=info";
+    QString url=file_url_for_remote_path(m_path);
+    QString url2=url+"?a=info";
     QString txt=http_get_text(url2);
     QStringList lines=txt.split("\n");
     QStringList sizes=lines.value(0).split(",");
@@ -176,7 +177,8 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
     if (!QDir(cache_path).exists()) QDir(QDir::tempPath()).mkdir("RemoteReadMda");
     QString fname=cache_path+"/"+m_info.checksum+"-"+QString("%1-%2").arg(REMOTE_READ_MDA_CHUNK_SIZE).arg(ii);
     if (QFile::exists(fname)) return fname;
-    QString url0=m_url+QString("?a=readChunk&index=%1&size=%2&datatype=float64").arg((long)(ii*REMOTE_READ_MDA_CHUNK_SIZE)).arg(size);
+    QString url=file_url_for_remote_path(m_path);
+    QString url0=url+QString("?a=readChunk&index=%1&size=%2&datatype=float64").arg((long)(ii*REMOTE_READ_MDA_CHUNK_SIZE)).arg(size);
     QString binary_url=http_get_text(url0).trimmed();
     if (binary_url.isEmpty()) return "";
     QString mda_fname=http_get_binary_mda_file(binary_url);
@@ -193,7 +195,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
 
 void unit_test_remote_read_mda()
 {
-    QString url="http://localhost:8000/firings.mda";
+    QString url="remote://localhost/firings.mda";
     RemoteReadMda X(url);
     qDebug()  << X.N1() << X.N2() << X.N3();
     Mda chunk;
@@ -204,13 +206,12 @@ void unit_test_remote_read_mda()
 }
 
 #include "diskreadmda.h"
-void unit_test_remote_read_mda_2(const QString& url)
+void unit_test_remote_read_mda_2(const QString& path)
 {
     // run this test by calling
     // > mountainview unit_test remotereadmda2
 
-    QUrl url0(url);
-    DiskReadMda X(url0);
+    DiskReadMda X(path);
     for (int j=0; j<20; j++) {
         printf("%d: ",j);
         for (int i=0; i<X.N1(); i++) {

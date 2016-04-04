@@ -20,5 +20,9 @@ Mda grab_clips_subset(Mda &clips,const QList<int> &inds);
 double compute_norm(long N,double *X);
 QString http_get_text(QString url);
 QString http_get_binary_mda_file(QString url);
+QString compute_hash(const QString &str);
+QString remote_name_of_path(const QString &path);
+QString mscmd_url_for_remote(const QString &remote_name);
+QString file_url_for_remote_path(const QString &path);
 
 #endif // MSMISC_H

@@ -17,7 +17,7 @@ enum MdaClientStatus {
 };
 
 void mdaclient_unit_test(const QString &url);
-void mdaclient_unit_test_2(const QString &url);
+//void mdaclient_unit_test_2(const QString &url);
 
 class ChunkParams {
 public:
