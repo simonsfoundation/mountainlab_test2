@@ -26,7 +26,7 @@ private:
     MountainsortThreadPrivate *d;
 };
 
-QString create_temporary_output_file_name(const QString &processor_name,const QMap<QString,QVariant> &params,const QString &parameter_name);
+QString create_temporary_output_file_name(const QString &remote_name,const QString &processor_name,const QMap<QString,QVariant> &params,const QString &parameter_name);
 
 #endif // MOUNTAINSORTTHREAD_H
 

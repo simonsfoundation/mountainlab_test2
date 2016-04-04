@@ -1016,10 +1016,16 @@ void MVOverview2WidgetPrivate::do_event_filter_old()
 
 void MVOverview2WidgetPrivate::do_shell_split()
 {
+    qDebug() << "@@@@@@@@@@@";
+    qDebug() << "@@@@@@@@@@@";
+    qDebug() << "@@@@@@@@@@@";
+    qDebug() << "@@@@@@@@@@@";
+    qDebug() << "@@@@@@@@@@@";
     MountainsortThread MT;
     QString processor_name="mv_firings_filter";
     MT.setProcessorName(processor_name);
     QMap<QString,QVariant> params;
+    QString remote_name=remote_name_of_path(m_firings_original.path());
     params["use_shell_split"]=m_control_panel->getParameterValue("use_shell_split").toInt();
     params["shell_width"]=m_control_panel->getParameterValue("shell_width").toDouble();
     params["min_per_shell"]=m_control_panel->getParameterValue("min_per_shell").toInt();
@@ -1027,12 +1033,13 @@ void MVOverview2WidgetPrivate::do_shell_split()
     params["min_amplitude"]=m_control_panel->getParameterValue("min_amplitude").toDouble();
     params["max_outlier_score"]=m_control_panel->getParameterValue("max_outlier_score").toDouble();
     params["firings"]=m_firings_original.makePath();
-    QString firings_out=create_temporary_output_file_name(processor_name,params,"firings_out");
-    QString original_cluster_numbers_out=create_temporary_output_file_name(processor_name,params,"original_cluster_numbers");
+    QString firings_out=create_temporary_output_file_name(remote_name,processor_name,params,"firings_out");
+    QString original_cluster_numbers_out=create_temporary_output_file_name(remote_name,processor_name,params,"original_cluster_numbers");
     params["firings_out"]=firings_out;
     params["original_cluster_numbers"]=original_cluster_numbers_out;
     MT.setParameters(params);
-    MT.setRemoteName(remote_name_of_path(m_firings_original.path()));
+    MT.setRemoteName(remote_name);
+    qDebug() << processor_name << params << remote_name;
     MT.compute();
     m_firings.setPath(firings_out);
     m_original_cluster_numbers.clear();

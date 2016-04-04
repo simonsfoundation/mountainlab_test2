@@ -886,7 +886,7 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
     return QColor(50, 0, 0);
 }
 
-Mda mscmd_compute_templates(const QString &timeseries,const QString &firings,int clip_size) {
+DiskReadMda mscmd_compute_templates(const QString &timeseries,const QString &firings,int clip_size) {
     MountainsortThread X;
     QString remote_name=remote_name_of_path(timeseries);
     qDebug() << "mscmd_compute_templates....." << timeseries << firings << clip_size;
@@ -897,11 +897,11 @@ Mda mscmd_compute_templates(const QString &timeseries,const QString &firings,int
     params["timeseries"]=timeseries;
     params["firings"]=firings;
     params["clip_size"]=clip_size;
-    QString templates_fname=create_temporary_output_file_name(processor_name,params,"templates");
+    QString templates_fname=create_temporary_output_file_name(remote_name,processor_name,params,"templates");
     params["templates"]=templates_fname;
     X.setParameters(params);
     X.compute();
-    Mda ret(templates_fname);
+    DiskReadMda ret(templates_fname);
     return ret;
 }
 
@@ -940,7 +940,7 @@ void MVClusterDetailWidgetCalculator::compute()
 
     QString timeseries_path=timeseries.makePath();
     QString firings_path=firings.makePath();
-    Mda templates0=mscmd_compute_templates(timeseries_path,firings_path,T);
+    DiskReadMda templates0=mscmd_compute_templates(timeseries_path,firings_path,T);
     //Mda templates0 = compute_templates_0(timeseries, times, labels, T);
 
     for (int k = 1; k <= K; k++) {
@@ -959,7 +959,7 @@ void MVClusterDetailWidgetCalculator::compute()
         }
         if (this->stopRequested())
             return; ////////////////////////////
-        templates0.getChunk(CD.template0, 0, 0, k - 1, M, T, 1);
+        templates0.readChunk(CD.template0, 0, 0, k - 1, M, T, 1);
         cluster_data << CD;
     }
 }

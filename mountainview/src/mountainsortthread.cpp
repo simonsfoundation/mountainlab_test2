@@ -75,12 +75,17 @@ void MountainsortThread::compute()
 }
 
 
-QString create_temporary_output_file_name(const QString &processor_name,const QMap<QString,QVariant> &params,const QString &parameter_name) {
+QString create_temporary_output_file_name(const QString &remote_name,const QString &processor_name,const QMap<QString,QVariant> &params,const QString &parameter_name) {
     QString str=processor_name+":";
     QStringList keys=params.keys();
     qSort(keys);
     foreach (QString key,keys) {
         str+=key+"="+params["key"].toString()+"&";
     }
-    return QString("/tmp/%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
+
+    QString ret=QString("tmp/%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
+    if (!remote_name.isEmpty()) {
+        ret="remote://"+remote_name+"/"+ret;
+    }
+    return ret;
 }

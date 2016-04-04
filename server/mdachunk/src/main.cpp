@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     }
 
     if (arg0 == "size") {
-        if ((arg1.isEmpty()) || (!arg1.endsWith(".mda"))) {
+        if (arg1.isEmpty()) {
             printf("Problem with second argument\n");
             return -1;
         }
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
         return 0;
     }
     else if (arg0 == "info") {
-        if ((arg1.isEmpty()) || (!arg1.endsWith(".mda"))) {
+        if (arg1.isEmpty()) {
             printf("Problem with second argument\n");
             return -1;
         }
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
         return 0;
     }
     else if (arg0 == "readChunk") {
-        if ((arg1.isEmpty()) || (!arg1.endsWith(".mda"))) {
+        if (arg1.isEmpty()) {
             printf("Problem with second argument\n");
             return -1;
         }
