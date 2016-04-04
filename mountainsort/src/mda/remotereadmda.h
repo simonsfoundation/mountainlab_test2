@@ -21,6 +21,7 @@ public:
     virtual ~RemoteReadMda();
 
     void setUrl(const QString &url);
+    QString url() const;
 
     long N1();
     long N2();

@@ -120,6 +120,8 @@ public:
     void set_progress(QString title, QString text, float frac);
     void set_current_event(MVEvent evt);
 
+    long cc_max_dt();
+
     //void start_cross_correlograms_computer();
 };
 
@@ -1130,8 +1132,6 @@ void MVOverview2WidgetPrivate::add_tab(QWidget* W, QString label)
 MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_auto_correlograms()
 {
     MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2;
-    int max_dt=(int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
-    X->setMaxDt(max_dt);
     X->setProperty("widget_type", "auto_correlograms");
     add_tab(X, "Auto-Correlograms");
     QObject::connect(X, SIGNAL(indexActivated(int)), q, SLOT(slot_auto_correlogram_activated(int)));
@@ -1144,8 +1144,7 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_auto_correlograms()
 MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_cross_correlograms(int k)
 {
     MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2;
-    int max_dt=(int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
-    X->setMaxDt(max_dt);
+    //int max_dt=(int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
     X->setProperty("widget_type", "cross_correlograms");
     X->setProperty("kk", k);
     add_tab(X, QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k) + 1));
@@ -1174,8 +1173,7 @@ QList<int> string_list_to_int_list(const QList<QString>& list)
 MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_matrix_of_cross_correlograms()
 {
     MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2;
-    int max_dt=(int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
-    X->setMaxDt(max_dt);
+    //int max_dt=(int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
     X->setProperty("widget_type", "matrix_of_cross_correlograms");
     QList<int> ks = m_selected_ks.toList();
     qSort(ks);
@@ -1402,6 +1400,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
     if (widget_type == "auto_correlograms") {
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         WW->setSampleRate(m_samplerate);
+        WW->setMaxDt(cc_max_dt());
         WW->setColors(m_colors);
         WW->setFirings(DiskReadMda(m_firings));
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
@@ -1425,6 +1424,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         int k = W->property("kk").toInt();
         WW->setColors(m_colors);
         WW->setSampleRate(m_samplerate);
+        WW->setMaxDt(cc_max_dt());
         WW->setFirings(DiskReadMda(m_firings));
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setBaseLabel(k);
@@ -1448,6 +1448,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         WW->setColors(m_colors);
         WW->setSampleRate(m_samplerate);
+        WW->setMaxDt(cc_max_dt());
         WW->setFirings(DiskReadMda(m_firings));
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setLabelNumbers(ks);
@@ -1991,6 +1992,11 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
             }
         }
     }
+}
+
+long MVOverview2WidgetPrivate::cc_max_dt()
+{
+    return (int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
 }
 
 /*

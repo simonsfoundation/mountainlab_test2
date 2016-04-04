@@ -4,10 +4,10 @@
 ** Created: 3/29/2016
 *******************************************************/
 
-#include "compute_templates.h"
+#include "compute_templates_0.h"
 #include "msmisc.h"
 
-Mda compute_templates(DiskReadMda &X, Mda &firings,int clip_size)
+Mda compute_templates_0(DiskReadMda &X, Mda &firings,int clip_size)
 {
     QList<double> times;
     QList<int> labels;
@@ -16,10 +16,10 @@ Mda compute_templates(DiskReadMda &X, Mda &firings,int clip_size)
         times << firings.value(1,i);
         labels << (int)firings.value(2,i);
     }
-    return compute_templates(X,times,labels,clip_size);
+    return compute_templates_0(X,times,labels,clip_size);
 }
 
-Mda compute_templates(DiskReadMda &X, const QList<double> &times, const QList<int> &labels, int clip_size)
+Mda compute_templates_0(DiskReadMda &X, const QList<double> &times, const QList<int> &labels, int clip_size)
 {
     int M=X.N1();
     int T=clip_size;

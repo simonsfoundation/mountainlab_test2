@@ -181,7 +181,14 @@ long Mda::N6() const
 
 long Mda::totalSize() const
 {
-	return d->m_total_size;
+    return d->m_total_size;
+}
+
+long Mda::size(int dimension_index)
+{
+    if (dimension_index<0) return 0;
+    if (dimension_index>=MDA_MAX_DIMS) return 1;
+    return d->m_dims[dimension_index];
 }
 
 double Mda::get(long i) const

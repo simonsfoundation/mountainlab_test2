@@ -9,7 +9,7 @@
 #include "msmisc.h"
 #include "diskreadmda.h"
 #include <math.h>
-#include "compute_templates.h"
+#include "compute_templates_0.h"
 
 double compute_score(long N,double *X,double *template0);
 QList<int> find_events_to_use(const QList<long> &times,const QList<double> &scores,const fit_stage_opts &opts);
@@ -33,7 +33,7 @@ bool fit_stage(const QString &timeseries_path, const QString &firings_path, cons
     int K=compute_max(labels);
 
     DiskReadMda X0(timeseries_path);
-    Mda templates=compute_templates(X0,firings,T); //MxNxK
+    Mda templates=compute_templates_0(X0,firings,T); //MxNxK
 
     QList<double> template_norms; template_norms << 0;
     for (int k=1; k<=K; k++) {

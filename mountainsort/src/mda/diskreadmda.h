@@ -43,6 +43,9 @@ public:
 	///Set the path (file name) of the .mda file to read.
 	void setUrl(const QUrl &url);
 
+    QString pathOrUrl();
+    QString makePathOrUrl();
+
 	///The first dimension of the array
 	long N1() const;
 	///The second dimension of the array

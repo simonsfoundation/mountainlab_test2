@@ -46,7 +46,8 @@ HEADERS += \
     ../../mountainsort/src/mda/mdaclient.h \
     computationthread.h \
     set_progress.h \
-    mvcrosscorrelogramswidget2.h
+    mvcrosscorrelogramswidget2.h \
+    mountainsortthread.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -82,7 +83,8 @@ SOURCES += mountainviewmain.cpp \
     ../../mountainsort/src/mda/mdaclient.cpp \
     computationthread.cpp \
     set_progress.cpp \
-    mvcrosscorrelogramswidget2.cpp
+    mvcrosscorrelogramswidget2.cpp \
+    mountainsortthread.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils
@@ -95,8 +97,8 @@ HEADERS += get_command_line_params.h
 SOURCES += get_command_line_params.cpp
 HEADERS += affinetransformation.h
 SOURCES += affinetransformation.cpp
-HEADERS += compute_templates.h
-SOURCES += compute_templates.cpp
+HEADERS += compute_templates_0.h
+SOURCES += compute_templates_0.cpp
 
 INCLUDEPATH += ../../mountainsort/src/mda
 DEPENDPATH += ../../mountainsort/src/mda

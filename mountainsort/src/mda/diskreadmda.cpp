@@ -4,9 +4,11 @@
 #include "mdaio.h"
 #include <math.h>
 #include <QUrl>
+#include <QFile>
+#include <QCryptographicHash>
 
 #define MAX_PATH_LEN 10000
-#define DEFAULT_CHUNK_SIZE 10e6
+#define DEFAULT_CHUNK_SIZE 1e6
 
 class DiskReadMdaPrivate
 {
@@ -115,7 +117,49 @@ void DiskReadMda::setUrl(const QUrl &url)
 	d->m_use_memory_mda=false;
 	d->m_memory_mda.allocate(1,1);
 
-	d->m_current_internal_chunk_index=-1;
+    d->m_current_internal_chunk_index=-1;
+}
+
+QString DiskReadMda::pathOrUrl()
+{
+    if (d->m_use_remote_mda) return d->m_remote_mda.url();
+    else return d->m_path;
+}
+
+QString compute_memory_checksum(long nbytes,void *ptr) {
+    QByteArray X((char *)ptr,nbytes);
+    QCryptographicHash hash(QCryptographicHash::Sha1);
+    hash.addData(X);
+    return QString(hash.result().toHex());
+}
+
+QString compute_mda_checksum(Mda &X) {
+    QString ret=compute_memory_checksum(X.totalSize()*sizeof(double),X.dataPtr());
+    ret+="-";
+    for (int i=0; i<X.ndims(); i++) {
+        if (i>0) ret+="x";
+        ret+=QString("%1").arg(X.size(i));
+    }
+    return ret;
+}
+
+QString DiskReadMda::makePathOrUrl()
+{
+    QString ret=pathOrUrl();
+    if (!ret.isEmpty()) return ret;
+    if (d->m_use_memory_mda) {
+        QString checksum=compute_mda_checksum(d->m_memory_mda);
+        QString fname="/tmp/"+checksum+".mda";
+        if (QFile::exists(fname)) return fname;
+        if (d->m_memory_mda.write64(fname+".tmp")) {
+            if (QFile::rename(fname+".tmp",fname)) {
+                return fname;
+            }
+        }
+        QFile::remove(fname);
+        QFile::remove(fname+".tmp");
+    }
+    return "";
 }
 
 long DiskReadMda::N1() const

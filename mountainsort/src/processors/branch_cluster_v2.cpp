@@ -8,7 +8,7 @@
 #include <QTime>
 #include "extract_clips.h"
 #include "msmisc.h"
-#include "compute_templates.h"
+#include "compute_templates_0.h"
 #include "get_sort_indices.h"
 
 QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, int channel_for_display);
@@ -114,7 +114,7 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
         }
         int T_for_peaks = 3;
         int Tmid_for_peaks = (int)((T_for_peaks + 1) / 2) - 1;
-        Mda templates = compute_templates(X, firings, T_for_peaks); //MxTxK
+        Mda templates = compute_templates_0(X, firings, T_for_peaks); //MxTxK
         QList<double> template_peaks;
         for (int k = 0; k < K; k++) {
             if (channels[k] >= 1) {

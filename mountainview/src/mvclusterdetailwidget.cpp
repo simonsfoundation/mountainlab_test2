@@ -16,8 +16,9 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QTimer>
-#include "compute_templates.h"
+#include "compute_templates_0.h"
 #include "computationthread.h"
+#include "mountainsortthread.h"
 
 struct ClusterData {
     int k;
@@ -885,6 +886,24 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
     return QColor(50, 0, 0);
 }
 
+Mda mscmd_compute_templates(const QString &timeseries,const QString &firings,int clip_size) {
+    MountainsortThread X;
+    if (timeseries.startsWith("http")) {
+        X.setMscmdServerUrl("http://localhost:8001");
+    }
+    X.setProcessorName("compute_templates");
+    QMap<QString,QVariant> params;
+    params["timeseries"]=timeseries;
+    params["firings"]=firings;
+    QString templates="/tmp/temp_templates.mda";
+    params["templates"]=templates;
+    params["clip_size"]=clip_size;
+    X.setParameters(params);
+    X.compute();
+    Mda ret(templates);
+    return ret;
+}
+
 void MVClusterDetailWidgetCalculator::compute()
 {
     QTime timer;
@@ -918,7 +937,8 @@ void MVClusterDetailWidgetCalculator::compute()
         if (labels[i] > K)
             K = labels[i];
 
-    Mda templates0 = compute_templates(timeseries, times, labels, T);
+    Mda templates0=mscmd_compute_templates(timeseries.makePathOrUrl(),firings.makePathOrUrl(),T);
+    //Mda templates0 = compute_templates_0(timeseries, times, labels, T);
 
     for (int k = 1; k <= K; k++) {
         if (this->stopRequested())

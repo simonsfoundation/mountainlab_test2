@@ -11,7 +11,7 @@
 #include <QDir>
 #include <QDateTime>
 
-#define REMOTE_READ_MDA_CHUNK_SIZE 5e6
+#define REMOTE_READ_MDA_CHUNK_SIZE 5e5
 
 struct RemoteReadMdaInfo {
     long N1,N2,N3;
@@ -60,6 +60,11 @@ void RemoteReadMda::setUrl(const QString &url)
     d->m_info.N1=d->m_info.N2=d->m_info.N3=0;
     d->m_info_downloaded=false;
     d->m_url=url;
+}
+
+QString RemoteReadMda::url() const
+{
+    return d->m_url;
 }
 
 long RemoteReadMda::N1()

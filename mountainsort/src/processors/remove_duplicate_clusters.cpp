@@ -3,7 +3,7 @@
 #include <QList>
 #include <stdio.h>
 #include "get_sort_indices.h"
-#include "compute_templates.h"
+#include "compute_templates_0.h"
 #include <math.h>
 #include "msmisc.h"
 
@@ -39,7 +39,7 @@ bool remove_duplicate_clusters(const QString &timeseries_path,const QString &fir
     for (int k=0; k<K; k++) clusters_to_use << 1;
 
     printf("Computing templates...\n");
-    Mda templates=compute_templates(X,F,opts.clip_size);
+    Mda templates=compute_templates_0(X,F,opts.clip_size);
     printf("Comparing templates...\n");
     for (int k1=0; k1<K; k1++) {
         for (int k2=0; k2<K; k2++) {
