@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QCryptographicHash>
+#include <QThread>
 #include "textfile.h"
 
 double compute_min(const QList<double> &X) {

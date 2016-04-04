@@ -102,8 +102,7 @@ void MVCrossCorrelogramsWidget2::setLabelPairs(const QList<int>& labels1, const 
 void MVCrossCorrelogramsWidget2::setColors(const QMap<QString, QColor>& colors)
 {
     d->m_colors = colors;
-    foreach(HistogramView * V, d->m_histogram_views)
-    {
+    foreach (HistogramView* V, d->m_histogram_views) {
         V->setColors(d->m_colors);
     }
 }
@@ -160,8 +159,7 @@ QList<int> MVCrossCorrelogramsWidget2::selectedLabels1()
     QList<int> tmp = d->m_selected_indices.toList();
     qSort(tmp);
     QList<int> ret;
-    foreach(int ind, tmp)
-    {
+    foreach (int ind, tmp) {
         ret << d->m_labels1.value(ind);
     }
     return ret;
@@ -172,8 +170,7 @@ QList<int> MVCrossCorrelogramsWidget2::selectedLabels2()
     QList<int> tmp = d->m_selected_indices.toList();
     qSort(tmp);
     QList<int> ret;
-    foreach(int ind, tmp)
-    {
+    foreach (int ind, tmp) {
         ret << d->m_labels2.value(ind);
     }
     return ret;
@@ -210,12 +207,12 @@ QList<int> MVCrossCorrelogramsWidget2::selectedIndices()
 
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach(int a, S1)
-    if (!S2.contains(a))
-        return false;
-    foreach(int a, S2)
-    if (!S1.contains(a))
-        return false;
+    foreach (int a, S1)
+        if (!S2.contains(a))
+            return false;
+    foreach (int a, S2)
+        if (!S1.contains(a))
+            return false;
     return true;
 }
 
@@ -417,7 +414,8 @@ void MVCrossCorrelogramsWidget2::slot_histogram_view_control_clicked()
         d->do_highlighting();
         if (d->m_current_index <= 0)
             setCurrentIndex(index);
-    } else {
+    }
+    else {
         d->m_selected_indices.remove(index);
         d->do_highlighting();
     }
@@ -429,7 +427,8 @@ void MVCrossCorrelogramsWidget2::slot_histogram_view_clicked()
     int index = sender()->property("index").toInt();
     d->m_selected_indices.clear();
     if (d->m_current_index == index) {
-    } else {
+    }
+    else {
         setCurrentIndex(index);
         d->m_selected_indices.clear();
         d->m_selected_indices << index;
@@ -484,6 +483,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
     QList<double> times;
     QList<int> labels;
     long L = firings.N2();
+
     printf("Setting up times and labels...\n");
     for (int n = 0; n < L; n++) {
         times << firings.value(1, n);
@@ -506,7 +506,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
     for (int j = 0; j < labels1.count(); j++) {
         int k1 = labels1[j];
         int k2 = labels2[j];
-        QList<float> data0 = compute_cc_data(the_times.value(k1), the_times.value(k2), max_dt,(k1==k2));
+        QList<float> data0 = compute_cc_data(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
         data << data0;
     }
 }
@@ -518,12 +518,14 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
         int index = HV->property("index").toInt();
         if (index == m_current_index) {
             HV->setCurrent(true);
-        } else {
+        }
+        else {
             HV->setCurrent(false);
         }
         if (m_selected_indices.contains(index)) {
             HV->setSelected(true);
-        } else {
+        }
+        else {
             HV->setSelected(false);
         }
     }

@@ -275,7 +275,7 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long i3, long size1, long 
 	}
     if (d->m_use_remote_mda) {
         if ((size1!=N1())||(i1!=0)||(size2!=N2())||(i2!=0)) {
-            qWarning() << "Cannot handle this case yet **.";
+            qWarning() << "Cannot handle this case yet **." << size1 << N1() << i1 << size2 << N2() << i2 << this->d->m_path;
             return false;
         }
 
@@ -360,6 +360,7 @@ bool DiskReadMdaPrivate::open_file_if_needed()
     if (m_use_memory_mda) return true;
 	if (m_file) return true;
 	if (m_file_open_failed) return false;
+    if (m_path.isEmpty()) return false;
     m_file=fopen(m_path.toLatin1().data(),"rb");
 	if (m_file) {
 		mda_read_header(&m_header,m_file);

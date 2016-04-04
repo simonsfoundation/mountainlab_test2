@@ -12,26 +12,26 @@
 
 class ComputationThreadPrivate {
 public:
-    ComputationThread *q;
+    ComputationThread* q;
     bool m_is_computing;
     bool m_stop_requested;
     bool m_is_finished;
     QString m_error_message;
     QMutex m_mutex;
     bool m_start_scheduled;
+    long m_randomization_seed;
 
     void schedule_start();
-
 };
 
 ComputationThread::ComputationThread()
 {
-    d=new ComputationThreadPrivate;
-    d->q=this;
-    d->m_is_computing=false;
-    d->m_stop_requested=false;
-    d->m_is_finished=false;
-    d->m_start_scheduled=false;
+    d = new ComputationThreadPrivate;
+    d->q = this;
+    d->m_is_computing = false;
+    d->m_stop_requested = false;
+    d->m_is_finished = false;
+    d->m_start_scheduled = false;
 }
 
 ComputationThread::~ComputationThread()
@@ -39,17 +39,16 @@ ComputationThread::~ComputationThread()
     delete d;
 }
 
-
 void ComputationThread::startComputation()
 {
     stopComputation();
-	{
-		QMutexLocker locker(&d->m_mutex);
-		d->m_is_computing=true;
-		d->m_stop_requested=false;
-		d->m_is_finished=false;
-		d->m_error_message="";
-	}
+    {
+        QMutexLocker locker(&d->m_mutex);
+        d->m_is_computing = true;
+        d->m_stop_requested = false;
+        d->m_is_finished = false;
+        d->m_error_message = "";
+    }
     d->schedule_start();
 }
 
@@ -57,8 +56,9 @@ void ComputationThread::stopComputation()
 {
     {
         QMutexLocker locker(&d->m_mutex);
-        if (!d->m_is_computing) return;
-        d->m_stop_requested=true; //attempt to end gracefully
+        if (!d->m_is_computing)
+            return;
+        d->m_stop_requested = true; //attempt to end gracefully
     }
     if (this->isRunning()) {
         this->wait(1000); //we will wait a second
@@ -102,31 +102,34 @@ bool ComputationThread::stopRequested()
     return d->m_stop_requested;
 }
 
-void ComputationThread::setErrorMessage(const QString &error)
+void ComputationThread::setErrorMessage(const QString& error)
 {
     QMutexLocker locker(&d->m_mutex);
-    d->m_error_message=error;
+    d->m_error_message = error;
 }
 
 void ComputationThread::run()
 {
-	{
-		compute();
-	}
+    {
+        qsrand(d->m_randomization_seed);
+        compute();
+    }
     if (!stopRequested()) {
-		QMutexLocker locker(&d->m_mutex);
-        d->m_is_finished=true;
-        d->m_is_computing=false;
+        QMutexLocker locker(&d->m_mutex);
+        d->m_is_finished = true;
+        d->m_is_computing = false;
         emit computationFinished();
     }
 }
 
 void ComputationThread::slot_start()
 {
+    d->m_randomization_seed = qrand();
     {
         QMutexLocker locker(&d->m_mutex);
-        if (d->m_stop_requested) return;
-        d->m_start_scheduled=false;
+        if (d->m_stop_requested)
+            return;
+        d->m_start_scheduled = false;
     }
     this->start();
 }
@@ -134,8 +137,9 @@ void ComputationThread::slot_start()
 void ComputationThreadPrivate::schedule_start()
 {
     QMutexLocker locker(&m_mutex);
-    if (m_start_scheduled) return;
-    m_stop_requested=false;
-    QTimer::singleShot(100,q,SLOT(slot_start()));
-    m_start_scheduled=true;
+    if (m_start_scheduled)
+        return;
+    m_stop_requested = false;
+    QTimer::singleShot(100, q, SLOT(slot_start()));
+    m_start_scheduled = true;
 }

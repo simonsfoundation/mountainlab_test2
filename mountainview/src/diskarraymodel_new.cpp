@@ -169,7 +169,8 @@ Mda downsample_2(Mda chunk)
 
 void DiskArrayModel_NewPrivate::create_multiscale_array_if_needed()
 {
-    if (m_path.startsWith("remote://")) return; //this case not handled yet
+    if (m_path.startsWith("remote://"))
+        return; //this case not handled yet
     long N = round_up_to_power_of_two(q->N2());
 
     if (m_use_memory_array) {
@@ -217,7 +218,7 @@ QString DiskArrayModel_NewPrivate::get_file_timestamp(const QString& path)
     QDateTime dt;
     if (path.startsWith("remote://")) {
         RemoteReadMda X(path);
-        dt=X.fileLastModified();
+        dt = X.fileLastModified();
     }
     else {
         dt = QFileInfo(path).lastModified();

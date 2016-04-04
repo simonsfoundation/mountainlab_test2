@@ -18,7 +18,7 @@ public:
     ComputationThread();
     virtual ~ComputationThread();
 
-    virtual void compute()=0;
+    virtual void compute() = 0;
 
     void startComputation(); //will stop existing computation
     void stopComputation(); //will wait for stop before returning
@@ -32,7 +32,7 @@ signals:
 
 protected:
     bool stopRequested();
-    void setErrorMessage(const QString &error);
+    void setErrorMessage(const QString& error);
 
 private:
     void run();

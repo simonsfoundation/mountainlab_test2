@@ -415,7 +415,7 @@ void MVOverview2Widget::slot_auto_correlogram_activated(int index)
     TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
     d->m_tabber->setCurrentContainer(TW);
     d->m_tabber->switchCurrentContainer();
-    d->open_cross_correlograms(index+1);
+    d->open_cross_correlograms(index + 1);
 }
 
 //void MVOverview2Widget::slot_templates_clicked()
@@ -431,7 +431,7 @@ void MVOverview2Widget::slot_auto_correlogram_activated(int index)
 void MVOverview2Widget::slot_details_current_k_changed()
 {
     MVClusterDetailWidget* X = (MVClusterDetailWidget*)sender();
-    int index = X->currentK()-1;
+    int index = X->currentK() - 1;
     d->m_current_k = X->currentK();
     d->set_cross_correlograms_current_index(index);
 }
@@ -440,7 +440,9 @@ void MVOverview2Widget::slot_details_selected_ks_changed()
 {
     MVClusterDetailWidget* X = (MVClusterDetailWidget*)sender();
     QList<int> ks = X->selectedKs();
-    QList<int> indices; foreach (int k,ks) indices << k-1;
+    QList<int> indices;
+    foreach (int k, ks)
+        indices << k - 1;
     d->m_selected_ks = ks.toSet();
     d->set_cross_correlograms_selected_indices(indices);
 }
@@ -489,12 +491,10 @@ void MVOverview2Widget::slot_cluster_view_current_event_changed()
 
 //void MVOverview2Widget::slot_cross_correlogram_computer_finished()
 //{
-    //d->m_cross_correlogram_computer.stopComputation(); //because I'm paranoid
-    //d->m_cross_correlograms_data=d->m_cross_correlogram_computer.cross_correlograms_data;
-    //d->update_cross_correlograms();
+//d->m_cross_correlogram_computer.stopComputation(); //because I'm paranoid
+//d->m_cross_correlograms_data=d->m_cross_correlogram_computer.cross_correlograms_data;
+//d->update_cross_correlograms();
 //}
-
-
 
 /*
 void MVOverview2WidgetPrivate::create_cross_correlograms_data()
@@ -1016,50 +1016,41 @@ void MVOverview2WidgetPrivate::do_event_filter_old()
 
 void MVOverview2WidgetPrivate::do_shell_split()
 {
-    qDebug() << "@@@@@@@@@@@";
-    qDebug() << "@@@@@@@@@@@";
-    qDebug() << "@@@@@@@@@@@";
-    qDebug() << "@@@@@@@@@@@";
-    qDebug() << "@@@@@@@@@@@";
     MountainsortThread MT;
-    QString processor_name="mv_firings_filter";
+    QString processor_name = "mv_firings_filter";
     MT.setProcessorName(processor_name);
-    QMap<QString,QVariant> params;
-    QString remote_name=remote_name_of_path(m_firings_original.path());
-    params["use_shell_split"]=m_control_panel->getParameterValue("use_shell_split").toInt();
-    params["shell_width"]=m_control_panel->getParameterValue("shell_width").toDouble();
-    params["min_per_shell"]=m_control_panel->getParameterValue("min_per_shell").toInt();
-    params["use_event_filter"]=m_control_panel->getParameterValue("use_event_filter").toInt();
-    params["min_amplitude"]=m_control_panel->getParameterValue("min_amplitude").toDouble();
-    params["max_outlier_score"]=m_control_panel->getParameterValue("max_outlier_score").toDouble();
-    params["firings"]=m_firings_original.makePath();
-    QString firings_out=create_temporary_output_file_name(remote_name,processor_name,params,"firings_out");
-    QString original_cluster_numbers_out=create_temporary_output_file_name(remote_name,processor_name,params,"original_cluster_numbers");
-    params["firings_out"]=firings_out;
-    params["original_cluster_numbers"]=original_cluster_numbers_out;
+    QMap<QString, QVariant> params;
+    QString remote_name = remote_name_of_path(m_firings_original.path());
+    params["use_shell_split"] = m_control_panel->getParameterValue("use_shell_split").toInt();
+    params["shell_width"] = m_control_panel->getParameterValue("shell_width").toDouble();
+    params["min_per_shell"] = m_control_panel->getParameterValue("min_per_shell").toInt();
+    params["use_event_filter"] = m_control_panel->getParameterValue("use_event_filter").toInt();
+    params["min_amplitude"] = m_control_panel->getParameterValue("min_amplitude").toDouble();
+    params["max_outlier_score"] = m_control_panel->getParameterValue("max_outlier_score").toDouble();
+    params["firings"] = m_firings_original.makePath();
+    QString firings_out = create_temporary_output_file_name(remote_name, processor_name, params, "firings_out");
+    QString original_cluster_numbers_out = create_temporary_output_file_name(remote_name, processor_name, params, "original_cluster_numbers");
+    params["firings_out"] = firings_out;
+    params["original_cluster_numbers"] = original_cluster_numbers_out;
     MT.setParameters(params);
     MT.setRemoteName(remote_name);
-    qDebug() << processor_name << params << remote_name;
     MT.compute();
     m_firings.setPath(firings_out);
     m_original_cluster_numbers.clear();
     m_original_cluster_offsets.clear();
-    Mda AA(original_cluster_numbers_out);
-    int offset=0;
-    for (int i=0; i<AA.totalSize(); i++) {
+    DiskReadMda AA(original_cluster_numbers_out);
+    int offset = 0;
+    for (int i = 0; i < AA.totalSize(); i++) {
         offset++;
         m_original_cluster_numbers << AA.value(i);
         m_original_cluster_offsets << offset;
-        if (AA.value(i)!=AA.value(i-1)) {
-            offset=0;
+        if (AA.value(i) != AA.value(i - 1)) {
+            offset = 0;
         }
     }
-    qDebug() << m_original_cluster_numbers;
-    qDebug() << m_original_cluster_offsets;
 
     this->set_templates_current_number(-1);
     this->set_templates_selected_numbers(QList<int>());
-
 }
 
 /*
@@ -1258,7 +1249,7 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
     QObject::connect(X, SIGNAL(signalCurrentKChanged()), q, SLOT(slot_details_current_k_changed()));
     QObject::connect(X, SIGNAL(signalSelectedKsChanged()), q, SLOT(slot_details_selected_ks_changed()));
-	X->setProperty("widget_type", "cluster_details");
+    X->setProperty("widget_type", "cluster_details");
     add_tab(X, QString("Details"));
     update_widget(X);
     return X;
@@ -1455,10 +1446,10 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setSampleRate(m_samplerate);
         WW->setMaxDt(cc_max_dt());
         WW->setColors(m_colors);
-        WW->setFirings(DiskReadMda(m_firings));
+        WW->setFirings(m_firings);
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         QStringList text_labels;
-        QList<int> labels1,labels2;
+        QList<int> labels1, labels2;
         for (int i = 1; i < m_original_cluster_numbers.count(); i++) {
             labels1 << i;
             labels2 << i;
@@ -1469,7 +1460,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
                 text_labels << "";
         }
         //WW->setTextLabels(labels);
-        WW->setLabelPairs(labels1,labels2,text_labels);
+        WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
     }
     else if (widget_type == "cross_correlograms") {
@@ -1482,18 +1473,18 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setBaseLabel(k);
         QStringList text_labels;
-        QList<int> labels1,labels2;
+        QList<int> labels1, labels2;
         for (int i = 1; i < m_original_cluster_numbers.count(); i++) {
             labels1 << k;
             labels2 << i;
             if ((i == 1) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
-                text_labels << QString("Cross %1(%2)/%3").arg(m_original_cluster_numbers[k+1]).arg(m_original_cluster_offsets.value(k+1)+1).arg(m_original_cluster_numbers[i]);
+                text_labels << QString("Cross %1(%2)/%3").arg(m_original_cluster_numbers[k + 1]).arg(m_original_cluster_offsets.value(k + 1) + 1).arg(m_original_cluster_numbers[i]);
             }
             else
                 text_labels << "";
         }
         //WW->setTextLabels(labels);
-        WW->setLabelPairs(labels1,labels2,text_labels);
+        WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
     }
     else if (widget_type == "matrix_of_cross_correlograms") {
@@ -1506,7 +1497,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setLabelNumbers(ks);
         QStringList text_labels;
-        QList<int> labels1,labels2;
+        QList<int> labels1, labels2;
         //text_labels << "";
         for (int a1 = 0; a1 < ks.count(); a1++) {
             QString str1 = QString("%1(%2)").arg(m_original_cluster_numbers[ks[a1]]).arg(m_original_cluster_offsets[ks[a1]] + 1);
@@ -1518,7 +1509,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
             }
         }
         //WW->setTextLabels(labels);
-        WW->setLabelPairs(labels1,labels2,text_labels);
+        WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
     }
     /*else if (widget_type=="templates") {
@@ -1546,9 +1537,9 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
     else if (widget_type == "cluster_details") {
         MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
         int clip_size = m_control_panel->getParameterValue("clip_size").toInt();
-		WW->setColors(m_colors);
-		WW->setTimeseries(m_timeseries);
-		WW->setClipSize(clip_size);
+        WW->setColors(m_colors);
+        WW->setTimeseries(m_timeseries);
+        WW->setClipSize(clip_size);
         WW->setFirings(DiskReadMda(m_firings));
         WW->setGroupNumbers(m_original_cluster_numbers);
     }
@@ -2105,9 +2096,6 @@ void CustomTabWidget::slot_switch_to_other_tab_widget()
 	q->d->m_current_tab_widget=q->d->get_other_tab_widget(this);
 }
 */
-
-
-
 
 typedef QList<long> IntList;
 void CrossCorrelogramComputer::compute()

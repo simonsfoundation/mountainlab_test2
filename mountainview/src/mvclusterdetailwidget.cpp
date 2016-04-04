@@ -886,19 +886,19 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
     return QColor(50, 0, 0);
 }
 
-DiskReadMda mscmd_compute_templates(const QString &timeseries,const QString &firings,int clip_size) {
+DiskReadMda mscmd_compute_templates(const QString& timeseries, const QString& firings, int clip_size)
+{
     MountainsortThread X;
-    QString remote_name=remote_name_of_path(timeseries);
-    qDebug() << "mscmd_compute_templates....." << timeseries << firings << clip_size;
+    QString remote_name = remote_name_of_path(timeseries);
     X.setRemoteName(remote_name);
-    QString processor_name="compute_templates";
+    QString processor_name = "compute_templates";
     X.setProcessorName(processor_name);
-    QMap<QString,QVariant> params;
-    params["timeseries"]=timeseries;
-    params["firings"]=firings;
-    params["clip_size"]=clip_size;
-    QString templates_fname=create_temporary_output_file_name(remote_name,processor_name,params,"templates");
-    params["templates"]=templates_fname;
+    QMap<QString, QVariant> params;
+    params["timeseries"] = timeseries;
+    params["firings"] = firings;
+    params["clip_size"] = clip_size;
+    QString templates_fname = create_temporary_output_file_name(remote_name, processor_name, params, "templates");
+    params["templates"] = templates_fname;
     X.setParameters(params);
     X.compute();
     DiskReadMda ret(templates_fname);
@@ -919,9 +919,6 @@ void MVClusterDetailWidgetCalculator::compute()
     QList<int> channels, labels;
     QList<double> peaks;
 
-    Q_UNUSED(M)
-    Q_UNUSED(N)
-
     for (int i = 0; i < L; i++) {
         times << firings.value(1, i) - 1; //convert to 0-based indexing
         channels << (int)firings.value(0, i) - 1; //convert to 0-based indexing
@@ -938,9 +935,9 @@ void MVClusterDetailWidgetCalculator::compute()
         if (labels[i] > K)
             K = labels[i];
 
-    QString timeseries_path=timeseries.makePath();
-    QString firings_path=firings.makePath();
-    DiskReadMda templates0=mscmd_compute_templates(timeseries_path,firings_path,T);
+    QString timeseries_path = timeseries.makePath();
+    QString firings_path = firings.makePath();
+    DiskReadMda templates0 = mscmd_compute_templates(timeseries_path, firings_path, T);
     //Mda templates0 = compute_templates_0(timeseries, times, labels, T);
 
     for (int k = 1; k <= K; k++) {

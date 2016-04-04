@@ -10,23 +10,21 @@
 #include "computationthread.h"
 
 class MountainsortThreadPrivate;
-class MountainsortThread : public ComputationThread
-{
+class MountainsortThread : public ComputationThread {
 public:
     friend class MountainsortThreadPrivate;
     MountainsortThread();
     virtual ~MountainsortThread();
 
-    void setProcessorName(const QString &pname);
-    void setParameters(const QMap<QString,QVariant> &parameters);
-    void setRemoteName(const QString &name);
+    void setProcessorName(const QString& pname);
+    void setParameters(const QMap<QString, QVariant>& parameters);
+    void setRemoteName(const QString& name);
     void compute();
 
 private:
-    MountainsortThreadPrivate *d;
+    MountainsortThreadPrivate* d;
 };
 
-QString create_temporary_output_file_name(const QString &remote_name,const QString &processor_name,const QMap<QString,QVariant> &params,const QString &parameter_name);
+QString create_temporary_output_file_name(const QString& remote_name, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name);
 
 #endif // MOUNTAINSORTTHREAD_H
-

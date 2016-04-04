@@ -4,7 +4,6 @@
 ** Created: 3/31/2016
 *******************************************************/
 
-
 #ifndef MVCROSSCORRELOGRAMSWIDGET2_H
 #define MVCROSSCORRELOGRAMSWIDGET2_H
 
@@ -13,16 +12,15 @@
 #include <QWidget>
 
 class MVCrossCorrelogramsWidget2Private;
-class MVCrossCorrelogramsWidget2 : public QWidget
-{
+class MVCrossCorrelogramsWidget2 : public QWidget {
     Q_OBJECT
 public:
     friend class MVCrossCorrelogramsWidget2Private;
     MVCrossCorrelogramsWidget2();
     virtual ~MVCrossCorrelogramsWidget2();
 
-    void setLabelPairs(const QList<int> &labels1,const QList<int> &labels2,const QList<QString> &text_labels);
-    void setFirings(const DiskReadMda &F);
+    void setLabelPairs(const QList<int>& labels1, const QList<int>& labels2, const QList<QString>& text_labels);
+    void setFirings(const DiskReadMda& F);
     void setSampleRate(double rate);
     void setMaxDt(int max_dt);
     void setColors(const QMap<QString, QColor>& colors);
@@ -34,10 +32,10 @@ public:
     void setCurrentLabel2(int k);
     QList<int> selectedLabels1();
     QList<int> selectedLabels2();
-    void setSelectedLabels1(const QList<int> &L);
-    void setSelectedLabels2(const QList<int> &L);
+    void setSelectedLabels1(const QList<int>& L);
+    void setSelectedLabels2(const QList<int>& L);
     QList<int> selectedIndices();
-    void setSelectedIndices(const QList<int> &X);
+    void setSelectedIndices(const QList<int>& X);
     QImage renderImage(int W = 0, int H = 0);
 signals:
     void currentIndexChanged();
@@ -51,8 +49,7 @@ private slots:
     void slot_export_image();
 
 private:
-    MVCrossCorrelogramsWidget2Private *d;
+    MVCrossCorrelogramsWidget2Private* d;
 };
 
 #endif // MVCROSSCORRELOGRAMSWIDGET2_H
-

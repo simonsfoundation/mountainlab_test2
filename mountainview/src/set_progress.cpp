@@ -10,7 +10,7 @@
 
 void set_progress(QString title, QString text, float frac)
 {
-    static QProgressDialog *m_progress_dialog=0;
+    static QProgressDialog* m_progress_dialog = 0;
     static QTime* timer = 0;
     if (!m_progress_dialog) {
         m_progress_dialog = new QProgressDialog;
@@ -39,4 +39,3 @@ void set_progress(QString title, QString text, float frac)
         m_progress_dialog = 0;
     }
 }
-
