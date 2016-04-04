@@ -149,22 +149,20 @@ void DiskWriteMda::writeChunk(Mda &X, long i)
 void DiskWriteMda::writeChunk(Mda &X, long i1, long i2)
 {
     if ((X.N1()==N1())&&(i1==0)) {
-		//easy case!
         writeChunk(X,i1+this->N1()*i2);
 	}
 	else {
-		qWarning() << "This case not yet supported in 2d writeSubArray";
+        qWarning() << "This case not yet supported in 2d writeSubArray" << X.N1() << X.N2() << N1() << N2() << i1 << i2;
 	}
 }
 
 void DiskWriteMda::writeChunk(Mda &X, long i1, long i2, long i3)
 {
     if ((X.N1()==N1())&&(X.N2()==N2())&&(i1==0)&&(i2==0)) {
-		//easy case!
         writeChunk(X,i1+this->N1()*i2+this->N1()*this->N2()*i3);
 	}
 	else {
-		qWarning() << "This case not yet supported in 2d writeSubArray";
+        qWarning() << "This case not yet supported in 3d writeSubArray" << X.N1() << X.N2() << X.N3() << N1() << N2() << N3() << i1 << i2 << i3;
 	}
 }
 

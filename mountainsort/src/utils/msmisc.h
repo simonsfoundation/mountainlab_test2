@@ -18,5 +18,7 @@ double compute_mean(const QList<double> &X);
 double compute_stdev(const QList<double> &X);
 Mda grab_clips_subset(Mda &clips,const QList<int> &inds);
 double compute_norm(long N,double *X);
+QString http_get_text(QString url);
+QString http_get_binary_mda_file(QString url);
 
 #endif // MSMISC_H

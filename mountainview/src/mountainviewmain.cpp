@@ -24,6 +24,7 @@
 #include "run_mountainview_script.h"
 #include "closemehandler.h"
 #include "mdaclient.h"
+#include "remotereadmda.h"
 
 /*
  * TO DO:
@@ -84,6 +85,13 @@ int main(int argc, char* argv[])
         else if (arg2=="mdaclient2") {
             QString arg3=CLP.unnamed_parameters.value(2,"http://magland.org:8000/firings.mda");
             mdaclient_unit_test_2(arg3);
+        }
+        else if (arg2=="remotereadmda") {
+            unit_test_remote_read_mda();
+        }
+        else if (arg2=="remotereadmda2") {
+            QString arg3=CLP.unnamed_parameters.value(2,"http://localhost:8000/firings.mda");
+            unit_test_remote_read_mda_2(arg3);
         }
         else {
             qWarning() << "No such unit test: "+arg2;

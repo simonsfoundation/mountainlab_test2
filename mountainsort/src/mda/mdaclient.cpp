@@ -15,6 +15,7 @@
 #include <QUrl>
 #include "textfile.h"
 #include <QCoreApplication>
+#include "msmisc.h"
 
 #ifdef USE_NETWORK
 #include <QNetworkReply>
@@ -264,85 +265,7 @@ bool MdaClientLoader::waitUntilFinished(int timeout)
     return ((this->status() == Finished) || (this->status() == Error));
 }
 
-QString get_temp_fname()
-{
-    long rand_num = qrand() + QDateTime::currentDateTime().toMSecsSinceEpoch();
-    return QString("%1/MdaClient_%2.tmp").arg(QDir::tempPath()).arg(rand_num);
-}
 
-QString http_get_text(QString url)
-{
-    QString tmp_fname = get_temp_fname();
-	QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
-    qDebug()  << cmd;
-    int exit_code = system(cmd.toLatin1().data());
-    if (exit_code != 0) {
-        qWarning() << "Problem with system call: " + cmd;
-        QFile::remove(tmp_fname);
-        return "";
-    }
-    QString ret = read_text_file(tmp_fname);
-    QFile::remove(tmp_fname);
-	qDebug()  << "RESPONSE: " << ret;
-    return ret;
-}
-
-QString http_get_binary_mda_file(QString url)
-{
-    QString tmp_fname = get_temp_fname() + ".mda";
-	QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
-    qDebug()  << cmd;
-    int exit_code = system(cmd.toLatin1().data());
-    if (exit_code != 0) {
-        qWarning() << "Problem with system call: " + cmd;
-        QFile::remove(tmp_fname);
-        return "";
-    }
-    return tmp_fname;
-}
-
-/*
-
-//Witold, I could not get this to work. Kept getting segmentation fault on result->readAll()
-//I changed your code around to get it to compile.
-
-QIODevice* http_get(const QString& url)
-{
-    QNetworkAccessManager manager; // better make it a singleton
-    QNetworkReply* reply = manager.get(QNetworkRequest(QUrl(url)));
-    QEventLoop loop;
-    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-    loop.exec();
-    if (reply->error() == QNetworkReply::NoError)
-        return reply;
-    delete reply;
-    return 0;
-}
-
-QString http_get_text(const QString& url)
-{
-    QIODevice* result = http_get(url);
-    if (!result)
-        return QString();
-    result->readAll()
-    QString ret=result->readAll();
-    delete result;
-    return ret;
-}
-
-
-QString http_get_binary_mda_file(const QString& url)
-{
-    QIODevice* result = http_get(url);
-    if (!result)
-        return QString();
-    QFile file(get_temp_fname());
-    file.open(QIODevice::WriteOnly);
-    file.write(result->readAll()); // this is EVIL™
-    delete result;
-    return file.fileName();
-}
-*/
 
 bool check_correct_size(Mda& X, const ChunkParams& P_in)
 {

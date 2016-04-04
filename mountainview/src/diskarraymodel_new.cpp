@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QFileInfo>
 #include <diskwritemda.h>
+#include <remotereadmda.h>
 #include "diskreadmda.h"
 
 class DiskArrayModel_NewPrivate {
@@ -12,10 +13,10 @@ public:
     DiskReadMda m_X;
     Mda m_memory_array;
     Mda m_multiscale_memory_array;
+    QString m_multiscale_file_name;
     bool m_use_memory_array;
     long m_dim3;
     void create_multiscale_array_if_needed();
-    QString get_multiscale_file_name();
     QString get_file_timestamp(const QString& path);
 };
 
@@ -39,6 +40,8 @@ void DiskArrayModel_New::setPath(const QString& path)
     d->m_dim3 = d->m_X.N3();
     //TODO: reshape here!
     d->m_use_memory_array = false;
+
+    d->m_multiscale_file_name = QFileInfo(d->m_path).path() + "/spikespy." + d->get_file_timestamp(d->m_path) + "." + QFileInfo(d->m_path).fileName();
 }
 
 void DiskArrayModel_New::setFromMda(const Mda& X)
@@ -90,7 +93,7 @@ Mda DiskArrayModel_New::loadData(long scale, long t1, long t2)
             d->m_X.readChunk(chunk, 0, pos + t1, N1(), (t2 - t1 + 1));
         }
         else {
-            DiskReadMda A(d->get_multiscale_file_name());
+            DiskReadMda A(d->m_multiscale_file_name);
             A.readChunk(chunk, 0, pos + t1 * 2, N1(), (t2 - t1 + 1) * 2);
         }
         return chunk;
@@ -166,6 +169,7 @@ Mda downsample_2(Mda chunk)
 
 void DiskArrayModel_NewPrivate::create_multiscale_array_if_needed()
 {
+    if (m_path.startsWith("http")) return; //this case not handled yet
     long N = round_up_to_power_of_two(q->N2());
 
     if (m_use_memory_array) {
@@ -185,7 +189,7 @@ void DiskArrayModel_NewPrivate::create_multiscale_array_if_needed()
         return;
     }
 
-    QString fname = get_multiscale_file_name();
+    QString fname = m_multiscale_file_name;
     long multiscale_file_size = N * 2;
     if (QFile::exists(fname)) {
         DiskReadMda X2(fname);
@@ -208,13 +212,15 @@ void DiskArrayModel_NewPrivate::create_multiscale_array_if_needed()
     Y.close();
 }
 
-QString DiskArrayModel_NewPrivate::get_multiscale_file_name()
-{
-    return QFileInfo(m_path).path() + "/spikespy." + get_file_timestamp(m_path) + "." + QFileInfo(m_path).fileName();
-}
-
 QString DiskArrayModel_NewPrivate::get_file_timestamp(const QString& path)
 {
-    QDateTime dt = QFileInfo(path).lastModified();
+    QDateTime dt;
+    if (path.startsWith("http")) {
+        RemoteReadMda X(path);
+        dt=X.fileLastModified();
+    }
+    else {
+        dt = QFileInfo(path).lastModified();
+    }
     return QString("%1").arg(dt.toMSecsSinceEpoch());
 }

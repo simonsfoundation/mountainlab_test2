@@ -1,6 +1,6 @@
 #include "diskreadmda.h"
 #include <stdio.h>
-#include "mdaclient.h"
+#include "remotereadmda.h"
 #include "mdaio.h"
 #include <math.h>
 #include <QUrl>
@@ -20,8 +20,8 @@ public:
 	long m_current_internal_chunk_index;
 	Mda m_memory_mda;
 	bool m_use_memory_mda;
-    bool m_use_mda_client;
-    MdaClient m_mda_client;
+    bool m_use_remote_mda;
+    RemoteReadMda m_remote_mda;
 
 	char m_path[MAX_PATH_LEN];
 	void do_construct();
@@ -66,8 +66,8 @@ DiskReadMda::DiskReadMda(const QUrl &url)
     d=new DiskReadMdaPrivate;
     d->q=this;
     d->do_construct();
-    d->m_use_mda_client=true;
-    d->m_mda_client.setUrl(url.toString());
+    d->m_use_remote_mda=true;
+    d->m_remote_mda.setUrl(url.toString());
 }
 
 DiskReadMda::~DiskReadMda() {
@@ -96,7 +96,7 @@ void DiskReadMda::setPath(const char *file_path_or_url)
 		fclose(d->m_file);
 		d->m_file=0;
 	}
-	d->m_use_mda_client=false;
+    d->m_use_remote_mda=false;
 	d->m_use_memory_mda=false;
 	d->m_memory_mda.allocate(1,1);
 	d->m_current_internal_chunk_index=-1;
@@ -109,8 +109,8 @@ void DiskReadMda::setUrl(const QUrl &url)
 		d->m_file=0;
 	}
 
-	d->m_use_mda_client=true;
-	d->m_mda_client.setUrl(url.toString());
+    d->m_use_remote_mda=true;
+    d->m_remote_mda.setUrl(url.toString());
 
 	d->m_use_memory_mda=false;
 	d->m_memory_mda.allocate(1,1);
@@ -121,8 +121,8 @@ void DiskReadMda::setUrl(const QUrl &url)
 long DiskReadMda::N1() const
 {
 	if (d->m_use_memory_mda) return d->m_memory_mda.N1();
-	if (d->m_use_mda_client) {
-		return d->m_mda_client.N1();
+    if (d->m_use_remote_mda) {
+        return d->m_remote_mda.N1();
 	}
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[0];
@@ -131,7 +131,7 @@ long DiskReadMda::N1() const
 long DiskReadMda::N2() const
 {
 	if (d->m_use_memory_mda) return d->m_memory_mda.N2();
-    if (d->m_use_mda_client) return d->m_mda_client.N2();
+    if (d->m_use_remote_mda) return d->m_remote_mda.N2();
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[1];
 }
@@ -139,7 +139,7 @@ long DiskReadMda::N2() const
 long DiskReadMda::N3() const
 {
 	if (d->m_use_memory_mda) return d->m_memory_mda.N3();
-    if (d->m_use_mda_client) return d->m_mda_client.N3();
+    if (d->m_use_remote_mda) return d->m_remote_mda.N3();
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[2];
 }
@@ -147,7 +147,7 @@ long DiskReadMda::N3() const
 long DiskReadMda::N4() const
 {
 	if (d->m_use_memory_mda) return d->m_memory_mda.N4();
-    if (d->m_use_mda_client) return 1;
+    if (d->m_use_remote_mda) return 1;
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[3];
 }
@@ -155,7 +155,7 @@ long DiskReadMda::N4() const
 long DiskReadMda::N5() const
 {
 	if (d->m_use_memory_mda) return d->m_memory_mda.N5();
-    if (d->m_use_mda_client) return 1;
+    if (d->m_use_remote_mda) return 1;
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[4];
 }
@@ -163,7 +163,7 @@ long DiskReadMda::N5() const
 long DiskReadMda::N6() const
 {
 	if (d->m_use_memory_mda) return d->m_memory_mda.N6();
-    if (d->m_use_mda_client) return 1;
+    if (d->m_use_remote_mda) return 1;
 	if (!d->open_file_if_needed()) return 0;
 	return d->m_header.dims[5];
 }
@@ -179,15 +179,10 @@ bool DiskReadMda::readChunk(Mda &X, long i, long size) const
 		d->m_memory_mda.getChunk(X,i,size);
 		return true;
 	}
-    if (d->m_use_mda_client) {
-        ChunkParams params;
-        params.i1=i; params.s1=size;
-        params.i2=0; params.s2=0;
-        params.i3=0; params.s3=0;
-        X=d->m_mda_client.getChunk(params);
-        return true;
+    if (d->m_use_remote_mda) {
+        return d->m_remote_mda.readChunk(X,i,size);
     }
-	if (!d->open_file_if_needed()) return false;
+    if (!d->open_file_if_needed()) return false;
     X.allocate(size,1);
 	long jA=qMax(i,0L);
     long jB=qMin(i+size-1,d->total_size()-1);
@@ -199,7 +194,7 @@ bool DiskReadMda::readChunk(Mda &X, long i, long size) const
 			printf("Warning problem reading chunk in diskreadmda: %ld<>%ld\n",bytes_read,size_to_read);
 			return false;
 		}
-	}
+    }
 	return true;
 }
 
@@ -212,16 +207,22 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long size1, long size2) co
 		d->m_memory_mda.getChunk(X,i1,i2,size1,size2);
 		return true;
 	}
-    if (d->m_use_mda_client) {
-        ChunkParams params;
-        params.i1=i1; params.s1=size1;
-        params.i2=i2; params.s2=size2;
-        params.i3=0; params.s3=0;
-        X=d->m_mda_client.getChunk(params);
+    if (d->m_use_remote_mda) {
+        if ((size1!=N1())||(i1!=0)) {
+            qWarning() << "Cannot handle this case yet.";
+            return false;
+        }
+        Mda tmp;
+        if (!d->m_remote_mda.readChunk(tmp,i2*size1,size1*size2)) return false;
+        X.allocate(size1,size2);
+        double *Xptr=X.dataPtr(); double *tmp_ptr=tmp.dataPtr();
+        for (long i=0; i<size1*size2; i++) {
+            Xptr[i]=tmp_ptr[i];
+        }
         return true;
     }
 	if (!d->open_file_if_needed()) return false;
-	if (size1==N1()) {
+    if ((size1==N1())&&(i1==0)) {
 		//easy case
 		X.allocate(size1,size2);
 		long jA=qMax(i2,0L);
@@ -257,12 +258,19 @@ bool DiskReadMda::readChunk(Mda &X, long i1, long i2, long i3, long size1, long 
 		d->m_memory_mda.getChunk(X,i1,i2,i3,size1,size2,size3);
 		return true;
 	}
-    if (d->m_use_mda_client) {
-        ChunkParams params;
-        params.i1=i1; params.s1=size1;
-        params.i2=i2; params.s2=size2;
-        params.i3=i3; params.s3=size3;
-        X=d->m_mda_client.getChunk(params);
+    if (d->m_use_remote_mda) {
+        if ((size1!=N1())||(i1!=0)||(size2!=N2())||(i2!=0)) {
+            qWarning() << "Cannot handle this case yet **.";
+            return false;
+        }
+
+        Mda tmp;
+        if (!d->m_remote_mda.readChunk(tmp,i3*size1*size2,size1*size2*size3)) return false;
+        X.allocate(size1,size2,size3);
+        double *Xptr=X.dataPtr(); double *tmp_ptr=tmp.dataPtr();
+        for (long i=0; i<size1*size2*size3; i++) {
+            Xptr[i]=tmp_ptr[i];
+        }
         return true;
     }
 	if (!d->open_file_if_needed()) return false;
@@ -329,12 +337,12 @@ void DiskReadMdaPrivate::do_construct()
 	m_file=0;
 	m_current_internal_chunk_index=-1;
 	m_use_memory_mda=false;
-    m_use_mda_client=false;
+    m_use_remote_mda=false;
 }
 
 bool DiskReadMdaPrivate::open_file_if_needed()
 {
-    if (m_use_mda_client) return true;
+    if (m_use_remote_mda) return true;
     if (m_use_memory_mda) return true;
 	if (m_file) return true;
 	if (m_file_open_failed) return false;
@@ -356,12 +364,14 @@ void DiskReadMdaPrivate::copy_from(const DiskReadMda &other)
 {
 	if (other.d->m_use_memory_mda) {
 		this->m_use_memory_mda=true;
-        this->m_use_mda_client=false;
+        this->m_use_remote_mda=false;
 		this->m_memory_mda=other.d->m_memory_mda;
 		return;
 	}
-    if (other.d->m_use_mda_client) {
-		q->setUrl(QUrl(other.d->m_mda_client.url()));
+    if (other.d->m_use_remote_mda) {
+        this->m_use_memory_mda=false;
+        this->m_use_remote_mda=true;
+        this->m_remote_mda=other.d->m_remote_mda;
 		return;
     }
     q->setPath(other.d->m_path);
@@ -370,7 +380,8 @@ void DiskReadMdaPrivate::copy_from(const DiskReadMda &other)
 long DiskReadMdaPrivate::total_size()
 {
     if (m_use_memory_mda) return m_memory_mda.totalSize();
-    if (m_use_mda_client) return m_mda_client.totalSize();
+    if (m_use_remote_mda) return m_remote_mda.N1()*m_remote_mda.N2()*m_remote_mda.N3();
+    if (!open_file_if_needed()) return 0;
     return m_mda_header_total_size;
 }
 

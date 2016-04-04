@@ -101,8 +101,8 @@ SOURCES += compute_templates.cpp
 INCLUDEPATH += ../../mountainsort/src/mda
 DEPENDPATH += ../../mountainsort/src/mda
 VPATH += ../../mountainsort/src/mda
-HEADERS += mda.h textfile.h diskreadmda.h diskwritemda.h mdaio.h usagetracking.h
-SOURCES += mda.cpp textfile.cpp diskreadmda.cpp diskwritemda.cpp mdaio.cpp usagetracking.cpp
+HEADERS += mda.h textfile.h diskreadmda.h diskwritemda.h mdaio.h usagetracking.h remotereadmda.h
+SOURCES += mda.cpp textfile.cpp diskreadmda.cpp diskwritemda.cpp mdaio.cpp usagetracking.cpp remotereadmda.cpp
 
 INCLUDEPATH += ../../mountainsort/src/processors
 DEPENDPATH += ../../mountainsort/src/processors

@@ -1,5 +1,8 @@
 #include "msmisc.h"
 #include <math.h>
+#include <QDateTime>
+#include <QDir>
+#include "textfile.h"
 
 double compute_min(const QList<double> &X) {
 	double ret=X.value(0);
@@ -95,4 +98,41 @@ double compute_max(long N, double *X)
 		if (X[i]>ret) ret=X[i];
 	}
 	return ret;
+}
+
+QString get_temp_fname()
+{
+    long rand_num = qrand() + QDateTime::currentDateTime().toMSecsSinceEpoch();
+    return QString("%1/MdaClient_%2.tmp").arg(QDir::tempPath()).arg(rand_num);
+}
+
+QString http_get_text(QString url)
+{
+    QString tmp_fname = get_temp_fname();
+    QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
+    qDebug()  << cmd;
+    int exit_code = system(cmd.toLatin1().data());
+    if (exit_code != 0) {
+        qWarning() << "Problem with system call: " + cmd;
+        QFile::remove(tmp_fname);
+        return "";
+    }
+    QString ret = read_text_file(tmp_fname);
+    QFile::remove(tmp_fname);
+    qDebug()  << "RESPONSE: " << ret;
+    return ret;
+}
+
+QString http_get_binary_mda_file(QString url)
+{
+    QString tmp_fname = get_temp_fname() + ".mda";
+    QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
+    qDebug()  << cmd;
+    int exit_code = system(cmd.toLatin1().data());
+    if (exit_code != 0) {
+        qWarning() << "Problem with system call: " + cmd;
+        QFile::remove(tmp_fname);
+        return "";
+    }
+    return tmp_fname;
 }

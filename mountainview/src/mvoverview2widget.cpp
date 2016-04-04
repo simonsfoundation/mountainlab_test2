@@ -263,7 +263,7 @@ void MVOverview2Widget::setSampleRate(float freq)
 void MVOverview2Widget::setDefaultInitialization()
 {
     //d->open_templates();
-	d->open_cluster_details();
+    //d->open_cluster_details();
     d->m_tabber->switchCurrentContainer();
 	//d->open_auto_correlograms();
 }

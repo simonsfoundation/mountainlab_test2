@@ -62,7 +62,8 @@ HEADERS += \
     processors/fit_stage_processor.h \
     processors/fit_stage.h \
     utils/compute_templates.h \
-    mda/mdaclient.h
+    mda/mdaclient.h \
+    mda/remotereadmda.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -113,7 +114,8 @@ SOURCES += mountainsortmain.cpp \
     processors/fit_stage_processor.cpp \
     processors/fit_stage.cpp \
     utils/compute_templates.cpp \
-    mda/mdaclient.cpp
+    mda/mdaclient.cpp \
+    mda/remotereadmda.cpp
 
 DISTFILES += \
     ../version.txt
