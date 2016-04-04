@@ -1,6 +1,9 @@
 #!/bin/bash
 
-base=/home/magland/dev/mdaserver/testdata/
+base1=/home/magland/dev/mdaserver/testdata/
 base2=http://localhost:8000
+base3=http://magland.org:8000
 
-mountainview --mode=overview2 --raw=$base/pre0.mda --filt=$base/pre1b.mda --pre=$base2/pre2.mda --firings=$base2/firings.mda --samplerate=30000.000000 
+base=base3
+
+mountainview --mode=overview2 --raw=$base/pre0.mda --filt=$base/pre1b.mda --pre=$base/pre2.mda --firings=$base/firings.mda --samplerate=30000.000000 
