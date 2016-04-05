@@ -1,5 +1,6 @@
 #include "mvclusterwidget.h"
 #include "mvclusterview.h"
+#include "computationthread.h"
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -8,6 +9,22 @@
 #include "msmisc.h"
 #include <math.h>
 #include "extract_clips.h"
+#include "mountainsortthread.h"
+
+class MVClusterWidgetComputer : public ComputationThread {
+public:
+    //input
+    DiskReadMda timeseries;
+    DiskReadMda firings;
+    int clip_size;
+    QList<int> labels_to_use;
+
+    //output
+    Mda data;
+    DiskReadMda firings_subset;
+
+    void compute();
+};
 
 class MVClusterWidgetPrivate {
 public:
@@ -17,13 +34,17 @@ public:
     QLabel* m_info_bar;
     Mda m_data;
     DiskReadMda m_timeseries;
+    DiskReadMda m_firings;
+    QList<int> m_labels_to_use;
     int m_clip_size;
     QList<double> m_outlier_scores;
+    MVClusterWidgetComputer m_computer;
 
     void connect_view(MVClusterView* V);
     void update_clips_view();
     int current_event_index();
     void set_data_on_visible_views_that_need_it();
+    void start_computation();
 };
 
 MVClusterWidget::MVClusterWidget()
@@ -133,6 +154,8 @@ MVClusterWidget::MVClusterWidget()
     foreach (MVClusterView* V, d->m_views) {
         d->connect_view(V);
     }
+
+    connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
 }
 
 MVClusterWidget::~MVClusterWidget()
@@ -199,12 +222,26 @@ void MVClusterWidget::setCurrentEvent(const MVEvent& evt)
 void MVClusterWidget::setClipSize(int clip_size)
 {
     d->m_clip_size = clip_size;
+    d->start_computation();
 }
 
 void MVClusterWidget::setTimeseries(const DiskReadMda& X)
 {
     d->m_timeseries = X;
-    d->update_clips_view();
+    d->start_computation();
+}
+
+void MVClusterWidget::setFirings(const DiskReadMda& F)
+{
+    d->m_firings = F;
+
+    d->start_computation();
+}
+
+void MVClusterWidget::setLabelsToUse(const QList<int>& labels)
+{
+    d->m_labels_to_use = labels;
+    d->start_computation();
 }
 
 void MVClusterWidget::setTransformation(const AffineTransformation& T)
@@ -249,6 +286,49 @@ void MVClusterWidget::slot_show_view_toggled(bool val)
     d->set_data_on_visible_views_that_need_it();
 }
 
+void MVClusterWidget::slot_computation_finished()
+{
+    d->m_computer.stopComputation(); //because I'm paranoid
+
+    DiskReadMda F=d->m_computer.firings_subset;
+
+    QList<double> times;
+    QList<int> labels;
+    QList<double> amplitudes;
+    QList<double> outlier_scores;
+    for (long j = 0; j < F.N2(); j++) {
+        times << F.value(1, j);
+        labels << (int)F.value(2, j);
+        amplitudes << F.value(3,j);
+        outlier_scores << F.value(4,j);
+    }
+
+    int K=compute_max(labels);
+    QList<int> labels_map;
+    labels_map << 0;
+    int aa=1;
+    for (int k=1; k<=K; k++) {
+        if (d->m_labels_to_use.indexOf(k)>=0) {
+            labels_map << aa;
+            aa++;
+        }
+        else {
+            labels_map << 0;
+        }
+    }
+    for (long j=0; j<labels.count(); j++) {
+        labels[j]=labels_map[labels[j]];
+    }
+
+    this->setTimes(times);
+    this->setLabels(labels);
+    this->setAmplitudes(amplitudes);
+    this->setOutlierScores(outlier_scores);
+
+    this->setData(d->m_computer.data);
+
+}
+
 void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 {
     QObject::connect(V, SIGNAL(currentEventChanged()), q, SLOT(slot_view_current_event_changed()));
@@ -289,4 +369,62 @@ void MVClusterWidgetPrivate::set_data_on_visible_views_that_need_it()
             }
         }
     }
+}
+
+void MVClusterWidgetPrivate::start_computation()
+{
+    m_computer.stopComputation();
+    m_computer.timeseries = m_timeseries;
+    m_computer.firings = m_firings;
+    m_computer.clip_size = m_clip_size;
+    m_computer.labels_to_use = m_labels_to_use;
+    m_computer.startComputation();
+}
+
+void MVClusterWidgetComputer::compute()
+{
+    QString firings_out_path;
+    {
+        QString labels_str;
+        foreach (int x, labels_to_use) {
+            if (!labels_str.isEmpty())
+                labels_str += ",";
+            labels_str += QString("%1").arg(x);
+        }
+
+        MountainsortThread MT;
+        QString processor_name = "mv_subfirings";
+        MT.setProcessorName(processor_name);
+
+        QMap<QString, QVariant> params;
+        params["firings"] = firings.path();
+        params["labels"] = labels_str;
+        MT.setInputParameters(params);
+
+        firings_out_path = MT.makeOutputFilePath("firings_out");
+
+        MT.compute();
+    }
+
+    QString features_path;
+    {
+        MountainsortThread MT;
+        QString processor_name = "extract_clips_features";
+        MT.setProcessorName(processor_name);
+
+        QMap<QString, QVariant> params;
+        params["timeseries"] = timeseries.path();
+        params["firings"] = firings_out_path;
+        params["clip_size"] = clip_size;
+        params["num_features"] = 3;
+        MT.setInputParameters(params);
+
+        features_path = MT.makeOutputFilePath("features");
+
+        MT.compute();
+    }
+    firings_subset=DiskReadMda(firings_out_path);
+
+    DiskReadMda features(features_path);
+    features.readChunk(data, 0, 0, features.N1(), features.N2());
 }

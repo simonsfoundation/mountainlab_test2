@@ -213,15 +213,14 @@ MVOverview2WidgetControlPanel::MVOverview2WidgetControlPanel(QWidget* parent)
         d->add_button(G, "open_auto_correlograms", "Auto-Correlograms")->setToolTip("Open a new auto-correlograms window");
         d->add_button(G, "open_matrix_of_cross_correlograms", "Matrix of Cross-Correlograms")->setToolTip("Open a matrix of cross-correlograms for the set of selected clusters");
         d->add_button(G, "open_timeseries", "Timeseries Data")->setToolTip("Open a window of raw/Preprocessed data");
-        QPushButton *clips_button=d->add_button(G, "open_clips", "Clips");
+        QPushButton* clips_button = d->add_button(G, "open_clips", "Clips");
         clips_button->setToolTip("Open clips for currently selected cluster.");
         d->add_button(G, "open_clusters", "Cluster(s)")->setToolTip("Open a view of cluster events in feature space.");
         d->add_button(G, "open_firing_rates", "Firing Events")->setToolTip("Open a view of firing rate as a function of time for the selected clusters.");
         d->add_button(G, "find_nearby_events", "Find Nearby Events")->setToolTip("Find multiples of events firing at a similar time.");
         d->add_horizontal_divider(layout);
 
-        clips_button->setEnabled(false);
-
+        //clips_button->setEnabled(false);
     }
 
     layout->addStretch(0);

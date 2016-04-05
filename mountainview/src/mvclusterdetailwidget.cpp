@@ -911,7 +911,7 @@ void MVClusterDetailWidgetCalculator::compute()
     timer.start();
 
     int M = timeseries.N1();
-    int N = timeseries.N2();
+    //int N = timeseries.N2();
     int L = firings.N2();
     int T = clip_size;
 

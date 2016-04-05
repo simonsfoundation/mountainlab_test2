@@ -26,6 +26,7 @@
 #include "mv_firings_filter_processor.h"
 #include "mv_subfirings_processor.h"
 #include "extract_clips_processor.h"
+#include "extract_clips_features_processor.h"
 
 #include "qjson.h"
 #include "textfile.h"
@@ -74,6 +75,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new mv_firings_filter_Processor);
     loadProcessor(new mv_subfirings_Processor);
     loadProcessor(new extract_clips_Processor);
+    loadProcessor(new extract_clips_features_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString &processor_name) const

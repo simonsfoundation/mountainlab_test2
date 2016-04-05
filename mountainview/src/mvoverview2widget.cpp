@@ -1041,13 +1041,14 @@ void MVOverview2WidgetPrivate::do_shell_split()
     DiskReadMda AA(original_cluster_numbers_out);
     int offset = 0;
     for (int i = 0; i < AA.totalSize(); i++) {
-        offset++;
-        m_original_cluster_numbers << AA.value(i);
-        m_original_cluster_offsets << offset;
         if (AA.value(i) != AA.value(i - 1)) {
             offset = 0;
         }
+        offset++;
+        m_original_cluster_numbers << AA.value(i);
+        m_original_cluster_offsets << offset;
     }
+    qDebug() << "&&&&&&&&&&&&&&&&&&&" << m_original_cluster_numbers << m_original_cluster_offsets;
 
     this->set_templates_current_number(-1);
     this->set_templates_selected_numbers(QList<int>());
@@ -1191,7 +1192,7 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_cross_correlograms(in
     //int max_dt=(int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
     X->setProperty("widget_type", "cross_correlograms");
     X->setProperty("kk", k);
-    add_tab(X, QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k) + 1));
+    add_tab(X, QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k)));
     QObject::connect(X, SIGNAL(currentIndexChanged()), q, SLOT(slot_cross_correlogram_current_index_changed()));
     QObject::connect(X, SIGNAL(selectedIndicesChanged()), q, SLOT(slot_cross_correlogram_selected_indices_changed()));
     update_widget(X);
@@ -1282,7 +1283,7 @@ void MVOverview2WidgetPrivate::open_clips()
     QString tab_title = "Clips";
     if (ks.count() == 1) {
         int kk = ks[0];
-        tab_title = QString("Clips %1(%2)").arg(m_original_cluster_numbers.value(kk)).arg(m_original_cluster_offsets.value(kk) + 1);
+        tab_title = QString("Clips %1(%2)").arg(m_original_cluster_numbers.value(kk)).arg(m_original_cluster_offsets.value(kk));
     }
     add_tab(X, tab_title);
     update_widget(X);
@@ -1295,7 +1296,7 @@ void MVOverview2WidgetPrivate::open_clips()
     QString tab_title = "Clips";
     if (ks.count() == 1) {
         int kk = ks[0];
-        tab_title = QString("Clips %1(%2)").arg(m_original_cluster_numbers.value(kk)).arg(m_original_cluster_offsets.value(kk) + 1);
+        tab_title = QString("Clips %1(%2)").arg(m_original_cluster_numbers.value(kk)).arg(m_original_cluster_offsets.value(kk));
     }
     add_tab(X, tab_title);
     update_widget(X);
@@ -1354,9 +1355,9 @@ void MVOverview2WidgetPrivate::find_nearby_events()
         int kk2 = ks[1];
         tab_title = QString("Clips %1(%2) : Clips %3(%4)")
                         .arg(m_original_cluster_numbers.value(kk1))
-                        .arg(m_original_cluster_offsets.value(kk1) + 1)
+                        .arg(m_original_cluster_offsets.value(kk1))
                         .arg(m_original_cluster_numbers.value(kk2))
-                        .arg(m_original_cluster_offsets.value(kk2) + 1);
+                        .arg(m_original_cluster_offsets.value(kk2));
     }
     add_tab(X, tab_title);
     update_widget(X);
@@ -1492,7 +1493,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
             labels1 << k;
             labels2 << i;
             if ((i == 1) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
-                text_labels << QString("Cross %1(%2)/%3").arg(m_original_cluster_numbers[k + 1]).arg(m_original_cluster_offsets.value(k + 1) + 1).arg(m_original_cluster_numbers[i]);
+                text_labels << QString("Cross %1(%2)/%3").arg(m_original_cluster_numbers[k + 1]).arg(m_original_cluster_offsets.value(k + 1)).arg(m_original_cluster_numbers[i]);
             }
             else
                 text_labels << "";
@@ -1514,9 +1515,9 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         QList<int> labels1, labels2;
         //text_labels << "";
         for (int a1 = 0; a1 < ks.count(); a1++) {
-            QString str1 = QString("%1(%2)").arg(m_original_cluster_numbers[ks[a1]]).arg(m_original_cluster_offsets[ks[a1]] + 1);
+            QString str1 = QString("%1(%2)").arg(m_original_cluster_numbers[ks[a1]]).arg(m_original_cluster_offsets[ks[a1]]);
             for (int a2 = 0; a2 < ks.count(); a2++) {
-                QString str2 = QString("%1(%2)").arg(m_original_cluster_numbers[ks[a2]]).arg(m_original_cluster_offsets[ks[a2]] + 1);
+                QString str2 = QString("%1(%2)").arg(m_original_cluster_numbers[ks[a2]]).arg(m_original_cluster_offsets[ks[a2]]);
                 text_labels << QString("%1/%2").arg(str1).arg(str2);
                 labels1 << ks.value(a1);
                 labels2 << ks.value(a2);
@@ -1643,6 +1644,16 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         printf(".\n");
     }
     else if (widget_type == "clusters") {
+        MVClusterWidget* WW = (MVClusterWidget*)W;
+        int clip_size = m_control_panel->getParameterValue("clip_size").toInt();
+        QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
+        WW->setTimeseries(m_timeseries);
+        WW->setClipSize(clip_size);
+        WW->setFirings(m_firings);
+        WW->setLabelsToUse(ks);
+    }
+    /*
+    else if (widget_type == "clusters_old") {
         set_progress("Extracting clips", "Extracting clips", 0);
         MVClusterWidget* WW = (MVClusterWidget*)W;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
@@ -1694,6 +1705,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         set_progress("", "", 1);
         printf(".\n");
     }
+    */
     else if (widget_type == "firing_rates") {
         MVFiringRateView* WW = (MVFiringRateView*)W;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());

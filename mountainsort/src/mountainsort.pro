@@ -69,7 +69,8 @@ HEADERS += \
     processors/mv_firings_filter.h \
     processors/extract_clips_processor.h \
     processors/mv_subfirings_processor.h \
-    core/mscachemanager.h
+    core/mscachemanager.h \
+    processors/extract_clips_features_processor.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -127,7 +128,8 @@ SOURCES += mountainsortmain.cpp \
     processors/mv_firings_filter.cpp \
     processors/extract_clips_processor.cpp \
     processors/mv_subfirings_processor.cpp \
-    core/mscachemanager.cpp
+    core/mscachemanager.cpp \
+    processors/extract_clips_features_processor.cpp
 
 DISTFILES += \
     ../version.txt

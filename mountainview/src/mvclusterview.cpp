@@ -11,6 +11,8 @@
 #include "msmisc.h"
 #include <QMenu>
 
+QList<QColor> generate_colors(const QColor &bg, const QColor &fg, int noColors);
+
 class MVClusterViewPrivate : public QObject {
     Q_OBJECT
 public:
@@ -85,7 +87,10 @@ MVClusterView::MVClusterView(QWidget* parent)
     d->m_max_amplitude = 1;
     this->setMouseTracking(true);
 
-    QList<QString> color_strings;
+
+    //QList<QString> color_strings;
+    //color_strings << "black" << "blue" << "red" << "green" << "white" << "magenta";
+    /*
     color_strings << "#F7977A"
                   << "#FDC68A"
                   << "#C4DF9B"
@@ -102,8 +107,22 @@ MVClusterView::MVClusterView(QWidget* parent)
                   << "#8882BE"
                   << "#BC8DBF"
                   << "#F6989D";
-    for (int i = 0; i < color_strings.size(); i++) {
-        d->m_label_colors << QColor(color_strings[i]);
+                  */
+    //for (int i = 0; i < color_strings.size(); i++) {
+    //    d->m_label_colors << QColor(color_strings[i]);
+    //}
+
+    //these should be relatively prime
+    //int num1=5;
+    //int num2=22;
+    int num1=3;
+    int num2=10;
+    QList<QColor> colors=generate_colors(Qt::gray,Qt::white,num2);
+    for (int j=0; j<colors.count(); j++) {
+        d->m_label_colors << colors.value((j*num1)%num2);
+    }
+    for (int j=0; j<d->m_label_colors.count(); j++) {
+        qDebug() << j << d->m_label_colors[j].red() << d->m_label_colors[j].green() << d->m_label_colors[j].blue();
     }
 
     this->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -771,4 +790,58 @@ void MVClusterViewPrivate::export_image()
 {
     QImage img = q->renderImage(1000, 800);
     user_save_image(img);
+}
+
+// generate_colors() is adapted from code by...
+/*
+ * Copyright (c) 2008 Helder Correia
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+QList<QColor> generate_colors(const QColor &bg, const QColor &fg, int noColors)
+{
+    QList<QColor> colors;
+    const int HUE_BASE = (bg.hue() == -1) ? 90 : bg.hue();
+    int h, s, v;
+
+    for (int i = 0; i < noColors; i++)
+    {
+        h = int(HUE_BASE + (360.0 / noColors * i)) % 360;
+        s = 240;
+        v = int(qMax(bg.value(), fg.value()) * 0.85);
+
+        // take care of corner cases
+        const int M = 35;
+        if (   (h < bg.hue() + M &&h > bg.hue() - M)
+                || (h < fg.hue() + M &&h > fg.hue() - M))
+        {
+            h = ((bg.hue() + fg.hue()) / (i + 1)) % 360;
+            s = ((bg.saturation() + fg.saturation() + 2 * i) / 2) % 256;
+            v = ((bg.value() + fg.value() + 2 * i) / 2) % 256;
+        }
+
+        colors.append(QColor::fromHsv(h, s, v));
+    }
+
+    return colors;
 }

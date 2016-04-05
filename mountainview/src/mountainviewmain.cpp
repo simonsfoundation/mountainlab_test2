@@ -171,6 +171,7 @@ int main(int argc, char* argv[])
             return 0;
         }
     }
+    /*
     else if (mode == "view_clusters") {
         MVClusterWidget* W = new MVClusterWidget;
         QString data_path = CLP.named_parameters.value("data").toString();
@@ -190,6 +191,7 @@ int main(int argc, char* argv[])
         W->resize(1000, 500);
         W->show();
     }
+    */
     else if (mode == "spikespy") {
         printf("spikespy...\n");
         QString timeseries_path = CLP.named_parameters["timeseries"].toString();

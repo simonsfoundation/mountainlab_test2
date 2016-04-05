@@ -1,4 +1,5 @@
 #include "extract_clips.h"
+#include "get_pca_features.h"
 
 Mda extract_clips(DiskReadMda &X, const QList<double> &times, int clip_size)
 {
@@ -60,5 +61,20 @@ bool extract_clips(const QString &timeseries_path, const QString &firings_path, 
     }
     Mda clips=extract_clips(X,times,clip_size);
     clips.write32(clips_path);
+    return true;
+}
+
+bool extract_clips_features(const QString &timeseries_path, const QString &firings_path, const QString &features_path, int clip_size, int num_features)
+{
+    DiskReadMda X(timeseries_path);
+    DiskReadMda F(firings_path);
+    QList<double> times;
+    for (long j=0; j<F.N2(); j++) {
+        times << F.value(1,j);
+    }
+    Mda clips=extract_clips(X,times,clip_size);
+    Mda features(num_features,clips.N3());
+    get_pca_features(clips.N1()*clips.N2(),clips.N3(),num_features,features.dataPtr(),clips.dataPtr());
+    features.write32(features_path);
     return true;
 }
