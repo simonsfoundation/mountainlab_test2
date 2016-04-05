@@ -23,7 +23,6 @@
 #include "mvclusterwidget.h"
 #include "run_mountainview_script.h"
 #include "closemehandler.h"
-#include "mdaclient.h"
 #include "remotereadmda.h"
 
 /*
@@ -67,8 +66,6 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
     CloseMeHandler::start();
 
-    MdaClient::setLocalCachePath(QDir::tempPath() + "/mdaclient_local_cache");
-
     CLParams CLP = get_command_line_params(argc, argv);
 
     if (CLP.unnamed_parameters.value(0).endsWith(".js")) {
@@ -78,15 +75,7 @@ int main(int argc, char* argv[])
 
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
-        if (arg2 == "mdaclient") {
-            QString arg3 = CLP.unnamed_parameters.value(2, "remote://magland/firings.mda");
-            mdaclient_unit_test(arg3);
-        }
-        //else if (arg2=="mdaclient2") {
-        //    QString arg3=CLP.unnamed_parameters.value(2,"remote://magland/firings.mda");
-        //    mdaclient_unit_test_2(arg3);
-        //}
-        else if (arg2 == "remotereadmda") {
+        if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
         }
         else if (arg2 == "remotereadmda2") {

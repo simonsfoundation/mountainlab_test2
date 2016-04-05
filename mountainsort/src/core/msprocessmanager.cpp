@@ -166,20 +166,6 @@ bool MSProcessManager::runProcess(const QString &processor_name, const QMap<QStr
 {
     QMap<QString,QVariant> parameters=parameters_in;
 
-    //preprocess the parameters
-    /*
-    QString tmp_path=QDir::tempPath()+"/mountainsort";
-    if (!QDir(tmp_path).exists()) QDir(QFileInfo(tmp_path).path()).mkdir(QFileInfo(tmp_path).fileName());
-    QStringList pkeys=parameters.keys();
-    foreach (QString key,pkeys) {
-        QVariant val=parameters[key];
-        if (val.toString().indexOf("(MSTMP)")>=0) {
-            val=val.toString().replace("(MSTMP)",tmp_path);
-            parameters[key]=val;
-        }
-    }
-    */
-
 	printf("RUNNING %s\n",processor_name.toLatin1().data());
 	QTime timer; timer.start();
 	bool ret=d->find_processor(processor_name)->run(parameters);

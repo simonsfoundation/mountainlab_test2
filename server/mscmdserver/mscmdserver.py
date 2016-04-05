@@ -23,6 +23,8 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         mdaserver_basepath            = self.cfg("mdaserver_basepath")
         remote_name   = self.cfg("remote_name")
         processor_name=self.query("processor")
+        self.mkdir_if_needed(mdaserver_basepath+"/tmp_short_term")
+        self.mkdir_if_needed(mdaserver_basepath+"/tmp_long_term")
         keys0=self.query_keys()
         print(remote_name)
         cmd = mountainsort_exe+" "+processor_name

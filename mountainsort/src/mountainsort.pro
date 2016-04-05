@@ -62,14 +62,14 @@ HEADERS += \
     processors/fit_stage_processor.h \
     processors/fit_stage.h \
     utils/compute_templates_0.h \
-    mda/mdaclient.h \
     mda/remotereadmda.h \
     processors/compute_templates.h \
     processors/compute_templates_processor.h \
     processors/mv_firings_filter_processor.h \
     processors/mv_firings_filter.h \
     processors/extract_clips_processor.h \
-    processors/mv_subfirings_processor.h
+    processors/mv_subfirings_processor.h \
+    core/mscachemanager.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -120,14 +120,14 @@ SOURCES += mountainsortmain.cpp \
     processors/fit_stage_processor.cpp \
     processors/fit_stage.cpp \
     utils/compute_templates_0.cpp \
-    mda/mdaclient.cpp \
     mda/remotereadmda.cpp \
     processors/compute_templates.cpp \
     processors/compute_templates_processor.cpp \
     processors/mv_firings_filter_processor.cpp \
     processors/mv_firings_filter.cpp \
     processors/extract_clips_processor.cpp \
-    processors/mv_subfirings_processor.cpp
+    processors/mv_subfirings_processor.cpp \
+    core/mscachemanager.cpp
 
 DISTFILES += \
     ../version.txt

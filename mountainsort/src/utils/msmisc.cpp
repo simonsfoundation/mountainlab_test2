@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QCryptographicHash>
 #include <QThread>
+#include "../core/mscachemanager.h"
 
 //I have to temporarily put this code in to get code completion to work in QtCreator
 //even though DEFINES+=USE_NETWORK is in the .pro file.
@@ -140,8 +141,9 @@ double compute_max(long N, double* X)
 
 QString get_temp_fname()
 {
-    long rand_num = qrand() + QDateTime::currentDateTime().toMSecsSinceEpoch();
-    return QString("%1/MdaClient_%2.tmp").arg(QDir::tempPath()).arg(rand_num);
+    return cacheManager()->makeLocalFile();
+    //long rand_num = qrand() + QDateTime::currentDateTime().toMSecsSinceEpoch();
+    //return QString("%1/MdaClient_%2.tmp").arg(QDir::tempPath()).arg(rand_num);
 }
 
 QString abbreviate(const QString& str, int len1, int len2)

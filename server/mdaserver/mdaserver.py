@@ -33,6 +33,8 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         mdaserver_basepath  = self.cfg("mdaserver_basepath")
         mdachunk_data_path  = self.cfg("mdachunk_data_path")
         mdaserver_url   = self.cfg("mdaserver_url")
+        self.mkdir_if_needed(mdaserver_basepath+"/tmp_short_term")
+        self.mkdir_if_needed(mdaserver_basepath+"/tmp_long_term")
     	mda_fname=mdaserver_basepath+"/"+urlparse.urlparse(self.path).path
         if self.query("a")=="size": #need to return the dimensions of the .mda
             (str,exit_code)=self.call_and_read_output(" ".join([mdachunk_exe, "size", mda_fname]))

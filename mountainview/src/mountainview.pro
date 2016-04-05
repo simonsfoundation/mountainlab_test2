@@ -46,7 +46,6 @@ HEADERS += \
     imagesavedialog.h \
     run_mountainview_script.h \
     closemehandler.h \
-    ../../mountainsort/src/mda/mdaclient.h \
     computationthread.h \
     set_progress.h \
     mvcrosscorrelogramswidget2.h \
@@ -84,7 +83,6 @@ SOURCES += mountainviewmain.cpp \
     imagesavedialog.cpp \
     run_mountainview_script.cpp \
     closemehandler.cpp \
-    ../../mountainsort/src/mda/mdaclient.cpp \
     computationthread.cpp \
     set_progress.cpp \
     mvcrosscorrelogramswidget2.cpp \
@@ -116,6 +114,12 @@ DEPENDPATH += ../../mountainsort/src/processors
 VPATH += ../../mountainsort/src/processors
 HEADERS += extract_clips.h
 SOURCES += extract_clips.cpp
+
+INCLUDEPATH += ../../mountainsort/src/core
+DEPENDPATH += ../../mountainsort/src/core
+VPATH += ../../mountainsort/src/core
+HEADERS += mscachemanager.h
+SOURCES += mscachemanager.cpp
 
 RESOURCES += mountainview.qrc
 

@@ -49,11 +49,9 @@ bool adjust_times(const QString &timeseries_path, const QString &detect_path, co
                 QList<int> channels; channels << m-1; //convert to 1-based indexing
                 clips=extract_clips(TS,times,channels,clip_size);
             }
-            clips.write32("/tmp/clips_before.mda");
             if (opts.num_pca_denoise_components) {
                 clips=pca_denoise(clips,opts.num_pca_denoise_components,opts.pca_denoise_jiggle);
             }
-            clips.write32("/tmp/clips_after.mda");
             QList<double> times2=adjust_times_2(clips,times,opts);
             for (long i=0; i<inds.count(); i++) {
                 times_out[inds[i]]=times2[i];

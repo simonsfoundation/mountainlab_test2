@@ -12,6 +12,7 @@
 #include <QString>
 #include <QStringList>
 #include "textfile.h"
+#include "mscachemanager.h"
 
 void usage();
 QString get_chunk_code(const QString& fname, const QString& datatype, long index, long size);
@@ -86,7 +87,10 @@ int main(int argc, char* argv[])
             printf("Error computing chunk code.\n");
             return -1;
         }
-        QString fname = outpath + "/" + code + ".mda";
+        cacheManager()->setLocalBasePath(outpath);
+        QString fname=cacheManager()->makeLocalFile(code+".mda");
+        QString relative_fname=fname.mid(outpath.count());
+        //QString fname = outpath + "/" + code + ".mda";
         if (!QFile::exists(fname)) {
             DiskReadMda X(arg1);
             Mda chunk;
@@ -128,7 +132,8 @@ int main(int argc, char* argv[])
             }
         }
 
-        printf("%s.mda\n", code.toLatin1().data());
+        printf("%s\n", relative_fname.toLatin1().data());
+        //printf("%s.mda\n", code.toLatin1().data());
         return 0;
     }
     else {

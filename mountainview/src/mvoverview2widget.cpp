@@ -1685,7 +1685,6 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         get_pca_features(M * T, L, 3, features.dataPtr(), clips.dataPtr());
         //subtract_features_mean(features);
         normalize_features(features, false);
-        features.write32("/tmp/tmp_features.mda");
         WW->setTimeseries(m_timeseries);
         WW->setData(features);
         WW->setTimes(times_kk);
