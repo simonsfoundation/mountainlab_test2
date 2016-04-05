@@ -1,6 +1,9 @@
 QT += core gui script network
+DEFINES += USE_NETWORK
 
 CONFIG -= app_bundle #Please apple, don't make a bundle today
+
+CONFIG += c++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets #We do want to support Qt5, but there is no reason not to use Qt4
 
@@ -47,7 +50,8 @@ HEADERS += \
     computationthread.h \
     set_progress.h \
     mvcrosscorrelogramswidget2.h \
-    mountainsortthread.h
+    mountainsortthread.h \
+    mvclipswidget.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -84,7 +88,8 @@ SOURCES += mountainviewmain.cpp \
     computationthread.cpp \
     set_progress.cpp \
     mvcrosscorrelogramswidget2.cpp \
-    mountainsortthread.cpp
+    mountainsortthread.cpp \
+    mvclipswidget.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils

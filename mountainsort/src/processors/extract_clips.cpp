@@ -49,3 +49,16 @@ Mda extract_clips(DiskReadMda &X, const QList<double> &times, const QList<int> &
 	}
 	return clips;
 }
+
+bool extract_clips(const QString &timeseries_path, const QString &firings_path, const QString &clips_path, int clip_size)
+{
+    DiskReadMda X(timeseries_path);
+    DiskReadMda F(firings_path);
+    QList<double> times;
+    for (long j=0; j<F.N2(); j++) {
+        times << F.value(1,j);
+    }
+    Mda clips=extract_clips(X,times,clip_size);
+    clips.write32(clips_path);
+    return true;
+}

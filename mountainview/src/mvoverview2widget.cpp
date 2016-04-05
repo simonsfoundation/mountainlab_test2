@@ -14,6 +14,7 @@
 #include "tabber.h"
 #include "computationthread.h"
 #include "mountainsortthread.h"
+#include "mvclipswidget.h"
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -1018,9 +1019,10 @@ void MVOverview2WidgetPrivate::do_shell_split()
 {
     MountainsortThread MT;
     QString processor_name = "mv_firings_filter";
+
     MT.setProcessorName(processor_name);
+
     QMap<QString, QVariant> params;
-    QString remote_name = remote_name_of_path(m_firings_original.path());
     params["use_shell_split"] = m_control_panel->getParameterValue("use_shell_split").toInt();
     params["shell_width"] = m_control_panel->getParameterValue("shell_width").toDouble();
     params["min_per_shell"] = m_control_panel->getParameterValue("min_per_shell").toInt();
@@ -1028,12 +1030,10 @@ void MVOverview2WidgetPrivate::do_shell_split()
     params["min_amplitude"] = m_control_panel->getParameterValue("min_amplitude").toDouble();
     params["max_outlier_score"] = m_control_panel->getParameterValue("max_outlier_score").toDouble();
     params["firings"] = m_firings_original.makePath();
-    QString firings_out = create_temporary_output_file_name(remote_name, processor_name, params, "firings_out");
-    QString original_cluster_numbers_out = create_temporary_output_file_name(remote_name, processor_name, params, "original_cluster_numbers");
-    params["firings_out"] = firings_out;
-    params["original_cluster_numbers"] = original_cluster_numbers_out;
-    MT.setParameters(params);
-    MT.setRemoteName(remote_name);
+    MT.setInputParameters(params);
+
+    QString firings_out = MT.makeOutputFilePath("firings_out");
+    QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
     MT.compute();
     m_firings.setPath(firings_out);
     m_original_cluster_numbers.clear();
@@ -1275,6 +1275,19 @@ void MVOverview2WidgetPrivate::open_clips()
         QMessageBox::information(q, "Unable to open clips", "You must select at least one cluster.");
         return;
     }
+
+    MVClipsWidget* X = new MVClipsWidget;
+    X->setProperty("widget_type", "clips");
+    X->setProperty("ks", int_list_to_string_list(ks));
+    QString tab_title = "Clips";
+    if (ks.count() == 1) {
+        int kk = ks[0];
+        tab_title = QString("Clips %1(%2)").arg(m_original_cluster_numbers.value(kk)).arg(m_original_cluster_offsets.value(kk) + 1);
+    }
+    add_tab(X, tab_title);
+    update_widget(X);
+
+    /*
     MVClipsView* X = MVClipsView::newInstance();
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
@@ -1287,6 +1300,7 @@ void MVOverview2WidgetPrivate::open_clips()
     add_tab(X, tab_title);
     update_widget(X);
     X->setXRange(vec2(0, 5000));
+    */
 }
 
 void MVOverview2WidgetPrivate::open_clusters()
@@ -1543,7 +1557,16 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setFirings(DiskReadMda(m_firings));
         WW->setGroupNumbers(m_original_cluster_numbers);
     }
-    else if ((widget_type == "clips") || (widget_type == "find_nearby_events")) {
+    else if (widget_type == "clips") {
+        MVClipsWidget* WW = (MVClipsWidget*)W;
+        int clip_size = m_control_panel->getParameterValue("clip_size").toInt();
+        QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
+        WW->setTimeseries(m_timeseries);
+        WW->setClipSize(clip_size);
+        WW->setFirings(m_firings);
+        WW->setLabelsToUse(ks);
+    }
+    else if (widget_type == "find_nearby_events") {
         printf("Extracting clips...\n");
         MVClipsView* WW = (MVClipsView*)W;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
@@ -2010,7 +2033,11 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
     QList<QWidget*> widgets = get_all_widgets();
     foreach (QWidget* W, widgets) {
         QString widget_type = W->property("widget_type").toString();
-        if ((widget_type == "clips") || (widget_type == "find_nearby_events")) {
+        if (widget_type == "clips") {
+            MVClipsView* WW = (MVClipsView*)W;
+            //finish
+        }
+        else if (widget_type == "find_nearby_events") {
             MVClipsView* WW = (MVClipsView*)W;
             WW->setCurrentEvent(evt);
         }

@@ -889,17 +889,17 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
 DiskReadMda mscmd_compute_templates(const QString& timeseries, const QString& firings, int clip_size)
 {
     MountainsortThread X;
-    QString remote_name = remote_name_of_path(timeseries);
-    X.setRemoteName(remote_name);
     QString processor_name = "compute_templates";
     X.setProcessorName(processor_name);
+
     QMap<QString, QVariant> params;
     params["timeseries"] = timeseries;
     params["firings"] = firings;
     params["clip_size"] = clip_size;
-    QString templates_fname = create_temporary_output_file_name(remote_name, processor_name, params, "templates");
-    params["templates"] = templates_fname;
-    X.setParameters(params);
+    X.setInputParameters(params);
+
+    QString templates_fname = X.makeOutputFilePath("templates");
+
     X.compute();
     DiskReadMda ret(templates_fname);
     return ret;

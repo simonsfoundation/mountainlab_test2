@@ -299,7 +299,7 @@ void LoadChunkThread::run()
     if (!local_fname.isEmpty()) {
         mda_fname = local_fname;
     } else {
-        mda_fname = http_get_binary_mda_file(result_url);
+        mda_fname = http_get_binary_file(result_url);
     }
     if (mda_fname.isEmpty()) {
         this->setError("Error getting binary file: " + result_url);

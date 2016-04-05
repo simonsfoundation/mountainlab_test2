@@ -67,7 +67,9 @@ HEADERS += \
     processors/compute_templates.h \
     processors/compute_templates_processor.h \
     processors/mv_firings_filter_processor.h \
-    processors/mv_firings_filter.h
+    processors/mv_firings_filter.h \
+    processors/extract_clips_processor.h \
+    processors/mv_subfirings_processor.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -123,7 +125,9 @@ SOURCES += mountainsortmain.cpp \
     processors/compute_templates.cpp \
     processors/compute_templates_processor.cpp \
     processors/mv_firings_filter_processor.cpp \
-    processors/mv_firings_filter.cpp
+    processors/mv_firings_filter.cpp \
+    processors/extract_clips_processor.cpp \
+    processors/mv_subfirings_processor.cpp
 
 DISTFILES += \
     ../version.txt

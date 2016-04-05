@@ -181,7 +181,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
     QString url0=url+QString("?a=readChunk&index=%1&size=%2&datatype=float64").arg((long)(ii*REMOTE_READ_MDA_CHUNK_SIZE)).arg(size);
     QString binary_url=http_get_text(url0).trimmed();
     if (binary_url.isEmpty()) return "";
-    QString mda_fname=http_get_binary_mda_file(binary_url);
+    QString mda_fname=http_get_binary_file(binary_url);
     if (mda_fname.isEmpty()) return "";
     DiskReadMda tmp(mda_fname);
     if (tmp.totalSize()!=size) {

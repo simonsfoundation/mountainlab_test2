@@ -53,7 +53,7 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return tmp[0] if tmp else ""
 
     def call_and_read_output(self,cmd): #make a system call and return the output string and exit code
-    	print(cmd)
+    	print("CALLING: "+cmd)
     	process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     	exit_code = process.wait()
     	(out,err)=process.communicate()
