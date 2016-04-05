@@ -12,7 +12,6 @@
 class MSCacheManagerPrivate;
 class MSCacheManager : public QObject {
 public:
-
     enum Duration {
         ShortTerm,
         LongTerm
@@ -22,16 +21,17 @@ public:
     MSCacheManager();
     virtual ~MSCacheManager();
 
-    void setLocalBasePath(const QString &path);
-    QString makeRemoteFile(const QString &remote_name,const QString &file_name="",Duration duration=ShortTerm);
-    QString makeLocalFile(const QString &file_name="",Duration duration=ShortTerm,QObject *remove_on_delete=0);
+    void setLocalBasePath(const QString& path);
+    QString makeRemoteFile(const QString& remote_name, const QString& file_name = "", Duration duration = ShortTerm);
+    QString makeLocalFile(const QString& file_name = "", Duration duration = ShortTerm, QObject* remove_on_delete = 0);
     void cleanUp();
 private slots:
     void slot_remove_on_delete();
+
 private:
     MSCacheManagerPrivate* d;
 };
 
-MSCacheManager *cacheManager();
+MSCacheManager* cacheManager();
 
 #endif // MSCACHEMANAGER_H
