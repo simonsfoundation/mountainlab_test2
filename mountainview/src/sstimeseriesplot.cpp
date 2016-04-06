@@ -8,12 +8,31 @@
 #include <QTimer>
 #include <QMouseEvent>
 #include "sscommon.h"
+#include "computationthread.h"
 #define MIN_NUM_PIXELS 4000
+
+class DataLoaderThread : public ComputationThread {
+public:
+    //input
+    int x1,x2;
+    int msfactor;
+    DiskArrayModel_New *array_model;
+
+    //output
+    Mda data;
+
+    void compute();
+};
+
+struct Some_Info {
+    int x1,x2;
+    int msfactor;
+};
 
 class SSTimeSeriesPlotPrivate {
 public:
     SSTimeSeriesPlot* q;
-    SSARRAY* m_data;
+    DiskArrayModel_New* m_data;
     SSLabelsModel1* m_labels;
     bool m_labels_is_owner;
     SSLabelsModel1* m_compare_labels;
@@ -44,8 +63,8 @@ public:
     bool m_uniform_vertical_channel_spacing;
     bool m_use_fixed_vertical_channel_spacing;
     double m_fixed_vertical_channel_spacing;
+    DataLoaderThread m_data_loader;
 
-    void set_data2();
     QColor get_channel_color(int num);
     void setup_plot_area();
     void schedule_setup_plot_area();
@@ -133,6 +152,7 @@ SSTimeSeriesPlot::SSTimeSeriesPlot(QWidget* parent)
     d->m_margins[0] = d->m_margins[1] = d->m_margins[2] = d->m_margins[3] = 0;
 
     connect(this, SIGNAL(replotNeeded()), this, SLOT(slot_replot_needed()));
+    connect(&d->m_data_loader,SIGNAL(computationFinished()),this,SLOT(slot_data_loaded()));
 }
 
 SSTimeSeriesPlot::~SSTimeSeriesPlot()
@@ -229,7 +249,48 @@ void SSTimeSeriesPlot::setData(SSARRAY* data)
     d->m_num_channels = d->m_data->N1();
     d->m_dim3 = d->m_data->dim3();
 
-    d->set_data2();
+    int M = d->m_num_channels;
+    int N = d->m_max_timepoint + 1;
+
+    if ((xRange().y >= N - 1) || (xRange().y < 200)) {
+        setXRange(vec2(0, N - 1));
+    }
+
+    int scale0 = 1;
+    while (N / scale0 > 100)
+        scale0 *= MULTISCALE_FACTOR;
+    Mda data0 = d->m_data->loadData(scale0, 0, N / scale0 + 1);
+
+    d->m_minvals.clear();
+    d->m_maxvals.clear();
+    for (int ch = 0; ch < M; ch++) {
+        d->m_minvals << 0;
+        d->m_maxvals << 0;
+    }
+    //fixed on 12/4/15
+    if (data0.N2() > 1) {
+        for (int ch = 0; ch < M; ch++) {
+            d->m_minvals[ch] = data0.value(ch, 0L, 0L);
+            d->m_maxvals[ch] = data0.value(ch, 0L, 0L);
+            for (long i3 = 0; i3 < data0.N3(); i3++) {
+                for (long i2 = 0; i2 < data0.N2(); i2++) {
+                    double val = data0.value(ch, i2, i3);
+                    if (val < d->m_minvals[ch]) {
+                        d->m_minvals[ch] = val;
+                    }
+                    if (val > d->m_maxvals[ch]) {
+                        d->m_maxvals[ch] = val;
+                    }
+                }
+            }
+        }
+    }
+    else {
+        for (int ch = 0; ch < M; ch++) {
+            d->m_minvals[ch] = 0;
+            d->m_maxvals[ch] = 1;
+        }
+    }
 
     d->m_image_needs_update = true;
     emit this->replotNeeded();
@@ -297,81 +358,6 @@ void SSTimeSeriesPlot::setControlPanelVisible(bool val)
         d->m_control_panel_height = 16;
     else
         d->m_control_panel_height = 0;
-}
-
-void SSTimeSeriesPlotPrivate::set_data2()
-{
-
-    int M = m_num_channels;
-    int N = m_max_timepoint + 1;
-
-    if ((q->xRange().y >= N - 1) || (q->xRange().y < 200)) {
-        q->setXRange(vec2(0, N - 1));
-    }
-
-    int scale0 = 1;
-    while (N / scale0 > 100)
-        scale0 *= MULTISCALE_FACTOR;
-    Mda tmp = m_data->loadData(scale0, 0, N / scale0 + 1);
-    Mda* data0 = &tmp;
-
-    m_minvals.clear();
-    m_maxvals.clear();
-    for (int ch = 0; ch < M; ch++) {
-        m_minvals << 0;
-        m_maxvals << 0;
-    }
-    /*
-	if (data0->size(1)>1) {
-		for (int ch = 0; ch < M; ch++) {
-			if (N > 0) {
-				m_minvals[ch] = data0->value(ch, 0);
-				m_maxvals[ch] = data0->value(ch, 0);
-			}
-			for (int i = 0; i < data0->size(1); i++) {
-				double val = data0->value(ch, i);
-				if (val < m_minvals[ch]) {
-					m_minvals[ch] = val;
-				}
-				if (val > m_maxvals[ch]) {
-					m_maxvals[ch] = val;
-				}
-			}
-        }
-
-	} else {
-		for (int ch=0; ch<M; ch++) {
-			m_minvals[ch]=0;
-			m_maxvals[ch]=1;
-		}
-	}
-	*/
-    //fixed on 12/4/15
-    if (data0->N2() > 1) {
-        for (int ch = 0; ch < M; ch++) {
-            m_minvals[ch] = data0->value(ch, 0L, 0L);
-            m_maxvals[ch] = data0->value(ch, 0L, 0L);
-            for (long i3 = 0; i3 < data0->N3(); i3++) {
-                for (long i2 = 0; i2 < data0->N2(); i2++) {
-                    double val = data0->value(ch, i2, i3);
-                    if (val < m_minvals[ch]) {
-                        m_minvals[ch] = val;
-                    }
-                    if (val > m_maxvals[ch]) {
-                        m_maxvals[ch] = val;
-                    }
-                }
-            }
-        }
-    }
-    else {
-        for (int ch = 0; ch < M; ch++) {
-            m_minvals[ch] = 0;
-            m_maxvals[ch] = 1;
-        }
-    }
-
-    q->update();
 }
 
 QColor SSTimeSeriesPlotPrivate::get_channel_color(int ch)
@@ -491,8 +477,6 @@ void SSTimeSeriesPlotPrivate::setup_plot_area()
         }
     }
 
-    m_plot_area.clearSeries();
-
     int xrange_min = q->xRange().x;
     int xrange_max = q->xRange().y;
 
@@ -520,60 +504,14 @@ void SSTimeSeriesPlotPrivate::setup_plot_area()
         x2 = (xrange_max / msfactor) * msfactor;
     }
 
-    Mda tmp = m_data->loadData(msfactor, x1 / msfactor, x2 / msfactor);
-    for (int ch = 0; ch < M; ch++) {
-        if (msfactor == 1) {
-            Mda xvals;
-            xvals.allocate(1, x2 - x1 + 1);
-            for (int x = x1; x <= x2; x++) {
-                xvals.setValue(x, 0, x - x1);
-            }
-            Mda yvals;
-            yvals.allocate(1, x2 - x1 + 1);
-            for (int ii = x1; ii <= x2; ii++) {
-                double val = tmp.value(ch, ii - x1);
-                yvals.setValue(val, 0, ii - x1);
-            }
-            QColor color = get_channel_color(ch);
-            PlotSeries SS;
-            SS.xvals = xvals;
-            SS.yvals = yvals;
-            SS.color = color;
-            SS.offset = m_plot_offsets[ch];
-            SS.plot_pairs = false;
-            QString label0 = m_channel_labels.value(ch);
-            if (label0.isEmpty())
-                label0 = QString("%1").arg(ch + 1);
-            SS.name = label0;
-            m_plot_area.addSeries(SS);
-        }
-        else {
+    m_data_loader.stopComputation();
+    m_data_loader.x1=x1;
+    m_data_loader.x2=x2;
+    m_data_loader.msfactor=msfactor;
+    m_data_loader.array_model=m_data;
 
-            Mda xvals;
-            xvals.allocate(1, (x2 - x1) / msfactor * 2);
-            for (int x = x1; x < x2; x += msfactor) {
-                xvals.setValue(x, 0, (x - x1) / msfactor * 2);
-                xvals.setValue(x, 0, (x - x1) / msfactor * 2 + 1);
-            }
-            Mda yvals;
-            yvals.allocate(1, (x2 - x1) / msfactor * 2);
-            for (int ii = x1; ii < x2; ii += msfactor) {
-                double val1 = tmp.value(ch, ((ii - x1) / msfactor) * 2);
-                double val2 = tmp.value(ch, ((ii - x1) / msfactor) * 2 + 1);
-                yvals.setValue(val1, 0, (ii - x1) / msfactor * 2);
-                yvals.setValue(val2, 0, (ii - x1) / msfactor * 2 + 1);
-            }
-            QColor color = get_channel_color(ch);
-            PlotSeries SS;
-            SS.xvals = xvals;
-            SS.yvals = yvals;
-            SS.color = color;
-            SS.offset = m_plot_offsets[ch];
-            SS.plot_pairs = false;
-            SS.name = QString("%1").arg(ch + 1);
-            m_plot_area.addSeries(SS);
-        }
-    }
+    //m_data_loader.startComputation();
+    m_data_loader.compute();
 
     //the label markers
     m_plot_area.clearMarkers();
@@ -626,8 +564,7 @@ void SSTimeSeriesPlotPrivate::setup_plot_area()
         }
     }
 
-    m_image_needs_update = true;
-    q->update();
+    q->slot_data_loaded();
 }
 
 void SSTimeSeriesPlotPrivate::schedule_setup_plot_area()
@@ -710,6 +647,72 @@ void SSTimeSeriesPlot::slot_setup_plot_area()
     d->setup_plot_area();
 }
 
+void SSTimeSeriesPlot::slot_data_loaded()
+{
+    //d->m_data_loader.stopComputation(); //because I'm paranoid
+    int x1=d->m_data_loader.x1;
+    int x2=d->m_data_loader.x2;
+    int msfactor=d->m_data_loader.msfactor;
+    int M=d->m_num_channels;
+    Mda data0=d->m_data_loader.data;
+    d->m_plot_area.clearSeries();
+    for (int ch = 0; ch < M; ch++) {
+        if (msfactor == 1) {
+            Mda xvals;
+            xvals.allocate(1, x2 - x1 + 1);
+            for (int x = x1; x <= x2; x++) {
+                xvals.setValue(x, 0, x - x1);
+            }
+            Mda yvals;
+            yvals.allocate(1, x2 - x1 + 1);
+            for (int ii = x1; ii <= x2; ii++) {
+                double val = data0.value(ch, ii - x1);
+                yvals.setValue(val, 0, ii - x1);
+            }
+            QColor color = d->get_channel_color(ch);
+            PlotSeries SS;
+            SS.xvals = xvals;
+            SS.yvals = yvals;
+            SS.color = color;
+            SS.offset = d->m_plot_offsets[ch];
+            SS.plot_pairs = false;
+            QString label0 = d->m_channel_labels.value(ch);
+            if (label0.isEmpty())
+                label0 = QString("%1").arg(ch + 1);
+            SS.name = label0;
+            d->m_plot_area.addSeries(SS);
+        }
+        else {
+
+            Mda xvals;
+            xvals.allocate(1, (x2 - x1) / msfactor * 2);
+            for (int x = x1; x < x2; x += msfactor) {
+                xvals.setValue(x, 0, (x - x1) / msfactor * 2);
+                xvals.setValue(x, 0, (x - x1) / msfactor * 2 + 1);
+            }
+            Mda yvals;
+            yvals.allocate(1, (x2 - x1) / msfactor * 2);
+            for (int ii = x1; ii < x2; ii += msfactor) {
+                double val1 = data0.value(ch, ((ii - x1) / msfactor) * 2);
+                double val2 = data0.value(ch, ((ii - x1) / msfactor) * 2 + 1);
+                yvals.setValue(val1, 0, (ii - x1) / msfactor * 2);
+                yvals.setValue(val2, 0, (ii - x1) / msfactor * 2 + 1);
+            }
+            QColor color = d->get_channel_color(ch);
+            PlotSeries SS;
+            SS.xvals = xvals;
+            SS.yvals = yvals;
+            SS.color = color;
+            SS.offset = d->m_plot_offsets[ch];
+            SS.plot_pairs = false;
+            SS.name = QString("%1").arg(ch + 1);
+            d->m_plot_area.addSeries(SS);
+        }
+    }
+    d->m_image_needs_update = true;
+    update();
+}
+
 void SSTimeSeriesPlot::setXRange(const Vec2& range)
 {
     if ((xRange().x != range.x) || (xRange().y != range.y)) {
@@ -728,4 +731,9 @@ void SSTimeSeriesPlot::setYRange(const Vec2& range)
         SSAbstractPlot::setYRange(range);
         d->m_plot_area.setYRange(range.x, range.y);
     }
+}
+
+void DataLoaderThread::compute()
+{
+    data = array_model->loadData(msfactor, x1 / msfactor, x2 / msfactor);
 }

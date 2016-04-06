@@ -51,6 +51,7 @@ MVClipsWidget::MVClipsWidget()
     this->setLayout(hlayout);
 
     connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
+    connect(d->m_view,SIGNAL(currentEventChanged()),this,SIGNAL(currentEventChanged()));
 }
 
 MVClipsWidget::~MVClipsWidget()
@@ -80,6 +81,21 @@ void MVClipsWidget::setClipSize(int clip_size)
 {
     d->m_clip_size = clip_size;
     d->start_computation();
+}
+
+int MVClipsWidget::currentClipIndex()
+{
+    return d->m_view->currentClipIndex();
+}
+
+MVEvent MVClipsWidget::currentEvent()
+{
+    return d->m_view->currentEvent();
+}
+
+void MVClipsWidget::setCurrentEvent(MVEvent evt)
+{
+    d->m_view->setCurrentEvent(evt);
 }
 
 void MVClipsWidget::slot_computation_finished()
@@ -133,7 +149,7 @@ void MVClipsWidgetComputer::compute()
     DiskReadMda firings_out(firings_out_path);
     times.clear();
     for (long j = 0; j < firings_out.N2(); j++) {
-        times << firings.value(1, j);
+        times << firings_out.value(1, j);
     }
     DiskReadMda CC(clips_path);
     CC.readChunk(clips, 0, 0, 0, CC.N1(), CC.N2(), CC.N3());

@@ -9,6 +9,7 @@
 
 #include "diskreadmda.h"
 #include <QWidget>
+#include "mvutils.h"
 
 class MVClipsWidgetPrivate;
 class MVClipsWidget : public QWidget {
@@ -21,6 +22,12 @@ public:
     void setFirings(DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
     void setClipSize(int clip_size);
+
+    int currentClipIndex();
+    MVEvent currentEvent();
+    void setCurrentEvent(MVEvent evt);
+signals:
+    void currentEventChanged();
 private slots:
     void slot_computation_finished();
 

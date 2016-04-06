@@ -48,6 +48,7 @@ public:
 private slots:
     void slot_replot_needed();
     void slot_setup_plot_area();
+    void slot_data_loaded();
 
 private:
     SSTimeSeriesPlotPrivate* d;

@@ -478,7 +478,7 @@ void MVOverview2Widget::slot_cross_correlogram_selected_indices_changed()
 
 void MVOverview2Widget::slot_clips_view_current_event_changed()
 {
-    MVClipsView* W = (MVClipsView*)sender();
+    MVClipsWidget* W = (MVClipsWidget*)sender();
     MVEvent evt = W->currentEvent();
     d->set_current_event(evt);
 }
@@ -1280,11 +1280,13 @@ void MVOverview2WidgetPrivate::open_clips()
     MVClipsWidget* X = new MVClipsWidget;
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
+    q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_view_current_event_changed()));
     QString tab_title = "Clips";
     if (ks.count() == 1) {
         int kk = ks[0];
         tab_title = QString("Clips %1(%2)").arg(m_original_cluster_numbers.value(kk)).arg(m_original_cluster_offsets.value(kk));
     }
+
     add_tab(X, tab_title);
     update_widget(X);
 
@@ -2045,8 +2047,8 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
     foreach (QWidget* W, widgets) {
         QString widget_type = W->property("widget_type").toString();
         if (widget_type == "clips") {
-            MVClipsView* WW = (MVClipsView*)W;
-            //finish
+            MVClipsWidget* WW = (MVClipsWidget*)W;
+            WW->setCurrentEvent(evt);
         }
         else if (widget_type == "find_nearby_events") {
             MVClipsView* WW = (MVClipsView*)W;
