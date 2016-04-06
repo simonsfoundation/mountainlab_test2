@@ -13,57 +13,52 @@
 
 class MBExperimentManagerPrivate {
 public:
-	MBExperimentManager *q;
+    MBExperimentManager* q;
 
-    QMap<QString,MBExperiment> m_experiments;
+    QMap<QString, MBExperiment> m_experiments;
 };
 
 MBExperimentManager::MBExperimentManager()
 {
-  d=new MBExperimentManagerPrivate;
-  d->q=this;
+    d = new MBExperimentManagerPrivate;
+    d->q = this;
 }
 
 MBExperimentManager::~MBExperimentManager()
 {
-  delete d;
+    delete d;
 }
 
-MBExperiment create_experiment_from_json(QJsonObject obj) {
+MBExperiment create_experiment_from_json(QJsonObject obj)
+{
     MBExperiment ret;
-    ret.id=obj["id"].toString();
-    ret.json=obj;
+    ret.id = obj["exp_id"].toString();
+    ret.json = obj;
     return ret;
 }
 
-void MBExperimentManager::loadExperiments(const QString &json_str)
+void MBExperimentManager::loadExperiments(const QString& json_str)
 {
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
-  QJsonDocument doc=QJsonDocument::fromJson(json_str.toLatin1());
-  qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << doc.toJson();
-  if (doc.isArray()) {
-      qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
-    QJsonArray A=doc.array();
-    for (int i=0; i<A.count(); i++) {
-        QJsonValue val=A.at(i);
-        addExperiment(create_experiment_from_json(val.toObject()));
+    QJsonDocument doc = QJsonDocument::fromJson(json_str.toLatin1());
+    if (doc.isArray()) {
+        QJsonArray A = doc.array();
+        for (int i = 0; i < A.count(); i++) {
+            QJsonValue val = A.at(i);
+            addExperiment(create_experiment_from_json(val.toObject()));
+        }
+    } else if (doc.isObject()) {
+        QJsonObject obj = doc.object();
+        if (obj.contains("experiments")) {
+            QJsonValue val = obj["experiments"];
+            QByteArray str = QJsonDocument(val.toArray()).toJson();
+            loadExperiments(str);
+        }
     }
-  }
-  else if (doc.isObject()) {
-      qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
-      QJsonObject obj=doc.object();
-      if (obj.contains("experiments")) {
-          QJsonValue val=obj["experiments"];
-          QByteArray str=QJsonDocument(val.toArray()).toJson();
-          qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
-          loadExperiments(str);
-      }
-  }
 }
 
-void MBExperimentManager::addExperiment(const MBExperiment &E)
+void MBExperimentManager::addExperiment(const MBExperiment& E)
 {
-    d->m_experiments[E.id]=E;
+    d->m_experiments[E.id] = E;
 }
 
 QStringList MBExperimentManager::allExperimentIds() const
@@ -71,7 +66,7 @@ QStringList MBExperimentManager::allExperimentIds() const
     return d->m_experiments.keys();
 }
 
-MBExperiment MBExperimentManager::experiment(const QString &id)
+MBExperiment MBExperimentManager::experiment(const QString& id)
 {
     return d->m_experiments.value(id);
 }

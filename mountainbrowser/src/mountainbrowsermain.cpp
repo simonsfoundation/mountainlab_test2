@@ -13,20 +13,20 @@
 
 int main(int argc, char* argv[])
 {
-	QApplication a(argc, argv);
+    QApplication a(argc, argv);
 
-	CLParams CLP = get_command_line_params(argc, argv);
+    CLParams CLP = get_command_line_params(argc, argv);
 
-    QString json_fname=qApp->applicationDirPath()+"/../src/experiments.json";
-    QString json_txt=read_text_file(json_fname);
-    qDebug() << json_txt;
+    QString json_fname = qApp->applicationDirPath() + "/../src/experiments.json";
+    QString json_txt = read_text_file(json_fname);
 
-    MBExperimentManager *EM=new MBExperimentManager;
+    MBExperimentManager* EM = new MBExperimentManager;
     EM->loadExperiments(json_txt);
 
-	MBMainWindow *W=new MBMainWindow;
-	W->show();
+    MBMainWindow* W = new MBMainWindow;
+    W->resize(800, 600);
+    W->show();
     W->setExperimentManager(EM);
 
-	return a.exec();
+    return a.exec();
 }

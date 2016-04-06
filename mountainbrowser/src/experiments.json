@@ -1,9 +1,9 @@
 {
     "experiments":[
-        {"exp_id":"E001_Test_Experiment"},
-        {"exp_id":"E002_Test_Experiment"},
-        {"exp_id":"E003_Test_Experiment"},
-        {"exp_id":"E004_Test_Experiment"},
-        {"exp_id":"E005_Test_Experiment"}
+        {"exp_id":"E001_Test_Experiment","exp_type":"sorting_result","remote_name":"magland","basepath":"","pre","pre2.mda","firings":"firings.mda"},
+        {"exp_id":"E002_Test_Experiment","exp_type":"sorting_result","remote_name":"magland"},
+        {"exp_id":"E003_Test_Experiment","exp_type":"sorting_result","remote_name":"magland"},
+        {"exp_id":"E004_Test_Experiment","exp_type":"sorting_result","remote_name":"magland"},
+        {"exp_id":"E005_Test_Experiment","exp_type":"sorting_result","remote_name":"magland"}
     ]
 }

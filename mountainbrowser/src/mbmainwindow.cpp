@@ -8,6 +8,7 @@
 
 #include <QHBoxLayout>
 #include <QTreeWidget>
+#include <QDebug>
 
 class MBMainWindowPrivate {
 public:

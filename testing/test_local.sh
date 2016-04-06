@@ -1,6 +1,6 @@
 #!/bin/bash
 
-base1=/home/magland/dev/mountainlab/mdaserver_data
+base1=/mnt/xfs1/home/magland/dev/mountainlab/mdaserver_data
 base2=remote://localhost
 base3=remote://magland
 
