@@ -26,7 +26,9 @@ function Y=ms_bandpass_filter(X,opts)
 % Oct 2015; Last revision: 13-Feb-2016
 % name changed to ms_bandpass_filter on 3/18/16 - jfm
 
-% TODO: test routine
+% todo: test routine.
+% todo: make fdwilo = flo/4 or something so always kills DC to 1e-4.
+% todo: use erf as filter func
 
 Y=freqfilter(X,opts.samplerate,opts.freq_min,opts.freq_max);
 end
