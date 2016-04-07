@@ -1,4 +1,5 @@
 QT += core gui
+QT += webkitwidgets
 QT -= gui
 CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
@@ -11,10 +12,14 @@ TARGET = mountainbrowser
 TEMPLATE = app
 
 HEADERS += mbmainwindow.h \
-    mbexperimentmanager.h
+    mbexperimentmanager.h \
+    mbexperimentlistwidget.h \
+    mbexperimentlistwidget2.h
 SOURCES += mountainbrowsermain.cpp \
     mbmainwindow.cpp \
-    mbexperimentmanager.cpp
+    mbexperimentmanager.cpp \
+    mbexperimentlistwidget.cpp \
+    mbexperimentlistwidget2.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils
@@ -35,6 +40,10 @@ HEADERS += serializer.h serializerrunnable.h parser.h parserrunnable.h json_scan
 SOURCES += serializer.cpp serializerrunnable.cpp parser.cpp parserrunnable.cpp json_scanner.cpp json_parser.cc
 
 DISTFILES += \
-    experiments.json
+    experiments.json \
+    html/style.css
+
+RESOURCES += \
+    mountainbrowser.qrc
 
 

@@ -21,6 +21,8 @@ public:
 	MBMainWindow();
 	virtual ~MBMainWindow();
     void setExperimentManager(MBExperimentManager *M);
+private slots:
+    void slot_experiment_activated(QString id);
 private:
 	MBMainWindowPrivate *d;
 };

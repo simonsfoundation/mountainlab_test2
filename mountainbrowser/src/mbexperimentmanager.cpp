@@ -39,7 +39,11 @@ MBExperiment create_experiment_from_json(QJsonObject obj)
 
 void MBExperimentManager::loadExperiments(const QString& json_str)
 {
-    QJsonDocument doc = QJsonDocument::fromJson(json_str.toLatin1());
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(json_str.toLatin1(),&error);
+    if (!error.errorString().isEmpty()) {
+        qWarning() << "JSON Parse Error:" << error.errorString();
+    }
     if (doc.isArray()) {
         QJsonArray A = doc.array();
         for (int i = 0; i < A.count(); i++) {

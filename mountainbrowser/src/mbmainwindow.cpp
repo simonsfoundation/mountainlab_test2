@@ -9,14 +9,17 @@
 #include <QHBoxLayout>
 #include <QTreeWidget>
 #include <QDebug>
+#include <QJsonDocument>
+#include <QProcess>
+#include "mbexperimentlistwidget2.h"
+#include <QCoreApplication>
 
 class MBMainWindowPrivate {
 public:
 	MBMainWindow *q;
     MBExperimentManager *m_experiment_manager;
 
-    QTreeWidget *m_experiment_list;
-    void refresh_experiment_list();
+    MBExperimentListWidget2 *m_experiment_list;
 };
 
 MBMainWindow::MBMainWindow()
@@ -25,11 +28,13 @@ MBMainWindow::MBMainWindow()
 	d->q=this;
     d->m_experiment_manager=0;
 
-    d->m_experiment_list=new QTreeWidget;
+    d->m_experiment_list=new MBExperimentListWidget2;
 
     QHBoxLayout *hlayout=new QHBoxLayout;
     hlayout->addWidget(d->m_experiment_list);
     this->setLayout(hlayout);
+
+    connect(d->m_experiment_list,SIGNAL(experimentActivated(QString)),this,SLOT(slot_experiment_activated(QString)));
 }
 
 MBMainWindow::~MBMainWindow()
@@ -40,21 +45,22 @@ MBMainWindow::~MBMainWindow()
 void MBMainWindow::setExperimentManager(MBExperimentManager *M)
 {
     d->m_experiment_manager=M;
-    d->refresh_experiment_list();
+    d->m_experiment_list->setExperimentManager(M);
 }
 
-
-void MBMainWindowPrivate::refresh_experiment_list()
+void MBMainWindow::slot_experiment_activated(QString id)
 {
-    QTreeWidget *X=m_experiment_list;
-    X->clear();
-    QStringList labels; labels << "Experiments";
-    X->setHeaderLabels(labels);
-    if (!m_experiment_manager) return;
-    QStringList ids=m_experiment_manager->allExperimentIds();
-    foreach (QString id,ids) {
-        QStringList strings; strings << id;
-        QTreeWidgetItem *item=new QTreeWidgetItem(strings);
-        X->addTopLevelItem(item);
+    MBExperiment E=d->m_experiment_manager->experiment(id);
+    QString exp_type=E.json["exp_type"].toString();
+    QString basepath=E.json["basepath"].toString();
+    if (!basepath.isEmpty()) basepath+="/";
+    if (exp_type=="sorting_result") {
+        QString pre=basepath+E.json["pre"].toString();
+        QString firings=basepath+E.json["firings"].toString();
+        QStringList args;
+        args << "--mode=overview2" << "--pre="+pre << "--firings="+firings;
+        QString mv_exe=qApp->applicationDirPath()+"/../../mountainview/bin/mountainview";
+        QProcess::startDetached(mv_exe,args);
     }
 }
+

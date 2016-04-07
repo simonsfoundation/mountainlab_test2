@@ -1,9 +1,11 @@
 {
     "experiments":[
-        {"exp_id":"E001_Test_Experiment","exp_type":"sorting_result","remote_name":"magland","basepath":"","pre","pre2.mda","firings":"firings.mda"},
-        {"exp_id":"E002_Test_Experiment","exp_type":"sorting_result","remote_name":"magland"},
-        {"exp_id":"E003_Test_Experiment","exp_type":"sorting_result","remote_name":"magland"},
-        {"exp_id":"E004_Test_Experiment","exp_type":"sorting_result","remote_name":"magland"},
-        {"exp_id":"E005_Test_Experiment","exp_type":"sorting_result","remote_name":"magland"}
+        {"exp_id":"Acq_01","exp_type":"acquisition","basepath":"remote://magland","raw":"asdfhjsdk.dat"},
+        {"exp_id":"E001_Test_Experiment","exp_type":"sorting_result","basepath":"remote://localhost","pre":"pre2.mda","firings":"firings.mda","description":
+            "This is the description of the first experiment <yep>."
+        },
+        {"exp_id":"E002_Test_Experiment","exp_type":"sorting_result","basepath":"remote://magland","pre":"pre2.mda","firings":"firings.mda"},
+        {"exp_id":"E003_Test_Experiment","exp_type":"sorting_result","basepath":"remote://magland","pre":"pre2.mda","firings":"firings.mda"},
+        {"exp_id":"E004_Test_Experiment","exp_type":"sorting_result","basepath":"remote://magland","pre":"pre2.mda","firings":"firings.mda"}
     ]
 }
