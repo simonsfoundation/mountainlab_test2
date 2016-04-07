@@ -5,23 +5,18 @@ CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets #We do want to support Qt5, but there is no reason not to use Qt4
 
+DEFINES += USE_NETWORK
+CONFIG += c++11
+
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
 MOC_DIR=../build
 TARGET = mountainbrowser
 TEMPLATE = app
 
-HEADERS += mbmainwindow.h \
-    mbexperimentmanager.h \
-    mbexperimentlistwidget.h \
-    mbexperimentlistwidget2.h \
-    mountainbrowsermain.h \
+HEADERS += mountainbrowsermain.h \
     mbcontroller.h
 SOURCES += mountainbrowsermain.cpp \
-    mbmainwindow.cpp \
-    mbexperimentmanager.cpp \
-    mbexperimentlistwidget.cpp \
-    mbexperimentlistwidget2.cpp \
     mbcontroller.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils

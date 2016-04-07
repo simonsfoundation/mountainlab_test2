@@ -16,7 +16,7 @@ detect_Processor::detect_Processor() {
 	this->setInputFileParameters("timeseries");
     this->setOutputFileParameters("detect_out");
 	this->setRequiredParameters("clip_size","detect_interval","detect_threshold");
-	this->setOptionalParameters("sign");
+    this->setOptionalParameters("sign","individual_channels");
 }
 
 detect_Processor::~detect_Processor() {
@@ -37,6 +37,7 @@ bool detect_Processor::run(const QMap<QString, QVariant> &params)
 	opts.clip_size=params["clip_size"].toInt();
 	opts.detect_interval=params["detect_interval"].toInt();
 	opts.detect_threshold=params["detect_threshold"].toDouble();
+    opts.individual_channels=params.value("individual_channels",1).toInt();
 	opts.sign=params.value("sign",0).toInt();
 	return detect(timeseries_path,detect_path,opts);
 }

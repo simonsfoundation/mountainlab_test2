@@ -8,8 +8,14 @@
 #ifndef MBCONTROLLER_H
 #define MBCONTROLLER_H
 
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
+
+struct MBExperiment {
+    QString exp_id;
+    QJsonObject json;
+};
 
 class MBControllerPrivate;
 class MBController : public QObject

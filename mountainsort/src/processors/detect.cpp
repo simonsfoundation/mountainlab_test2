@@ -32,12 +32,31 @@ bool detect(const QString &timeseries_path,const QString &detect_path,const Dete
 
 			QList<double> times1;
 			QList<int> channels1;
-			for (int m=0; m<M; m++) {
+            int m_begin=0,m_end=M-1;
+            if (opts.individual_channels) m_end=0;
+            for (int m=m_begin; m<=m_end; m++) {
 				QList<double> vals;
-				for (int j=0; j<chunk.N2(); j++) {
-					vals << chunk.value(m,j);
-				}
-				QList<double> times0=do_detect(vals,opts.detect_interval,opts.detect_threshold,opts.sign);
+                if (opts.individual_channels) {
+                    for (int j=0; j<chunk.N2(); j++) {
+                        double tmp=chunk.value(m,j);
+                        if (opts.sign<0) tmp=-tmp;
+                        if ((opts.sign==0)&&(tmp<0)) tmp=-tmp;
+                        vals << chunk.value(m,j);
+                    }
+                }
+                else {
+                    for (int j=0; j<chunk.N2(); j++) {
+                        double maxval=0;
+                        for (int a=0; a<M; a++) {
+                            double tmp=chunk.value(a,j);
+                            if (opts.sign<0) tmp=-tmp;
+                            if ((opts.sign==0)&&(tmp<0)) tmp=-tmp;
+                            if (tmp>maxval) maxval=tmp;
+                        }
+                        vals << maxval;
+                    }
+                }
+                QList<double> times0=do_detect(vals,opts.detect_interval,opts.detect_threshold);
 
 				for (int i=0; i<times0.count(); i++) {
 					double time0=times0[i]+timepoint-overlap_size;
@@ -72,7 +91,7 @@ bool detect(const QString &timeseries_path,const QString &detect_path,const Dete
 	return true;
 }
 
-QList<double> do_detect(const QList<double> &vals,int detect_interval,double detect_threshold,int sign) {
+QList<double> do_detect(const QList<double> &vals,int detect_interval,double detect_threshold) {
 	int N=vals.count();
 	QList<int> to_use;
 	for (int n=0; n<N; n++) to_use << 0;
@@ -80,8 +99,6 @@ QList<double> do_detect(const QList<double> &vals,int detect_interval,double det
 	double last_best_val=0;
 	for (int n=0; n<N; n++) {
 		double val=vals[n];
-		if (sign==0) val=fabs(val);
-		else if (sign<0) val=-val;
 		if (n-last_best_ind>detect_interval) last_best_val=0;
 		if (val>=detect_threshold) {
 			if (last_best_val>0) {

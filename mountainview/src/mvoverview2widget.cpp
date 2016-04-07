@@ -1048,7 +1048,6 @@ void MVOverview2WidgetPrivate::do_shell_split()
         m_original_cluster_numbers << AA.value(i);
         m_original_cluster_offsets << offset;
     }
-    qDebug() << "&&&&&&&&&&&&&&&&&&&" << m_original_cluster_numbers << m_original_cluster_offsets;
 
     this->set_templates_current_number(-1);
     this->set_templates_selected_numbers(QList<int>());

@@ -1,9 +1,9 @@
 QT += core gui script network
+
 DEFINES += USE_NETWORK
+CONFIG += c++11
 
 CONFIG -= app_bundle #Please apple, don't make a bundle today
-
-CONFIG += c++11
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets #We do want to support Qt5, but there is no reason not to use Qt4
 

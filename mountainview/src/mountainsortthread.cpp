@@ -54,7 +54,6 @@ void MountainsortThread::setInputParameters(const QMap<QString, QVariant>& param
 void MountainsortThread::compute()
 {
     QString remote_name = d->get_remote_name_from_parameters();
-    qDebug() << "MountainSort::::" << d->m_processor_name << d->m_parameters;
     if (remote_name.isEmpty()) {
         QString mountainsort_exe = qApp->applicationDirPath() + "/../../mountainsort/bin/mountainsort";
         QStringList args;

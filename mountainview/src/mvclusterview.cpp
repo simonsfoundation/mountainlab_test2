@@ -121,9 +121,6 @@ MVClusterView::MVClusterView(QWidget* parent)
     for (int j=0; j<colors.count(); j++) {
         d->m_label_colors << colors.value((j*num1)%num2);
     }
-    for (int j=0; j<d->m_label_colors.count(); j++) {
-        qDebug() << j << d->m_label_colors[j].red() << d->m_label_colors[j].green() << d->m_label_colors[j].blue();
-    }
 
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));

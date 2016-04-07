@@ -6,11 +6,11 @@
 
 #include "textfile.h"
 #include "mbcontroller.h"
-#include "mbexperimentmanager.h"
 #include <QCoreApplication>
 #include <QProcess>
 
 #include <QJsonDocument>
+#include <QDebug>
 
 class MBControllerPrivate {
 public:
@@ -38,15 +38,18 @@ void MBController::openSortingResult(QString json)
 {
     MBExperiment E;
     E.json=QJsonDocument::fromJson(json.toUtf8()).object();
-    E.id=E.json["exp_id"].toString();
+    E.exp_id=E.json["exp_id"].toString();
     QString exp_type=E.json["exp_type"].toString();
     QString basepath=E.json["basepath"].toString();
     if (!basepath.isEmpty()) basepath+="/";
     if (exp_type=="sorting_result") {
         QString pre=basepath+E.json["pre"].toString();
+        QString filt=basepath+E.json["filt"].toString();
+        QString raw=basepath+E.json["raw"].toString();
         QString firings=basepath+E.json["firings"].toString();
         QStringList args;
-        args << "--mode=overview2" << "--pre="+pre << "--firings="+firings;
+        args << "--mode=overview2" << "--pre="+pre << "--filt="+filt << "--raw="+raw  << "--firings="+firings;
+        qDebug() << args;
         QString mv_exe=qApp->applicationDirPath()+"/../../mountainview/bin/mountainview";
         QProcess::startDetached(mv_exe,args);
     }

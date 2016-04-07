@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>html/mbexperimentlist.html</file>
         <file>html/mountainbrowser.css</file>
         <file>html/jquery-2.2.3.min.js</file>
         <file>html/mbexperimentlist.js</file>

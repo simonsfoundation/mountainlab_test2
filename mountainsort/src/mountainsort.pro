@@ -55,8 +55,6 @@ HEADERS += \
     processors/mask_out_artifacts_processor.h \
     processors/mask_out_artifacts.h \
     utils/get_pca_features.h \
-    processors/detect3_processor.h \
-    processors/detect3.h \
     processors/adjust_times_processor.h \
     processors/adjust_times.h \
     processors/fit_stage_processor.h \
@@ -114,8 +112,6 @@ SOURCES += mountainsortmain.cpp \
     processors/mask_out_artifacts_processor.cpp \
     processors/mask_out_artifacts.cpp \
     utils/get_pca_features.cpp \
-    processors/detect3_processor.cpp \
-    processors/detect3.cpp \
     processors/adjust_times_processor.cpp \
     processors/adjust_times.cpp \
     processors/fit_stage_processor.cpp \

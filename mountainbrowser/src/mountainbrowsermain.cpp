@@ -6,8 +6,6 @@
 
 #include <QApplication>
 #include "get_command_line_params.h"
-#include "mbmainwindow.h"
-#include "mbexperimentmanager.h"
 #include "textfile.h"
 #include <QDebug>
 #include <QWebInspector>
@@ -26,9 +24,6 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
 
     CLParams CLP = get_command_line_params(argc, argv);
-
-    QString json_fname = qApp->applicationDirPath() + "/../src/experiments.json";
-    QString json_txt = read_text_file(json_fname);
 
     QWebView* X = new QWebView;
     X->page()->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);

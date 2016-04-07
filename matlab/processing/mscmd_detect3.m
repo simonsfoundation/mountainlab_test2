@@ -21,6 +21,8 @@ function mscmd_detect3(timeseries_path,detect_out_path,opts)
 %    opts.upsampling_factor - the upsampling factor for fractional shift detection based
 %                on upsampling
 %    opts.num_pca_denoise_components
+%    opts.individual_channels - 0 or 1 (if 0 fills first row of output with zeros)
+%    opts.pca_denoise_jiggle - if positive, eg 2, theoretically helps with the pca denoising (default 0)
 %
 % Other m-files required: mscmd_exe
 %
@@ -36,12 +38,14 @@ if ~isfield(opts,'clip_size') opts.clip_size=100; end;
 if ~isfield(opts,'sign') opts.sign=0; end;
 if ~isfield(opts,'upsampling_factor') opts.upsampling_factor=1; end;
 if ~isfield(opts,'num_pca_denoise_components') opts.num_pca_denoise_components=0; end;
-if ~isfield(opts,'pca_denoise_jiggle') opts.pca_denoise_jiggle=2; end;
+if ~isfield(opts,'pca_denoise_jiggle') opts.pca_denoise_jiggle=0; end;
+if ~isfield(opts,'individual_channels') opts.individual_channels=1; end;
 
 cmd=sprintf('%s detect --timeseries=%s --detect_out=%s.1 ',mscmd_exe,timeseries_path,detect_out_path);
 cmd=[cmd,sprintf('--clip_size=%d ',opts.clip_size)];
 cmd=[cmd,sprintf('--detect_threshold=%g --detect_interval=%d ',opts.detect_threshold,opts.detect_interval)];
 cmd=[cmd,sprintf('--sign=%d ',opts.sign)];
+cmd=[cmd,sprintf('--individual_channels=%d ',opts.individual_channels)];
 
 fprintf('\n*** DETECT ***\n');
 fprintf('%s\n',cmd);
@@ -55,6 +59,7 @@ cmd=[cmd,sprintf('--upsampling_factor=%d ',opts.upsampling_factor)];
 cmd=[cmd,sprintf('--num_pca_denoise_components=%d ',opts.num_pca_denoise_components)];
 cmd=[cmd,sprintf('--pca_denoise_jiggle=%d ',opts.pca_denoise_jiggle)];
 cmd=[cmd,sprintf('--sign=%d ',opts.sign)];
+
 fprintf('\n*** ADJUST TIMES ***\n');
 fprintf('%s\n',cmd);
 status=system(cmd);
