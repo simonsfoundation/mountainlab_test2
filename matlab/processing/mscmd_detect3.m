@@ -79,7 +79,7 @@ end
 
 function test_mscmd_detect3
 
-close all;
+%close all; % nah
 
 % single-channel test...
 N=400;
