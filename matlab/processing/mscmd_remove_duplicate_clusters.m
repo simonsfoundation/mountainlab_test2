@@ -1,6 +1,6 @@
 function mscmd_remove_duplicate_clusters(timeseries_in_path,firings_in_path,firings_out_path,opts)
 % TODO: Docs
-if (nargin<3) opts=struct; end;
+if (nargin<4) opts=struct; end;
 
 if (~isfield(opts,'clip_size')) opts.clip_size=100; end;
 
