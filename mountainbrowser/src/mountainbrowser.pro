@@ -14,12 +14,15 @@ TEMPLATE = app
 HEADERS += mbmainwindow.h \
     mbexperimentmanager.h \
     mbexperimentlistwidget.h \
-    mbexperimentlistwidget2.h
+    mbexperimentlistwidget2.h \
+    mountainbrowsermain.h \
+    mbcontroller.h
 SOURCES += mountainbrowsermain.cpp \
     mbmainwindow.cpp \
     mbexperimentmanager.cpp \
     mbexperimentlistwidget.cpp \
-    mbexperimentlistwidget2.cpp
+    mbexperimentlistwidget2.cpp \
+    mbcontroller.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils

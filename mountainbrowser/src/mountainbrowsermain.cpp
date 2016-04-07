@@ -10,6 +10,16 @@
 #include "mbexperimentmanager.h"
 #include "textfile.h"
 #include <QDebug>
+#include <QWebInspector>
+#include <QWebView>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QTimer>
+#include <QWebFrame>
+#include "mbcontroller.h"
+
+#include "mountainbrowsermain.h"
 
 int main(int argc, char* argv[])
 {
@@ -20,6 +30,28 @@ int main(int argc, char* argv[])
     QString json_fname = qApp->applicationDirPath() + "/../src/experiments.json";
     QString json_txt = read_text_file(json_fname);
 
+    QWebView* X = new QWebView;
+    X->page()->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
+
+    /*
+    QWebInspector* WI = new QWebInspector;
+    WI->setPage(X->page());
+    WI->show();
+    WI->move(100, 100);
+    WI->resize(1000, 1000);
+    */
+
+    //QString json=read_text_file("/mnt/xfs1/home/magland/dev/mountainlab/mountainbrowser/src/experiments.json");
+
+    //MyLocalStudy *LocalStudy=new MyLocalStudy(json);
+
+    MBController *controller=new MBController;
+    X->page()->mainFrame()->addToJavaScriptWindowObject("MB",controller,QWebFrame::ScriptOwnership);
+
+    X->load(QUrl("qrc:/html/mbstudyview.html"));
+    X->show();
+
+    /*
     MBExperimentManager* EM = new MBExperimentManager;
     EM->loadExperiments(json_txt);
 
@@ -27,6 +59,7 @@ int main(int argc, char* argv[])
     W->resize(800, 600);
     W->show();
     W->setExperimentManager(EM);
+    */
 
     return a.exec();
 }
