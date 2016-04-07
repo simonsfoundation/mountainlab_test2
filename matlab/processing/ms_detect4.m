@@ -28,6 +28,9 @@ function [times peakchans] = ms_detect4(X,opts)
 %    opts.individual_channels - 0: detect peaks across channels (default)
 %                               1: peaks on each channel & report channel #s
 %                                  (needed by JFM's sorting chain)
+%    opts.num_features - (default 15) # PCA features for sub-sample alignment
+%    opts.jiggle - the integer amount of jiggle for better PCA space.
+%
 % Outputs:
 %    times - 1xL array of integer- or real-valued timepoints where an event has
 %          been detected.
