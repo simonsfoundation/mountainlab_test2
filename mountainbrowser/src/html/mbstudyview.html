@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<link rel="stylesheet" type="text/css" href="mountainbrowser.css" />
+
+<script src="jquery-2.2.3.min.js"></script>
+
+<script src="mbexperimentlist.js"></script>
+
+<script>
+$(document).ready(function() {
+    console.log('testing...');
+    var path='/mnt/xfs1/home/magland/dev/mountainlab/mountainbrowser/src/experiments.json';
+    load_study(path,function(S) {
+        console.log(JSON.stringify(S));
+        X=new MBExperimentList();
+        $('#experiment_list').append(X.div);
+        X.setExperiments(S.experiments||[]);
+        X.refresh();
+    });
+
+    function load_study(url_or_path,callback) {
+        if (url_or_path.indexOf('/')==0) {
+            callback(JSON.parse(MB.loadLocalStudy(url_or_path)));
+        }
+        else {
+            $.getJSON('file:///home/magland/dev/mountainlab/mountainbrowser/src/experiments.json',function(json) {
+                callback(json);
+            });
+        }
+    }
+});
+</script>
+
+</head>
+<body>
+<h2>Study: <span id=study_name></span></h3>
+
+<h3>Experiments</h3>
+<span id=experiment_list>
+</span>
+
+</body>
+</html>
