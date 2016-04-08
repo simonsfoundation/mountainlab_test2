@@ -178,7 +178,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
     //if (!QDir(cache_path).exists()) QDir(QDir::tempPath()).mkdir("RemoteReadMda");
     //QString fname=cache_path+"/"+m_info.checksum+"-"+QString("%1-%2").arg(REMOTE_READ_MDA_CHUNK_SIZE).arg(ii);
     QString file_name=m_info.checksum+"-"+QString("%1-%2").arg(REMOTE_READ_MDA_CHUNK_SIZE).arg(ii);
-    QString fname=cacheManager()->makeLocalFile(file_name,MSCacheManager::ShortTerm);
+    QString fname=MSCacheManager::globalInstance()->makeLocalFile(file_name,MSCacheManager::ShortTerm);
     if (QFile::exists(fname)) return fname;
     QString url=file_url_for_remote_path(m_path);
     QString url0=url+QString("?a=readChunk&index=%1&size=%2&datatype=float64").arg((long)(ii*REMOTE_READ_MDA_CHUNK_SIZE)).arg(size);

@@ -47,6 +47,15 @@ int compute_max(const QList<int>& X)
     return ret;
 }
 
+long compute_max(const QList<long>& X)
+{
+    long ret = X.value(0);
+    for (int i = 0; i < X.count(); i++)
+        if (X[i] > ret)
+            ret = X[i];
+    return ret;
+}
+
 double compute_norm(long N, double* X)
 {
     double sumsqr = 0;
@@ -141,7 +150,7 @@ double compute_max(long N, double* X)
 
 QString get_temp_fname()
 {
-    return cacheManager()->makeLocalFile();
+    return MSCacheManager::globalInstance()->makeLocalFile();
     //long rand_num = qrand() + QDateTime::currentDateTime().toMSecsSinceEpoch();
     //return QString("%1/MdaClient_%2.tmp").arg(QDir::tempPath()).arg(rand_num);
 }

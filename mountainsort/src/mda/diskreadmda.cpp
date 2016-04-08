@@ -122,7 +122,7 @@ QString DiskReadMda::makePath()
     if (d->m_use_memory_mda) {
         QString checksum=compute_mda_checksum(d->m_memory_mda);
         //QString fname=QDir::tempPath()+"/"+checksum+".mda";
-        QString fname=cacheManager()->makeLocalFile(fname,MSCacheManager::ShortTerm);
+        QString fname=MSCacheManager::globalInstance()->makeLocalFile(fname,MSCacheManager::ShortTerm);
         if (QFile::exists(fname)) return fname;
         if (d->m_memory_mda.write64(fname+".tmp")) {
             if (QFile::rename(fname+".tmp",fname)) {

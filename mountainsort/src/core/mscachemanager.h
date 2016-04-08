@@ -25,13 +25,14 @@ public:
     QString makeRemoteFile(const QString& remote_name, const QString& file_name = "", Duration duration = ShortTerm);
     QString makeLocalFile(const QString& file_name = "", Duration duration = ShortTerm, QObject* remove_on_delete = 0);
     void cleanUp();
+
+    static MSCacheManager *globalInstance();
+
 private slots:
     void slot_remove_on_delete();
 
 private:
     MSCacheManagerPrivate* d;
 };
-
-MSCacheManager* cacheManager();
 
 #endif // MSCACHEMANAGER_H

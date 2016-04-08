@@ -10,10 +10,12 @@
 #include "diskreadmda.h"
 #include <math.h>
 #include "compute_templates_0.h"
+#include "compute_detectability_scores.h"
 
 double compute_score(long N,double *X,double *template0);
 QList<int> find_events_to_use(const QList<long> &times,const QList<double> &scores,const fit_stage_opts &opts);
 void subtract_template(long N,double *X,double *template0);
+Mda split_into_shells(const Mda &firings,Define_Shells_Opts opts);
 
 bool fit_stage(const QString &timeseries_path, const QString &firings_path, const QString &firings_out_path, const fit_stage_opts &opts)
 {
@@ -24,16 +26,21 @@ bool fit_stage(const QString &timeseries_path, const QString &firings_path, cons
     int Tmid=(int)((T+1)/2)-1;
     long L=firings.N2();
 
+    Define_Shells_Opts define_shells_opts;
+    define_shells_opts.min_shell_size=opts.min_shell_size;
+    define_shells_opts.shell_increment=opts.shell_increment;
+    Mda firings_split=split_into_shells(firings,define_shells_opts);
+
     QList<long> times;
     QList<int> labels;
     for (long i=0; i<L; i++) {
-        times << (long)(firings.value(1,i)+0.5);
-        labels << (int)firings.value(2,i);
+        times << (long)(firings_split.value(1,i)+0.5);
+        labels << (int)firings_split.value(2,i);
     }
     int K=compute_max(labels);
 
     DiskReadMda X0(timeseries_path);
-    Mda templates=compute_templates_0(X0,firings,T); //MxNxK
+    Mda templates=compute_templates_0(X0,firings_split,T); //MxNxK
 
     QList<double> template_norms; template_norms << 0;
     for (int k=1; k<=K; k++) {
@@ -149,4 +156,37 @@ void subtract_template(long N,double *X,double *template0) {
     for (long i=0; i<N; i++) {
         X[i]-=template0[i];
     }
+}
+Mda split_into_shells(const Mda &firings,Define_Shells_Opts opts) {
+
+
+    QList<long> labels,labels_new;
+    for (long j=0; j<firings.N2(); j++) {
+        labels << (int)firings.value(2,j);
+        labels_new << 0;
+    }
+    int K=compute_max(labels);
+    int k2=1;
+    for (int k=1; k<=K; k++) {
+        QList<long> inds_k=find_label_inds(labels,k);
+        QList<double> peaks;
+        for (long j=0; j<inds_k.count(); j++) {
+            peaks << firings.value(3,inds_k[j]);
+        }
+        QList<Shell> shells=define_shells(peaks,opts);
+        for (int a=0; a<shells.count(); a++) {
+            QList<long> s_inds=shells[a].inds;
+            for (long b=0; b<s_inds.count(); b++) {
+                labels[inds_k[s_inds[b]]]=k2;
+            }
+            k2++;
+        }
+    }
+
+
+    Mda firings_ret=firings;
+    for (long j=0; j<firings.N2(); j++) {
+        firings_ret.setValue(labels[j],2,j);
+    }
+    return firings_ret;
 }

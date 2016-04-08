@@ -16,6 +16,7 @@
 #include "remove_duplicate_clusters_processor.h"
 #include "remove_noise_subclusters_processor.h"
 #include "compute_outlier_scores_processor.h"
+#include "compute_detectability_scores_processor.h"
 #include "copy_processor.h"
 #include "mda2txt_processor.h"
 #include "mask_out_artifacts_processor.h"
@@ -65,6 +66,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new remove_duplicate_clusters_Processor);
 	loadProcessor(new remove_noise_subclusters_Processor);
 	loadProcessor(new compute_outlier_scores_Processor);
+    loadProcessor(new compute_detectability_scores_Processor);
 	loadProcessor(new copy_Processor);
 	loadProcessor(new mda2txt_Processor);
     loadProcessor(new mask_out_artifacts_Processor);

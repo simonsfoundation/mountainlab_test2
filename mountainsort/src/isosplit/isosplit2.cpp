@@ -379,6 +379,7 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
     for (int i=0; i<N; i++) counts[labels[i]]++;
     double *Cptr=centers.dataPtr();
 
+
     AttemptedComparisons attempted_comparisons;
 
     int num_iterations=0;
@@ -494,6 +495,7 @@ QList<int> choose_random_indices(int N,int K) {;
 QList<int> do_kmeans(Mda &X,int K) {
     int M=X.N1();
     int N=X.N2();
+    if (N==0) return QList<int>(); //added 4/8/16 to prevent crash
     double *Xptr=X.dataPtr();
     Mda centroids_mda; centroids_mda.allocate(M,K); double *centroids=centroids_mda.dataPtr();
     QList<int> labels; for (int i=0; i<N; i++) labels << -1;

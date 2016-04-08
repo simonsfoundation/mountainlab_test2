@@ -98,6 +98,12 @@ void MSCacheManager::cleanUp()
 {
 }
 
+Q_GLOBAL_STATIC(MSCacheManager,theInstance)
+MSCacheManager *MSCacheManager::globalInstance()
+{
+    return theInstance;
+}
+
 void MSCacheManager::slot_remove_on_delete()
 {
     QString fname=sender()->property("MSCacheManager_file_to_remove").toString();
@@ -109,14 +115,6 @@ void MSCacheManager::slot_remove_on_delete()
     else {
         qWarning() << "Unexpected problem" << __FUNCTION__ << __FILE__ << __LINE__;
     }
-}
-
-MSCacheManager* cacheManager()
-{
-    static MSCacheManager* global_cache_manager = 0;
-    if (!global_cache_manager)
-        global_cache_manager = new MSCacheManager;
-    return global_cache_manager;
 }
 
 QString MSCacheManagerPrivate::create_random_file_name()

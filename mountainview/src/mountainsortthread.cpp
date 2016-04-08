@@ -87,7 +87,7 @@ QString MountainsortThreadPrivate::create_temporary_output_file_name(const QStri
     }
 
     QString file_name=QString("%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
-    QString ret=cacheManager()->makeRemoteFile(remote_name,file_name,MSCacheManager::LongTerm);
+    QString ret=MSCacheManager::globalInstance()->makeRemoteFile(remote_name,file_name,MSCacheManager::LongTerm);
     //QString ret = QString("tmp_long_term/%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
     /*
     if (!remote_name.isEmpty()) {

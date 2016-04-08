@@ -33,7 +33,7 @@ bool detect(const QString &timeseries_path,const QString &detect_path,const Dete
 			QList<double> times1;
 			QList<int> channels1;
             int m_begin=0,m_end=M-1;
-            if (opts.individual_channels) m_end=0;
+            if (!opts.individual_channels) m_end=0;
             for (int m=m_begin; m<=m_end; m++) {
 				QList<double> vals;
                 if (opts.individual_channels) {

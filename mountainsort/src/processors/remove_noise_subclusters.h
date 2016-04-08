@@ -8,6 +8,7 @@
 
 #include <QList>
 #include <QString>
+#include "compute_detectability_scores.h"
 
 struct Remove_noise_subclusters_opts {
 	int clip_size;
@@ -17,15 +18,5 @@ struct Remove_noise_subclusters_opts {
 };
 
 bool remove_noise_subclusters(const QString &timeseries_path,const QString &firings_path,const QString &firings_out_path,const Remove_noise_subclusters_opts &opts);
-
-struct Shell {
-    QList<int> inds;
-};
-struct Define_Shells_Opts {
-    double shell_increment;
-    int min_shell_size;
-};
-
-QList<Shell> define_shells(const QList<double> &peaks,const Define_Shells_Opts &opts);
 
 #endif // REMOVE_NOISE_SUBCLUSTERS_H
