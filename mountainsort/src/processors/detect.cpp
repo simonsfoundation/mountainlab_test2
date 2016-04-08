@@ -15,6 +15,8 @@ bool detect(const QString &timeseries_path,const QString &detect_path,const Dete
 	long overlap_size=PROCESSING_CHUNK_OVERLAP_SIZE;
 	if (N<PROCESSING_CHUNK_SIZE) {chunk_size=N; overlap_size=0;}
 
+    qDebug() << "SIGN=" << opts.sign;
+
 	QList<int> channels;
 	QList<double> times;
 	int Tmid=(int)((opts.clip_size+1)/2)-1;
@@ -41,7 +43,7 @@ bool detect(const QString &timeseries_path,const QString &detect_path,const Dete
                         double tmp=chunk.value(m,j);
                         if (opts.sign<0) tmp=-tmp;
                         if ((opts.sign==0)&&(tmp<0)) tmp=-tmp;
-                        vals << chunk.value(m,j);
+                        vals << tmp;
                     }
                 }
                 else {
