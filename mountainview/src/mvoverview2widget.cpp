@@ -4,7 +4,11 @@
 #include "sstimeserieswidget.h"
 #include "mvcrosscorrelogramswidget2.h"
 #include "mvoverview2widgetcontrolpanel.h"
+#ifdef USE_LAPACK
 #include "get_pca_features.h"
+#else
+#include "get_principal_components.h"
+#endif
 #include "get_sort_indices.h"
 #include "mvclusterdetailwidget.h"
 #include "mvclipsview.h"
@@ -1904,7 +1908,11 @@ Mda MVOverview2WidgetPrivate::compute_geometric_median(Mda& clips, int num_itera
     Mda features;
     features.allocate(num_features, L);
     double* featuresptr = features.dataPtr();
+#ifdef USE_LAPACK
     get_pca_features(M * T, L, num_features, featuresptr, clipsptr);
+#else
+    get_pca_features_2(M * T, L, num_features, featuresptr, clipsptr);
+#endif
 
     Mda geomedian;
     geomedian.allocate(num_features, 1);

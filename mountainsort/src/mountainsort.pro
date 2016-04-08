@@ -40,7 +40,6 @@ HEADERS += \
     isosplit/isosplit2.h \
     isosplit/isocut.h \
     isosplit/jisotonic.h \
-    utils/get_principal_components.h \
     processors/extract_clips.h \
     utils/msmisc.h \
     processors/remove_duplicate_clusters_processor.h \
@@ -99,7 +98,6 @@ SOURCES += mountainsortmain.cpp \
     isosplit/isosplit2.cpp \
     isosplit/isocut.cpp \
     isosplit/jisotonic.cpp \
-    utils/get_principal_components.cpp \
     processors/extract_clips.cpp \
     utils/msmisc.cpp \
     processors/remove_duplicate_clusters_processor.cpp \
