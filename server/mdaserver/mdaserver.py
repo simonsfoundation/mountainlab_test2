@@ -29,10 +29,6 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		path=self.cfg("mdachunk_data_path")+path
 		return path
 
-    def end_headers (self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        SimpleHTTPRequestHandler.end_headers(self)
-
     def do_GET(self): #handle a GET request
             request_path = urlparse.urlparse(self.path).path  # sanity check needed
 
@@ -111,7 +107,7 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	    ])
 	    (str,exit_code)=self.call_and_read_output(cmd)
 	    if not exit_code:
-	        url0=mdachunk_data_url+"/"+str
+	        url0=mdaserver_url+"/"+str
 	        if self.query("output") == "text": return url0
 	        return { 'path': url0 }
 	    else:
