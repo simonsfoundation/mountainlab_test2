@@ -7,6 +7,8 @@ import os
 import sys
 import ConfigParser
 import shutil
+from json import JSONDecoder, JSONEncoder
+from exceptions import ValueError
 
 class ConfigReader(object):
     def __init__(self, **kwargs):
@@ -29,46 +31,87 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	return path
 
     def do_GET(self): #handle a GET request
+		request_path = urlparse.urlparse(self.path).path  # sanity check needed
+
+		methods = {
+		    'info': self.handle_INFO,
+		    'readChunk': self.handle_READCHUNK
+		}
+		method = self.query('a')
+
+		if method and methods.has_key(method):
+			response = {"request": {"method": method, "mda": request_path } }
+			try:
+				result = methods.get(method)(request_path)
+				response["result"] = result
+			except ValueError as e:
+			    response["error"] = str(e)
+			if self.query('output') == "text":
+			    if response.has_key("result"):
+			        self.send_plain_text(response["result"])
+			    elif response.has_key("error"):
+			        self.send_plain_text("ERROR: "+response["error"])
+			else:
+			    encoded = JSONEncoder(indent=4).encode(response)
+			    self.send_plain_text(encoded)
+		else:
+		    SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+
+    def handle_INFO_TEXT(self, path):
+    	mdachunk_exe        = self.cfg("mdachunk_exe")
+    	mdaserver_basepath  = self.cfg("mdaserver_basepath")
+    	mda_fname=mdaserver_basepath+"/"+path
+    	(str,exit_code)=self.call_and_read_output(" ".join([mdachunk_exe, "info", mda_fname]))
+    	return str
+	def handle_INFO(self, path):
+		str = self.handle_INFO_TEXT(path)
+		#str = "5,52355,1,1,1,1\n8dc26fa7b25afaf114e2188a8f62db1a99e2c35b\n1459597809000"
+		if self.query("output") == "text": return str
+		# it would be easier if mdachunk spitted out JSON
+		# but hey, let's parse the response ourselves
+		# three lines:
+		lines = str.split('\n')
+		if len(lines) < 3: raise ValueError("Incorrect output from mdachunk")
+		# 6 integers separated by commas
+		dimensions = lines[0].split(',')
+		if len(dimensions) != 6: raise ValueError("Incorrect output from mdachunk")
+		# sha1
+		sha1 = lines[1]
+		# path
+		filepath = lines[2]
+		return {
+			'dimensions': dimensions,
+			'sha1': sha1,
+			'path': filepath
+		}
+    def handle_READCHUNK(self, path):
         mdachunk_exe        = self.cfg("mdachunk_exe")
-        mdaserver_basepath  = self.cfg("mdaserver_basepath")
         mdachunk_data_path  = self.cfg("mdachunk_data_path")
         mdaserver_url   = self.cfg("mdaserver_url")
-        self.mkdir_if_needed(mdaserver_basepath+"/tmp_short_term")
-        self.mkdir_if_needed(mdaserver_basepath+"/tmp_long_term")
-    	mda_fname=mdaserver_basepath+"/"+urlparse.urlparse(self.path).path
-        if self.query("a")=="size": #need to return the dimensions of the .mda
-            (str,exit_code)=self.call_and_read_output(" ".join([mdachunk_exe, "size", mda_fname]))
-            self.send_plain_text(str)
-            return
-        elif self.query("a")=="info": #need to return the dimensions and checksum of the .mda
-            (str,exit_code)=self.call_and_read_output(" ".join([mdachunk_exe, "info", mda_fname]))
-            self.send_plain_text(str)
-            return
-        elif self.query("a")=="readChunk": #read a chunk and return url to retrieve the .mda binary data
-    		print(mda_fname)
-    		datatype=self.query("datatype","float32")
-    		index=self.query("index","0")
-    		size=self.query("size","")
-    		self.mkdir_if_needed(mdachunk_data_path)
-    		outpath=self.query("outpath",mdachunk_data_path)
-                cmd = " ".join([
-                    mdachunk_exe,
-                    "readChunk",
-                    mda_fname,
-                    "--index="+index,
-                    "--size="+size,
-                    "--datatype="+datatype,
-                    "--outpath="+outpath
-                ])
-    		(str,exit_code)=self.call_and_read_output(cmd)
-                if not exit_code:
-    			url0=mdaserver_url+"/"+str
-    			self.send_plain_text(url0)
-    		else:
-    			self.send_plain_text("ERROR: "+str)
-    		return
-	else:
-            SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+        mdaserver_basepath            = self.cfg("mdaserver_basepath")
+        mda_fname=mdaserver_basepath+"/"+path
+
+        datatype=self.query("datatype","float32")
+        index=self.query("index","0")
+        size=self.query("size","")
+        self.mkdir_if_needed(mdachunk_data_path)
+        outpath=self.query("outpath",mdachunk_data_path)
+        cmd = " ".join([
+            mdachunk_exe,
+            "readChunk",
+            mda_fname,
+            "--index="+index,
+            "--size="+size,
+            "--datatype="+datatype,
+            "--outpath="+outpath
+        ])
+        (str,exit_code)=self.call_and_read_output(cmd)
+        if not exit_code:
+            url0=mdachunk_data_url+"/"+str
+            if self.query("output") == "text": return url0
+            return { 'path': url0 }
+        else:
+            raise ValueError(str)
 
     def cfg(self, key, section = 'General'):
         return self.config.get(section, key)
