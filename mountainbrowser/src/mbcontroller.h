@@ -27,6 +27,7 @@ public:
     virtual ~MBController();
 
     Q_INVOKABLE QString loadLocalStudy(QString file_path);
+    Q_INVOKABLE QString loadRemoteStudy(QString url);
     Q_INVOKABLE void openSortingResult(QString json);
 private:
     MBControllerPrivate *d;

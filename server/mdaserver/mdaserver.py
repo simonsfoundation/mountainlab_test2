@@ -29,6 +29,38 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		path=self.cfg("mdachunk_data_path")+path
 		return path
 
+    def end_headers (self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        SimpleHTTPRequestHandler.end_headers(self)
+
+    def do_GET(self): #handle a GET request
+            request_path = urlparse.urlparse(self.path).path  # sanity check needed
+
+            methods = {
+                'info': self.handle_INFO,
+                'readChunk': self.handle_READCHUNK,
+                'readText': self.handle_READTEXT
+            }
+            method = self.query('a')
+
+            if method and methods.has_key(method):
+                    response = {"request": {"method": method, "mda": request_path } }
+                    try:
+                            result = methods.get(method)(request_path)
+                            response["result"] = result
+                    except ValueError as e:
+                        response["error"] = str(e)
+                    if self.query('output') == "text":
+                        if response.has_key("result"):
+                            self.send_plain_text(response["result"])
+                        elif response.has_key("error"):
+                            self.send_plain_text("ERROR: "+response["error"])
+                    else:
+                        encoded = JSONEncoder(indent=4).encode(response)
+                        self.send_plain_text(encoded)
+            else:
+                SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+
     def handle_INFO_TEXT(self, path):
         mdachunk_exe        = self.cfg("mdachunk_exe")
         mdaserver_basepath  = self.cfg("mdaserver_basepath")
@@ -84,6 +116,12 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	        return { 'path': url0 }
 	    else:
 	        raise ValueError(str)
+    def handle_READTEXT(self, path):
+        mdaserver_basepath  = self.cfg("mdaserver_basepath")
+        txt_fname=mdaserver_basepath+"/"+path
+        with open(txt_fname, 'r') as myfile:
+            str=myfile.read()
+        return str
 
     def cfg(self, key, section = 'General'):
         return self.config.get(section, key)
@@ -117,32 +155,7 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		self.end_headers()
 		self.wfile.write(txt)
 
-    def do_GET(self): #handle a GET request
-		request_path = urlparse.urlparse(self.path).path  # sanity check needed
 
-		methods = {
-		    'info': self.handle_INFO,
-		    'readChunk': self.handle_READCHUNK
-		}
-		method = self.query('a')
-
-		if method and methods.has_key(method):
-			response = {"request": {"method": method, "mda": request_path } }
-			try:
-				result = methods.get(method)(request_path)
-				response["result"] = result
-			except ValueError as e:
-			    response["error"] = str(e)
-			if self.query('output') == "text":
-			    if response.has_key("result"):
-			        self.send_plain_text(response["result"])
-			    elif response.has_key("error"):
-			        self.send_plain_text("ERROR: "+response["error"])
-			else:
-			    encoded = JSONEncoder(indent=4).encode(response)
-			    self.send_plain_text(encoded)
-		else:
-		    SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 	
 
 class MyTCPServer(SocketServer.TCPServer):

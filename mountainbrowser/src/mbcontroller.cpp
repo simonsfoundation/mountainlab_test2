@@ -8,6 +8,7 @@
 #include "mbcontroller.h"
 #include <QCoreApplication>
 #include <QProcess>
+#include "msmisc.h"
 
 #include <QJsonDocument>
 #include <QDebug>
@@ -32,6 +33,11 @@ QString MBController::loadLocalStudy(QString file_path)
 {
     //Witold, it would be great if we could return a javascript object directly here
     return read_text_file(file_path);
+}
+
+QString MBController::loadRemoteStudy(QString url)
+{
+    return http_get_text(url);
 }
 
 void MBController::openSortingResult(QString json)

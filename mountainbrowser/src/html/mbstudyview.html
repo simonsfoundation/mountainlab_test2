@@ -11,7 +11,9 @@
 <script>
 $(document).ready(function() {
     console.log('testing...');
-    var path='/mnt/xfs1/home/magland/dev/mountainlab/mountainbrowser/src/experiments.json';
+    //var path='/mnt/xfs1/home/magland/dev/mountainlab/mountainbrowser/src/experiments.json';
+    var path='http://magland.org:8000/20160408-TETRODE-TEST/mountainview.json?a=readText&output=text';
+    //var path='http://localhost:8000/experiments.json?a=readText&output=text';
     load_study(path,function(S) {
         console.log(JSON.stringify(S));
         X=new MBExperimentList();
@@ -21,14 +23,16 @@ $(document).ready(function() {
     });
 
     function load_study(url_or_path,callback) {
+
         if (url_or_path.indexOf('/')==0) {
             console.log(MB.loadLocalStudy(url_or_path));
             callback(JSON.parse(MB.loadLocalStudy(url_or_path)));
         }
         else {
-            $.getJSON(url_or_path,function(json) {
-                callback(json);
-            });
+            callback(JSON.parse(MB.loadRemoteStudy(url_or_path)));
+            //$.getJSON(url_or_path,function(json) {
+            //    callback(json);
+            //});
         }
     }
 });

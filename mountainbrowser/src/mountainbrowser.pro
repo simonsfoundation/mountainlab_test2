@@ -22,8 +22,20 @@ SOURCES += mountainbrowsermain.cpp \
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils
 VPATH += ../../mountainsort/src/utils
-HEADERS += get_command_line_params.h textfile.h
-SOURCES += get_command_line_params.cpp textfile.cpp
+HEADERS += get_command_line_params.h textfile.h msmisc.h
+SOURCES += get_command_line_params.cpp textfile.cpp msmisc.cpp
+
+INCLUDEPATH += ../../mountainsort/src/mda
+DEPENDPATH += ../../mountainsort/src/mda
+VPATH += ../../mountainsort/src/mda
+HEADERS += mda.h mdaio.h usagetracking.h
+SOURCES += mda.cpp mdaio.cpp usagetracking.cpp
+
+INCLUDEPATH += ../../mountainsort/src/core
+DEPENDPATH += ../../mountainsort/src/core
+VPATH += ../../mountainsort/src/core
+HEADERS += mscachemanager.h
+SOURCES += mscachemanager.cpp
 
 #QJSON
 INCLUDEPATH += ../../mountainsort/src/3rdparty
@@ -39,7 +51,8 @@ SOURCES += serializer.cpp serializerrunnable.cpp parser.cpp parserrunnable.cpp j
 
 DISTFILES += \
     experiments.json \
-    html/style.css
+    html/style.css \
+    franklab.json
 
 RESOURCES += \
     mountainbrowser.qrc
