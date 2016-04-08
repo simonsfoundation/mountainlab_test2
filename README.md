@@ -49,7 +49,7 @@ git clone https://github.com/magland/mountainlab.git
 
 **Installation of Lapack:**
 ```bash
-Ubuntu/Debian: sudo apt-get install liblapack-dev
+Ubuntu/Debian: sudo apt-get install liblapack liblapacke liblapack-dev liblapacke-dev
 CentOS/Red Hat: sudo yum install lapack-devel.x86_64
 ```
 
