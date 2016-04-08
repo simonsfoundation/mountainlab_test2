@@ -11,15 +11,18 @@ function MBExperimentList() {
         var ul=$('<ul></ul>');
         this.div.append(ul);
         for (var i=0; i<m_experiments.length; i++) {
-            var E=m_experiments[i];
-            var li=$('<li></li>'); ul.append(li);
-            var a=$('<a href=#>'+E.exp_id+'</a>');
-            a.click(function() {open_experiment(E);})
-            li.append(a);
+            (function() {
+                var E=m_experiments[i];
+                var li=$('<li></li>'); ul.append(li);
+                var a=$('<a href=#>'+E.exp_id+'</a>');
+                a.click(function() {open_experiment(E);})
+                li.append(a);
+            })();
         }
     }
 
     function open_experiment(E) {
+        console.log('OPEN :'+JSON.stringify(E));
         MB.openSortingResult(JSON.stringify(E));
     }
 }

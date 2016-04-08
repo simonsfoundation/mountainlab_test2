@@ -19,6 +19,15 @@
 
 #include "mountainbrowsermain.h"
 
+class MyPage : public QWebPage {
+public:
+protected:
+    virtual void javaScriptConsoleMessage(const QString & message, int lineNumber, const QString & sourceID) {
+        qDebug() << "JAVASCRIPT:" << message;
+        QWebPage::javaScriptConsoleMessage(message,lineNumber,sourceID);
+    }
+};
+
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -26,6 +35,7 @@ int main(int argc, char* argv[])
     CLParams CLP = get_command_line_params(argc, argv);
 
     QWebView* X = new QWebView;
+    X->setPage(new MyPage());
     X->page()->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 
     /*

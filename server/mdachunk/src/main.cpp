@@ -87,8 +87,8 @@ int main(int argc, char* argv[])
             printf("Error computing chunk code.\n");
             return -1;
         }
-        cacheManager()->setLocalBasePath(outpath);
-        QString fname=cacheManager()->makeLocalFile(code+".mda");
+        MSCacheManager::globalInstance()->setLocalBasePath(outpath);
+        QString fname=MSCacheManager::globalInstance()->makeLocalFile(code+".mda");
         QString relative_fname=fname.mid(outpath.count());
         //QString fname = outpath + "/" + code + ".mda";
         if (!QFile::exists(fname)) {

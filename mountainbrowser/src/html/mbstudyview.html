@@ -11,7 +11,7 @@
 <script>
 $(document).ready(function() {
     console.log('testing...');
-    var path='/home/magland/dev/mountainlab/mountainbrowser/src/experiments.json';
+    var path='/mnt/xfs1/home/magland/dev/mountainlab/mountainbrowser/src/experiments.json';
     load_study(path,function(S) {
         console.log(JSON.stringify(S));
         X=new MBExperimentList();
@@ -22,10 +22,11 @@ $(document).ready(function() {
 
     function load_study(url_or_path,callback) {
         if (url_or_path.indexOf('/')==0) {
+            console.log(MB.loadLocalStudy(url_or_path));
             callback(JSON.parse(MB.loadLocalStudy(url_or_path)));
         }
         else {
-            $.getJSON('file:///home/magland/dev/mountainlab/mountainbrowser/src/experiments.json',function(json) {
+            $.getJSON(url_or_path,function(json) {
                 callback(json);
             });
         }
