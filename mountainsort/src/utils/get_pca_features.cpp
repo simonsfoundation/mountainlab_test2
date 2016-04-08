@@ -5,6 +5,8 @@
 
 #include <QTime>
 
+#ifdef USE_LAPACK
+
 bool get_pca_features(long M, long N, int num_features, double *features_out, double *X_in, long num_representatives)
 {
     long increment=1;
@@ -99,3 +101,5 @@ bool pca_denoise(long M, long N, int num_features, double *X_out, double *X_in, 
 
     return true;
 }
+
+#endif

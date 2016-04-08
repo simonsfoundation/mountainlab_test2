@@ -2,6 +2,8 @@
 #include <QDebug>
 #include <QTime>
 
+#ifdef USE_LAPACK
+
 #define HAVE_LAPACK_CONFIG_H
 #define LAPACK_COMPLEX_CPP
 #include "lapacke.h"
@@ -38,3 +40,6 @@ bool eigenvalue_decomposition_sym(Mda &U, Mda &S,Mda &X)
 	}
 	return true;
 }
+
+#endif
+

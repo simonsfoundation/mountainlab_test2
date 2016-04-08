@@ -1,5 +1,9 @@
 #include "extract_clips.h"
+#ifdef USE_LAPACK
 #include "get_pca_features.h"
+#else
+#include "get_principal_components.h"
+#endif
 
 Mda extract_clips(DiskReadMda &X, const QList<double> &times, int clip_size)
 {
@@ -74,7 +78,11 @@ bool extract_clips_features(const QString &timeseries_path, const QString &firin
     }
     Mda clips=extract_clips(X,times,clip_size);
     Mda features(num_features,clips.N3());
+#ifdef USE_LAPACK
     get_pca_features(clips.N1()*clips.N2(),clips.N3(),num_features,features.dataPtr(),clips.dataPtr());
+#else
+    get_pca_features_2(clips.N1()*clips.N2(),clips.N3(),num_features,features.dataPtr(),clips.dataPtr());
+#endif
     features.write32(features_path);
     return true;
 }
