@@ -27,7 +27,7 @@ public:
     }
 
     //Q_INVOKABLE QWidget* createOverview2Widget();
-    Q_INVOKABLE QImage createTemplatesImage(QString timeseries,QString firings,QJsonObject object);
+    //Q_INVOKABLE QImage createTemplatesImage(QString timeseries,QString firings,QJsonObject object);
     Q_INVOKABLE void writeImage(const QImage& img, const QString& fname);
     Q_INVOKABLE void appExec();
 };
