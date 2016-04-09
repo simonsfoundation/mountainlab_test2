@@ -12,6 +12,7 @@
 #include <QString>
 #include <QMap>
 #include <QVariant>
+#include <QJsonObject>
 
 int run_mountainview_script(const QString& script, QMap<QString, QVariant>& params);
 
@@ -25,7 +26,8 @@ public:
     {
     }
 
-    Q_INVOKABLE QWidget* createOverview2Widget();
+    //Q_INVOKABLE QWidget* createOverview2Widget();
+    Q_INVOKABLE QImage createTemplatesImage(QString timeseries,QString firings,QJsonObject object);
     Q_INVOKABLE void writeImage(const QImage& img, const QString& fname);
     Q_INVOKABLE void appExec();
 };

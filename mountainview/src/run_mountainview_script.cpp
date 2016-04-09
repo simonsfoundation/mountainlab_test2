@@ -7,6 +7,7 @@
 #include "run_mountainview_script.h"
 #include <QImageWriter>
 #include <QScriptEngine>
+#include "mvclusterdetailwidget.h"
 
 int run_mountainview_script(const QString& script, QMap<QString, QVariant>& params)
 {
@@ -28,6 +29,13 @@ QWidget* MVController::createOverview2Widget()
     QWidget* ret = new MVOverview2Widget;
     ret->setAttribute(Qt::WA_DeleteOnClose);
     return ret;
+}
+
+QImage MVController::createTemplatesImage(QString timeseries, QString firings, QJsonObject object)
+{
+    MVClusterDetailWidget *W=new MVClusterDetailWidget;
+    W->setTimeseries(DiskReadMda(timeseries));
+    W->setFirings(DiskReadMda(firings));
 }
 
 void MVController::writeImage(const QImage& img, const QString& fname)

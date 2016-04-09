@@ -70,7 +70,7 @@ QString MSCacheManager::makeRemoteFile(const QString& remote_name, const QString
     return QString("remote://%1/%2/%3").arg(remote_name).arg(str).arg(file_name);
 }
 
-QString MSCacheManager::makeLocalFile(const QString& file_name_in, MSCacheManager::Duration duration, QObject* remove_on_delete)
+QString MSCacheManager::makeLocalFile(const QString& file_name_in, MSCacheManager::Duration duration)
 {
     QString file_name=file_name_in;
     if (file_name.isEmpty()) file_name=d->create_random_file_name();
@@ -87,10 +87,6 @@ QString MSCacheManager::makeLocalFile(const QString& file_name_in, MSCacheManage
         return "";
     }
     QString ret=QString("%1/%2/%3").arg(d->m_local_base_path).arg(str).arg(file_name);
-    if (remove_on_delete) {
-        remove_on_delete->setProperty("MSCacheManager_file_to_remove",ret);
-        QObject::connect(remove_on_delete,SIGNAL(destroyed(QObject*)),this,SLOT(slot_remove_on_delete()));
-    }
     return ret;
 }
 
