@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Compile mountainview
 echo "Compiling mountainbrowser"
 cd mountainbrowser/src
 qmake
