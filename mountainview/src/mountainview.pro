@@ -134,3 +134,11 @@ RESOURCES += mountainview.qrc
 QMAKE_LFLAGS += -fopenmp
 QMAKE_CXXFLAGS += -fopenmp
 #-std=c++11   # AHB removed since not in GNU gcc 4.6.3
+
+DISTFILES += \
+    ../../server/mountainviewserver/mountainviewserver.py \
+    ../../server/mscmdserver/mscmdserver.py \
+    ../../server/mdaserver/mdaserver.py \
+    ../../server/mountainviewserver/mountainviewserver.example.cfg \
+    ../../server/mdaserver/mdaserver.example.cfg \
+    ../../server/mscmdserver/mscmdserver.example.cfg
