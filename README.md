@@ -7,6 +7,8 @@ The software suite (in flux) comprises the following:
 
 * MountainView -- Collection of Qt/C++ widgets for visualizing generic electrophysiological datasets and sorting results.
 
+* MountainBrowser -- Web-browser based exploration of studies and experiments on a server.
+
 * A Matlab toolset for processing, visualizing, and validating spike sorting data and a set of Matlab wrappers to MountainSort and MountainView.
 
 ## License
@@ -57,6 +59,7 @@ CentOS/Red Hat: sudo yum install lapack-devel.x86_64
 ```bash
 ./compile_mountainsort.sh
 ./compile_mountainview.sh
+./compile_mountainbrowser.sh
 ```
 
 **Opening Matlab:**
