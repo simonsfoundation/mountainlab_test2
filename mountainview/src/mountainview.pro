@@ -7,6 +7,7 @@ CONFIG -= app_bundle #Please apple, don't make a bundle today
 
 #we are no longer supporting qt4 for mountainview
 #greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += widgets
 
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
