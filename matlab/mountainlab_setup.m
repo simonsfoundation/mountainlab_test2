@@ -7,4 +7,5 @@ addpath([mfile_path,'/msutils']);
 addpath([mfile_path,'/unit_tests']);
 addpath([mfile_path,'/validation']);
 addpath([mfile_path,'/../mountainsort/src/isosplit']);
+addpath([mfile_path,'/../spikespy/matlab']); %added on 4/12/16
 end
