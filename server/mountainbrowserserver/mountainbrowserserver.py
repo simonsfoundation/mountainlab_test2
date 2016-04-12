@@ -105,7 +105,7 @@ def main():
     config = ConfigParser.ConfigParser(allow_no_value=True)
     config.read(config_fname)
     Handler.config = config
-    port=int(config.get('General', 'mdaserver_port'))
+    port=int(config.get('General', 'mountainbrowser_port'))
     server = MyTCPServer(('0.0.0.0', port), Handler)
     print('Serving on port: '+str(port));
     server.serve_forever()
