@@ -19,14 +19,7 @@
 
 #include "mountainbrowsermain.h"
 
-class MyPage : public QWebPage {
-public:
-protected:
-    virtual void javaScriptConsoleMessage(const QString & message, int lineNumber, const QString & sourceID) {
-        qDebug() << "JAVASCRIPT:" << message;
-        QWebPage::javaScriptConsoleMessage(message,lineNumber,sourceID);
-    }
-};
+
 
 int main(int argc, char* argv[])
 {
@@ -34,9 +27,12 @@ int main(int argc, char* argv[])
 
     CLParams CLP = get_command_line_params(argc, argv);
 
+    MBController *controller=new MBController;
+
     QWebView* X = new QWebView;
-    X->setContextMenuPolicy(Qt::NoContextMenu);
-    X->setPage(new MyPage());
+    MyPage *page=new MyPage;
+    page->setController(controller);
+    X->setPage(page);
     X->page()->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 
     /*
@@ -47,25 +43,26 @@ int main(int argc, char* argv[])
     WI->resize(1000, 1000);
     */
 
-    //QString json=read_text_file("/mnt/xfs1/home/magland/dev/mountainlab/mountainbrowser/src/experiments.json");
-
-    //MyLocalStudy *LocalStudy=new MyLocalStudy(json);
-
-    MBController *controller=new MBController;
-    X->page()->mainFrame()->addToJavaScriptWindowObject("MB",controller,QWebFrame::ScriptOwnership);
-
     X->load(QUrl("qrc:/html/mbstudyview.html"));
     X->show();
 
-    /*
-    MBExperimentManager* EM = new MBExperimentManager;
-    EM->loadExperiments(json_txt);
-
-    MBMainWindow* W = new MBMainWindow;
-    W->resize(800, 600);
-    W->show();
-    W->setExperimentManager(EM);
-    */
-
     return a.exec();
+}
+
+MyPage::MyPage()
+{
+    m_controller=0;
+    connect(this->mainFrame(),SIGNAL(urlChanged(QUrl)),this,SLOT(slot_url_changed()),Qt::DirectConnection);
+}
+
+void MyPage::slot_url_changed()
+{
+    if (m_controller) {
+        this->mainFrame()->addToJavaScriptWindowObject("MB",m_controller,QWebFrame::QtOwnership);
+    }
+}
+
+void MyPage::javaScriptConsoleMessage(const QString &message, int lineNumber, const QString &sourceID)
+{
+    QWebPage::javaScriptConsoleMessage(message,lineNumber,sourceID);
 }
