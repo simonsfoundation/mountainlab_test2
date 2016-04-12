@@ -62,6 +62,7 @@ private slots:
     void slot_cross_correlogram_current_index_changed();
     void slot_cross_correlogram_selected_indices_changed();
     void slot_clips_view_current_event_changed();
+    void slot_clips_widget_current_event_changed();
     void slot_cluster_view_current_event_changed();
     //void slot_cross_correlogram_computer_finished();
 

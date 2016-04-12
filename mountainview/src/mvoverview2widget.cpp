@@ -488,6 +488,13 @@ void MVOverview2Widget::slot_cross_correlogram_selected_indices_changed()
 
 void MVOverview2Widget::slot_clips_view_current_event_changed()
 {
+    MVClipsView* V = (MVClipsView*)sender();
+    MVEvent evt = V->currentEvent();
+    d->set_current_event(evt);
+}
+
+void MVOverview2Widget::slot_clips_widget_current_event_changed()
+{
     MVClipsWidget* W = (MVClipsWidget*)sender();
     MVEvent evt = W->currentEvent();
     d->set_current_event(evt);
@@ -1292,7 +1299,7 @@ void MVOverview2WidgetPrivate::open_clips()
     X->setMscmdServerUrl(m_mscmdserver_url);
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
-    q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_view_current_event_changed()));
+    q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_widget_current_event_changed()));
     QString tab_title = "Clips";
     if (ks.count() == 1) {
         int kk = ks[0];
