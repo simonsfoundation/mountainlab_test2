@@ -5,7 +5,8 @@ CONFIG += c++11
 
 CONFIG -= app_bundle #Please apple, don't make a bundle today
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets #We do want to support Qt5, but there is no reason not to use Qt4
+#we are no longer supporting qt4 for mountainview
+#greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
