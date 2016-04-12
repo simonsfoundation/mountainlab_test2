@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
     CLParams CLP = get_command_line_params(argc, argv);
 
     QWebView* X = new QWebView;
+    X->setContextMenuPolicy(Qt::NoContextMenu);
     X->setPage(new MyPage());
     X->page()->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 

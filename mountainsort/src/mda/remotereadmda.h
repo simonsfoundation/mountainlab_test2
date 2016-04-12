@@ -11,6 +11,9 @@
 #include "mda.h"
 
 class RemoteReadMdaPrivate;
+/**
+ * @brief Do not use this class directly -- it is used by DiskReadMda
+ */
 class RemoteReadMda
 {
 public:
