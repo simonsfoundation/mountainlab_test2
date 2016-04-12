@@ -306,9 +306,9 @@ void SSTimeSeriesWidget::slot_extract_clips()
 	DiskArrayModel *DD=VV->data();
 	QString data_path=DD->path();
 	SSLabelsModel *TL=VV->getLabels();
-	MemoryMda TL0;
+    MemoryMda TL0;
 	if (TL) TL0=TL->getTimepointsLabels(0,TL->getMaxTimepoint());
-	else qWarning() << "TL is null in slot_extract_clips";
+    else qWarning() << "TL is null in slot_extract_clips";
 	QString TL_path=ssTempPath()+"/spikespy-tmp-extract-clips-TL.mda";
 	removeOnClose(TL_path);
 	TL0.write(TL_path.toLatin1().data());
@@ -320,12 +320,12 @@ void SSTimeSeriesWidget::slot_extract_clips()
 	removeOnClose(out_path_TL);
 
 	QStringList args; args << data_path << TL_path << out_path << QString("--clipsize=%1").arg(clipsize) << "--labels="+labels_txt;
-	if (fixed_clipsize) args << "--fixed-clipsize";
+    if (fixed_clipsize) args << "--fixed-clipsize";
 	QString exe=qApp->applicationDirPath()+"/extractclips";
 	if (!QFile::exists(exe)) {
 		QString exe2=qApp->applicationDirPath()+"/../src/spikespy/bin/extractclips";
 		if (QFile::exists(exe2)) exe=exe2;
-	}
+    }
 	qDebug()  << exe << args;
 	QProcess process;
 	process.start(exe,args);
@@ -333,7 +333,7 @@ void SSTimeSeriesWidget::slot_extract_clips()
 	process.waitForReadyRead();
 	QString output=QString(process.readAll());
 	int num_clips=get_num_clips_from_process_output(output);
-	do_wait(100); //may be necessary for files to finish writing (probably not)
+    do_wait(100); //may be necessary for files to finish writing (probably not)
 
 	if (save_to_path.isEmpty()) {
         DiskReadMdaOld out_TM(out_path_TM);

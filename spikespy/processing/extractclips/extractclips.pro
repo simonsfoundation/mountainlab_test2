@@ -20,10 +20,10 @@ SOURCES += main.cpp extractclips.cpp
 
 HEADERS += extractclips.h
 
-INCLUDEPATH += ../../src
-HEADERS += ../../src/mdaio.h
-SOURCES += ../../src/mdaio.cpp
-SOURCES += ../../src/usagetracking.cpp
+INCLUDEPATH += ../../../mountainsort/src/mda
+HEADERS += ../../../mountainsort/src/mda/mdaio.h
+SOURCES += ../../../mountainsort/src/mda/mdaio.cpp
+SOURCES += ../../../mountainsort/src/mda/usagetracking.cpp
 
 INCLUDEPATH += ../common
 HEADERS += ../common/get_command_line_params.h
