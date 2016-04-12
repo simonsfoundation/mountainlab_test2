@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
             unit_test_remote_read_mda();
         }
         else if (arg2 == "remotereadmda2") {
-            QString arg3 = CLP.unnamed_parameters.value(2, "remote://localhost/firings.mda");
+            QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
         }
         else {
@@ -99,6 +99,7 @@ int main(int argc, char* argv[])
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         MVOverview2Widget* W = new MVOverview2Widget;
+        W->setMscmdServerUrl(CLP.named_parameters.value("mscmdserver_url","").toString());
         if (!pre_path.isEmpty()) {
             W->addTimeseriesPath("Preprocessed Data", pre_path);
         }

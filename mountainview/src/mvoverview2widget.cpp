@@ -61,6 +61,7 @@ public:
     QSet<int> m_selected_ks;
     float m_samplerate;
     MVEvent m_current_event;
+    QString m_mscmdserver_url;
 
     MVOverview2WidgetControlPanel* m_control_panel;
 
@@ -328,6 +329,11 @@ int MVOverview2Widget::getMaxLabel()
             ret = label;
     }
     return ret;
+}
+
+void MVOverview2Widget::setMscmdServerUrl(const QString &url)
+{
+    d->m_mscmdserver_url=url;
 }
 
 void MVOverview2Widget::resizeEvent(QResizeEvent* evt)
@@ -1035,6 +1041,7 @@ void MVOverview2WidgetPrivate::do_shell_split()
     params["max_outlier_score"] = m_control_panel->getParameterValue("max_outlier_score").toDouble();
     params["firings"] = m_firings_original.makePath();
     MT.setInputParameters(params);
+    MT.setMscmdServerUrl(m_mscmdserver_url);
 
     QString firings_out = MT.makeOutputFilePath("firings_out");
     QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
@@ -1246,6 +1253,7 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_matrix_of_cross_corre
 MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget;
+    X->setMscmdServerUrl(m_mscmdserver_url);
     X->setChannelColors(m_channel_colors);
     X->setTimeseries(m_timeseries);
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
@@ -1281,6 +1289,7 @@ void MVOverview2WidgetPrivate::open_clips()
     }
 
     MVClipsWidget* X = new MVClipsWidget;
+    X->setMscmdServerUrl(m_mscmdserver_url);
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_view_current_event_changed()));
@@ -1318,6 +1327,7 @@ void MVOverview2WidgetPrivate::open_clusters()
         return;
     }
     MVClusterWidget* X = new MVClusterWidget;
+    X->setMscmdServerUrl(m_mscmdserver_url);
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_cluster_view_current_event_changed()));

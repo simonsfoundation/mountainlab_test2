@@ -52,7 +52,9 @@ SOURCES += serializer.cpp serializerrunnable.cpp parser.cpp parserrunnable.cpp j
 DISTFILES += \
     experiments.json \
     html/style.css \
-    franklab.json
+    franklab.json \
+    ../../server/mountainbrowserserver/mountainbrowserserver.py \
+    ../../server/mountainbrowserserver/mountainbrowserserver.example.cfg
 
 RESOURCES += \
     mountainbrowser.qrc

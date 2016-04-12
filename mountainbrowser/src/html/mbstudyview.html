@@ -12,16 +12,55 @@
 $(document).ready(function() {
     console.log('testing...');
     //var path='/mnt/xfs1/home/magland/dev/mountainlab/mountainbrowser/src/experiments.json';
-    var path='http://magland.org:8000/20160408-TETRODE-TEST/mountainview.json?a=readText&output=text';
+    //var path='http://magland.org:8000/20160408-TETRODE-TEST/mountainview.json?a=readText&output=text';
     //var path='http://localhost:8000/experiments.json?a=readText&output=text';
-    load_study(path,function(S) {
-        console.log(JSON.stringify(S));
-        X=new MBExperimentList();
-        $('#experiment_list').append(X.div);
-        X.setExperiments(S.experiments||[]);
-        X.refresh();
-    });
+    var mountainbrowser_url=MB.mountainBrowserUrl();
+    console.log('AAAAAAA: '+mountainbrowser_url);
+    //load_text(mountainbrowser_url+"/?a=mdaServerUrl",function(mdaserver_url) {
+    //    console.log(mdaserver_url);
+        load_json(mountainbrowser_url+"/index.mb.json?a=readJson",function(obj0) {
+            console.log('testing 2...');
+            console.log(JSON.stringify(obj0));
+            index=obj0.index;
+            load_json(mountainbrowser_url+"/"+index[0]+"?a=readJson",function(Y) {
+                X=new MBExperimentList();
+                $('#experiment_list').append(X.div);
+                var basepath=get_file_path(index[0]);
+                console.log('basepath = '+basepath);
+                X.setBasePath(basepath);
+                X.setExperiments(Y.experiments||[]);
+                X.refresh();
+            });
+        });
+    //});
 
+    function get_file_path(fname) {
+        var ii=fname.lastIndexOf('/');
+        if (ii<0) return '';
+        return fname.substring(0,ii);
+    }
+
+    function load_text(url_or_path,callback) {
+        var text=MB.getText(url_or_path);
+        callback(text);
+    }
+
+    function load_json(url_or_path,callback) {
+        var json=MB.getJson(url_or_path);
+        try {
+            callback(JSON.parse(json));
+        }
+        catch(err) {
+            console.log(json);
+            console.error('Problem parsing JSON...');
+            console.log(err);
+
+            console.log(err);
+            //do we do a callback here?
+        }
+    }
+
+    /*
     function load_study(url_or_path,callback) {
 
         if (url_or_path.indexOf('/')==0) {
@@ -35,6 +74,7 @@ $(document).ready(function() {
             //});
         }
     }
+    */
 });
 </script>
 

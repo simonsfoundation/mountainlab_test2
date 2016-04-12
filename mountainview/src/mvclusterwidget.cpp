@@ -14,6 +14,7 @@
 class MVClusterWidgetComputer : public ComputationThread {
 public:
     //input
+    QString mscmdserver_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
     int clip_size;
@@ -33,6 +34,7 @@ public:
     MVClipsView* m_clips_view;
     QLabel* m_info_bar;
     Mda m_data;
+    QString m_mscmdserver_url;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     QList<int> m_labels_to_use;
@@ -163,6 +165,11 @@ MVClusterWidget::~MVClusterWidget()
     delete d;
 }
 
+void MVClusterWidget::setMscmdServerUrl(const QString &url)
+{
+    d->m_mscmdserver_url=url;
+}
+
 void MVClusterWidget::setData(const Mda& X)
 {
     d->m_data = X;
@@ -290,7 +297,7 @@ void MVClusterWidget::slot_computation_finished()
 {
     d->m_computer.stopComputation(); //because I'm paranoid
 
-    DiskReadMda F=d->m_computer.firings_subset;
+    DiskReadMda F = d->m_computer.firings_subset;
 
     QList<double> times;
     QList<int> labels;
@@ -299,16 +306,16 @@ void MVClusterWidget::slot_computation_finished()
     for (long j = 0; j < F.N2(); j++) {
         times << F.value(1, j);
         labels << (int)F.value(2, j);
-        amplitudes << F.value(3,j);
-        outlier_scores << F.value(4,j);
+        amplitudes << F.value(3, j);
+        outlier_scores << F.value(4, j);
     }
 
-    int K=compute_max(labels);
+    int K = compute_max(labels);
     QList<int> labels_map;
     labels_map << 0;
-    int aa=1;
-    for (int k=1; k<=K; k++) {
-        if (d->m_labels_to_use.indexOf(k)>=0) {
+    int aa = 1;
+    for (int k = 1; k <= K; k++) {
+        if (d->m_labels_to_use.indexOf(k) >= 0) {
             labels_map << aa;
             aa++;
         }
@@ -316,8 +323,8 @@ void MVClusterWidget::slot_computation_finished()
             labels_map << 0;
         }
     }
-    for (long j=0; j<labels.count(); j++) {
-        labels[j]=labels_map[labels[j]];
+    for (long j = 0; j < labels.count(); j++) {
+        labels[j] = labels_map[labels[j]];
     }
 
     this->setTimes(times);
@@ -326,7 +333,6 @@ void MVClusterWidget::slot_computation_finished()
     this->setOutlierScores(outlier_scores);
 
     this->setData(d->m_computer.data);
-
 }
 
 void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
@@ -374,6 +380,7 @@ void MVClusterWidgetPrivate::set_data_on_visible_views_that_need_it()
 void MVClusterWidgetPrivate::start_computation()
 {
     m_computer.stopComputation();
+    m_computer.mscmdserver_url = m_mscmdserver_url;
     m_computer.timeseries = m_timeseries;
     m_computer.firings = m_firings;
     m_computer.clip_size = m_clip_size;
@@ -400,6 +407,7 @@ void MVClusterWidgetComputer::compute()
         params["firings"] = firings.path();
         params["labels"] = labels_str;
         MT.setInputParameters(params);
+        MT.setMscmdServerUrl(mscmdserver_url);
 
         firings_out_path = MT.makeOutputFilePath("firings_out");
 
@@ -418,12 +426,13 @@ void MVClusterWidgetComputer::compute()
         params["clip_size"] = clip_size;
         params["num_features"] = 3;
         MT.setInputParameters(params);
+        MT.setMscmdServerUrl(mscmdserver_url);
 
         features_path = MT.makeOutputFilePath("features");
 
         MT.compute();
     }
-    firings_subset=DiskReadMda(firings_out_path);
+    firings_subset = DiskReadMda(firings_out_path);
 
     DiskReadMda features(features_path);
     features.readChunk(data, 0, 0, features.N1(), features.N2());

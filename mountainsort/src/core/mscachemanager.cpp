@@ -50,9 +50,9 @@ void MSCacheManager::setLocalBasePath(const QString& path)
     }
 }
 
-QString MSCacheManager::makeRemoteFile(const QString& remote_name, const QString& file_name_in, MSCacheManager::Duration duration)
+QString MSCacheManager::makeRemoteFile(const QString& remote_url, const QString& file_name_in, MSCacheManager::Duration duration)
 {
-    if (remote_name.isEmpty()) {
+    if (remote_url.isEmpty()) {
         return makeLocalFile(file_name_in,duration);
     }
 
@@ -67,7 +67,7 @@ QString MSCacheManager::makeRemoteFile(const QString& remote_name, const QString
         qWarning() << "Unexpected problem" << __FUNCTION__ << __FILE__ << __LINE__;
         return "";
     }
-    return QString("remote://%1/%2/%3").arg(remote_name).arg(str).arg(file_name);
+    return QString("%1/%2/%3").arg(remote_url).arg(str).arg(file_name);
 }
 
 QString MSCacheManager::makeLocalFile(const QString& file_name_in, MSCacheManager::Duration duration)

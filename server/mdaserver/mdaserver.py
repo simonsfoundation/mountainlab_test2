@@ -153,7 +153,6 @@ def main():
 
     config = ConfigParser.ConfigParser(allow_no_value=True)
     config.read(config_fname)
-
     Handler.config = config
     port=int(config.get('General', 'mdaserver_port'))
     server = MyTCPServer(('0.0.0.0', port), Handler)

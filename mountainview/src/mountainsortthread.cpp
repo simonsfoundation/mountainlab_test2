@@ -18,9 +18,11 @@ public:
     MountainsortThread* q;
     QString m_processor_name;
     QMap<QString, QVariant> m_parameters;
+    QString m_mscmdserver_url;
 
-    QString get_remote_name_from_parameters();
-    QString create_temporary_output_file_name(const QString& remote_name, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name);
+    QString get_remote_url_from_parameters();
+    QString remote_url_of_path(const QString &path);
+    QString create_temporary_output_file_name(const QString& remote_url, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name);
 };
 
 MountainsortThread::MountainsortThread()
@@ -41,7 +43,7 @@ void MountainsortThread::setProcessorName(const QString& pname)
 
 QString MountainsortThread::makeOutputFilePath(const QString& pname)
 {
-    QString ret = d->create_temporary_output_file_name(d->get_remote_name_from_parameters(), d->m_processor_name, d->m_parameters, pname);
+    QString ret = d->create_temporary_output_file_name(d->get_remote_url_from_parameters(), d->m_processor_name, d->m_parameters, pname);
     d->m_parameters[pname] = ret;
     return ret;
 }
@@ -51,10 +53,14 @@ void MountainsortThread::setInputParameters(const QMap<QString, QVariant>& param
     d->m_parameters = parameters;
 }
 
+void MountainsortThread::setMscmdServerUrl(const QString &url)
+{
+    d->m_mscmdserver_url=url;
+}
+
 void MountainsortThread::compute()
 {
-    QString remote_name = d->get_remote_name_from_parameters();
-    if (remote_name.isEmpty()) {
+    if (d->m_mscmdserver_url.isEmpty()) {
         QString mountainsort_exe = qApp->applicationDirPath() + "/../../mountainsort/bin/mountainsort";
         QStringList args;
         args << d->m_processor_name;
@@ -67,7 +73,7 @@ void MountainsortThread::compute()
         }
     }
     else {
-        QString url = mscmd_url_for_remote(remote_name) + "/?";
+        QString url = d->m_mscmdserver_url + "/?";
         url += "processor=" + d->m_processor_name + "&";
         QStringList keys = d->m_parameters.keys();
         foreach (QString key, keys) {
@@ -77,7 +83,7 @@ void MountainsortThread::compute()
     }
 }
 
-QString MountainsortThreadPrivate::create_temporary_output_file_name(const QString& remote_name, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name)
+QString MountainsortThreadPrivate::create_temporary_output_file_name(const QString& remote_url, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name)
 {
     QString str = processor_name + ":";
     QStringList keys = params.keys();
@@ -87,30 +93,21 @@ QString MountainsortThreadPrivate::create_temporary_output_file_name(const QStri
     }
 
     QString file_name=QString("%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
-    QString ret=MSCacheManager::globalInstance()->makeRemoteFile(remote_name,file_name,MSCacheManager::LongTerm);
-    //QString ret = QString("tmp_long_term/%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
-    /*
-    if (!remote_name.isEmpty()) {
-        ret = "remote://" + remote_name + "/" + ret;
-    }
-    else {
-        ret = "/" + ret;
-    }
-    */
+    QString ret=MSCacheManager::globalInstance()->makeRemoteFile(remote_url,file_name,MSCacheManager::LongTerm);
     return ret;
 }
 
-QString MountainsortThreadPrivate::get_remote_name_from_parameters()
+QString MountainsortThreadPrivate::get_remote_url_from_parameters()
 {
     QString ret;
     QStringList keys = m_parameters.keys();
     foreach (QString key, keys) {
         QString val = m_parameters.value(key).toString();
-        if (val.startsWith("remote://")) {
-            QString remote_name = remote_name_of_path(val);
-            if (!remote_name.isEmpty()) {
+        if (val.startsWith("http://")) {
+            QString remote_url = remote_url_of_path(val);
+            if (!remote_url.isEmpty()) {
                 if (ret.isEmpty()) {
-                    ret = remote_name;
+                    ret = remote_url;
                 }
             }
             else {
@@ -120,4 +117,16 @@ QString MountainsortThreadPrivate::get_remote_name_from_parameters()
         }
     }
     return ret;
+}
+
+QString MountainsortThreadPrivate::remote_url_of_path(const QString &path)
+{
+    if (path.startsWith("http://")) {
+        int ind=path.indexOf("/",QString("http://").count());
+        if (ind<0) return "";
+        return path.mid(0,ind);
+    }
+    else {
+        return "";
+    }
 }

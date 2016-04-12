@@ -18,6 +18,7 @@ public:
 
     void setProcessorName(const QString& pname);
     void setInputParameters(const QMap<QString, QVariant>& parameters);
+    void setMscmdServerUrl(const QString &url);
     QString makeOutputFilePath(const QString& pname);
     void compute();
 

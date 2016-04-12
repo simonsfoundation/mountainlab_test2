@@ -2,8 +2,10 @@ function MBExperimentList() {
     this.div=$('<div></div>');
     this.refresh=refresh;
     this.setExperiments=function(exp) {m_experiments=exp;}
+    this.setBasePath=function(path) {m_base_path=path;}
 
     var m_experiments=[];
+    var m_base_path='';
 
     function refresh() {
         console.log(JSON.stringify(m_experiments));
@@ -13,6 +15,7 @@ function MBExperimentList() {
         for (var i=0; i<m_experiments.length; i++) {
             (function() {
                 var E=m_experiments[i];
+                E.basepath=m_base_path+'/'+E.basepath;
                 var li=$('<li></li>'); ul.append(li);
                 var a=$('<a href=#>'+E.exp_id+'</a>');
                 a.click(function() {open_experiment(E);})

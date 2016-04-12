@@ -37,6 +37,7 @@ struct ChannelSpacingInfo {
 class MVClusterDetailWidgetCalculator : public ComputationThread {
 public:
     //input
+    QString mscmdserver_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
     int clip_size;
@@ -121,6 +122,7 @@ class MVClusterDetailWidgetPrivate {
 public:
     MVClusterDetailWidget* q;
 
+    QString m_mscmdserver_url;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     double m_samplerate;
@@ -203,6 +205,11 @@ MVClusterDetailWidget::~MVClusterDetailWidget()
     d->m_calculator.stopComputation();
     qDeleteAll(d->m_views);
     delete d;
+}
+
+void MVClusterDetailWidget::setMscmdServerUrl(const QString &url)
+{
+    d->m_mscmdserver_url=url;
 }
 
 void MVClusterDetailWidget::setTimeseries(DiskReadMda& X)
@@ -855,6 +862,7 @@ void MVClusterDetailWidgetPrivate::export_image()
 void MVClusterDetailWidgetPrivate::start_calculation()
 {
     m_calculator.stopComputation();
+    m_calculator.mscmdserver_url=m_mscmdserver_url;
     m_calculator.timeseries = m_timeseries;
     m_calculator.firings = m_firings;
     m_calculator.clip_size = m_clip_size;
@@ -886,7 +894,7 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
     return QColor(50, 0, 0);
 }
 
-DiskReadMda mscmd_compute_templates(const QString& timeseries, const QString& firings, int clip_size)
+DiskReadMda mscmd_compute_templates(const QString& mscmdserver_url, const QString& timeseries, const QString& firings, int clip_size)
 {
     MountainsortThread X;
     QString processor_name = "compute_templates";
@@ -897,6 +905,7 @@ DiskReadMda mscmd_compute_templates(const QString& timeseries, const QString& fi
     params["firings"] = firings;
     params["clip_size"] = clip_size;
     X.setInputParameters(params);
+    X.setMscmdServerUrl(mscmdserver_url);
 
     QString templates_fname = X.makeOutputFilePath("templates");
 
@@ -937,7 +946,7 @@ void MVClusterDetailWidgetCalculator::compute()
 
     QString timeseries_path = timeseries.makePath();
     QString firings_path = firings.makePath();
-    DiskReadMda templates0 = mscmd_compute_templates(timeseries_path, firings_path, T);
+    DiskReadMda templates0 = mscmd_compute_templates(mscmdserver_url,timeseries_path, firings_path, T);
     //Mda templates0 = compute_templates_0(timeseries, times, labels, T);
 
     for (int k = 1; k <= K; k++) {

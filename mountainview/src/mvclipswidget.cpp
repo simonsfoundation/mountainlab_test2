@@ -16,6 +16,7 @@ public:
     //input
     DiskReadMda firings;
     DiskReadMda timeseries;
+    QString mscmdserver_url;
     int clip_size;
     QList<int> labels_to_use;
 
@@ -29,6 +30,7 @@ public:
 class MVClipsWidgetPrivate {
 public:
     MVClipsWidget* q;
+    QString m_mscmdserver_url;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     QList<int> m_labels_to_use;
@@ -57,6 +59,11 @@ MVClipsWidget::MVClipsWidget()
 MVClipsWidget::~MVClipsWidget()
 {
     delete d;
+}
+
+void MVClipsWidget::setMscmdServerUrl(const QString &url)
+{
+    d->m_mscmdserver_url=url;
 }
 
 void MVClipsWidget::setTimeseries(DiskReadMda& X)
@@ -124,6 +131,7 @@ void MVClipsWidgetComputer::compute()
         params["firings"] = firings.path();
         params["labels"] = labels_str;
         MT.setInputParameters(params);
+        MT.setMscmdServerUrl(mscmdserver_url);
 
         firings_out_path = MT.makeOutputFilePath("firings_out");
 
@@ -141,6 +149,7 @@ void MVClipsWidgetComputer::compute()
         params["firings"] = firings_out_path;
         params["clip_size"] = clip_size;
         MT.setInputParameters(params);
+        MT.setMscmdServerUrl(mscmdserver_url);
 
         clips_path = MT.makeOutputFilePath("clips");
 
@@ -158,6 +167,7 @@ void MVClipsWidgetComputer::compute()
 void MVClipsWidgetPrivate::start_computation()
 {
     m_computer.stopComputation();
+    m_computer.mscmdserver_url = m_mscmdserver_url;
     m_computer.firings = m_firings;
     m_computer.timeseries = m_timeseries;
     m_computer.labels_to_use = m_labels_to_use;

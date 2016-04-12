@@ -16,6 +16,10 @@
 class MBControllerPrivate {
 public:
     MBController *q;
+
+    QString m_mountainbrowser_url;
+    QString m_mscmdserver_url;
+    QString m_mdaserver_url;
 };
 
 MBController::MBController()
@@ -29,15 +33,45 @@ MBController::~MBController()
     delete d;
 }
 
-QString MBController::loadLocalStudy(QString file_path)
+void MBController::setMountainBrowserUrl(const QString &url)
 {
-    //Witold, it would be great if we could return a javascript object directly here
-    return read_text_file(file_path);
+    d->m_mountainbrowser_url=url;
 }
 
-QString MBController::loadRemoteStudy(QString url)
+void MBController::setMscmdServerUrl(const QString &url)
 {
-    return http_get_text(url);
+    d->m_mscmdserver_url=url;
+}
+
+void MBController::setMdaServerUrl(const QString &url)
+{
+    d->m_mdaserver_url=url;
+}
+
+QString MBController::mountainBrowserUrl()
+{
+    return d->m_mountainbrowser_url;
+}
+
+QString MBController::getJson(QString url_or_path)
+{
+    //Witold, it would be great if we could return a javascript object directly here
+    if (url_or_path.startsWith("http")) {
+        return http_get_text(url_or_path);
+    }
+    else {
+        return read_text_file(url_or_path);
+    }
+}
+
+QString MBController::getText(QString url_or_path)
+{
+    if (url_or_path.startsWith("http")) {
+        return http_get_text(url_or_path);
+    }
+    else {
+        return read_text_file(url_or_path);
+    }
 }
 
 void MBController::openSortingResult(QString json)
@@ -47,16 +81,18 @@ void MBController::openSortingResult(QString json)
     E.exp_id=E.json["exp_id"].toString();
     QString exp_type=E.json["exp_type"].toString();
     QString basepath=E.json["basepath"].toString();
-    if (!basepath.isEmpty()) basepath+="/";
+    basepath=d->m_mdaserver_url+"/"+basepath;
+    if ((!basepath.isEmpty())&&(!basepath.endsWith("/"))) basepath+="/";
     if (exp_type=="sorting_result") {
         QString pre=basepath+E.json["pre"].toString();
         QString filt=basepath+E.json["filt"].toString();
         QString raw=basepath+E.json["raw"].toString();
         QString firings=basepath+E.json["firings"].toString();
         QStringList args;
+        args << "--mscmdserver_url="+d->m_mscmdserver_url;
         args << "--mode=overview2" << "--pre="+pre << "--filt="+filt << "--raw="+raw  << "--firings="+firings;
-        qDebug() << args;
         QString mv_exe=qApp->applicationDirPath()+"/../../mountainview/bin/mountainview";
+        qDebug()  << "openSortingResult: " << mv_exe << args;
         QProcess::startDetached(mv_exe,args);
     }
 }

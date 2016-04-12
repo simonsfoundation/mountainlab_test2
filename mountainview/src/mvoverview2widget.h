@@ -41,6 +41,7 @@ public:
     Q_INVOKABLE void clickButton(const QString& name);
     Q_INVOKABLE QImage generateImage(const QMap<QString, QVariant>& params);
     Q_INVOKABLE int getMaxLabel();
+    Q_INVOKABLE void setMscmdServerUrl(const QString &url);
 
 protected:
     void resizeEvent(QResizeEvent* evt);

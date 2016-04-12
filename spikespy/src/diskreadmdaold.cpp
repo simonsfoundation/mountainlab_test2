@@ -311,7 +311,6 @@ void DiskReadMdaOldPrivate::load_header()
         qWarning() << "Problem in mda_read_header" << m_path;
     }
 	m_data_type=HH.data_type;
-    qDebug() << "DiskReadMdaOldPrivate::load_header, data_type=" << m_data_type << HH.num_bytes_per_entry << HH.dims[0] << HH.dims[1] << HH.num_dims;
 	m_num_bytes_per_entry=HH.num_bytes_per_entry;
 	m_total_size=1;
     for (long i=0; i<MDAIO_MAX_DIMS; i++) {

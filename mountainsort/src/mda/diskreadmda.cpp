@@ -87,7 +87,7 @@ void DiskReadMda::setPath(const char *file_path)
         d->m_file=0;
     }
 
-    if (QString(file_path).startsWith("remote://")) {
+    if (QString(file_path).startsWith("http://")) {
         d->m_use_remote_mda=true;
         d->m_remote_mda.setPath(file_path);
     }

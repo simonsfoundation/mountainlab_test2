@@ -26,8 +26,13 @@ public:
     MBController();
     virtual ~MBController();
 
-    Q_INVOKABLE QString loadLocalStudy(QString file_path);
-    Q_INVOKABLE QString loadRemoteStudy(QString url);
+    void setMountainBrowserUrl(const QString &url);
+    void setMscmdServerUrl(const QString &url);
+    void setMdaServerUrl(const QString &url);
+    Q_INVOKABLE QString mountainBrowserUrl();
+
+    Q_INVOKABLE QString getJson(QString url_or_path);
+    Q_INVOKABLE QString getText(QString url_or_path);
     Q_INVOKABLE void openSortingResult(QString json);
 private:
     MBControllerPrivate *d;
