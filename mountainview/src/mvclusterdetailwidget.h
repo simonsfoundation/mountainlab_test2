@@ -24,7 +24,7 @@ public:
     MVClusterDetailWidget(QWidget* parent = 0);
     virtual ~MVClusterDetailWidget();
 
-    void setMscmdServerUrl(const QString &url);
+    void setMscmdServerUrl(const QString& url);
 
     ///Set the time series, from which the templates and stats will be derived
     void setTimeseries(DiskReadMda& X);

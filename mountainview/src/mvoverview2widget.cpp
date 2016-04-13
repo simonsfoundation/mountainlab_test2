@@ -331,9 +331,9 @@ int MVOverview2Widget::getMaxLabel()
     return ret;
 }
 
-void MVOverview2Widget::setMscmdServerUrl(const QString &url)
+void MVOverview2Widget::setMscmdServerUrl(const QString& url)
 {
-    d->m_mscmdserver_url=url;
+    d->m_mscmdserver_url = url;
 }
 
 void MVOverview2Widget::resizeEvent(QResizeEvent* evt)

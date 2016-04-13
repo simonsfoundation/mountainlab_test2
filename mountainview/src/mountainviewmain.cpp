@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         MVOverview2Widget* W = new MVOverview2Widget;
-        W->setMscmdServerUrl(CLP.named_parameters.value("mscmdserver_url","").toString());
+        W->setMscmdServerUrl(CLP.named_parameters.value("mscmdserver_url", "").toString());
         if (!pre_path.isEmpty()) {
             W->addTimeseriesPath("Preprocessed Data", pre_path);
         }

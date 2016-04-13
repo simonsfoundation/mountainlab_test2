@@ -53,7 +53,7 @@ MVClipsWidget::MVClipsWidget()
     this->setLayout(hlayout);
 
     connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
-    connect(d->m_view,SIGNAL(currentEventChanged()),this,SIGNAL(currentEventChanged()));
+    connect(d->m_view, SIGNAL(currentEventChanged()), this, SIGNAL(currentEventChanged()));
 }
 
 MVClipsWidget::~MVClipsWidget()
@@ -61,9 +61,9 @@ MVClipsWidget::~MVClipsWidget()
     delete d;
 }
 
-void MVClipsWidget::setMscmdServerUrl(const QString &url)
+void MVClipsWidget::setMscmdServerUrl(const QString& url)
 {
-    d->m_mscmdserver_url=url;
+    d->m_mscmdserver_url = url;
 }
 
 void MVClipsWidget::setTimeseries(DiskReadMda& X)

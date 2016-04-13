@@ -207,9 +207,9 @@ MVClusterDetailWidget::~MVClusterDetailWidget()
     delete d;
 }
 
-void MVClusterDetailWidget::setMscmdServerUrl(const QString &url)
+void MVClusterDetailWidget::setMscmdServerUrl(const QString& url)
 {
-    d->m_mscmdserver_url=url;
+    d->m_mscmdserver_url = url;
 }
 
 void MVClusterDetailWidget::setTimeseries(DiskReadMda& X)
@@ -862,7 +862,7 @@ void MVClusterDetailWidgetPrivate::export_image()
 void MVClusterDetailWidgetPrivate::start_calculation()
 {
     m_calculator.stopComputation();
-    m_calculator.mscmdserver_url=m_mscmdserver_url;
+    m_calculator.mscmdserver_url = m_mscmdserver_url;
     m_calculator.timeseries = m_timeseries;
     m_calculator.firings = m_firings;
     m_calculator.clip_size = m_clip_size;
@@ -946,7 +946,7 @@ void MVClusterDetailWidgetCalculator::compute()
 
     QString timeseries_path = timeseries.makePath();
     QString firings_path = firings.makePath();
-    DiskReadMda templates0 = mscmd_compute_templates(mscmdserver_url,timeseries_path, firings_path, T);
+    DiskReadMda templates0 = mscmd_compute_templates(mscmdserver_url, timeseries_path, firings_path, T);
     //Mda templates0 = compute_templates_0(timeseries, times, labels, T);
 
     for (int k = 1; k <= K; k++) {

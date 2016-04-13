@@ -21,7 +21,7 @@ public:
     QString m_mscmdserver_url;
 
     QString get_remote_url_from_parameters();
-    QString remote_url_of_path(const QString &path);
+    QString remote_url_of_path(const QString& path);
     QString create_temporary_output_file_name(const QString& remote_url, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name);
 };
 
@@ -53,9 +53,9 @@ void MountainsortThread::setInputParameters(const QMap<QString, QVariant>& param
     d->m_parameters = parameters;
 }
 
-void MountainsortThread::setMscmdServerUrl(const QString &url)
+void MountainsortThread::setMscmdServerUrl(const QString& url)
 {
-    d->m_mscmdserver_url=url;
+    d->m_mscmdserver_url = url;
 }
 
 void MountainsortThread::compute()
@@ -92,8 +92,8 @@ QString MountainsortThreadPrivate::create_temporary_output_file_name(const QStri
         str += key + "=" + params.value(key).toString() + "&";
     }
 
-    QString file_name=QString("%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
-    QString ret=MSCacheManager::globalInstance()->makeRemoteFile(remote_url,file_name,MSCacheManager::LongTerm);
+    QString file_name = QString("%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
+    QString ret = MSCacheManager::globalInstance()->makeRemoteFile(remote_url, file_name, MSCacheManager::LongTerm);
     return ret;
 }
 
@@ -119,12 +119,13 @@ QString MountainsortThreadPrivate::get_remote_url_from_parameters()
     return ret;
 }
 
-QString MountainsortThreadPrivate::remote_url_of_path(const QString &path)
+QString MountainsortThreadPrivate::remote_url_of_path(const QString& path)
 {
     if (path.startsWith("http://")) {
-        int ind=path.indexOf("/",QString("http://").count());
-        if (ind<0) return "";
-        return path.mid(0,ind);
+        int ind = path.indexOf("/", QString("http://").count());
+        if (ind < 0)
+            return "";
+        return path.mid(0, ind);
     }
     else {
         return "";

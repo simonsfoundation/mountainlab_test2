@@ -11,7 +11,7 @@
 #include "msmisc.h"
 #include <QMenu>
 
-QList<QColor> generate_colors(const QColor &bg, const QColor &fg, int noColors);
+QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors);
 
 class MVClusterViewPrivate : public QObject {
     Q_OBJECT
@@ -87,7 +87,6 @@ MVClusterView::MVClusterView(QWidget* parent)
     d->m_max_amplitude = 1;
     this->setMouseTracking(true);
 
-
     //QList<QString> color_strings;
     //color_strings << "black" << "blue" << "red" << "green" << "white" << "magenta";
     /*
@@ -115,11 +114,11 @@ MVClusterView::MVClusterView(QWidget* parent)
     //these should be relatively prime
     //int num1=5;
     //int num2=22;
-    int num1=3;
-    int num2=10;
-    QList<QColor> colors=generate_colors(Qt::gray,Qt::white,num2);
-    for (int j=0; j<colors.count(); j++) {
-        d->m_label_colors << colors.value((j*num1)%num2);
+    int num1 = 3;
+    int num2 = 10;
+    QList<QColor> colors = generate_colors(Qt::gray, Qt::white, num2);
+    for (int j = 0; j < colors.count(); j++) {
+        d->m_label_colors << colors.value((j * num1) % num2);
     }
 
     this->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -815,23 +814,21 @@ void MVClusterViewPrivate::export_image()
  * OTHER DEALINGS IN THE SOFTWARE.
 */
 
-QList<QColor> generate_colors(const QColor &bg, const QColor &fg, int noColors)
+QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors)
 {
     QList<QColor> colors;
     const int HUE_BASE = (bg.hue() == -1) ? 90 : bg.hue();
     int h, s, v;
 
-    for (int i = 0; i < noColors; i++)
-    {
+    for (int i = 0; i < noColors; i++) {
         h = int(HUE_BASE + (360.0 / noColors * i)) % 360;
         s = 240;
         v = int(qMax(bg.value(), fg.value()) * 0.85);
 
         // take care of corner cases
         const int M = 35;
-        if (   (h < bg.hue() + M &&h > bg.hue() - M)
-                || (h < fg.hue() + M &&h > fg.hue() - M))
-        {
+        if ((h < bg.hue() + M && h > bg.hue() - M)
+            || (h < fg.hue() + M && h > fg.hue() - M)) {
             h = ((bg.hue() + fg.hue()) / (i + 1)) % 360;
             s = ((bg.saturation() + fg.saturation() + 2 * i) / 2) % 256;
             v = ((bg.value() + fg.value() + 2 * i) / 2) % 256;

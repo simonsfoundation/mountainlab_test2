@@ -165,9 +165,9 @@ MVClusterWidget::~MVClusterWidget()
     delete d;
 }
 
-void MVClusterWidget::setMscmdServerUrl(const QString &url)
+void MVClusterWidget::setMscmdServerUrl(const QString& url)
 {
-    d->m_mscmdserver_url=url;
+    d->m_mscmdserver_url = url;
 }
 
 void MVClusterWidget::setData(const Mda& X)

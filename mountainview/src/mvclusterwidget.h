@@ -23,7 +23,7 @@ public:
     MVClusterWidget();
     virtual ~MVClusterWidget();
 
-    void setMscmdServerUrl(const QString &url);
+    void setMscmdServerUrl(const QString& url);
 
     void setClipSize(int clip_size);
     ///Set the time series for purpose of computing the clip to display when corresponding datapoint is selected
@@ -39,7 +39,6 @@ public:
     ///Just as in MVClusterView::currentEvent()
     MVEvent currentEvent();
 
-
 private:
     ///Just as in MVClusterView::setData()
     void setData(const Mda& X);
@@ -51,7 +50,6 @@ private:
     void setAmplitudes(const QList<double>& amps);
     ///For purpose of info display
     void setOutlierScores(const QList<double>& outlier_scores);
-
 
 signals:
     ///Just as in MVClusterView::currentEventChanged()

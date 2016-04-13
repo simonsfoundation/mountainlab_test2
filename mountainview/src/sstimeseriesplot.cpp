@@ -14,9 +14,9 @@
 class DataLoaderThread : public ComputationThread {
 public:
     //input
-    int x1,x2;
+    int x1, x2;
     int msfactor;
-    DiskArrayModel_New *array_model;
+    DiskArrayModel_New* array_model;
 
     //output
     Mda data;
@@ -25,7 +25,7 @@ public:
 };
 
 struct Some_Info {
-    int x1,x2;
+    int x1, x2;
     int msfactor;
 };
 
@@ -152,7 +152,7 @@ SSTimeSeriesPlot::SSTimeSeriesPlot(QWidget* parent)
     d->m_margins[0] = d->m_margins[1] = d->m_margins[2] = d->m_margins[3] = 0;
 
     connect(this, SIGNAL(replotNeeded()), this, SLOT(slot_replot_needed()));
-    connect(&d->m_data_loader,SIGNAL(computationFinished()),this,SLOT(slot_data_loaded()));
+    connect(&d->m_data_loader, SIGNAL(computationFinished()), this, SLOT(slot_data_loaded()));
 }
 
 SSTimeSeriesPlot::~SSTimeSeriesPlot()
@@ -505,10 +505,10 @@ void SSTimeSeriesPlotPrivate::setup_plot_area()
     }
 
     m_data_loader.stopComputation();
-    m_data_loader.x1=x1;
-    m_data_loader.x2=x2;
-    m_data_loader.msfactor=msfactor;
-    m_data_loader.array_model=m_data;
+    m_data_loader.x1 = x1;
+    m_data_loader.x2 = x2;
+    m_data_loader.msfactor = msfactor;
+    m_data_loader.array_model = m_data;
 
     //m_data_loader.startComputation();
     m_data_loader.compute();
@@ -650,11 +650,11 @@ void SSTimeSeriesPlot::slot_setup_plot_area()
 void SSTimeSeriesPlot::slot_data_loaded()
 {
     //d->m_data_loader.stopComputation(); //because I'm paranoid
-    int x1=d->m_data_loader.x1;
-    int x2=d->m_data_loader.x2;
-    int msfactor=d->m_data_loader.msfactor;
-    int M=d->m_num_channels;
-    Mda data0=d->m_data_loader.data;
+    int x1 = d->m_data_loader.x1;
+    int x2 = d->m_data_loader.x2;
+    int msfactor = d->m_data_loader.msfactor;
+    int M = d->m_num_channels;
+    Mda data0 = d->m_data_loader.data;
     d->m_plot_area.clearSeries();
     for (int ch = 0; ch < M; ch++) {
         if (msfactor == 1) {
