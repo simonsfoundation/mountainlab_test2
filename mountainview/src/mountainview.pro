@@ -133,8 +133,10 @@ RESOURCES += mountainview.qrc
 #LIBS += -llapack -llapacke
 
 #OPENMP
-QMAKE_LFLAGS += -fopenmp
-QMAKE_CXXFLAGS += -fopenmp
+!macx {
+  QMAKE_LFLAGS += -fopenmp
+  QMAKE_CXXFLAGS += -fopenmp
+}
 #-std=c++11   # AHB removed since not in GNU gcc 4.6.3
 
 DISTFILES += \
