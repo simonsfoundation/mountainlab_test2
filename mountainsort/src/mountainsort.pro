@@ -71,7 +71,9 @@ HEADERS += \
     processors/compute_detectability_scores_processor.h \
     processors/compute_detectability_scores.h \
     processors/merge_labels_processor.h \
-    processors/merge_labels.h
+    processors/merge_labels.h \
+    processors/filter_events.h \
+    processors/filter_events_processor.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -131,7 +133,9 @@ SOURCES += mountainsortmain.cpp \
     processors/compute_detectability_scores_processor.cpp \
     processors/compute_detectability_scores.cpp \
     processors/merge_labels_processor.cpp \
-    processors/merge_labels.cpp
+    processors/merge_labels.cpp \
+    processors/filter_events.cpp \
+    processors/filter_events_processor.cpp
 
 DISTFILES += \
     ../version.txt
