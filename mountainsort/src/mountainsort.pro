@@ -69,7 +69,9 @@ HEADERS += \
     core/mscachemanager.h \
     processors/extract_clips_features_processor.h \
     processors/compute_detectability_scores_processor.h \
-    processors/compute_detectability_scores.h
+    processors/compute_detectability_scores.h \
+    processors/merge_labels_processor.h \
+    processors/merge_labels.h
 
 SOURCES += mountainsortmain.cpp \
     utils/get_command_line_params.cpp \
@@ -127,7 +129,9 @@ SOURCES += mountainsortmain.cpp \
     core/mscachemanager.cpp \
     processors/extract_clips_features_processor.cpp \
     processors/compute_detectability_scores_processor.cpp \
-    processors/compute_detectability_scores.cpp
+    processors/compute_detectability_scores.cpp \
+    processors/merge_labels_processor.cpp \
+    processors/merge_labels.cpp
 
 DISTFILES += \
     ../version.txt
@@ -144,8 +148,10 @@ LIBS += -llapack -llapacke
 LIBS += -fopenmp -lfftw3 -lfftw3_threads
 
 #OPENMP
-QMAKE_LFLAGS += -fopenmp
-QMAKE_CXXFLAGS += -fopenmp
+!macx {
+  QMAKE_LFLAGS += -fopenmp
+  QMAKE_CXXFLAGS += -fopenmp
+}
 #-std=c++11   # AHB removed since not in GNU gcc 4.6.3
 
 #QJSON
