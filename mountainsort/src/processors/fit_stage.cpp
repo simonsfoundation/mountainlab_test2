@@ -11,16 +11,21 @@
 #include <math.h>
 #include "compute_templates_0.h"
 #include "compute_detectability_scores.h"
+#include "get_sort_indices.h"
 
 double compute_score(long N,double *X,double *template0);
 QList<int> find_events_to_use(const QList<long> &times,const QList<double> &scores,const fit_stage_opts &opts);
 void subtract_template(long N,double *X,double *template0);
 Mda split_into_shells(const Mda &firings,Define_Shells_Opts opts);
+Mda sort_firings_by_time(const Mda &firings);
 
 bool fit_stage(const QString &timeseries_path, const QString &firings_path, const QString &firings_out_path, const fit_stage_opts &opts)
 {
     Mda X(timeseries_path);
-    Mda firings; firings.read(firings_path);
+    Mda firingsA; firingsA.read(firings_path);
+
+    Mda firings=sort_firings_by_time(firingsA);
+
     int M=X.N1();
     int T=opts.clip_size;
     int Tmid=(int)((T+1)/2)-1;
@@ -136,7 +141,8 @@ QList<int> find_events_to_use(const QList<long> &times,const QList<double> &scor
                 last_best_score=0; //i think this was a bug.... used to be inside the next for loop!! 4/13/16
                 for (int ii=last_best_ind+1; ii<i; ii++) {
                     if (times[ii]>=times[i]-opts.clip_size) {
-                        if (scores[ii]>=last_best_score) {
+                        if (scores[ii]<scores[i]) to_use[ii]=0;
+                        if (scores[ii]>last_best_score) {
                             last_best_score=scores[ii];
                             last_best_ind=ii;
                         }
@@ -145,9 +151,12 @@ QList<int> find_events_to_use(const QList<long> &times,const QList<double> &scor
             }
             if (scores[i]>last_best_score) {
                 //to_use[last_best_score]=0; //this was a bug!!!!!!!!!! 4/13/16
-                to_use[last_best_ind]=0;
+                if (last_best_score>0) {
+                    to_use[last_best_ind]=0;
+                }
                 to_use[i]=1;
                 last_best_score=scores[i]; //this was another bug, this line was left out! 4/13/16
+                last_best_ind=i; //this was another bug, this line was left out! 4/13/16
             }
         }
     }
@@ -191,4 +200,21 @@ Mda split_into_shells(const Mda &firings,Define_Shells_Opts opts) {
         firings_ret.setValue(labels[j],2,j);
     }
     return firings_ret;
+}
+
+Mda sort_firings_by_time(const Mda &firings) {
+    QList<double> times;
+    for (long i=0; i<firings.N2(); i++) {
+        times << firings.value(1,i);
+    }
+    QList<long> sort_inds=get_sort_indices(times);
+
+    Mda F(firings.N1(),firings.N2());
+    for (long i=0; i<firings.N2(); i++) {
+        for (int j=0; j<firings.N1(); j++) {
+            F.setValue(firings.value(j,sort_inds[i]),j,i);
+        }
+    }
+
+    return F;
 }
