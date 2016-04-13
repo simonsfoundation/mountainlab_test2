@@ -72,7 +72,7 @@ bool fit_stage(const QString &timeseries_path, const QString &firings_path, cons
                         inds_to_try << i;
                     }
                     else {
-                        all_to_use[i]=-1;
+                        all_to_use[i]=-1; //means we definitely aren't using it (so we will never get here again)
                     }
                 }
             }
@@ -133,8 +133,8 @@ QList<int> find_events_to_use(const QList<long> &times,const QList<double> &scor
     for (long i=0; i<L; i++) {
         if (scores[i]>0) {
             if (times[last_best_ind]<times[i]-opts.clip_size) {
+                last_best_score=0; //i think this was a bug.... used to be inside the next for loop!! 4/13/16
                 for (int ii=last_best_ind+1; ii<i; ii++) {
-                    last_best_score=0;
                     if (times[ii]>=times[i]-opts.clip_size) {
                         if (scores[ii]>=last_best_score) {
                             last_best_score=scores[ii];
@@ -144,8 +144,10 @@ QList<int> find_events_to_use(const QList<long> &times,const QList<double> &scor
                 }
             }
             if (scores[i]>last_best_score) {
-                to_use[last_best_score]=0;
+                //to_use[last_best_score]=0; //this was a bug!!!!!!!!!! 4/13/16
+                to_use[last_best_ind]=0;
                 to_use[i]=1;
+                last_best_score=scores[i]; //this was another bug, this line was left out! 4/13/16
             }
         }
     }

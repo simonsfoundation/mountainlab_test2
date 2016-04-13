@@ -18,7 +18,7 @@ fit_stage_Processor::fit_stage_Processor() {
     d->q=this;
 
     this->setName("fit_stage");
-    this->setVersion("0.1");
+    this->setVersion("0.12");
     this->setInputFileParameters("timeseries","firings");
     this->setOutputFileParameters("firings_out");
     this->setRequiredParameters("clip_size","shell_increment","min_shell_size");
