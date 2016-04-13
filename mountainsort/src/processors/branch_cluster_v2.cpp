@@ -13,7 +13,7 @@
 
 QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, int channel_for_display);
 QList<double> compute_peaks_v2(Mda& clips, int ch);
-QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, const QList<int>& labels, int ch, int clip_size, int detect_interval);
+QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, const QList<int>& labels, int ch, int clip_size, int detect_interval, double consolidation_factor);
 QList<long> get_sort_indices(const QList<int>& channels, const QList<double>& template_peaks);
 
 bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_path, const QString& adjacency_matrix_path, const QString& output_firings_path, const Branch_Cluster_V2_Opts& opts)
@@ -69,7 +69,7 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
         QList<int> labels = do_branch_cluster_v2(clips, opts, m);
 #pragma omp critical
         {
-            labels = consolidate_labels_v2(X, times, labels, m, opts.clip_size, opts.detect_interval);
+            labels = consolidate_labels_v2(X, times, labels, m, opts.clip_size, opts.detect_interval, opts.consolidation_factor);
             QList<double> peaks = compute_peaks_v2(clips, 0);
 
             for (int i = 0; i < times.count(); i++) {
@@ -183,8 +183,9 @@ QList<long> get_sort_indices(const QList<int>& channels, const QList<double>& te
     return ret;
 }
 
-QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, const QList<int>& labels, int ch, int clip_size, int detect_interval)
+QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, const QList<int>& labels, int ch, int clip_size, int detect_interval, double consolidation_factor)
 {
+    printf("Consolidation factor = %g\n",consolidation_factor);
     int M = X.N1();
     int T = clip_size;
     int K = compute_max(labels);
@@ -206,15 +207,17 @@ QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, con
         QList<double> energies;
         for (int m = 0; m < M; m++)
             energies << 0;
+        double max_energy=0;
         for (int t = 0; t < T; t++) {
             for (int m = 0; m < M; m++) {
                 double val = template_k.value(m, t);
                 energies[m] += val * val;
+                if ((m!=ch)&&(energies[m]>max_energy)) max_energy=energies[m];
             }
         }
-        double max_energy = compute_max(energies);
+        //double max_energy = compute_max(energies);
         bool okay = true;
-        if (energies[ch] < max_energy * 0.9)
+        if (energies[ch] < max_energy * consolidation_factor)
             okay = false;
         double abs_peak_val = 0;
         int abs_peak_ind = 0;
