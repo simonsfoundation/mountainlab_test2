@@ -9,6 +9,7 @@
 #include "msmisc.h"
 #include "compute_templates_0.h"
 #include <math.h>
+#include <QDebug>
 
 double compute_template_similarity(int M,int T,double *template1,double *template2);
 
@@ -130,5 +131,12 @@ double compute_template_similarity(int M,int T,double *template1,double *templat
         S22+=v2*v2;
     }
     if ((S11==0)||(S22==0)) return 0;
-    return S12/sqrt(S11*S22);
+
+    double cor=S12/sqrt(S11*S22);
+
+    double norm1=sqrt(S11);
+    double norm2=sqrt(S22);
+    if ((norm1<norm2*0.8)||(norm2<norm1*0.8)) return 0;
+
+    return cor;
 }
