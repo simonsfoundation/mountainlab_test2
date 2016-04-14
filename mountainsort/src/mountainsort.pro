@@ -75,8 +75,7 @@ HEADERS += \
     processors/filter_events.h \
     processors/filter_events_processor.h
 
-SOURCES += mountainsortmain.cpp \
-    utils/get_command_line_params.cpp \
+SOURCES += utils/get_command_line_params.cpp \
     core/msprocessmanager.cpp \
     core/mountainsort_version.cpp \
     utils/textfile.cpp \
@@ -167,4 +166,15 @@ VPATH += 3rdparty/qjson
 HEADERS += serializer.h serializerrunnable.h parser.h parserrunnable.h json_scanner.h json_parser.hh
 SOURCES += serializer.cpp serializerrunnable.cpp parser.cpp parserrunnable.cpp json_scanner.cpp json_parser.cc
 
-
+#tests
+test {
+    QT += testlib
+    CONFIG += testcase
+    TARGET = mountainsort_test
+    DEPENDPATH += unit_tests
+    SOURCES += unit_tests/testMda.cpp	\
+	unit_tests/testMain.cpp
+    HEADERS += unit_tests/testMda.h
+} else {
+    SOURCES += mountainsortmain.cpp
+}
