@@ -15,23 +15,28 @@
 class MSProcessManagerPrivate;
 class MSProcessManager {
 public:
-	friend class MSProcessManagerPrivate;
-	MSProcessManager();
-	virtual ~MSProcessManager();
-	void loadDefaultProcessors();
-	bool containsProcessor(const QString &processor_name) const;
-	bool checkProcess(const QString &processor_name,const QMap<QString,QVariant> &parameters) const;
-	bool runProcess(const QString &processor_name,const QMap<QString,QVariant> &parameters);
+    friend class MSProcessManagerPrivate;
+    MSProcessManager();
+    virtual ~MSProcessManager();
+    void loadDefaultProcessors();
 
-	bool findCompletedProcess(const QString &processor_name,const QMap<QString,QVariant> &parameters) const;
+    bool containsProcessor(const QString& processor_name) const;
+    bool checkProcess(const QString& processor_name, const QMap<QString, QVariant>& parameters) const;
+    bool runProcess(const QString& processor_name, const QMap<QString, QVariant>& parameters);
+    bool checkAndRunProcessIfNecessary(const QString& processor_name, const QMap<QString, QVariant>& parameters);
 
-	void loadProcessor(MSProcessor *P);
-	QStringList allProcessorNames() const;
+    MSProcessor* processor(const QString& processor_name);
 
-	QString usageString() const;
+    bool findCompletedProcess(const QString& processor_name, const QMap<QString, QVariant>& parameters) const;
+
+    void loadProcessor(MSProcessor* P);
+    QStringList allProcessorNames() const;
+
+    QString usageString() const;
     void printDetails() const;
+
 private:
-	MSProcessManagerPrivate *d;
+    MSProcessManagerPrivate* d;
 };
 
 #endif // MSPROCESSMANAGER_H

@@ -7,5 +7,9 @@
 #ifndef RUN_PIPELINE_H
 #define RUN_PIPELINE_H
 
-#endif // RUN_PIPELINE_H
+#include "msprocessmanager.h"
+#include <QJsonObject>
 
+bool run_pipeline(MSProcessManager& PM, QJsonObject pipeline);
+
+#endif // RUN_PIPELINE_H

@@ -73,7 +73,8 @@ HEADERS += \
     processors/merge_labels_processor.h \
     processors/merge_labels.h \
     processors/filter_events.h \
-    processors/filter_events_processor.h
+    processors/filter_events_processor.h \
+    core/run_pipeline.h
 
 SOURCES += utils/get_command_line_params.cpp \
     core/msprocessmanager.cpp \
@@ -134,7 +135,8 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/merge_labels_processor.cpp \
     processors/merge_labels.cpp \
     processors/filter_events.cpp \
-    processors/filter_events_processor.cpp
+    processors/filter_events_processor.cpp \
+    core/run_pipeline.cpp
 
 DISTFILES += \
     ../version.txt

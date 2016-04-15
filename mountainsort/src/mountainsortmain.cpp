@@ -14,11 +14,17 @@
 #include "get_command_line_params.h"
 #include "msprocessmanager.h"
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include "diskreadmda.h"
 #include "unit_tests.h"
 #include "process_msh.h"
+#include "textfile.h"
+#include "run_pipeline.h"
 
-void print_usage(const MSProcessManager& PM);
+void print_usage();
+void list_processors(const MSProcessManager& PM);
+int run_process(MSProcessManager& PM, QJsonObject process);
 
 int main(int argc, char* argv[])
 {
@@ -29,49 +35,58 @@ int main(int argc, char* argv[])
     MSProcessManager PM;
     PM.loadDefaultProcessors();
 
-    if (CLP.unnamed_parameters.count() == 0) {
-        print_usage(PM);
-        return -1;
-    }
-
     QString arg1 = CLP.unnamed_parameters.value(0);
+    QString arg2 = CLP.unnamed_parameters.value(1);
 
-    if (arg1 == "-diskreadmda_unit_test") {
-        diskreadmda_unit_test();
+    if (arg1 == "process") {
+        if (arg2.isEmpty()) {
+            print_usage();
+            return -1;
+        }
+        QString json = read_text_file(arg2);
+        if (json.isEmpty()) {
+            printf("Unable to open file or file is empty: %s\n", arg2.toLatin1().data());
+        }
+        QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
+        return run_process(PM, obj);
+    }
+    else if (arg1 == "pipeline") {
+        if (arg2.isEmpty()) {
+            print_usage();
+            return -1;
+        }
+        QString json = read_text_file(arg2);
+        if (json.isEmpty()) {
+            printf("Unable to open file or file is empty: %s\n", arg2.toLatin1().data());
+        }
+        QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
+        return run_pipeline(PM, obj);
+    }
+    else if (arg1 == "list-processors") {
+        list_processors(PM);
         return 0;
     }
-    if (arg1 == "-unit_test") {
-        QString test_name = CLP.unnamed_parameters.value(1);
-        run_unit_test(test_name);
-        return 0;
-    }
-    if (arg1.endsWith(".msh")) {
-        return process_msh(CLP.unnamed_parameters.value(0), argc, argv);
-    }
-    if (arg1 == "-details") {
+    else if (arg1 == "detail-processors") {
         PM.printDetails();
         return 0;
     }
 
+    if (CLP.unnamed_parameters.count() == 0) {
+        print_usage();
+        return -1;
+    }
+
     if (CLP.unnamed_parameters.count() == 1) {
         QString processor_name = CLP.unnamed_parameters[0];
-        if (!PM.containsProcessor(processor_name)) {
-            printf("Unable to find processor: %s\n", processor_name.toLatin1().data());
-            return -1;
+        QJsonObject process;
+        process["processor_name"] = processor_name;
+        QJsonObject parameters;
+        QStringList keys = CLP.named_parameters.keys();
+        foreach (QString key, keys) {
+            parameters[key] = CLP.named_parameters[key].toString();
         }
-        if (!PM.checkProcess(processor_name, CLP.named_parameters)) {
-            printf("Problem checking processor: %s\n", processor_name.toLatin1().data());
-            return -1;
-        }
-        if (PM.findCompletedProcess(processor_name, CLP.named_parameters)) {
-            printf("Process already completed: %s\n", processor_name.toLatin1().data());
-        }
-        else {
-            if (!PM.runProcess(processor_name, CLP.named_parameters)) {
-                printf("Problem running processor: %s\n", processor_name.toLatin1().data());
-                return -1;
-            }
-        }
+        process["parameters"] = parameters;
+        return run_process(PM, process);
     }
     else {
         printf("Unexpected number of unnamed parameters: %d\n", CLP.unnamed_parameters.count());
@@ -80,8 +95,34 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void print_usage(const MSProcessManager& PM)
+void print_usage()
+{
+    printf("mountainsort process [process.json]\n");
+    printf("mountainsort pipeline [pipeline.json]\n");
+    printf("mountainsort list-processors\n");
+    printf("mountainsort detail-processors\n");
+    printf("mountainsort [processor_name] --[param1]=[value1] --[param2]=[value2] ...\n");
+}
+
+void list_processors(const MSProcessManager& PM)
 {
     QString str = PM.usageString();
     printf("%s\n", str.toLatin1().data());
+}
+
+int run_process(MSProcessManager& PM, QJsonObject process)
+{
+    QString processor_name = process["processor_name"].toString();
+    QJsonObject parameters = process["parameters"].toObject();
+    QStringList keys = parameters.keys();
+    QMap<QString, QVariant> params;
+    foreach (QString key, keys) {
+        params[key] = parameters[key].toString();
+    }
+
+    if (!PM.checkAndRunProcessIfNecessary(processor_name, params)) {
+        return -1;
+    }
+
+    return 0;
 }
