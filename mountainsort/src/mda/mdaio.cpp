@@ -1,6 +1,10 @@
 #include "mdaio.h"
 #include "usagetracking.h"
 
+//can be replaced by std::is_same when C++11 is enabled
+template<class T, class U> struct is_same { enum { value = 0 }; };
+template<class T> struct is_same<T, T> { enum { value = 1 }; };
+
 long mda_read_header(struct MDAIO_HEADER *HH,FILE *input_file) {
 	long num_read=0;
 	long i;
@@ -247,151 +251,65 @@ long mda_read_uint16(uint16_t *data,struct MDAIO_HEADER *H,long n,FILE *input_fi
 	else return 0;
 }
 
-#define MDA_WRITE_MACRO(type1,type2) \
-type2 *tmp=(type2 *)malloc(sizeof(type2)*n); \
-for (i=0; i<n; i++) tmp[i]=(type2)data[i]; \
-long ret=fwrite(tmp,sizeof(type2),n,output_file); \
-free(tmp); \
-return ret;
-#define MDA_WRITE_MACRO_SAME(type1,type2) \
-return fwrite(data,sizeof(type1),n,output_file);
+template<typename TargetType, typename DataType>
+long mdaWriteData_impl(DataType* data, const long size, FILE* outputFile) {
+	if (is_same<DataType, TargetType>::value) {
+		return fwrite(data, sizeof(DataType), size, outputFile);
+	} else {
+		TargetType *tmp=(TargetType *)malloc(sizeof(TargetType) * size);
+		for (long i=0; i<size; i++)
+			tmp[i]=(TargetType)data[i];
+		const long result = fwrite(tmp, sizeof(TargetType), size, outputFile);
+		free(tmp);
+		return result;
+	}
+}
+
+template<typename DataType>
+long mdaWriteData(DataType* data, const long size, const struct MDAIO_HEADER* header, FILE* outputFile) {
+	if (header->data_type==MDAIO_TYPE_BYTE) {
+		return mdaWriteData_impl<unsigned char>(data, size, outputFile);
+	}
+	else if (header->data_type==MDAIO_TYPE_FLOAT32) {
+		return mdaWriteData_impl<float>(data, size, outputFile);
+	}
+	else if (header->data_type==MDAIO_TYPE_INT16) {
+		return mdaWriteData_impl<int16_t>(data, size, outputFile);
+	}
+	else if (header->data_type==MDAIO_TYPE_INT32) {
+		return mdaWriteData_impl<int32_t>(data, size, outputFile);
+	}
+	else if (header->data_type==MDAIO_TYPE_UINT16) {
+		return mdaWriteData_impl<uint16_t>(data, size, outputFile);
+	}
+	else if (header->data_type==MDAIO_TYPE_FLOAT64) {
+		return mdaWriteData_impl<double>(data, size, outputFile);
+	}
+	else return 0;
+}
 
 long mda_write_byte(unsigned char *data,struct MDAIO_HEADER *H,long n,FILE *output_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_WRITE_MACRO_SAME(unsigned char,unsigned char)
-	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_WRITE_MACRO(unsigned char,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_WRITE_MACRO(unsigned char,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_WRITE_MACRO(unsigned char,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_WRITE_MACRO(unsigned char,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_WRITE_MACRO(unsigned char,double)
-    }
-	else return 0;
+	return mdaWriteData(data, n, H, output_file);
 }
 
 long mda_write_float32(float *data,struct MDAIO_HEADER *H,long n,FILE *output_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_WRITE_MACRO(float,unsigned char)
-	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_WRITE_MACRO_SAME(float,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_WRITE_MACRO(float,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_WRITE_MACRO(float,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_WRITE_MACRO(float,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_WRITE_MACRO(float,double)
-    }
-	else return 0;
+	return mdaWriteData(data, n, H, output_file);
 }
 
 long mda_write_int16(int16_t *data,struct MDAIO_HEADER *H,long n,FILE *output_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_WRITE_MACRO(int16_t,unsigned char)
-	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_WRITE_MACRO(int16_t,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_WRITE_MACRO_SAME(int16_t,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_WRITE_MACRO(int16_t,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_WRITE_MACRO(int16_t,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_WRITE_MACRO(int16_t,double)
-    }
-	else return 0;
+	return mdaWriteData(data, n, H, output_file);
 }
 
 long mda_write_int32(int32_t *data,struct MDAIO_HEADER *H,long n,FILE *output_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_WRITE_MACRO(int32_t,unsigned char)
-	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_WRITE_MACRO(int32_t,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_WRITE_MACRO(int32_t,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_WRITE_MACRO_SAME(int32_t,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_WRITE_MACRO(int32_t,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_WRITE_MACRO(int32_t,double)
-    }
-	else return 0;
+	return mdaWriteData(data, n, H, output_file);
 }
 
 long mda_write_uint16(uint16_t *data,struct MDAIO_HEADER *H,long n,FILE *output_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_WRITE_MACRO(uint16_t,unsigned char)
-	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_WRITE_MACRO(uint16_t,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_WRITE_MACRO(uint16_t,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_WRITE_MACRO(uint16_t,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_WRITE_MACRO_SAME(uint16_t,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_WRITE_MACRO(uint16_t,double)
-    }
-	else return 0;
+	return mdaWriteData(data, n, H, output_file);
 }
 
 long mda_write_float64(double *data,struct MDAIO_HEADER *H,long n,FILE *output_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-        MDA_WRITE_MACRO(double,unsigned char)
-	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-        MDA_WRITE_MACRO(double,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-        MDA_WRITE_MACRO(double,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-        MDA_WRITE_MACRO(double,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-        MDA_WRITE_MACRO(double,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_WRITE_MACRO_SAME(double,double)
-    }
-	else return 0;
+	return mdaWriteData(data, n, H, output_file);
 }
 
 
