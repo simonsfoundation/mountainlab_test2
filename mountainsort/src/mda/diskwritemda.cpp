@@ -79,6 +79,7 @@ bool DiskWriteMda::open(int data_type, const QString &path, long N1, long N2, lo
 		mda_write_float32(zeros,&d->m_header,num_to_write,d->m_file);
 		i+=buf_size;
 	}
+	free(zeros);
 
 	return true;
 }
