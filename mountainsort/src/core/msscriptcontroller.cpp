@@ -62,3 +62,8 @@ bool MSScriptController::runProcess(const QString &processor_name, const QString
     }
     return MSProcessManager::globalInstance()->checkAndRunProcessIfNecessary(processor_name,parameters);
 }
+
+void MSScriptController::log(const QString &message)
+{
+    printf("SCRIPT: %s\n",message.toLatin1().data());
+}

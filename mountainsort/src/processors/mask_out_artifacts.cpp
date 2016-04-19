@@ -7,10 +7,16 @@
 
 bool mask_out_artifacts(const QString &timeseries_path, const QString &timeseries_out_path, double threshold, int interval_size)
 {
+    if ((!threshold)||(!interval_size)) {
+        printf("Problem with input parameters. Either threshold or interval_size is zero.\n");
+        return false;
+    }
+
 	DiskReadMda X(timeseries_path);
 	long M=X.N1();
     long N=X.N2();
 
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << interval_size;
     //compute norms of chunks
 	Mda norms(M,N/interval_size);
 	for (long i=0; i<N/interval_size; i++) {
@@ -26,6 +32,7 @@ bool mask_out_artifacts(const QString &timeseries_path, const QString &timeserie
 		}
 	}
 
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     //determine which chunks, on which channels, to use
 	Mda use_it(M,N/interval_size);
 	for (long i=0; i<use_it.totalSize(); i++) use_it.set(1,i);
@@ -45,6 +52,7 @@ bool mask_out_artifacts(const QString &timeseries_path, const QString &timeserie
 		}
 	}
 
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     //write the data
     long num_timepoints_used=0;
     long num_timepoints_not_used=0;
@@ -65,6 +73,7 @@ bool mask_out_artifacts(const QString &timeseries_path, const QString &timeserie
 	}
 	Y.close();
 
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     printf("Using %.2f%% of all timepoints\n",num_timepoints_used*100.0/(num_timepoints_used+num_timepoints_not_used));
 
 	return true;

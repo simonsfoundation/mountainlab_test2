@@ -3,13 +3,69 @@ function main() {
 }
 
 function test_pipeline() {
-	var o_bandpass_filter={samplerate:30000,freq_min:300,freq_max:3000};
-	var o_whiten={};
+	var clip_size=100;
+	var detect_threshold=3.5;
+	var detect_interval=10;
+	var shell_increment=1.5;
+	var min_shell_size=150;
+	var samplerate=30000;
+	var o_filter={
+		samplerate:samplerate,
+		freq_min:300,
+		freq_max:6000
+	};
+	var o_mask_out_artifacts={
+		threshold:3,
+		interval_size:200
+	};
+	var o_whiten={
+	};
+	var o_detect={
+		detect_threshold:detect_threshold,
+		detect_interval:detect_interval,
+		clip_size:clip_size,
+		sign:0
+	};
+	var o_branch_cluster={
+		clip_size:clip_size,
+		min_shell_size:min_shell_size,
+		shell_increment:shell_increment,
+		num_features:3,
+		detect_interval:detect_interval
+	};
+	var o_compute_detectability_scores={
+		clip_size:clip_size,
+		shell_increment:shell_increment,
+		min_shell_size:min_shell_size,
+	};
+	var o_compute_outlier_scores={
+		clip_size:clip_size,
+		shell_increment:shell_increment,
+		min_shell_size:min_shell_size
+	};
+	var o_fit_stage={
+		clip_size:clip_size,
+		min_shell_size:min_shell_size,
+		shell_increment:shell_increment
+	};
 
-	var X=new MSPipeline();
-	X.addProcess(bandpass_filter('pre0.mda','@pre1',o_bandpass_filter));
-	X.addProcess(whiten('@pre1','pre2.mda',o_whiten));
-	X.run();
+	var pre0='pre0.mda';
+
+	var P=new MSPipeline();
+
+	P.addProcess(bandpass_filter(pre0,'@pre1',o_filter));
+	P.addProcess(mask_out_artifacts('@pre1','@pre1b',o_mask_out_artifacts));
+	P.addProcess(whiten('@pre1b','@pre2',o_whiten));
+	P.addProcess(detect('@pre2','@detect',o_detect));
+
+	P.addProcess(branch_cluster_v2('@pre2','@detect','@firings1',o_branch_cluster));
+	P.addProcess(fit_stage('@pre2','@firings1','@firings2',o_fit_stage));
+	P.addProcess(compute_outlier_scores('@pre2','@firings2','@firings3',o_compute_outlier_scores));
+	P.addProcess(compute_detectability_scores('@pre2','@firings3','@firings4',o_compute_detectability_scores));
+
+	P.addProcess(copy('@firings4','firings.mda'));
+
+	P.run();
 }
 
 function MSPipeline() {
@@ -80,6 +136,7 @@ function MSPipeline() {
 			}
 			PP.process_code=MS.stringChecksum(JSON.stringify(code_obj));
 		}
+		return true;
 	}
 
 	function _run() {
@@ -106,7 +163,7 @@ function MSPipeline() {
 			}
 			for (var pname in PP.outputs) {
 				if (PP.outputs[pname].indexOf('@')==0) {
-					fname_map[PP.outputs[pname]]=MS.createTemporaryFile(PP.process_code+'-'+pname);
+					fname_map[PP.outputs[pname]]=MS.createTemporaryFileName(PP.process_code+'-'+pname);
 				}
 			}
 		}
@@ -142,7 +199,7 @@ function MSPipeline() {
 			for (var pname in PP.outputs) {
 				parameters[pname]=PP.outputs[pname];
 			}
-			if (!MS.runProcess(processor_name,parameters)) {
+			if (!MS.runProcess(processor_name,JSON.stringify(parameters))) {
 				console.log('Error running process: '+processor_name);
 				return false;
 			}
@@ -164,23 +221,89 @@ function MSPipeline() {
 }
 
 function bandpass_filter(timeseries,timeseries_out,opts) {
-	var ret=clone(opts);
+	var ret={};
 	ret.processor_name='bandpass_filter';
 	ret.inputs={timeseries:timeseries};
 	ret.outputs={timeseries_out:timeseries_out};
-	ret.parameters=opts;
+	ret.parameters=clone(opts);
 	return ret;
 }
 
 function whiten(timeseries,timeseries_out,opts) {
-	var ret=clone(opts);
+	var ret={};
 	ret.processor_name='whiten';
 	ret.inputs={timeseries:timeseries};
 	ret.outputs={timeseries_out:timeseries_out};
-	ret.parameters=opts;
+	ret.parameters=clone(opts);
 	return ret;
 }
 
+function mask_out_artifacts(timeseries,timeseries_out,opts) {
+	var ret={};
+	ret.processor_name='mask_out_artifacts';
+	ret.inputs={timeseries:timeseries};
+	ret.outputs={timeseries_out:timeseries_out};
+	ret.parameters=clone(opts);
+	return ret;
+}
+
+function detect(timeseries,detect,opts) {
+	var ret={};
+	ret.processor_name='detect';
+	ret.inputs={timeseries:timeseries};
+	ret.outputs={detect:detect};
+	ret.parameters=clone(opts);
+	return ret;
+}
+
+function branch_cluster_v2(timeseries,detect,firings,opts) {
+	var ret={};
+	ret.processor_name='branch_cluster_v2';
+	ret.inputs={timeseries:timeseries,detect:detect};
+	ret.outputs={firings:firings};
+	ret.parameters=clone(opts);
+	return ret;
+}
+
+function fit_stage(timeseries,firings,firings_out,opts) {
+	var ret={};
+	ret.processor_name='fit_stage';
+	ret.inputs={timeseries:timeseries,firings:firings};
+	ret.outputs={firings_out:firings_out};
+	ret.parameters=clone(opts);
+	return ret;
+}
+
+function compute_outlier_scores(timeseries,firings,firings_out,opts) {
+	var ret={};
+	ret.processor_name='compute_outlier_scores';
+	ret.inputs={timeseries:timeseries,firings:firings};
+	ret.outputs={firings_out:firings_out};
+	ret.parameters=clone(opts);
+	return ret;
+}
+
+function compute_detectability_scores(timeseries,firings,firings_out,opts) {
+	var ret={};
+	ret.processor_name='compute_detectability_scores';
+	ret.inputs={timeseries:timeseries,firings:firings};
+	ret.outputs={firings_out:firings_out};
+	ret.parameters=clone(opts);
+	return ret;
+}
+
+function copy(input,output) {
+	var ret={};
+	ret.processor_name='copy';
+	ret.inputs={input:input};
+	ret.outputs={output:output};
+	ret.parameters={};
+	return ret;
+}
 function clone(obj) {
 	return JSON.parse(JSON.stringify(obj));
+}
+
+var console={
+	log:function(msg) {MS.log(msg);}
 }

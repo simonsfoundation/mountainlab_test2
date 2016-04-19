@@ -184,6 +184,7 @@ bool MSProcessManager::runProcess(const QString& processor_name, const QMap<QStr
     QMap<QString, QVariant> parameters = parameters_in;
 
     printf("RUNNING %s\n", processor_name.toLatin1().data());
+    qDebug() << parameters;
     QTime timer;
     timer.start();
     bool ret = d->find_processor(processor_name)->run(parameters);
