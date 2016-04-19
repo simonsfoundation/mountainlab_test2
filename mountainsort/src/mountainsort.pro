@@ -4,6 +4,8 @@ QT -= gui
 #CONFIG -= debug
 CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
+QT += qml
+
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
 MOC_DIR=../build
@@ -74,7 +76,8 @@ HEADERS += \
     processors/merge_labels.h \
     processors/filter_events.h \
     processors/filter_events_processor.h \
-    core/run_pipeline.h
+    core/run_pipeline.h \
+    core/msscriptcontroller.h
 
 SOURCES += utils/get_command_line_params.cpp \
     core/msprocessmanager.cpp \
@@ -136,7 +139,8 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/merge_labels.cpp \
     processors/filter_events.cpp \
     processors/filter_events_processor.cpp \
-    core/run_pipeline.cpp
+    core/run_pipeline.cpp \
+    core/msscriptcontroller.cpp
 
 DISTFILES += \
     ../version.txt

@@ -52,6 +52,12 @@ MSProcessManager::MSProcessManager()
     d->q = this;
 }
 
+Q_GLOBAL_STATIC(MSProcessManager,theInstance)
+MSProcessManager *MSProcessManager::globalInstance()
+{
+    return theInstance;
+}
+
 MSProcessManager::~MSProcessManager()
 {
     qDeleteAll(d->m_processors);

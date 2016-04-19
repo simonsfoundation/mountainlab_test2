@@ -27,7 +27,7 @@ QMap<QString, QVariant> to_variant_map(QJsonObject obj)
     return ret;
 }
 
-bool run_pipeline(MSProcessManager& PM, QJsonObject pipeline)
+bool run_pipeline(MSProcessManager* PM, QJsonObject pipeline)
 {
     //Get the list of processes to run
     QJsonArray processes = pipeline["processes"].toArray();
@@ -42,11 +42,11 @@ bool run_pipeline(MSProcessManager& PM, QJsonObject pipeline)
             QString processor_name = process["processor_name"].toString();
             QJsonObject parameters = process["parameters"].toObject();
             QMap<QString, QVariant> params = to_variant_map(parameters);
-            if (!PM.containsProcessor(processor_name)) {
+            if (!PM->containsProcessor(processor_name)) {
                 printf("Unable to find processor: %s\n", processor_name.toLatin1().data());
                 return false;
             }
-            MSProcessor* processor = PM.processor(processor_name);
+            MSProcessor* processor = PM->processor(processor_name);
             QStringList inputs = processor->inputFileParameters();
             QStringList outputs = processor->outputFileParameters();
             QStringList required = processor->requiredParameters();
@@ -136,11 +136,11 @@ bool run_pipeline(MSProcessManager& PM, QJsonObject pipeline)
                 QString processor_name = process["processor_name"].toString();
                 QJsonObject parameters = process["parameters"].toObject();
                 QMap<QString, QVariant> params = to_variant_map(parameters);
-                if (!PM.containsProcessor(processor_name)) {
+                if (!PM->containsProcessor(processor_name)) {
                     printf("Unable to find processor: %s\n", processor_name.toLatin1().data());
                     return false;
                 }
-                MSProcessor* processor = PM.processor(processor_name);
+                MSProcessor* processor = PM->processor(processor_name);
                 QStringList inputs = processor->inputFileParameters();
                 QStringList outputs = processor->outputFileParameters();
 
@@ -183,7 +183,7 @@ bool run_pipeline(MSProcessManager& PM, QJsonObject pipeline)
         QMap<QString, QVariant> params = to_variant_map(parameters);
 
         printf("[--------] RUNNING PROCESS %s\n",processor_name.toLatin1().data());
-        if (!PM.checkAndRunProcessIfNecessary(processor_name,params)) {
+        if (!PM->checkAndRunProcessIfNecessary(processor_name,params)) {
             printf("Error in process: %s\n", processor_name.toLatin1().data());
             return false;
         }

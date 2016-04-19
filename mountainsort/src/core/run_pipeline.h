@@ -10,6 +10,6 @@
 #include "msprocessmanager.h"
 #include <QJsonObject>
 
-bool run_pipeline(MSProcessManager& PM, QJsonObject pipeline);
+bool run_pipeline(MSProcessManager* PM, QJsonObject pipeline);
 
 #endif // RUN_PIPELINE_H
