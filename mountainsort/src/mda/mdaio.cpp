@@ -1,5 +1,6 @@
 #include "mdaio.h"
 #include "usagetracking.h"
+#include <vector>
 
 //can be replaced by std::is_same when C++11 is enabled
 template<class T, class U> struct is_same { enum { value = 0 }; };
@@ -256,12 +257,9 @@ long mdaWriteData_impl(DataType* data, const long size, FILE* outputFile) {
 	if (is_same<DataType, TargetType>::value) {
 		return fwrite(data, sizeof(DataType), size, outputFile);
 	} else {
-		TargetType *tmp=(TargetType *)malloc(sizeof(TargetType) * size);
-		for (long i=0; i<size; i++)
-			tmp[i]=(TargetType)data[i];
-		const long result = fwrite(tmp, sizeof(TargetType), size, outputFile);
-		free(tmp);
-		return result;
+		std::vector<TargetType> tmp(size);
+		std::copy(data, data + size, tmp.begin());
+		return fwrite(&tmp[0], sizeof(TargetType), size, outputFile);
 	}
 }
 
