@@ -29,6 +29,7 @@
 #include "extract_clips_features_processor.h"
 #include "merge_labels_processor.h"
 #include "filter_events_processor.h"
+#include "confusion_matrix_processor.h"
 
 #include "qjson.h"
 #include "textfile.h"
@@ -80,6 +81,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new extract_clips_features_Processor);
     loadProcessor(new merge_labels_Processor);
     loadProcessor(new filter_events_Processor);
+    loadProcessor(new confusion_matrix_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString &processor_name) const
