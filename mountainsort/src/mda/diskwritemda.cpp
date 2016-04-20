@@ -64,11 +64,12 @@ bool DiskWriteMda::open(int data_type, const QString &path, long N1, long N2, lo
 	if (!d->m_file) return false;
 
 	long NN=N1*N2*N3*N4*N5*N6;
-	long buf_size=1e6;
+    //long buf_size=1e6;
 
 	//write the header
 	mda_write_header(&d->m_header,d->m_file);
 
+    /*
 	//fill it all with zeros!
 	float *zeros=(float *)malloc(sizeof(float)*buf_size);
 	for (int i=0; i<buf_size; i++) zeros[i]=0;
@@ -80,6 +81,10 @@ bool DiskWriteMda::open(int data_type, const QString &path, long N1, long N2, lo
 		i+=buf_size;
 	}
 	free(zeros);
+    */
+    fseek(d->m_file,d->m_header.header_size+d->m_header.num_bytes_per_entry*NN-1,SEEK_SET);
+    unsigned char zero=0;
+    fwrite(&zero,1,1,d->m_file);
 
 	return true;
 }
