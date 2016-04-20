@@ -77,20 +77,26 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
     long M2 = channels.count();
     long N2 = t2 - t1 + 1;
 
-    for (int j=0; j<M2; j++) {
-        if ((channels[j]<=0)||(channels[j]>M)) {
-            printf("Unexpected input channel %d (M=%ld)\n",channels[j],M);
+    for (int j = 0; j < M2; j++) {
+        if ((channels[j] <= 0) || (channels[j] > M)) {
+            printf("Unexpected input channel %d (M=%ld)\n", channels[j], M);
             return false;
         }
     }
 
     DiskWriteMda Y(MDAIO_TYPE_FLOAT32, timeseries_out_path, M2, N2);
-    for (long i = 0; i < N2; i++) {
+    int chunk_size = 1000;
+    for (long t = 0; t < N2; t += chunk_size) {
+        long aa = chunk_size;
+        if (t + aa > N2)
+            aa = N2 - t;
         Mda chunk;
-        X.readChunk(chunk, 0, t1 + i, M, 1);
-        Mda chunk2(M2, 1);
-        for (int j = 0; j < channels.count(); j++) {
-            chunk2.set(chunk.value(channels[j] - 1), j);
+        X.readChunk(chunk, 0, t1 + i, M, aa);
+        Mda chunk2(M2, aa);
+        for (int k = 0; k < aa; k++) {
+            for (int j = 0; j < channels.count(); j++) {
+                chunk2.set(chunk.value(channels[j] - 1, k), j, k);
+            }
         }
         Y.writeChunk(chunk2, 0, i);
     }
