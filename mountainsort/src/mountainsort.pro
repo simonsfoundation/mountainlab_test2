@@ -77,7 +77,8 @@ HEADERS += \
     processors/filter_events.h \
     processors/filter_events_processor.h \
     processors/confusion_matrix.h \
-    core/msscriptcontroller.h
+    core/msscriptcontroller.h \
+    processors/extract_raw_processor.h
 
 SOURCES += utils/get_command_line_params.cpp \
     core/msprocessmanager.cpp \
@@ -141,7 +142,8 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/filter_events_processor.cpp \
     processors/confusion_matrix.cpp \
     processors/confusion_matrix_processor.cpp \
-    core/msscriptcontroller.cpp
+    core/msscriptcontroller.cpp \
+    processors/extract_raw_processor.cpp
 
 DISTFILES += \
     ../version.txt
