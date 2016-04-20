@@ -15,8 +15,7 @@ mask_out_artifacts_Processor::mask_out_artifacts_Processor() {
 	this->setVersion("0.1");
     this->setInputFileParameters("timeseries");
 	this->setOutputFileParameters("timeseries_out");
-	this->setRequiredParameters("threshold");
-	this->setOptionalParameters("interval_size");
+    this->setRequiredParameters("threshold","interval_size");
 }
 
 mask_out_artifacts_Processor::~mask_out_artifacts_Processor() {

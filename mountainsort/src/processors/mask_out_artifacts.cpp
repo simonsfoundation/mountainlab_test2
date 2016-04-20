@@ -7,6 +7,11 @@
 
 bool mask_out_artifacts(const QString &timeseries_path, const QString &timeseries_out_path, double threshold, int interval_size)
 {
+    if ((!threshold)||(!interval_size)) {
+        printf("Problem with input parameters. Either threshold or interval_size is zero.\n");
+        return false;
+    }
+
 	DiskReadMda X(timeseries_path);
 	long M=X.N1();
     long N=X.N2();
