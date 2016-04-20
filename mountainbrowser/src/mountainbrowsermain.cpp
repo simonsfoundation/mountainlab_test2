@@ -34,7 +34,6 @@ int main(int argc, char* argv[])
 
     QString mdaserver_url=config["mdaserver_url"].toString();
     QString mscmdserver_url=config["mscmdserver_url"].toString();
-    qDebug() << config_json << mdaserver_url << mscmdserver_url << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
 
     MBController* controller = new MBController;
     controller->setMountainBrowserUrl(mountainbrowser_url);

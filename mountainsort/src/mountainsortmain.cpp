@@ -141,9 +141,9 @@ int run_process(MSProcessManager* PM, QJsonObject process)
 }
 
 void display_error(QJSValue result) {
-    qDebug() << result.property("name").toString();
-    qDebug() << result.property("message").toString();
-    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
+    qDebug()  << result.property("name").toString();
+    qDebug()  << result.property("message").toString();
+    qDebug()  << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
 }
 
 int run_script(const QStringList &script_fnames) {

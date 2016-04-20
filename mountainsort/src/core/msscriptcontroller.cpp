@@ -58,7 +58,7 @@ bool MSScriptController::runProcess(const QString &processor_name, const QString
     QStringList keys=params.keys();
     QMap<QString,QVariant> parameters;
     foreach (QString key,keys) {
-        parameters[key]=params[key].toString();
+        parameters[key]=params[key].toVariant();
     }
     return MSProcessManager::globalInstance()->checkAndRunProcessIfNecessary(processor_name,parameters);
 }

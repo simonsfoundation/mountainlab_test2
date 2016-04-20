@@ -120,10 +120,15 @@ function MSPipeline() {
 					input_codes[pname]=tmp.process.process_code+'--'+tmp.pname;
 				}
 				else {
-					input_codes[pname]=MS.fileChecksum(fname);
-					if (!input_codes[pname]) {
-						console.log('Checksum is empty, perhaps file does not exist: '+fname);
-						return false;
+					if (fname) {
+						input_codes[pname]=MS.fileChecksum(fname);
+						if (!input_codes[pname]) {
+							console.log('Checksum is empty, perhaps file does not exist for '+pname+': '+fname);
+							return false;
+						}
+					}
+					else {
+						input_codes[pname]='<empty>';
 					}
 				}
 			}
@@ -251,7 +256,7 @@ function detect(timeseries,detect,opts) {
 	var ret={};
 	ret.processor_name='detect';
 	ret.inputs={timeseries:timeseries};
-	ret.outputs={detect:detect};
+	ret.outputs={detect_out:detect};
 	ret.parameters=clone(opts);
 	return ret;
 }
@@ -259,8 +264,8 @@ function detect(timeseries,detect,opts) {
 function branch_cluster_v2(timeseries,detect,firings,opts) {
 	var ret={};
 	ret.processor_name='branch_cluster_v2';
-	ret.inputs={timeseries:timeseries,detect:detect};
-	ret.outputs={firings:firings};
+	ret.inputs={timeseries:timeseries,detect:detect,adjacency_matrix:''};
+	ret.outputs={firings_out:firings};
 	ret.parameters=clone(opts);
 	return ret;
 }
