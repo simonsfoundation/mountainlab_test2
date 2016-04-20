@@ -21,7 +21,6 @@
 #include "unit_tests.h"
 #include "process_msh.h"
 #include "textfile.h"
-#include "run_pipeline.h"
 #include <QJSEngine>
 
 void print_usage();
@@ -62,18 +61,6 @@ int main(int argc, char* argv[])
         }
         QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
         return run_process(PM, obj);
-    }
-    else if (arg1 == "pipeline") {
-        if (arg2.isEmpty()) {
-            print_usage();
-            return -1;
-        }
-        QString json = read_text_file(arg2);
-        if (json.isEmpty()) {
-            printf("Unable to open file or file is empty: %s\n", arg2.toLatin1().data());
-        }
-        QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
-        return run_pipeline(PM, obj);
     }
     else if (arg1 == "list-processors") {
         list_processors(PM);
