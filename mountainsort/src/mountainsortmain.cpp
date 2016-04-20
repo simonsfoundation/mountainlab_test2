@@ -22,6 +22,7 @@
 #include "process_msh.h"
 #include "textfile.h"
 #include <QJSEngine>
+#include "mscachemanager.h"
 
 void print_usage();
 void list_processors(const MSProcessManager* PM);
@@ -31,6 +32,8 @@ int run_script(const QStringList &script_fnames);
 int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
+
+    MSCacheManager::globalInstance()->setLocalBasePath(app.applicationDirPath()+"/../../tmp");
 
     CLParams CLP = get_command_line_params(argc, argv);
 

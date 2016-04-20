@@ -91,14 +91,14 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
         if (t + aa > N2)
             aa = N2 - t;
         Mda chunk;
-        X.readChunk(chunk, 0, t1 + i, M, aa);
+        X.readChunk(chunk, 0, t1 + t, M, aa);
         Mda chunk2(M2, aa);
         for (int k = 0; k < aa; k++) {
             for (int j = 0; j < channels.count(); j++) {
                 chunk2.set(chunk.value(channels[j] - 1, k), j, k);
             }
         }
-        Y.writeChunk(chunk2, 0, i);
+        Y.writeChunk(chunk2, 0, t);
     }
 
     return true;
