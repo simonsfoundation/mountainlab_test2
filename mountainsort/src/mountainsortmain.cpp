@@ -26,8 +26,8 @@
 
 void print_usage();
 void list_processors(const MSProcessManager* PM);
-int run_process(MSProcessManager* PM, QJsonObject process);
-int run_script(const QStringList &script_fnames);
+bool run_process(MSProcessManager* PM, QJsonObject process);
+int run_script(const QStringList& script_fnames);
 
 int main(int argc, char* argv[])
 {
@@ -37,19 +37,19 @@ int main(int argc, char* argv[])
 
     CLParams CLP = get_command_line_params(argc, argv);
 
-    MSProcessManager *PM=MSProcessManager::globalInstance();
+    MSProcessManager* PM = MSProcessManager::globalInstance();
     PM->loadDefaultProcessors();
 
     QString arg1 = CLP.unnamed_parameters.value(0);
     QString arg2 = CLP.unnamed_parameters.value(1);
 
     QStringList script_fnames;
-    for (int i=0; i<CLP.unnamed_parameters.count(); i++) {
-        if ((CLP.unnamed_parameters[i].endsWith(".js"))||(CLP.unnamed_parameters[i].endsWith(".ms"))) {
+    for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
+        if ((CLP.unnamed_parameters[i].endsWith(".js")) || (CLP.unnamed_parameters[i].endsWith(".ms"))) {
             script_fnames << CLP.unnamed_parameters[i];
         }
     }
-    if (script_fnames.count()>=1) {
+    if (!script_fnames.isEmpty()) {
         return run_script(script_fnames);
     }
 
@@ -63,18 +63,19 @@ int main(int argc, char* argv[])
             printf("Unable to open file or file is empty: %s\n", arg2.toLatin1().data());
         }
         QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
-        return run_process(PM, obj);
-    }
-    else if (arg1 == "list-processors") {
+        if (!run_process(PM, obj))
+            return -1;
+        else
+            return 0;
+    } else if (arg1 == "list-processors") {
         list_processors(PM);
         return 0;
-    }
-    else if (arg1 == "detail-processors") {
+    } else if (arg1 == "detail-processors") {
         PM->printDetails();
         return 0;
     }
 
-    if (CLP.unnamed_parameters.count() == 0) {
+    if (CLP.unnamed_parameters.isEmpty()) {
         print_usage();
         return -1;
     }
@@ -85,13 +86,13 @@ int main(int argc, char* argv[])
         process["processor_name"] = processor_name;
         QJsonObject parameters;
         QStringList keys = CLP.named_parameters.keys();
-        foreach (QString key, keys) {
+        foreach(QString key, keys)
+        {
             parameters[key] = CLP.named_parameters[key].toString();
         }
         process["parameters"] = parameters;
         return run_process(PM, process);
-    }
-    else {
+    } else {
         printf("Unexpected number of unnamed parameters: %d\n", CLP.unnamed_parameters.count());
     }
 
@@ -113,36 +114,40 @@ void list_processors(const MSProcessManager* PM)
     printf("%s\n", str.toLatin1().data());
 }
 
-int run_process(MSProcessManager* PM, QJsonObject process)
+bool run_process(MSProcessManager* PM, QJsonObject process)
 {
     QString processor_name = process["processor_name"].toString();
     QJsonObject parameters = process["parameters"].toObject();
     QStringList keys = parameters.keys();
     QMap<QString, QVariant> params;
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         params[key] = parameters[key].toString();
     }
 
     if (!PM->checkAndRunProcessIfNecessary(processor_name, params)) {
-        return -1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
-void display_error(QJSValue result) {
-    qDebug()  << result.property("name").toString();
-    qDebug()  << result.property("message").toString();
-    qDebug()  << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
+void display_error(QJSValue result)
+{
+    qDebug() << result.property("name").toString();
+    qDebug() << result.property("message").toString();
+    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
 }
 
-int run_script(const QStringList &script_fnames) {
-    QJSEngine* engine = new QJSEngine;
+int run_script(const QStringList& script_fnames)
+{
+    QJSEngine engine;
     MSScriptController Controller;
-    QJSValue MS = engine->newQObject(&Controller);
-    engine->globalObject().setProperty("MS",MS);
-    foreach (QString fname,script_fnames) {
-        QJSValue result=engine->evaluate(read_text_file(fname),fname);
+    QJSValue MS = engine.newQObject(&Controller);
+    engine.globalObject().setProperty("MS", MS);
+    foreach(QString fname, script_fnames)
+    {
+        QJSValue result = engine.evaluate(read_text_file(fname), fname);
         if (result.isError()) {
             display_error(result);
             qCritical() << "Error running script.";
@@ -151,7 +156,7 @@ int run_script(const QStringList &script_fnames) {
     }
 
     {
-        QJSValue result=engine->evaluate("main();");
+        QJSValue result = engine.evaluate("main();");
         if (result.isError()) {
             display_error(result);
             qCritical() << "Error running script.";
