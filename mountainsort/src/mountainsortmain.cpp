@@ -91,7 +91,8 @@ int main(int argc, char* argv[])
             parameters[key] = CLP.named_parameters[key].toString();
         }
         process["parameters"] = parameters;
-        return run_process(PM, process);
+        if (run_process(PM, process)) return 0;
+        else return -1;
     } else {
         printf("Unexpected number of unnamed parameters: %d\n", CLP.unnamed_parameters.count());
     }

@@ -15,7 +15,7 @@
 
 double compute_score(long N, double* X, double* template0);
 QList<int> find_events_to_use(const QList<long>& times, const QList<double>& scores, const fit_stage_opts& opts);
-void subtract_template(long N, double* X, double* template0);
+void subtract_scaled_template(long N, double* X, double* template0);
 Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts);
 Mda sort_firings_by_time(const Mda& firings);
 
@@ -36,6 +36,7 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     define_shells_opts.min_shell_size = opts.min_shell_size;
     define_shells_opts.shell_increment = opts.shell_increment;
     Mda firings_split = split_into_shells(firings, define_shells_opts);
+    //Mda firings_split = firings;
 
     QList<long> times;
     QList<int> labels;
@@ -59,13 +60,14 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     for (long i = 0; i < L; i++)
         all_to_use << 0;
     int num_passes = 0;
+    //while ((something_changed)&&(num_passes<2)) {
     while (something_changed) {
         num_passes++;
         printf("pass %d... ", num_passes);
         QList<double> scores_to_try;
         QList<long> times_to_try;
         QList<int> labels_to_try;
-        QList<long> inds_to_try;
+        QList<long> inds_to_try; //indices of the events to try on this pass
         //QList<double> template_norms_to_try;
         for (long i = 0; i < L; i++) {
             if (all_to_use[i] == 0) {
@@ -73,30 +75,52 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
                 int k0 = labels[i];
                 if (k0 > 0) {
                     double score0 = compute_score(M * T, X.dataPtr(0, t0 - Tmid), templates.dataPtr(0, 0, k0 - 1));
+
                     /*
-                    if (score0 < template_norms[k0] * template_norms[k0] * 0.5)
+                    if (score0 < template_norms[k0] * template_norms[k0] * 0.1)
                         score0 = 0; //the norm of the improvement needs to be at least 0.5 times the norm of the template
                         */
-                    if (score0 > 0) {
+
+                    double neglogprior=30;
+                    if (score0 > neglogprior) {
                         scores_to_try << score0;
                         times_to_try << t0;
                         labels_to_try << k0;
                         inds_to_try << i;
-                    }
-                    else {
+                    } else {
                         all_to_use[i] = -1; //means we definitely aren't using it (so we will never get here again)
                     }
                 }
             }
         }
         QList<int> to_use = find_events_to_use(times_to_try, scores_to_try, opts);
+
+        //debug
+
+        {
+            X.write32(QString("/tmp/debug-X-%1.mda").arg(num_passes));
+            QList<long> debug_inds;
+            for (long i = 0; i < to_use.count(); i++) {
+                if (to_use[i] == 1) {
+                    debug_inds << inds_to_try[i];
+                }
+            }
+            Mda debug_firings(firings.N1(), debug_inds.count());
+            for (long a = 0; a < debug_inds.count(); a++) {
+                for (int b = 0; b < firings.N1(); b++) {
+                    debug_firings.setValue(firings.value(b, debug_inds[a]), b, a);
+                }
+            }
+            debug_firings.write64(QString("/tmp/debug-firings-%1.mda").arg(num_passes));
+        }
+
         something_changed = false;
         long num_added = 0;
         for (long i = 0; i < to_use.count(); i++) {
             if (to_use[i] == 1) {
                 something_changed = true;
                 num_added++;
-                subtract_template(M * T, X.dataPtr(0, times_to_try[i] - Tmid), templates.dataPtr(0, 0, labels_to_try[i] - 1));
+                subtract_scaled_template(M * T, X.dataPtr(0, times_to_try[i] - Tmid), templates.dataPtr(0, 0, labels_to_try[i] - 1));
                 all_to_use[inds_to_try[i]] = 1;
             }
         }
@@ -144,41 +168,42 @@ QList<int> find_events_to_use(const QList<long>& times, const QList<double>& sco
     long L = times.count();
     for (long i = 0; i < L; i++)
         to_use << 0;
-    double last_best_score = 0;
-    long last_best_ind = 0;
     for (long i = 0; i < L; i++) {
         if (scores[i] > 0) {
-            if (times[last_best_ind] < times[i] - opts.clip_size) {
-                last_best_score = 0; //i think this was a bug.... used to be inside the next for loop!! 4/13/16
-                for (int ii = last_best_ind + 1; ii < i; ii++) {
-                    if (times[ii] >= times[i] - opts.clip_size) {
-                        if (scores[ii] < scores[i])
-                            to_use[ii] = 0;
-                        if (scores[ii] > last_best_score) {
-                            last_best_score = scores[ii];
-                            last_best_ind = ii;
-                        }
-                    }
+            to_use[i] = 1;
+            {
+                long j = i;
+                while ((j >= 0) && (times[j] >= times[i] - opts.clip_size)) {
+                    if ((i != j) && (scores[j] >= scores[i]))
+                        to_use[i] = 0;
+                    j--;
                 }
             }
-            if (scores[i] > last_best_score) {
-                //to_use[last_best_score]=0; //this was a bug!!!!!!!!!! 4/13/16
-                if (last_best_score > 0) {
-                    to_use[last_best_ind] = 0;
+            {
+                long j = i;
+                while ((j < times.count()) && (times[j] <= times[i] + opts.clip_size)) {
+                    if (scores[j] > scores[i])
+                        to_use[i] = 0;
+                    j++;
                 }
-                to_use[i] = 1;
-                last_best_score = scores[i]; //this was another bug, this line was left out! 4/13/16
-                last_best_ind = i; //this was another bug, this line was left out! 4/13/16
             }
         }
     }
     return to_use;
 }
 
-void subtract_template(long N, double* X, double* template0)
+void subtract_scaled_template(long N, double* X, double* template0)
 {
+    double S12 = 0, S22 = 0;
     for (long i = 0; i < N; i++) {
-        X[i] -= template0[i];
+        S22 += template0[i] * template0[i];
+        S12 += X[i] * template0[i];
+    }
+    double alpha = 1;
+    if (S22)
+        alpha = S12 / S22;
+    for (long i = 0; i < N; i++) {
+        X[i] -= alpha * template0[i];
     }
 }
 Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts)

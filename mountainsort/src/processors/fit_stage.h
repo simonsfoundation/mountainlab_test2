@@ -15,7 +15,7 @@ struct fit_stage_opts {
     int min_shell_size;
 };
 
-bool fit_stage_new(const QString &timeseries_path,const QString &firings_path,const QString &firings_out_path,const fit_stage_opts &opts);
+bool fit_stage(const QString &timeseries_path,const QString &firings_path,const QString &firings_out_path,const fit_stage_opts &opts);
 
 #endif // FIT_STAGE_H
 
