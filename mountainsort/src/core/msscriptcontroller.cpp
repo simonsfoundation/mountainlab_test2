@@ -12,6 +12,7 @@
 #include <QJsonObject>
 #include "mscachemanager.h"
 #include "msprocessmanager.h"
+#include <QTime>
 
 class MSScriptControllerPrivate {
 public:
@@ -31,12 +32,16 @@ MSScriptController::~MSScriptController()
 
 QString MSScriptController::fileChecksum(const QString &fname)
 {
+    QTime timer; timer.start();
+    printf("Computing checksum for file %s\n",fname.toLatin1().data());
     QFile file(fname);
     if (!file.open(QIODevice::ReadOnly)) return "";
     QCryptographicHash hash(QCryptographicHash::Sha1);
     hash.addData(&file);
     file.close();
-    return QString(hash.result().toHex());
+    QString ret=QString(hash.result().toHex());
+    printf("%s -- Elapsed: %g sec\n",ret.toLatin1().data(),timer.elapsed()*1.0/1000);
+    return ret;
 }
 
 QString MSScriptController::stringChecksum(const QString &str)
