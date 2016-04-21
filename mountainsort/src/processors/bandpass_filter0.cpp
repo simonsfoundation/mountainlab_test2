@@ -17,7 +17,8 @@ void define_kernel(int N, double* kernel, double samplefreq, double freq_min, do
 
 bool bandpass_filter0(const QString& input_path, const QString& output_path, double samplerate, double freq_min, double freq_max)
 {
-    QTime timer_total; timer_total.start();
+    QTime timer_total;
+    timer_total.start();
     QMap<QString, long> elapsed_times;
 
     DiskReadMda X(input_path);
@@ -34,8 +35,8 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
     DiskWriteMda Y(MDAIO_TYPE_FLOAT32, output_path, M, N);
 
     {
-        QTime timer;
-        timer.start();
+        QTime timer_status;
+        timer_status.start();
         long num_timepoints_handled = 0;
 #pragma omp parallel for
         for (long timepoint = 0; timepoint < N; timepoint += chunk_size) {
@@ -61,24 +62,29 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
                 chunk.getChunk(chunk2, 0, overlap_size, M, chunk_size);
                 elapsed_times_local["getChunk"] += timer.elapsed();
             }
-#pragma omp critical(lock2)
+#pragma omp critical(lock1)
             {
                 elapsed_times["do_bandpass_filter0"] += elapsed_times_local["do_bandpass_filter0"];
                 elapsed_times["getChunk"] += elapsed_times_local["getChunk"];
-                Y.writeChunk(chunk2, 0, timepoint);
-                elapsed_times["writeChunk"] += timer.elapsed();
+
+                {
+                    QTime timer;
+                    timer.start();
+                    Y.writeChunk(chunk2, 0, timepoint);
+                    elapsed_times["writeChunk"] += timer.elapsed();
+                }
                 num_timepoints_handled += qMin(chunk_size, N - timepoint);
-                if ((timer.elapsed() > 1000) || (num_timepoints_handled == N) || (timepoint == 0)) {
+                if ((timer_status.elapsed() > 1000) || (num_timepoints_handled == N) || (timepoint == 0)) {
                     printf("%ld/%ld (%d%%) - Elapsed(s): RC:%g, BPF:%g, GC:%g, WC:%g, Total:%g, %d threads\n",
                            num_timepoints_handled, N,
                            (int)(num_timepoints_handled * 1.0 / N * 100),
                            elapsed_times["readChunk"] * 1.0 / 1000,
                            elapsed_times["do_bandpass_filter0"] * 1.0 / 1000,
                            elapsed_times["getChunk"] * 1.0 / 1000,
-                            elapsed_times["writeChunk"] * 1.0 / 1000,
+                           elapsed_times["writeChunk"] * 1.0 / 1000,
                            timer_total.elapsed() * 1.0 / 1000,
                            omp_get_num_threads());
-                    timer.restart();
+                    timer_status.restart();
                 }
             }
         }

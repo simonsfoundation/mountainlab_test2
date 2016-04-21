@@ -143,7 +143,8 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/confusion_matrix.cpp \
     processors/confusion_matrix_processor.cpp \
     core/msscriptcontroller.cpp \
-    processors/extract_raw_processor.cpp
+    processors/extract_raw_processor.cpp \
+    processors/fit_stage_new.cpp
 
 DISTFILES += \
     ../version.txt
