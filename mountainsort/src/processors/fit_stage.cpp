@@ -18,7 +18,6 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     Mda X(timeseries_path);
     Mda firingsA;
     firingsA.read(firings_path);
-
     Mda firings = sort_firings_by_time(firingsA);
 
     int M = X.N1();
@@ -32,10 +31,10 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     Mda firings_split = split_into_shells(firings, define_shells_opts);
     //Mda firings_split = firings;
 
-    QList<long> times;
+    QList<double> times;
     QList<int> labels;
     for (long i = 0; i < L; i++) {
-        times << (long)(firings_split.value(1, i) + 0.5);
+        times << firings_split.value(1, i);
         labels << (int)firings_split.value(2, i);
     }
     int K = compute_max(labels);
@@ -59,37 +58,37 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
         num_passes++;
         printf("pass %d... ", num_passes);
         QList<double> scores_to_try;
-        QList<long> times_to_try;
+        QList<double> times_to_try;
         QList<int> labels_to_try;
         QList<long> inds_to_try; //indices of the events to try on this pass
         //QList<double> template_norms_to_try;
         for (long i = 0; i < L; i++) {
             if (all_to_use[i] == 0) {
-                long t0 = times[i];
+                double t0 = times[i];
                 int k0 = labels[i];
                 if (k0 > 0) {
-                    double score0 = compute_score(M * T, X.dataPtr(0, t0 - Tmid), templates.dataPtr(0, 0, k0 - 1));
+                    long tt = (long)(t0 - Tmid + 0.5);
+                    double score0 = compute_score(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, k0 - 1));
 
                     /*
                     if (score0 < template_norms[k0] * template_norms[k0] * 0.1)
                         score0 = 0; //the norm of the improvement needs to be at least 0.5 times the norm of the template
                         */
 
-                    double neglogprior=30;
+                    double neglogprior = 30;
                     if (score0 > neglogprior) {
                         scores_to_try << score0;
                         times_to_try << t0;
                         labels_to_try << k0;
                         inds_to_try << i;
-                    } else {
+                    }
+                    else {
                         all_to_use[i] = -1; //means we definitely aren't using it (so we will never get here again)
                     }
                 }
             }
         }
         QList<int> to_use = find_events_to_use(times_to_try, scores_to_try, opts);
-
-        //debug
 
         {
             X.write32(QString("/tmp/debug-X-%1.mda").arg(num_passes));
@@ -114,7 +113,8 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
             if (to_use[i] == 1) {
                 something_changed = true;
                 num_added++;
-                subtract_scaled_template(M * T, X.dataPtr(0, times_to_try[i] - Tmid), templates.dataPtr(0, 0, labels_to_try[i] - 1));
+                long tt = (long)(times_to_try[i] - Tmid + 0.5);
+                subtract_scaled_template(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, labels_to_try[i] - 1));
                 all_to_use[inds_to_try[i]] = 1;
             }
         }
@@ -156,7 +156,7 @@ double compute_score(long N, double* X, double* template0)
     return norm1 * norm1 - norm2 * norm2;
 }
 
-QList<int> find_events_to_use(const QList<long>& times, const QList<double>& scores, const fit_stage_opts& opts)
+QList<int> find_events_to_use(const QList<double>& times, const QList<double>& scores, const fit_stage_opts& opts)
 {
     QList<int> to_use;
     long L = times.count();

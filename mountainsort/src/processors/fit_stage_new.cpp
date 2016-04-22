@@ -50,10 +50,10 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
 
     long chunk_size = PROCESSING_CHUNK_SIZE;
     long overlap_size = PROCESSING_CHUNK_OVERLAP_SIZE;
-    //if (N < PROCESSING_CHUNK_SIZE) {
+    if (N < PROCESSING_CHUNK_SIZE) {
         chunk_size = N;
         overlap_size = 0;
-    //}
+    }
 
     QList<long> inds_to_use;
 
@@ -126,6 +126,7 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
         }
     }
 
+    qSort(inds_to_use);
     long num_to_use = inds_to_use.count();
     if (times.count()) {
         printf("using %ld/%ld events (%g%%)\n", num_to_use, (long)times.count(), num_to_use * 100.0 / times.count());
@@ -164,18 +165,18 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList
     //while ((something_changed)&&(num_passes<2)) {
     while (something_changed) {
         num_passes++;
-        printf("pass %d... ", num_passes);
         QList<double> scores_to_try;
-        QList<long> times_to_try;
+        QList<double> times_to_try;
         QList<int> labels_to_try;
         QList<long> inds_to_try; //indices of the events to try on this pass
         //QList<double> template_norms_to_try;
         for (long i = 0; i < L; i++) {
             if (all_to_use[i] == 0) {
-                long t0 = times[i];
+                double t0 = times[i];
                 int k0 = labels[i];
                 if (k0 > 0) {
-                    double score0 = compute_score(M * T, X.dataPtr(0, t0 - Tmid), templates.dataPtr(0, 0, k0 - 1));
+                    long tt = (long)(t0 - Tmid + 0.5);
+                    double score0 = compute_score(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, k0 - 1));
                     /*
                     if (score0 < template_norms[k0] * template_norms[k0] * 0.1)
                         score0 = 0; //the norm of the improvement needs to be at least 0.5 times the norm of the template
@@ -202,11 +203,12 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList
             if (to_use[i] == 1) {
                 something_changed = true;
                 num_added++;
-                subtract_scaled_template(M * T, X.dataPtr(0, times_to_try[i] - Tmid), templates.dataPtr(0, 0, labels_to_try[i] - 1));
+                long tt = (long)(times_to_try[i] - Tmid + 0.5);
+                subtract_scaled_template(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, labels_to_try[i] - 1));
                 all_to_use[inds_to_try[i]] = 1;
             }
         }
-        printf("added %ld events\n", num_added);
+        printf("pass %d: added %ld events\n", num_passes, num_added);
     }
 
     QList<long> inds_to_use;
