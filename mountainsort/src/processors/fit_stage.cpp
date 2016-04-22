@@ -13,12 +13,6 @@
 #include "compute_detectability_scores.h"
 #include "get_sort_indices.h"
 
-double compute_score(long N, double* X, double* template0);
-QList<int> find_events_to_use(const QList<long>& times, const QList<double>& scores, const fit_stage_opts& opts);
-void subtract_scaled_template(long N, double* X, double* template0);
-Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts);
-Mda sort_firings_by_time(const Mda& firings);
-
 bool fit_stage(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts)
 {
     Mda X(timeseries_path);
