@@ -45,6 +45,6 @@ bool fit_stage_Processor::run(const QMap<QString, QVariant> &params)
     opts.clip_size=clip_size;
     opts.min_shell_size=params["min_shell_size"].toInt();
     opts.shell_increment=params["shell_increment"].toDouble();
-    return fit_stage(timeseries_path,firings_path,firings_out_path,opts);
+    return fit_stage_new(timeseries_path,firings_path,firings_out_path,opts);
 }
 
