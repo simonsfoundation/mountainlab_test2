@@ -1,6 +1,7 @@
 #include "mdaio.h"
 #include "usagetracking.h"
 #include <vector>
+#include <cstring>
 
 //can be replaced by std::is_same when C++11 is enabled
 template<class T, class U> struct is_same { enum { value = 0 }; };
@@ -105,150 +106,38 @@ long mda_write_header(struct MDAIO_HEADER *X,FILE *output_file) {
 	return 1;
 }
 
-#define MDA_READ_MACRO(type1,type2) \
-type2 *tmp=(type2 *)malloc(sizeof(type2)*n); \
-long ret=jfread(tmp,sizeof(type2),n,input_file); \
-for (i=0; i<n; i++) data[i]=(type1)tmp[i]; \
-free(tmp); \
-return ret;
-#define MDA_READ_MACRO_SAME(type1,type2) \
-return jfread(data,sizeof(type1),n,input_file);
-
-long mda_read_byte(unsigned char *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_READ_MACRO_SAME(unsigned char,unsigned char)
+template <typename SourceType, typename TargetType>
+long mdaReadData_impl(TargetType* data, const long size, FILE* inputFile) {
+	if (is_same<TargetType, SourceType>::value) {
+		return jfread(data, sizeof(SourceType), size, inputFile);
+	} else {
+		std::vector<SourceType> tmp(size);
+		const long ret = jfread(&tmp[0], sizeof(SourceType), size, inputFile);
+		std::copy(tmp.begin(), tmp.end(), data);
+		return ret;
 	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_READ_MACRO(unsigned char,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_READ_MACRO(unsigned char,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_READ_MACRO(unsigned char,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_READ_MACRO(unsigned char,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_READ_MACRO(unsigned char,double)
-    }
-	else return 0;
 }
 
-long mda_read_float32(float *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_READ_MACRO(float,unsigned char)
+template <typename Type>
+long mdaReadData(Type *data, const struct MDAIO_HEADER* header, const long size, FILE *inputFile) {
+	if (header->data_type==MDAIO_TYPE_BYTE) {
+		return mdaReadData_impl<unsigned char>(data, size, inputFile);
 	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_READ_MACRO_SAME(float,float)
+	else if (header->data_type==MDAIO_TYPE_FLOAT32) {
+		return mdaReadData_impl<float>(data, size, inputFile);
 	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_READ_MACRO(float,int16_t)
+	else if (header->data_type==MDAIO_TYPE_INT16) {
+		return mdaReadData_impl<int16_t>(data, size, inputFile);
 	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_READ_MACRO(float,int32_t)
+	else if (header->data_type==MDAIO_TYPE_INT32) {
+		return mdaReadData_impl<int32_t>(data, size, inputFile);
 	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_READ_MACRO(float,uint16_t)
+	else if (header->data_type==MDAIO_TYPE_UINT16) {
+		return mdaReadData_impl<uint16_t>(data, size, inputFile);
 	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_READ_MACRO(float,double)
-    }
-	else return 0;
-}
-
-long mda_read_float64(double *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
-	long i;
-    if (H->data_type==MDAIO_TYPE_BYTE) {
-        MDA_READ_MACRO(double,unsigned char)
-    }
-    else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-        MDA_READ_MACRO(double,float)
-    }
-    else if (H->data_type==MDAIO_TYPE_INT16) {
-        MDA_READ_MACRO(double,int16_t)
-    }
-    else if (H->data_type==MDAIO_TYPE_INT32) {
-        MDA_READ_MACRO(double,int32_t)
-    }
-    else if (H->data_type==MDAIO_TYPE_UINT16) {
-        MDA_READ_MACRO(double,uint16_t)
-    }
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_READ_MACRO_SAME(double,double)
-    }
-    else return 0;
-}
-
-long mda_read_int16(int16_t *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_READ_MACRO(int16_t,unsigned char)
+	else if (header->data_type==MDAIO_TYPE_FLOAT64) {
+		return mdaReadData_impl<double>(data, size, inputFile);
 	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_READ_MACRO(int16_t,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_READ_MACRO_SAME(int16_t,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_READ_MACRO(int16_t,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_READ_MACRO(int16_t,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_READ_MACRO(int16_t,double)
-    }
-	else return 0;
-}
-
-long mda_read_int32(int32_t *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_READ_MACRO(int32_t,unsigned char)
-	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_READ_MACRO(int32_t,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_READ_MACRO(int32_t,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_READ_MACRO_SAME(int32_t,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_READ_MACRO(int32_t,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_READ_MACRO(int32_t,double)
-    }
-	else return 0;
-}
-
-long mda_read_uint16(uint16_t *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
-	long i;
-	if (H->data_type==MDAIO_TYPE_BYTE) {
-		MDA_READ_MACRO(uint16_t,unsigned char)
-	}
-	else if (H->data_type==MDAIO_TYPE_FLOAT32) {
-		MDA_READ_MACRO(uint16_t,float)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT16) {
-		MDA_READ_MACRO(uint16_t,int16_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_INT32) {
-		MDA_READ_MACRO(uint16_t,int32_t)
-	}
-	else if (H->data_type==MDAIO_TYPE_UINT16) {
-		MDA_READ_MACRO_SAME(uint16_t,uint16_t)
-	}
-    else if (H->data_type==MDAIO_TYPE_FLOAT64) {
-        MDA_READ_MACRO(uint16_t,double)
-    }
 	else return 0;
 }
 
@@ -286,6 +175,30 @@ long mdaWriteData(DataType* data, const long size, const struct MDAIO_HEADER* he
 	else return 0;
 }
 
+long mda_read_byte(unsigned char *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
+	return mdaReadData(data, H, n, input_file);
+}
+
+long mda_read_float32(float *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
+	return mdaReadData(data, H, n, input_file);
+}
+
+long mda_read_float64(double *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
+	return mdaReadData(data, H, n, input_file);
+}
+
+long mda_read_int16(int16_t *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
+	return mdaReadData(data, H, n, input_file);
+}
+
+long mda_read_int32(int32_t *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
+	return mdaReadData(data, H, n, input_file);
+}
+
+long mda_read_uint16(uint16_t *data,struct MDAIO_HEADER *H,long n,FILE *input_file) {
+	return mdaReadData(data, H, n, input_file);
+}
+
 long mda_write_byte(unsigned char *data,struct MDAIO_HEADER *H,long n,FILE *output_file) {
 	return mdaWriteData(data, n, H, output_file);
 }
@@ -311,14 +224,8 @@ long mda_write_float64(double *data,struct MDAIO_HEADER *H,long n,FILE *output_f
 }
 
 
-void mda_copy_header(struct MDAIO_HEADER *ret,struct MDAIO_HEADER *X)
-{
-	long i;
-	ret->data_type=X->data_type;
-	ret->header_size=X->header_size;
-	ret->num_bytes_per_entry=X->num_bytes_per_entry;
-	ret->num_dims=X->num_dims;
-	for (i=0; i<MDAIO_MAX_DIMS; i++) ret->dims[i]=X->dims[i];
+void mda_copy_header(struct MDAIO_HEADER *ret,struct MDAIO_HEADER *X) {
+	std::memcpy(ret, X, sizeof(*ret));
 }
 
 void transpose_array(char *infile_path,char *outfile_path) {

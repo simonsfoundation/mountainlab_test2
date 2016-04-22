@@ -54,7 +54,7 @@ end;
 K=max(labels);
 
 nbins=600;
-tmp=max(clips,[],2);
+tmp=max(abs(clips),[],2);
 stdev0=sqrt(var(tmp(:)));
 ybins=linspace(-stdev0*4,stdev0*4,nbins);
 ybins=ybins/opts.vzoom; %zoom vertically
