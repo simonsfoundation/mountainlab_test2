@@ -38,13 +38,6 @@ if ~isfield(opts,'max_corr_stddev'), opts.max_corr_stddev = 3; end     % in samp
 if ~isfield(opts,'min_template_corr_coef'), opts.min_template_corr_coef = 0.5; end    % waveform corr coeff
 if ~isfield(opts,'min_coinc_num'), opts.min_coinc_num = 10; end
 
-% opts.min_peak_ratio=0;
-% opts.max_dt=10;
-% opts.min_coinc_frac=0;
-% opts.max_corr_stdev=inf;
-% opts.min_template_corr_coef=0;
-% opts.min_coinc_num=0;
-
 firings=sort_by_time(firings);
 
 peakchans=firings(1,:);    % must be same across all events with same label (since no merging done yet)
