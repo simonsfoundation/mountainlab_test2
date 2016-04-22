@@ -9,13 +9,14 @@ function ms_view_templates(templates,opts)
 %    opts.Tpad - the spacing between templates, (default floor(T*0.2))
 %    opts.stdev - optional MxTxK array of standard deviations to be viewed
 %    opts.showcenter - optional, if true plot fiducial lines at the "center" time
+%    opts.pops - optional, if present interpreted as populations & blobs shown
 %
 % Other m-files required: none
 %
 % See also: mscmd_templates, ms_templates, ms_view_templates_from_clips
 
 % Author: Jeremy Magland
-% Jan 2015; Last revision: 21-Mar-2016, Barnett
+% Jan 2015; Last revision: 22-Apr-2016, Barnett
 
 if (nargin<1) test_ms_view_templates; return; end;
 
@@ -76,22 +77,34 @@ ylim([-vspread*(M-1)-vmargin,vmargin]);
 set(gca,'xtick',[]); set(gca,'ytick',[]);
 %set(gca,'position',[0,0,1,1]);
 
+if isfield(opts,'pops')
+  popsc = 50/sqrt(max(opts.pops));  % blob size scale (propto area)
+  for k=1:K
+    if opts.pops(k)>0
+      plot((T+Tpad)*(k-1)+T/2,-vspread*(M-1)-1.0*vspread,'k.','markersize',max(1,popsc*sqrt(opts.pops(k)))); hold on;
+    end
+  end
+end
+
 label_color=[0.7,0.7,0.7];  % now do text number labels...
-for k=1:K
-    hh=text((T+Tpad)*(k-1)+T/2,vspread/2,sprintf('%d',k));
-    set(hh,'HorizontalAlignment','center');
-    set(hh,'VerticalAlignment','bottom');
-    set(hh,'FontSize',10);
-    set(hh,'Color',label_color);
-end;
 
 for k=1:K
+  hh=text((T+Tpad)*(k-1)+T/2,vspread/2,sprintf('%d',k));
+  set(hh,'HorizontalAlignment','center');
+  set(hh,'VerticalAlignment','bottom');
+  set(hh,'FontSize',10);
+  set(hh,'Color',label_color);
+end;
+
+if ~isfield(opts,'pops')   % ahb
+  for k=1:K
     hh=text((T+Tpad)*(k-1)+T/2,-vspread*(M-1)-vspread/2,sprintf('%d',k));
     set(hh,'HorizontalAlignment','center');
     set(hh,'VerticalAlignment','top');
     set(hh,'FontSize',10);
     set(hh,'Color',label_color);
-end;
+  end;
+end
 
 for m=1:M
     hh=text(-Tpad,-(m-1)*vspread,sprintf('Chan %d',m));
