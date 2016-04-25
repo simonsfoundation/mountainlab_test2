@@ -15,8 +15,8 @@ struct AttemptedComparisons {
 };
 
 
-QList<int> find_inds(const QList<int> &labels,int k) {
-    QList<int> ret;
+QList<long> find_inds(const QList<int> &labels,int k) {
+    QList<long> ret;
     for (int i=0; i<labels.count(); i++) {
         if (labels[i]==k) ret << i;
     }
@@ -77,7 +77,7 @@ QList<double> compute_centroid(Mda &X) {
 }
 
 
-QList<double> compute_center(Mda &X,const QList<int> &inds) {
+QList<double> compute_center(Mda &X,const QList<long> &inds) {
     int M=X.N1();
     int NN=inds.count();
     if (NN==0) {
@@ -106,7 +106,7 @@ Mda compute_centers(Mda &X,const QList<int> &labels,int K) {
     Mda ret;
     ret.allocate(M,K);
     for (int k=0; k<K; k++) {
-        QList<int> inds=find_inds(labels,k);
+        QList<long> inds=find_inds(labels,k);
         QList<double> ctr=compute_center(X,inds);
         for (int m=0; m<M; m++) ret.setValue(ctr[m],m,k);
     }
@@ -338,7 +338,7 @@ QList<int> test_redistribute(bool &do_merge,Mda &Y1,Mda &Y2,double isocut_thresh
 	return ret;
 }
 
-QList<int> test_redistribute(bool &do_merge,Mda &X,const QList<int> &inds1,const QList<int> &inds2,double isocut_threshold) {
+QList<int> test_redistribute(bool &do_merge,Mda &X,const QList<long> &inds1,const QList<long> &inds2,double isocut_threshold) {
     int M=X.N1();
     Mda X1;
     X1.allocate(M,inds1.count());
@@ -393,9 +393,9 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
         if (k1<0) break;
         if (verbose) printf("compare %d(%d),%d(%d) --- ",k1,counts[k1],k2,counts[k2]);
 
-        QList<int> inds1=find_inds(labels,k1);
-        QList<int> inds2=find_inds(labels,k2);
-        QList<int> inds12=inds1; inds12.append(inds2);
+        QList<long> inds1=find_inds(labels,k1);
+        QList<long> inds2=find_inds(labels,k2);
+        QList<long> inds12=inds1; inds12.append(inds2);
         for (int m=0; m<M; m++) {
             attempted_comparisons.centers1 << Cptr[m+k1*M];
             attempted_comparisons.centers2 << Cptr[m+k2*M];
@@ -429,9 +429,9 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
         }
         else {
 
-            QList<int> indsA0=find_inds(labels0,1);
-            QList<int> indsB0=find_inds(labels0,2);
-            QList<int> indsA,indsB;
+            QList<long> indsA0=find_inds(labels0,1);
+            QList<long> indsB0=find_inds(labels0,2);
+            QList<long> indsA,indsB;
             for (int i=0; i<indsA0.count(); i++) indsA << inds12[indsA0[i]];
             for (int i=0; i<indsB0.count(); i++) indsB << inds12[indsB0[i]];
             for (int i=0; i<indsA.count(); i++) {
