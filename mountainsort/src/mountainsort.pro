@@ -78,9 +78,7 @@ HEADERS += \
     processors/filter_events_processor.h \
     processors/confusion_matrix.h \
     core/msscriptcontroller.h \
-    processors/extract_raw_processor.h \
-    processors/merge_across_channels_processor.h \
-    processors/merge_across_channels.h
+    processors/extract_raw_processor.h
 
 SOURCES += utils/get_command_line_params.cpp \
     core/msprocessmanager.cpp \
@@ -146,9 +144,7 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/confusion_matrix_processor.cpp \
     core/msscriptcontroller.cpp \
     processors/extract_raw_processor.cpp \
-    processors/fit_stage_new.cpp \
-    processors/merge_across_channels_processor.cpp \
-    processors/merge_across_channels.cpp
+    processors/fit_stage_new.cpp
 
 DISTFILES += \
     ../version.txt
