@@ -11,6 +11,13 @@ The software suite (in flux) comprises the following:
 
 * A Matlab toolset for processing, visualizing, and validating spike sorting data and a set of Matlab wrappers to MountainSort and MountainView.
 
+## Developers
+
+* Jeremy Magland
+* Alex Barnett
+* Sebastian Baginski
+* Witold Wysota
+
 ## License
 
 This is open source software released under the terms of the GPLv3. For alternative licensing options, please contact scdainfo@simonsfoundation.org.
