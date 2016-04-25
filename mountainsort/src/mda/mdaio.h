@@ -60,7 +60,7 @@ struct MDAIO_HEADER {
 //simply read, write or copy the mda header
 long mda_read_header(struct MDAIO_HEADER *H,FILE *input_file);
 long mda_write_header(struct MDAIO_HEADER *H,FILE *output_file);
-void mda_copy_header(struct MDAIO_HEADER *Hdst,struct MDAIO_HEADER *Hsrc);
+void mda_copy_header(struct MDAIO_HEADER *Hdst,const struct MDAIO_HEADER *Hsrc);
 
 //the following can be used no matter what the underlying data type is
 long mda_read_byte(unsigned char *data,struct MDAIO_HEADER *H,long n,FILE *input_file);

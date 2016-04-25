@@ -183,8 +183,10 @@ test {
     TARGET = mountainsort_test
     DEPENDPATH += unit_tests
     SOURCES += unit_tests/testMda.cpp	\
-	unit_tests/testMain.cpp
-    HEADERS += unit_tests/testMda.h
+	unit_tests/testMain.cpp	\
+	unit_tests/testMdaIO.cpp
+    HEADERS += unit_tests/testMda.h \
+	unit_tests/testMdaIO.h
 } else {
     SOURCES += mountainsortmain.cpp
 }
