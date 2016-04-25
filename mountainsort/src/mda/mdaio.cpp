@@ -224,7 +224,7 @@ long mda_write_float64(double *data,struct MDAIO_HEADER *H,long n,FILE *output_f
 }
 
 
-void mda_copy_header(struct MDAIO_HEADER *ret,struct MDAIO_HEADER *X) {
+void mda_copy_header(struct MDAIO_HEADER *ret, const struct MDAIO_HEADER *X) {
 	std::memcpy(ret, X, sizeof(*ret));
 }
 

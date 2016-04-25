@@ -16,7 +16,7 @@
 #include "msprefs.h"
 #include "omp.h"
 
-QList<long> fit_stage_kernel(Mda &X, Mda &templates, QList<double> &times, QList<int> &labels, const fit_stage_opts& opts);
+QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList<int>& labels, const fit_stage_opts& opts);
 
 bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts)
 {
@@ -27,7 +27,7 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     DiskReadMda X(timeseries_path);
     long M = X.N1();
     long N = X.N2();
-    int T=opts.clip_size;
+    int T = opts.clip_size;
 
     Mda firingsA;
     firingsA.read(firings_path);
@@ -40,12 +40,12 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
 
     Mda templates = compute_templates_0(X, firings_split, T); //MxNxK
 
-    long L=firings.N2();
+    long L = firings.N2();
     QList<double> times;
     QList<int> labels;
-    for (long j=0; j<L; j++) {
-        times << firings.value(2,j);
-        labels << (int)firings_split.value(3,j);
+    for (long j = 0; j < L; j++) {
+        times << firings.value(1, j);
+        labels << (int)firings_split.value(2, j);
     }
 
     long chunk_size = PROCESSING_CHUNK_SIZE;
@@ -73,13 +73,13 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
             {
                 QTime timer;
                 timer.start();
-                local_templates=templates;
+                local_templates = templates;
                 X.readChunk(chunk, 0, timepoint - overlap_size, M, chunk_size + 2 * overlap_size);
                 elapsed_times["readChunk"] += timer.elapsed();
                 timer.start();
-                for (long jj=0; jj<L; jj++) {
-                    if ((timepoint-overlap_size<=times[jj])&&(times[jj]<timepoint-overlap_size+chunk_size+2*overlap_size)) {
-                        local_times << times[jj]-(timepoint-overlap_size);
+                for (long jj = 0; jj < L; jj++) {
+                    if ((timepoint - overlap_size <= times[jj]) && (times[jj] < timepoint - overlap_size + chunk_size + 2 * overlap_size)) {
+                        local_times << times[jj] - (timepoint - overlap_size);
                         local_labels << labels[jj];
                         local_inds << jj;
                     }
@@ -90,18 +90,19 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
             {
                 QTime timer;
                 timer.start();
-                local_inds_to_use = fit_stage_kernel(chunk,local_templates,local_times,local_labels,opts);
+                local_inds_to_use = fit_stage_kernel(chunk, local_templates, local_times, local_labels, opts);
                 elapsed_times_local["fit_stage_kernel"] += timer.elapsed();
             }
 #pragma omp critical(lock1)
             {
                 elapsed_times["fit_stage_kernel"] += elapsed_times_local["fit_stage_kernel"];
                 {
-                    QTime timer; timer.start();
-                    for (long ii=0; ii<local_inds_to_use.count(); ii++) {
-                        long ind0=local_inds[local_inds_to_use[ii]];
-                        double t0=times[ind0];
-                        if ((timepoint<=t0)&&(t0<timepoint+chunk_size)) {
+                    QTime timer;
+                    timer.start();
+                    for (long ii = 0; ii < local_inds_to_use.count(); ii++) {
+                        long ind0 = local_inds[local_inds_to_use[ii]];
+                        double t0 = times[ind0];
+                        if ((timepoint <= t0) && (t0 < timepoint + chunk_size)) {
                             inds_to_use << ind0;
                         }
                     }
@@ -111,26 +112,27 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
                 num_timepoints_handled += qMin(chunk_size, N - timepoint);
                 if ((timer_status.elapsed() > 1000) || (num_timepoints_handled == N) || (timepoint == 0)) {
                     printf("%ld/%ld (%d%%) - Elapsed(s): RC:%g, SLD:%g, KERNEL:%g, GLD:%g, Total:%g, %d threads\n",
-                           num_timepoints_handled, N,
-                           (int)(num_timepoints_handled * 1.0 / N * 100),
-                           elapsed_times["readChunk"] * 1.0 / 1000,
-                           elapsed_times["set_local_data"] * 1.0 / 1000,
-                           elapsed_times["fit_stage_kernel"] * 1.0 / 1000,
-                           elapsed_times["get_local_data"] * 1.0 / 1000,
-                           timer_total.elapsed() * 1.0 / 1000,
-                           omp_get_num_threads());
+                        num_timepoints_handled, N,
+                        (int)(num_timepoints_handled * 1.0 / N * 100),
+                        elapsed_times["readChunk"] * 1.0 / 1000,
+                        elapsed_times["set_local_data"] * 1.0 / 1000,
+                        elapsed_times["fit_stage_kernel"] * 1.0 / 1000,
+                        elapsed_times["get_local_data"] * 1.0 / 1000,
+                        timer_total.elapsed() * 1.0 / 1000,
+                        omp_get_num_threads());
                     timer_status.restart();
                 }
             }
         }
     }
 
-    long num_to_use=inds_to_use.count();
+    qSort(inds_to_use);
+    long num_to_use = inds_to_use.count();
     if (times.count()) {
         printf("using %ld/%ld events (%g%%)\n", num_to_use, (long)times.count(), num_to_use * 100.0 / times.count());
     }
     Mda firings_out(firings.N1(), num_to_use);
-    for (long i=0; i<num_to_use; i++) {
+    for (long i = 0; i < num_to_use; i++) {
         for (int j = 0; j < firings.N1(); j++) {
             firings_out.set(firings.get(j, inds_to_use[i]), j, i);
         }
@@ -141,7 +143,7 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     return true;
 }
 
-QList<long> fit_stage_kernel(Mda &X, Mda &templates, QList<double> &times, QList<int> &labels, const fit_stage_opts& opts)
+QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList<int>& labels, const fit_stage_opts& opts)
 {
     int M = X.N1();
     int T = opts.clip_size;
@@ -163,31 +165,31 @@ QList<long> fit_stage_kernel(Mda &X, Mda &templates, QList<double> &times, QList
     //while ((something_changed)&&(num_passes<2)) {
     while (something_changed) {
         num_passes++;
-        printf("pass %d... ", num_passes);
         QList<double> scores_to_try;
-        QList<long> times_to_try;
+        QList<double> times_to_try;
         QList<int> labels_to_try;
         QList<long> inds_to_try; //indices of the events to try on this pass
         //QList<double> template_norms_to_try;
         for (long i = 0; i < L; i++) {
             if (all_to_use[i] == 0) {
-                long t0 = times[i];
+                double t0 = times[i];
                 int k0 = labels[i];
                 if (k0 > 0) {
-                    double score0 = compute_score(M * T, X.dataPtr(0, t0 - Tmid), templates.dataPtr(0, 0, k0 - 1));
-
+                    long tt = (long)(t0 - Tmid + 0.5);
+                    double score0 = compute_score(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, k0 - 1));
                     /*
                     if (score0 < template_norms[k0] * template_norms[k0] * 0.1)
                         score0 = 0; //the norm of the improvement needs to be at least 0.5 times the norm of the template
                         */
 
-                    double neglogprior=30;
+                    double neglogprior = 30;
                     if (score0 > neglogprior) {
                         scores_to_try << score0;
                         times_to_try << t0;
                         labels_to_try << k0;
                         inds_to_try << i;
-                    } else {
+                    }
+                    else {
                         all_to_use[i] = -1; //means we definitely aren't using it (so we will never get here again)
                     }
                 }
@@ -201,11 +203,12 @@ QList<long> fit_stage_kernel(Mda &X, Mda &templates, QList<double> &times, QList
             if (to_use[i] == 1) {
                 something_changed = true;
                 num_added++;
-                subtract_scaled_template(M * T, X.dataPtr(0, times_to_try[i] - Tmid), templates.dataPtr(0, 0, labels_to_try[i] - 1));
+                long tt = (long)(times_to_try[i] - Tmid + 0.5);
+                subtract_scaled_template(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, labels_to_try[i] - 1));
                 all_to_use[inds_to_try[i]] = 1;
             }
         }
-        printf("added %ld events\n", num_added);
+        printf("pass %d: added %ld events\n", num_passes, num_added);
     }
 
     QList<long> inds_to_use;
@@ -216,4 +219,3 @@ QList<long> fit_stage_kernel(Mda &X, Mda &templates, QList<double> &times, QList
 
     return inds_to_use;
 }
-

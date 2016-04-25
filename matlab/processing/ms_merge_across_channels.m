@@ -1,34 +1,57 @@
-function firings_out=ms_merge_across_channels(templates,firings,opts)
-% MS_MERGE_ACROSS_CHANNELS - merge clusters corresponding to the same neuron but detected on different channels
+function [firings_out info]=ms_merge_across_channels(templates,firings,opts)
+% MS_MERGE_ACROSS_CHANNELS - merge clusters from the same neuron but detected
+%                            on different channels
 %
-% [firings_out] = ms_merge_across_channels(templates,firings,opts)
+% [firings_out info] = ms_merge_across_channels(templates,firings,opts)
 %
 % Inputs:
 %    templates - MxTxK array of templates
-%    firings - JxL array of firing events. channels in first row, times in the second row, labels in the third row
+%    firings - JxL array of firing events. channels in first row, times in the
+%    second row, labels in the third row
 %    opts - (optional) including
-%        min_peak_ratio - the minimum ratio between the peaks on two channels in order to even consider merging
-%        max_dt - the maximum time shift between peaks on different channels to consider for merging
-%        min_coinc_frac - the minimum fraction of events that coincidently occur to consider for merging
-%        min_coinc_num - the minimum number of events that coincidently occur to consider for merging
-%        max_corr_stdev - (ahb will describe this)
-%        min_template_corr_coef - the minimum correlation between template waveforms to consider merging
-%        
+%        min_peak_ratio - the minimum ratio between the peaks on two channels in
+%                         order to even consider merging
+%        max_dt - the maximum time shift between peaks on different channels to
+%                 consider for merging
+%        min_coinc_frac - the minimum fraction of events that coincidently occur
+%                 to consider for merging
+%        min_coinc_num - the minimum number of events that coincidently occur to
+%                 consider for merging
+%        max_corr_stdev - the maximum standard deviation in cross-correlation
+%                 distribution (in samples)
+%        min_template_corr_coef - the minimum correlation coefficient between
+%                 template waveforms to consider merging
 %
 % Outputs:
-%    firings_out - the new array of firing events (labels and times will have been modified)
+%    firings_out - the new array of firing events
+%                 (labels and times will have been modified)
+%    info - diagnostic struct containing fields:
+%           Sinfo - K*K cell array of structs giving diagnostic info for all the
+%                   decisions used for S matrix elements.
+%           premergelabelchans - the peak channel numbers for each label
+%                                pre-merge.
 %
-% Two clusters (detected on two distinct channels) are merged if ALL of the following criteria are met:
+% Two clusters (detected on two distinct channels) are merged if ALL of the
+% following criteria are met:
 %    (Let W1,W2 be the templates and m1,m2 be the channels)
-%    (a) The peak value of W1 on channel m2 is at least opts.min_peak_ratio times its peak value on channel m1
-%    (b) The correlation between waveforms W1 and W2 is at least opts.min_template_corr_coef
-%    (c) The number of coincident firing events is at least min_coinc_frac times [ahb will describe this]
+%    (a) The peak value of W1 on channel m2 is at least opts.min_peak_ratio
+%        times its peak value on channel m1
+%    (b) The correlation between waveforms W1 and W2 is at least
+%        opts.min_template_corr_coef
+%    (c) The number of coincident firing events is at least min_coinc_frac
+%        times the lesser of the number of firing events and at least
+%        min_coinc_num in number
+%    (d) The standard deviation of the distibution of firing time offsets is
+%        no more than opts.max_corr_stdev  (this ensures offsets repeatable).
 %
-% This procedure is forced to be 
+% Other m-files required: none.
 %
-% Other m-files required:
-%
-% Created 4/21/16 by ahb and jfm (simultaneously on etherpad)
+% Created 4/21/16 by ahb and jfm (simultaneously on etherpad).
+% jfm debugged 4/22/16, ahb diagnostic output.
+% Todo: 0) self test
+%       1) maximize r (corr coef) over t-shifts.
+%       2) check bestdt altering in make_...
+%       3) should maxdt in remove... be opts.max_dt ?
 
 if nargin<3, opts=[]; end
 if ~isfield(opts,'min_peak_ratio'), opts.min_peak_ratio = 0.7; end
@@ -38,33 +61,47 @@ if ~isfield(opts,'max_corr_stddev'), opts.max_corr_stddev = 3; end     % in samp
 if ~isfield(opts,'min_template_corr_coef'), opts.min_template_corr_coef = 0.5; end    % waveform corr coeff
 if ~isfield(opts,'min_coinc_num'), opts.min_coinc_num = 10; end
 
+info = []; diagnose = (nargout>1);
+
 firings=sort_by_time(firings);
 
 peakchans=firings(1,:);    % must be same across all events with same label (since no merging done yet)
 labels=firings(3,:);
-times = firings(2,:);
+times=firings(2,:);
 
 K=max(labels);
-
 S=zeros(K,K);  % score matrix between pairs
 best_dt=zeros(K,K); % best time shifts between pairs
 
-fprintf('Merging across channels...\n');
+if diagnose, info.Sinfo = cell(K,K); % diagnostics output S cell array (ahb)
+  info.premergelabelchans = nan(1,K);
+  for k=1:K          % make a list of which peak chan each label had...
+    inds=find(labels==k); if ~isempty(inds)
+      info.premergelabelchans(k) = peakchans(inds(1));
+    end
+  end
+end
+
+fprintf('Merging across channels (compute score matrix)...\n');
 for k1=1:K
-    fprintf('.');
-for k2=1:K
-    inds1=find(labels==k1);
+  fprintf('.');
+  inds1=find(labels==k1);
+  for k2=[1:k1-1, k1+1:K]        % omit the diagonal
     inds2=find(labels==k2);
     if ((length(inds1)>0)&&(length(inds2)>0))
       peakchan1=peakchans(inds1(1));
       peakchan2=peakchans(inds2(1));
-      [S(k1,k2),best_dt(k1,k2)]=compute_score(squeeze(templates(:,:,k1)),squeeze(templates(:,:,k2)),times(inds1),times(inds2),peakchan1,peakchan2,opts); % Boolean
+      if diagnose
+        [S(k1,k2),best_dt(k1,k2),info.Sinfo{k1,k2}]=compute_score(squeeze(templates(:,:,k1)),squeeze(templates(:,:,k2)),times(inds1),times(inds2),peakchan1,peakchan2,opts);
+      else
+        [S(k1,k2),best_dt(k1,k2)]=compute_score(squeeze(templates(:,:,k1)),squeeze(templates(:,:,k2)),times(inds1),times(inds2),peakchan1,peakchan2,opts);   
+      end
     end;
-end;
+  end;
 end;
 fprintf('\n');
 
-%make the matrix relexive and transitive
+%make the matrix reflexive and transitive
 [S,best_dt]=make_reflexive_and_transitive(S,best_dt);
 
 %now we merge based on the above scores
@@ -89,7 +126,7 @@ firings_out(3,:)=new_labels;
 firings_out(2,:)=new_times;
 
 %Now we will have a bunch of redundant events! So let's remove them!
-maxdt=5;
+maxdt=5;     % shouldn't this be opts.max_dt ?
 firings_out=remove_redundant_events(firings_out,maxdt);
 
 fprintf('Merge: %d -> %d clusters, %d -> %d events.\n',K,max(firings_out(3,:)),size(firings,2),size(firings_out,2));
@@ -127,6 +164,8 @@ end
 function [S,best_dt]=make_reflexive_and_transitive(S,best_dt)
 % makes S(i,j) true whenever S(j,i)              for all i,j
 % makes S(i,j) true whenever S(i,k) && S(k,j)    for all i,j,k
+%
+% ** ahb not sure of need for changing bestdt here?
 K=size(S,1);
 something_changed=1;
 while something_changed
@@ -169,41 +208,53 @@ labels=label_map(labels);
 end
 
 
-function [s bestdt]  = compute_score(template1,template2,t1,t2,peakchan1,peakchan2,opts)
-% returns merge score for two labels (using their firing events and templates), based on various criteria
+function [s bestdt info] = compute_score(template1,template2,t1,t2,peakchan1,...
+                                         peakchan2,opts)
+% returns merge score for two labels (using their firing events and templates),
+% based on various criteria.
+% Outputs:  s is Boolean, true for merge.
+%           bestdt is estimate of time offset between the merged events
+%           info is a struct giving diagnostic info about decisions made
 
-s = 0; bestdt = nan;     % values to return if no merge
+s = 0; bestdt = nan; info = []; info.s = 0;    % values to return if no merge
 
 template1selfpeak = max(abs(template1(peakchan1,:)));         % bipolar for now
 template1peakonc2 = max(abs(template1(peakchan2,:)));
-if template1peakonc2  < opts.min_peak_ratio*template1selfpeak           % drop out if peaks not close enough in size
+% drop out if peaks not close enough in size...
+if template1peakonc2  < opts.min_peak_ratio*template1selfpeak
   return
 end
+info.peakratio = template1peakonc2/template1selfpeak;
 % drop out if not correlated enough...
 w1 = template1(:); w2 = template2(:);
 r12 = dot(w1,w2)/norm(w1)/norm(w2);
+info.r12 = r12;
 if r12 < opts.min_template_corr_coef
   return
 end
 
-if (numel(t1)==0)||(numel(t2)==0) return; end;
+if (numel(t1)==0)||(numel(t2)==0)
+  info.reason='a time list was empty'; return
+end
 
 % compute firing cross-corr
 cco=[]; cco.dtau=1; cco.taumax = opts.max_dt;
 [C taus] = crosscorr_local([1+0*t1, 2+0*t2],[t1,t2],[],cco);    
 C = squeeze(C(2,1,:))';  % hack to get the t1 vs t2 corr. row vec
-% ** check why diag auto-corr is zero
 coincfrac = sum(C)/min(numel(t1),numel(t2));
 meanC = sum(taus.*C) / sum(C);
 stddevC = sqrt(sum((taus-meanC).^2.*C)/sum(C));
-s = coincfrac > opts.min_coinc_frac && sum(C)>=opts.min_coinc_num  && stddevC < opts.max_corr_stddev;
+s = coincfrac > opts.min_coinc_frac && sum(C)>=opts.min_coinc_num ...
+    && stddevC < opts.max_corr_stddev;
 bestdt = meanC;
+% diagnostic output...
+info.s = s; info.coincfrac = coincfrac; info.sumC = sum(C); info.stddevC=stddevC;
+
 
 end
 
 
-%jfm says: I puth this here locally so we don't have a file dependency
-%(ahb, we can debate)
+% jfm says: I put this here locally so we don't have a file dependency.
 % taken from mountainlab_devel/view/crosscorr.m
 function [C taus] = crosscorr_local(l,t,a,o)
 % CROSSCORR - estimate cross-correlation vs time shift given times and labels

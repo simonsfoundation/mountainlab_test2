@@ -18,11 +18,11 @@ fit_stage_Processor::fit_stage_Processor() {
     d->q=this;
 
     this->setName("fit_stage");
-    this->setVersion("0.12");
+    this->setVersion("0.13");
     this->setInputFileParameters("timeseries","firings");
     this->setOutputFileParameters("firings_out");
     this->setRequiredParameters("clip_size","shell_increment","min_shell_size");
-    //this->setOptionalParameters();
+    this->setOptionalParameters("use_old");
 }
 
 fit_stage_Processor::~fit_stage_Processor() {
@@ -45,6 +45,11 @@ bool fit_stage_Processor::run(const QMap<QString, QVariant> &params)
     opts.clip_size=clip_size;
     opts.min_shell_size=params["min_shell_size"].toInt();
     opts.shell_increment=params["shell_increment"].toDouble();
-    return fit_stage(timeseries_path,firings_path,firings_out_path,opts);
+    if (params["use_old"].toBool()) {
+        return fit_stage(timeseries_path,firings_path,firings_out_path,opts);
+    }
+    else {
+        return fit_stage_new(timeseries_path,firings_path,firings_out_path,opts);
+    }
 }
 

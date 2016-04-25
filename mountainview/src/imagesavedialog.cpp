@@ -8,6 +8,8 @@
 #include <QFileDialog>
 #include <QImageWriter>
 #include <QMessageBox>
+#include <QDesktopWidget>
+#include <QApplication>
 
 class ImageSaveDialogPrivate {
 public:
@@ -74,11 +76,25 @@ void ImageSaveDialog::presentImage(const QImage& img)
     dlg.exec();
 }
 
+static QPixmap fit_display(const QImage& img) {
+    static QRect screenRect;
+    static int margin = 20;
+    QPixmap result = QPixmap::fromImage(img);
+    if (screenRect.isNull())
+        screenRect = QApplication::desktop()->availableGeometry();
+    if (result.width() > screenRect.width())
+        result = result.scaledToWidth(screenRect.width() - margin, Qt::SmoothTransformation);
+    if (result.height() > screenRect.height())
+        result = result.scaledToHeight(screenRect.height() - margin, Qt::SmoothTransformation);
+    return result;
+}
+
 void ImageSaveDialog::setImage(const QImage& img)
 {
     d->m_image = img;
-    d->m_label->setPixmap(QPixmap::fromImage(img));
-    d->m_label->resize(img.width(), img.height());
+    const QPixmap toDisplay = fit_display(img);
+    d->m_label->setPixmap(toDisplay);
+    d->m_label->resize(toDisplay.width(), toDisplay.height());
 }
 
 void ImageSaveDialog::slot_save()
