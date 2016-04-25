@@ -184,10 +184,8 @@ double max_absolute_value_on_channel(Mda& template1, int channel)
     return compute_max(vals);
 }
 
-double compute_sliding_noncentered_correlation(long N, double* X1, double* X2)
+double compute_noncentered_correlation(long N, double* X1, double* X2)
 {
-    //first we compute
-
     double S12 = 0, S11 = 0, S22 = 0;
     for (long i = 0; i < N; i++) {
         S12 += X1[i] * X2[i];
@@ -197,6 +195,30 @@ double compute_sliding_noncentered_correlation(long N, double* X1, double* X2)
     if ((!S11) || (!S22))
         return 0;
     return S12 / (sqrt(S11) * sqrt(S22));
+}
+
+Mda time_shift_template(Mda &template0,int dt) {
+    int M=template0.N1();
+    int T=template0.N2();
+    Mda ret(M,T);
+    for (int t=0; t<T; t++) {
+        for (int m=0; m<M; m++) {
+            ret.setValue(template0.value(m,t-dt),m,t);
+        }
+    }
+    return ret;
+}
+
+double compute_sliding_noncentered_correlation(Mda &template1,Mda &template2) {
+    int M=template1.N1();
+    int T=template1.N2();
+    double best=0;
+    for (int dt=-T/2; dt<=T/2; dt++) {
+        Mda template1b=time_shift_template(template1,dt);
+        double val=compute_noncentered_correlation(M*T,template1b.dataPtr(),template2.dataPtr());
+        if (val>best) best=val;
+    }
+    return best;
 }
 
 double compute_sum(const QList<double>& X)
@@ -209,9 +231,6 @@ double compute_sum(const QList<double>& X)
 
 void compute_merge_score(double& score0, double& best_dt0, Mda& template1, Mda& template2, QList<double>& times1, QList<double>& times2, double peakchan1, double peakchan2, const merge_across_channels_opts& opts)
 {
-    int M = template1.N1();
-    int T = template1.N2();
-
     //values to return if no merge
     score0 = 0;
     best_dt0 = 0;
@@ -224,7 +243,8 @@ void compute_merge_score(double& score0, double& best_dt0, Mda& template1, Mda& 
     }
 
     //min_template_corr_coef criterion
-    double r12 = compute_sliding_noncentered_correlation(M * T, template1.dataPtr(), template2.dataPtr());
+    //double r12 = compute_noncentered_correlation(M * T, template1.dataPtr(), template2.dataPtr());
+    double r12 = compute_sliding_noncentered_correlation(template1, template2);
     if (r12 < opts.min_template_corr_coef) {
         return;
     }
