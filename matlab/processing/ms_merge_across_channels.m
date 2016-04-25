@@ -53,6 +53,7 @@ function [firings_out info]=ms_merge_across_channels(templates,firings,opts)
 %       2) check bestdt altering in make_...
 %       3) should maxdt in remove... be opts.max_dt ?
 
+if nargin==0, test_ms_merge_across_channels; return; end
 if nargin<3, opts=[]; end
 if ~isfield(opts,'min_peak_ratio'), opts.min_peak_ratio = 0.7; end
 if ~isfield(opts,'max_dt'), opts.max_dt = 10; end      % max difference between peaks of same event peak on different channels
@@ -211,7 +212,7 @@ end
 function [s bestdt info] = compute_score(template1,template2,t1,t2,peakchan1,...
                                          peakchan2,opts)
 % returns merge score for two labels (using their firing events and templates),
-% based on various criteria.
+% based on various criteria. Templates are each M*T.
 % Outputs:  s is Boolean, true for merge.
 %           bestdt is estimate of time offset between the merged events
 %           info is a struct giving diagnostic info about decisions made
@@ -226,8 +227,7 @@ if template1peakonc2  < opts.min_peak_ratio*template1selfpeak
 end
 info.peakratio = template1peakonc2/template1selfpeak;
 % drop out if not correlated enough...
-w1 = template1(:); w2 = template2(:);
-r12 = dot(w1,w2)/norm(w1)/norm(w2);
+r12 = best_corr_coef(template1,template2);
 info.r12 = r12;
 if r12 < opts.min_template_corr_coef
   return
@@ -249,11 +249,28 @@ s = coincfrac > opts.min_coinc_frac && sum(C)>=opts.min_coinc_num ...
 bestdt = meanC;
 % diagnostic output...
 info.s = s; info.coincfrac = coincfrac; info.sumC = sum(C); info.stddevC=stddevC;
+end
 
-
+function bestr = best_corr_coef(w1,w2,o)
+% w1, w2 are templates of size M*T.  naive version, ahb 4/25/16
+if nargin<3, o = []; end
+% note incr maxdt shrinks available time window for cross corr computation:
+if isfield(o,'maxdt'), maxdt = o.maxdt; else maxdt = 10; end
+[M T] = size(w1);
+t = 1+maxdt:T-maxdt;   % time points to compare on unshifted template
+if numel(t)<10, warning('less than 10 time points used in corr coef calc!'); end
+v1 = w1(:,t); nv1 = norm(v1(:));
+dts = -maxdt:maxdt;  % shifts
+rs = nan*dts;
+for i=1:numel(dts)
+  v2 = w2(:,t+dts(i));  % shifted
+  rs(i) = dot(v1(:),v2(:))/(nv1*norm(v2(:)));
+end
+bestr = max(rs);
 end
 
 
+% ----------------------------------------------------------------------------
 % jfm says: I put this here locally so we don't have a file dependency.
 % taken from mountainlab_devel/view/crosscorr.m
 function [C taus] = crosscorr_local(l,t,a,o)
@@ -351,4 +368,34 @@ elseif meth=='d'  % work directly w/ t,l: faster, 1 min 50bins N=1e6 K=10, 1core
   end
 end
 %fprintf('\n')
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% self-test
+function test_ms_merge_across_channels   % AHB  4/25/16
+dt = 6; % two waveforms with peaks separated by dt on two different channels
+T = 50;
+M=2;
+K=2;
+templates = nan(M,T,K);
+Tcen = floor((T+1)/2);  % defn of center time of clip
+w0=3;   % Gaussian width in samples (w0=3 makes r<0.5 for dt>=5)
+t = (1:T)-Tcen;
+templates(:,:,1) = [1.1*exp(-.5*t.^2/w0^2); 0.9*exp(-.5*(t-dt).^2/w0^2)];
+templates(:,:,2) = [0.9*exp(-.5*(t+dt).^2/w0^2); 1.1*exp(-.5*t.^2/w0^2)]; % similar peak heights but shifted
+%o = []; o.showcenter = 1; ms_view_templates(templates,o);  % to see them
+N=1e7;   % duration
+L = 1e4;  % how many true firings
+truetimes = round(N*rand(1,L));
+probdetected = 0.8;         % fake events found on two channels...
+times1 = truetimes(rand(1,L)<probdetected); labels1 = 1+0*times1;
+times2 = truetimes(rand(1,L)<probdetected) + dt; labels2 = 2+0*times2;
+times = [times1,times2]; labels = [labels1,labels2]; peakchans = labels;
+firings = [peakchans; times; labels];
+o = [];
+[f info]=ms_merge_across_channels(templates,firings,o);
+fprintf('%d events found (should be close to expected %d)\n,',size(f,2),round((1-(1-probdetected)^2)*L))
+%diagnose_merge(info);
+info.Sinfo{1,2}
+fprintf('correlation coeff r found: %.3g\n',info.Sinfo{1,2}.r12)
 end
