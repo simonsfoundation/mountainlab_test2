@@ -13,8 +13,8 @@ struct merge_across_channels_opts {
     double min_peak_ratio;
     int max_dt;
     double min_coinc_frac;
-    double min_coinc_num;
-    double max_corr_stdev;
+    int min_coinc_num;
+    double max_corr_stddev;
     double min_template_corr_coef;
     int clip_size;
 };
