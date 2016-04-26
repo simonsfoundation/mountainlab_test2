@@ -58,7 +58,6 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     QList<long> inds_to_use;
 
     {
-        omp_set_num_threads(1);
         QTime timer_status;
         timer_status.start();
         long num_timepoints_handled = 0;
