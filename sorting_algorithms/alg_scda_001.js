@@ -1,8 +1,8 @@
-function main() {
-	run_pipeline();
+function main(params) {
+	run_pipeline(params);
 }
 
-function run_pipeline() {
+function run_pipeline(params) {
 	var clip_size=100;
 	var detect_threshold=3.0;
 	var detect_interval=10;
@@ -63,7 +63,7 @@ function run_pipeline() {
 		shell_increment:shell_increment
 	};
 
-	var pre0='pre0.mda';
+	var pre0=params.raw;
 
 	var P=new MSPipeline();
 

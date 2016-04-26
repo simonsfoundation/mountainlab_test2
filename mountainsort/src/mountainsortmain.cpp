@@ -27,13 +27,13 @@
 void print_usage();
 void list_processors(const MSProcessManager* PM);
 bool run_process(MSProcessManager* PM, QJsonObject process);
-int run_script(const QStringList& script_fnames);
+int run_script(const QStringList& script_fnames, const QVariantMap& params);
 
 int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
 
-    MSCacheManager::globalInstance()->setLocalBasePath(app.applicationDirPath()+"/../../tmp");
+    MSCacheManager::globalInstance()->setLocalBasePath(app.applicationDirPath() + "/../../tmp");
 
     CLParams CLP = get_command_line_params(argc, argv);
 
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
         }
     }
     if (!script_fnames.isEmpty()) {
-        return run_script(script_fnames);
+        return run_script(script_fnames, CLP.named_parameters);
     }
 
     if (arg1 == "process") {
@@ -67,10 +67,12 @@ int main(int argc, char* argv[])
             return -1;
         else
             return 0;
-    } else if (arg1 == "list-processors") {
+    }
+    else if (arg1 == "list-processors") {
         list_processors(PM);
         return 0;
-    } else if (arg1 == "detail-processors") {
+    }
+    else if (arg1 == "detail-processors") {
         PM->printDetails();
         return 0;
     }
@@ -86,14 +88,16 @@ int main(int argc, char* argv[])
         process["processor_name"] = processor_name;
         QJsonObject parameters;
         QStringList keys = CLP.named_parameters.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             parameters[key] = CLP.named_parameters[key].toString();
         }
         process["parameters"] = parameters;
-        if (run_process(PM, process)) return 0;
-        else return -1;
-    } else {
+        if (run_process(PM, process))
+            return 0;
+        else
+            return -1;
+    }
+    else {
         printf("Unexpected number of unnamed parameters: %d\n", CLP.unnamed_parameters.count());
     }
 
@@ -121,8 +125,7 @@ bool run_process(MSProcessManager* PM, QJsonObject process)
     QJsonObject parameters = process["parameters"].toObject();
     QStringList keys = parameters.keys();
     QMap<QString, QVariant> params;
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         params[key] = parameters[key].toString();
     }
 
@@ -135,19 +138,18 @@ bool run_process(MSProcessManager* PM, QJsonObject process)
 
 void display_error(QJSValue result)
 {
-    qDebug()  << result.property("name").toString();
-    qDebug()  << result.property("message").toString();
-    qDebug()  << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
+    qDebug() << result.property("name").toString();
+    qDebug() << result.property("message").toString();
+    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
 }
 
-int run_script(const QStringList& script_fnames)
+int run_script(const QStringList& script_fnames, const QVariantMap& params)
 {
     QJSEngine engine;
     MSScriptController Controller;
     QJSValue MS = engine.newQObject(&Controller);
     engine.globalObject().setProperty("MS", MS);
-    foreach(QString fname, script_fnames)
-    {
+    foreach (QString fname, script_fnames) {
         QJSValue result = engine.evaluate(read_text_file(fname), fname);
         if (result.isError()) {
             display_error(result);
@@ -157,7 +159,15 @@ int run_script(const QStringList& script_fnames)
     }
 
     {
-        QJSValue result = engine.evaluate("main();");
+        QStringList param_keys=params.keys();
+        QJsonObject params_obj;
+        foreach (QString key,param_keys) {
+            params_obj[key]=params[key].toString();
+        }
+        QString params_json = QJsonDocument(params_obj).toJson(QJsonDocument::Compact);
+        QString str=QString("main(JSON.parse('%1'));").arg(params_json);
+        qDebug() << str;
+        QJSValue result = engine.evaluate(str);
         if (result.isError()) {
             display_error(result);
             qCritical() << "Error running script.";
