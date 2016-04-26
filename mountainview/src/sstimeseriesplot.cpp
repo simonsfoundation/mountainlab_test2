@@ -587,7 +587,7 @@ void SSTimeSeriesPlotPrivate::draw_control_panel(QPainter* P)
 
     Vec2 tmp = q->xRange();
     int t0 = tmp.x, t1 = tmp.y;
-    if ((t0 < 0) || (t0 < 0)) {
+    if (t0 < 0) {
         P->fillRect(RR1, col2);
     }
     else {
