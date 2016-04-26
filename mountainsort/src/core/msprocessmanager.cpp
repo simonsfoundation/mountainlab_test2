@@ -31,6 +31,7 @@
 #include "filter_events_processor.h"
 #include "confusion_matrix_processor.h"
 #include "extract_raw_processor.h"
+#include "merge_across_channels_processor.h"
 
 #include "qjson.h"
 #include "textfile.h"
@@ -91,6 +92,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new filter_events_Processor);
     loadProcessor(new confusion_matrix_Processor);
     loadProcessor(new extract_raw_Processor);
+    loadProcessor(new merge_across_channels_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString& processor_name) const

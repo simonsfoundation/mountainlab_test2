@@ -63,17 +63,17 @@ void geometric_median(int M,int N,double *ret,double *X) {
 }
 
 QList<double> compute_centroid(Mda &X) {
-	int M=X.N1();
-	int N=X.N2();
-	QList<double> ret;
-	for (int i=0; i<M; i++) ret << 0;
-	for (int n=0; n<N; n++) {
-		for (int m=0; m<M; m++) {
-			ret[m]+=X.value(m,n);
-		}
-	}
-	for (int i=0; i<M; i++) ret[i]/=N;
-	return ret;
+    int M=X.N1();
+    int N=X.N2();
+    QList<double> ret;
+    for (int i=0; i<M; i++) ret << 0;
+    for (int n=0; n<N; n++) {
+        for (int m=0; m<M; m++) {
+            ret[m]+=X.value(m,n);
+        }
+    }
+    for (int i=0; i<M; i++) ret[i]/=N;
+    return ret;
 }
 
 
@@ -84,7 +84,7 @@ QList<double> compute_center(Mda &X,const QList<long> &inds) {
         QList<double> ret; for (int i=0; i<M; i++) ret << 0;
         return ret;
     }
-	double *XX=(double *)malloc(sizeof(double)*M*NN);
+    double *XX=(double *)malloc(sizeof(double)*M*NN);
     int aa=0;
     for (int n=0; n<NN; n++) {
         for (int m=0; m<M; m++) {
@@ -180,10 +180,10 @@ void find_next_comparison(int M,int K,int &k1,int &k2,bool *active_labels,double
                 }
             }
         }
-		if (best_a<0) {
-			k1=-1; k2=-1;
-			return;
-		}
+        if (best_a<0) {
+            k1=-1; k2=-1;
+            return;
+        }
         k1=active_inds[best_a];
         k2=active_inds[best_b];
         if ((counts[k1]>0)&&(counts[k2]>0)) { //just to make sure (zero was actually happening some times, but not sure why)
@@ -199,143 +199,143 @@ void find_next_comparison(int M,int K,int &k1,int &k2,bool *active_labels,double
 }
 
 Mda matrix_transpose_isosplit(const Mda &A) {
-	Mda ret(A.N2(),A.N1());
-	for (int i=0; i<A.N1(); i++) {
-		for (int j=0; j<A.N2(); j++) {
-			ret.set(A.get(i,j),j,i);
-		}
-	}
-	return ret;
+    Mda ret(A.N2(),A.N1());
+    for (int i=0; i<A.N1(); i++) {
+        for (int j=0; j<A.N2(); j++) {
+            ret.set(A.get(i,j),j,i);
+        }
+    }
+    return ret;
 }
 
 Mda matrix_multiply_isosplit(const Mda &A,const Mda &B) {
-	int N1=A.N1();
-	int N2=A.N2();
-	int N2B=B.N1();
-	int N3=B.N2();
-	if (N2!=N2B) {
-		qWarning() << "Unexpected problem in matrix_multiply" << N1 << N2 << N2B << N3;
-		exit(-1);
-	}
-	Mda ret(N1,N3);
-	for (int i=0; i<N1; i++) {
-		for (int j=0; j<N3; j++) {
-			double val=0;
-			for (int k=0; k<N2; k++) {
-				val+=A.get(i,k)*B.get(k,j);
-			}
-			ret.set(val,i,j);
-		}
-	}
-	return ret;
+    int N1=A.N1();
+    int N2=A.N2();
+    int N2B=B.N1();
+    int N3=B.N2();
+    if (N2!=N2B) {
+        qWarning() << "Unexpected problem in matrix_multiply" << N1 << N2 << N2B << N3;
+        exit(-1);
+    }
+    Mda ret(N1,N3);
+    for (int i=0; i<N1; i++) {
+        for (int j=0; j<N3; j++) {
+            double val=0;
+            for (int k=0; k<N2; k++) {
+                val+=A.get(i,k)*B.get(k,j);
+            }
+            ret.set(val,i,j);
+        }
+    }
+    return ret;
 }
 
 Mda get_whitening_matrix_isosplit(Mda &COV) {
-	int M=COV.N1();
-	Mda U(M,M),S(1,M);
-	eigenvalue_decomposition_sym_isosplit(U,S,COV);
-	Mda S2(M,M);
-	for (int m=0; m<M; m++) {
-		if (S.get(m)) {
-			S2.set(1/sqrt(S.get(m)),m,m);
-		}
-	}
-	Mda W=matrix_multiply_isosplit(matrix_multiply_isosplit(U,S2),matrix_transpose_isosplit(U));
-	return W;
+    int M=COV.N1();
+    Mda U(M,M),S(1,M);
+    eigenvalue_decomposition_sym_isosplit(U,S,COV);
+    Mda S2(M,M);
+    for (int m=0; m<M; m++) {
+        if (S.get(m)) {
+            S2.set(1/sqrt(S.get(m)),m,m);
+        }
+    }
+    Mda W=matrix_multiply_isosplit(matrix_multiply_isosplit(U,S2),matrix_transpose_isosplit(U));
+    return W;
 }
 
 void whiten_two_clusters(double *V,Mda &X1,Mda &X2) {
-	int M=X1.N1();
-	int N1=X1.N2();
-	int N2=X2.N2();
-	int N=N1+N2;
+    int M=X1.N1();
+    int N1=X1.N2();
+    int N2=X2.N2();
+    int N=N1+N2;
 
-	QList<double> center1=compute_centroid(X1);
-	QList<double> center2=compute_centroid(X2);
+    QList<double> center1=compute_centroid(X1);
+    QList<double> center2=compute_centroid(X2);
 
-	if (M<N) { //otherwise there are too few points to whiten
+    if (M<N) { //otherwise there are too few points to whiten
 
-		Mda XX(M,N);
-		for (int i=0; i<N1; i++) {
-			for (int j=0; j<M; j++) {
-				XX.set(X1.get(j,i)-center1[j],j,i);
-			}
-		}
-		for (int i=0; i<N2; i++) {
-			for (int j=0; j<M; j++) {
-				XX.set(X2.get(j,i)-center2[j],j,i+N1);
-			}
-		}
+        Mda XX(M,N);
+        for (int i=0; i<N1; i++) {
+            for (int j=0; j<M; j++) {
+                XX.set(X1.get(j,i)-center1[j],j,i);
+            }
+        }
+        for (int i=0; i<N2; i++) {
+            for (int j=0; j<M; j++) {
+                XX.set(X2.get(j,i)-center2[j],j,i+N1);
+            }
+        }
 
-		Mda COV=matrix_multiply_isosplit(XX,matrix_transpose_isosplit(XX));
-		Mda W=get_whitening_matrix_isosplit(COV);
-		X1=matrix_multiply_isosplit(W,X1);
-		X2=matrix_multiply_isosplit(W,X2);
-	}
+        Mda COV=matrix_multiply_isosplit(XX,matrix_transpose_isosplit(XX));
+        Mda W=get_whitening_matrix_isosplit(COV);
+        X1=matrix_multiply_isosplit(W,X1);
+        X2=matrix_multiply_isosplit(W,X2);
+    }
 
 
-	//compute the vector
-	center1=compute_centroid(X1);
-	center2=compute_centroid(X2);
-	for (int m=0; m<M; m++) {
-		V[m]=center2[m]-center1[m];
-	}
+    //compute the vector
+    center1=compute_centroid(X1);
+    center2=compute_centroid(X2);
+    for (int m=0; m<M; m++) {
+        V[m]=center2[m]-center1[m];
+    }
 }
 
 QList<int> test_redistribute(bool &do_merge,Mda &Y1,Mda &Y2,double isocut_threshold) {
-	Mda X1; X1=Y1;
-	Mda X2; X2=Y2;
-	int M=X1.N1();
-	int N1=X1.N2();
-	int N2=X2.N2();
-	QList<int> ret; for (int i=0; i<N1+N2; i++) ret << 1;
-	do_merge=true;
-	double V[M];
-	whiten_two_clusters(V,X1,X2);
-	double normv=0;
-	{
-		double sumsqr=0; for (int m=0; m<M; m++) sumsqr+=V[m]*V[m];
-		normv=sqrt(sumsqr);
-	}
-	if (!normv) {
-		printf("Warning: isosplit2: vector V is null.\n");
-		return ret;
-	}
-	if (N1+N2<=5) {
-		//avoid a crash?
-		return ret;
-	}
+    Mda X1; X1=Y1;
+    Mda X2; X2=Y2;
+    int M=X1.N1();
+    int N1=X1.N2();
+    int N2=X2.N2();
+    QList<int> ret; for (int i=0; i<N1+N2; i++) ret << 1;
+    do_merge=true;
+    double V[M];
+    whiten_two_clusters(V,X1,X2);
+    double normv=0;
+    {
+        double sumsqr=0; for (int m=0; m<M; m++) sumsqr+=V[m]*V[m];
+        normv=sqrt(sumsqr);
+    }
+    if (!normv) {
+        printf("Warning: isosplit2: vector V is null.\n");
+        return ret;
+    }
+    if (N1+N2<=5) {
+        //avoid a crash?
+        return ret;
+    }
 
-	//project onto line connecting the centers
-	QList<double> XX;
-	for (int i=0; i<N1; i++) {
-		double val=0;
-		for (int m=0; m<M; m++) val+=X1.value(m,i)*V[m];
-		XX << val;
-	}
+    //project onto line connecting the centers
+    QList<double> XX;
+    for (int i=0; i<N1; i++) {
+        double val=0;
+        for (int m=0; m<M; m++) val+=X1.value(m,i)*V[m];
+        XX << val;
+    }
     for (int i=0; i<N2; i++) {
-		double val=0;
-		for (int m=0; m<M; m++) val+=X2.value(m,i)*V[m];
-		XX << val;
-	}
+        double val=0;
+        for (int m=0; m<M; m++) val+=X2.value(m,i)*V[m];
+        XX << val;
+    }
 
-	QList<double> XXs=XX;
-	qSort(XXs);
-	double *XXX=(double *)malloc(sizeof(double)*(N1+N2));
-	for (int i=0; i<N1+N2; i++) XXX[i]=XXs[i];
+    QList<double> XXs=XX;
+    qSort(XXs);
+    double *XXX=(double *)malloc(sizeof(double)*(N1+N2));
+    for (int i=0; i<N1+N2; i++) XXX[i]=XXs[i];
 
-	double cutpoint;
-	bool do_cut=isocut(N1+N2,&cutpoint,XXX,isocut_threshold,5);
-	free(XXX);
+    double cutpoint;
+    bool do_cut=isocut(N1+N2,&cutpoint,XXX,isocut_threshold,5);
+    free(XXX);
 
-	if (do_cut) {
-		do_merge=0;
-		for (int i=0; i<N1+N2; i++) {
-			if (XX[i]<=cutpoint) ret[i]=1;
-			else ret[i]=2;
-		}
-	}
-	return ret;
+    if (do_cut) {
+        do_merge=0;
+        for (int i=0; i<N1+N2; i++) {
+            if (XX[i]<=cutpoint) ret[i]=1;
+            else ret[i]=2;
+        }
+    }
+    return ret;
 }
 
 QList<int> test_redistribute(bool &do_merge,Mda &X,const QList<long> &inds1,const QList<long> &inds2,double isocut_threshold) {
@@ -370,7 +370,7 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
 
     int M=X.N1();
     int N=X.N2();
-	QList<int> labels=do_kmeans(X,K_init);
+    QList<int> labels=do_kmeans(X,K_init);
 
     bool active_labels[K_init];
     for (int ii=0; ii<K_init; ii++) active_labels[ii]=true;
@@ -386,7 +386,7 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
     int max_iterations=1000;
     while ((true)&&(num_iterations<max_iterations)) {
         num_iterations++;
-		if (verbose) printf("isosplit2: iteration %d\n",num_iterations);
+        if (verbose) printf("isosplit2: iteration %d\n",num_iterations);
         QList<int> old_labels=labels;
         int k1,k2;
         find_next_comparison(M,K_init,k1,k2,active_labels,Cptr,counts,attempted_comparisons,repeat_tolerance);
@@ -573,100 +573,100 @@ QList<int> do_kmeans(Mda &X,int K) {
 
 void test_isosplit2_routines()
 {
-	{ //whiten two clusters
-		//compare this with the test in matlab isosplit2('test')
-		Mda X1,X2;
-		int M=4;
-		X1.allocate(M,M);
-		X2.allocate(M,M);
-		for (int m1=0; m1<M; m1++) {
-			for (int m2=0; m2<M; m2++) {
-				X1.setValue(sin(m1+m2)+sin(m1*m2),m1,m2);
-				X2.setValue(cos(m1+m2)-cos(m1*m2),m1,m2);
-			}
-		}
-		printf("X1:\n");
-		for (int m2=0; m2<M; m2++) {
-			for (int m1=0; m1<M; m1++) {
-				printf("%g ",X1.value(m2,m1));
-			}
-			printf("\n");
-		}
-		double V[M];
-		whiten_two_clusters(V,X1,X2);
-		printf("V: ");
-		for (int m=0; m<M; m++) {
-			printf("%g ",V[m]);
-		}
-		printf("\n");
-	}
+    { //whiten two clusters
+        //compare this with the test in matlab isosplit2('test')
+        Mda X1,X2;
+        int M=4;
+        X1.allocate(M,M);
+        X2.allocate(M,M);
+        for (int m1=0; m1<M; m1++) {
+            for (int m2=0; m2<M; m2++) {
+                X1.setValue(sin(m1+m2)+sin(m1*m2),m1,m2);
+                X2.setValue(cos(m1+m2)-cos(m1*m2),m1,m2);
+            }
+        }
+        printf("X1:\n");
+        for (int m2=0; m2<M; m2++) {
+            for (int m1=0; m1<M; m1++) {
+                printf("%g ",X1.value(m2,m1));
+            }
+            printf("\n");
+        }
+        double V[M];
+        whiten_two_clusters(V,X1,X2);
+        printf("V: ");
+        for (int m=0; m<M; m++) {
+            printf("%g ",V[m]);
+        }
+        printf("\n");
+    }
 
-	{
-		int M=2;
+    {
+        int M=2;
         int N=120;
-		Mda X; X.allocate(M,N);
-		for (int i=0; i<N; i++) {
-			double r1=(qrand()%100000)*1.0/100000;
-			double r2=(qrand()%100000)*1.0/100000;
+        Mda X; X.allocate(M,N);
+        for (int i=0; i<N; i++) {
+            double r1=(qrand()%100000)*1.0/100000;
+            double r2=(qrand()%100000)*1.0/100000;
             if (i<N/3) {
-				double val1=r1;
-				double val2=r2;
-				X.setValue(val1,0,i);
-				X.setValue(val2,1,i);
-			}
+                double val1=r1;
+                double val2=r2;
+                X.setValue(val1,0,i);
+                X.setValue(val2,1,i);
+            }
             else if (i<2*N/3) {
                 double val1=1.5+r1;
                 double val2=r2;
-				X.setValue(val1,0,i);
-				X.setValue(val2,1,i);
-			}
+                X.setValue(val1,0,i);
+                X.setValue(val2,1,i);
+            }
             else {
                 double val1=r1;
                 double val2=1.5+r2;
                 X.setValue(val1,0,i);
                 X.setValue(val2,1,i);
             }
-		}
+        }
 
         QList<int> labels=isosplit2(X,1.5,30,false);
-		printf("Labels:\n");
-		for (int i=0; i<labels.count(); i++) {
-			printf("%d ",labels[i]);
-		}
-		printf("\n");
-	}
+        printf("Labels:\n");
+        for (int i=0; i<labels.count(); i++) {
+            printf("%d ",labels[i]);
+        }
+        printf("\n");
+    }
 }
 
 bool eigenvalue_decomposition_sym_isosplit(Mda &U, Mda &S,Mda &X)
 {
-	//X=U*diag(S)*U'
-	//X is MxM, U is MxM, S is 1xM
-	//X must be real and symmetric
+    //X=U*diag(S)*U'
+    //X is MxM, U is MxM, S is 1xM
+    //X must be real and symmetric
 
-	int M=X.N1();
-	if (M!=X.N2()) {
-		qWarning() << "Unexpected problem in eigenvalue_decomposition_sym" << X.N1() << X.N2();
-		exit(-1);
-	}
+    int M=X.N1();
+    if (M!=X.N2()) {
+        qWarning() << "Unexpected problem in eigenvalue_decomposition_sym" << X.N1() << X.N2();
+        exit(-1);
+    }
 
-	U.allocate(M,M);
-	S.allocate(1,M);
-	double *Uptr=U.dataPtr();
-	double *Sptr=S.dataPtr();
-	double *Xptr=X.dataPtr();
+    U.allocate(M,M);
+    S.allocate(1,M);
+    double *Uptr=U.dataPtr();
+    double *Sptr=S.dataPtr();
+    double *Xptr=X.dataPtr();
 
-	for (int ii=0; ii<M*M; ii++) {
-		Uptr[ii]=Xptr[ii];
-	}
+    for (int ii=0; ii<M*M; ii++) {
+        Uptr[ii]=Xptr[ii];
+    }
 
-	//'V' means compute eigenvalues and eigenvectors (use 'N' for eigenvalues only)
-	//'U' means upper triangle of A is stored.
-	//QTime timer; timer.start();
-	int info=LAPACKE_dsyev(LAPACK_COL_MAJOR,'V','U',M,Uptr,M,Sptr);
-	//printf("Time for call to LAPACKE_dsyev: %g sec\n",timer.elapsed()*1.0/1000);
-	if (info!=0) {
-		qWarning() << "Error in LAPACKE_dsyev" << info;
-		return false;
-	}
-	return true;
+    //'V' means compute eigenvalues and eigenvectors (use 'N' for eigenvalues only)
+    //'U' means upper triangle of A is stored.
+    //QTime timer; timer.start();
+    int info=LAPACKE_dsyev(LAPACK_COL_MAJOR,'V','U',M,Uptr,M,Sptr);
+    //printf("Time for call to LAPACKE_dsyev: %g sec\n",timer.elapsed()*1.0/1000);
+    if (info!=0) {
+        qWarning() << "Error in LAPACKE_dsyev" << info;
+        return false;
+    }
+    return true;
 }
