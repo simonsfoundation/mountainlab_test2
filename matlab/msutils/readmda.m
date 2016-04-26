@@ -22,7 +22,7 @@ function A=readmda(fname)
 F=fopen(fname,'rb');
 
 try
-code=fread(F,1,'long');
+code=fread(F,1,'int32');
 catch
     error('Problem reading file: %s',fname);
 end
@@ -30,13 +30,13 @@ if (code>0)
     num_dims=code;
     code=-1;
 else
-    fread(F,1,'long');
-    num_dims=fread(F,1,'long');    
+    fread(F,1,'int32');
+    num_dims=fread(F,1,'int32');    
 end;
 
 S=zeros(1,num_dims);
 for j=1:num_dims
-    S(j)=fread(F,1,'long');
+    S(j)=fread(F,1,'int32');
 end;
 N=prod(S);
 
