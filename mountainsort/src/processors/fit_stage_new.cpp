@@ -176,7 +176,10 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList
                 int k0 = labels[i];
                 if (k0 > 0) {
                     long tt = (long)(t0 - Tmid + 0.5);
-                    double score0 = compute_score(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, k0 - 1));
+                    double score0=0;
+                    if ((tt>=0)&&(tt<X.N2())) {
+                        score0 = compute_score(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, k0 - 1));
+                    }
                     /*
                     if (score0 < template_norms[k0] * template_norms[k0] * 0.1)
                         score0 = 0; //the norm of the improvement needs to be at least 0.5 times the norm of the template
