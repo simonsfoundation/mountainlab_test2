@@ -50,7 +50,7 @@ elseif (code==-2)
 elseif (code==-3)
     A(:)=fread(F,N,'float');
 elseif (code==-4)
-    A(:)=fread(F,N,'short');
+    A(:)=fread(F,N,'int16');
 elseif (code==-5)
     A(:)=fread(F,N,'int32');
 elseif (code==-6)
