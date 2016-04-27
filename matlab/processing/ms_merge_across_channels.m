@@ -47,15 +47,14 @@ function [firings_out info]=ms_merge_across_channels(templates,firings,opts)
 % Other m-files required: none.
 %
 % Created 4/21/16 by ahb and jfm (simultaneously on etherpad).
-% jfm debugged 4/22/16, ahb diagnostic output.
+% jfm debugged 4/22/16, ahb diagnostic output; max corr_coef over t-shift 4/25/16
 % Todo: 0) self test
-%       1) maximize r (corr coef) over t-shifts.
-%       2) check bestdt altering in make_...
-%       3) should maxdt in remove... be opts.max_dt ?
+%       1) check bestdt altering in make_...
+%       2) should maxdt in remove... be opts.max_dt ?
 
 if nargin==0, test_ms_merge_across_channels; return; end
 if nargin<3, opts=[]; end
-if ~isfield(opts,'min_peak_ratio'), opts.min_peak_ratio = 0.7; end
+if ~isfield(opts,'min_peak_ratio'), opts.min_peak_ratio = 0.5; end
 if ~isfield(opts,'max_dt'), opts.max_dt = 10; end      % max difference between peaks of same event peak on different channels
 if ~isfield(opts,'min_coinc_frac'), opts.min_coinc_frac = 0.1; end 
 if ~isfield(opts,'max_corr_stddev'), opts.max_corr_stddev = 3; end     % in sample units
