@@ -86,6 +86,7 @@ MLProcessor ProcessManagerPrivate::create_processor_from_json_object(QJsonObject
     MLProcessor P;
     P.name=obj["name"].toString();
     P.version=obj["version"].toString();
+    P.description=obj["description"].toString();
 
     QJsonArray inputs=obj["inputs"].toArray();
     for (int i=0; i<inputs.count(); i++) {
@@ -110,5 +111,11 @@ MLProcessor ProcessManagerPrivate::create_processor_from_json_object(QJsonObject
 
 MLParameter ProcessManagerPrivate::create_parameter_from_json_object(QJsonObject obj)
 {
-    //finish!!!!!
+    MLParameter param;
+    param.name=obj["name"].toString();
+    param.ptype=obj["ptype"].toString();
+    param.description=obj["description"].toString();
+    param.optional=obj["optional"].toBool();
+    param.default_value=obj["default_value"].toVariant();
+    return param;
 }

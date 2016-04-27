@@ -12,6 +12,8 @@
 
 struct MLParameter {
     QString name;
+    QString ptype;
+    QString description;
     bool optional;
     QVariant default_value;
 };
@@ -19,6 +21,7 @@ struct MLParameter {
 struct MLProcessor {
     QString name;
     QString version;
+    QString description;
     QMap<QString,MLParameter> inputs;
     QMap<QString,MLParameter> outputs;
     QMap<QString,MLParameter> parameters;
