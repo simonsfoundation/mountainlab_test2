@@ -18,11 +18,12 @@ mv_firings_filter_Processor::mv_firings_filter_Processor() {
     d->q=this;
 
     this->setName("mv_firings_filter");
-    this->setVersion("0.1");
+    this->setVersion("0.11");
     this->setInputFileParameters("firings");
     this->setOutputFileParameters("firings_out","original_cluster_numbers");
     this->setRequiredParameters("use_shell_split","shell_width","min_per_shell");
     this->setRequiredParameters("use_event_filter","min_amplitude","max_outlier_score");
+    this->setOptionalParameters("min_detectability_score");
 }
 
 mv_firings_filter_Processor::~mv_firings_filter_Processor() {
@@ -47,6 +48,7 @@ bool mv_firings_filter_Processor::run(const QMap<QString, QVariant> &params)
     opts.min_per_shell=params["min_per_shell"].toInt();
     opts.use_event_filter=params["use_event_filter"].toBool();
     opts.min_amplitude=params["min_amplitude"].toDouble();
+    opts.min_detectability_score=params["min_detectability_score"].toDouble();
     opts.max_outlier_score=params["max_outlier_score"].toDouble();
 
     return mv_firings_filter(firings,firings_out,original_cluster_numbers,opts);
