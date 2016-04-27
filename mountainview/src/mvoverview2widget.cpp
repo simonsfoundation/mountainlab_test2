@@ -114,7 +114,7 @@ public:
     void set_templates_current_number(int kk);
     void set_templates_selected_numbers(const QList<int>& kks);
 
-    void set_times_labels();
+    void set_times_labels_for_timeseries_widget(SSTimeSeriesWidget *WW);
 
     QList<QWidget*> get_all_widgets();
     TabberTabWidget* tab_widget_of(QWidget* W);
@@ -1759,7 +1759,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         DiskArrayModel_New* X = new DiskArrayModel_New;
         X->setPath(m_timeseries_paths[m_current_timeseries_name]);
         ((SSTimeSeriesView*)(WW->view()))->setData(X, true);
-        set_times_labels();
+        set_times_labels_for_timeseries_widget(WW);
     }
 }
 
@@ -1823,13 +1823,20 @@ void MVOverview2WidgetPrivate::set_templates_selected_numbers(const QList<int>& 
     }
 }
 
-void MVOverview2WidgetPrivate::set_times_labels()
-{
+void MVOverview2WidgetPrivate::set_times_labels_for_timeseries_widget(SSTimeSeriesWidget *WW)
+{   
     QList<long> times, labels;
     for (int n = 0; n < m_firings_original.N2(); n++) {
-        times << (long)m_firings_original.value(1, n);
-        labels << (long)m_firings_original.value(2, n);
+        long label0=(long)m_firings_original.value(2, n);
+        if ((m_selected_ks.isEmpty())||(m_selected_ks.contains(label0))) {
+            times << (long)m_firings_original.value(1, n);
+            labels << label0;
+        }
     }
+    SSTimeSeriesView* V = (SSTimeSeriesView*)WW->view();
+    V->setTimesLabels(times, labels);
+
+    /*
     QList<QWidget*> widgets = get_all_widgets();
     foreach (QWidget* W, widgets) {
         QString widget_type = W->property("widget_type").toString();
@@ -1839,6 +1846,7 @@ void MVOverview2WidgetPrivate::set_times_labels()
             V->setTimesLabels(times, labels);
         }
     }
+    */
 }
 
 QList<QWidget*> MVOverview2WidgetPrivate::get_all_widgets()
