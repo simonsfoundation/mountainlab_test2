@@ -69,11 +69,13 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
             QList<double> local_times;
             QList<int> local_labels;
             QList<long> local_inds;
+            fit_stage_opts local_opts;
 #pragma omp critical(lock1)
             {
                 QTime timer;
                 timer.start();
                 local_templates = templates;
+                local_opts = opts;
                 X.readChunk(chunk, 0, timepoint - overlap_size, M, chunk_size + 2 * overlap_size);
                 elapsed_times["readChunk"] += timer.elapsed();
                 timer.start();
@@ -90,7 +92,7 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
             {
                 QTime timer;
                 timer.start();
-                local_inds_to_use = fit_stage_kernel(chunk, local_templates, local_times, local_labels, opts);
+                local_inds_to_use = fit_stage_kernel(chunk, local_templates, local_times, local_labels, local_opts);
                 elapsed_times_local["fit_stage_kernel"] += timer.elapsed();
             }
 #pragma omp critical(lock1)
@@ -176,8 +178,8 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList
                 int k0 = labels[i];
                 if (k0 > 0) {
                     long tt = (long)(t0 - Tmid + 0.5);
-                    double score0=0;
-                    if ((tt>=0)&&(tt<X.N2())) {
+                    double score0 = 0;
+                    if ((tt >= 0) && (tt + T <= X.N2())) {
                         score0 = compute_score(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, k0 - 1));
                     }
                     /*
