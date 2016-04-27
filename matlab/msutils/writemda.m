@@ -91,6 +91,17 @@ elseif strcmp(dtype,'int32')
     end;
     Y=reshape(X,dimprod,1);
     fwrite(FF,Y,'int32');
+elseif strcmp(dtype,'int16')
+    fwrite(FF,-4,'int32');
+    fwrite(FF,2,'int32');
+    fwrite(FF,num_dims,'int32');
+    dimprod=1;
+    for dd=1:num_dims
+        fwrite(FF,size(X,dd),'int32');
+        dimprod=dimprod*size(X,dd);
+    end;
+    Y=reshape(X,dimprod,1);
+    fwrite(FF,Y,'int16');
 else
     error('Unknown dtype %s',dtype);
 end;
