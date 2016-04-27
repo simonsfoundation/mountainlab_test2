@@ -25,6 +25,9 @@ struct MLProcessor {
     QMap<QString,MLParameter> inputs;
     QMap<QString,MLParameter> outputs;
     QMap<QString,MLParameter> parameters;
+    QString exe_command;
+
+    QString basepath;
 };
 
 class ProcessManagerPrivate;
@@ -37,6 +40,8 @@ public:
 
     bool loadProcessors(const QString &path,bool recursive=true);
     bool loadProcessorFile(const QString &path);
+    QString startProcess(const QString &processor_name,const QVariantMap &parameters); //returns the process id/handle (a random string)
+    bool checkParameters(const QString &processor_name,const QVariantMap &parameters);
 private:
     ProcessManagerPrivate *d;
 };

@@ -10,13 +10,24 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QProcess>
 #include "textfile.h"
+
+struct RunningProcess {
+    QProcess *qprocess;
+    QString processor_name;
+    QVariantMap parameters;
+    QString exe_command;
+};
 
 class ProcessManagerPrivate {
 public:
     ProcessManager *q;
 
     QMap<QString,MLProcessor> m_processors;
+    QMap<QString,RunningProcess> m_running_processes;
+
+    void clear_running_processes();
 
     static MLProcessor create_processor_from_json_object(QJsonObject obj);
     static MLParameter create_parameter_from_json_object(QJsonObject obj);
@@ -30,6 +41,7 @@ ProcessManager::ProcessManager()
 
 ProcessManager::~ProcessManager()
 {
+    d->clear_running_processes();
     delete d;
 }
 
@@ -71,6 +83,7 @@ bool ProcessManager::loadProcessorFile(const QString &path)
             return false;
         }
         MLProcessor P=d->create_processor_from_json_object(processors[i].toObject());
+        P.basepath=QFileInfo(path).path();
         if (P.name.isEmpty()) {
             qWarning() << "Problem with processor file: processor error: "+path;
             return false;
@@ -80,6 +93,103 @@ bool ProcessManager::loadProcessorFile(const QString &path)
     return true;
 }
 
+QString ProcessManager::startProcess(const QString &processor_name, const QVariantMap &parameters)
+{
+    if (!this->checkParameters(processor_name,parameters)) return "";
+
+    if (!d->m_processors.contains(processor_name)) {
+        qWarning() << "Unable to find processor: "+processor_name;
+        return false;
+    }
+    MLProcessor P=d->m_processors[processor_name];
+
+    QString exe_command=P.exe_command;
+    exe_command.replace(QRegExp("$basepath"),P.basepath);
+    {
+        QString ppp;
+        QStringList keys=P.inputs.keys();
+        foreach (QString key,keys) {
+            ppp+=QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
+        }
+
+        exe_command.replace(QRegExp("$input"),ppp);
+    }
+    {
+        QString ppp;
+        QStringList keys=P.outputs.keys();
+        foreach (QString key,keys) {
+            ppp+=QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
+        }
+        exe_command.replace(QRegExp("$output"),ppp);
+    }
+    {
+        QString ppp;
+        QStringList keys=P.parameters.keys();
+        foreach (QString key,keys) {
+            QVariant default_val=P.parameters[key].default_value;
+            ppp+=QString("--%1=%2 ").arg(key).arg(parameters.value(key,default_val).toString());
+        }
+        exe_command.replace(QRegExp("$parameters"),ppp);
+    }
+
+    QString id=make_random_id();
+    RunningProcess RP;
+    RP.exe_command=exe_command;
+    RP.parameters=parameters;
+    RP.processor_name=processor_name;
+    RP.qprocess=new QProcess;
+    RP.qprocess->start(RP.exe_command);
+    d->m_running_processes[id]=RP;
+    return id;
+}
+
+bool ProcessManager::checkParameters(const QString &processor_name, const QVariantMap &parameters)
+{
+    if (!d->m_processors.contains(processor_name)) {
+        qWarning() << "checkProcess: Unable to find processor: "+processor_name;
+        return false;
+    }
+    MLProcessor P=d->m_processors[processor_name];
+    {
+        QStringList keys=P.inputs.keys();
+        foreach (QString key,keys) {
+            if (!parameters.contains(key)) {
+                qWarning() << QString("checkProcess: Missing input in %1: %2").arg(processor_name).arg(key);
+                return false;
+            }
+        }
+    }
+    {
+        QStringList keys=P.outputs.keys();
+        foreach (QString key,keys) {
+            if (!parameters.contains(key)) {
+                qWarning() << QString("checkProcess: Missing output in %1: %2").arg(processor_name).arg(key);
+                return false;
+            }
+        }
+    }
+    {
+        QStringList keys=P.parameters.keys();
+        foreach (QString key,keys) {
+            if (!P.parameters[key].optional) {
+                if (!parameters.contains(key)) {
+                    qWarning() << QString("checkProcess: Missing required parameter in %1: %2").arg(processor_name).arg(key);
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+
+void ProcessManagerPrivate::clear_running_processes()
+{
+    foreach (RunningProcess P,m_running_processes) {
+        delete P.qprocess;
+    }
+    m_running_processes.clear();
+}
 
 MLProcessor ProcessManagerPrivate::create_processor_from_json_object(QJsonObject obj)
 {
@@ -105,6 +215,8 @@ MLProcessor ProcessManagerPrivate::create_processor_from_json_object(QJsonObject
         MLParameter param=create_parameter_from_json_object(parameters[i].toObject());
         P.parameters[param.name]=param;
     }
+
+    P.exe_command=obj["exe_command"].toString();
 
     return P;
 }
