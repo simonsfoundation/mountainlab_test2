@@ -41,10 +41,7 @@ ProcessManager::ProcessManager()
 
 ProcessManager::~ProcessManager()
 {
-<<<<<<< HEAD
     d->clear_running_processes();
-=======
->>>>>>> add
     delete d;
 }
 
