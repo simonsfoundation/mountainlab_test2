@@ -285,8 +285,10 @@ bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
     return true;
 }
 
-void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks)
+void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks_in)
 {
+    QList<int> ks=ks_in;
+    ks.removeAll(0);
     if (sets_are_equal(d->m_selected_ks, ks.toSet()))
         return;
     d->m_selected_ks = ks.toSet();
@@ -442,7 +444,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
             }
             else {
                 d->m_anchor_view_index = view_index;
-                d->m_selected_ks.insert(k);
+                if (k) d->m_selected_ks.insert(k);
                 emit signalSelectedKsChanged();
                 update();
             }
@@ -457,7 +459,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 for (int i = min_index; i <= max_index; i++) {
                     if (i < d->m_views.count()) {
                         int k = d->m_views[i]->k();
-                        d->m_selected_ks.insert(k);
+                        if (k) d->m_selected_ks.insert(k);
                     }
                 }
                 emit signalSelectedKsChanged();
@@ -476,7 +478,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
             else {
                 d->set_current_k(k);
                 d->m_selected_ks.clear();
-                d->m_selected_ks.insert(k);
+                if (k) d->m_selected_ks.insert(k);
                 emit signalSelectedKsChanged();
                 update();
             }
@@ -552,7 +554,7 @@ void MVClusterDetailWidgetPrivate::set_current_k(int k)
     if (k == m_current_k)
         return;
     m_current_k = k;
-    m_selected_ks.insert(k);
+    if (k) m_selected_ks.insert(k);
     ClusterView* V = find_view_for_k(k);
     if (V)
         ensure_view_visible(V);
