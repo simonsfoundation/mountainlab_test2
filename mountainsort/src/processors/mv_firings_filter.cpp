@@ -12,16 +12,15 @@
 
 void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<double>& clip_peaks, double shell_increment, int min_shell_count);
 
-bool mv_firings_filter(const QString& firings_path, const QString& firings_out_path, const QString &original_cluster_numbers_path,const mv_firings_filter_opts& opts)
+bool mv_firings_filter(const QString& firings_path, const QString& firings_out_path, const QString& original_cluster_numbers_path, const mv_firings_filter_opts& opts)
 {
 
-    double shell_width=opts.shell_width;
-    int min_per_shell=opts.min_per_shell;
+    double shell_width = opts.shell_width;
+    int min_per_shell = opts.min_per_shell;
 
     Mda firings_original(firings_path);
     Mda original_cluster_numbers;
     Mda firings_split;
-
 
     QList<int> labels;
     QList<double> peaks;
@@ -31,7 +30,7 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
         peaks << peak;
     }
 
-    int K=compute_max(labels);
+    int K = compute_max(labels);
 
     if (opts.use_shell_split) {
         QList<int> nums;
@@ -65,12 +64,12 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
         }
 
         int KK = nums.count();
-        original_cluster_numbers.allocate(1,KK+1);
-        for (int kk=1; kk<=KK; kk++) {
-            int k = nums[kk-1];
-            float min0 = mins[kk-1];
-            float max0 = maxs[kk-1];
-            original_cluster_numbers.set(k,0,kk);
+        original_cluster_numbers.allocate(1, KK + 1);
+        for (int kk = 1; kk <= KK; kk++) {
+            int k = nums[kk - 1];
+            float min0 = mins[kk - 1];
+            float max0 = maxs[kk - 1];
+            original_cluster_numbers.set(k, 0, kk);
             for (int n = 0; n < labels.count(); n++) {
                 if (labels[n] == k) {
                     if ((min0 <= peaks[n]) && (peaks[n] < max0)) {
@@ -80,28 +79,31 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
             }
         }
 
-    }
-    else {
-        firings_split=firings_original;
-        original_cluster_numbers.allocate(1,K+1);
-        for (int k=1; k<=K; k++) original_cluster_numbers.set(k,0,k);
+    } else {
+        firings_split = firings_original;
+        original_cluster_numbers.allocate(1, K + 1);
+        for (int k = 1; k <= K; k++)
+            original_cluster_numbers.set(k, 0, k);
     }
 
     Mda firings_out;
     if (opts.use_event_filter) {
         double min_amplitude = opts.min_amplitude;
+        double min_detectablity_score = opts.min_detectability_score;
         double max_outlier_score = opts.max_outlier_score;
 
         QList<int> inds;
         for (int i = 0; i < firings_split.N2(); i++) {
             if (fabs(firings_split.value(3, i)) >= min_amplitude) {
-                if (max_outlier_score) {
-                    if (firings_split.value(4, i) <= max_outlier_score) {
+                if (fabs(firings_split.value(5, i)) >= min_detectablity_score) {
+                    if (max_outlier_score) {
+                        if (firings_split.value(4, i) <= max_outlier_score) {
+                            inds << i;
+                        }
+                    } else {
                         inds << i;
                     }
                 }
-                else
-                    inds << i;
             }
         }
 
@@ -112,8 +114,8 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
                 firings_out.setValue(firings_split.value(j, inds[i]), j, i); //speed this up?
             }
         }
-    }
-    else firings_out=firings_split;
+    } else
+        firings_out = firings_split;
 
     firings_out.write64(firings_out_path);
     original_cluster_numbers.write64(original_cluster_numbers_path);
@@ -159,13 +161,11 @@ void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<d
                     count_in = counts[min_b];
                 else
                     count_in = 0;
-            }
-            else {
+            } else {
                 max_b++;
                 if (max_b < num_bins) {
                     count_in += counts[max_b];
-                }
-                else {
+                } else {
                     if (count_in > 0) {
                         shell_mins_pos << min_b* shell_increment;
                         shell_maxs_pos << (max_b + 1) * shell_increment;
@@ -213,13 +213,11 @@ void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<d
                     count_in = counts[min_b];
                 else
                     count_in = 0;
-            }
-            else {
+            } else {
                 max_b++;
                 if (max_b < num_bins) {
                     count_in += counts[max_b];
-                }
-                else {
+                } else {
                     if (count_in > 0) {
                         shell_mins_neg << min_b* shell_increment;
                         shell_maxs_neg << (max_b + 1) * shell_increment;

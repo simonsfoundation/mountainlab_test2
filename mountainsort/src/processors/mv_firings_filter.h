@@ -16,6 +16,7 @@ public:
     int min_per_shell;
     bool use_event_filter;
     double min_amplitude;
+    double min_detectability_score;
     double max_outlier_score;
 };
 

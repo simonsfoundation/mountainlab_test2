@@ -198,6 +198,7 @@ MVOverview2WidgetControlPanel::MVOverview2WidgetControlPanel(QWidget* parent)
         d->add_group_label(G, "Event Filter");
         d->add_check_box(G, "use_event_filter", "Use event filter", false)->setToolTip("Filter the set of events by peak amplitude and/or outlier score.");
         d->add_float_box(G, "min_amplitude", "Min amplitude", 0, 0, 100)->setToolTip("Exclude events with absolute peak amplitude below this threshold");
+        d->add_float_box(G, "min_detectability_score", "Min detectability score", 0, 0, 100)->setToolTip("Exclude events with detectability score below this threshold");
         d->add_float_box(G, "max_outlier_score", "Max outlier score", 3, 0, 100)->setToolTip("Exclude events with outlier score above this threshold. Use zero for no filter.");
         d->add_button(G, "update_event_filter", "Update");
         d->add_horizontal_divider(layout);

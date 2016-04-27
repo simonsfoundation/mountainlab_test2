@@ -1045,6 +1045,10 @@ void MVOverview2WidgetPrivate::do_shell_split()
     params["min_per_shell"] = m_control_panel->getParameterValue("min_per_shell").toInt();
     params["use_event_filter"] = m_control_panel->getParameterValue("use_event_filter").toInt();
     params["min_amplitude"] = m_control_panel->getParameterValue("min_amplitude").toDouble();
+    double min_detectability_score=m_control_panel->getParameterValue("min_detectability_score").toDouble();
+    if (min_detectability_score) {
+        params["min_detectability_score"] = min_detectability_score;
+    }
     params["max_outlier_score"] = m_control_panel->getParameterValue("max_outlier_score").toDouble();
     params["firings"] = m_firings_original.makePath();
     MT.setInputParameters(params);
