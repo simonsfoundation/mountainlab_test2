@@ -66,7 +66,7 @@ bool detect3(const QString &timeseries_path,const QString &detect_path,const Det
 				times.append(times1);
 				channels.append(channels1);
 				num_timepoints_handled+=qMin(chunk_size,N-timepoint);
-				if ((timer.elapsed()>1000)||(num_timepoints_handled==N)) {
+                                if ((timer.elapsed()>5000)||(num_timepoints_handled==N)) {
 					printf("%ld/%ld (%d%%)\n",num_timepoints_handled,N,(int)(num_timepoints_handled*1.0/N*100));
 					timer.restart();
 				}
