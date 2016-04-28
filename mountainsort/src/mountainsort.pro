@@ -150,6 +150,9 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/merge_across_channels.cpp \
     processors/merge_across_channels_processor.cpp
 
+HEADERS += utils/get_principal_components.h
+SOURCES += utils/get_principal_components.cpp
+
 DISTFILES += \
     ../version.txt
 

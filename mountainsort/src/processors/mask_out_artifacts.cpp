@@ -1,6 +1,7 @@
 #include "mask_out_artifacts.h"
 #include "diskreadmda.h"
 #include "diskwritemda.h"
+#include <QTime>
 #include <math.h>
 #include "msmisc.h"
 #include "mda.h"
@@ -12,6 +13,8 @@ bool mask_out_artifacts(const QString &timeseries_path, const QString &timeserie
         return false;
     }
 
+    QTime status_timer; status_timer.start();
+
 	DiskReadMda X(timeseries_path);
 	long M=X.N1();
     long N=X.N2();
@@ -20,6 +23,10 @@ bool mask_out_artifacts(const QString &timeseries_path, const QString &timeserie
 	Mda norms(M,N/interval_size);
 	for (long i=0; i<N/interval_size; i++) {
 		long timepoint=i*interval_size;
+        if (status_timer.elapsed()>1000) {
+            printf("mask_out_artifacts compute_norms: %ld/%ld (%d%%)\n",timepoint,N,(int)(timepoint*100.0/N));
+            status_timer.restart();
+        }
 		Mda chunk;
 		X.readChunk(chunk,0,timepoint,M,interval_size);
 		for (int m=0; m<M; m++) {
@@ -56,6 +63,10 @@ bool mask_out_artifacts(const QString &timeseries_path, const QString &timeserie
     DiskWriteMda Y; Y.open(MDAIO_TYPE_FLOAT32,timeseries_out_path,M,N);
 	for (long i=0; i<N/interval_size; i++) {
 		long timepoint=i*interval_size;
+        if (status_timer.elapsed()>1000) {
+            printf("mask_out_artifacts write data: %ld/%ld (%d%%)\n",timepoint,N,(int)(timepoint*100.0/N));
+            status_timer.restart();
+        }
 		Mda chunk;
 		X.readChunk(chunk,0,timepoint,M,interval_size);
 		for (int m=0; m<M; m++) {
