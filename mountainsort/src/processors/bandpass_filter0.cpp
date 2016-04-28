@@ -74,7 +74,7 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
                     elapsed_times["writeChunk"] += timer.elapsed();
                 }
                 num_timepoints_handled += qMin(chunk_size, N - timepoint);
-                if ((timer_status.elapsed() > 1000) || (num_timepoints_handled == N) || (timepoint == 0)) {
+                if ((timer_status.elapsed() > 5000) || (num_timepoints_handled == N) || (timepoint == 0)) {
                     printf("%ld/%ld (%d%%) - Elapsed(s): RC:%g, BPF:%g, GC:%g, WC:%g, Total:%g, %d threads\n",
                            num_timepoints_handled, N,
                            (int)(num_timepoints_handled * 1.0 / N * 100),
