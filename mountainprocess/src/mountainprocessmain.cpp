@@ -37,6 +37,7 @@ int main(int argc,char *argv[]) {
     if (processor_paths.isEmpty()) {
         qWarning() << "No processor paths found in "+config_fname;
     }
+    qDebug()  << "Searching processor paths: " << processor_paths;
 
     /*
      * Initialize the process manager
@@ -49,8 +50,33 @@ int main(int argc,char *argv[]) {
     QString arg1=CLP.unnamed_parameters.value(0);
     QString arg2=CLP.unnamed_parameters.value(1);
 
-    if (arg1=="run") {
-
+    if (arg1=="runProcess") {
+        QString processor_name=arg2;
+        QVariantMap parameters=CLP.named_parameters;
+        if (!PM.checkParameters(processor_name,parameters)) {
+            qWarning() << "Problem checking process" << processor_name;
+            return -1;
+        }
+        QString id=PM.startProcess(processor_name,parameters);
+        if (id.isEmpty()) {
+            qWarning() << "Problem starting process" << processor_name;
+            return -1;
+        }
+        if (!PM.waitForFinished(id,-1)) {
+            qWarning() << "Problem waiting for process to finish" << processor_name;
+            return -1;
+        }
+        MLProcessInfo info=PM.processInfo(id);
+        if (info.exit_status==QProcess::CrashExit) {
+            qWarning() << "Process crashed" << processor_name;
+            return -1;
+        }
+        qDebug()  << "==STANDARD OUTPUT===";
+        qDebug()  << info.standard_output;
+        qDebug()  << "==STANDARD ERROR===";
+        qDebug()  << info.standard_error;
+        PM.clearProcess(id);
+        return info.exit_code;
     }
     else {
         print_usage();
@@ -62,5 +88,5 @@ int main(int argc,char *argv[]) {
 
 void print_usage() {
     printf("Usage:\n");
-    printf("mountainprocess run [processor_name] --[param1]=[val1] --[param2]=[val2] ...\n");
+    printf("mountainprocess runProcess [processor_name] --[param1]=[val1] --[param2]=[val2] ...\n");
 }
