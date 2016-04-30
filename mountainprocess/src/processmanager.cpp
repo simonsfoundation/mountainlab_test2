@@ -11,13 +11,13 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QProcess>
+#include <QTime>
+#include <QEventLoop>
 #include "textfile.h"
 
-struct RunningProcess {
+struct PMProcess {
+    MLProcessInfo info;
     QProcess *qprocess;
-    QString processor_name;
-    QVariantMap parameters;
-    QString exe_command;
 };
 
 class ProcessManagerPrivate {
@@ -25,9 +25,10 @@ public:
     ProcessManager *q;
 
     QMap<QString,MLProcessor> m_processors;
-    QMap<QString,RunningProcess> m_running_processes;
+    QMap<QString,PMProcess> m_processes;
 
-    void clear_running_processes();
+    void clear_all_processes();
+    void update_process_info(QString id);
 
     static MLProcessor create_processor_from_json_object(QJsonObject obj);
     static MLParameter create_parameter_from_json_object(QJsonObject obj);
@@ -41,7 +42,7 @@ ProcessManager::ProcessManager()
 
 ProcessManager::~ProcessManager()
 {
-    d->clear_running_processes();
+    d->clear_all_processes();
     delete d;
 }
 
@@ -71,7 +72,12 @@ bool ProcessManager::loadProcessorFile(const QString &path)
         qWarning() << "Processor file is empty: "+path;
         return false;
     }
-    QJsonObject obj=QJsonDocument::fromJson(json.toLatin1()).object();
+    QJsonParseError error;
+    QJsonObject obj=QJsonDocument::fromJson(json.toLatin1(),&error).object();
+    if (error.error!=QJsonParseError::NoError) {
+        qWarning() << "Json parse error: " << error.errorString();
+        return false;
+    }
     if (!obj["processors"].isArray()) {
         qWarning() << "Problem with processor file: processors field is missing or not any array: "+path;
         return false;
@@ -99,48 +105,70 @@ QString ProcessManager::startProcess(const QString &processor_name, const QVaria
 
     if (!d->m_processors.contains(processor_name)) {
         qWarning() << "Unable to find processor: "+processor_name;
-        return false;
+        return "";
     }
     MLProcessor P=d->m_processors[processor_name];
 
+    qDebug() << P.inputs.keys();
+    qDebug() << P.outputs.keys();
+    qDebug() << P.parameters.keys();
+
     QString exe_command=P.exe_command;
-    exe_command.replace(QRegExp("$basepath"),P.basepath);
+    exe_command.replace(QRegExp("\\$\\(basepath\\)"),P.basepath);
     {
         QString ppp;
-        QStringList keys=P.inputs.keys();
-        foreach (QString key,keys) {
-            ppp+=QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
+        {
+            QStringList keys=P.inputs.keys();
+            foreach (QString key,keys) {
+                exe_command.replace(QRegExp(QString("\\$%1").arg(key)),parameters[key].toString());
+                ppp+=QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
+            }
+        }
+        {
+            QStringList keys=P.outputs.keys();
+            foreach (QString key,keys) {
+                exe_command.replace(QRegExp(QString("\\$%1").arg(key)),parameters[key].toString());
+                ppp+=QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
+            }
+        }
+        {
+            QStringList keys=P.parameters.keys();
+            foreach (QString key,keys) {
+                exe_command.replace(QRegExp(QString("$%1").arg(key)),parameters[key].toString());
+                ppp+=QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
+            }
         }
 
-        exe_command.replace(QRegExp("$input"),ppp);
-    }
-    {
-        QString ppp;
-        QStringList keys=P.outputs.keys();
-        foreach (QString key,keys) {
-            ppp+=QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
-        }
-        exe_command.replace(QRegExp("$output"),ppp);
-    }
-    {
-        QString ppp;
-        QStringList keys=P.parameters.keys();
-        foreach (QString key,keys) {
-            QVariant default_val=P.parameters[key].default_value;
-            ppp+=QString("--%1=%2 ").arg(key).arg(parameters.value(key,default_val).toString());
-        }
-        exe_command.replace(QRegExp("$parameters"),ppp);
+        exe_command.replace(QRegExp("\\$\\(arguments\\)"),ppp);
     }
 
     QString id=make_random_id();
-    RunningProcess RP;
-    RP.exe_command=exe_command;
-    RP.parameters=parameters;
-    RP.processor_name=processor_name;
-    RP.qprocess=new QProcess;
-    RP.qprocess->start(RP.exe_command);
-    d->m_running_processes[id]=RP;
+    PMProcess PP;
+    PP.info.exe_command=exe_command;
+    PP.info.parameters=parameters;
+    PP.info.processor_name=processor_name;
+    PP.info.finished=false;
+    PP.info.exit_code=0;
+    PP.info.exit_status=QProcess::NormalExit;
+    PP.qprocess=new QProcess;
+    QObject::connect(PP.qprocess,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(slot_process_finished()));
+    qDebug()  << "STARTING: " << PP.info.exe_command;
+    PP.qprocess->start(PP.info.exe_command);
+    PP.qprocess->setProperty("pp_id",id);
+    if (!PP.qprocess->waitForStarted(2000)) {
+        qWarning() << "Problem starting process: "+exe_command;
+        delete PP.qprocess;
+        return "";
+    }
+    d->m_processes[id]=PP;
     return id;
+}
+
+bool ProcessManager::waitForFinished(const QString &process_id,int msecs)
+{
+    if (!d->m_processes.contains(process_id)) return false;
+    QProcess *qprocess=d->m_processes[process_id].qprocess;
+    return qprocess->waitForFinished(msecs);
 }
 
 bool ProcessManager::checkParameters(const QString &processor_name, const QVariantMap &parameters)
@@ -182,13 +210,82 @@ bool ProcessManager::checkParameters(const QString &processor_name, const QVaria
     return true;
 }
 
-
-void ProcessManagerPrivate::clear_running_processes()
+QStringList ProcessManager::allProcessIds() const
 {
-    foreach (RunningProcess P,m_running_processes) {
+    return d->m_processes.keys();
+}
+
+void ProcessManager::clearProcess(const QString &id)
+{
+    if (!d->m_processes.contains(id)) return;
+    QProcess *qprocess=d->m_processes[id].qprocess;
+    d->m_processes.remove(id);
+    if (qprocess->state()==QProcess::Running) {
+        d->m_processes[id].qprocess->kill();;
+    }
+    delete qprocess;
+}
+
+void ProcessManager::clearAllProcesses()
+{
+    d->clear_all_processes();
+}
+
+MLProcessInfo ProcessManager::processInfo(const QString &id)
+{
+    if (!d->m_processes.contains(id)) {
+        MLProcessInfo dummy;
+        dummy.finished=true;
+        dummy.exit_code=0;
+        dummy.exit_status=QProcess::NormalExit;
+        return dummy;
+    }
+    d->update_process_info(id);
+    return d->m_processes[id].info;
+}
+
+bool ProcessManager::isFinished(const QString &id)
+{
+    return processInfo(id).finished;
+}
+
+void ProcessManager::slot_process_finished()
+{
+    QProcess *qprocess=qobject_cast<QProcess *>(sender());
+    if (!qprocess) {
+        qWarning() << "Unexpected problem in slot_process_finished: qprocess is null.";
+        return;
+    }
+    QString id=qprocess->property("pp_id").toString();
+    if (!d->m_processes.contains(id)) {
+        qWarning() << "Unexpected problem in slot_process_finished. id not found in m_processes: "+id;
+        return;
+    }
+    d->update_process_info(id);
+    emit this->processFinished(id);
+}
+
+
+void ProcessManagerPrivate::clear_all_processes()
+{
+    foreach (PMProcess P,m_processes) {
         delete P.qprocess;
     }
-    m_running_processes.clear();
+    m_processes.clear();
+}
+
+void ProcessManagerPrivate::update_process_info(QString id)
+{
+    if (!m_processes.contains(id)) return;
+    PMProcess *PP=&m_processes[id];
+    QProcess *qprocess=PP->qprocess;
+    if (qprocess->state()==QProcess::NotRunning) {
+        PP->info.finished=true;
+        PP->info.exit_code=qprocess->exitCode();
+        PP->info.exit_status=qprocess->exitStatus();
+    }
+    PP->info.standard_output+=qprocess->readAllStandardOutput();
+    PP->info.standard_error+=qprocess->readAllStandardError();
 }
 
 MLProcessor ProcessManagerPrivate::create_processor_from_json_object(QJsonObject obj)
@@ -207,7 +304,7 @@ MLProcessor ProcessManagerPrivate::create_processor_from_json_object(QJsonObject
     QJsonArray outputs=obj["outputs"].toArray();
     for (int i=0; i<outputs.count(); i++) {
         MLParameter param=create_parameter_from_json_object(outputs[i].toObject());
-        P.inputs[param.name]=param;
+        P.outputs[param.name]=param;
     }
 
     QJsonArray parameters=obj["parameters"].toArray();
@@ -230,4 +327,21 @@ MLParameter ProcessManagerPrivate::create_parameter_from_json_object(QJsonObject
     param.optional=obj["optional"].toBool();
     param.default_value=obj["default_value"].toVariant();
     return param;
+}
+
+QChar make_random_alphanumeric() {
+        static int val=0;
+        val++;
+        QTime time=QTime::currentTime();
+        int num=qHash(time.toString("hh:mm:ss:zzz")+QString::number(qrand()+val));
+        num=num%36;
+        if (num<26) return QChar('A'+num);
+        else return QChar('0'+num-26);
+}
+QString make_random_id(int numchars) {
+        QString ret;
+        for (int i=0; i<numchars; i++) {
+                ret.append(make_random_alphanumeric());
+        }
+        return ret;
 }
