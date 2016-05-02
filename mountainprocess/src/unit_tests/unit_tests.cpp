@@ -139,6 +139,7 @@ void run_unit_test_isosplit() {
 
 void run_unit_test(const QString &test_name)
 {
+    Q_UNUSED(test_name)
     /*
 	if (test_name=="eigenvalue_decomposition") {
 		run_unit_test_eigenvalue_decomposition();

@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
     CloseMeHandler::start();
 
-    /// Witold, I don't want to do this here! It should be in the taskprogress.h. What can I do?
+    /// Witold I don't want to do this here! It should be in the taskprogress.h. What can I do?
     qRegisterMetaType<TaskInfo>();
 
     CLParams CLP = get_command_line_params(argc, argv);

@@ -249,6 +249,12 @@ bool ProcessManager::isFinished(const QString &id)
     return processInfo(id).finished;
 }
 
+Q_GLOBAL_STATIC(ProcessManager,theInstance)
+ProcessManager *ProcessManager::globalInstance()
+{
+    return theInstance;
+}
+
 void ProcessManager::slot_process_finished()
 {
     QProcess *qprocess=qobject_cast<QProcess *>(sender());

@@ -57,7 +57,7 @@ public:
 
     bool checkParameters(const QString &processor_name,const QVariantMap &parameters);
     QString startProcess(const QString &processor_name,const QVariantMap &parameters); //returns the process id/handle (a random string)
-    bool waitForFinished(const QString &process_id,int msecs);
+    bool waitForFinished(const QString &process_id,int msecs=-1);
     MLProcessInfo processInfo(const QString &id);
     void clearProcess(const QString &id);
     void clearAllProcesses();
@@ -65,6 +65,8 @@ public:
     QStringList allProcessIds() const;
 
     bool isFinished(const QString &id);
+
+    static ProcessManager *globalInstance();
 
 signals:
     void processFinished(QString id);

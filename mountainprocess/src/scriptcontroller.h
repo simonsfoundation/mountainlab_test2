@@ -7,16 +7,23 @@
 #ifndef SCRIPTCONTROLLER_H
 #define SCRIPTCONTROLLER_H
 
+#include <QObject>
+
 class ScriptControllerPrivate;
-class ScriptController
-{
+class ScriptController : public QObject {
+    Q_OBJECT
 public:
     friend class ScriptControllerPrivate;
     ScriptController();
     virtual ~ScriptController();
+    Q_INVOKABLE QString fileChecksum(const QString& fname);
+    Q_INVOKABLE QString stringChecksum(const QString& str);
+    Q_INVOKABLE QString createTemporaryFileName(const QString& code);
+    Q_INVOKABLE bool runProcess(const QString& processor_name, const QString& parameters_json);
+    Q_INVOKABLE void log(const QString& message);
+
 private:
-    ScriptControllerPrivate *d;
+    ScriptControllerPrivate* d;
 };
 
 #endif // SCRIPTCONTROLLER_H
-
