@@ -8,8 +8,8 @@
 
 //I have to temporarily put this code in to get code completion to work in QtCreator
 //even though DEFINES+=USE_NETWORK is in the .pro file.
-//Ask Witold
 //#define USE_NETWORK
+/// Witold, in order for syntax completion to work, I need to type #define USE_NETWORK in this source file, even though it is defined in the .pro. Maybe just a problem with QtCreator
 
 #ifdef USE_NETWORK
 #include <QEventLoop>
