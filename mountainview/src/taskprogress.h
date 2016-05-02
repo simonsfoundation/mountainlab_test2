@@ -25,21 +25,27 @@ struct TaskInfo {
     QDateTime end_time;
 };
 
+Q_DECLARE_METATYPE(TaskInfo)
+
 class TaskProgressPrivate;
-class TaskProgress
-{
+class TaskProgress : public QObject {
+    Q_OBJECT
 public:
     friend class TaskProgressPrivate;
-    TaskProgress(const QString &label="",const QString &description="");
+    TaskProgress(const QString& label = "", const QString& description = "");
     virtual ~TaskProgress();
-    void setLabel(const QString &label);
-    void setDescription(const QString &description);
-    void log(const QString &log_message);
+    void setLabel(const QString& label);
+    void setDescription(const QString& description);
+    void log(const QString& log_message);
     void setProgress(double pct);
 
     TaskInfo getInfo() const;
+signals:
+    void changed();
+    void completed(TaskInfo info);
+
 private:
-    TaskProgressPrivate *d;
+    TaskProgressPrivate* d;
 };
 
 class TaskProgressAgentPrivate;
@@ -47,22 +53,24 @@ class TaskProgressAgent : public QObject {
     Q_OBJECT
 public:
     friend class TaskProgressAgentPrivate;
-    friend class TaskProgress;
-    friend class TaskProgressPrivate;
     TaskProgressAgent();
     virtual ~TaskProgressAgent();
+    void addTask(TaskProgress* T);
+    void removeTask(TaskProgress *T);
 
     QList<TaskInfo> activeTasks();
-    QList<TaskInfo> inactiveTasks();
+    QList<TaskInfo> completedTasks();
 
-    static TaskProgressAgent *globalInstance();
+    static TaskProgressAgent* globalInstance();
 signals:
     void tasksChanged();
 private slots:
+    void slot_schedule_emit_tasks_changed();
     void slot_emit_tasks_changed();
+    void slot_task_completed(TaskInfo info);
+
 private:
-    TaskProgressAgentPrivate *d;
+    TaskProgressAgentPrivate* d;
 };
 
 #endif // TASKPROGRESS_H
-

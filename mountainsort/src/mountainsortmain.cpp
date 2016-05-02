@@ -138,9 +138,9 @@ bool run_process(MSProcessManager* PM, QJsonObject process)
 
 void display_error(QJSValue result)
 {
-    qDebug() << result.property("name").toString();
-    qDebug() << result.property("message").toString();
-    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
+    qDebug()  << result.property("name").toString();
+    qDebug()  << result.property("message").toString();
+    qDebug()  << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
 }
 
 int run_script(const QStringList& script_fnames, const QVariantMap& params)
@@ -159,14 +159,13 @@ int run_script(const QStringList& script_fnames, const QVariantMap& params)
     }
 
     {
-        QStringList param_keys=params.keys();
+        QStringList param_keys = params.keys();
         QJsonObject params_obj;
-        foreach (QString key,param_keys) {
-            params_obj[key]=params[key].toString();
+        foreach (QString key, param_keys) {
+            params_obj[key] = params[key].toString();
         }
         QString params_json = QJsonDocument(params_obj).toJson(QJsonDocument::Compact);
-        QString str=QString("main(JSON.parse('%1'));").arg(params_json);
-        qDebug() << str;
+        QString str = QString("main(JSON.parse('%1'));").arg(params_json);
         QJSValue result = engine.evaluate(str);
         if (result.isError()) {
             display_error(result);

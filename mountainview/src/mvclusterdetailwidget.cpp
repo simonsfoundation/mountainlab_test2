@@ -287,7 +287,7 @@ bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
 
 void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks_in)
 {
-    QList<int> ks=ks_in;
+    QList<int> ks = ks_in;
     ks.removeAll(0);
     if (sets_are_equal(d->m_selected_ks, ks.toSet()))
         return;
@@ -444,7 +444,8 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
             }
             else {
                 d->m_anchor_view_index = view_index;
-                if (k) d->m_selected_ks.insert(k);
+                if (k)
+                    d->m_selected_ks.insert(k);
                 emit signalSelectedKsChanged();
                 update();
             }
@@ -459,7 +460,8 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 for (int i = min_index; i <= max_index; i++) {
                     if (i < d->m_views.count()) {
                         int k = d->m_views[i]->k();
-                        if (k) d->m_selected_ks.insert(k);
+                        if (k)
+                            d->m_selected_ks.insert(k);
                     }
                 }
                 emit signalSelectedKsChanged();
@@ -478,7 +480,8 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
             else {
                 d->set_current_k(k);
                 d->m_selected_ks.clear();
-                if (k) d->m_selected_ks.insert(k);
+                if (k)
+                    d->m_selected_ks.insert(k);
                 emit signalSelectedKsChanged();
                 update();
             }
@@ -554,7 +557,8 @@ void MVClusterDetailWidgetPrivate::set_current_k(int k)
     if (k == m_current_k)
         return;
     m_current_k = k;
-    if (k) m_selected_ks.insert(k);
+    if (k)
+        m_selected_ks.insert(k);
     ClusterView* V = find_view_for_k(k);
     if (V)
         ensure_view_visible(V);
@@ -920,16 +924,20 @@ void MVClusterDetailWidgetCalculator::compute()
 {
     QTime timer;
     timer.start();
+    this->setStatus("Cluster Detail Calculator", "Calculating1",0);
 
     int M = timeseries.N1();
     //int N = timeseries.N2();
     int L = firings.N2();
     int T = clip_size;
 
+    this->setStatus("Cluster Detail Calculator", "Calculating2");
+
     QList<double> times;
     QList<int> channels, labels;
     QList<double> peaks;
 
+    this->setStatus("", "Setting up times/channels/labels/peaks", 0.25);
     for (int i = 0; i < L; i++) {
         times << firings.value(1, i) - 1; //convert to 0-based indexing
         channels << (int)firings.value(0, i) - 1; //convert to 0-based indexing
@@ -941,6 +949,7 @@ void MVClusterDetailWidgetCalculator::compute()
         return; ////////////////////////////
     cluster_data.clear();
 
+    this->setStatus("", "Computing templates", 0.5);
     int K = 0;
     for (int i = 0; i < L; i++)
         if (labels[i] > K)
@@ -948,12 +957,16 @@ void MVClusterDetailWidgetCalculator::compute()
 
     QString timeseries_path = timeseries.makePath();
     QString firings_path = firings.makePath();
+    this->setStatus("", "mscmd_compute_templates: "+mscmdserver_url+" timeseries_path="+timeseries_path+" firings_path="+firings_path, 0.6);
     DiskReadMda templates0 = mscmd_compute_templates(mscmdserver_url, timeseries_path, firings_path, T);
     //Mda templates0 = compute_templates_0(timeseries, times, labels, T);
 
+    this->setStatus("", "Setting cluster data", 0.75);
     for (int k = 1; k <= K; k++) {
-        if (this->stopRequested())
+        if (this->stopRequested()) {
+            this->setStatus("","Stopped.",1);
             return; ////////////////////////////
+        }
         ClusterData CD;
         CD.k = k;
         CD.channel = 0;
@@ -965,9 +978,13 @@ void MVClusterDetailWidgetCalculator::compute()
                 CD.peaks << peaks[i];
             }
         }
-        if (this->stopRequested())
+        if (this->stopRequested()) {
+            this->setStatus("","Stopped.",1);
             return; ////////////////////////////
+        }
         templates0.readChunk(CD.template0, 0, 0, k - 1, M, T, 1);
         cluster_data << CD;
     }
+
+    this->setStatus("", "Done.", 1);
 }

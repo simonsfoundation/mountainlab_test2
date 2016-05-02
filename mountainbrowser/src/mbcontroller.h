@@ -4,7 +4,6 @@
 ** Created: 4/7/2016
 *******************************************************/
 
-
 #ifndef MBCONTROLLER_H
 #define MBCONTROLLER_H
 
@@ -18,25 +17,27 @@ struct MBExperiment {
 };
 
 class MBControllerPrivate;
-class MBController : public QObject
-{
+class MBController : public QObject {
     Q_OBJECT
 public:
     friend class MBControllerPrivate;
     MBController();
     virtual ~MBController();
 
-    void setMountainBrowserUrl(const QString &url);
-    void setMscmdServerUrl(const QString &url);
-    void setMdaServerUrl(const QString &url);
+    void setMountainBrowserUrl(const QString& url);
+    void setMscmdServerUrl(const QString& url);
+    void setMdaServerUrl(const QString& url);
     Q_INVOKABLE QString mountainBrowserUrl();
 
     Q_INVOKABLE QString getJson(QString url_or_path);
     Q_INVOKABLE QString getText(QString url_or_path);
     Q_INVOKABLE void openSortingResult(QString json);
+private slots:
+    void slot_ready_read_standard_output();
+    void slot_ready_read_standard_error();
+
 private:
-    MBControllerPrivate *d;
+    MBControllerPrivate* d;
 };
 
 #endif // MBCONTROLLER_H
-

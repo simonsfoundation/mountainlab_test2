@@ -12,6 +12,7 @@
 #include <QImageWriter>
 #include <QMessageBox>
 #include "imagesavedialog.h"
+#include "taskprogress.h"
 
 Mda compute_mean_waveform(DiskArrayModel_New* C)
 {

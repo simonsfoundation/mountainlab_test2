@@ -26,6 +26,7 @@ public:
     bool isFinished();
     bool hasError();
     QString errorMessage();
+    void setStatus(QString label = "", QString description = "", double progress = -1);
 
 signals:
     void computationFinished();
