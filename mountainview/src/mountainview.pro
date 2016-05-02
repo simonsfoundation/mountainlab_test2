@@ -52,7 +52,9 @@ HEADERS += \
     set_progress.h \
     mvcrosscorrelogramswidget2.h \
     mountainsortthread.h \
-    mvclipswidget.h
+    mvclipswidget.h \
+    taskprogress.h \
+    taskprogressview.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -89,7 +91,9 @@ SOURCES += mountainviewmain.cpp \
     set_progress.cpp \
     mvcrosscorrelogramswidget2.cpp \
     mountainsortthread.cpp \
-    mvclipswidget.cpp
+    mvclipswidget.cpp \
+    taskprogress.cpp \
+    taskprogressview.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils

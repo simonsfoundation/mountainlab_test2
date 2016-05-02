@@ -178,6 +178,9 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     splitter2->setOrientation(Qt::Vertical);
     d->m_splitter2 = splitter2;
 
+    QWidget *left_widget=new QWidget;
+    QVBoxLayout *left_layout=new QVBoxLayout;
+    left_widget->setLayout(left_layout);
     QScrollArea* CP = new QScrollArea;
     CP->setWidget(d->m_control_panel);
     CP->setWidgetResizable(true);
