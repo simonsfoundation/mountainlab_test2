@@ -27,22 +27,22 @@ int main(int argc, char* argv[])
 
     CLParams CLP = get_command_line_params(argc, argv);
 
-    QString mountainbrowser_url=CLP.named_parameters.value("url","http://magland.org:8002").toString();
+    QString mountainbrowser_url = CLP.named_parameters.value("url", "http://magland.org:8002").toString();
 
-    QString config_json=http_get_text(mountainbrowser_url+"?a=getConfig");
-    QJsonObject config=(QJsonDocument::fromJson(config_json.toLatin1())).object();
+    QString config_json = http_get_text(mountainbrowser_url + "?a=getConfig");
+    QJsonObject config = (QJsonDocument::fromJson(config_json.toLatin1())).object();
 
-    QString mdaserver_url=config["mdaserver_url"].toString();
-    QString mscmdserver_url=config["mscmdserver_url"].toString();
+    QString mdaserver_url = config["mdaserver_url"].toString();
+    QString mscmdserver_url = config["mscmdserver_url"].toString();
 
-    MBController* controller = new MBController;
-    controller->setMountainBrowserUrl(mountainbrowser_url);
-    controller->setMdaServerUrl(mdaserver_url);
-    controller->setMscmdServerUrl(mscmdserver_url);
+    MBController controller;
+    controller.setMountainBrowserUrl(mountainbrowser_url);
+    controller.setMdaServerUrl(mdaserver_url);
+    controller.setMscmdServerUrl(mscmdserver_url);
 
     QWebView* X = new QWebView;
     MyPage* page = new MyPage;
-    page->setController(controller);
+    page->setController(&controller);
     X->setPage(page);
     X->page()->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 
@@ -76,6 +76,5 @@ void MyPage::slot_url_changed()
 void MyPage::javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID)
 {
     QString str = QString("JS [%1:%2]  %3").arg(sourceID).arg(lineNumber).arg(message);
-    qDebug()  << str;
     QWebPage::javaScriptConsoleMessage(message, lineNumber, sourceID);
 }

@@ -39,6 +39,7 @@ MountainsortThread::~MountainsortThread()
 void MountainsortThread::setProcessorName(const QString& pname)
 {
     d->m_processor_name = pname;
+    this->setStatus(pname);
 }
 
 QString MountainsortThread::makeOutputFilePath(const QString& pname)
@@ -60,6 +61,7 @@ void MountainsortThread::setMscmdServerUrl(const QString& url)
 
 void MountainsortThread::compute()
 {
+
     if (d->m_mscmdserver_url.isEmpty()) {
         QString mountainsort_exe = qApp->applicationDirPath() + "/../../mountainsort/bin/mountainsort";
         QStringList args;
@@ -68,9 +70,11 @@ void MountainsortThread::compute()
         foreach (QString key, keys) {
             args << QString("--%1=%2").arg(key).arg(d->m_parameters.value(key).toString());
         }
+        this->setStatus("Local "+d->m_processor_name,"Executing locally: "+mountainsort_exe,0.5);
         if (QProcess::execute(mountainsort_exe, args) != 0) {
             qWarning() << "Problem running mountainsort" << mountainsort_exe << args;
         }
+        this->setStatus("","Done.",1);
     }
     else {
         QString url = d->m_mscmdserver_url + "/?";
@@ -79,7 +83,9 @@ void MountainsortThread::compute()
         foreach (QString key, keys) {
             url += QString("%1=%2&").arg(key).arg(d->m_parameters.value(key).toString());
         }
+        this->setStatus("Remote "+d->m_processor_name,"http_get_text: "+url,0.5);
         http_get_text(url);
+        this->setStatus("","",1);
     }
 }
 

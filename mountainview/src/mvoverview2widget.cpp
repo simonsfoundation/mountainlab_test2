@@ -19,6 +19,7 @@
 #include "computationthread.h"
 #include "mountainsortthread.h"
 #include "mvclipswidget.h"
+#include "taskprogressview.h"
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -64,6 +65,7 @@ public:
     QString m_mscmdserver_url;
 
     MVOverview2WidgetControlPanel* m_control_panel;
+    TaskProgressView *m_task_progress_view;
 
     QSplitter* m_splitter1, *m_splitter2;
     TabberTabWidget* m_tabs1, *m_tabs2;
@@ -178,13 +180,20 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     splitter2->setOrientation(Qt::Vertical);
     d->m_splitter2 = splitter2;
 
-    QWidget *left_widget=new QWidget;
-    QVBoxLayout *left_layout=new QVBoxLayout;
-    left_widget->setLayout(left_layout);
     QScrollArea* CP = new QScrollArea;
     CP->setWidget(d->m_control_panel);
     CP->setWidgetResizable(true);
-    splitter1->addWidget(CP);
+
+    d->m_task_progress_view=new TaskProgressView;
+    d->m_task_progress_view->setFixedHeight(200);
+
+    QWidget *left_widget=new QWidget;
+    QVBoxLayout *left_layout=new QVBoxLayout;
+    left_widget->setLayout(left_layout);
+    left_layout->addWidget(CP);
+    left_layout->addWidget(d->m_task_progress_view);
+
+    splitter1->addWidget(left_widget);
     splitter1->addWidget(splitter2);
 
     d->m_tabber = new Tabber;

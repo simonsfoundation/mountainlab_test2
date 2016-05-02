@@ -24,6 +24,7 @@
 #include "run_mountainview_script.h"
 #include "closemehandler.h"
 #include "remotereadmda.h"
+#include "taskprogress.h"
 
 /*
  * TO DO:
@@ -66,6 +67,9 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
     CloseMeHandler::start();
 
+    //Witold, I don't want to do this here! What can I do?
+    qRegisterMetaType<TaskInfo>();
+
     CLParams CLP = get_command_line_params(argc, argv);
 
     if (CLP.unnamed_parameters.value(0).endsWith(".js")) {
@@ -99,6 +103,24 @@ int main(int argc, char* argv[])
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         MVOverview2Widget* W = new MVOverview2Widget;
+        if (mode == "overview2") {
+            W->setWindowTitle(window_title);
+            W->show();
+            W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
+
+            int W0 = 1400, H0 = 1000;
+            QRect geom = QApplication::desktop()->geometry();
+            if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
+                //W->showMaximized();
+                W->resize(geom.width() - 100, geom.height() - 100);
+            }
+            else {
+                W->resize(W0, H0);
+            }
+
+            qApp->processEvents();
+        }
+
         W->setMscmdServerUrl(CLP.named_parameters.value("mscmdserver_url", "").toString());
         if (!pre_path.isEmpty()) {
             W->addTimeseriesPath("Preprocessed Data", pre_path);
@@ -123,15 +145,6 @@ int main(int argc, char* argv[])
         W->setFiringsPath(firings_path);
         W->setSampleRate(samplerate);
 
-        int W0 = 1400, H0 = 1000;
-        QRect geom = QApplication::desktop()->geometry();
-        if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
-            //W->showMaximized();
-            W->resize(geom.width() - 100, geom.height() - 100);
-        }
-        else {
-            W->resize(W0, H0);
-        }
         QStringList keys = CLP.named_parameters.keys();
         foreach (QString key, keys) {
             if (key.startsWith("P")) {
@@ -141,13 +154,9 @@ int main(int argc, char* argv[])
             }
         }
 
-        if (mode == "overview2") {
-            W->setDefaultInitialization();
-            W->setWindowTitle(window_title);
-            W->show();
-            W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
-        }
-        else if (mode == "export_image") {
+        W->setDefaultInitialization();
+
+        if (mode == "export_image") {
             QString output_fname = CLP.named_parameters.value("output").toString();
             if (output_fname.isEmpty()) {
                 printf("Missing --output parameter.\n");

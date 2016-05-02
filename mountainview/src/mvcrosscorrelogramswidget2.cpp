@@ -484,6 +484,9 @@ void MVCrossCorrelogramsWidget2Computer::compute()
     QList<int> labels;
     long L = firings.N2();
 
+    this->setStatus("Cross-correlograms2 computer","",0);
+
+    this->setStatus("","Setting up times and labels",0.2);
     printf("Setting up times and labels...\n");
     for (int n = 0; n < L; n++) {
         times << firings.value(1, n);
@@ -502,6 +505,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
         the_times[k] << times[ii];
     }
 
+    this->setStatus("","Setting data",0.7);
     data.clear();
     for (int j = 0; j < labels1.count(); j++) {
         int k1 = labels1[j];
@@ -509,6 +513,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
         QList<float> data0 = compute_cc_data(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
         data << data0;
     }
+
+    this->setStatus("","Done",1);
 }
 
 void MVCrossCorrelogramsWidget2Private::do_highlighting()

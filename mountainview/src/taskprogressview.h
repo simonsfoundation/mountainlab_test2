@@ -10,15 +10,17 @@
 #include <QWidget>
 
 class TaskProgressViewPrivate;
-class TaskProgressView : public QWidget
-{
+class TaskProgressView : public QWidget {
+    Q_OBJECT
 public:
     friend class TaskProgressViewPrivate;
     TaskProgressView();
     virtual ~TaskProgressView();
+private slots:
+    void slot_refresh();
+
 private:
-    TaskProgressViewPrivate *d;
+    TaskProgressViewPrivate* d;
 };
 
 #endif // TASKPROGRESSVIEW_H
-

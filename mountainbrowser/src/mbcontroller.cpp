@@ -15,37 +15,43 @@
 
 class MBControllerPrivate {
 public:
-    MBController *q;
+    MBController* q;
 
     QString m_mountainbrowser_url;
     QString m_mscmdserver_url;
     QString m_mdaserver_url;
+    QList<QProcess*> m_processes;
 };
 
 MBController::MBController()
 {
-    d=new MBControllerPrivate;
-    d->q=this;
+    d = new MBControllerPrivate;
+    d->q = this;
 }
 
 MBController::~MBController()
 {
+    foreach (QProcess* P, d->m_processes) {
+        P->terminate();
+        delete P;
+    }
+
     delete d;
 }
 
-void MBController::setMountainBrowserUrl(const QString &url)
+void MBController::setMountainBrowserUrl(const QString& url)
 {
-    d->m_mountainbrowser_url=url;
+    d->m_mountainbrowser_url = url;
 }
 
-void MBController::setMscmdServerUrl(const QString &url)
+void MBController::setMscmdServerUrl(const QString& url)
 {
-    d->m_mscmdserver_url=url;
+    d->m_mscmdserver_url = url;
 }
 
-void MBController::setMdaServerUrl(const QString &url)
+void MBController::setMdaServerUrl(const QString& url)
 {
-    d->m_mdaserver_url=url;
+    d->m_mdaserver_url = url;
 }
 
 QString MBController::mountainBrowserUrl()
@@ -77,22 +83,46 @@ QString MBController::getText(QString url_or_path)
 void MBController::openSortingResult(QString json)
 {
     MBExperiment E;
-    E.json=QJsonDocument::fromJson(json.toUtf8()).object();
-    E.exp_id=E.json["exp_id"].toString();
-    QString exp_type=E.json["exp_type"].toString();
-    QString basepath=E.json["basepath"].toString();
-    basepath=d->m_mdaserver_url+"/"+basepath;
-    if ((!basepath.isEmpty())&&(!basepath.endsWith("/"))) basepath+="/";
-    if (exp_type=="sorting_result") {
-        QString pre=basepath+E.json["pre"].toString();
-        QString filt=basepath+E.json["filt"].toString();
-        QString raw=basepath+E.json["raw"].toString();
-        QString firings=basepath+E.json["firings"].toString();
+    E.json = QJsonDocument::fromJson(json.toUtf8()).object();
+    E.exp_id = E.json["exp_id"].toString();
+    QString exp_type = E.json["exp_type"].toString();
+    QString basepath = E.json["basepath"].toString();
+    basepath = d->m_mdaserver_url + "/" + basepath;
+    if ((!basepath.isEmpty()) && (!basepath.endsWith("/")))
+        basepath += "/";
+    if (exp_type == "sorting_result") {
+        QString pre = basepath + E.json["pre"].toString();
+        QString filt = basepath + E.json["filt"].toString();
+        QString raw = basepath + E.json["raw"].toString();
+        QString firings = basepath + E.json["firings"].toString();
         QStringList args;
-        args << "--mscmdserver_url="+d->m_mscmdserver_url;
-        args << "--mode=overview2" << "--pre="+pre << "--filt="+filt << "--raw="+raw  << "--firings="+firings;
-        QString mv_exe=qApp->applicationDirPath()+"/../../mountainview/bin/mountainview";
-        qDebug()  << "openSortingResult: " << mv_exe << args;
-        QProcess::startDetached(mv_exe,args);
+        args << "--mscmdserver_url=" + d->m_mscmdserver_url;
+        args << "--mode=overview2"
+             << "--pre=" + pre << "--filt=" + filt << "--raw=" + raw << "--firings=" + firings;
+        QString mv_exe = qApp->applicationDirPath() + "/../../mountainview/bin/mountainview";
+        QProcess* process = new QProcess;
+        connect(process, SIGNAL(readyReadStandardOutput()), this, SLOT(slot_ready_read_standard_output()));
+        connect(process, SIGNAL(readyReadStandardError()), this, SLOT(slot_ready_read_standard_error()));
+        process->start(mv_exe, args);
+        d->m_processes << process;
     }
+}
+
+void MBController::slot_ready_read_standard_output()
+{
+    QProcess* P = qobject_cast<QProcess*>(sender());
+    if (!P) {
+        qWarning() << "Unexpected problem in slot_ready_read_standard_output";
+        return;
+    }
+}
+
+void MBController::slot_ready_read_standard_error()
+{
+    QProcess* P = qobject_cast<QProcess*>(sender());
+    if (!P) {
+        qWarning() << "Unexpected problem in slot_ready_read_standard_error";
+        return;
+    }
+    qWarning() << P->readAllStandardError();
 }
