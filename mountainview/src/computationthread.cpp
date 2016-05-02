@@ -134,10 +134,13 @@ void ComputationThread::run()
     }
     if (!stopRequested()) {
         QMutexLocker locker(&d->m_mutex);
-        this->setStatus("", "Finished");
+        this->setStatus("", "Finished", 1);
         d->m_is_finished = true;
         d->m_is_computing = false;
         emit computationFinished();
+    }
+    else {
+        this->setStatus("", "Stopped", 1);
     }
 }
 
