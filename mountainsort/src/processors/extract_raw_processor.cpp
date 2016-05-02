@@ -9,6 +9,7 @@
 #include <QList>
 #include <diskreadmda.h>
 #include <diskwritemda.h>
+#include <QTime>
 
 class extract_raw_ProcessorPrivate {
 public:
@@ -55,8 +56,8 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
 {
     QString timeseries_path = params["timeseries"].toString();
     QString timeseries_out_path = params["timeseries_out"].toString();
-    long t1 = params.value("t1","-1").toLongLong();
-    long t2 = params.value("t2","-1").toLongLong();
+    long t1 = params.value("t1", "-1").toLongLong();
+    long t2 = params.value("t2", "-1").toLongLong();
     QString channels_str = params["channels"].toString();
     QList<int> channels = str_to_intlist(channels_str);
 
@@ -64,9 +65,9 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
     long M = X.N1();
     long N = X.N2();
 
-    if (t1<0) {
-        t1=0;
-        t2=N-1;
+    if (t1 < 0) {
+        t1 = 0;
+        t2 = N - 1;
     }
 
     if ((t1 < 0) || (t2 < t1) || (t2 >= N)) {
@@ -90,8 +91,14 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
     }
 
     DiskWriteMda Y(MDAIO_TYPE_FLOAT32, timeseries_out_path, M2, N2);
-    int chunk_size = 1000;
+    long chunk_size = qMax(1000L,(long)1e6/M);
+    QTime timer;
+    timer.start();
     for (long t = 0; t < N2; t += chunk_size) {
+        if ((t == 0) || (timer.elapsed() > 5000)) {
+            printf("extract raw %ld/%ld (%d%%)\n", t, N2, (int)(t * 100.0 / N2));
+            timer.restart();
+        }
         long aa = chunk_size;
         if (t + aa > N2)
             aa = N2 - t;

@@ -88,10 +88,13 @@ def main():
         print("Please edit the configuration file "+config_fname+" and then re-run this program")
         return
     Handler = MyRequestHandler
-    port = sys.argv[1] if sys.argv[1:] else "8001"
-    config = ConfigReader(port=port).read(config_fname)
+    config = ConfigReader().read(config_fname)
     Handler.config = config
-    server = MyTCPServer(('0.0.0.0', int(config.get('General', 'port'))), Handler)
+
+    port=int(config.get('General', 'mscmdserver_port'))
+    server = MyTCPServer(('0.0.0.0', port), Handler)
+    print('Serving on port: '+str(port));
+
     server.serve_forever()
 
 if __name__ == "__main__":
