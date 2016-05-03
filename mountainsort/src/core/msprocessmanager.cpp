@@ -203,7 +203,7 @@ bool MSProcessManager::runProcess(const QString& processor_name, const QVariantM
     return ret;
 }
 
-bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_name, const QVariantMap& parameters)
+bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_name, const QVariantMap& parameters, bool force_run)
 {
     if (!this->containsProcessor(processor_name)) {
         printf("Unable to find processor: %s\n", processor_name.toLatin1().data());
@@ -213,7 +213,7 @@ bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_na
         printf("Problem checking processor: %s\n", processor_name.toLatin1().data());
         return false;
     }
-    if (this->findCompletedProcess(processor_name, parameters)) {
+    if ((!force_run)&&(this->findCompletedProcess(processor_name, parameters))) {
         printf("Process already completed: %s\n", processor_name.toLatin1().data());
         return true;
     }
@@ -326,7 +326,7 @@ void MSProcessManager::printJsonSpec() const
         obj["inputs"] = inputs;
         obj["outputs"] = outputs;
         obj["parameters"] = parameters;
-        QString exe_command = QString("%1 %2 $(arguments)").arg(qApp->applicationFilePath()).arg(P->name());
+        QString exe_command = QString("%1 %2 --force_run=1 $(arguments)").arg(qApp->applicationFilePath()).arg(P->name());
         obj["exe_command"] = exe_command;
 
         processors.append(obj);

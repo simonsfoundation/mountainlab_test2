@@ -24,7 +24,7 @@ public:
     bool containsProcessor(const QString& processor_name) const;
     bool checkProcess(const QString& processor_name, const QVariantMap& parameters) const;
     bool runProcess(const QString& processor_name, const QVariantMap& parameters);
-    bool checkAndRunProcessIfNecessary(const QString& processor_name, const QVariantMap& parameters);
+    bool checkAndRunProcessIfNecessary(const QString& processor_name, const QVariantMap& parameters, bool force_run);
 
     MSProcessor* processor(const QString& processor_name);
 

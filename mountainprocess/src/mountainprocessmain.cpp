@@ -16,6 +16,7 @@
 #include <QJSEngine>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QFileInfo>
 #include "processmanager.h"
 #include "textfile.h"
 
@@ -169,14 +170,22 @@ bool initialize_process_manager()
     if (processor_paths.isEmpty()) {
         qWarning() << "No processor paths found in " + config_fname;
     }
-    qDebug() << "Searching processor paths: " << processor_paths;
 
     /*
      * Load the processors
      */
     ProcessManager* PM = ProcessManager::globalInstance();
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
     foreach (QString processor_path, processor_paths) {
-        PM->loadProcessors(processor_path);
+        qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
+        QString p0=processor_path;
+        qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
+        if (QFileInfo(p0).isRelative()) {
+            /// TODO use canonicalFilePath throughout, wherever appropriate so we don't get stuff like a/b/c/../../b/c/../d
+            p0=QFileInfo(qApp->applicationDirPath()+"/"+p0).canonicalFilePath();
+        }
+        printf("Searching for processors in %s\n",p0.toLatin1().data());
+        PM->loadProcessors(p0);
     }
 
     return true;

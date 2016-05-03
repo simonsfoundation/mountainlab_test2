@@ -23,9 +23,9 @@ struct MLProcessor {
     QString name;
     QString version;
     QString description;
-    QMap<QString,MLParameter> inputs;
-    QMap<QString,MLParameter> outputs;
-    QMap<QString,MLParameter> parameters;
+    QMap<QString, MLParameter> inputs;
+    QMap<QString, MLParameter> outputs;
+    QMap<QString, MLParameter> parameters;
     QString exe_command;
 
     QString basepath;
@@ -42,42 +42,41 @@ struct MLProcessInfo {
     QByteArray standard_error;
 };
 
-
 class ProcessManagerPrivate;
-class ProcessManager : public QObject
-{
+class ProcessManager : public QObject {
     Q_OBJECT
 public:
     friend class ProcessManagerPrivate;
     ProcessManager();
     virtual ~ProcessManager();
 
-    bool loadProcessors(const QString &path,bool recursive=true);
-    bool loadProcessorFile(const QString &path);
+    bool loadProcessors(const QString& path, bool recursive = true);
+    bool loadProcessorFile(const QString& path);
     QStringList processorNames() const;
 
-    bool checkParameters(const QString &processor_name,const QVariantMap &parameters);
-    QString startProcess(const QString &processor_name,const QVariantMap &parameters); //returns the process id/handle (a random string)
-    bool waitForFinished(const QString &process_id,int msecs=-1);
-    MLProcessInfo processInfo(const QString &id);
-    void clearProcess(const QString &id);
+    bool checkParameters(const QString& processor_name, const QVariantMap& parameters);
+    bool processAlreadyCompleted(const QString& processor_name, const QVariantMap& parameters);
+    QString startProcess(const QString& processor_name, const QVariantMap& parameters); //returns the process id/handle (a random string)
+    bool waitForFinished(const QString& process_id, int msecs = -1);
+    MLProcessInfo processInfo(const QString& id);
+    void clearProcess(const QString& id);
     void clearAllProcesses();
 
     QStringList allProcessIds() const;
 
-    bool isFinished(const QString &id);
+    bool isFinished(const QString& id);
 
-    static ProcessManager *globalInstance();
+    static ProcessManager* globalInstance();
 
 signals:
     void processFinished(QString id);
 private slots:
     void slot_process_finished();
+
 private:
-    ProcessManagerPrivate *d;
+    ProcessManagerPrivate* d;
 };
 
-QString make_random_id(int numchars=20);
+QString make_random_id(int numchars = 20);
 
 #endif // PROCESSMANAGER_H
-

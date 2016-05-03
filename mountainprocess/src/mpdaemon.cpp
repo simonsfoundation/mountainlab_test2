@@ -97,6 +97,7 @@ QString MPDaemon::daemonPath()
     mkdir_if_doesnt_exist(ret);
     mkdir_if_doesnt_exist(ret + "/info");
     mkdir_if_doesnt_exist(ret + "/commands");
+    mkdir_if_doesnt_exist(ret + "/completed_processes");
     return ret;
 }
 

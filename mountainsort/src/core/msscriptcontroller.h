@@ -21,7 +21,7 @@ public:
     Q_INVOKABLE QString fileChecksum(const QString &fname);
     Q_INVOKABLE QString stringChecksum(const QString &str);
     Q_INVOKABLE QString createTemporaryFileName(const QString &code);
-    Q_INVOKABLE bool runProcess(const QString &processor_name,const QString &parameters_json);
+    Q_INVOKABLE bool runProcess(const QString &processor_name,const QString &parameters_json, bool force_run=false);
     Q_INVOKABLE void log(const QString &message);
 private:
     MSScriptControllerPrivate *d;
