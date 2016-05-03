@@ -14,8 +14,12 @@ INCLUDEPATH += utils core mda unit_tests 3rdparty
 
 INCLUDEPATH += ../../common/mda
 VPATH += ../../common/mda
-HEADERS += mda.h mdaio.h usagetracking.h diskreadmda.h diskwritemda.h
-SOURCES += mda.cpp mdaio.cpp usagetracking.cpp diskreadmda.cpp diskwritemda.cpp
+HEADERS += mda.h mdaio.h usagetracking.h diskreadmda.h diskwritemda.h \
+    mpdaemon.h \
+    mpdaemoninterface.h
+SOURCES += mda.cpp mdaio.cpp usagetracking.cpp diskreadmda.cpp diskwritemda.cpp \
+    mpdaemon.cpp \
+    mpdaemoninterface.cpp
 
 #DEFINES += USE_REMOTE_MDA
 #HEADERS += remotereadmda.h

@@ -5,6 +5,9 @@
 *******************************************************/
 
 #include "commandlineparams.h"
+#include "mpdaemon.h"
+#include "mpdaemoninterface.h"
+#include "scriptcontroller.h"
 
 #include <QCoreApplication>
 #include <QFile>
@@ -56,7 +59,7 @@ int main(int argc,char *argv[]) {
     QString arg1=CLP.unnamed_parameters.value(0);
     QString arg2=CLP.unnamed_parameters.value(1);
 
-    if (arg1=="runProcess") {
+    if (arg1=="run-process") {
         QString processor_name=arg2;
         QVariantMap parameters=CLP.named_parameters;
         if (!PM.checkParameters(processor_name,parameters)) {
@@ -84,7 +87,7 @@ int main(int argc,char *argv[]) {
         PM.clearProcess(id);
         return info.exit_code;
     }
-    else if (arg1=="runScript") {
+    else if (arg1=="run-script") {
         QStringList script_fnames;
         QVariantMap params;
         for (int i=0; i<CLP.unnamed_parameters.count(); i++) {
@@ -97,6 +100,43 @@ int main(int argc,char *argv[]) {
             }
         }
         if (!run_script(script_fnames,params)) return -1;
+        return 0;
+    }
+    else if (arg1=="-daemon-internal-start") {
+        MPDaemon X;
+        if (!X.run()) return -1;
+        return 0;
+    }
+    else if (arg1=="daemon-start") {
+        MPDaemonInterface X;
+        if (X.start()) return 0;
+        else return -1;
+    }
+    else if (arg1=="daemon-stop") {
+        MPDaemonInterface X;
+        if (X.stop()) return 0;
+        else return -1;
+    }
+    else if (arg1=="daemon-info") {
+        MPDaemonInterface X;
+        QJsonObject info=X.getInfo();
+        qDebug()  << QJsonDocument(info).toJson();
+        return 0;
+    }
+    else if (arg1=="daemon-queue-script") {
+        QStringList script_fnames;
+        QVariantMap params;
+        for (int i=0; i<CLP.unnamed_parameters.count(); i++) {
+            QString str=CLP.unnamed_parameters[i];
+            if (str.endsWith(".js")) {
+                script_fnames << str;
+            }
+            if (str.endsWith(".par")) { // note that we can have multiple parameter files! the later ones override the earlier ones.
+                load_parameter_file(params,str);
+            }
+        }
+        MPDaemonInterface X;
+        //if (!X.queueScript(script_fnames,params)) return -1;
         return 0;
     }
     else {
@@ -116,6 +156,16 @@ void load_parameter_file(QVariantMap &params,const QString &fname) {
         params[key]=obj[key].toVariant();
     }
 }
+
+void display_error(QJSValue result)
+{
+    /// Witold there must be a better way to print the QJSValue error message out to the console.
+    /// Witold In general is it possible to not display quotes around strings for qDebug?
+    qDebug()  << result.property("name").toString();
+    qDebug()  << result.property("message").toString();
+    qDebug()  << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
+}
+
 
 bool run_script(const QStringList& script_fnames, const QVariantMap& params)
 {
@@ -144,15 +194,16 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params)
         if (result.isError()) {
             display_error(result);
             qCritical() << "Error running script.";
-            return -1;
+            return false;
         }
     }
 
-    return 0;
+    return true;
 }
 
 
 void print_usage() {
     printf("Usage:\n");
     printf("mountainprocess runProcess [processor_name] --[param1]=[val1] --[param2]=[val2] ...\n");
+    printf("mountainprocess runScript [script1].js [script2.js] ... [file1].par [file2].par ... \n");
 }
