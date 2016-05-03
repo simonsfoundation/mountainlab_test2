@@ -13,8 +13,10 @@
 #include <QJsonObject>
 #include <QFileSystemWatcher>
 #include <QJsonArray>
+#include <QProcess>
 #include "textfile.h"
 #include <QDebug>
+#include "cachemanager.h"
 
 /// TODO clean up the old files in mpdaemon/info
 /// TODO consider separating out a class with an API other than from command files -- probably a very good idea, if I'm not too lazy
@@ -25,9 +27,15 @@ public:
     bool m_is_running;
     QFileSystemWatcher m_watcher;
     QMap<QString, MPDaemonScript> m_scripts;
+    QMap<QString, QProcess*> m_script_processes;
 
     void write_info();
     void process_command(QJsonObject obj);
+    void handle_scripts();
+    int num_running_scripts();
+    int num_pending_scripts();
+    void launch_next_script();
+    void launch_script(QString script_id);
 };
 
 MPDaemon::MPDaemon()
@@ -35,6 +43,12 @@ MPDaemon::MPDaemon()
     d = new MPDaemonPrivate;
     d->q = this;
     d->m_is_running = false;
+
+    foreach (QProcess *P,d->m_script_processes) {
+        if (P->state()==QProcess::Running) P->terminate();
+    }
+
+    qDeleteAll(d->m_script_processes);
 
     connect(&d->m_watcher, SIGNAL(directoryChanged(QString)), this, SLOT(slot_commands_directory_changed()));
 }
@@ -63,6 +77,7 @@ bool MPDaemon::run()
             d->write_info();
             timer.restart();
         }
+        d->handle_scripts();
         qApp->processEvents();
     }
     return true;
@@ -119,6 +134,20 @@ void MPDaemon::slot_commands_directory_changed()
     }
 }
 
+void MPDaemon::slot_process_finished()
+{
+    QProcess *P=qobject_cast<QProcess *>(sender());
+    if (!P) return;
+    QString script_id=P->property("script_id").toString();
+    if (!d->m_scripts.contains(script_id)) {
+        qWarning() << "Unexpected problem in slot_process_finished. Unable to find script with id: "+script_id;
+        return;
+    }
+    d->m_scripts[script_id].is_finished=true;
+    d->m_scripts[script_id].is_running=false;
+    /// TODO read the standard output and standard error
+}
+
 void MPDaemonPrivate::write_info()
 {
     /// Witold rather than starting at 100000, I'd like to format the num in the fname to be link 0000023. Could you please help?
@@ -154,7 +183,7 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
     else if (command == "queue-script") {
         MPDaemonScript S = script_obj_to_struct(obj);
         if (m_scripts.contains(S.script_id)) {
-            qWarning() << "Unable to queue script. Script with this id already exists: "+S.script_id;
+            qWarning() << "Unable to queue script. Script with this id already exists: " + S.script_id;
             return;
         }
         QString json = QJsonDocument(script_struct_to_obj(S)).toJson();
@@ -165,6 +194,83 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
     else {
         qWarning() << "Unrecognized command: " + command;
     }
+}
+
+void MPDaemonPrivate::handle_scripts()
+{
+    if (num_running_scripts() < 1) {
+        if (num_pending_scripts() > 0) {
+            launch_next_script();
+        }
+    }
+}
+
+int MPDaemonPrivate::num_running_scripts()
+{
+    int ret = 0;
+    QStringList keys = m_scripts.keys();
+    foreach (QString key, keys) {
+        if (m_scripts[key].is_running)
+            ret++;
+    }
+    return ret;
+}
+
+int MPDaemonPrivate::num_pending_scripts()
+{
+    int ret = 0;
+    QStringList keys = m_scripts.keys();
+    foreach (QString key, keys) {
+        if ((!m_scripts[key].is_running) && (!m_scripts[key].is_finished))
+            ret++;
+    }
+    return ret;
+}
+
+void MPDaemonPrivate::launch_next_script()
+{
+    QStringList keys = m_scripts.keys();
+    foreach (QString key, keys) {
+        if ((!m_scripts[key].is_running) && (!m_scripts[key].is_finished)) {
+            launch_script(key);
+            return;
+        }
+    }
+}
+
+void MPDaemonPrivate::launch_script(QString script_id)
+{
+    if (!m_scripts.contains(script_id))
+        return;
+    MPDaemonScript* S = &m_scripts[script_id];
+    if (S->is_running)
+        return;
+    if (S->is_finished)
+        return;
+    QString exe = qApp->applicationFilePath();
+    QStringList args;
+    args << "run-script";
+    foreach (QString fname, S->script_paths) {
+        args << fname;
+    }
+    QJsonObject parameters = variantmap_to_json_obj(S->parameters);
+    QString parameters_json = QJsonDocument(parameters).toJson();
+    QString par_fname = CacheManager::globalInstance()->makeLocalFile(script_id + ".par", CacheManager::ShortTerm);
+    args << par_fname;
+    QProcess* process = new QProcess;
+    process->setProperty("script_id",script_id.toLatin1().data());
+    printf("Launching script %s: ",script_id.toLatin1().data());
+    foreach (QString fname,S->script_paths) {
+        QString str=QFileInfo(fname).fileName();
+        printf("%s ",str.toLatin1().data());
+    }
+    printf("\n");
+
+    QObject::connect(process,SIGNAL(finished(int)),q,SLOT(slot_process_finished()));
+
+    process->start(exe, args);
+    m_script_processes[script_id] = process;
+    S->is_running=true;
 }
 
 QJsonArray stringlist_to_json_array(QStringList list)

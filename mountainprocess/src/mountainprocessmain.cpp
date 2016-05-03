@@ -109,6 +109,7 @@ int main(int argc, char* argv[])
         return 0;
     }
     else if (arg1 == "queue-script") {
+        /// TODO Probably important to record the checksum of the script files so that we know whether things have changed by the time we come around to running the script
         MPDaemonScript S = default_daemon_script();
         QVariantMap params;
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
@@ -193,6 +194,8 @@ void display_error(QJSValue result)
 
 bool run_script(const QStringList& script_fnames, const QVariantMap& params)
 {
+    QJsonObject parameters=variantmap_to_json_obj(params);
+
     QJSEngine engine;
     ScriptController Controller;
     QJSValue MP = engine.newQObject(&Controller);
@@ -205,7 +208,18 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params)
             return false;
         }
     }
+    {
+        QString parameters_json=QJsonDocument(parameters).toJson(QJsonDocument::Compact);
+        QString code=QString("main(JSON.parse('%1'));").arg(parameters_json);
+        QJSValue result = engine.evaluate(code);
+        if (result.isError()) {
+            display_error(result);
+            qCritical() << "Error running script.";
+            return false;
+        }
+    }
 
+    /*
     {
         QStringList param_keys = params.keys();
         QJsonObject params_obj;
@@ -221,6 +235,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params)
             return false;
         }
     }
+    */
 
     return true;
 }

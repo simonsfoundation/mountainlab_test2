@@ -27,6 +27,7 @@ public:
 
 private slots:
     void slot_commands_directory_changed();
+    void slot_process_finished();
 
 private:
     MPDaemonPrivate* d;
@@ -43,5 +44,9 @@ QJsonObject script_struct_to_obj(MPDaemonScript S);
 MPDaemonScript script_obj_to_struct(QJsonObject obj);
 /// Witold there is probably a better way to set the default struct. is this a struct constructor?
 MPDaemonScript default_daemon_script();
+QJsonArray stringlist_to_json_array(QStringList list);
+QStringList json_array_to_stringlist(QJsonArray X);
+QJsonObject variantmap_to_json_obj(QVariantMap map);
+QVariantMap json_obj_to_variantmap(QJsonObject obj);
 
 #endif // MPDAEMON_H

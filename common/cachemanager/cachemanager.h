@@ -4,35 +4,35 @@
 ** Created: 4/5/2016
 *******************************************************/
 
-#ifndef MSCACHEMANAGER_H
-#define MSCACHEMANAGER_H
+#ifndef CACHEMANAGER_H
+#define CACHEMANAGER_H
 
 #include <QObject>
 
-class MSCacheManagerPrivate;
-class MSCacheManager : public QObject {
+class CacheManagerPrivate;
+class CacheManager : public QObject {
 public:
     enum Duration {
         ShortTerm,
         LongTerm
     };
 
-    friend class MSCacheManagerPrivate;
-    MSCacheManager();
-    virtual ~MSCacheManager();
+    friend class CacheManagerPrivate;
+    CacheManager();
+    virtual ~CacheManager();
 
     void setLocalBasePath(const QString& path);
     QString makeRemoteFile(const QString& remote_name, const QString& file_name = "", Duration duration = ShortTerm);
     QString makeLocalFile(const QString& file_name = "", Duration duration = ShortTerm);
     void cleanUp();
 
-    static MSCacheManager *globalInstance();
+    static CacheManager *globalInstance();
 
 private slots:
     void slot_remove_on_delete();
 
 private:
-    MSCacheManagerPrivate* d;
+    CacheManagerPrivate* d;
 };
 
-#endif // MSCACHEMANAGER_H
+#endif // CACHEMANAGER_H

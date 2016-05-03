@@ -56,7 +56,7 @@ QString ScriptController::stringChecksum(const QString& str)
 
 QString ScriptController::createTemporaryFileName(const QString& code)
 {
-    return MSCacheManager::globalInstance()->makeLocalFile(code, MSCacheManager::LongTerm);
+    return CacheManager::globalInstance()->makeLocalFile(code, CacheManager::LongTerm);
 }
 
 bool ScriptController::runProcess(const QString& processor_name, const QString& parameters_json)
