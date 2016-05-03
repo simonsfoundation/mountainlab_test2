@@ -62,6 +62,11 @@ QString MPDaemon::makeTimestamp(const QDateTime &dt)
     return dt.toString("yyyy-MM-dd-hh-mm-ss-zzz");
 }
 
+QDateTime MPDaemon::parseTimestamp(const QString &timestamp)
+{
+    return QDateTime::fromString(timestamp,"yyyy-MM-dd-hh-mm-ss-zzz");
+}
+
 void MPDaemon::slot_timer()
 {
     d->write_info();
@@ -71,9 +76,9 @@ void MPDaemon::slot_timer()
 void MPDaemonPrivate::write_info()
 {
     /// Witold rather than starting at 100000, I'd like to format the num in the fname to be link 0000023. Could you please help?
-    long num=100000;
+    static long num=100000;
     QString timestamp=MPDaemon::makeTimestamp();
-    QString fname=QString("%1/%2.%3.info").arg(MPDaemon::daemonPath()).arg(num).arg(timestamp);
+    QString fname=QString("%1/%2.%3.info").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
     num++;
     QJsonObject info;
     info["is_running"]=m_is_running;

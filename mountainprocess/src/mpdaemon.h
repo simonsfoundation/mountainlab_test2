@@ -23,6 +23,7 @@ public:
 
     static QString daemonPath();
     static QString makeTimestamp(const QDateTime &dt=QDateTime::currentDateTime());
+    static QDateTime parseTimestamp(const QString &timestamp);
 
 private slots:
     void slot_timer();
