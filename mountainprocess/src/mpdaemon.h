@@ -9,6 +9,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QDateTime>
 
 class MPDaemonPrivate;
 class MPDaemon : public QObject
@@ -21,6 +22,7 @@ public:
     bool run();
 
     static QString daemonPath();
+    static QString makeTimestamp(const QDateTime &dt=QDateTime::currentDateTime());
 
 private slots:
     void slot_timer();

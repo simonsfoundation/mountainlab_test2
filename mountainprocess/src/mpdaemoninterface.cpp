@@ -23,7 +23,6 @@ public:
     void send_daemon_command(QJsonObject obj);
     QString last_info_fname();
     int msec_since_last_info();
-    QString get_timestamp();
 };
 
 MPDaemonInterface::MPDaemonInterface()
@@ -110,7 +109,7 @@ void MPDaemonInterfacePrivate::wait(int msec)
 void MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj)
 {
     static int num=1;
-    QString timestamp=get_timestamp();
+    QString timestamp=MPDaemon::makeTimestamp();
     QString fname=QString("%1/%2.%3.command").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
     num++;
 
@@ -133,9 +132,4 @@ int MPDaemonInterfacePrivate::msec_since_last_info()
     QString fname=last_info_fname();
     if (fname.isEmpty()) return 9999;
     return QFileInfo(fname).lastModified().msecsTo(QDateTime::currentDateTime());
-}
-
-QString MPDaemonInterfacePrivate::get_timestamp()
-{
-    return QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss-zzz");
 }

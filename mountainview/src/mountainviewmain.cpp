@@ -26,40 +26,6 @@
 #include "remotereadmda.h"
 #include "taskprogress.h"
 
-/*
- * TO DO:
- * Clean up temporary files
- * */
-
-bool download_file(QString url, QString fname)
-{
-    QStringList args;
-    args << "-o" << fname << url;
-    int ret = QProcess::execute("/usr/bin/curl", args);
-    if (ret != 0) {
-        if (QFile::exists(fname)) {
-            QFile::remove(fname);
-        }
-        return false;
-    }
-    return QFile::exists(fname);
-}
-
-void test_histogramview()
-{
-
-    int N = 100;
-    float values[N];
-    for (int i = 0; i < N; i++) {
-        values[i] = (qrand() % 10000) * 1.0 / 10000;
-    }
-
-    HistogramView* W = new HistogramView;
-    W->setData(N, values);
-    W->autoSetBins(N / 5);
-    W->show();
-}
-
 void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions);
 
 int main(int argc, char* argv[])
