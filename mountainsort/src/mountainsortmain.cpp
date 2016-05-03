@@ -76,6 +76,10 @@ int main(int argc, char* argv[])
         PM->printDetails();
         return 0;
     }
+    else if (arg1 == "spec") {
+        PM->printJsonSpec();
+        return 0;
+    }
 
     if (CLP.unnamed_parameters.isEmpty()) {
         print_usage();

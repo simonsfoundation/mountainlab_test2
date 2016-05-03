@@ -32,7 +32,17 @@ int main(int argc, char* argv[])
     QString arg1 = CLP.unnamed_parameters.value(0);
     QString arg2 = CLP.unnamed_parameters.value(1);
 
-    if (arg1 == "run-process") {
+    if (arg1=="list-processors") {
+        if (!initialize_process_manager()) return -1;
+        ProcessManager* PM = ProcessManager::globalInstance();
+        QStringList pnames=PM->processorNames();
+        qSort(pnames);
+        foreach (QString pname,pnames) {
+            printf("%s\n",pname.toLatin1().data());
+        }
+        return 0;
+    }
+    else if (arg1 == "run-process") {
         if (!initialize_process_manager()) return -1;
         ProcessManager* PM = ProcessManager::globalInstance();
 

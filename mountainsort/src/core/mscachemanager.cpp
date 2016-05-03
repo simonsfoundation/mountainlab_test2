@@ -32,6 +32,7 @@ MSCacheManager::~MSCacheManager()
     delete d;
 }
 
+
 void MSCacheManager::setLocalBasePath(const QString& path)
 {
     d->m_local_base_path = path;

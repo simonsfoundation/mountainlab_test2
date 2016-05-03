@@ -35,6 +35,7 @@ public:
 
     QString usageString() const;
     void printDetails() const;
+    void printJsonSpec() const;
 
 private:
     MSProcessManagerPrivate* d;

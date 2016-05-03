@@ -63,14 +63,28 @@ bool ProcessManager::loadProcessors(const QString &path, bool recursive)
 
 bool ProcessManager::loadProcessorFile(const QString &path)
 {
+    QString json;
     if (QFileInfo(path).isExecutable()) {
-        qWarning() << "Case of executable processor file is not yet supported: "+path;
-        return false;
+        QProcess pp;
+        pp.start(path,QStringList("spec"));
+        if (!pp.waitForFinished()) {
+            qWarning() << "Problem with executable processor file, waiting for finish: "+path;
+            return false;
+        }
+        pp.waitForReadyRead();
+        QString output=pp.readAllStandardOutput();
+        json=output;
+        if (json.isEmpty()) {
+            qWarning() << "Executable processor file did not return output for spec: "+path;
+            return false;
+        }
     }
-    QString json=read_text_file(path);
-    if (json.isEmpty()) {
-        qWarning() << "Processor file is empty: "+path;
-        return false;
+    else {
+        json=read_text_file(path);
+        if (json.isEmpty()) {
+            qWarning() << "Processor file is empty: "+path;
+            return false;
+        }
     }
     QJsonParseError error;
     QJsonObject obj=QJsonDocument::fromJson(json.toLatin1(),&error).object();
@@ -97,6 +111,11 @@ bool ProcessManager::loadProcessorFile(const QString &path)
         d->m_processors[P.name]=P;
     }
     return true;
+}
+
+QStringList ProcessManager::processorNames() const
+{
+    return d->m_processors.keys();
 }
 
 QString ProcessManager::startProcess(const QString &processor_name, const QVariantMap &parameters)

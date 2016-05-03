@@ -12,6 +12,14 @@ MOC_DIR=../build
 TARGET = mountainsort
 TEMPLATE = app
 
+mp_target.target = mountainsort.mp
+mp_target.commands = cp mountainsort mountainsort.mp
+mp_target.depends = mp_target2
+
+mp_target2.target = mountainsort
+
+QMAKE_EXTRA_TARGETS += mp_target mp_target2
+
 INCLUDEPATH += utils core processors mda unit_tests 3rdparty isosplit
 
 HEADERS += \

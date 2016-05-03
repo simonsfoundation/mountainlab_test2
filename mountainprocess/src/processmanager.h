@@ -54,6 +54,7 @@ public:
 
     bool loadProcessors(const QString &path,bool recursive=true);
     bool loadProcessorFile(const QString &path);
+    QStringList processorNames() const;
 
     bool checkParameters(const QString &processor_name,const QVariantMap &parameters);
     QString startProcess(const QString &processor_name,const QVariantMap &parameters); //returns the process id/handle (a random string)

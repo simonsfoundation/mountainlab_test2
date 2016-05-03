@@ -36,6 +36,9 @@
 #include "qjson.h"
 #include "textfile.h"
 #include <sys/stat.h>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 class MSProcessManagerPrivate {
 public:
@@ -55,8 +58,8 @@ MSProcessManager::MSProcessManager()
     d->q = this;
 }
 
-Q_GLOBAL_STATIC(MSProcessManager,theInstance)
-MSProcessManager *MSProcessManager::globalInstance()
+Q_GLOBAL_STATIC(MSProcessManager, theInstance)
+MSProcessManager* MSProcessManager::globalInstance()
 {
     return theInstance;
 }
@@ -224,7 +227,7 @@ bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_na
     }
 }
 
-MSProcessor *MSProcessManager::processor(const QString &processor_name)
+MSProcessor* MSProcessManager::processor(const QString& processor_name)
 {
     return d->find_processor(processor_name);
 }
@@ -250,7 +253,7 @@ QString MSProcessManager::usageString() const
 
     str += QString("Available processors:\n");
     QStringList names = allProcessorNames();
-    str+=names.join(", ");
+    str += names.join(", ");
     str += "\n";
 
     return str;
@@ -275,6 +278,63 @@ void MSProcessManager::printDetails() const
         str += QString("    Optional params: %1").arg(tostr(P->optionalParameters())) + "\n";
         printf("%s\n", str.toLatin1().data());
     }
+}
+
+void MSProcessManager::printJsonSpec() const
+{
+    QJsonArray processors;
+    QStringList names = allProcessorNames();
+    for (int i = 0; i < names.count(); i++) {
+        QString name = names[i];
+        MSProcessor* P = d->m_processors[name];
+
+        QJsonArray inputs;
+        {
+            QStringList input_file_parameters = P->inputFileParameters();
+            foreach (QString pname, input_file_parameters) {
+                QJsonObject P;
+                P["name"] = pname;
+                inputs.append(P);
+            }
+        }
+
+        QJsonArray outputs;
+        {
+            QStringList output_file_parameters = P->outputFileParameters();
+            foreach (QString pname, output_file_parameters) {
+                QJsonObject P;
+                P["name"] = pname;
+                outputs.append(P);
+            }
+        }
+
+        QJsonArray parameters;
+        {
+            QStringList parameters0 = P->requiredParameters();
+            parameters0.append(P->optionalParameters());
+            foreach (QString pname, parameters0) {
+                QJsonObject P;
+                P["name"] = pname;
+                parameters.append(P);
+            }
+        }
+
+        QJsonObject obj;
+        obj["name"] = P->name();
+        obj["version"] = P->version();
+        obj["description"] = ""; /// TODO make a property of MSProcessor for this
+        obj["inputs"] = inputs;
+        obj["outputs"] = outputs;
+        obj["parameters"] = parameters;
+        QString exe_command = QString("%1 %2 $(arguments)").arg(qApp->applicationFilePath()).arg(P->name());
+        obj["exe_command"] = exe_command;
+
+        processors.append(obj);
+    }
+    QJsonObject X;
+    X["processors"] = processors;
+    QString json = QJsonDocument(X).toJson();
+    printf("%s", json.toLatin1().data());
 }
 
 MSProcessor* MSProcessManagerPrivate::find_processor(const QString& name)

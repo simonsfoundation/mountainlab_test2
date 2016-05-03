@@ -1,7 +1,7 @@
 {
 	"processors":[
 		{
-			"name":"copy",
+			"name":"copy2",
 			"version":"0.1",
 			"description":"",
 			"inputs":[{"name":"input"}],
