@@ -8,7 +8,7 @@
 #define MPDAEMONINTERFACE_H
 
 #include <QJsonObject>
-
+#include "mpdaemon.h"
 
 class MPDaemonInterfacePrivate;
 class MPDaemonInterface
@@ -20,6 +20,7 @@ public:
     bool start();
     bool stop();
     QJsonObject getInfo();
+    void queueScript(const MPDaemonScript &script);
 private:
     MPDaemonInterfacePrivate *d;
 };

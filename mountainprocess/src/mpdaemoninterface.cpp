@@ -20,7 +20,7 @@ public:
 
     bool daemon_is_running();
     void wait(qint64 msec); //Maybe not used
-    void send_daemon_command(QJsonObject obj);
+    bool send_daemon_command(QJsonObject obj,qint64 timeout_msec);
     QString last_info_fname();
     QJsonObject get_last_info(qint64 max_elapsed_msec);
     qint64 msec_since_last_info(); //Maybe not used
@@ -58,12 +58,15 @@ bool MPDaemonInterface::stop()
     }
     QJsonObject obj;
     obj["command"]="stop";
-    d->send_daemon_command(obj);
+    d->send_daemon_command(obj,5000);
+    /// Witold even though this is more than enough time for Daemon to stop itself once it has acknowledge receipt of the command by deleting the file, there should be a better way
+    d->wait(1000); //give it some time after command has been received
     if (!d->daemon_is_running()) {
         printf("daemon has been stopped.\n");
         return true;
     }
     else {
+
         printf("Failed to stop daemon\n");
         return false;
     }
@@ -72,6 +75,13 @@ bool MPDaemonInterface::stop()
 QJsonObject MPDaemonInterface::getInfo()
 {
     return d->get_last_info(10000);
+}
+
+void MPDaemonInterface::queueScript(const MPDaemonScript &script)
+{
+    QJsonObject obj=script_struct_to_obj(script);
+    obj["command"]="queue-script";
+    d->send_daemon_command(obj,0);
 }
 
 bool MPDaemonInterfacePrivate::daemon_is_running()
@@ -86,22 +96,24 @@ void MPDaemonInterfacePrivate::wait(qint64 msec)
     while (timer.elapsed()<=msec) {}
 }
 
-void MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj)
+bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj,qint64 msec_timeout)
 {
     static long num=100000;
     QString timestamp=MPDaemon::makeTimestamp();
-    QString fname=QString("%1/%2.%3.command").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
+    QString fname=QString("%1/commands/%2.%3.command").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
     num++;
 
     QString json=QJsonDocument(obj).toJson();
     write_text_file(fname,json);
     QTime timer; timer.start();
-    while ((timer.elapsed()<=6000)&&(QFile::exists(fname)));
+    //wait until it has been received by the daemon
+    while ((timer.elapsed()<=msec_timeout)&&(QFile::exists(fname)));
+    return (!QFile::exists(fname));
 }
 
 QString MPDaemonInterfacePrivate::last_info_fname()
 {
-    QString path=MPDaemon::daemonPath();
+    QString path=MPDaemon::daemonPath()+"/info";
     QStringList list=QDir(path).entryList(QStringList("*.info"),QDir::Files,QDir::Name);
     if (list.isEmpty()) return "";
     return path+"/"+list[list.count()-1];

@@ -108,11 +108,6 @@ QString ProcessManager::startProcess(const QString &processor_name, const QVaria
         return "";
     }
     MLProcessor P=d->m_processors[processor_name];
-
-    qDebug() << P.inputs.keys();
-    qDebug() << P.outputs.keys();
-    qDebug() << P.parameters.keys();
-
     QString exe_command=P.exe_command;
     exe_command.replace(QRegExp("\\$\\(basepath\\)"),P.basepath);
     {
@@ -152,7 +147,7 @@ QString ProcessManager::startProcess(const QString &processor_name, const QVaria
     PP.info.exit_status=QProcess::NormalExit;
     PP.qprocess=new QProcess;
     QObject::connect(PP.qprocess,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(slot_process_finished()));
-    qDebug()  << "STARTING: " << PP.info.exe_command;
+    printf("STARTING: %s.\n",PP.info.exe_command.toLatin1().data());
     PP.qprocess->start(PP.info.exe_command);
     PP.qprocess->setProperty("pp_id",id);
     if (!PP.qprocess->waitForStarted(2000)) {
@@ -340,6 +335,7 @@ QChar make_random_alphanumeric() {
         val++;
         QTime time=QTime::currentTime();
         int num=qHash(time.toString("hh:mm:ss:zzz")+QString::number(qrand()+val));
+        if (num<0) num=-num;
         num=num%36;
         if (num<26) return QChar('A'+num);
         else return QChar('0'+num-26);
