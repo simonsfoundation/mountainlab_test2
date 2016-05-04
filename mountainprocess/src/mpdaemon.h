@@ -31,47 +31,42 @@ public:
 private
 slots:
     void slot_commands_directory_changed();
-    void slot_script_qprocess_finished();
-    void slot_process_qprocess_finished();
+    void slot_pript_qprocess_finished();
 
 private:
     MPDaemonPrivate* d;
 };
 
-struct MPDaemonScript {
-    MPDaemonScript()
-    {
-        is_running = false;
-        is_finished = false;
-        success=false;
-    }
-    QString script_id;
-    QString script_output_file;
-    QStringList script_paths;
-    QVariantMap parameters;
-    bool is_running;
-    bool is_finished;
-    bool success;
-    QString error;
-    QJsonObject run_time_results;
+enum PriptType {
+    ScriptType,
+    ProcessType
 };
 
-struct MPDaemonProcess {
-    MPDaemonProcess()
+struct MPDaemonPript {
+    MPDaemonPript()
     {
         is_running = false;
         is_finished = false;
         success=false;
+        parent_pid=0;
     }
-    QString process_id;
-    QString process_output_file;
-    QString processor_name;
+    QString id;
+    QString output_file;
     QVariantMap parameters;
     bool is_running;
     bool is_finished;
     bool success;
     QString error;
     QJsonObject run_time_results;
+    qint64 parent_pid;
+};
+
+struct MPDaemonScript : MPDaemonPript {
+    QStringList script_paths;
+};
+
+struct MPDaemonProcess : MPDaemonPript {
+    QString processor_name;
 };
 
 QJsonObject script_struct_to_obj(MPDaemonScript S);
