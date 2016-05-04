@@ -325,7 +325,8 @@ void ProcessManager::slot_process_finished()
             QString code = d->compute_unique_object_code(obj);
             QString fname = MPDaemon::daemonPath() + "/completed_processes/" + code + ".json";
             QString json = QJsonDocument(obj).toJson();
-            if (QFile::exists(fname)) QFile::remove(fname); //shouldn't be needed
+            if (QFile::exists(fname))
+                QFile::remove(fname); //shouldn't be needed
             if (write_text_file(fname + ".tmp", json)) {
                 QFile::rename(fname + ".tmp", fname);
             }

@@ -11,8 +11,7 @@
 #include "mpdaemon.h"
 
 class MPDaemonInterfacePrivate;
-class MPDaemonInterface
-{
+class MPDaemonInterface {
 public:
     friend class MPDaemonInterfacePrivate;
     MPDaemonInterface();
@@ -20,10 +19,11 @@ public:
     bool start();
     bool stop();
     QJsonObject getInfo();
-    void queueScript(const MPDaemonScript &script);
+    void queueScript(const MPDaemonScript& script);
+    void queueProcess(const MPDaemonProcess& process);
+
 private:
-    MPDaemonInterfacePrivate *d;
+    MPDaemonInterfacePrivate* d;
 };
 
 #endif // MPDAEMONINTERFACE_H
-

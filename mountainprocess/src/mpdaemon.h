@@ -27,23 +27,45 @@ public:
 
 private slots:
     void slot_commands_directory_changed();
-    void slot_process_finished();
+    void slot_script_qprocess_finished();
+    void slot_process_qprocess_finished();
 
 private:
     MPDaemonPrivate* d;
 };
 
 struct MPDaemonScript {
+    MPDaemonScript()
+    {
+        is_running = false;
+        is_finished = false;
+    }
     QString script_id;
+    QString script_output_file;
     QStringList script_paths;
     QVariantMap parameters;
     bool is_running;
     bool is_finished;
 };
+
+struct MPDaemonProcess {
+    MPDaemonProcess()
+    {
+        is_running = false;
+        is_finished = false;
+    }
+    QString process_id;
+    QString process_output_file;
+    QString processor_name;
+    QVariantMap parameters;
+    bool is_running;
+    bool is_finished;
+};
+
 QJsonObject script_struct_to_obj(MPDaemonScript S);
 MPDaemonScript script_obj_to_struct(QJsonObject obj);
-/// Witold there is probably a better way to set the default struct. is this a struct constructor?
-MPDaemonScript default_daemon_script();
+QJsonObject process_struct_to_obj(MPDaemonProcess P);
+MPDaemonProcess process_obj_to_struct(QJsonObject obj);
 QJsonArray stringlist_to_json_array(QStringList list);
 QStringList json_array_to_stringlist(QJsonArray X);
 QJsonObject variantmap_to_json_obj(QVariantMap map);

@@ -13,10 +13,13 @@
 #include "cachemanager.h"
 #include "processmanager.h"
 #include <QTime>
+#include <QCoreApplication>
 
 class ScriptControllerPrivate {
 public:
     ScriptController* q;
+
+    bool queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters);
 };
 
 ScriptController::ScriptController()
@@ -71,6 +74,13 @@ bool ScriptController::runProcess(const QString& processor_name, const QString& 
     if (!PM->checkParameters(processor_name, parameters)) {
         return false;
     }
+    if (PM->processAlreadyCompleted(processor_name, parameters)) {
+        printf("Process already completed: %s\n", processor_name.toLatin1().data());
+        return true;
+    }
+
+    return d->queue_process_and_wait_for_finished(processor_name, parameters);
+    /*
     QString process_id = PM->startProcess(processor_name, parameters);
     if (process_id.isEmpty())
         return false;
@@ -78,9 +88,37 @@ bool ScriptController::runProcess(const QString& processor_name, const QString& 
         return false;
     PM->clearProcess(process_id);
     return true;
+    */
 }
 
 void ScriptController::log(const QString& message)
 {
     printf("SCRIPT: %s\n", message.toLatin1().data());
+}
+
+bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters)
+{
+    QString exe = qApp->applicationDirPath();
+    QStringList args;
+    args << "queue-process";
+    QStringList pkeys = parameters.keys();
+    foreach (QString pkey, pkeys) {
+        args << QString("--%1=%2").arg(pkey).arg(parameters[pkey].toString());
+    }
+    QProcess P1;
+    P1.start(exe, args);
+    if (!P1.waitForFinished(30000)) {
+        printf("Error waiting for queue-process to finish: %s\n", processor_name.toLatin1().data());
+        return false;
+    }
+    if (P1.exitStatus() == QProcess::CrashExit) {
+        printf("Error -- queue-process crashed: %s\n", processor_name.toLatin1().data());
+        return false;
+    }
+    if (P1.exitCode() != 0) {
+        printf("Error -- queue-process returned non-zero exit code: %s\n", processor_name.toLatin1().data());
+        return false;
+    }
+    /////// FINISH!!!!!!!!!!!!!!!
+    return true;
 }

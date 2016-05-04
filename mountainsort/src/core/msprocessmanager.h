@@ -17,7 +17,7 @@ class MSProcessManager {
 public:
     friend class MSProcessManagerPrivate;
     MSProcessManager();
-    static MSProcessManager *globalInstance();
+    static MSProcessManager* globalInstance();
     virtual ~MSProcessManager();
     void loadDefaultProcessors();
 
