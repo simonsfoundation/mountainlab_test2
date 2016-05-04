@@ -239,6 +239,7 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
     }
     else if (command == "queue-process") {
         MPDaemonProcess P = process_obj_to_struct(obj);
+        qDebug() << "@@@@@@@@@@@@" << P.processor_name;
         if (m_processes.contains(P.process_id)) {
             qWarning() << "Unable to queue process. Process with this id already exists: " + P.process_id;
             return;

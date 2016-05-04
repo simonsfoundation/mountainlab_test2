@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include "mpdaemon.h"
 #include "textfile.h"
+#include <unistd.h> //for usleep
 
 class MPDaemonInterfacePrivate {
 public:
@@ -99,10 +100,7 @@ bool MPDaemonInterfacePrivate::daemon_is_running()
 
 void MPDaemonInterfacePrivate::wait(qint64 msec)
 {
-    QTime timer;
-    timer.start();
-    while (timer.elapsed() <= msec) {
-    }
+    usleep(msec*1000);
 }
 
 bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_timeout)

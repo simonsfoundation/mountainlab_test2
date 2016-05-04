@@ -14,12 +14,16 @@
 #include "processmanager.h"
 #include <QTime>
 #include <QCoreApplication>
+#include <QDebug>
+#include <unistd.h> //for usleep
 
 class ScriptControllerPrivate {
 public:
     ScriptController* q;
 
-    bool queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters);
+    static bool queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters);
+    static bool wait_for_file_to_appear(QString fname,qint64 timeout_ms=-1,bool remove_on_appear=false);
+    static void wait(qint64 msec);
 };
 
 ScriptController::ScriptController()
@@ -98,13 +102,17 @@ void ScriptController::log(const QString& message)
 
 bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters)
 {
-    QString exe = qApp->applicationDirPath();
+    QString exe = qApp->applicationFilePath();
     QStringList args;
     args << "queue-process";
+    args << processor_name;
+    QString process_output_fname=CacheManager::globalInstance()->makeLocalFile("process_output."+make_random_id()+".json",CacheManager::ShortTerm);
+    args << "--~process_output="+process_output_fname;
     QStringList pkeys = parameters.keys();
     foreach (QString pkey, pkeys) {
         args << QString("--%1=%2").arg(pkey).arg(parameters[pkey].toString());
     }
+    qDebug() << exe+" "+args.join(" ");
     QProcess P1;
     P1.start(exe, args);
     if (!P1.waitForFinished(30000)) {
@@ -119,6 +127,30 @@ bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString proces
         printf("Error -- queue-process returned non-zero exit code: %s\n", processor_name.toLatin1().data());
         return false;
     }
-    /////// FINISH!!!!!!!!!!!!!!!
+    if (!wait_for_file_to_appear(process_output_fname,-1,false)) {
+        printf("Error waiting for file to appear (%s): %s",processor_name.toLatin1().data(),process_output_fname.toLatin1().data());
+        return false;
+    }
     return true;
 }
+
+bool ScriptControllerPrivate::wait_for_file_to_appear(QString fname, qint64 timeout_ms, bool remove_on_appear)
+{
+    QTime timer;
+    timer.start();
+    while (!QFile::exists(fname)) {
+        if ((timeout_ms>=0)&&(timer.elapsed()>timeout_ms)) return false;
+        wait(100);
+    }
+    if (remove_on_appear) {
+        QFile::remove(fname);
+    }
+    return true;
+}
+
+void ScriptControllerPrivate::wait(qint64 msec)
+{
+    /// Witold is this the right thing?
+    usleep(msec*1000);
+}
+
