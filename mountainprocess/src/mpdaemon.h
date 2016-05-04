@@ -11,6 +11,7 @@
 #include <QString>
 #include <QDateTime>
 #include <QVariantMap>
+#include <QJsonObject>
 
 class MPDaemonPrivate;
 class MPDaemon : public QObject {
@@ -24,8 +25,11 @@ public:
     static QString daemonPath();
     static QString makeTimestamp(const QDateTime& dt = QDateTime::currentDateTime());
     static QDateTime parseTimestamp(const QString& timestamp);
+    static bool waitForFileToAppear(QString fname, qint64 timeout_ms = -1, bool remove_on_appear = false);
+    static void wait(qint64 msec);
 
-private slots:
+private
+slots:
     void slot_commands_directory_changed();
     void slot_script_qprocess_finished();
     void slot_process_qprocess_finished();
@@ -39,6 +43,7 @@ struct MPDaemonScript {
     {
         is_running = false;
         is_finished = false;
+        success=false;
     }
     QString script_id;
     QString script_output_file;
@@ -46,6 +51,9 @@ struct MPDaemonScript {
     QVariantMap parameters;
     bool is_running;
     bool is_finished;
+    bool success;
+    QString error;
+    QJsonObject run_time_results;
 };
 
 struct MPDaemonProcess {
@@ -53,6 +61,7 @@ struct MPDaemonProcess {
     {
         is_running = false;
         is_finished = false;
+        success=false;
     }
     QString process_id;
     QString process_output_file;
@@ -60,6 +69,9 @@ struct MPDaemonProcess {
     QVariantMap parameters;
     bool is_running;
     bool is_finished;
+    bool success;
+    QString error;
+    QJsonObject run_time_results;
 };
 
 QJsonObject script_struct_to_obj(MPDaemonScript S);

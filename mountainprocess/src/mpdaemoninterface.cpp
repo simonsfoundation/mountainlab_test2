@@ -13,14 +13,12 @@
 #include <stdio.h>
 #include "mpdaemon.h"
 #include "textfile.h"
-#include <unistd.h> //for usleep
 
 class MPDaemonInterfacePrivate {
 public:
     MPDaemonInterface* q;
 
     bool daemon_is_running();
-    void wait(qint64 msec); //Maybe not used
     bool send_daemon_command(QJsonObject obj, qint64 timeout_msec);
     QString last_info_fname();
     QJsonObject get_last_info(qint64 max_elapsed_msec);
@@ -42,32 +40,38 @@ MPDaemonInterface::~MPDaemonInterface()
 bool MPDaemonInterface::start()
 {
     if (d->daemon_is_running()) {
-        printf("daemon is already running.\n");
+        printf("Cannot start: daemon is already running.\n");
         return true;
     }
     QString exe = qApp->applicationFilePath();
     QStringList args;
     args << "-internal-daemon-start";
-    return QProcess::startDetached(exe, args);
+    if (!QProcess::startDetached(exe, args)) {
+        printf("Unable to startDetached: %s\n",exe.toLatin1().data());
+        return false;
+    }
+    for (int i=0; i<10; i++) {
+        MPDaemon::wait(100);
+        if (d->daemon_is_running()) return true;
+    }
+    printf("Unable to start daemon after waiting.\n");
+    return false;
 }
 
 bool MPDaemonInterface::stop()
 {
     if (!d->daemon_is_running()) {
-        printf("daemon is not running.\n");
+        printf("Cannot stop: daemon is not running.\n");
         return true;
     }
     QJsonObject obj;
     obj["command"] = "stop";
     d->send_daemon_command(obj, 5000);
-    /// Witold even though this is more than enough time for Daemon to stop itself once it has acknowledge receipt of the command by deleting the file, there should be a better way
-    d->wait(1000); //give it some time after command has been received
     if (!d->daemon_is_running()) {
         printf("daemon has been stopped.\n");
         return true;
     }
     else {
-
         printf("Failed to stop daemon\n");
         return false;
     }
@@ -78,29 +82,36 @@ QJsonObject MPDaemonInterface::getInfo()
     return d->get_last_info(10000);
 }
 
-void MPDaemonInterface::queueScript(const MPDaemonScript& script)
+bool MPDaemonInterface::queueScript(const MPDaemonScript& script)
 {
+    if (!d->daemon_is_running()) {
+        if (!this->start()) {
+            printf("Problem in queueScript: Unable to start daemon.\n");
+            return false;
+        }
+    }
     QJsonObject obj = script_struct_to_obj(script);
     obj["command"] = "queue-script";
-    d->send_daemon_command(obj, 0);
+    return d->send_daemon_command(obj, 0);
 }
 
-void MPDaemonInterface::queueProcess(const MPDaemonProcess& process)
+bool MPDaemonInterface::queueProcess(const MPDaemonProcess& process)
 {
+    if (!d->daemon_is_running()) {
+        if (!this->start()) {
+            printf("Problem in queueProcess: Unable to start daemon.\n");
+            return false;
+        }
+    }
     QJsonObject obj = process_struct_to_obj(process);
     obj["command"] = "queue-process";
-    d->send_daemon_command(obj, 0);
+    return d->send_daemon_command(obj, 0);
 }
 
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
     QJsonObject obj = get_last_info(10000);
     return obj.value("is_running").toBool();
-}
-
-void MPDaemonInterfacePrivate::wait(qint64 msec)
-{
-    usleep(msec*1000);
 }
 
 bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_timeout)

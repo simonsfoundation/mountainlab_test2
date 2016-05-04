@@ -1,7 +1,7 @@
 function main(params) {
 	console.log('testing');
 
-	copy('script1.js','script1_copy.js');
+	copy('script1.js','copy.script1.js');
 
 	console.log('testing2');
 }
@@ -13,7 +13,10 @@ function copy(infile,outfile) {
 }
 
 function run_process(processor_name,params) {
-	MP.runProcess(processor_name,JSON.stringify(params));
+	if (!MP.runProcess(processor_name,JSON.stringify(params))) {
+		console.log(processor_name+' '+JSON.stringify(params));
+		throw 'Error running process: '+processor_name;
+	}
 }
 
 var console={

@@ -20,6 +20,7 @@
 #include <QFileInfo>
 #include "processmanager.h"
 #include "textfile.h"
+#include "cachemanager.h"
 
 void print_usage();
 void load_parameter_file(QVariantMap& params, const QString& fname);
@@ -32,6 +33,8 @@ int main(int argc, char* argv[])
     QCoreApplication app(argc, argv);
     CLParams CLP = commandlineparams(argc, argv);
 
+    CacheManager::globalInstance()->setLocalBasePath(qApp->applicationDirPath() + "/../tmp");
+
     QString arg1 = CLP.unnamed_parameters.value(0);
     QString arg2 = CLP.unnamed_parameters.value(1);
 
@@ -41,12 +44,12 @@ int main(int argc, char* argv[])
         ProcessManager* PM = ProcessManager::globalInstance();
         QStringList pnames = PM->processorNames();
         qSort(pnames);
-        foreach (QString pname, pnames) {
+        foreach(QString pname, pnames)
+        {
             printf("%s\n", pname.toLatin1().data());
         }
         return 0;
-    }
-    else if (arg1 == "run-process") { //Run a process synchronously
+    } else if (arg1 == "run-process") { //Run a process synchronously
         if (!initialize_process_manager())
             return -1; //load the processor plugins etc
         ProcessManager* PM = ProcessManager::globalInstance();
@@ -61,15 +64,13 @@ int main(int argc, char* argv[])
 
         if (PM->processAlreadyCompleted(processor_name, process_parameters)) { //do we have a record of this procesor already completing? If so, we save a lot of time by not re-running
             printf("Process already completed: %s\n", processor_name.toLatin1().data());
-        }
-        else {
+        } else {
             QString id;
 
             if (!PM->checkParameters(processor_name, process_parameters)) { //check to see that all our parameters are in order for the given processor
                 error_message = "Problem checking process: " + processor_name;
                 ret = -1;
-            }
-            else {
+            } else {
                 id = PM->startProcess(processor_name, process_parameters); //start the process and retrieve a unique id
                 if (id.isEmpty()) {
                     error_message = "Problem starting process: " + processor_name;
@@ -118,8 +119,7 @@ int main(int argc, char* argv[])
         }
 
         return ret; //returns exit code 0 if okay
-    }
-    else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes may be queued, but the script will wait for them to complete)
+    } else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued, but the script will wait for them to complete)
         if (!initialize_process_manager())
             return -1;
 
@@ -156,35 +156,41 @@ int main(int argc, char* argv[])
         }
 
         return ret;
-    }
-    else if (arg1 == "-internal-daemon-start") { //This is called internaly to start the daemon (which is the central program running in the background)
+    } else if (arg1 == "-internal-daemon-start") { //This is called internaly to start the daemon (which is the central program running in the background)
         MPDaemon X;
         if (!X.run())
             return -1;
         return 0;
-    }
-    else if (arg1 == "daemon-start") { //Start the daemon
+    } else if (arg1 == "daemon-start") { //Start the daemon
         MPDaemonInterface X;
-        if (X.start())
+        if (X.start()) {
+            printf("Started daemon.\n");
             return 0;
-        else
+        } else {
+            printf("Failed to start daemon.\n");
             return -1;
-    }
-    else if (arg1 == "daemon-stop") { //Stop the daemon
+        }
+    } else if (arg1 == "daemon-stop") { //Stop the daemon
         MPDaemonInterface X;
         if (X.stop())
             return 0;
         else
             return -1;
-    }
-    else if (arg1 == "daemon-info") { //Print some information on the daemon
+    } else if (arg1 == "daemon-restart") { //Restart the daemon
+        MPDaemonInterface X;
+        if (!X.stop())
+            return -1;
+        if (!X.start())
+            return -1;
+        printf("Daemon has been restarted.\n");
+        return 0;
+    } else if (arg1 == "daemon-info") { //Print some information on the daemon
         MPDaemonInterface X;
         QJsonObject info = X.getInfo();
         QString json = QJsonDocument(info).toJson();
         printf("%s", json.toLatin1().data());
         return 0;
-    }
-    else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
+    } else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
         /// TODO Probably important to record the checksum of the script files so that we know whether things have changed by the time we come around to running the script
         MPDaemonScript S;
         QVariantMap params; //see run-script above
@@ -197,29 +203,51 @@ int main(int argc, char* argv[])
                 load_parameter_file(params, str);
             }
         }
-        S.script_output_file = CLP.named_parameters["~script_output"].toString();
         S.script_id = make_random_id();
+        S.script_output_file = CLP.named_parameters["~script_output"].toString();
+        if (S.script_output_file.isEmpty()) {
+            S.script_output_file = CacheManager::globalInstance()->makeLocalFile("script_output." + S.script_id + ".json", CacheManager::ShortTerm);
+        }
         printf("script_id: %s\n", S.script_id.toLatin1().data());
         S.parameters = params;
         MPDaemonInterface X;
         X.queueScript(S); //queue the script
+        if (!S.script_output_file.isEmpty()) {
+            MPDaemon::waitForFileToAppear(S.script_output_file);
+            QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(S.script_output_file).toLatin1()).object();
+            bool success = results_obj["success"].toBool();
+            if (!success) {
+                qWarning() << "Error in script " + S.script_id + ": " + results_obj["error"].toString();
+                return -1;
+            }
+        }
         return 0;
-    }
-    else if (arg1 == "queue-process") {
+    } else if (arg1 == "queue-process") {
         MPDaemonProcess P;
         QStringList pkeys = CLP.named_parameters.keys();
         P.parameters = CLP.named_parameters;
         remove_system_parameters(P.parameters); //as in run-process
-        P.process_output_file = CLP.named_parameters["~process_output"].toString();
         P.process_id = make_random_id();
+        P.process_output_file = CLP.named_parameters["~process_output"].toString();
+        if (P.process_output_file.isEmpty()) {
+            P.process_output_file = CacheManager::globalInstance()->makeLocalFile("process_output." + P.process_id + ".json", CacheManager::ShortTerm);
+        }
         printf("process_id: %s\n", P.process_id.toLatin1().data());
 
         P.processor_name = arg2; //as in run-process
         MPDaemonInterface X;
         X.queueProcess(P); //queue the process
+        if (!P.process_output_file.isEmpty()) {
+            MPDaemon::waitForFileToAppear(P.process_output_file);
+            QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(P.process_output_file).toLatin1()).object();
+            bool success = results_obj["success"].toBool();
+            if (!success) {
+                qWarning() << "Error in process " + P.processor_name + ": " + results_obj["error"].toString();
+                return -1;
+            }
+        }
         return 0;
-    }
-    else {
+    } else {
         print_usage(); //print usage information
         return -1;
     }
@@ -252,7 +280,8 @@ bool initialize_process_manager()
      * Load the processors
      */
     ProcessManager* PM = ProcessManager::globalInstance();
-    foreach (QString processor_path, processor_paths) {
+    foreach(QString processor_path, processor_paths)
+    {
         QString p0 = processor_path;
         if (QFileInfo(p0).isRelative()) {
             /// TODO use canonicalFilePath throughout, wherever appropriate so we don't get stuff like a/b/c/../../b/c/../d
@@ -271,7 +300,8 @@ void load_parameter_file(QVariantMap& params, const QString& fname)
     /// Witold I use toLatin1() everywhere. Is this the appropriate way to convert to byte array?
     QJsonObject obj = QJsonDocument::fromJson(read_text_file(fname).toLatin1()).object();
     QStringList keys = obj.keys();
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         params[key] = obj[key].toVariant();
     }
 }
@@ -293,7 +323,8 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, QSt
     ScriptController Controller;
     QJSValue MP = engine.newQObject(&Controller);
     engine.globalObject().setProperty("MP", MP);
-    foreach (QString fname, script_fnames) {
+    foreach(QString fname, script_fnames)
+    {
         QJSValue result = engine.evaluate(read_text_file(fname), fname);
         if (result.isError()) {
             display_error(result);
@@ -343,6 +374,7 @@ void print_usage()
     printf("mountainprocess runScript [script1].js [script2.js] ... [file1].par [file2].par ... \n");
     printf("mountainprocess daemon-start\n");
     printf("mountainprocess daemon-stop\n");
+    printf("mountainprocess daemon-restart\n");
     printf("mountainprocess daemon-info\n");
     printf("mountainprocess queue-script --~script_output=[optional_output_file] [script1].js [script2.js] ... [file1].par [file2].par ... \n");
     printf("mountainprocess queue-process [processor_name] --~process_output=[optional_output_file] --[param1]=[val1] --[param2]=[val2] ...\n");
@@ -351,7 +383,8 @@ void print_usage()
 void remove_system_parameters(QVariantMap& params)
 {
     QStringList keys = params.keys();
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         if (key.startsWith("~")) {
             params.remove(key);
         }
