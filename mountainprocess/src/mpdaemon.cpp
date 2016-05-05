@@ -113,6 +113,7 @@ bool MPDaemon::run()
         d->stop_orphan_processes_and_scripts();
         d->handle_scripts();
         d->handle_processes();
+        //
         qApp->processEvents();
     }
     return true;
@@ -229,6 +230,15 @@ void MPDaemon::slot_pript_qprocess_finished()
         printf("successfully\n");
     else
         printf("with error: %s\n", S->error.toLatin1().data());
+}
+
+void MPDaemon::slot_qprocess_output()
+{
+    QProcess* P = qobject_cast<QProcess*>(sender());
+    if (!P)
+        return;
+    QByteArray str = P->readAll();
+    printf("%s", str.data());
 }
 
 void MPDaemonPrivate::write_info()
@@ -370,6 +380,8 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         }
     }
     QProcess* qprocess = new QProcess;
+    qprocess->setProcessChannelMode(QProcess::MergedChannels);
+    QObject::connect(qprocess, SIGNAL(readyRead()), q, SLOT(slot_qprocess_output()));
     qprocess->setProperty("pript_id", pript_id.toLatin1().data());
     if (S->prtype == ScriptType) {
         printf("   Launching script %s: ", pript_id.toLatin1().data());
@@ -423,7 +435,7 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
     foreach(QString key, keys)
     {
         if (!m_pripts[key].is_finished) {
-            if ((m_pripts[key].parent_pid)&&(!MPDaemon::pidExists(m_pripts[key].parent_pid))) {
+            if ((m_pripts[key].parent_pid) && (!MPDaemon::pidExists(m_pripts[key].parent_pid))) {
                 if (m_pripts[key].is_running) {
                     if (m_pripts[key].qprocess) {
                         if (!m_pripts[key].qprocess->property("terminating").toBool()) {
@@ -453,7 +465,29 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
 #include "signal.h"
 bool MPDaemon::pidExists(qint64 pid)
 {
+    /// TODO is this the best way to see if process exists?
     return (kill(pid, 0) == 0);
+}
+
+bool MPDaemon::waitForFinishedAndWriteOutput(QProcess *P)
+{
+    P->waitForStarted();
+    while (P->state()==QProcess::Running) {
+        P->waitForReadyRead(100);
+        QByteArray str=P->readAll();
+        if (str.count()>0) {
+            printf("%s",str.data());
+        }
+        qApp->processEvents();
+    }
+    {
+        P->waitForReadyRead();
+        QByteArray str=P->readAll();
+        if (str.count()>0) {
+            printf("%s",str.data());
+        }
+    }
+    return (P->state()!=QProcess::Running);
 }
 
 int MPDaemonPrivate::num_running_pripts(PriptType prtype)

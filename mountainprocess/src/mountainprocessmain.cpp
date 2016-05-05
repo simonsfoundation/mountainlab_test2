@@ -39,6 +39,8 @@ int main(int argc, char* argv[])
     QString arg1 = CLP.unnamed_parameters.value(0);
     QString arg2 = CLP.unnamed_parameters.value(1);
 
+    setbuf(stdout, NULL);
+
     if (arg1 == "list-processors") { //Provide a human-readable list of the available processors
         if (!initialize_process_manager())
             return -1; //load the processor plugins etc
@@ -113,8 +115,6 @@ int main(int argc, char* argv[])
                 qWarning() << "Unable to write results to: " + output_file;
             }
         }
-        printf("Standard output:\n%s\n", info.standard_output.data()); //display the standard output and standard error
-        printf("Standard error:\n%s\n", info.standard_error.data());
         if (!error_message.isEmpty()) {
             qWarning() << error_message;
         }
@@ -140,6 +140,13 @@ int main(int argc, char* argv[])
                 load_parameter_file(params, str);
             }
         }
+        QStringList keys0 = CLP.named_parameters.keys();
+        foreach(QString key0, keys0)
+        {
+            params[key0] = CLP.named_parameters[key0];
+        }
+        remove_system_parameters(params);
+
         if (!run_script(script_fnames, params, error_message)) { //actually run the script
             ret = -1;
         }

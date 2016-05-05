@@ -33,8 +33,7 @@ public:
     Q_INVOKABLE QString getText(QString url_or_path);
     Q_INVOKABLE void openSortingResult(QString json);
 private slots:
-    void slot_ready_read_standard_output();
-    void slot_ready_read_standard_error();
+    void slot_ready_read();
 
 private:
     MBControllerPrivate* d;

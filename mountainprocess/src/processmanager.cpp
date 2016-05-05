@@ -16,6 +16,8 @@
 #include <QCryptographicHash>
 #include "mpdaemon.h"
 #include "textfile.h"
+#include <QCoreApplication>
+#include "mpdaemon.h"
 
 struct PMProcess {
     MLProcessInfo info;
@@ -80,7 +82,7 @@ bool ProcessManager::loadProcessorFile(const QString& path)
             return false;
         }
         pp.waitForReadyRead();
-        QString output = pp.readAllStandardOutput();
+        QString output = pp.readAll();
         json = output;
         if (json.isEmpty()) {
             qWarning() << "Executable processor file did not return output for spec: " + path;
@@ -174,6 +176,8 @@ QString ProcessManager::startProcess(const QString& processor_name, const QVaria
     PP.info.exit_code = 0;
     PP.info.exit_status = QProcess::NormalExit;
     PP.qprocess = new QProcess;
+    PP.qprocess->setProcessChannelMode(QProcess::MergedChannels);
+    //connect(PP.qprocess,SIGNAL(readyRead()),this,SLOT(slot_qprocess_output()));
     QObject::connect(PP.qprocess, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(slot_process_finished()));
     printf("STARTING: %s.\n", PP.info.exe_command.toLatin1().data());
     PP.qprocess->start(PP.info.exe_command);
@@ -192,7 +196,7 @@ bool ProcessManager::waitForFinished(const QString& process_id, int msecs)
     if (!d->m_processes.contains(process_id))
         return false;
     QProcess* qprocess = d->m_processes[process_id].qprocess;
-    return qprocess->waitForFinished(msecs);
+    return MPDaemon::waitForFinishedAndWriteOutput(qprocess);
 }
 
 bool ProcessManager::checkParameters(const QString& processor_name, const QVariantMap& parameters)
@@ -307,6 +311,11 @@ void ProcessManager::slot_process_finished()
         qWarning() << "Unexpected problem in slot_process_finished: qprocess is null.";
         return;
     }
+    {
+        qprocess->waitForReadyRead();
+        QByteArray str1=qprocess->readAll();
+        printf("%s",str1.data());
+    }
     QString id = qprocess->property("pp_id").toString();
     if (!d->m_processes.contains(id)) {
         qWarning() << "Unexpected problem in slot_process_finished. id not found in m_processes: " + id;
@@ -335,6 +344,14 @@ void ProcessManager::slot_process_finished()
     emit this->processFinished(id);
 }
 
+void ProcessManager::slot_qprocess_output()
+{
+    QProcess *P=qobject_cast<QProcess *>(sender());
+    if (!P) return;
+    QByteArray str=P->readAll();
+    printf("%s",str.data());
+}
+
 void ProcessManagerPrivate::clear_all_processes()
 {
     foreach (PMProcess P, m_processes) {
@@ -354,8 +371,7 @@ void ProcessManagerPrivate::update_process_info(QString id)
         PP->info.exit_code = qprocess->exitCode();
         PP->info.exit_status = qprocess->exitStatus();
     }
-    PP->info.standard_output += qprocess->readAllStandardOutput();
-    PP->info.standard_error += qprocess->readAllStandardError();
+    PP->info.standard_output += qprocess->readAll();
 }
 
 MLProcessor ProcessManagerPrivate::create_processor_from_json_object(QJsonObject obj)

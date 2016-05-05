@@ -18,6 +18,7 @@ QList<long> get_sort_indices(const QList<int>& channels, const QList<double>& te
 
 bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_path, const QString& adjacency_matrix_path, const QString& output_firings_path, const Branch_Cluster_V2_Opts& opts)
 {
+    printf("Starting branch_cluster_v2\n");
     DiskReadMda X;
     X.setPath(timeseries_path);
     int M = X.N1();
@@ -372,6 +373,7 @@ QList<double> compute_dists_from_template(Mda& clips, Mda& template0)
 
 QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, int channel_for_display)
 {
+    printf("do_branch_cluster_v2 %ldx%ldx%ld (channel %d)\n",clips.N1(),clips.N2(),clips.N3(),channel_for_display+1);
     int M = clips.N1();
     int T = clips.N2();
     int L = clips.N3();

@@ -150,12 +150,12 @@ QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& process
         version = PP->version();
         input_file_parameters = PP->inputFileParameters();
         output_file_parameters = PP->outputFileParameters();
-    }
-    else
+    } else
         return ret; //can't even find the processor (not registered)
 
     QVariantMap input_file_codes;
-    foreach (const QString& pp, input_file_parameters) {
+    foreach(const QString & pp, input_file_parameters)
+    {
         QString path0 = parameters[pp].toString();
         if (!path0.isEmpty()) {
             QString code0 = compute_file_code(path0);
@@ -163,7 +163,8 @@ QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& process
         }
     }
     QVariantMap output_file_codes;
-    foreach (const QString& pp, output_file_parameters) {
+    foreach(const QString & pp, output_file_parameters)
+    {
         QString path0 = parameters[pp].toString();
         if (!path0.isEmpty()) {
             QString code0 = compute_file_code(path0);
@@ -213,16 +214,14 @@ bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_na
         printf("Problem checking processor: %s\n", processor_name.toLatin1().data());
         return false;
     }
-    if ((!force_run)&&(this->findCompletedProcess(processor_name, parameters))) {
+    if ((!force_run) && (this->findCompletedProcess(processor_name, parameters))) {
         printf("Process already completed: %s\n", processor_name.toLatin1().data());
         return true;
-    }
-    else {
+    } else {
         if (!this->runProcess(processor_name, parameters)) {
             printf("Problem running processor: %s\n", processor_name.toLatin1().data());
             return 0;
-        }
-        else
+        } else
             return true;
     }
 }
@@ -291,7 +290,8 @@ void MSProcessManager::printJsonSpec() const
         QJsonArray inputs;
         {
             QStringList input_file_parameters = P->inputFileParameters();
-            foreach (QString pname, input_file_parameters) {
+            foreach(QString pname, input_file_parameters)
+            {
                 QJsonObject P;
                 P["name"] = pname;
                 inputs.append(P);
@@ -301,7 +301,8 @@ void MSProcessManager::printJsonSpec() const
         QJsonArray outputs;
         {
             QStringList output_file_parameters = P->outputFileParameters();
-            foreach (QString pname, output_file_parameters) {
+            foreach(QString pname, output_file_parameters)
+            {
                 QJsonObject P;
                 P["name"] = pname;
                 outputs.append(P);
@@ -311,10 +312,21 @@ void MSProcessManager::printJsonSpec() const
         QJsonArray parameters;
         {
             QStringList parameters0 = P->requiredParameters();
-            parameters0.append(P->optionalParameters());
-            foreach (QString pname, parameters0) {
+            foreach(QString pname, parameters0)
+            {
                 QJsonObject P;
                 P["name"] = pname;
+                P["optional"] = false;
+                parameters.append(P);
+            }
+        }
+        {
+            QStringList parameters0 = P->optionalParameters();
+            foreach(QString pname, parameters0)
+            {
+                QJsonObject P;
+                P["name"] = pname;
+                P["optional"] = true;
                 parameters.append(P);
             }
         }

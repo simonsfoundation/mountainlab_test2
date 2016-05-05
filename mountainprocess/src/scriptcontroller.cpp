@@ -120,7 +120,8 @@ bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString proces
     args << QString("--~parent_pid=%1").arg(QCoreApplication::applicationPid());
     QProcess P1;
     P1.start(exe, args);
-    if (!P1.waitForFinished(30000)) {
+    if (!MPDaemon::waitForFinishedAndWriteOutput(&P1)) {
+        //if (!P1.waitForFinished(-1)) {
         printf("Error waiting for queue-process to finish: %s\n", processor_name.toLatin1().data());
         return false;
     }

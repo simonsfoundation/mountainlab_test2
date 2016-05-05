@@ -29,11 +29,13 @@ public:
     static bool waitForFileToAppear(QString fname, qint64 timeout_ms = -1, bool remove_on_appear = false, qint64 parent_pid=0);
     static void wait(qint64 msec);
     static bool pidExists(qint64 pid);
+    static bool waitForFinishedAndWriteOutput(QProcess *P);
 
 private
 slots:
     void slot_commands_directory_changed();
     void slot_pript_qprocess_finished();
+    void slot_qprocess_output();
 
 private:
     MPDaemonPrivate* d;

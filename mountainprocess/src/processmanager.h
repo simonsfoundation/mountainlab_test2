@@ -72,6 +72,7 @@ signals:
     void processFinished(QString id);
 private slots:
     void slot_process_finished();
+    void slot_qprocess_output();
 
 private:
     ProcessManagerPrivate* d;

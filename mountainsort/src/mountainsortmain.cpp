@@ -33,6 +33,9 @@ int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
 
+    setbuf(stdout, NULL);
+
+
     MSCacheManager::globalInstance()->setLocalBasePath(app.applicationDirPath() + "/../../tmp");
 
     CLParams CLP = get_command_line_params(argc, argv);
