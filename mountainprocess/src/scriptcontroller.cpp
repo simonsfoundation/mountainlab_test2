@@ -117,6 +117,7 @@ bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString proces
     {
         args << QString("--%1=%2").arg(pkey).arg(parameters[pkey].toString());
     }
+    args << QString("--~parent_pid=%1").arg(QCoreApplication::applicationPid());
     QProcess P1;
     P1.start(exe, args);
     if (!P1.waitForFinished(30000)) {

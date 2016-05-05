@@ -19,8 +19,8 @@ public:
     bool start();
     bool stop();
     QJsonObject getInfo();
-    bool queueScript(const MPDaemonScript& script);
-    bool queueProcess(const MPDaemonProcess& process);
+    bool queueScript(const MPDaemonPript& script);
+    bool queueProcess(const MPDaemonPript& process);
 
 private:
     MPDaemonInterfacePrivate* d;

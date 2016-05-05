@@ -82,7 +82,7 @@ QJsonObject MPDaemonInterface::getInfo()
     return d->get_last_info(10000);
 }
 
-bool MPDaemonInterface::queueScript(const MPDaemonScript& script)
+bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
 {
     if (!d->daemon_is_running()) {
         if (!this->start()) {
@@ -90,12 +90,12 @@ bool MPDaemonInterface::queueScript(const MPDaemonScript& script)
             return false;
         }
     }
-    QJsonObject obj = script_struct_to_obj(script);
+    QJsonObject obj = pript_struct_to_obj(script);
     obj["command"] = "queue-script";
     return d->send_daemon_command(obj, 0);
 }
 
-bool MPDaemonInterface::queueProcess(const MPDaemonProcess& process)
+bool MPDaemonInterface::queueProcess(const MPDaemonPript& process)
 {
     if (!d->daemon_is_running()) {
         if (!this->start()) {
@@ -103,7 +103,7 @@ bool MPDaemonInterface::queueProcess(const MPDaemonProcess& process)
             return false;
         }
     }
-    QJsonObject obj = process_struct_to_obj(process);
+    QJsonObject obj = pript_struct_to_obj(process);
     obj["command"] = "queue-process";
     return d->send_daemon_command(obj, 0);
 }

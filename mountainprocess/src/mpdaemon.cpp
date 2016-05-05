@@ -27,19 +27,10 @@ public:
     MPDaemon* q;
     bool m_is_running;
     QFileSystemWatcher m_watcher;
-    QMap<QString, MPDaemonScript> m_scripts;
-    QMap<QString, QProcess*> m_script_qprocesses;
-    QMap<QString, MPDaemonProcess> m_processes;
-    QMap<QString, QProcess*> m_process_qprocesses;
+    QMap<QString, MPDaemonPript> m_pripts;
 
     void write_info();
     void process_command(QJsonObject obj);
-
-    /////////////////////////////////
-    int num_running_pripts(PriptType prtype);
-    int num_pending_pripts(PriptType prtype);
-    bool launch_next_pript(PriptType prtype);
-    bool launch_pript(PriptType prtype, QString id);
 
     bool handle_scripts();
     bool handle_processes();
@@ -67,17 +58,14 @@ public:
     {
         return launch_next_pript(ProcessType);
     }
-    bool launch_script(QString id)
-    {
-        return launch_pript(ScriptType, id);
-    }
-    bool launch_process(QString id)
-    {
-        return launch_pript(ProcessType, id);
-    }
 
-    void stop_qprocesses_whose_parents_are_gone();
-    bool pid_is_gone(qint64 pid);
+    void stop_orphan_processes_and_scripts();
+
+    /////////////////////////////////
+    int num_running_pripts(PriptType prtype);
+    int num_pending_pripts(PriptType prtype);
+    bool launch_next_pript(PriptType prtype);
+    bool launch_pript(QString id);
 };
 
 MPDaemon::MPDaemon()
@@ -91,19 +79,13 @@ MPDaemon::MPDaemon()
 
 MPDaemon::~MPDaemon()
 {
-    foreach(QProcess * P, d->m_script_qprocesses)
+    foreach(MPDaemonPript P, d->m_pripts)
     {
-        if (P->state() == QProcess::Running)
-            P->terminate();
+        if (P.qprocess) {
+            if (P.qprocess->state() == QProcess::Running)
+                P.qprocess->terminate();
+        }
     }
-    qDeleteAll(d->m_script_qprocesses);
-
-    foreach(QProcess * P, d->m_process_qprocesses)
-    {
-        if (P->state() == QProcess::Running)
-            P->terminate();
-    }
-    qDeleteAll(d->m_process_qprocesses);
 
     delete d;
 }
@@ -129,7 +111,7 @@ bool MPDaemon::run()
             d->write_info();
             timer.restart();
         }
-        d->stop_qprocesses_whose_parents_are_gone();
+        d->stop_orphan_processes_and_scripts();
         d->handle_scripts();
         d->handle_processes();
         qApp->processEvents();
@@ -165,13 +147,17 @@ QDateTime MPDaemon::parseTimestamp(const QString& timestamp)
     return QDateTime::fromString(timestamp, "yyyy-MM-dd-hh-mm-ss-zzz");
 }
 
-bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove_on_appear)
+bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove_on_appear, qint64 parent_pid)
 {
     QTime timer;
     timer.start();
     while (!QFile::exists(fname)) {
         if ((timeout_ms >= 0) && (timer.elapsed() > timeout_ms))
             return false;
+        if ((parent_pid) && (!MPDaemon::pidExists(parent_pid))) {
+            qWarning() << "Exiting waitForFileToAppear because parent process is gone.";
+            break;
+        }
         wait(100);
     }
     if (remove_on_appear) {
@@ -213,18 +199,10 @@ void MPDaemon::slot_pript_qprocess_finished()
     if (!P)
         return;
     QString pript_id = P->property("pript_id").toString();
-    MPDaemonPript* S = 0;
-    bool is_script;
-    QString processor_name;
-    if (d->m_scripts.contains(pript_id)) {
-        S = &d->m_scripts[pript_id];
-        is_script = true;
-    } else if (d->m_processes.contains(pript_id)) {
-        S = &d->m_processes[pript_id];
-        is_script = false;
-        processor_name = ((MPDaemonProcess*)S)->processor_name;
-    }
-    if (!S) {
+    MPDaemonPript* S;
+    if (d->m_pripts.contains(pript_id)) {
+        S = &d->m_pripts[pript_id];
+    } else {
         qWarning() << "Unexpected problem in slot_pript_qprocess_finished. Unable to find script or process with id: " + pript_id;
         return;
     }
@@ -243,10 +221,10 @@ void MPDaemon::slot_pript_qprocess_finished()
     } else {
         S->success = true;
     }
-    if (is_script) {
+    if (S->prtype == ScriptType) {
         printf("  Script %s finished ", pript_id.toLatin1().data());
     } else {
-        printf("  Process %s %s finished ", processor_name.toLatin1().data(), pript_id.toLatin1().data());
+        printf("  Process %s %s finished ", S->processor_name.toLatin1().data(), pript_id.toLatin1().data());
     }
     if (S->success)
         printf("successfully\n");
@@ -268,21 +246,16 @@ void MPDaemonPrivate::write_info()
 
     {
         QJsonObject scripts;
-        QStringList script_keys = m_scripts.keys();
-        foreach(QString key, script_keys)
+        QJsonObject processes;
+        QStringList keys = m_pripts.keys();
+        foreach(QString key, keys)
         {
-            scripts[key] = script_struct_to_obj(m_scripts[key]);
+            if (m_pripts[key].prtype == ScriptType)
+                scripts[key] = pript_struct_to_obj(m_pripts[key]);
+            else
+                processes[key] = pript_struct_to_obj(m_pripts[key]);
         }
         info["scripts"] = scripts;
-    }
-
-    {
-        QJsonObject processes;
-        QStringList process_keys = m_processes.keys();
-        foreach(QString key, process_keys)
-        {
-            processes[key] = process_struct_to_obj(m_processes[key]);
-        }
         info["processes"] = processes;
     }
 
@@ -310,21 +283,23 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
         m_is_running = false;
         write_info();
     } else if (command == "queue-script") {
-        MPDaemonScript S = script_obj_to_struct(obj);
-        if (m_scripts.contains(S.id)) {
-            qWarning() << "Unable to queue script. Script with this id already exists: " + S.id;
+        MPDaemonPript S = pript_obj_to_struct(obj);
+        S.prtype = ScriptType;
+        if (m_pripts.contains(S.id)) {
+            qWarning() << "Unable to queue script. Process or script with this id already exists: " + S.id;
             return;
         }
         printf("QUEUING SCRIPT %s\n", S.id.toLatin1().data());
-        m_scripts[S.id] = S;
+        m_pripts[S.id] = S;
     } else if (command == "queue-process") {
-        MPDaemonProcess P = process_obj_to_struct(obj);
-        if (m_processes.contains(P.id)) {
-            qWarning() << "Unable to queue process. Process with this id already exists: " + P.id;
+        MPDaemonPript P = pript_obj_to_struct(obj);
+        P.prtype = ProcessType;
+        if (m_pripts.contains(P.id)) {
+            qWarning() << "Unable to queue process. Process or script with this id already exists: " + P.id;
             return;
         }
         printf("QUEUING PROCESS %s %s\n", P.processor_name.toLatin1().data(), P.id.toLatin1().data());
-        m_processes[P.id] = P;
+        m_pripts[P.id] = P;
     } else {
         qWarning() << "Unrecognized command: " + command;
     }
@@ -345,43 +320,24 @@ bool MPDaemonPrivate::handle_scripts()
 
 bool MPDaemonPrivate::launch_next_pript(PriptType prtype)
 {
-    if (prtype == ScriptType) {
-        QStringList keys = m_scripts.keys();
-        foreach(QString key, keys)
-        {
-            if ((!m_scripts[key].is_running) && (!m_scripts[key].is_finished)) {
-                return launch_script(key);
-            }
-        }
-    } else {
-        QStringList keys = m_processes.keys();
-        foreach(QString key, keys)
-        {
-            if ((!m_processes[key].is_running) && (!m_processes[key].is_finished)) {
-                return launch_process(key);
+    QStringList keys = m_pripts.keys();
+    foreach(QString key, keys)
+    {
+        if (m_pripts[key].prtype == prtype) {
+            if ((!m_pripts[key].is_running) && (!m_pripts[key].is_finished)) {
+                return launch_pript(key);
             }
         }
     }
     return false;
 }
 
-bool MPDaemonPrivate::launch_pript(PriptType prtype, QString pript_id)
+bool MPDaemonPrivate::launch_pript(QString pript_id)
 {
-    MPDaemonPript* S = 0;
-    QString processor_name;
-    QStringList script_paths;
-    if (prtype == ScriptType) {
-        if (!m_scripts.contains(pript_id))
-            return false;
-        S = &m_scripts[pript_id];
-        script_paths = ((MPDaemonScript*)S)->script_paths;
-    } else {
-        if (!m_processes.contains(pript_id))
-            return false;
-        S = &m_processes[pript_id];
-        processor_name = ((MPDaemonProcess*)S)->processor_name;
-    }
-
+    MPDaemonPript* S;
+    if (!m_pripts.contains(pript_id))
+        return false;
+    S = &m_pripts[pript_id];
     if (S->is_running)
         return false;
     if (S->is_finished)
@@ -390,12 +346,12 @@ bool MPDaemonPrivate::launch_pript(PriptType prtype, QString pript_id)
     QString exe = qApp->applicationFilePath();
     QStringList args;
 
-    if (prtype == ScriptType) {
+    if (S->prtype == ScriptType) {
         args << "run-script";
         if (!S->output_file.isEmpty()) {
             args << "--~script_output=" + S->output_file;
         }
-        foreach(QString fname, script_paths)
+        foreach(QString fname, S->script_paths)
         {
             args << fname;
         }
@@ -403,9 +359,9 @@ bool MPDaemonPrivate::launch_pript(PriptType prtype, QString pript_id)
         QString parameters_json = QJsonDocument(parameters).toJson();
         QString par_fname = CacheManager::globalInstance()->makeLocalFile(S->id + ".par", CacheManager::ShortTerm);
         args << par_fname;
-    } else {
+    } else if (S->prtype == ProcessType) {
         args << "run-process";
-        args << processor_name;
+        args << S->processor_name;
         if (!S->output_file.isEmpty())
             args << "--~process_output=" + S->output_file;
         QStringList pkeys = S->parameters.keys();
@@ -416,16 +372,16 @@ bool MPDaemonPrivate::launch_pript(PriptType prtype, QString pript_id)
     }
     QProcess* qprocess = new QProcess;
     qprocess->setProperty("pript_id", pript_id.toLatin1().data());
-    if (prtype == ScriptType) {
+    if (S->prtype == ScriptType) {
         printf("   Launching script %s: ", pript_id.toLatin1().data());
-        foreach(QString fname, script_paths)
+        foreach(QString fname, S->script_paths)
         {
             QString str = QFileInfo(fname).fileName();
             printf("%s ", str.toLatin1().data());
         }
         printf("\n");
     } else {
-        printf("   Launching process %s %s: ", processor_name.toLatin1().data(), pript_id.toLatin1().data());
+        printf("   Launching process %s %s: ", S->processor_name.toLatin1().data(), pript_id.toLatin1().data());
         QString cmd = args.join(" ");
         printf("%s\n", cmd.toLatin1().data());
     }
@@ -434,22 +390,17 @@ bool MPDaemonPrivate::launch_pript(PriptType prtype, QString pript_id)
 
     qprocess->start(exe, args);
     if (qprocess->waitForStarted()) {
-        if (prtype == ScriptType) {
-            m_script_qprocesses[pript_id] = qprocess;
-        } else {
-            m_process_qprocesses[pript_id] = qprocess;
-        }
+        S->qprocess = qprocess;
         S->is_running = true;
         return true;
 
     } else {
-        if (prtype == ScriptType) {
+        if (S->prtype == ScriptType) {
             qWarning() << "Unable to start script: " + S->id;
-            m_scripts.remove(pript_id);
         } else {
-            qWarning() << "Unable to start process: " + processor_name + " " + S->id;
-            m_processes.remove(pript_id);
+            qWarning() << "Unable to start process: " + S->processor_name + " " + S->id;
         }
+        m_pripts.remove(pript_id);
         return false;
     }
 }
@@ -467,44 +418,33 @@ bool MPDaemonPrivate::handle_processes()
     return true;
 }
 
-void MPDaemonPrivate::stop_qprocesses_whose_parents_are_gone()
+void MPDaemonPrivate::stop_orphan_processes_and_scripts()
 {
+    QStringList keys = m_pripts.keys();
+    foreach(QString key, keys)
     {
-        QStringList keys=m_scripts.keys();
-        foreach (QString key,keys) {
-            if (!m_scripts[key].is_finished) {
-                if (pid_is_gone(m_scripts[key].parent_pid)) {
-                    if (m_scripts[key].is_running) {
-                        qWarning() << "Terminating script qprocess: "+key;
-                        if (m_script_qprocesses[key]) {
-                            m_script_qprocesses[key]->kill();
+        if (!m_pripts[key].is_finished) {
+            if ((m_pripts[key].parent_pid)&&(!MPDaemon::pidExists(m_pripts[key].parent_pid))) {
+                if (m_pripts[key].is_running) {
+                    if (m_pripts[key].qprocess) {
+                        if (!m_pripts[key].qprocess->property("terminating").toBool()) {
+                            if (m_pripts[key].prtype == ScriptType) {
+                                qWarning() << "Terminating script qprocess: " + key;
+                            } else {
+                                qWarning() << "Terminating process qprocess: " + key;
+                            }
+                            m_pripts[key].qprocess->terminate();
+                            m_pripts[key].qprocess->setProperty("terminating", true);
+                            //Now the process should end and we will remove it in the slot
                         }
                     }
-                    else {
-                        qWarning() << "Removing script: "+key;
-                        m_scripts.remove(key);
+                } else {
+                    if (m_pripts[key].prtype == ScriptType) {
+                        qWarning() << "Removing script: " + key;
+                    } else {
+                        qWarning() << "Removing process: " + key;
                     }
-
-                }
-            }
-        }
-    }
-    {
-        QStringList keys=m_processes.keys();
-        foreach (QString key,keys) {
-            if (!m_processes[key].is_finished) {
-                if (pid_is_gone(m_processes[key].parent_pid)) {
-                    if (m_processes[key].is_running) {
-                        qWarning() << "Terminating process qprocess: "+key;
-                        if (m_process_qprocesses[key]) {
-                            m_process_qprocesses[key]->kill();
-                        }
-                    }
-                    else {
-                        qWarning() << "Removing process: "+key;
-                        m_processes.remove(key);
-                    }
-
+                    m_pripts.remove(key);
                 }
             }
         }
@@ -512,28 +452,19 @@ void MPDaemonPrivate::stop_qprocesses_whose_parents_are_gone()
 }
 
 #include "signal.h"
-bool MPDaemonPrivate::pid_is_gone(qint64 pid)
+bool MPDaemon::pidExists(qint64 pid)
 {
-    if (pid==0) return false;
-    if (kill(pid, 0)!=0) return true;
-    return false;
+    return (kill(pid, 0) == 0);
 }
 
 int MPDaemonPrivate::num_running_pripts(PriptType prtype)
 {
     int ret = 0;
-    if (prtype == ScriptType) {
-        QStringList keys = m_scripts.keys();
-        foreach(QString key, keys)
-        {
-            if (m_scripts[key].is_running)
-                ret++;
-        }
-    } else {
-        QStringList keys = m_processes.keys();
-        foreach(QString key, keys)
-        {
-            if (m_processes[key].is_running)
+    QStringList keys = m_pripts.keys();
+    foreach(QString key, keys)
+    {
+        if (m_pripts[key].is_running) {
+            if (m_pripts[key].prtype == prtype)
                 ret++;
         }
     }
@@ -543,18 +474,11 @@ int MPDaemonPrivate::num_running_pripts(PriptType prtype)
 int MPDaemonPrivate::num_pending_pripts(PriptType prtype)
 {
     int ret = 0;
-    if (prtype == ScriptType) {
-        QStringList keys = m_scripts.keys();
-        foreach(QString key, keys)
-        {
-            if ((!m_scripts[key].is_running) && (!m_scripts[key].is_finished))
-                ret++;
-        }
-    } else {
-        QStringList keys = m_processes.keys();
-        foreach(QString key, keys)
-        {
-            if ((!m_processes[key].is_running) && (!m_processes[key].is_finished))
+    QStringList keys = m_pripts.keys();
+    foreach(QString key, keys)
+    {
+        if ((!m_pripts[key].is_running) && (!m_pripts[key].is_finished)) {
+            if (m_pripts[key].prtype == prtype)
                 ret++;
         }
     }
@@ -614,18 +538,19 @@ QJsonObject pript_struct_to_obj(MPDaemonPript S)
     ret["success"] = S.success;
     ret["error"] = S.error;
     ret["parent_pid"] = QString("%1").arg(S.parent_pid);
+    if (S.prtype == ScriptType) {
+        ret["prtype"] = "script";
+        ret["script_paths"] = stringlist_to_json_array(S.script_paths);
+    } else {
+        ret["prtype"] = "process";
+        ret["processor_name"] = S.processor_name;
+    }
     return ret;
 }
 
-QJsonObject script_struct_to_obj(MPDaemonScript S)
+MPDaemonPript pript_obj_to_struct(QJsonObject obj)
 {
-    QJsonObject ret = pript_struct_to_obj(S);
-    ret["script_paths"] = stringlist_to_json_array(S.script_paths);
-    return ret;
-}
-
-void pript_obj_to_struct(MPDaemonPript& ret, QJsonObject obj)
-{
+    MPDaemonPript ret;
     ret.is_finished = obj.value("is_finished").toBool();
     ret.is_running = obj.value("is_running").toBool();
     ret.parameters = json_obj_to_variantmap(obj.value("parameters").toObject());
@@ -634,27 +559,12 @@ void pript_obj_to_struct(MPDaemonPript& ret, QJsonObject obj)
     ret.success = obj.value("success").toBool();
     ret.error = obj.value("error").toString();
     ret.parent_pid = obj.value("parent_pid").toString().toLongLong();
-}
-
-MPDaemonScript script_obj_to_struct(QJsonObject obj)
-{
-    MPDaemonScript ret;
-    pript_obj_to_struct(ret, obj);
-    ret.script_paths = json_array_to_stringlist(obj.value("script_paths").toArray());
-    return ret;
-}
-
-QJsonObject process_struct_to_obj(MPDaemonProcess P)
-{
-    QJsonObject ret = pript_struct_to_obj(P);
-    ret["processor_name"] = P.processor_name;
-    return ret;
-}
-
-MPDaemonProcess process_obj_to_struct(QJsonObject obj)
-{
-    MPDaemonProcess ret;
-    pript_obj_to_struct(ret, obj);
-    ret.processor_name = obj.value("processor_name").toString();
+    if (obj.value("prtype").toString() == "script") {
+        ret.prtype = ScriptType;
+        ret.script_paths = json_array_to_stringlist(obj.value("script_paths").toArray());
+    } else {
+        ret.prtype = ProcessType;
+        ret.processor_name = obj.value("processor_name").toString();
+    }
     return ret;
 }

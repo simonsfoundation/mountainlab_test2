@@ -12,6 +12,7 @@
 #include <QDateTime>
 #include <QVariantMap>
 #include <QJsonObject>
+#include <QProcess>
 
 class MPDaemonPrivate;
 class MPDaemon : public QObject {
@@ -25,8 +26,9 @@ public:
     static QString daemonPath();
     static QString makeTimestamp(const QDateTime& dt = QDateTime::currentDateTime());
     static QDateTime parseTimestamp(const QString& timestamp);
-    static bool waitForFileToAppear(QString fname, qint64 timeout_ms = -1, bool remove_on_appear = false);
+    static bool waitForFileToAppear(QString fname, qint64 timeout_ms = -1, bool remove_on_appear = false, qint64 parent_pid=0);
     static void wait(qint64 msec);
+    static bool pidExists(qint64 pid);
 
 private
 slots:
@@ -43,13 +45,17 @@ enum PriptType {
 };
 
 struct MPDaemonPript {
+    //Represents a process or a script
     MPDaemonPript()
     {
         is_running = false;
         is_finished = false;
         success=false;
         parent_pid=0;
+        qprocess=0;
+        prtype=ScriptType;
     }
+    PriptType prtype;
     QString id;
     QString output_file;
     QVariantMap parameters;
@@ -59,20 +65,17 @@ struct MPDaemonPript {
     QString error;
     QJsonObject run_time_results;
     qint64 parent_pid;
-};
+    QProcess *qprocess;
 
-struct MPDaemonScript : MPDaemonPript {
+    //For a script:
     QStringList script_paths;
-};
 
-struct MPDaemonProcess : MPDaemonPript {
+    //For a process:
     QString processor_name;
 };
 
-QJsonObject script_struct_to_obj(MPDaemonScript S);
-MPDaemonScript script_obj_to_struct(QJsonObject obj);
-QJsonObject process_struct_to_obj(MPDaemonProcess P);
-MPDaemonProcess process_obj_to_struct(QJsonObject obj);
+QJsonObject pript_struct_to_obj(MPDaemonPript S);
+MPDaemonPript pript_obj_to_struct(QJsonObject obj);
 QJsonArray stringlist_to_json_array(QStringList list);
 QStringList json_array_to_stringlist(QJsonArray X);
 QJsonObject variantmap_to_json_obj(QVariantMap map);

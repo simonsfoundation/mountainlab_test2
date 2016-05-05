@@ -324,63 +324,60 @@ void remove_system_parameters(QVariantMap& params)
 
 int queue_pript(PriptType prtype, const CLParams& CLP)
 {
-    MPDaemonScript SS;
-    MPDaemonProcess PP;
-    MPDaemonPript* S;
-    if (prtype == ScriptType)
-        S = &SS;
-    else
-        S = &PP;
+    MPDaemonPript PP;
 
     if (prtype == ScriptType) {
         QVariantMap params;
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString str = CLP.unnamed_parameters[i];
             if (str.endsWith(".js")) {
-                SS.script_paths << str;
+                PP.script_paths << str;
             }
             if (str.endsWith(".par")) { // note that we can have multiple parameter files! the later ones override the earlier ones.
                 load_parameter_file(params, str);
             }
         }
-        S->parameters = params;
+        PP.parameters = params;
+        PP.prtype=ScriptType;
     } else {
-        S->parameters = CLP.named_parameters;
-        remove_system_parameters(S->parameters);
+        PP.parameters = CLP.named_parameters;
+        PP.prtype=ProcessType;
+        remove_system_parameters(PP.parameters);
         PP.processor_name = CLP.unnamed_parameters.value(1); //arg2
     }
 
-    S->id = make_random_id();
+    PP.id = make_random_id();
     if (prtype == ScriptType) {
-        S->output_file = CLP.named_parameters["~script_output"].toString();
+        PP.output_file = CLP.named_parameters["~script_output"].toString();
     } else {
-        S->output_file = CLP.named_parameters["~process_output"].toString();
+        PP.output_file = CLP.named_parameters["~process_output"].toString();
     }
-    if (S->output_file.isEmpty()) {
+    if (PP.output_file.isEmpty()) {
         if (prtype == ScriptType)
-            S->output_file = CacheManager::globalInstance()->makeLocalFile("script_output." + S->id + ".json", CacheManager::ShortTerm);
+            PP.output_file = CacheManager::globalInstance()->makeLocalFile("script_output." + PP.id + ".json", CacheManager::ShortTerm);
         else
-            S->output_file = CacheManager::globalInstance()->makeLocalFile("process_output." + S->id + ".json", CacheManager::ShortTerm);
+            PP.output_file = CacheManager::globalInstance()->makeLocalFile("process_output." + PP.id + ".json", CacheManager::ShortTerm);
     }
-    printf("id: %s\n", S->id.toLatin1().data());
+    printf("id: %s\n", PP.id.toLatin1().data());
 
-    S->parent_pid=QCoreApplication::applicationPid();
+    PP.parent_pid=QCoreApplication::applicationPid();
 
     MPDaemonInterface X;
     if (prtype == ScriptType) {
-        X.queueScript(SS); //queue the script
+        X.queueScript(PP); //queue the script
     } else {
         X.queueProcess(PP); //queue the process
     }
-    if (!S->output_file.isEmpty()) {
-        MPDaemon::waitForFileToAppear(S->output_file);
-        QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(S->output_file).toLatin1()).object();
+    if (!PP.output_file.isEmpty()) {
+        qint64 parent_pid=CLP.named_parameters.value("~parent_pid",0).toLongLong();
+        MPDaemon::waitForFileToAppear(PP.output_file,-1,false,parent_pid);
+        QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(PP.output_file).toLatin1()).object();
         bool success = results_obj["success"].toBool();
         if (!success) {
             if (prtype == ScriptType) {
-                qWarning() << "Error in script " + S->id + ": " + results_obj["error"].toString();
+                qWarning() << "Error in script " + PP.id + ": " + results_obj["error"].toString();
             } else {
-                qWarning() << "Error in process " + PP.processor_name + " " + S->id + ": " + results_obj["error"].toString();
+                qWarning() << "Error in process " + PP.processor_name + " " + PP.id + ": " + results_obj["error"].toString();
             }
             return -1;
         }
