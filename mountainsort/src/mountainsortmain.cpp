@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         QJsonObject parameters;
         QStringList keys = CLP.named_parameters.keys();
         foreach (QString key, keys) {
-            if (key == "force_run")
+            if (key == "~force_run")
                 force_run = CLP.named_parameters[key].toBool();
             else {
                 parameters[key] = CLP.named_parameters[key].toString();

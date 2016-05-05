@@ -338,7 +338,7 @@ void MSProcessManager::printJsonSpec() const
         obj["inputs"] = inputs;
         obj["outputs"] = outputs;
         obj["parameters"] = parameters;
-        QString exe_command = QString("%1 %2 --force_run=1 $(arguments)").arg(qApp->applicationFilePath()).arg(P->name());
+        QString exe_command = QString("%1 %2 $(arguments)").arg(qApp->applicationFilePath()).arg(P->name());
         obj["exe_command"] = exe_command;
 
         processors.append(obj);

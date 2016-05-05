@@ -18,6 +18,7 @@
 #include <QDebug>
 #include "cachemanager.h"
 #include "unistd.h" //for usleep
+#include <sys/stat.h> //for mkfifo
 
 /// TODO check for bad situation of more than one daemon running simultaneously
 
@@ -147,19 +148,39 @@ QDateTime MPDaemon::parseTimestamp(const QString& timestamp)
     return QDateTime::fromString(timestamp, "yyyy-MM-dd-hh-mm-ss-zzz");
 }
 
-bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove_on_appear, qint64 parent_pid)
+bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove_on_appear, qint64 parent_pid, QString stdout_fname)
 {
     QTime timer;
     timer.start();
-    while (!QFile::exists(fname)) {
+    QFile stdout_file(stdout_fname);
+    bool failed_to_open=false;
+    while (1) {
+        wait(200);
         if ((timeout_ms >= 0) && (timer.elapsed() > timeout_ms))
             return false;
         if ((parent_pid) && (!MPDaemon::pidExists(parent_pid))) {
             qWarning() << "Exiting waitForFileToAppear because parent process is gone.";
             break;
         }
-        wait(100);
+        if ((!stdout_fname.isEmpty())&&(!failed_to_open)) {
+            if (stdout_file.isOpen()) {
+                QByteArray str=stdout_file.readAll();
+                if (!str.isEmpty()) {
+                    printf("%s",str.data());
+                }
+            }
+            else {
+                if (QFile::exists(stdout_fname)) {
+                    if (!stdout_file.open(QFile::ReadOnly)) {
+                        qWarning() << "Unable to open stdout file for reading: "+stdout_fname;
+                        failed_to_open=true;
+                    }
+                }
+            }
+        }
+        if (QFile::exists(fname)) break;
     }
+    if (stdout_file.isOpen()) stdout_file.close();
     if (remove_on_appear) {
         QFile::remove(fname);
     }
@@ -208,11 +229,11 @@ void MPDaemon::slot_pript_qprocess_finished()
     }
     S->is_finished = true;
     S->is_running = false;
-    if (!S->output_file.isEmpty()) {
-        QString run_time_results_json = read_text_file(S->output_file);
+    if (!S->output_fname.isEmpty()) {
+        QString run_time_results_json = read_text_file(S->output_fname);
         if (run_time_results_json.isEmpty()) {
             S->success = false;
-            S->error = "Could not read results file: " + S->output_file;
+            S->error = "Could not read results file: " + S->output_fname;
         } else {
             S->run_time_results = QJsonDocument::fromJson(run_time_results_json.toLatin1()).object();
             S->success = S->run_time_results["success"].toBool();
@@ -230,6 +251,15 @@ void MPDaemon::slot_pript_qprocess_finished()
         printf("successfully\n");
     else
         printf("with error: %s\n", S->error.toLatin1().data());
+    if (S->qprocess) {
+        delete S->qprocess;
+        S->qprocess=0;
+    }
+    if (S->stdout_file) {
+        S->stdout_file->close();
+        delete S->stdout_file;
+        S->stdout_file=0;
+    }
 }
 
 void MPDaemon::slot_qprocess_output()
@@ -238,7 +268,14 @@ void MPDaemon::slot_qprocess_output()
     if (!P)
         return;
     QByteArray str = P->readAll();
-    printf("%s", str.data());
+    QString pript_id=P->property("pript_id").toString();
+    if ((d->m_pripts.contains(pript_id))&&(d->m_pripts[pript_id].stdout_file)) {
+        d->m_pripts[pript_id].stdout_file->write(str);
+        d->m_pripts[pript_id].stdout_file->flush();
+    }
+    else {
+        printf("%s", str.data());
+    }
 }
 
 void MPDaemonPrivate::write_info()
@@ -357,8 +394,8 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
 
     if (S->prtype == ScriptType) {
         args << "run-script";
-        if (!S->output_file.isEmpty()) {
-            args << "--~script_output=" + S->output_file;
+        if (!S->output_fname.isEmpty()) {
+            args << "--~script_output=" + S->output_fname;
         }
         foreach(QString fname, S->script_paths)
         {
@@ -367,12 +404,13 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         QJsonObject parameters = variantmap_to_json_obj(S->parameters);
         QString parameters_json = QJsonDocument(parameters).toJson();
         QString par_fname = CacheManager::globalInstance()->makeLocalFile(S->id + ".par", CacheManager::ShortTerm);
+        write_text_file(par_fname, parameters_json);
         args << par_fname;
     } else if (S->prtype == ProcessType) {
         args << "run-process";
         args << S->processor_name;
-        if (!S->output_file.isEmpty())
-            args << "--~process_output=" + S->output_file;
+        if (!S->output_fname.isEmpty())
+            args << "--~process_output=" + S->output_fname;
         QStringList pkeys = S->parameters.keys();
         foreach(QString pkey, pkeys)
         {
@@ -380,6 +418,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         }
     }
     QProcess* qprocess = new QProcess;
+    qprocess->setProperty("pript_id",pript_id);
     qprocess->setProcessChannelMode(QProcess::MergedChannels);
     QObject::connect(qprocess, SIGNAL(readyRead()), q, SLOT(slot_qprocess_output()));
     qprocess->setProperty("pript_id", pript_id.toLatin1().data());
@@ -402,6 +441,14 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     qprocess->start(exe, args);
     if (qprocess->waitForStarted()) {
         S->qprocess = qprocess;
+        if (!S->stdout_fname.isEmpty()) {
+            S->stdout_file=new QFile(S->stdout_fname);
+            if (!S->stdout_file->open(QFile::WriteOnly)) {
+                qWarning() << "Unable to open stdout file for writing: "+S->stdout_fname;
+                delete S->stdout_file;
+                S->stdout_file=0;
+            }
+        }
         S->is_running = true;
         return true;
 
@@ -469,25 +516,25 @@ bool MPDaemon::pidExists(qint64 pid)
     return (kill(pid, 0) == 0);
 }
 
-bool MPDaemon::waitForFinishedAndWriteOutput(QProcess *P)
+bool MPDaemon::waitForFinishedAndWriteOutput(QProcess* P)
 {
     P->waitForStarted();
-    while (P->state()==QProcess::Running) {
+    while (P->state() == QProcess::Running) {
         P->waitForReadyRead(100);
-        QByteArray str=P->readAll();
-        if (str.count()>0) {
-            printf("%s",str.data());
+        QByteArray str = P->readAll();
+        if (str.count() > 0) {
+            printf("%s", str.data());
         }
         qApp->processEvents();
     }
     {
         P->waitForReadyRead();
-        QByteArray str=P->readAll();
-        if (str.count()>0) {
-            printf("%s",str.data());
+        QByteArray str = P->readAll();
+        if (str.count() > 0) {
+            printf("%s", str.data());
         }
     }
-    return (P->state()!=QProcess::Running);
+    return (P->state() != QProcess::Running);
 }
 
 int MPDaemonPrivate::num_running_pripts(PriptType prtype)
@@ -544,7 +591,7 @@ QJsonObject variantmap_to_json_obj(QVariantMap map)
     foreach(QString key, keys)
     {
         /// Witold I would like to map numbers to numbers here. Can you help?
-        ret[key] = QJsonValue(map[key].toString());
+        ret[key] = QJsonValue::fromVariant(map[key]);
     }
     return ret;
 }
@@ -567,7 +614,8 @@ QJsonObject pript_struct_to_obj(MPDaemonPript S)
     ret["is_running"] = S.is_running;
     ret["parameters"] = variantmap_to_json_obj(S.parameters);
     ret["id"] = S.id;
-    ret["output_file"] = S.output_file;
+    ret["output_fname"] = S.output_fname;
+    ret["stdout_fname"] = S.stdout_fname;
     ret["success"] = S.success;
     ret["error"] = S.error;
     ret["parent_pid"] = QString("%1").arg(S.parent_pid);
@@ -588,7 +636,8 @@ MPDaemonPript pript_obj_to_struct(QJsonObject obj)
     ret.is_running = obj.value("is_running").toBool();
     ret.parameters = json_obj_to_variantmap(obj.value("parameters").toObject());
     ret.id = obj.value("id").toString();
-    ret.output_file = obj.value("output_file").toString();
+    ret.output_fname = obj.value("output_fname").toString();
+    ret.stdout_fname = obj.value("stdout_fname").toString();
     ret.success = obj.value("success").toBool();
     ret.error = obj.value("error").toString();
     ret.parent_pid = obj.value("parent_pid").toString().toLongLong();

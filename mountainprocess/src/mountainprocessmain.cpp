@@ -23,7 +23,7 @@
 #include "cachemanager.h"
 
 void print_usage();
-void load_parameter_file(QVariantMap& params, const QString& fname);
+bool load_parameter_file(QVariantMap& params, const QString& fname);
 bool run_script(const QStringList& script_fnames, const QVariantMap& params, QString& error_message);
 bool initialize_process_manager();
 void remove_system_parameters(QVariantMap& params);
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
             return -1; //load the processor plugins etc
         ProcessManager* PM = ProcessManager::globalInstance();
 
-        QString output_file = CLP.named_parameters.value("~process_output").toString(); //maybe the user specified where output is to be reported
+        QString output_fname = CLP.named_parameters.value("~process_output").toString(); //maybe the user specified where output is to be reported
         QString processor_name = arg2; //name of the processor is the second user-supplied arg
         QVariantMap process_parameters = CLP.named_parameters;
         remove_system_parameters(process_parameters); //remove parameters starting with "~"
@@ -109,10 +109,10 @@ int main(int argc, char* argv[])
         obj["standard_error"] = QString(info.standard_error);
         obj["success"] = error_message.isEmpty();
         obj["error"] = error_message;
-        if (!output_file.isEmpty()) { //The user wants the results to go in this file
+        if (!output_fname.isEmpty()) { //The user wants the results to go in this file
             QString obj_json = QJsonDocument(obj).toJson();
-            if (!write_text_file(output_file, obj_json)) {
-                qWarning() << "Unable to write results to: " + output_file;
+            if (!write_text_file(output_fname, obj_json)) {
+                qWarning() << "Unable to write results to: " + output_fname;
             }
         }
         if (!error_message.isEmpty()) {
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
         if (!initialize_process_manager())
             return -1;
 
-        QString output_file = CLP.named_parameters.value("~script_output").toString(); //maybe the user specified where output is to be reported
+        QString output_fname = CLP.named_parameters.value("~script_output").toString(); //maybe the user specified where output is to be reported
 
         int ret = 0;
         QString error_message;
@@ -137,7 +137,9 @@ int main(int argc, char* argv[])
                 script_fnames << str;
             }
             if (str.endsWith(".par")) { // note that we can have multiple parameter files! the later ones override the earlier ones.
-                load_parameter_file(params, str);
+                if (!load_parameter_file(params, str)) {
+                    return -1;
+                }
             }
         }
         QStringList keys0 = CLP.named_parameters.keys();
@@ -156,10 +158,10 @@ int main(int argc, char* argv[])
         obj["parameters"] = variantmap_to_json_obj(params);
         obj["success"] = (ret == 0);
         obj["error"] = error_message;
-        if (!output_file.isEmpty()) { //The user wants the results to go in this file
+        if (!output_fname.isEmpty()) { //The user wants the results to go in this file
             QString obj_json = QJsonDocument(obj).toJson();
-            if (!write_text_file(output_file, obj_json)) {
-                qWarning() << "Unable to write results to: " + output_file;
+            if (!write_text_file(output_fname, obj_json)) {
+                qWarning() << "Unable to write results to: " + output_fname;
             }
         }
 
@@ -250,16 +252,28 @@ bool initialize_process_manager()
     return true;
 }
 
-void load_parameter_file(QVariantMap& params, const QString& fname)
+bool load_parameter_file(QVariantMap& params, const QString& fname)
 {
     /// Witold maybe a bad idea but.... I would like for user to optionally specify the parameters in a more intuitive way than json. Like freq_min=300\nfreq_max=6000, etc. I'd like to support both formats and detect which one.
+    QString json = read_text_file(fname);
+    if (json.isEmpty()) {
+        qWarning() << "Non-existent or empty parameter file: " + fname;
+        return false;
+    }
+    QJsonParseError error;
     /// Witold I use toLatin1() everywhere. Is this the appropriate way to convert to byte array?
-    QJsonObject obj = QJsonDocument::fromJson(read_text_file(fname).toLatin1()).object();
+    QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
+    if (error.error != QJsonParseError::NoError) {
+        qWarning() << "Error parsing json file: " + fname + " : " + error.errorString();
+        return false;
+    }
     QStringList keys = obj.keys();
     foreach(QString key, keys)
     {
         params[key] = obj[key].toVariant();
+        qDebug() << key << ":" << obj[key].toVariant();
     }
+    return true;
 }
 
 void display_error(QJSValue result)
@@ -314,8 +328,8 @@ void print_usage()
     printf("mountainprocess daemon-stop\n");
     printf("mountainprocess daemon-restart\n");
     printf("mountainprocess daemon-info\n");
-    printf("mountainprocess queue-script --~script_output=[optional_output_file] [script1].js [script2.js] ... [file1].par [file2].par ... \n");
-    printf("mountainprocess queue-process [processor_name] --~process_output=[optional_output_file] --[param1]=[val1] --[param2]=[val2] ...\n");
+    printf("mountainprocess queue-script --~script_output=[optional_output_fname] [script1].js [script2.js] ... [file1].par [file2].par ... \n");
+    printf("mountainprocess queue-process [processor_name] --~process_output=[optional_output_fname] --[param1]=[val1] --[param2]=[val2] ...\n");
 }
 
 void remove_system_parameters(QVariantMap& params)
@@ -341,9 +355,16 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
                 PP.script_paths << str;
             }
             if (str.endsWith(".par")) { // note that we can have multiple parameter files! the later ones override the earlier ones.
-                load_parameter_file(params, str);
+                if (!load_parameter_file(params, str)) {
+                    return -1;
+                }
             }
         }
+        QStringList pkeys=CLP.named_parameters.keys();
+        foreach (QString pkey,pkeys) {
+            params[pkey]=CLP.named_parameters[pkey];
+        }
+        remove_system_parameters(params);
         PP.parameters = params;
         PP.prtype = ScriptType;
     } else {
@@ -355,17 +376,20 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
 
     PP.id = make_random_id();
     if (prtype == ScriptType) {
-        PP.output_file = CLP.named_parameters["~script_output"].toString();
+        PP.output_fname = CLP.named_parameters["~script_output"].toString();
     } else {
-        PP.output_file = CLP.named_parameters["~process_output"].toString();
+        PP.output_fname = CLP.named_parameters["~process_output"].toString();
     }
-    if (PP.output_file.isEmpty()) {
+    if (PP.output_fname.isEmpty()) {
         if (prtype == ScriptType)
-            PP.output_file = CacheManager::globalInstance()->makeLocalFile("script_output." + PP.id + ".json", CacheManager::ShortTerm);
+            PP.output_fname = CacheManager::globalInstance()->makeLocalFile("script_output." + PP.id + ".json", CacheManager::ShortTerm);
         else
-            PP.output_file = CacheManager::globalInstance()->makeLocalFile("process_output." + PP.id + ".json", CacheManager::ShortTerm);
+            PP.output_fname = CacheManager::globalInstance()->makeLocalFile("process_output." + PP.id + ".json", CacheManager::ShortTerm);
     }
-    printf("id: %s\n", PP.id.toLatin1().data());
+    if (prtype == ScriptType)
+        PP.stdout_fname = CacheManager::globalInstance()->makeLocalFile("script_stdout." + PP.id + ".txt", CacheManager::ShortTerm);
+    else
+        PP.stdout_fname = CacheManager::globalInstance()->makeLocalFile("process_stdout." + PP.id + ".txt", CacheManager::ShortTerm);
 
     PP.parent_pid = QCoreApplication::applicationPid();
 
@@ -375,10 +399,10 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
     } else {
         X.queueProcess(PP); //queue the process
     }
-    if (!PP.output_file.isEmpty()) {
+    if (!PP.output_fname.isEmpty()) {
         qint64 parent_pid = CLP.named_parameters.value("~parent_pid", 0).toLongLong();
-        MPDaemon::waitForFileToAppear(PP.output_file, -1, false, parent_pid);
-        QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(PP.output_file).toLatin1()).object();
+        MPDaemon::waitForFileToAppear(PP.output_fname, -1, false, parent_pid, PP.stdout_fname);
+        QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(PP.output_fname).toLatin1()).object();
         bool success = results_obj["success"].toBool();
         if (!success) {
             if (prtype == ScriptType) {

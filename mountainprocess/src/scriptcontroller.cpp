@@ -119,6 +119,7 @@ bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString proces
     }
     args << QString("--~parent_pid=%1").arg(QCoreApplication::applicationPid());
     QProcess P1;
+    P1.setReadChannelMode(QProcess::MergedChannels);
     P1.start(exe, args);
     if (!MPDaemon::waitForFinishedAndWriteOutput(&P1)) {
         //if (!P1.waitForFinished(-1)) {
