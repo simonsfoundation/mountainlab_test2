@@ -19,8 +19,7 @@
 #include "cachemanager.h"
 #include "unistd.h" //for usleep
 
-/// TODO clean up the old files in mpdaemon/info
-/// TODO consider separating out a class with an API other than from command files -- probably a very good idea, if I'm not too lazy
+/// TODO check for bad situation of more than one daemon running simultaneously
 
 class MPDaemonPrivate {
 public:

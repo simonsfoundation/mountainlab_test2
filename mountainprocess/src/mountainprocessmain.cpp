@@ -338,10 +338,10 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
             }
         }
         PP.parameters = params;
-        PP.prtype=ScriptType;
+        PP.prtype = ScriptType;
     } else {
         PP.parameters = CLP.named_parameters;
-        PP.prtype=ProcessType;
+        PP.prtype = ProcessType;
         remove_system_parameters(PP.parameters);
         PP.processor_name = CLP.unnamed_parameters.value(1); //arg2
     }
@@ -360,7 +360,7 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
     }
     printf("id: %s\n", PP.id.toLatin1().data());
 
-    PP.parent_pid=QCoreApplication::applicationPid();
+    PP.parent_pid = QCoreApplication::applicationPid();
 
     MPDaemonInterface X;
     if (prtype == ScriptType) {
@@ -369,8 +369,8 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
         X.queueProcess(PP); //queue the process
     }
     if (!PP.output_file.isEmpty()) {
-        qint64 parent_pid=CLP.named_parameters.value("~parent_pid",0).toLongLong();
-        MPDaemon::waitForFileToAppear(PP.output_file,-1,false,parent_pid);
+        qint64 parent_pid = CLP.named_parameters.value("~parent_pid", 0).toLongLong();
+        MPDaemon::waitForFileToAppear(PP.output_file, -1, false, parent_pid);
         QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(PP.output_file).toLatin1()).object();
         bool success = results_obj["success"].toBool();
         if (!success) {
