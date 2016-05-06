@@ -171,19 +171,26 @@ bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove
     timer.start();
     QFile stdout_file(stdout_fname);
     bool failed_to_open = false;
+
+    /*
     QString i_am_alive_fname;
     if (parent_pid) {
         i_am_alive_fname=CacheManager::globalInstance()->makeLocalFile(QString("i_am_alive.%1.txt").arg(parent_pid));
     }
     QTime timer_i_am_alive; timer_i_am_alive.start();
+    */
+
     while (1) {
         wait(200);
+        /*
         if (timer_i_am_alive.elapsed()>1000) {
             if (parent_pid) {
                 write_text_file(i_am_alive_fname,QString("Process is alive: %1").arg(parent_pid));
             }
             timer_i_am_alive.restart();
         }
+        */
+
         if ((timeout_ms >= 0) && (timer.elapsed() > timeout_ms))
             return false;
         if ((parent_pid) && (!MPDaemon::pidExists(parent_pid))) {

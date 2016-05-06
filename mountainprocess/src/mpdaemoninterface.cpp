@@ -119,7 +119,7 @@ bool MPDaemonInterface::queueProcess(const MPDaemonPript& process)
 
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
-    QJsonObject obj = get_last_info(10000);
+    QJsonObject obj = get_last_info(25000); //be conservative, because ideally it will have stopped gracefully
     if (!obj.contains("is_running")) {
         printf("is_running field NOT found\n");
     }
