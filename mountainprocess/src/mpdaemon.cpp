@@ -145,9 +145,13 @@ bool MPDaemon::run()
             d->write_info();
             timer.restart();
         }
+        QTime timer2; timer2.start();
         d->stop_orphan_processes_and_scripts();
         d->handle_scripts();
         d->handle_processes();
+        if (timer2.elapsed()>3000) {
+            qWarning() << "This should not take this much time" << timer2.elapsed();
+        }
         //
         qApp->processEvents();
     }
