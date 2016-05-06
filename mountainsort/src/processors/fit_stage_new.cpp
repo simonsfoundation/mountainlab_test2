@@ -213,7 +213,7 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList
                 all_to_use[inds_to_try[i]] = 1;
             }
         }
-        printf("pass %d: added %ld events\n", num_passes, num_added);
+        //printf("pass %d: added %ld events\n", num_passes, num_added);
     }
 
     QList<long> inds_to_use;
