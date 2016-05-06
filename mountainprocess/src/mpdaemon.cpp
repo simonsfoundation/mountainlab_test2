@@ -68,32 +68,32 @@ public:
     bool launch_pript(QString id);
 };
 
-void append_line_to_file(QString fname,QString line) {
+void append_line_to_file(QString fname, QString line)
+{
     QFile ff(fname);
-    if (ff.open(QFile::Append|QFile::WriteOnly)) {
+    if (ff.open(QFile::Append | QFile::WriteOnly)) {
         ff.write(line.toLatin1());
         ff.write(QByteArray("\n"));
         ff.close();
-    }
-    else {
-        static bool reported=false;
+    } else {
+        static bool reported = false;
         if (!reported) {
-            reported=true;
+            reported = true;
             qWarning() << "Unable to write to log file" << fname;
         }
     }
-
 }
 
 void debug_log(const char* function, const char* file, int line)
 {
-    QString fname=CacheManager::globalInstance()->localTempPath()+"/mpdaemon_debug.log";
-    QString line0=QString("%1: %2 %3:%4").arg(QDateTime::currentDateTime().toString("yy-MM-dd:hh:mm:ss.zzz")).arg(function).arg(file).arg(line);
+    QString fname = CacheManager::globalInstance()->localTempPath() + "/mpdaemon_debug.log";
+    QString line0 = QString("%1: %2 %3:%4").arg(QDateTime::currentDateTime().toString("yy-MM-dd:hh:mm:ss.zzz")).arg(function).arg(file).arg(line);
     line0 += "ARGS: ";
-    foreach (QString arg,qApp->arguments()) {
-        line0+=arg+" ";
+    foreach(QString arg, qApp->arguments())
+    {
+        line0 += arg + " ";
     }
-    append_line_to_file(fname,line0);
+    append_line_to_file(fname, line0);
 }
 
 MPDaemon::MPDaemon()
@@ -140,29 +140,31 @@ bool MPDaemon::run()
     QTime timer;
     timer.start();
     d->write_info();
-    QTime timer4; timer4.start();
+    QTime timer4;
+    timer4.start();
     while (d->m_is_running) {
         if (timer.elapsed() > 5000) {
             d->write_info();
             timer.restart();
+            printf(".");
+        }
+        if (timer4.elapsed() > 5 * 60000) {
             printf("\n");
         }
-        QTime timer2; timer2.start();
+        QTime timer2;
+        timer2.start();
         d->stop_orphan_processes_and_scripts();
         d->handle_scripts();
         d->handle_processes();
-        if (timer2.elapsed()>3000) {
+        if (timer2.elapsed() > 3000) {
             qWarning() << "This should not take this much time" << timer2.elapsed();
         }
         //
-        QTime timer3; timer3.start();
+        QTime timer3;
+        timer3.start();
         qApp->processEvents();
-        if (timer3.elapsed()>3000) {
+        if (timer3.elapsed() > 3000) {
             qWarning() << "Processing events should not take this much time" << timer2.elapsed();
-        }
-        if (timer4.elapsed()>500) {
-            printf(".");
-            timer4.start();
         }
     }
     return true;
