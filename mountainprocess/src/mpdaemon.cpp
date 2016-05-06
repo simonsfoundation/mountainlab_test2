@@ -144,6 +144,7 @@ bool MPDaemon::run()
         if (timer.elapsed() > 5000) {
             d->write_info();
             timer.restart();
+            printf("\n");
         }
         QTime timer2; timer2.start();
         d->stop_orphan_processes_and_scripts();
@@ -155,9 +156,10 @@ bool MPDaemon::run()
         //
         QTime timer3; timer3.start();
         qApp->processEvents();
-        if (timer2.elapsed()>3000) {
+        if (timer3.elapsed()>3000) {
             qWarning() << "Processing events should not take this much time" << timer2.elapsed();
         }
+        printf(".");
     }
     return true;
 }
