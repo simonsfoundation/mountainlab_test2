@@ -36,6 +36,9 @@
 #include "qjson.h"
 #include "textfile.h"
 #include <sys/stat.h>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 class MSProcessManagerPrivate {
 public:
@@ -55,8 +58,8 @@ MSProcessManager::MSProcessManager()
     d->q = this;
 }
 
-Q_GLOBAL_STATIC(MSProcessManager,theInstance)
-MSProcessManager *MSProcessManager::globalInstance()
+Q_GLOBAL_STATIC(MSProcessManager, theInstance)
+MSProcessManager* MSProcessManager::globalInstance()
 {
     return theInstance;
 }
@@ -147,12 +150,12 @@ QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& process
         version = PP->version();
         input_file_parameters = PP->inputFileParameters();
         output_file_parameters = PP->outputFileParameters();
-    }
-    else
+    } else
         return ret; //can't even find the processor (not registered)
 
     QVariantMap input_file_codes;
-    foreach (const QString& pp, input_file_parameters) {
+    foreach(const QString & pp, input_file_parameters)
+    {
         QString path0 = parameters[pp].toString();
         if (!path0.isEmpty()) {
             QString code0 = compute_file_code(path0);
@@ -160,7 +163,8 @@ QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& process
         }
     }
     QVariantMap output_file_codes;
-    foreach (const QString& pp, output_file_parameters) {
+    foreach(const QString & pp, output_file_parameters)
+    {
         QString path0 = parameters[pp].toString();
         if (!path0.isEmpty()) {
             QString code0 = compute_file_code(path0);
@@ -200,7 +204,7 @@ bool MSProcessManager::runProcess(const QString& processor_name, const QVariantM
     return ret;
 }
 
-bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_name, const QVariantMap& parameters)
+bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_name, const QVariantMap& parameters, bool force_run)
 {
     if (!this->containsProcessor(processor_name)) {
         printf("Unable to find processor: %s\n", processor_name.toLatin1().data());
@@ -210,21 +214,19 @@ bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_na
         printf("Problem checking processor: %s\n", processor_name.toLatin1().data());
         return false;
     }
-    if (this->findCompletedProcess(processor_name, parameters)) {
+    if ((!force_run) && (this->findCompletedProcess(processor_name, parameters))) {
         printf("Process already completed: %s\n", processor_name.toLatin1().data());
         return true;
-    }
-    else {
+    } else {
         if (!this->runProcess(processor_name, parameters)) {
             printf("Problem running processor: %s\n", processor_name.toLatin1().data());
             return 0;
-        }
-        else
+        } else
             return true;
     }
 }
 
-MSProcessor *MSProcessManager::processor(const QString &processor_name)
+MSProcessor* MSProcessManager::processor(const QString& processor_name)
 {
     return d->find_processor(processor_name);
 }
@@ -250,7 +252,7 @@ QString MSProcessManager::usageString() const
 
     str += QString("Available processors:\n");
     QStringList names = allProcessorNames();
-    str+=names.join(", ");
+    str += names.join(", ");
     str += "\n";
 
     return str;
@@ -275,6 +277,76 @@ void MSProcessManager::printDetails() const
         str += QString("    Optional params: %1").arg(tostr(P->optionalParameters())) + "\n";
         printf("%s\n", str.toLatin1().data());
     }
+}
+
+void MSProcessManager::printJsonSpec() const
+{
+    QJsonArray processors;
+    QStringList names = allProcessorNames();
+    for (int i = 0; i < names.count(); i++) {
+        QString name = names[i];
+        MSProcessor* P = d->m_processors[name];
+
+        QJsonArray inputs;
+        {
+            QStringList input_file_parameters = P->inputFileParameters();
+            foreach(QString pname, input_file_parameters)
+            {
+                QJsonObject P;
+                P["name"] = pname;
+                inputs.append(P);
+            }
+        }
+
+        QJsonArray outputs;
+        {
+            QStringList output_file_parameters = P->outputFileParameters();
+            foreach(QString pname, output_file_parameters)
+            {
+                QJsonObject P;
+                P["name"] = pname;
+                outputs.append(P);
+            }
+        }
+
+        QJsonArray parameters;
+        {
+            QStringList parameters0 = P->requiredParameters();
+            foreach(QString pname, parameters0)
+            {
+                QJsonObject P;
+                P["name"] = pname;
+                P["optional"] = false;
+                parameters.append(P);
+            }
+        }
+        {
+            QStringList parameters0 = P->optionalParameters();
+            foreach(QString pname, parameters0)
+            {
+                QJsonObject P;
+                P["name"] = pname;
+                P["optional"] = true;
+                parameters.append(P);
+            }
+        }
+
+        QJsonObject obj;
+        obj["name"] = P->name();
+        obj["version"] = P->version();
+        obj["description"] = ""; /// TODO make a property of MSProcessor for this
+        obj["inputs"] = inputs;
+        obj["outputs"] = outputs;
+        obj["parameters"] = parameters;
+        QString exe_command = QString("%1 %2 --force_run=1 $(arguments)").arg(qApp->applicationFilePath()).arg(P->name());
+        obj["exe_command"] = exe_command;
+
+        processors.append(obj);
+    }
+    QJsonObject X;
+    X["processors"] = processors;
+    QString json = QJsonDocument(X).toJson();
+    printf("%s", json.toLatin1().data());
 }
 
 MSProcessor* MSProcessManagerPrivate::find_processor(const QString& name)

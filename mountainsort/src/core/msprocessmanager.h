@@ -17,14 +17,14 @@ class MSProcessManager {
 public:
     friend class MSProcessManagerPrivate;
     MSProcessManager();
-    static MSProcessManager *globalInstance();
+    static MSProcessManager* globalInstance();
     virtual ~MSProcessManager();
     void loadDefaultProcessors();
 
     bool containsProcessor(const QString& processor_name) const;
     bool checkProcess(const QString& processor_name, const QVariantMap& parameters) const;
     bool runProcess(const QString& processor_name, const QVariantMap& parameters);
-    bool checkAndRunProcessIfNecessary(const QString& processor_name, const QVariantMap& parameters);
+    bool checkAndRunProcessIfNecessary(const QString& processor_name, const QVariantMap& parameters, bool force_run);
 
     MSProcessor* processor(const QString& processor_name);
 
@@ -35,6 +35,7 @@ public:
 
     QString usageString() const;
     void printDetails() const;
+    void printJsonSpec() const;
 
 private:
     MSProcessManagerPrivate* d;

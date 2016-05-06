@@ -26,12 +26,15 @@
 
 void print_usage();
 void list_processors(const MSProcessManager* PM);
-bool run_process(MSProcessManager* PM, QJsonObject process);
+bool run_process(MSProcessManager* PM, QJsonObject process, bool force_run);
 int run_script(const QStringList& script_fnames, const QVariantMap& params);
 
 int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
+
+    setbuf(stdout, NULL);
+
 
     MSCacheManager::globalInstance()->setLocalBasePath(app.applicationDirPath() + "/../../tmp");
 
@@ -63,7 +66,7 @@ int main(int argc, char* argv[])
             printf("Unable to open file or file is empty: %s\n", arg2.toLatin1().data());
         }
         QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
-        if (!run_process(PM, obj))
+        if (!run_process(PM, obj, false))
             return -1;
         else
             return 0;
@@ -76,6 +79,10 @@ int main(int argc, char* argv[])
         PM->printDetails();
         return 0;
     }
+    else if (arg1 == "spec") {
+        PM->printJsonSpec();
+        return 0;
+    }
 
     if (CLP.unnamed_parameters.isEmpty()) {
         print_usage();
@@ -83,16 +90,21 @@ int main(int argc, char* argv[])
     }
 
     if (CLP.unnamed_parameters.count() == 1) {
+        bool force_run=false;
         QString processor_name = CLP.unnamed_parameters[0];
         QJsonObject process;
         process["processor_name"] = processor_name;
         QJsonObject parameters;
         QStringList keys = CLP.named_parameters.keys();
         foreach (QString key, keys) {
-            parameters[key] = CLP.named_parameters[key].toString();
+            if (key == "force_run")
+                force_run = CLP.named_parameters[key].toBool();
+            else {
+                parameters[key] = CLP.named_parameters[key].toString();
+            }
         }
         process["parameters"] = parameters;
-        if (run_process(PM, process))
+        if (run_process(PM, process, force_run))
             return 0;
         else
             return -1;
@@ -119,7 +131,7 @@ void list_processors(const MSProcessManager* PM)
     printf("%s\n", str.toLatin1().data());
 }
 
-bool run_process(MSProcessManager* PM, QJsonObject process)
+bool run_process(MSProcessManager* PM, QJsonObject process, bool force_run)
 {
     QString processor_name = process["processor_name"].toString();
     QJsonObject parameters = process["parameters"].toObject();
@@ -129,7 +141,7 @@ bool run_process(MSProcessManager* PM, QJsonObject process)
         params[key] = parameters[key].toString();
     }
 
-    if (!PM->checkAndRunProcessIfNecessary(processor_name, params)) {
+    if (!PM->checkAndRunProcessIfNecessary(processor_name, params, force_run)) {
         return false;
     }
 
@@ -138,9 +150,9 @@ bool run_process(MSProcessManager* PM, QJsonObject process)
 
 void display_error(QJSValue result)
 {
-    qDebug()  << result.property("name").toString();
-    qDebug()  << result.property("message").toString();
-    qDebug()  << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
+    qDebug() << result.property("name").toString();
+    qDebug() << result.property("message").toString();
+    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
 }
 
 int run_script(const QStringList& script_fnames, const QVariantMap& params)

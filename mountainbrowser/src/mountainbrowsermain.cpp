@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 
     CLParams CLP = get_command_line_params(argc, argv);
 
-    QString mountainbrowser_url = CLP.named_parameters.value("url", "http://magland.org:8002").toString();
+    QString mountainbrowser_url = CLP.named_parameters.value("url", "http://datalaboratory.org:8002").toString();
 
     QString config_json = http_get_text(mountainbrowser_url + "?a=getConfig");
     QJsonObject config = (QJsonDocument::fromJson(config_json.toLatin1())).object();

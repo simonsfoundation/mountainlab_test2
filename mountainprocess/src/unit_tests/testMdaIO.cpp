@@ -100,7 +100,9 @@ void test_type(const int typeId, _mdaiofunc<T> readFunc, _mdaiofunc<T> writeFunc
 	bool compareResult = true;
 	if (data != result) {
 		compareResult = false;
+		qDebug() << "---> data written to file:";
 		std::copy(data.begin(), data.end(), std::ostream_iterator<T>(std::cout, ", "));
+		qDebug() << "\n---> data read from file:";
 		std::copy(result.begin(), result.end(), std::ostream_iterator<T>(std::cout, ", "));
 	}
 	QVERIFY(compareResult);

@@ -61,7 +61,7 @@ QString MBController::mountainBrowserUrl()
 
 QString MBController::getJson(QString url_or_path)
 {
-    //Witold, it would be great if we could return a javascript object directly here
+    /// Witold it would be great if we could return a javascript object directly here, rather than the json text
     if (url_or_path.startsWith("http")) {
         return http_get_text(url_or_path);
     }
@@ -101,28 +101,21 @@ void MBController::openSortingResult(QString json)
              << "--pre=" + pre << "--filt=" + filt << "--raw=" + raw << "--firings=" + firings;
         QString mv_exe = qApp->applicationDirPath() + "/../../mountainview/bin/mountainview";
         QProcess* process = new QProcess;
-        connect(process, SIGNAL(readyReadStandardOutput()), this, SLOT(slot_ready_read_standard_output()));
-        connect(process, SIGNAL(readyReadStandardError()), this, SLOT(slot_ready_read_standard_error()));
+        process->setProcessChannelMode(QProcess::MergedChannels);
+        connect(process, SIGNAL(readyRead()), this, SLOT(slot_ready_read()));
         process->start(mv_exe, args);
         d->m_processes << process;
     }
 }
 
-void MBController::slot_ready_read_standard_output()
+void MBController::slot_ready_read()
 {
     QProcess* P = qobject_cast<QProcess*>(sender());
     if (!P) {
-        qWarning() << "Unexpected problem in slot_ready_read_standard_output";
+        qWarning() << "Unexpected problem in slot_ready_read";
         return;
     }
+    QByteArray str=P->readAll();
+    printf("%s",str.data());
 }
 
-void MBController::slot_ready_read_standard_error()
-{
-    QProcess* P = qobject_cast<QProcess*>(sender());
-    if (!P) {
-        qWarning() << "Unexpected problem in slot_ready_read_standard_error";
-        return;
-    }
-    qWarning() << P->readAllStandardError();
-}

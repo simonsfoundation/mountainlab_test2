@@ -4,7 +4,7 @@
 ** Created: 4/5/2016
 *******************************************************/
 
-#include "mscachemanager.h"
+#include "cachemanager.h"
 
 #include <QDir>
 #include <QDebug>
@@ -13,27 +13,26 @@
 
 #define DEFAULT_LOCAL_BASE_PATH QDir::tempPath()+"/mountainlab"
 
-class MSCacheManagerPrivate {
+class CacheManagerPrivate {
 public:
-    MSCacheManager* q;
+    CacheManager* q;
     QString m_local_base_path;
 
     QString create_random_file_name();
 };
 
-MSCacheManager::MSCacheManager()
+CacheManager::CacheManager()
 {
-    d = new MSCacheManagerPrivate;
+    d = new CacheManagerPrivate;
     d->q = this;
 }
 
-MSCacheManager::~MSCacheManager()
+CacheManager::~CacheManager()
 {
     delete d;
 }
 
-
-void MSCacheManager::setLocalBasePath(const QString& path)
+void CacheManager::setLocalBasePath(const QString& path)
 {
     d->m_local_base_path = path;
     if (!QDir(path).exists()) {
@@ -51,7 +50,7 @@ void MSCacheManager::setLocalBasePath(const QString& path)
     }
 }
 
-QString MSCacheManager::makeRemoteFile(const QString& remote_url, const QString& file_name_in, MSCacheManager::Duration duration)
+QString CacheManager::makeRemoteFile(const QString& remote_url, const QString& file_name_in, CacheManager::Duration duration)
 {
     if (remote_url.isEmpty()) {
         return makeLocalFile(file_name_in,duration);
@@ -71,11 +70,12 @@ QString MSCacheManager::makeRemoteFile(const QString& remote_url, const QString&
     return QString("%1/%2/%3").arg(remote_url).arg(str).arg(file_name);
 }
 
-QString MSCacheManager::makeLocalFile(const QString& file_name_in, MSCacheManager::Duration duration)
+QString CacheManager::makeLocalFile(const QString& file_name_in, CacheManager::Duration duration)
 {
     QString file_name=file_name_in;
     if (file_name.isEmpty()) file_name=d->create_random_file_name();
     if (d->m_local_base_path.isEmpty()) {
+        qWarning() << "Local base path has not been set. Using default: "+QString(DEFAULT_LOCAL_BASE_PATH);
         this->setLocalBasePath(DEFAULT_LOCAL_BASE_PATH);
     }
     QString str;
@@ -91,19 +91,19 @@ QString MSCacheManager::makeLocalFile(const QString& file_name_in, MSCacheManage
     return ret;
 }
 
-void MSCacheManager::cleanUp()
+void CacheManager::cleanUp()
 {
 }
 
-Q_GLOBAL_STATIC(MSCacheManager,theInstance)
-MSCacheManager *MSCacheManager::globalInstance()
+Q_GLOBAL_STATIC(CacheManager,theInstance)
+CacheManager *CacheManager::globalInstance()
 {
     return theInstance;
 }
 
-void MSCacheManager::slot_remove_on_delete()
+void CacheManager::slot_remove_on_delete()
 {
-    QString fname=sender()->property("MSCacheManager_file_to_remove").toString();
+    QString fname=sender()->property("CacheManager_file_to_remove").toString();
     if (!fname.isEmpty()) {
         if (!QFile::remove(fname)) {
             qWarning() << "Unable to remove local cached file:" << fname;
@@ -114,7 +114,7 @@ void MSCacheManager::slot_remove_on_delete()
     }
 }
 
-QString MSCacheManagerPrivate::create_random_file_name()
+QString CacheManagerPrivate::create_random_file_name()
 {
 
     long num1=QDateTime::currentMSecsSinceEpoch();
