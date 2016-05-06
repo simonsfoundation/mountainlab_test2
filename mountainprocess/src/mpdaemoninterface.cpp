@@ -162,8 +162,10 @@ QJsonObject MPDaemonInterfacePrivate::get_last_info(qint64 max_elapsed_msec)
     if (fname.isEmpty())
         return ret;
     qint64 elapsed = get_time_from_timestamp_of_fname(fname).msecsTo(QDateTime::currentDateTime());
-    if (elapsed > max_elapsed_msec)
+    if (elapsed > max_elapsed_msec) {
+        qDebug() << QString("get_last_info: ELAPSED %1 > %2").arg(elapsed).arg(max_elapsed_msec);
         return ret;
+    }
     QString json = read_text_file(fname);
     ret = QJsonDocument::fromJson(json.toLatin1()).object();
     return ret;
