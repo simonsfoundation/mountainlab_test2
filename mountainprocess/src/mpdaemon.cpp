@@ -140,6 +140,7 @@ bool MPDaemon::run()
     QTime timer;
     timer.start();
     d->write_info();
+    QTime timer4; timer4.start();
     while (d->m_is_running) {
         if (timer.elapsed() > 5000) {
             d->write_info();
@@ -159,7 +160,10 @@ bool MPDaemon::run()
         if (timer3.elapsed()>3000) {
             qWarning() << "Processing events should not take this much time" << timer2.elapsed();
         }
-        printf(".");
+        if (timer4.elapsed()>500) {
+            printf(".");
+            timer4.start();
+        }
     }
     return true;
 }
