@@ -159,6 +159,7 @@ QJsonObject MPDaemonInterfacePrivate::get_last_info(qint64 max_elapsed_msec)
 {
     QJsonObject ret;
     QString fname = last_info_fname();
+    qDebug() << "last_info_fname:" << fname << QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss-zzz");
     if (fname.isEmpty())
         return ret;
     qint64 elapsed = get_time_from_timestamp_of_fname(fname).msecsTo(QDateTime::currentDateTime());
