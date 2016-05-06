@@ -123,9 +123,6 @@ bool MPDaemonInterfacePrivate::daemon_is_running()
     if (!obj.contains("is_running")) {
         printf("is_running field NOT found\n");
     }
-    else {
-        printf("is_running field found\n");
-    }
     return obj.value("is_running").toBool();
 }
 

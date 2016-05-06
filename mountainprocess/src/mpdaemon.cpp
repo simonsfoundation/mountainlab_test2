@@ -68,9 +68,32 @@ public:
     bool launch_pript(QString id);
 };
 
+void append_line_to_file(QString fname,QString line) {
+    QFile ff(fname);
+    if (ff.open(QFile::Append|QFile::WriteOnly)) {
+        ff.write(line.toLatin1());
+        ff.write(QByteArray("\n"));
+        ff.close();
+    }
+    else {
+        static bool reported=false;
+        if (!reported) {
+            reported=true;
+            qWarning() << "Unable to write to log file" << fname;
+        }
+    }
+
+}
+
 void debug_log(const char* function, const char* file, int line)
 {
-    qDebug() << "debug_log::: " << QDateTime::currentDateTime().toString("yy-MM-dd:hh:mm:ss.zzz") << function << file << line;
+    QString fname=CacheManager::globalInstance()->localTempPath()+"/mpdaemon_debug.log";
+    QString line0=QString("%1: %2 %3:%4").arg(QDateTime::currentDateTime().toString("yy-MM-dd:hh:mm:ss.zzz")).arg(function).arg(file).arg(line);
+    line0 += "ARGS: ";
+    foreach (QString arg,qApp->arguments()) {
+        line0+=arg+" ";
+    }
+    append_line_to_file(fname,line0);
 }
 
 MPDaemon::MPDaemon()
@@ -230,8 +253,6 @@ void MPDaemon::wait(qint64 msec)
 
 void MPDaemon::slot_commands_directory_changed()
 {
-    debug_log(__FUNCTION__, __FILE__, __LINE__);
-
     QString path = MPDaemon::daemonPath() + "/commands";
     QStringList fnames = QDir(path).entryList(QStringList("*.command"), QDir::Files, QDir::Name);
     qDebug() << fnames;
@@ -368,13 +389,13 @@ void MPDaemonPrivate::write_info()
 
 void MPDaemonPrivate::process_command(QJsonObject obj)
 {
-    debug_log(__FUNCTION__, __FILE__, __LINE__);
-
     QString command = obj.value("command").toString();
     if (command == "stop") {
+        debug_log(__FUNCTION__, __FILE__, __LINE__);
         m_is_running = false;
         write_info();
     } else if (command == "queue-script") {
+        debug_log(__FUNCTION__, __FILE__, __LINE__);
         MPDaemonPript S = pript_obj_to_struct(obj);
         S.prtype = ScriptType;
         if (m_pripts.contains(S.id)) {
@@ -384,6 +405,7 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
         printf("QUEUING SCRIPT %s\n", S.id.toLatin1().data());
         m_pripts[S.id] = S;
     } else if (command == "queue-process") {
+        debug_log(__FUNCTION__, __FILE__, __LINE__);
         MPDaemonPript P = pript_obj_to_struct(obj);
         P.prtype = ProcessType;
         if (m_pripts.contains(P.id)) {
