@@ -153,7 +153,11 @@ bool MPDaemon::run()
             qWarning() << "This should not take this much time" << timer2.elapsed();
         }
         //
+        QTime timer3; timer3.start();
         qApp->processEvents();
+        if (timer2.elapsed()>3000) {
+            qWarning() << "Processing events should not take this much time" << timer2.elapsed();
+        }
     }
     return true;
 }
