@@ -166,7 +166,15 @@ int main(int argc, char* argv[])
         }
 
         return ret;
-    } else if (arg1 == "-internal-daemon-start") { //This is called internaly to start the daemon (which is the central program running in the background)
+    }
+    else if (arg1 == "daemon-start") {
+        MPDaemon X;
+        if (!X.run())
+            return -1;
+        return 0;
+    }
+    /*
+    else if (arg1 == "-internal-daemon-start") { //This is called internaly to start the daemon (which is the central program running in the background)
         MPDaemon X;
         if (!X.run())
             return -1;
@@ -194,7 +202,9 @@ int main(int argc, char* argv[])
             return -1;
         printf("Daemon has been restarted.\n");
         return 0;
-    } else if (arg1 == "daemon-info") { //Print some information on the daemon
+    }
+    */
+    else if (arg1 == "daemon-info") { //Print some information on the daemon
         MPDaemonInterface X;
         QJsonObject info = X.getInfo();
         QString json = QJsonDocument(info).toJson();
@@ -271,7 +281,6 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
     foreach(QString key, keys)
     {
         params[key] = obj[key].toVariant();
-        qDebug() << key << ":" << obj[key].toVariant();
     }
     return true;
 }
@@ -395,9 +404,13 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
 
     MPDaemonInterface X;
     if (prtype == ScriptType) {
-        X.queueScript(PP); //queue the script
+        if (!X.queueScript(PP)) { //queue the script
+            return -1;
+        }
     } else {
-        X.queueProcess(PP); //queue the process
+        if (!X.queueProcess(PP)) { //queue the process
+            return -1;
+        }
     }
     if (!PP.output_fname.isEmpty()) {
         qint64 parent_pid = CLP.named_parameters.value("~parent_pid", 0).toLongLong();

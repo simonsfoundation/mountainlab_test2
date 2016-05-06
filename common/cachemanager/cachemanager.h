@@ -24,6 +24,7 @@ public:
     void setLocalBasePath(const QString& path);
     QString makeRemoteFile(const QString& remote_name, const QString& file_name = "", Duration duration = ShortTerm);
     QString makeLocalFile(const QString& file_name = "", Duration duration = ShortTerm);
+    QString localTempPath();
     void cleanUp();
 
     static CacheManager *globalInstance();
