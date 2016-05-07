@@ -1,0 +1,27 @@
+<html>
+<head>
+<script 
+<script src="jquery.min.js">
+</script>
+<script type="text/javascript">
+$(document).ready(function() {
+	console.log('hello with jquery');
+	var url='http://localhost:8004'
+	$.ajax({
+		type:'POST',
+		url:url,
+		dataType:'json',
+		data:JSON.stringify({action:'queueScript'}),
+		success:function(resp) {
+			console.log('success!!');
+			console.log(resp);
+		}
+	})
+});
+
+</script>
+</head>
+<body>
+<h3>Test mpserver</h3>
+</body>
+</html>
