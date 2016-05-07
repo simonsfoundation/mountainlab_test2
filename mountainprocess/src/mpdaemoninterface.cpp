@@ -23,7 +23,7 @@ public:
     bool send_daemon_command(QJsonObject obj, qint64 timeout_msec);
     QString last_info_fname();
     QJsonObject get_last_info(qint64 max_elapsed_msec);
-    qint64 msec_since_last_info(); //Maybe not used
+    //qint64 msec_since_last_info(); //Maybe not used
     QDateTime get_time_from_timestamp_of_fname(QString fname);
 };
 
@@ -157,6 +157,7 @@ QString MPDaemonInterfacePrivate::last_info_fname()
 
 QJsonObject MPDaemonInterfacePrivate::get_last_info(qint64 max_elapsed_msec)
 {
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
     QJsonObject ret;
     QString fname = last_info_fname();
     qDebug() << "last_info_fname:" << fname << QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss-zzz");
@@ -169,9 +170,11 @@ QJsonObject MPDaemonInterfacePrivate::get_last_info(qint64 max_elapsed_msec)
     }
     QString json = read_text_file(fname);
     ret = QJsonDocument::fromJson(json.toLatin1()).object();
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
     return ret;
 }
 
+/*
 qint64 MPDaemonInterfacePrivate::msec_since_last_info()
 {
     QString fname = last_info_fname();
@@ -179,6 +182,7 @@ qint64 MPDaemonInterfacePrivate::msec_since_last_info()
         return 999000;
     return get_time_from_timestamp_of_fname(fname).msecsTo(QDateTime::currentDateTime());
 }
+*/
 
 QDateTime MPDaemonInterfacePrivate::get_time_from_timestamp_of_fname(QString fname)
 {
