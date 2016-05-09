@@ -331,6 +331,7 @@ function MSPipeline() {
 			}
 		}
 
+		var submit_the_entire_pipeline=true;
 		if (submit_the_entire_pipeline) {
 			var pipe={processes:[]};
 			for (var j=0; j<m_processes.length; j++) {

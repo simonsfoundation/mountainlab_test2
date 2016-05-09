@@ -96,9 +96,15 @@ bool ScriptController::runProcess(const QString& processor_name, const QString& 
 struct PipelineNode {
     PipelineNode()
     {
-        completed = true;
+        completed = false;
         running = false;
         qprocess = 0;
+    }
+    ~PipelineNode()
+    {
+        if (qprocess) {
+            delete qprocess;
+        }
     }
     QString processor_name;
     QVariantMap parameters;
@@ -146,6 +152,7 @@ bool ScriptController::runPipeline(const QString& json)
             if (!path0.isEmpty())
                 node.output_paths << path0;
         }
+        nodes << node;
     }
 
     //record which outputs get created by which nodes (by index)
@@ -192,10 +199,13 @@ bool ScriptController::runPipeline(const QString& json)
                     node_indices_not_ready_to_be_run << i;
             }
         }
+        if ((node_indices_running.isEmpty()) && (node_indices_ready_to_be_run.isEmpty()) && (node_indices_not_ready_to_be_run.isEmpty())) {
+            //we are done!
+            done = true;
+        }
         if ((node_indices_running.isEmpty()) && (node_indices_ready_to_be_run.isEmpty()) && (!node_indices_not_ready_to_be_run.isEmpty())) {
             //Somehow we are not done, but nothing is ready and nothing is running.
             qWarning() << "Unable to run all processes in pipeline.";
-            cleanup_nodes(nodes);
             return false;
         }
         if (!node_indices_ready_to_be_run.isEmpty()) {
@@ -204,7 +214,6 @@ bool ScriptController::runPipeline(const QString& json)
             PipelineNode* node = &nodes[ii];
             if (!PM->checkParameters(node->processor_name, node->parameters)) {
                 qWarning() << "Error checking parameters for processor: " + node->processor_name;
-                cleanup_nodes(nodes);
                 return false;
             }
             if (PM->processAlreadyCompleted(node->processor_name, node->parameters)) {
@@ -212,46 +221,55 @@ bool ScriptController::runPipeline(const QString& json)
                 node->completed = true;
             }
             else {
+                printf("Queuing process %s\n", node->processor_name.toLatin1().data());
                 QProcess* P1 = d->queue_process(node->processor_name, node->parameters);
                 if (!P1) {
                     qWarning() << "Unable to queue process: " + node->processor_name;
-                    cleanup_nodes(nodes);
                     return false;
                 }
                 node->running = true;
                 node->qprocess = P1;
             }
         }
+        //check for completed processes
         for (int i = 0; i < node_indices_running.count(); i++) {
             PipelineNode* node = &nodes[node_indices_running[i]];
+            if (!node->qprocess) {
+                qWarning() << "Unexpected problem" << __FILE__ << __LINE__;
+                return false;
+            }
             {
-                QByteArray str=node->qprocess->readAll();
+                QByteArray str = node->qprocess->readAll();
                 if (!str.isEmpty()) {
-                    printf("%s",str.data());
+                    printf("%s:: %s", node->processor_name.toLatin1().data(), str.data());
                 }
             }
-            if (node->qprocess->state()==QProcess::NotRunning) {
+            if (node->qprocess->state() == QProcess::NotRunning) {
+                printf("Process finished: %s\n", node->processor_name.toLatin1().data());
                 node->qprocess->waitForReadyRead();
-                QByteArray str=node->qprocess->readAll();
+                QByteArray str = node->qprocess->readAll();
                 if (!str.isEmpty()) {
-                    printf("%s",str.data());
+                    printf("%s", str.data());
                 }
-                if (node->qprocess->exitStatus()==QProcess::CrashExit) {
-                    qWarning() << "Process crashed: "+node->processor_name;
-                    cleanup_nodes(nodes);
+                if (node->qprocess->exitStatus() == QProcess::CrashExit) {
+                    qWarning() << "Process crashed: " + node->processor_name;
                     return false;
                 }
-                if (node->qprocess->exitCode()!=0) {
-                    qWarning() << "Process returned with non-zero exit code: "+node->processor_name;
-                    cleanup_nodes(nodes);
+                if (node->qprocess->exitCode() != 0) {
+                    qWarning() << "Process returned with non-zero exit code: " + node->processor_name;
                     return false;
                 }
-                node->completed=true;
-                node->running=false;
+                printf("Done.\n");
+                node->completed = true;
+                node->running = false;
                 delete node->qprocess;
+                node->qprocess = 0;
             }
         }
-        MPDaemon::wait(100);
+        if (!done) {
+            MPDaemon::wait(100);
+            qApp->processEvents(); //important I think for detecting when processes end.
+        }
     }
 
     return true;
@@ -277,7 +295,7 @@ QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const Q
     P1->setReadChannelMode(QProcess::MergedChannels);
     P1->start(exe, args);
     if (!P1->waitForStarted()) {
-        qWarning() << "Error waiting for process to start: "+processor_name;
+        qWarning() << "Error waiting for process to start: " + processor_name;
         delete P1;
         return 0;
     }

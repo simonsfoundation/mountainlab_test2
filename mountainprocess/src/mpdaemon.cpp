@@ -54,7 +54,7 @@ public:
     {
         return launch_next_pript(ScriptType);
     }
-    bool launch_next_processes()
+    bool launch_next_process()
     {
         return launch_next_pript(ProcessType);
     }
@@ -454,12 +454,14 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
 
 bool MPDaemonPrivate::handle_scripts()
 {
-    if (num_running_scripts() < 1) {
+    int max_simultaneous_scripts=10;
+    if (num_running_scripts() < max_simultaneous_scripts) {
         if (num_pending_scripts() > 0) {
             if (!launch_next_script()) {
                 qWarning() << "Unexpected problem. Failed to launch_next_script";
                 return false;
             }
+            printf("%d scripts running.\n",num_running_scripts());
         }
     }
     return true;
@@ -576,12 +578,14 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
 
 bool MPDaemonPrivate::handle_processes()
 {
-    if (num_running_pripts(ProcessType) < 1) {
-        if (num_pending_pripts(ProcessType) > 0) {
-            if (!launch_next_pript(ProcessType)) {
+    int max_simultaneous_processes=10;
+    if (num_running_pripts(ProcessType) < max_simultaneous_processes) {
+        if (num_pending_processes() > 0) {
+            if (!launch_next_process()) {
                 qWarning() << "Unexpected problem. Failed to launch next process.";
                 return false;
             }
+            printf("%d processes running\n",num_running_processes());
         }
     }
     return true;
