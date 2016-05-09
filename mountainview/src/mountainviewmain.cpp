@@ -33,6 +33,8 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
     CloseMeHandler::start();
 
+    setbuf(stdout, 0);
+
     /// Witold I don't want to do this here! It should be in the taskprogress.h. What can I do?
     qRegisterMetaType<TaskInfo>();
 
@@ -47,12 +49,10 @@ int main(int argc, char* argv[])
         QString arg2 = CLP.unnamed_parameters.value(1);
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
-        }
-        else if (arg2 == "remotereadmda2") {
+        } else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
-        }
-        else {
+        } else {
             qWarning() << "No such unit test: " + arg2;
         }
         return 0;
@@ -79,8 +79,7 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            }
-            else {
+            } else {
                 W->resize(W0, H0);
             }
 
@@ -112,7 +111,8 @@ int main(int argc, char* argv[])
         W->setSampleRate(samplerate);
 
         QStringList keys = CLP.named_parameters.keys();
-        foreach (QString key, keys) {
+        foreach(QString key, keys)
+        {
             if (key.startsWith("P")) {
                 QString pname = key.mid(1);
                 QVariant pvalue = CLP.named_parameters[key];
@@ -133,14 +133,12 @@ int main(int argc, char* argv[])
             printf("Writing image %s... ", output_fname.toLatin1().data());
             if (!IW.write(img)) {
                 printf("Error writing image.\n");
-            }
-            else {
+            } else {
                 printf("OK.\n");
             }
 
             return 0;
-        }
-        else if (mode == "export_images") {
+        } else if (mode == "export_images") {
             QString instructions_fname = CLP.named_parameters.value("instructions").toString();
             QString instructions = read_text_file(instructions_fname);
             run_export_instructions(W, instructions.split("\n"));
@@ -202,7 +200,8 @@ int main(int argc, char* argv[])
 
 void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions)
 {
-    foreach (QString instruction, instructions) {
+    foreach(QString instruction, instructions)
+    {
         QStringList vals = instruction.split(QRegExp("\\s"));
         CLParams params = get_command_line_params(vals);
         QString val0 = params.unnamed_parameters.value(0);
@@ -213,14 +212,13 @@ void run_export_instructions(MVOverview2Widget* W, const QStringList& instructio
             printf("Writing image %s... ", output_fname.toLatin1().data());
             if (!IW.write(img)) {
                 printf("Error writing image.\n");
-            }
-            else {
+            } else {
                 printf("OK.\n");
             }
-        }
-        else if (val0 == "SET") {
+        } else if (val0 == "SET") {
             QStringList keys = params.named_parameters.keys();
-            foreach (QString key, keys) {
+            foreach(QString key, keys)
+            {
                 W->setParameterValue(key, params.named_parameters[key]);
             }
         }

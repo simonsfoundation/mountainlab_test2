@@ -13,6 +13,7 @@
 #include <QVariantMap>
 #include <QJsonObject>
 #include <QProcess>
+#include <QFile>
 
 class MPDaemonPrivate;
 class MPDaemon : public QObject {
@@ -26,7 +27,7 @@ public:
     static QString daemonPath();
     static QString makeTimestamp(const QDateTime& dt = QDateTime::currentDateTime());
     static QDateTime parseTimestamp(const QString& timestamp);
-    static bool waitForFileToAppear(QString fname, qint64 timeout_ms = -1, bool remove_on_appear = false, qint64 parent_pid=0);
+    static bool waitForFileToAppear(QString fname, qint64 timeout_ms = -1, bool remove_on_appear = false, qint64 parent_pid=0, QString stdout_fname="");
     static void wait(qint64 msec);
     static bool pidExists(qint64 pid);
     static bool waitForFinishedAndWriteOutput(QProcess *P);
@@ -55,11 +56,13 @@ struct MPDaemonPript {
         success=false;
         parent_pid=0;
         qprocess=0;
+        stdout_file=0;
         prtype=ScriptType;
     }
     PriptType prtype;
     QString id;
-    QString output_file;
+    QString output_fname;
+    QString stdout_fname;
     QVariantMap parameters;
     bool is_running;
     bool is_finished;
@@ -68,6 +71,7 @@ struct MPDaemonPript {
     QJsonObject run_time_results;
     qint64 parent_pid;
     QProcess *qprocess;
+    QFile *stdout_file;
 
     //For a script:
     QStringList script_paths;

@@ -18,6 +18,7 @@
 #include <QDebug>
 #include "cachemanager.h"
 #include "unistd.h" //for usleep
+#include <sys/stat.h> //for mkfifo
 
 /// TODO check for bad situation of more than one daemon running simultaneously
 
@@ -67,8 +68,38 @@ public:
     bool launch_pript(QString id);
 };
 
+void append_line_to_file(QString fname,QString line) {
+    QFile ff(fname);
+    if (ff.open(QFile::Append|QFile::WriteOnly)) {
+        ff.write(line.toLatin1());
+        ff.write(QByteArray("\n"));
+        ff.close();
+    }
+    else {
+        static bool reported=false;
+        if (!reported) {
+            reported=true;
+            qWarning() << "Unable to write to log file" << fname;
+        }
+    }
+
+}
+
+void debug_log(const char* function, const char* file, int line)
+{
+    QString fname=CacheManager::globalInstance()->localTempPath()+"/mpdaemon_debug.log";
+    QString line0=QString("%1: %2 %3:%4").arg(QDateTime::currentDateTime().toString("yy-MM-dd:hh:mm:ss.zzz")).arg(function).arg(file).arg(line);
+    line0 += "ARGS: ";
+    foreach (QString arg,qApp->arguments()) {
+        line0+=arg+" ";
+    }
+    append_line_to_file(fname,line0);
+}
+
 MPDaemon::MPDaemon()
 {
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     d = new MPDaemonPrivate;
     d->q = this;
     d->m_is_running = false;
@@ -78,6 +109,8 @@ MPDaemon::MPDaemon()
 
 MPDaemon::~MPDaemon()
 {
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     foreach(MPDaemonPript P, d->m_pripts)
     {
         if (P.qprocess) {
@@ -91,6 +124,8 @@ MPDaemon::~MPDaemon()
 
 bool MPDaemon::run()
 {
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     if (d->m_is_running) {
         qWarning() << "Unexpected problem in MPDaemon:run(). Daemon is already running.";
         return false;
@@ -105,35 +140,51 @@ bool MPDaemon::run()
     QTime timer;
     timer.start();
     d->write_info();
+    QTime timer4; timer4.start();
     while (d->m_is_running) {
         if (timer.elapsed() > 5000) {
             d->write_info();
             timer.restart();
+            printf("\n");
         }
+        QTime timer2; timer2.start();
         d->stop_orphan_processes_and_scripts();
         d->handle_scripts();
         d->handle_processes();
+        if (timer2.elapsed()>3000) {
+            qWarning() << "This should not take this much time" << timer2.elapsed();
+        }
         //
+        QTime timer3; timer3.start();
         qApp->processEvents();
+        if (timer3.elapsed()>3000) {
+            qWarning() << "Processing events should not take this much time" << timer2.elapsed();
+        }
+        if (timer4.elapsed()>500) {
+            printf(".");
+            timer4.start();
+        }
     }
     return true;
 }
 
-void mkdir_if_doesnt_exist(QString path)
+void mkdir_if_doesnt_exist(QString path, QFile::Permissions perm)
 {
     /// Witold is there a better way to mkdir if not exists?
     if (!QDir(path).exists()) {
         QDir(QFileInfo(path).path()).mkdir(QFileInfo(path).fileName());
+        QFile(path).setPermissions(perm);
     }
 }
 
 QString MPDaemon::daemonPath()
 {
-    QString ret = qApp->applicationDirPath() + "/mpdaemon";
-    mkdir_if_doesnt_exist(ret);
-    mkdir_if_doesnt_exist(ret + "/info");
-    mkdir_if_doesnt_exist(ret + "/commands");
-    mkdir_if_doesnt_exist(ret + "/completed_processes");
+    QFile::Permissions perm = QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther | QFile::ExeOwner | QFile::ExeGroup | QFile::ExeOther;
+    QString ret = CacheManager::globalInstance()->localTempPath() + "/mpdaemon";
+    mkdir_if_doesnt_exist(ret, perm);
+    mkdir_if_doesnt_exist(ret + "/info", perm);
+    mkdir_if_doesnt_exist(ret + "/commands", perm);
+    mkdir_if_doesnt_exist(ret + "/completed_processes", perm);
     return ret;
 }
 
@@ -144,22 +195,65 @@ QString MPDaemon::makeTimestamp(const QDateTime& dt)
 
 QDateTime MPDaemon::parseTimestamp(const QString& timestamp)
 {
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     return QDateTime::fromString(timestamp, "yyyy-MM-dd-hh-mm-ss-zzz");
 }
 
-bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove_on_appear, qint64 parent_pid)
+bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove_on_appear, qint64 parent_pid, QString stdout_fname)
 {
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     QTime timer;
     timer.start();
-    while (!QFile::exists(fname)) {
+    QFile stdout_file(stdout_fname);
+    bool failed_to_open = false;
+
+    /*
+    QString i_am_alive_fname;
+    if (parent_pid) {
+        i_am_alive_fname=CacheManager::globalInstance()->makeLocalFile(QString("i_am_alive.%1.txt").arg(parent_pid));
+    }
+    QTime timer_i_am_alive; timer_i_am_alive.start();
+    */
+
+    while (1) {
+        wait(200);
+        /*
+        if (timer_i_am_alive.elapsed()>1000) {
+            if (parent_pid) {
+                write_text_file(i_am_alive_fname,QString("Process is alive: %1").arg(parent_pid));
+            }
+            timer_i_am_alive.restart();
+        }
+        */
+
         if ((timeout_ms >= 0) && (timer.elapsed() > timeout_ms))
             return false;
         if ((parent_pid) && (!MPDaemon::pidExists(parent_pid))) {
             qWarning() << "Exiting waitForFileToAppear because parent process is gone.";
             break;
         }
-        wait(100);
+        if ((!stdout_fname.isEmpty()) && (!failed_to_open)) {
+            if (stdout_file.isOpen()) {
+                QByteArray str = stdout_file.readAll();
+                if (!str.isEmpty()) {
+                    printf("%s", str.data());
+                }
+            } else {
+                if (QFile::exists(stdout_fname)) {
+                    if (!stdout_file.open(QFile::ReadOnly)) {
+                        qWarning() << "Unable to open stdout file for reading: " + stdout_fname;
+                        failed_to_open = true;
+                    }
+                }
+            }
+        }
+        if (QFile::exists(fname))
+            break;
     }
+    if (stdout_file.isOpen())
+        stdout_file.close();
     if (remove_on_appear) {
         QFile::remove(fname);
     }
@@ -175,6 +269,7 @@ void MPDaemon::slot_commands_directory_changed()
 {
     QString path = MPDaemon::daemonPath() + "/commands";
     QStringList fnames = QDir(path).entryList(QStringList("*.command"), QDir::Files, QDir::Name);
+    qDebug() << fnames;
     foreach(QString fname, fnames)
     {
         QString path0 = path + "/" + fname;
@@ -195,6 +290,8 @@ void MPDaemon::slot_commands_directory_changed()
 
 void MPDaemon::slot_pript_qprocess_finished()
 {
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     QProcess* P = qobject_cast<QProcess*>(sender());
     if (!P)
         return;
@@ -208,11 +305,11 @@ void MPDaemon::slot_pript_qprocess_finished()
     }
     S->is_finished = true;
     S->is_running = false;
-    if (!S->output_file.isEmpty()) {
-        QString run_time_results_json = read_text_file(S->output_file);
+    if (!S->output_fname.isEmpty()) {
+        QString run_time_results_json = read_text_file(S->output_fname);
         if (run_time_results_json.isEmpty()) {
             S->success = false;
-            S->error = "Could not read results file: " + S->output_file;
+            S->error = "Could not read results file: " + S->output_fname;
         } else {
             S->run_time_results = QJsonDocument::fromJson(run_time_results_json.toLatin1()).object();
             S->success = S->run_time_results["success"].toBool();
@@ -230,15 +327,33 @@ void MPDaemon::slot_pript_qprocess_finished()
         printf("successfully\n");
     else
         printf("with error: %s\n", S->error.toLatin1().data());
+    if (S->qprocess) {
+        delete S->qprocess;
+        S->qprocess = 0;
+    }
+    if (S->stdout_file) {
+        S->stdout_file->close();
+        delete S->stdout_file;
+        S->stdout_file = 0;
+    }
 }
 
 void MPDaemon::slot_qprocess_output()
 {
+
     QProcess* P = qobject_cast<QProcess*>(sender());
     if (!P)
         return;
     QByteArray str = P->readAll();
-    printf("%s", str.data());
+    QString pript_id = P->property("pript_id").toString();
+    if ((d->m_pripts.contains(pript_id)) && (d->m_pripts[pript_id].stdout_file)) {
+        if (d->m_pripts[pript_id].stdout_file->isOpen()) {
+            d->m_pripts[pript_id].stdout_file->write(str);
+            d->m_pripts[pript_id].stdout_file->flush();
+        }
+    } else {
+        printf("%s", str.data());
+    }
 }
 
 void MPDaemonPrivate::write_info()
@@ -272,6 +387,7 @@ void MPDaemonPrivate::write_info()
     write_text_file(fname + ".tmp", json);
     /// Witold I don't think rename is an atomic operation. Is there a way to guarantee that I don't read the file halfway through the rename?
     QFile::rename(fname + ".tmp", fname);
+    QFile::setPermissions(fname, QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther);
 
     //finally, clean up
     QStringList list = QDir(MPDaemon::daemonPath() + "/info").entryList(QStringList("*.info"), QDir::Files, QDir::Name);
@@ -289,9 +405,11 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
 {
     QString command = obj.value("command").toString();
     if (command == "stop") {
+        debug_log(__FUNCTION__, __FILE__, __LINE__);
         m_is_running = false;
         write_info();
     } else if (command == "queue-script") {
+        debug_log(__FUNCTION__, __FILE__, __LINE__);
         MPDaemonPript S = pript_obj_to_struct(obj);
         S.prtype = ScriptType;
         if (m_pripts.contains(S.id)) {
@@ -301,6 +419,7 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
         printf("QUEUING SCRIPT %s\n", S.id.toLatin1().data());
         m_pripts[S.id] = S;
     } else if (command == "queue-process") {
+        debug_log(__FUNCTION__, __FILE__, __LINE__);
         MPDaemonPript P = pript_obj_to_struct(obj);
         P.prtype = ProcessType;
         if (m_pripts.contains(P.id)) {
@@ -329,6 +448,8 @@ bool MPDaemonPrivate::handle_scripts()
 
 bool MPDaemonPrivate::launch_next_pript(PriptType prtype)
 {
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     QStringList keys = m_pripts.keys();
     foreach(QString key, keys)
     {
@@ -343,6 +464,8 @@ bool MPDaemonPrivate::launch_next_pript(PriptType prtype)
 
 bool MPDaemonPrivate::launch_pript(QString pript_id)
 {
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     MPDaemonPript* S;
     if (!m_pripts.contains(pript_id))
         return false;
@@ -357,8 +480,8 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
 
     if (S->prtype == ScriptType) {
         args << "run-script";
-        if (!S->output_file.isEmpty()) {
-            args << "--~script_output=" + S->output_file;
+        if (!S->output_fname.isEmpty()) {
+            args << "--~script_output=" + S->output_fname;
         }
         foreach(QString fname, S->script_paths)
         {
@@ -367,12 +490,14 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         QJsonObject parameters = variantmap_to_json_obj(S->parameters);
         QString parameters_json = QJsonDocument(parameters).toJson();
         QString par_fname = CacheManager::globalInstance()->makeLocalFile(S->id + ".par", CacheManager::ShortTerm);
+        write_text_file(par_fname, parameters_json);
+        QFile::setPermissions(par_fname, QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther);
         args << par_fname;
     } else if (S->prtype == ProcessType) {
         args << "run-process";
         args << S->processor_name;
-        if (!S->output_file.isEmpty())
-            args << "--~process_output=" + S->output_file;
+        if (!S->output_fname.isEmpty())
+            args << "--~process_output=" + S->output_fname;
         QStringList pkeys = S->parameters.keys();
         foreach(QString pkey, pkeys)
         {
@@ -380,6 +505,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         }
     }
     QProcess* qprocess = new QProcess;
+    qprocess->setProperty("pript_id", pript_id);
     qprocess->setProcessChannelMode(QProcess::MergedChannels);
     QObject::connect(qprocess, SIGNAL(readyRead()), q, SLOT(slot_qprocess_output()));
     qprocess->setProperty("pript_id", pript_id.toLatin1().data());
@@ -402,6 +528,14 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     qprocess->start(exe, args);
     if (qprocess->waitForStarted()) {
         S->qprocess = qprocess;
+        if (!S->stdout_fname.isEmpty()) {
+            S->stdout_file = new QFile(S->stdout_fname);
+            if (!S->stdout_file->open(QFile::WriteOnly)) {
+                qWarning() << "Unable to open stdout file for writing: " + S->stdout_fname;
+                delete S->stdout_file;
+                S->stdout_file = 0;
+            }
+        }
         S->is_running = true;
         return true;
 
@@ -436,6 +570,7 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
     {
         if (!m_pripts[key].is_finished) {
             if ((m_pripts[key].parent_pid) && (!MPDaemon::pidExists(m_pripts[key].parent_pid))) {
+                debug_log(__FUNCTION__, __FILE__, __LINE__);
                 if (m_pripts[key].is_running) {
                     if (m_pripts[key].qprocess) {
                         if (!m_pripts[key].qprocess->property("terminating").toBool()) {
@@ -451,9 +586,9 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
                     }
                 } else {
                     if (m_pripts[key].prtype == ScriptType) {
-                        qWarning() << "Removing script: " + key;
+                        qWarning() << "Removing orphan script: " + key + " " + m_pripts[key].script_paths.value(0);
                     } else {
-                        qWarning() << "Removing process: " + key;
+                        qWarning() << "Removing orphan process: " + key + " " + m_pripts[key].processor_name;
                     }
                     m_pripts.remove(key);
                 }
@@ -467,27 +602,34 @@ bool MPDaemon::pidExists(qint64 pid)
 {
     /// TODO is this the best way to see if process exists?
     return (kill(pid, 0) == 0);
+    /*
+    QString i_am_alive_fname=CacheManager::globalInstance()->makeLocalFile(QString("i_am_alive.%1.txt").arg(pid));
+    return (QFileInfo(i_am_alive_fname).lastModified().secsTo(QDateTime::currentDateTime())<=5000);
+    */
+    //return QDir("/proc").exists(QString("%1").arg(pid));
 }
 
-bool MPDaemon::waitForFinishedAndWriteOutput(QProcess *P)
+bool MPDaemon::waitForFinishedAndWriteOutput(QProcess* P)
 {
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     P->waitForStarted();
-    while (P->state()==QProcess::Running) {
+    while (P->state() == QProcess::Running) {
         P->waitForReadyRead(100);
-        QByteArray str=P->readAll();
-        if (str.count()>0) {
-            printf("%s",str.data());
+        QByteArray str = P->readAll();
+        if (str.count() > 0) {
+            printf("%s", str.data());
         }
         qApp->processEvents();
     }
     {
         P->waitForReadyRead();
-        QByteArray str=P->readAll();
-        if (str.count()>0) {
-            printf("%s",str.data());
+        QByteArray str = P->readAll();
+        if (str.count() > 0) {
+            printf("%s", str.data());
         }
     }
-    return (P->state()!=QProcess::Running);
+    return (P->state() != QProcess::Running);
 }
 
 int MPDaemonPrivate::num_running_pripts(PriptType prtype)
@@ -544,7 +686,7 @@ QJsonObject variantmap_to_json_obj(QVariantMap map)
     foreach(QString key, keys)
     {
         /// Witold I would like to map numbers to numbers here. Can you help?
-        ret[key] = QJsonValue(map[key].toString());
+        ret[key] = QJsonValue::fromVariant(map[key]);
     }
     return ret;
 }
@@ -567,7 +709,8 @@ QJsonObject pript_struct_to_obj(MPDaemonPript S)
     ret["is_running"] = S.is_running;
     ret["parameters"] = variantmap_to_json_obj(S.parameters);
     ret["id"] = S.id;
-    ret["output_file"] = S.output_file;
+    ret["output_fname"] = S.output_fname;
+    ret["stdout_fname"] = S.stdout_fname;
     ret["success"] = S.success;
     ret["error"] = S.error;
     ret["parent_pid"] = QString("%1").arg(S.parent_pid);
@@ -588,7 +731,8 @@ MPDaemonPript pript_obj_to_struct(QJsonObject obj)
     ret.is_running = obj.value("is_running").toBool();
     ret.parameters = json_obj_to_variantmap(obj.value("parameters").toObject());
     ret.id = obj.value("id").toString();
-    ret.output_file = obj.value("output_file").toString();
+    ret.output_fname = obj.value("output_fname").toString();
+    ret.stdout_fname = obj.value("stdout_fname").toString();
     ret.success = obj.value("success").toBool();
     ret.error = obj.value("error").toString();
     ret.parent_pid = obj.value("parent_pid").toString().toLongLong();

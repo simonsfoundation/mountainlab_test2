@@ -35,18 +35,22 @@ CacheManager::~CacheManager()
 void CacheManager::setLocalBasePath(const QString& path)
 {
     d->m_local_base_path = path;
+    QFile::Permissions perm=QFile::ReadOwner|QFile::ReadGroup|QFile::ReadOther|QFile::WriteOwner|QFile::WriteGroup|QFile::WriteOther|QFile::ExeOwner|QFile::ExeGroup|QFile::ExeOther;
     if (!QDir(path).exists()) {
         QString parent = QFileInfo(path).path();
         QString name = QFileInfo(path).fileName();
         if (!QDir(parent).mkdir(name)) {
             qWarning() << "Unable to create local base path" << path;
         }
+        QFile(path).setPermissions(perm);
     }
     if (!QDir(path + "/tmp_short_term").exists()) {
         QDir(path).mkdir("tmp_short_term");
+        QFile(path+"/tmp_short_term").setPermissions(perm);
     }
     if (!QDir(path + "/tmp_long_term").exists()) {
         QDir(path).mkdir("tmp_long_term");
+        QFile(path+"/tmp_long_term").setPermissions(perm);
     }
 }
 
@@ -89,6 +93,11 @@ QString CacheManager::makeLocalFile(const QString& file_name_in, CacheManager::D
     }
     QString ret=QString("%1/%2/%3").arg(d->m_local_base_path).arg(str).arg(file_name);
     return ret;
+}
+
+QString CacheManager::localTempPath()
+{
+    return d->m_local_base_path;
 }
 
 void CacheManager::cleanUp()
