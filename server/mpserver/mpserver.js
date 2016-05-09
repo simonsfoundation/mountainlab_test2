@@ -5,6 +5,7 @@ var http=require('http');
 //// tasks
 var actions={};
 actions['queueScript']=require('./queuescript.js').queueScript;
+actions['getDaemonState']=require('./getdaemonstate.js').getDaemonState;
 
 //// configuration
 var config={};
@@ -41,9 +42,14 @@ function MPManager() {
 
 	function initialize_task(req,callback) {
 		if (req.action in actions) {
-			return new actions[req.action](config,req,callback);
+			console.log(req.action);
+			return new actions[req.action](config,req,function(resp) {
+				console.log('Done with '+req.action);
+				callback(resp);
+			});
 		}
 		else {
+			console.log('Unrecognized action: '+req.action);
 			callback({success:false,error:'Unrecognized action: '+req.action});
 			return null;
 		}

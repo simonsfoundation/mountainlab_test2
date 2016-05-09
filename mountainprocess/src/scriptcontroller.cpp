@@ -24,7 +24,7 @@ public:
     ScriptController* q;
 
     static QProcess* queue_process(QString processor_name, const QVariantMap& parameters);
-    static bool queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters);
+    //static bool queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters);
     static void wait(qint64 msec);
 };
 
@@ -68,6 +68,7 @@ QString ScriptController::createTemporaryFileName(const QString& code)
     return CacheManager::globalInstance()->makeLocalFile(code, CacheManager::LongTerm);
 }
 
+/*
 bool ScriptController::runProcess(const QString& processor_name, const QString& parameters_json)
 {
     QJsonObject params = QJsonDocument::fromJson(parameters_json.toLatin1()).object();
@@ -92,6 +93,7 @@ bool ScriptController::runProcess(const QString& processor_name, const QString& 
         return false;
     }
 }
+*/
 
 struct PipelineNode {
     PipelineNode()
@@ -302,6 +304,7 @@ QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const Q
     return P1;
 }
 
+/*
 bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters)
 {
     QString exe = qApp->applicationFilePath();
@@ -331,6 +334,7 @@ bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString proces
     }
     return true;
 }
+*/
 
 void ScriptControllerPrivate::wait(qint64 msec)
 {

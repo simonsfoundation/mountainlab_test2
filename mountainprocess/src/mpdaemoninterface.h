@@ -18,7 +18,7 @@ public:
     virtual ~MPDaemonInterface();
     bool start();
     bool stop();
-    QJsonObject getInfo();
+    QJsonObject getDaemonState();
     bool queueScript(const MPDaemonPript& script);
     bool queueProcess(const MPDaemonPript& process);
 

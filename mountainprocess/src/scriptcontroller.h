@@ -19,7 +19,7 @@ public:
     Q_INVOKABLE QString fileChecksum(const QString& fname);
     Q_INVOKABLE QString stringChecksum(const QString& str);
     Q_INVOKABLE QString createTemporaryFileName(const QString& code);
-    Q_INVOKABLE bool runProcess(const QString& processor_name, const QString& parameters_json);
+    //Q_INVOKABLE bool runProcess(const QString& processor_name, const QString& parameters_json);
     Q_INVOKABLE bool runPipeline(const QString& json);
     Q_INVOKABLE void log(const QString& message);
 

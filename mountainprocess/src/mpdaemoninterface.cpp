@@ -21,9 +21,9 @@ public:
 
     bool daemon_is_running();
     bool send_daemon_command(QJsonObject obj, qint64 timeout_msec);
-    QString last_info_fname();
-    QJsonObject get_last_info(qint64 max_elapsed_msec);
-    //qint64 msec_since_last_info(); //Maybe not used
+    QString last_daemon_state_fname();
+    QJsonObject get_last_daemon_state(qint64 max_elapsed_msec);
+    //qint64 msec_since_last_daemon_state(); //Maybe not used
     QDateTime get_time_from_timestamp_of_fname(QString fname);
 };
 
@@ -48,12 +48,13 @@ bool MPDaemonInterface::start()
     QStringList args;
     args << "-internal-daemon-start";
     if (!QProcess::startDetached(exe, args)) {
-        printf("Unable to startDetached: %s\n",exe.toLatin1().data());
+        printf("Unable to startDetached: %s\n", exe.toLatin1().data());
         return false;
     }
-    for (int i=0; i<10; i++) {
+    for (int i = 0; i < 10; i++) {
         MPDaemon::wait(100);
-        if (d->daemon_is_running()) return true;
+        if (d->daemon_is_running())
+            return true;
     }
     printf("Unable to start daemon after waiting.\n");
     return false;
@@ -78,9 +79,9 @@ bool MPDaemonInterface::stop()
     }
 }
 
-QJsonObject MPDaemonInterface::getInfo()
+QJsonObject MPDaemonInterface::getDaemonState()
 {
-    return d->get_last_info(10000);
+    return d->get_last_daemon_state(10000);
 }
 
 bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
@@ -119,7 +120,7 @@ bool MPDaemonInterface::queueProcess(const MPDaemonPript& process)
 
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
-    QJsonObject obj = get_last_info(25000); //be conservative, because ideally it will have stopped gracefully
+    QJsonObject obj = get_last_daemon_state(25000); //be conservative, because ideally it will have stopped gracefully
     if (!obj.contains("is_running")) {
         printf("is_running field NOT found\n");
     }
@@ -128,16 +129,17 @@ bool MPDaemonInterfacePrivate::daemon_is_running()
 
 bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_timeout)
 {
-    if (!msec_timeout) msec_timeout=1000;
+    if (!msec_timeout)
+        msec_timeout = 1000;
 
     static long num = 100000;
     QString timestamp = MPDaemon::makeTimestamp();
-    QString fname = QString("%1/commands/%2.%3.command").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
+    QString fname = QString("%1/daemon_commands/%2.%3.command").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
     num++;
 
     QString json = QJsonDocument(obj).toJson();
     write_text_file(fname, json);
-    QFile::setPermissions(fname,QFile::ReadOwner|QFile::ReadGroup|QFile::ReadOther|QFile::WriteOwner|QFile::WriteGroup|QFile::WriteOther);
+    QFile::setPermissions(fname, QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther);
     QTime timer;
     timer.start();
     //wait until it has been received by the daemon
@@ -146,26 +148,26 @@ bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_
     return (!QFile::exists(fname));
 }
 
-QString MPDaemonInterfacePrivate::last_info_fname()
+QString MPDaemonInterfacePrivate::last_daemon_state_fname()
 {
-    QString path = MPDaemon::daemonPath() + "/info";
-    QStringList list = QDir(path).entryList(QStringList("*.info"), QDir::Files, QDir::Name);
+    QString path = MPDaemon::daemonPath() + "/daemon_state";
+    QStringList list = QDir(path).entryList(QStringList("*.json"), QDir::Files, QDir::Name);
     if (list.isEmpty())
         return "";
     return path + "/" + list[list.count() - 1];
 }
 
-QJsonObject MPDaemonInterfacePrivate::get_last_info(qint64 max_elapsed_msec)
+QJsonObject MPDaemonInterfacePrivate::get_last_daemon_state(qint64 max_elapsed_msec)
 {
     qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
     QJsonObject ret;
-    QString fname = last_info_fname();
-    qDebug() << "last_info_fname:" << fname << QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss-zzz");
+    QString fname = last_daemon_state_fname();
+    qDebug() << "last_daemon_state_fname:" << fname << QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss-zzz");
     if (fname.isEmpty())
         return ret;
     qint64 elapsed = get_time_from_timestamp_of_fname(fname).msecsTo(QDateTime::currentDateTime());
     if (elapsed > max_elapsed_msec) {
-        qDebug() << QString("get_last_info: ELAPSED %1 > %2").arg(elapsed).arg(max_elapsed_msec);
+        qDebug() << QString("get_last_daemon_state: ELAPSED %1 > %2").arg(elapsed).arg(max_elapsed_msec);
         return ret;
     }
     QString json = read_text_file(fname);
@@ -175,9 +177,9 @@ QJsonObject MPDaemonInterfacePrivate::get_last_info(qint64 max_elapsed_msec)
 }
 
 /*
-qint64 MPDaemonInterfacePrivate::msec_since_last_info()
+qint64 MPDaemonInterfacePrivate::msec_since_last_daemon_state()
 {
-    QString fname = last_info_fname();
+    QString fname = last_daemon_state_fname();
     if (fname.isEmpty())
         return 999000;
     return get_time_from_timestamp_of_fname(fname).msecsTo(QDateTime::currentDateTime());

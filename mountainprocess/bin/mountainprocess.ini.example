@@ -1,3 +1,5 @@
 [general]
 processor_paths = ../processors
+num_cores = 8
+memory_gb = 8
 

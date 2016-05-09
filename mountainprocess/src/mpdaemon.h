@@ -15,6 +15,16 @@
 #include <QProcess>
 #include <QFile>
 
+struct ProcessResources {
+    ProcessResources()
+    {
+        num_cores = 0;
+        memory_gb = 0;
+    }
+    double num_cores;
+    double memory_gb;
+};
+
 class MPDaemonPrivate;
 class MPDaemon : public QObject {
     Q_OBJECT
@@ -22,18 +32,18 @@ public:
     friend class MPDaemonPrivate;
     MPDaemon();
     virtual ~MPDaemon();
+    void setTotalResourcesAvailable(ProcessResources PR);
     bool run();
 
     static QString daemonPath();
     static QString makeTimestamp(const QDateTime& dt = QDateTime::currentDateTime());
     static QDateTime parseTimestamp(const QString& timestamp);
-    static bool waitForFileToAppear(QString fname, qint64 timeout_ms = -1, bool remove_on_appear = false, qint64 parent_pid=0, QString stdout_fname="");
+    static bool waitForFileToAppear(QString fname, qint64 timeout_ms = -1, bool remove_on_appear = false, qint64 parent_pid = 0, QString stdout_fname = "");
     static void wait(qint64 msec);
     static bool pidExists(qint64 pid);
-    static bool waitForFinishedAndWriteOutput(QProcess *P);
+    static bool waitForFinishedAndWriteOutput(QProcess* P);
 
-private
-slots:
+private slots:
     void slot_commands_directory_changed();
     void slot_pript_qprocess_finished();
     void slot_qprocess_output();
@@ -41,6 +51,19 @@ slots:
 private:
     MPDaemonPrivate* d;
 };
+
+struct ProcessRuntimeOpts {
+    ProcessRuntimeOpts()
+    {
+        num_cores_allotted = 1;
+        memory_gb_allotted = 1;
+    }
+    double num_cores_allotted;
+    double memory_gb_allotted;
+};
+
+
+bool is_at_most(ProcessResources PR1, ProcessResources PR2);
 
 enum PriptType {
     ScriptType,
@@ -53,11 +76,13 @@ struct MPDaemonPript {
     {
         is_running = false;
         is_finished = false;
-        success=false;
-        parent_pid=0;
-        qprocess=0;
-        stdout_file=0;
-        prtype=ScriptType;
+        success = false;
+        parent_pid = 0;
+        qprocess = 0;
+        stdout_file = 0;
+        prtype = ScriptType;
+        num_cores_requested = 1;
+        memory_gb_requested = 1;
     }
     PriptType prtype;
     QString id;
@@ -68,16 +93,19 @@ struct MPDaemonPript {
     bool is_finished;
     bool success;
     QString error;
-    QJsonObject run_time_results;
+    QJsonObject runtime_results;
     qint64 parent_pid;
-    QProcess *qprocess;
-    QFile *stdout_file;
+    QProcess* qprocess;
+    QFile* stdout_file;
 
     //For a script:
     QStringList script_paths;
 
     //For a process:
     QString processor_name;
+    double num_cores_requested;
+    double memory_gb_requested;
+    ProcessRuntimeOpts runtime_opts; //defined at run time
 };
 
 QJsonObject pript_struct_to_obj(MPDaemonPript S);

@@ -19,6 +19,7 @@
 #include "cachemanager.h"
 #include "unistd.h" //for usleep
 #include <sys/stat.h> //for mkfifo
+#include "processmanager.h"
 
 /// TODO check for bad situation of more than one daemon running simultaneously
 
@@ -28,12 +29,16 @@ public:
     bool m_is_running;
     QFileSystemWatcher m_watcher;
     QMap<QString, MPDaemonPript> m_pripts;
+    ProcessResources m_total_resources_available;
 
-    void write_info();
+    void write_daemon_state();
     void process_command(QJsonObject obj);
 
     bool handle_scripts();
     bool handle_processes();
+    bool okay_to_run_process(const QString& key);
+    QStringList get_input_paths(MPDaemonPript P);
+    QStringList get_output_paths(MPDaemonPript P);
     int num_running_scripts()
     {
         return num_running_pripts(ScriptType);
@@ -50,22 +55,16 @@ public:
     {
         return num_pending_pripts(ProcessType);
     }
-    bool launch_next_script()
-    {
-        return launch_next_pript(ScriptType);
-    }
-    bool launch_next_process()
-    {
-        return launch_next_pript(ProcessType);
-    }
 
     void stop_orphan_processes_and_scripts();
 
     /////////////////////////////////
     int num_running_pripts(PriptType prtype);
     int num_pending_pripts(PriptType prtype);
-    bool launch_next_pript(PriptType prtype);
+    bool launch_next_script();
     bool launch_pript(QString id);
+    ProcessResources compute_process_resources_available();
+    ProcessResources compute_process_resources_needed(MPDaemonPript P);
 };
 
 void append_line_to_file(QString fname, QString line)
@@ -104,6 +103,9 @@ MPDaemon::MPDaemon()
     d->q = this;
     d->m_is_running = false;
 
+    d->m_total_resources_available.num_cores=12;
+    d->m_total_resources_available.memory_gb=8;
+
     connect(&d->m_watcher, SIGNAL(directoryChanged(QString)), this, SLOT(slot_commands_directory_changed()));
 }
 
@@ -121,6 +123,11 @@ MPDaemon::~MPDaemon()
     delete d;
 }
 
+void MPDaemon::setTotalResourcesAvailable(ProcessResources PR)
+{
+    d->m_total_resources_available=PR;
+}
+
 bool MPDaemon::run()
 {
     debug_log(__FUNCTION__, __FILE__, __LINE__);
@@ -134,16 +141,16 @@ bool MPDaemon::run()
     if (!d->m_watcher.directories().isEmpty()) {
         d->m_watcher.removePaths(d->m_watcher.directories());
     }
-    d->m_watcher.addPath(MPDaemon::daemonPath() + "/commands");
+    d->m_watcher.addPath(MPDaemon::daemonPath() + "/daemon_commands");
 
     QTime timer;
     timer.start();
-    d->write_info();
+    d->write_daemon_state();
     QTime timer4;
     timer4.start();
     while (d->m_is_running) {
         if (timer.elapsed() > 5000) {
-            d->write_info();
+            d->write_daemon_state();
             timer.restart();
             printf(".");
         }
@@ -185,8 +192,8 @@ QString MPDaemon::daemonPath()
     QFile::Permissions perm = QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther | QFile::ExeOwner | QFile::ExeGroup | QFile::ExeOther;
     QString ret = CacheManager::globalInstance()->localTempPath() + "/mpdaemon";
     mkdir_if_doesnt_exist(ret, perm);
-    mkdir_if_doesnt_exist(ret + "/info", perm);
-    mkdir_if_doesnt_exist(ret + "/commands", perm);
+    mkdir_if_doesnt_exist(ret + "/daemon_state", perm);
+    mkdir_if_doesnt_exist(ret + "/daemon_commands", perm);
     mkdir_if_doesnt_exist(ret + "/completed_processes", perm);
     return ret;
 }
@@ -271,7 +278,7 @@ void MPDaemon::wait(qint64 msec)
 
 void MPDaemon::slot_commands_directory_changed()
 {
-    QString path = MPDaemon::daemonPath() + "/commands";
+    QString path = MPDaemon::daemonPath() + "/daemon_commands";
     QStringList fnames = QDir(path).entryList(QStringList("*.command"), QDir::Files, QDir::Name);
     foreach (QString fname, fnames) {
         QString path0 = path + "/" + fname;
@@ -311,15 +318,15 @@ void MPDaemon::slot_pript_qprocess_finished()
     S->is_running = false;
     if (!S->output_fname.isEmpty()) {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
-        QString run_time_results_json = read_text_file(S->output_fname);
-        if (run_time_results_json.isEmpty()) {
+        QString runtime_results_json = read_text_file(S->output_fname);
+        if (runtime_results_json.isEmpty()) {
             S->success = false;
             S->error = "Could not read results file: " + S->output_fname;
         }
         else {
-            S->run_time_results = QJsonDocument::fromJson(run_time_results_json.toLatin1()).object();
-            S->success = S->run_time_results["success"].toBool();
-            S->error = S->run_time_results["error"].toString();
+            S->runtime_results = QJsonDocument::fromJson(runtime_results_json.toLatin1()).object();
+            S->success = S->runtime_results["success"].toBool();
+            S->error = S->runtime_results["error"].toString();
         }
     }
     else {
@@ -336,7 +343,7 @@ void MPDaemon::slot_pript_qprocess_finished()
     else
         printf("with error: %s\n", S->error.toLatin1().data());
     if (S->qprocess) {
-        if (S->qprocess->state()==QProcess::Running) {
+        if (S->qprocess->state() == QProcess::Running) {
             if (S->qprocess->waitForFinished(1000)) {
                 delete S->qprocess;
             }
@@ -353,6 +360,7 @@ void MPDaemon::slot_pript_qprocess_finished()
         delete S->stdout_file;
         S->stdout_file = 0;
     }
+    d->write_daemon_state();
 }
 
 void MPDaemon::slot_qprocess_output()
@@ -374,17 +382,17 @@ void MPDaemon::slot_qprocess_output()
     }
 }
 
-void MPDaemonPrivate::write_info()
+void MPDaemonPrivate::write_daemon_state()
 {
-    /// Witold rather than starting at 100000, I'd like to format the num in the fname to be link 0000023. Could you please help?
+    /// Witold rather than starting at 100000, I'd like to format the num in the fname to be like 0000023. Could you please help?
     static long num = 100000;
     QString timestamp = MPDaemon::makeTimestamp();
-    QString fname = QString("%1/info/%2.%3.info").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
+    QString fname = QString("%1/daemon_state/%2.%3.json").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
     num++;
 
-    QJsonObject info;
+    QJsonObject state;
 
-    info["is_running"] = m_is_running;
+    state["is_running"] = m_is_running;
 
     {
         QJsonObject scripts;
@@ -396,20 +404,30 @@ void MPDaemonPrivate::write_info()
             else
                 processes[key] = pript_struct_to_obj(m_pripts[key]);
         }
-        info["scripts"] = scripts;
-        info["processes"] = processes;
+        state["scripts"] = scripts;
+        state["processes"] = processes;
     }
 
-    QString json = QJsonDocument(info).toJson();
+    QString json = QJsonDocument(state).toJson();
     write_text_file(fname + ".tmp", json);
     /// Witold I don't think rename is an atomic operation. Is there a way to guarantee that I don't read the file halfway through the rename?
     QFile::rename(fname + ".tmp", fname);
     QFile::setPermissions(fname, QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther);
 
+    //remove the pripts that are finished
+    {
+        QStringList keys = m_pripts.keys();
+        foreach (QString key, keys) {
+            if (m_pripts[key].is_finished) {
+                m_pripts.remove(key);
+            }
+        }
+    }
+
     //finally, clean up
-    QStringList list = QDir(MPDaemon::daemonPath() + "/info").entryList(QStringList("*.info"), QDir::Files, QDir::Name);
+    QStringList list = QDir(MPDaemon::daemonPath() + "/daemin_state").entryList(QStringList("*.json"), QDir::Files, QDir::Name);
     foreach (QString fname, list) {
-        QString path0 = MPDaemon::daemonPath() + "/info/" + fname;
+        QString path0 = MPDaemon::daemonPath() + "/daemon_state/" + fname;
         qint64 secs = QFileInfo(path0).lastModified().secsTo(QDateTime::currentDateTime());
         if ((secs <= -60) || (secs >= 60)) { //I feel a bit paranoid. That's why I allow some future stuff.
             QFile::remove(path0);
@@ -423,7 +441,7 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
     if (command == "stop") {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
         m_is_running = false;
-        write_info();
+        write_daemon_state();
     }
     else if (command == "queue-script") {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
@@ -454,26 +472,28 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
 
 bool MPDaemonPrivate::handle_scripts()
 {
-    int max_simultaneous_scripts=10;
+    int max_simultaneous_scripts = 100;
     if (num_running_scripts() < max_simultaneous_scripts) {
         if (num_pending_scripts() > 0) {
-            if (!launch_next_script()) {
+            if (launch_next_script()) {
+                printf("%d scripts running.\n", num_running_scripts());
+            }
+            else {
                 qWarning() << "Unexpected problem. Failed to launch_next_script";
                 return false;
             }
-            printf("%d scripts running.\n",num_running_scripts());
         }
     }
     return true;
 }
 
-bool MPDaemonPrivate::launch_next_pript(PriptType prtype)
+bool MPDaemonPrivate::launch_next_script()
 {
     debug_log(__FUNCTION__, __FILE__, __LINE__);
 
     QStringList keys = m_pripts.keys();
     foreach (QString key, keys) {
-        if (m_pripts[key].prtype == prtype) {
+        if (m_pripts[key].prtype == ScriptType) {
             if ((!m_pripts[key].is_running) && (!m_pripts[key].is_finished)) {
                 return launch_pript(key);
             }
@@ -524,6 +544,8 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         foreach (QString pkey, pkeys) {
             args << QString("--%1=%2").arg(pkey).arg(S->parameters[pkey].toString());
         }
+        S->runtime_opts.num_cores_allotted = S->num_cores_requested;
+        S->runtime_opts.memory_gb_allotted = S->memory_gb_requested;
     }
     debug_log(__FUNCTION__, __FILE__, __LINE__);
     QProcess* qprocess = new QProcess;
@@ -559,6 +581,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
             }
         }
         S->is_running = true;
+        this->write_daemon_state();
         return true;
     }
     else {
@@ -576,19 +599,145 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     }
 }
 
+ProcessResources MPDaemonPrivate::compute_process_resources_available()
+{
+    ProcessResources ret = m_total_resources_available; /// TODO make these configurable
+    QStringList keys = m_pripts.keys();
+    foreach (QString key, keys) {
+        if (m_pripts[key].prtype == ProcessType) {
+            if (m_pripts[key].is_running) {
+                ProcessRuntimeOpts rtopts = m_pripts[key].runtime_opts;
+                ret.num_cores -= rtopts.num_cores_allotted;
+                ret.memory_gb -= rtopts.memory_gb_allotted;
+            }
+        }
+    }
+    return ret;
+}
+
+ProcessResources MPDaemonPrivate::compute_process_resources_needed(MPDaemonPript P)
+{
+    ProcessResources ret;
+    ret.num_cores = P.num_cores_requested;
+    ret.memory_gb = P.memory_gb_requested;
+    return ret;
+}
+
 bool MPDaemonPrivate::handle_processes()
 {
-    int max_simultaneous_processes=10;
+    ProcessResources pr_available = compute_process_resources_available();
+    QStringList keys = m_pripts.keys();
+    foreach (QString key, keys) {
+        if (m_pripts[key].prtype == ProcessType) {
+            if ((!m_pripts[key].is_running) && (!m_pripts[key].is_finished)) {
+                ProcessResources pr_needed = compute_process_resources_needed(m_pripts[key]);
+                if (is_at_most(pr_needed, pr_available)) {
+                    if (okay_to_run_process(key)) { //check whether there are io file conflicts at the moment
+                        launch_pript(key);
+                        pr_available.num_cores -= m_pripts[key].runtime_opts.num_cores_allotted;
+                        pr_available.memory_gb -= m_pripts[key].runtime_opts.memory_gb_allotted;
+                    }
+                }
+            }
+        }
+    }
+    /*
     if (num_running_pripts(ProcessType) < max_simultaneous_processes) {
         if (num_pending_processes() > 0) {
-            if (!launch_next_process()) {
-                qWarning() << "Unexpected problem. Failed to launch next process.";
-                return false;
+            if (launch_next_process()) { //may not launch if there is an output file conflict with already running process
+                printf("%d processes running\n", num_running_processes());
             }
-            printf("%d processes running\n",num_running_processes());
+        }
+    }
+    */
+    return true;
+}
+
+bool MPDaemonPrivate::okay_to_run_process(const QString& key)
+{
+    //first check that the processor is registered and that the parameters are okay
+    {
+        ProcessManager* PM = ProcessManager::globalInstance();
+        MPDaemonPript P0 = m_pripts[key];
+        MLProcessor MLP = PM->processor(P0.processor_name);
+        if (MLP.name != P0.processor_name) {
+            qWarning() << "Unable to find processor **: " + P0.processor_name;
+            return false;
+        }
+        if (!PM->checkParameters(P0.processor_name, P0.parameters)) {
+            qWarning() << "Failure in checkParameters: " + P0.processor_name;
+            return false;
+        }
+    }
+
+    //next we check that there are no running processes where the input or output files conflict with the proposed input or output files
+    //but note that it is okay for the same input file to be used in more than one simultaneous process
+    QSet<QString> pending_input_paths;
+    QSet<QString> pending_output_paths;
+    QStringList pripts_keys = m_pripts.keys();
+    foreach (QString key0, pripts_keys) {
+        if (m_pripts[key0].prtype == ProcessType) {
+            if (m_pripts[key0].is_running) {
+                QStringList input_paths = get_input_paths(m_pripts[key0]);
+                foreach (QString path0, input_paths) {
+                    pending_input_paths.insert(path0);
+                }
+                QStringList output_paths = get_output_paths(m_pripts[key0]);
+                foreach (QString path0, output_paths) {
+                    pending_output_paths.insert(path0);
+                }
+            }
+        }
+    }
+    {
+        QStringList proposed_input_paths = get_input_paths(m_pripts[key]);
+        QStringList proposed_output_paths = get_output_paths(m_pripts[key]);
+        foreach (QString path0, proposed_input_paths) {
+            if (pending_output_paths.contains(path0))
+                return false;
+        }
+        foreach (QString path0, proposed_output_paths) {
+            if (pending_input_paths.contains(path0))
+                return false;
+            if (pending_output_paths.contains(path0))
+                return false;
         }
     }
     return true;
+}
+
+QStringList MPDaemonPrivate::get_input_paths(MPDaemonPript P)
+{
+    QStringList ret;
+    if (P.prtype != ProcessType)
+        return ret;
+    ProcessManager* PM = ProcessManager::globalInstance();
+    MLProcessor MLP = PM->processor(P.processor_name);
+    QStringList pnames = MLP.inputs.keys();
+    foreach (QString pname, pnames) {
+        QString path0 = P.parameters.value(pname).toString();
+        if (!path0.isEmpty()) {
+            ret << path0;
+        }
+    }
+    return ret;
+}
+
+QStringList MPDaemonPrivate::get_output_paths(MPDaemonPript P)
+{
+    QStringList ret;
+    if (P.prtype != ProcessType)
+        return ret;
+    ProcessManager* PM = ProcessManager::globalInstance();
+    MLProcessor MLP = PM->processor(P.processor_name);
+    QStringList pnames = MLP.outputs.keys();
+    foreach (QString pname, pnames) {
+        QString path0 = P.parameters.value(pname).toString();
+        if (!path0.isEmpty()) {
+            ret << path0;
+        }
+    }
+    return ret;
 }
 
 void MPDaemonPrivate::stop_orphan_processes_and_scripts()
@@ -768,4 +917,9 @@ MPDaemonPript pript_obj_to_struct(QJsonObject obj)
         ret.processor_name = obj.value("processor_name").toString();
     }
     return ret;
+}
+
+bool is_at_most(ProcessResources PR1, ProcessResources PR2)
+{
+    return ((PR1.num_cores <= PR2.num_cores) && (PR1.memory_gb <= PR2.memory_gb));
 }
