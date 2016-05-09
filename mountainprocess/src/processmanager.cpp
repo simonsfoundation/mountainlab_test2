@@ -128,6 +128,11 @@ QStringList ProcessManager::processorNames() const
     return d->m_processors.keys();
 }
 
+MLProcessor ProcessManager::processor(const QString &name)
+{
+    return d->m_processors.value(name);
+}
+
 QString ProcessManager::startProcess(const QString& processor_name, const QVariantMap& parameters)
 {
     if (!this->checkParameters(processor_name, parameters))

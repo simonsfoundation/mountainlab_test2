@@ -53,6 +53,7 @@ public:
     bool loadProcessors(const QString& path, bool recursive = true);
     bool loadProcessorFile(const QString& path);
     QStringList processorNames() const;
+    MLProcessor processor(const QString &name);
 
     bool checkParameters(const QString& processor_name, const QVariantMap& parameters);
     bool processAlreadyCompleted(const QString& processor_name, const QVariantMap& parameters);
