@@ -305,7 +305,6 @@ void MPDaemon::slot_pript_qprocess_finished()
         qWarning() << "Unexpected problem in slot_pript_qprocess_finished. Unable to find script or process with id: " + pript_id;
         return;
     }
-    debug_log(__FUNCTION__, __FILE__, __LINE__);
     S->is_finished = true;
     S->is_running = false;
     if (!S->output_fname.isEmpty()) {
@@ -330,7 +329,6 @@ void MPDaemon::slot_pript_qprocess_finished()
     else {
         printf("  Process %s %s finished ", S->processor_name.toLatin1().data(), pript_id.toLatin1().data());
     }
-    debug_log(__FUNCTION__, __FILE__, __LINE__);
     if (S->success)
         printf("successfully\n");
     else
@@ -346,7 +344,6 @@ void MPDaemon::slot_pript_qprocess_finished()
         }
         S->qprocess = 0;
     }
-    debug_log(__FUNCTION__, __FILE__, __LINE__);
     if (S->stdout_file) {
         if (S->stdout_file->isOpen()) {
             S->stdout_file->close();
@@ -354,7 +351,6 @@ void MPDaemon::slot_pript_qprocess_finished()
         delete S->stdout_file;
         S->stdout_file = 0;
     }
-    debug_log(__FUNCTION__, __FILE__, __LINE__);
 }
 
 void MPDaemon::slot_qprocess_output()
@@ -495,8 +491,6 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     if (S->is_finished)
         return false;
 
-    debug_log(__FUNCTION__, __FILE__, __LINE__);
-
     QString exe = qApp->applicationFilePath();
     QStringList args;
 
@@ -509,7 +503,6 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         foreach (QString fname, S->script_paths) {
             args << fname;
         }
-        debug_log(__FUNCTION__, __FILE__, __LINE__);
         QJsonObject parameters = variantmap_to_json_obj(S->parameters);
         QString parameters_json = QJsonDocument(parameters).toJson();
         QString par_fname = CacheManager::globalInstance()->makeLocalFile(S->id + ".par", CacheManager::ShortTerm);
@@ -534,7 +527,6 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     qprocess->setProcessChannelMode(QProcess::MergedChannels);
     QObject::connect(qprocess, SIGNAL(readyRead()), q, SLOT(slot_qprocess_output()));
     if (S->prtype == ScriptType) {
-        debug_log(__FUNCTION__, __FILE__, __LINE__);
         printf("   Launching script %s: ", pript_id.toLatin1().data());
         foreach (QString fname, S->script_paths) {
             QString str = QFileInfo(fname).fileName();
@@ -543,7 +535,6 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         printf("\n");
     }
     else {
-        debug_log(__FUNCTION__, __FILE__, __LINE__);
         printf("   Launching process %s %s: ", S->processor_name.toLatin1().data(), pript_id.toLatin1().data());
         QString cmd = args.join(" ");
         printf("%s\n", cmd.toLatin1().data());
@@ -554,7 +545,6 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     debug_log(__FUNCTION__, __FILE__, __LINE__);
     qprocess->start(exe, args);
     if (qprocess->waitForStarted()) {
-        debug_log(__FUNCTION__, __FILE__, __LINE__);
         S->qprocess = qprocess;
         if (!S->stdout_fname.isEmpty()) {
             S->stdout_file = new QFile(S->stdout_fname);
@@ -565,7 +555,6 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
             }
         }
         S->is_running = true;
-        debug_log(__FUNCTION__, __FILE__, __LINE__);
         return true;
     }
     else {
