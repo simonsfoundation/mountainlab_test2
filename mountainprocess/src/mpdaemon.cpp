@@ -149,6 +149,7 @@ bool MPDaemon::run()
         }
         if (timer4.elapsed() > 5 * 60000) {
             printf("\n");
+            timer4.start();
         }
         QTime timer2;
         timer2.start();
@@ -165,6 +166,7 @@ bool MPDaemon::run()
         if (timer3.elapsed() > 3000) {
             qWarning() << "Processing events should not take this much time" << timer2.elapsed();
         }
+        MPDaemon::wait(100);
     }
     return true;
 }

@@ -314,7 +314,9 @@ void ProcessManager::slot_process_finished()
     {
         qprocess->waitForReadyRead();
         QByteArray str1=qprocess->readAll();
-        printf("%s",str1.data());
+        if (!str1.isEmpty()) {
+            printf("%s",str1.data());
+        }
     }
     QString id = qprocess->property("pp_id").toString();
     if (!d->m_processes.contains(id)) {
@@ -349,7 +351,9 @@ void ProcessManager::slot_qprocess_output()
     QProcess *P=qobject_cast<QProcess *>(sender());
     if (!P) return;
     QByteArray str=P->readAll();
-    printf("%s",str.data());
+    if (!str.isEmpty()) {
+        printf("%s",str.data());
+    }
 }
 
 void ProcessManagerPrivate::clear_all_processes()
