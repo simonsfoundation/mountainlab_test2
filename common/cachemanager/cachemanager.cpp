@@ -110,6 +110,7 @@ CacheManager *CacheManager::globalInstance()
     return theInstance;
 }
 
+/*
 void CacheManager::slot_remove_on_delete()
 {
     QString fname=sender()->property("CacheManager_file_to_remove").toString();
@@ -122,6 +123,7 @@ void CacheManager::slot_remove_on_delete()
         qWarning() << "Unexpected problem" << __FUNCTION__ << __FILE__ << __LINE__;
     }
 }
+*/
 
 QString CacheManagerPrivate::create_random_file_name()
 {

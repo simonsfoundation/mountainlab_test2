@@ -14,7 +14,7 @@ TEMPLATE = app
 
 QMAKE_POST_LINK += cp $$PWD/../bin/mountainsort $$PWD/../../mountainprocess/processors/mountainsort.mp
 
-INCLUDEPATH += utils core processors mda unit_tests 3rdparty isosplit
+INCLUDEPATH += utils core processors mda unit_tests 3rdparty isosplit ../../common/cachemanager
 
 HEADERS += \
     utils/get_command_line_params.h \
@@ -64,7 +64,7 @@ HEADERS += \
     processors/mv_firings_filter.h \
     processors/extract_clips_processor.h \
     processors/mv_subfirings_processor.h \
-    core/mscachemanager.h \
+    ../../common/cachemanager/cachemanager.h \
     processors/extract_clips_features_processor.h \
     processors/compute_detectability_scores_processor.h \
     processors/compute_detectability_scores.h \
@@ -76,7 +76,8 @@ HEADERS += \
     core/msscriptcontroller.h \
     processors/extract_raw_processor.h \
     processors/merge_across_channels.h \
-    processors/merge_across_channels_processor.h
+    processors/merge_across_channels_processor.h \
+    processors/geom2adj_processor.h
 
 SOURCES += utils/get_command_line_params.cpp \
     core/msprocessmanager.cpp \
@@ -124,7 +125,7 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/mv_firings_filter.cpp \
     processors/extract_clips_processor.cpp \
     processors/mv_subfirings_processor.cpp \
-    core/mscachemanager.cpp \
+    ../../common/cachemanager/cachemanager.cpp \
     processors/extract_clips_features_processor.cpp \
     processors/compute_detectability_scores_processor.cpp \
     processors/compute_detectability_scores.cpp \
@@ -138,8 +139,10 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/extract_raw_processor.cpp \
     processors/fit_stage_new.cpp \
     processors/merge_across_channels.cpp \
-    processors/merge_across_channels_processor.cpp
+    processors/merge_across_channels_processor.cpp \
+    processors/geom2adj_processor.cpp
 
+DEFINES += USE_REMOTE_MDA
 INCLUDEPATH += ../../common/mda
 DEPENDPATH += ../../common/mda
 VPATH += ../../common/mda

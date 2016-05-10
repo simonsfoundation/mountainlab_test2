@@ -39,6 +39,7 @@ public:
     void setPath(const char *file_path);
 
     QString path();
+    QString makePath();
 
 	///The first dimension of the array
 	long N1() const;

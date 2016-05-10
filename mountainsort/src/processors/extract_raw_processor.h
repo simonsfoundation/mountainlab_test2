@@ -24,5 +24,7 @@ private:
     extract_raw_ProcessorPrivate *d;
 };
 
+QList<int> str_to_intlist(QString str);
+
 #endif // EXTRACT_RAW_PROCESSOR_H
 

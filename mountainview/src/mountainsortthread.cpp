@@ -11,7 +11,7 @@
 #include <QVariant>
 #include <QDebug>
 #include "msmisc.h"
-#include "mscachemanager.h"
+#include "cachemanager.h"
 
 class MountainsortThreadPrivate {
 public:
@@ -99,7 +99,7 @@ QString MountainsortThreadPrivate::create_temporary_output_file_name(const QStri
     }
 
     QString file_name = QString("%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
-    QString ret = MSCacheManager::globalInstance()->makeRemoteFile(remote_url, file_name, MSCacheManager::LongTerm);
+    QString ret = CacheManager::globalInstance()->makeRemoteFile(remote_url, file_name, CacheManager::LongTerm);
     return ret;
 }
 

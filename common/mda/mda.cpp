@@ -20,7 +20,8 @@ public:
     bool safe_index(long i1, long i2, long i3);
     bool safe_index(long i1, long i2, long i3, long i4, long i5, long i6);
 
-    void read_from_text_file(const QString& path);
+    bool read_from_text_file(const QString& path);
+    bool write_to_text_file(const QString& path);
 };
 
 Mda::Mda(long N1, long N2, long N3, long N4, long N5, long N6)
@@ -116,6 +117,11 @@ bool Mda::read(const char* path)
 
 bool Mda::write32(const char* path) const
 {
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "----------------------" << path;
+    if ((QString(path).endsWith(".txt")) || (QString(path).endsWith(".csv"))) {
+        qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
+        return d->write_to_text_file(path);
+    }
     FILE* output_file = fopen(path, "wb");
     if (!output_file) {
         printf("Warning: Unable to open mda file for writing: %s\n", path);
@@ -137,6 +143,11 @@ bool Mda::write32(const char* path) const
 
 bool Mda::write64(const char* path) const
 {
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "----------------------" << path;
+    if ((QString(path).endsWith(".txt")) || (QString(path).endsWith(".csv"))) {
+        qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
+        return d->write_to_text_file(path);
+    }
     FILE* output_file = fopen(path, "wb");
     if (!output_file) {
         printf("Warning: Unable to open mda file for writing: %s\n", path);
@@ -667,18 +678,18 @@ bool MdaPrivate::safe_index(long i1, long i2, long i3, long i4, long i5, long i6
         (0 <= i1) && (i1 < m_dims[0]) && (0 <= i2) && (i2 < m_dims[1]) && (0 <= i3) && (i3 < m_dims[2]) && (0 <= i4) && (i4 < m_dims[3]) && (0 <= i5) && (i5 < m_dims[4]) && (0 <= i6) && (i6 < m_dims[5]));
 }
 
-void MdaPrivate::read_from_text_file(const QString& path)
+bool MdaPrivate::read_from_text_file(const QString& path)
 {
     QString txt = read_text_file(path);
-    QStringList lines = txt.split("\n");
+    QStringList lines = txt.split("\n",QString::SkipEmptyParts);
     QStringList lines2;
     for (int i = 0; i < lines.count(); i++) {
         QString line = lines[i].trimmed();
         if (!line.isEmpty()) {
             if (i == 0) {
                 //check whether this is a header line, if so, don't include it
-                line=line.split(",").join(" ");
-                QList<QString> vals = line.split(QRegExp("\\s+"));
+                line = line.split(",",QString::SkipEmptyParts).join(" ");
+                QList<QString> vals = line.split(QRegExp("\\s+"),QString::SkipEmptyParts);
                 bool ok;
                 vals.value(0).toDouble(&ok);
                 if (ok) {
@@ -690,16 +701,37 @@ void MdaPrivate::read_from_text_file(const QString& path)
             }
         }
     }
-    for (int i=0; i<lines2.count(); i++) {
-        QString line=lines2[i].trimmed();
-        line=line.split(",").join(" ");
-        QList<QString> vals = line.split(QRegExp("\\s+"));
-        if (i==0) {
-            q->allocate(vals.count(),lines2.count());
+    for (int i = 0; i < lines2.count(); i++) {
+        QString line = lines2[i].trimmed();
+        line = line.split(",",QString::SkipEmptyParts).join(" ");
+        QList<QString> vals = line.split(QRegExp("\\s+"),QString::SkipEmptyParts);
+        if (i == 0) {
+            q->allocate(vals.count(), lines2.count());
         }
-        for (int j=0; j<vals.count(); j++) {
-            q->setValue(j,i,vals[j].toDouble());
+        for (int j = 0; j < vals.count(); j++) {
+            q->setValue(vals[j].toDouble(), j, i);
         }
     }
     return true;
+}
+
+bool MdaPrivate::write_to_text_file(const QString &path)
+{
+    char sep=' ';
+    if (path.endsWith(".csv")) sep=',';
+    long max_num_entries=1e6;
+    if (q->N1()*q->N2()==max_num_entries) {
+        qWarning() << "mda is too large to write text file";
+        return false;
+    }
+    QList<QString> lines;
+    for (long i=0; i<q->N2(); i++) {
+        QStringList vals;
+        for (long j=0; j<q->N1(); j++) {
+            vals << QString("%1").arg(q->value(j,i));
+        }
+        QString line=vals.join(sep);
+        lines << line;
+    }
+    return write_text_file(path,lines.join("\n"));
 }

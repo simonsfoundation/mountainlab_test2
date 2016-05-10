@@ -22,7 +22,7 @@
 #include "process_msh.h"
 #include "textfile.h"
 #include <QJSEngine>
-#include "mscachemanager.h"
+#include "cachemanager.h"
 
 void print_usage();
 void list_processors(const MSProcessManager* PM);
@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     setbuf(stdout, NULL);
 
 
-    MSCacheManager::globalInstance()->setLocalBasePath(app.applicationDirPath() + "/../../tmp");
+    CacheManager::globalInstance()->setLocalBasePath(app.applicationDirPath() + "/../../tmp");
 
     CLParams CLP = get_command_line_params(argc, argv);
 

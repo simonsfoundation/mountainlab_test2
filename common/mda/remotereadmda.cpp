@@ -9,6 +9,8 @@
 #include <QStringList>
 #include <QDir>
 #include <QDateTime>
+#include "cachemanager.h"
+#include "msmisc.h"
 
 #define REMOTE_READ_MDA_CHUNK_SIZE 5e5
 
@@ -179,7 +181,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
     //if (!QDir(cache_path).exists()) QDir(QDir::tempPath()).mkdir("RemoteReadMda");
     //QString fname=cache_path+"/"+m_info.checksum+"-"+QString("%1-%2").arg(REMOTE_READ_MDA_CHUNK_SIZE).arg(ii);
     QString file_name=m_info.checksum+"-"+QString("%1-%2").arg(REMOTE_READ_MDA_CHUNK_SIZE).arg(ii);
-    QString fname=MSCacheManager::globalInstance()->makeLocalFile(file_name,MSCacheManager::ShortTerm);
+    QString fname=CacheManager::globalInstance()->makeLocalFile(file_name,CacheManager::ShortTerm);
     if (QFile::exists(fname)) return fname;
     //QString url=file_url_for_remote_path(m_path);
     QString url=m_path;
