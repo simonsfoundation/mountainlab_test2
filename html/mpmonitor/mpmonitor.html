@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script src="jquery.min.js"></script>
+<script src="daemonstateview.js"></script>
+<link rel="stylesheet" type="text/css" href="mpmonitor.css">
+
+<script>
+$(document).ready(function() {
+    var url='http://localhost:8004';
+    var DSV=new DaemonStateView();
+    $('#dsv').append(DSV.div());
+    getDaemonState(function(state) {
+        DSV.setState(state);
+    });
+
+    function getDaemonState(callback) {
+        console.log('url: '+url);
+        $.ajax({
+            type:'POST',
+            url:url,
+            dataType:'json',
+            data:JSON.stringify({action:'getDaemonState'}),
+            success:function(resp) {
+                if (resp.success) {
+                    callback(resp.state);
+                }
+                else {
+                    alert('Problem getting daemon state: '+resp.error);
+                }
+            }
+        });
+    }
+});
+</script>
+
+</head>
+
+<body>
+
+<h3>MountainProcess Monitor</h3>
+<span id=dsv></span>
+
+<div id=templates style="visibility: hidden;">
+    <div id=daemonstateview>
+        <table>
+        <tr><td>Daemon is running:</td><td id=running></td></tr>
+        </table>
+        <h4>Running Scripts:</h4>
+        <table id=running_scripts>
+        </table>
+        <h4>Running Processes:</h4>
+        <table id=running_processes>
+        </tbody></table>
+    </div>
+    <table id=dummy>
+    <tr id=dsv_script_row>
+        <td id=pript_id></td>
+        <td id=script_file_names></td>
+    </tr>
+    <tr id=dsv_process_row>
+        <td id=pript_id></td>
+        <td id=processor_name></td>
+    </tr>
+    </table>
+</div>
+
+</body>
+</html>
