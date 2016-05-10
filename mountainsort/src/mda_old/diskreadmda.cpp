@@ -6,7 +6,7 @@
 #include <QFile>
 #include <QCryptographicHash>
 #include <QDir>
-#include "../core/mscachemanager.h"
+#include "../cachemanager/cachemanager.h"
 
 #define MAX_PATH_LEN 10000
 #define DEFAULT_CHUNK_SIZE 1e6

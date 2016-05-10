@@ -10,7 +10,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include "mscachemanager.h"
+#include "cachemanager.h"
 #include "msprocessmanager.h"
 #include <QTime>
 
@@ -56,7 +56,7 @@ QString MSScriptController::stringChecksum(const QString& str)
 
 QString MSScriptController::createTemporaryFileName(const QString& code)
 {
-    return MSCacheManager::globalInstance()->makeLocalFile(code, MSCacheManager::LongTerm);
+    return CacheManager::globalInstance()->makeLocalFile(code, CacheManager::LongTerm);
 }
 
 bool MSScriptController::runProcess(const QString& processor_name, const QString& parameters_json, bool force_run)

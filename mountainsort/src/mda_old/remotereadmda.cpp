@@ -10,7 +10,7 @@
 #include <QStringList>
 #include <QDir>
 #include <QDateTime>
-#include "../core/mscachemanager.h"
+#include "../cachemanager/mscachemanager.h"
 
 #define REMOTE_READ_MDA_CHUNK_SIZE 5e5
 

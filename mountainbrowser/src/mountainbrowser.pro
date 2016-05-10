@@ -25,17 +25,11 @@ VPATH += ../../mountainsort/src/utils
 HEADERS += get_command_line_params.h textfile.h msmisc.h
 SOURCES += get_command_line_params.cpp textfile.cpp msmisc.cpp
 
-INCLUDEPATH += ../../mountainsort/src/mda
-DEPENDPATH += ../../mountainsort/src/mda
-VPATH += ../../mountainsort/src/mda
-HEADERS += mda.h mdaio.h usagetracking.h
-SOURCES += mda.cpp mdaio.cpp usagetracking.cpp
-
-INCLUDEPATH += ../../mountainsort/src/core
-DEPENDPATH += ../../mountainsort/src/core
-VPATH += ../../mountainsort/src/core
-HEADERS += mscachemanager.h
-SOURCES += mscachemanager.cpp
+INCLUDEPATH += ../../common/cachemanager
+DEPENDPATH += ../../common/cachemanager
+VPATH += ../../common/cachemanager
+HEADERS += cachemanager.h
+SOURCES += cachemanager.cpp
 
 #QJSON
 INCLUDEPATH += ../../mountainsort/src/3rdparty
@@ -48,6 +42,14 @@ HEADERS += qjson.h
 SOURCES += qjson.cpp
 HEADERS += serializer.h serializerrunnable.h parser.h parserrunnable.h json_scanner.h json_parser.hh
 SOURCES += serializer.cpp serializerrunnable.cpp parser.cpp parserrunnable.cpp json_scanner.cpp json_parser.cc
+
+DEFINES += USE_REMOTE_MDA
+INCLUDEPATH += ../../common/mda
+DEPENDPATH += ../../common/mda
+VPATH += ../../common/mda
+HEADERS += remotereadmda.h diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
+SOURCES += remotereadmda.cpp diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
+
 
 DISTFILES += \
     experiments.json \

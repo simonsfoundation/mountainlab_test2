@@ -20,6 +20,7 @@ public:
     QString m_mountainbrowser_url;
     QString m_mscmdserver_url;
     QString m_mdaserver_url;
+    QString m_mpserver_url;
     QList<QProcess*> m_processes;
 };
 
@@ -54,9 +55,19 @@ void MBController::setMdaServerUrl(const QString& url)
     d->m_mdaserver_url = url;
 }
 
+void MBController::setMPServerUrl(const QString& url)
+{
+    d->m_mpserver_url = url;
+}
+
 QString MBController::mountainBrowserUrl()
 {
     return d->m_mountainbrowser_url;
+}
+
+QString MBController::mpServerUrl()
+{
+    return d->m_mpserver_url;
 }
 
 QString MBController::getJson(QString url_or_path)
@@ -115,7 +126,6 @@ void MBController::slot_ready_read()
         qWarning() << "Unexpected problem in slot_ready_read";
         return;
     }
-    QByteArray str=P->readAll();
-    printf("%s",str.data());
+    QByteArray str = P->readAll();
+    printf("%s", str.data());
 }
-

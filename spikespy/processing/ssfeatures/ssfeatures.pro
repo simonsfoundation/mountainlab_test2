@@ -20,11 +20,31 @@ SOURCES += main.cpp ssfeatures.cpp pcasolver.cpp array2d.cpp
 
 HEADERS += ssfeatures.h pcasolver.h array2d.h
 
-INCLUDEPATH += ../../../mountainsort/src/mda
-HEADERS += ../../../mountainsort/src/mda/mdaio.h
-SOURCES += ../../../mountainsort/src/mda/mdaio.cpp
-SOURCES += ../../../mountainsort/src/mda/usagetracking.cpp
+DEFINES += USE_REMOTE_MDA
+INCLUDEPATH += ../../../common/mda
+DEPENDPATH += ../../../common/mda
+VPATH += ../../../common/mda
+HEADERS += remotereadmda.h diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
+SOURCES += remotereadmda.cpp diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
+
+INCLUDEPATH += ../../../common/cachemanager
+DEPENDPATH += ../../../common/cachemanager
+VPATH += ../../../common/cachemanager
+HEADERS += cachemanager.h
+SOURCES += cachemanager.cpp
+
+INCLUDEPATH += ../../../common/utils
+DEPENDPATH += ../../../common/utils
+VPATH += ../../../common/utils
+HEADERS += textfile.h
+SOURCES += textfile.cpp
 
 INCLUDEPATH += ../common
 HEADERS += ../common/get_command_line_params.h
 SOURCES += ../common/get_command_line_params.cpp
+
+INCLUDEPATH += ../../../mountainsort/src/utils
+DEPENDPATH += ../../../mountainsort/src/utils
+VPATH += ../../../mountainsort/src/utils
+HEADERS += msmisc.h
+SOURCES += msmisc.cpp

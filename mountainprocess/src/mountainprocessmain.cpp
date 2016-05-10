@@ -47,12 +47,12 @@ int main(int argc, char* argv[])
         ProcessManager* PM = ProcessManager::globalInstance();
         QStringList pnames = PM->processorNames();
         qSort(pnames);
-        foreach(QString pname, pnames)
-        {
+        foreach (QString pname, pnames) {
             printf("%s\n", pname.toLatin1().data());
         }
         return 0;
-    } else if (arg1 == "run-process") { //Run a process synchronously
+    }
+    else if (arg1 == "run-process") { //Run a process synchronously
         if (!initialize_process_manager())
             return -1; //load the processor plugins etc
         ProcessManager* PM = ProcessManager::globalInstance();
@@ -67,13 +67,15 @@ int main(int argc, char* argv[])
 
         if (PM->processAlreadyCompleted(processor_name, process_parameters)) { //do we have a record of this procesor already completing? If so, we save a lot of time by not re-running
             printf("Process already completed: %s\n", processor_name.toLatin1().data());
-        } else {
+        }
+        else {
             QString id;
 
             if (!PM->checkParameters(processor_name, process_parameters)) { //check to see that all our parameters are in order for the given processor
                 error_message = "Problem checking process: " + processor_name;
                 ret = -1;
-            } else {
+            }
+            else {
                 id = PM->startProcess(processor_name, process_parameters); //start the process and retrieve a unique id
                 if (id.isEmpty()) {
                     error_message = "Problem starting process: " + processor_name;
@@ -120,7 +122,8 @@ int main(int argc, char* argv[])
         }
 
         return ret; //returns exit code 0 if okay
-    } else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued, but the script will wait for them to complete)
+    }
+    else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued, but the script will wait for them to complete)
         if (!initialize_process_manager())
             return -1;
 
@@ -143,8 +146,7 @@ int main(int argc, char* argv[])
             }
         }
         QStringList keys0 = CLP.named_parameters.keys();
-        foreach(QString key0, keys0)
-        {
+        foreach (QString key0, keys0) {
             params[key0] = CLP.named_parameters[key0];
         }
         remove_system_parameters(params);
@@ -168,7 +170,15 @@ int main(int argc, char* argv[])
         return ret;
     }
     else if (arg1 == "daemon-start") {
+        if (!initialize_process_manager())
+            return -1;
+        QString config_fname = qApp->applicationDirPath() + "/mountainprocess.ini";
+        QSettings config(config_fname, QSettings::IniFormat);
         MPDaemon X;
+        ProcessResources RR;
+        RR.num_cores=config.value("num_cores",8).toDouble();
+        RR.memory_gb=config.value("memory_gb",8).toDouble();
+        X.setTotalResourcesAvailable(RR);
         if (!X.run())
             return -1;
         return 0;
@@ -204,18 +214,21 @@ int main(int argc, char* argv[])
         return 0;
     }
     */
-    else if (arg1 == "daemon-info") { //Print some information on the daemon
+    else if (arg1 == "daemon-state") { //Print some information on the state of the daemon
         MPDaemonInterface X;
-        QJsonObject info = X.getInfo();
-        QString json = QJsonDocument(info).toJson();
+        QJsonObject state = X.getDaemonState();
+        QString json = QJsonDocument(state).toJson();
         printf("%s", json.toLatin1().data());
         return 0;
-    } else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
+    }
+    else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
         /// TODO Probably important to record the checksum of the script files so that we know whether things have changed by the time we come around to running the script
         return queue_pript(ScriptType, CLP);
-    } else if (arg1 == "queue-process") {
+    }
+    else if (arg1 == "queue-process") {
         return queue_pript(ProcessType, CLP);
-    } else {
+    }
+    else {
         print_usage(); //print usage information
         return -1;
     }
@@ -248,8 +261,7 @@ bool initialize_process_manager()
      * Load the processors
      */
     ProcessManager* PM = ProcessManager::globalInstance();
-    foreach(QString processor_path, processor_paths)
-    {
+    foreach (QString processor_path, processor_paths) {
         QString p0 = processor_path;
         if (QFileInfo(p0).isRelative()) {
             /// TODO use canonicalFilePath throughout, wherever appropriate so we don't get stuff like a/b/c/../../b/c/../d
@@ -278,8 +290,7 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
         return false;
     }
     QStringList keys = obj.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         params[key] = obj[key].toVariant();
     }
     return true;
@@ -302,8 +313,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, QSt
     ScriptController Controller;
     QJSValue MP = engine.newQObject(&Controller);
     engine.globalObject().setProperty("MP", MP);
-    foreach(QString fname, script_fnames)
-    {
+    foreach (QString fname, script_fnames) {
         QJSValue result = engine.evaluate(read_text_file(fname), fname);
         if (result.isError()) {
             display_error(result);
@@ -336,7 +346,7 @@ void print_usage()
     printf("mountainprocess daemon-start\n");
     printf("mountainprocess daemon-stop\n");
     printf("mountainprocess daemon-restart\n");
-    printf("mountainprocess daemon-info\n");
+    printf("mountainprocess daemon-state\n");
     printf("mountainprocess queue-script --~script_output=[optional_output_fname] [script1].js [script2.js] ... [file1].par [file2].par ... \n");
     printf("mountainprocess queue-process [processor_name] --~process_output=[optional_output_fname] --[param1]=[val1] --[param2]=[val2] ...\n");
 }
@@ -344,8 +354,7 @@ void print_usage()
 void remove_system_parameters(QVariantMap& params)
 {
     QStringList keys = params.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         if (key.startsWith("~")) {
             params.remove(key);
         }
@@ -355,6 +364,8 @@ void remove_system_parameters(QVariantMap& params)
 int queue_pript(PriptType prtype, const CLParams& CLP)
 {
     MPDaemonPript PP;
+
+    bool detach=CLP.named_parameters.value("~detach",false).toBool();
 
     if (prtype == ScriptType) {
         QVariantMap params;
@@ -369,14 +380,15 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
                 }
             }
         }
-        QStringList pkeys=CLP.named_parameters.keys();
-        foreach (QString pkey,pkeys) {
-            params[pkey]=CLP.named_parameters[pkey];
+        QStringList pkeys = CLP.named_parameters.keys();
+        foreach (QString pkey, pkeys) {
+            params[pkey] = CLP.named_parameters[pkey];
         }
         remove_system_parameters(params);
         PP.parameters = params;
         PP.prtype = ScriptType;
-    } else {
+    }
+    else {
         PP.parameters = CLP.named_parameters;
         PP.prtype = ProcessType;
         remove_system_parameters(PP.parameters);
@@ -384,35 +396,40 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
     }
 
     PP.id = make_random_id();
-    if (prtype == ScriptType) {
-        PP.output_fname = CLP.named_parameters["~script_output"].toString();
-    } else {
-        PP.output_fname = CLP.named_parameters["~process_output"].toString();
-    }
-    if (PP.output_fname.isEmpty()) {
-        if (prtype == ScriptType)
-            PP.output_fname = CacheManager::globalInstance()->makeLocalFile("script_output." + PP.id + ".json", CacheManager::ShortTerm);
-        else
-            PP.output_fname = CacheManager::globalInstance()->makeLocalFile("process_output." + PP.id + ".json", CacheManager::ShortTerm);
-    }
-    if (prtype == ScriptType)
-        PP.stdout_fname = CacheManager::globalInstance()->makeLocalFile("script_stdout." + PP.id + ".txt", CacheManager::ShortTerm);
-    else
-        PP.stdout_fname = CacheManager::globalInstance()->makeLocalFile("process_stdout." + PP.id + ".txt", CacheManager::ShortTerm);
 
-    PP.parent_pid = QCoreApplication::applicationPid();
+    if (!detach) {
+        if (prtype == ScriptType) {
+            PP.output_fname = CLP.named_parameters["~script_output"].toString();
+        }
+        else {
+            PP.output_fname = CLP.named_parameters["~process_output"].toString();
+        }
+        if (PP.output_fname.isEmpty()) {
+            if (prtype == ScriptType)
+                PP.output_fname = CacheManager::globalInstance()->makeLocalFile("script_output." + PP.id + ".json", CacheManager::ShortTerm);
+            else
+                PP.output_fname = CacheManager::globalInstance()->makeLocalFile("process_output." + PP.id + ".json", CacheManager::ShortTerm);
+        }
+        if (prtype == ScriptType)
+            PP.stdout_fname = CacheManager::globalInstance()->makeLocalFile("script_stdout." + PP.id + ".txt", CacheManager::ShortTerm);
+        else
+            PP.stdout_fname = CacheManager::globalInstance()->makeLocalFile("process_stdout." + PP.id + ".txt", CacheManager::ShortTerm);
+
+        PP.parent_pid = QCoreApplication::applicationPid();
+    }
 
     MPDaemonInterface X;
     if (prtype == ScriptType) {
         if (!X.queueScript(PP)) { //queue the script
             return -1;
         }
-    } else {
+    }
+    else {
         if (!X.queueProcess(PP)) { //queue the process
             return -1;
         }
     }
-    if (!PP.output_fname.isEmpty()) {
+    if (!detach) {
         qint64 parent_pid = CLP.named_parameters.value("~parent_pid", 0).toLongLong();
         MPDaemon::waitForFileToAppear(PP.output_fname, -1, false, parent_pid, PP.stdout_fname);
         QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(PP.output_fname).toLatin1()).object();
@@ -420,7 +437,8 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
         if (!success) {
             if (prtype == ScriptType) {
                 qWarning() << "Error in script " + PP.id + ": " + results_obj["error"].toString();
-            } else {
+            }
+            else {
                 qWarning() << "Error in process " + PP.processor_name + " " + PP.id + ": " + results_obj["error"].toString();
             }
             return -1;

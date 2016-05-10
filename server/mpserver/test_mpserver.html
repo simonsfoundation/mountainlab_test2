@@ -1,0 +1,69 @@
+<html>
+<head>
+<script 
+<script src="jquery.min.js">
+</script>
+<script type="text/javascript">
+$(document).ready(function() {
+	console.log('hello with jquery');
+	var url='http://localhost:8004';
+	var j=1;
+	function do_next() {
+		var opts={detach:true};
+		var num=j;
+		var script1="function main() {initialize_pipeline(); copy_with_delay('/home/magland/tmp11.sh','/home/magland/tmp33-"+num+".sh'); run_pipeline();}";
+		var scripts=[{code:script1,fname:'test1.js'}];
+		queueScript(scripts,opts,function(resp) {
+			//console.log('SCRIPT OUTPUT');
+			//console.log('success!!');
+			//console.log(resp.success);
+			//console.log(resp.stdout);
+			//console.log(resp.stderr);
+			getDaemonState(function(resp) {
+				//console.log('DAEMON STATE');
+				//console.log(resp.success);
+				//console.log(resp.stdout);
+				//console.log(resp.stderr);
+				var state=resp.state;
+				console.log(keys(state.scripts).length+' scripts and '+keys(state.processes).length+' processes');
+			});
+		});
+		j=j+1;
+		if (j<=60) {
+			setTimeout(do_next,100);
+		}
+	}
+	do_next();
+	function queueScript(scripts,opts,callback) {
+		$.ajax({
+			type:'POST',
+			url:url,
+			dataType:'json',
+			data:JSON.stringify({action:'queueScript',scripts:scripts,detach:opts.detach}),
+			success:callback
+		});
+	}
+	function getDaemonState(callback) {
+		$.ajax({
+			type:'POST',
+			url:url,
+			dataType:'json',
+			data:JSON.stringify({action:'getDaemonState'}),
+			success:callback
+		});
+	}
+	function keys(obj) {
+		var ret=[];
+		for (var key in obj) {
+			ret.push(key);
+		}
+		return ret;
+	}
+});
+
+</script>
+</head>
+<body>
+<h3>Test mpserver</h3>
+</body>
+</html>

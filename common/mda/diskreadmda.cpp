@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QCryptographicHash>
 #include <QDir>
+#include "cachemanager.h"
 
 #ifdef USE_REMOTE_MDA
 #include "remotereadmda.h"
@@ -81,6 +82,12 @@ void DiskReadMda::setPath(const QString &file_path)
 
 void DiskReadMda::setPath(const char *file_path)
 {
+    if ((QString(file_path).endsWith(".txt"))||(QString(file_path).endsWith(".csv"))) {
+        Mda X(file_path);
+        (*this)=X;
+        return;
+    }
+
     d->m_path=file_path;
 
     d->m_use_memory_mda=false;
@@ -111,6 +118,8 @@ QString DiskReadMda::path()
     return d->m_path;
 }
 
+
+
 QString compute_memory_checksum(long nbytes,void *ptr) {
     QByteArray X((char *)ptr,nbytes);
     QCryptographicHash hash(QCryptographicHash::Sha1);
@@ -126,6 +135,26 @@ QString compute_mda_checksum(Mda &X) {
         ret+=QString("%1").arg(X.size(i));
     }
     return ret;
+}
+
+QString DiskReadMda::makePath()
+{
+    QString ret=path();
+    if (!ret.isEmpty()) return ret;
+    if (d->m_use_memory_mda) {
+        QString checksum=compute_mda_checksum(d->m_memory_mda);
+        //QString fname=QDir::tempPath()+"/"+checksum+".mda";
+        QString fname=CacheManager::globalInstance()->makeLocalFile(fname,CacheManager::ShortTerm);
+        if (QFile::exists(fname)) return fname;
+        if (d->m_memory_mda.write64(fname+".tmp")) {
+            if (QFile::rename(fname+".tmp",fname)) {
+                return fname;
+            }
+        }
+        QFile::remove(fname);
+        QFile::remove(fname+".tmp");
+    }
+    return "";
 }
 
 long DiskReadMda::N1() const

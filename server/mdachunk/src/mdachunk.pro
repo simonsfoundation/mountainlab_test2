@@ -17,28 +17,26 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
-INCLUDEPATH += ../../../mountainsort/src/mda
-DEPENDPATH += ../../../mountainsort/src/mda
-VPATH += ../../../mountainsort/src/mda
 SOURCES += main.cpp \
-    diskreadmda.cpp \
-    diskwritemda.cpp \
-    mda.cpp \
-    mdaio.cpp \
-    remotereadmda.cpp \
-    usagetracking.cpp \
     utils/get_command_line_params.cpp \
     utils/textfile.cpp
 INCLUDEPATH += utils
 HEADERS += \
-    diskreadmda.h \
-    diskwritemda.h \
-    mda.h \
-    mdaio.h \
-    usagetracking.h \
-    remotereadmda.h \
     utils/get_command_line_params.h \
     utils/textfile.h
+
+DEFINES += USE_REMOTE_MDA
+INCLUDEPATH += ../../../common/mda
+DEPENDPATH += ../../../common/mda
+VPATH += ../../../common/mda
+HEADERS += remotereadmda.h diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
+SOURCES += remotereadmda.cpp diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
+
+INCLUDEPATH += ../../../common/cachemanager
+DEPENDPATH += ../../../common/cachemanager
+VPATH += ../../../common/cachemanager
+HEADERS += cachemanager.h
+SOURCES += cachemanager.cpp
 
 INCLUDEPATH += ../../../mountainsort/src/utils
 DEPENDPATH += ../../../mountainsort/src/utils

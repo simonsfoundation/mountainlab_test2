@@ -7,10 +7,10 @@
 #ifndef CACHEMANAGER_H
 #define CACHEMANAGER_H
 
-#include <QObject>
+#include <QString>
 
 class CacheManagerPrivate;
-class CacheManager : public QObject {
+class CacheManager {
 public:
     enum Duration {
         ShortTerm,
@@ -29,8 +29,8 @@ public:
 
     static CacheManager *globalInstance();
 
-private slots:
-    void slot_remove_on_delete();
+//private slots:
+//    void slot_remove_on_delete();
 
 private:
     CacheManagerPrivate* d;
