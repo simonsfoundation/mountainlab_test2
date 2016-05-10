@@ -70,7 +70,7 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
         t2 = N;
     }
 
-    if ((t1 < 0) || (t2 < t1) || (t2 >= N)) {
+    if ((t1 < 0) || (t2 < t1) || (t2 > N)) {
         printf("Unexpected input parameters, t1=%ld, t2=%ld, N=%ld\n", t1, t2, N);
         return false;
     }
