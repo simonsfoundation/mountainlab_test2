@@ -23,13 +23,8 @@ HEADERS += \
     utils/textfile.h \
     core/msprocessor.h \
     processors/example_processor.h \
-    mda/mda.h \
-    mda/mdaio.h \
-    mda/usagetracking.h \
-    mda/diskreadmda.h \
     processors/bandpass_filter_processor.h \
     processors/bandpass_filter0.h \
-    mda/diskwritemda.h \
     unit_tests/unit_tests.h \
     msprefs.h \
     processors/detect_processor.h \
@@ -63,7 +58,6 @@ HEADERS += \
     processors/fit_stage_processor.h \
     processors/fit_stage.h \
     utils/compute_templates_0.h \
-    mda/remotereadmda.h \
     processors/compute_templates.h \
     processors/compute_templates_processor.h \
     processors/mv_firings_filter_processor.h \
@@ -90,13 +84,8 @@ SOURCES += utils/get_command_line_params.cpp \
     utils/textfile.cpp \
     core/msprocessor.cpp \
     processors/example_processor.cpp \
-    mda/mda.cpp \
-    mda/mdaio.cpp \
-    mda/usagetracking.cpp \
-    mda/diskreadmda.cpp \
     processors/bandpass_filter_processor.cpp \
     processors/bandpass_filter0.cpp \
-    mda/diskwritemda.cpp \
     unit_tests/unit_tests.cpp \
     processors/detect_processor.cpp \
     processors/detect.cpp \
@@ -129,7 +118,6 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/fit_stage_processor.cpp \
     processors/fit_stage.cpp \
     utils/compute_templates_0.cpp \
-    mda/remotereadmda.cpp \
     processors/compute_templates.cpp \
     processors/compute_templates_processor.cpp \
     processors/mv_firings_filter_processor.cpp \
@@ -151,6 +139,12 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/fit_stage_new.cpp \
     processors/merge_across_channels.cpp \
     processors/merge_across_channels_processor.cpp
+
+INCLUDEPATH += ../../common/mda
+DEPENDPATH += ../../common/mda
+VPATH += ../../common/mda
+HEADERS += remotereadmda.h diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
+SOURCES += remotereadmda.cpp diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
 
 HEADERS += utils/get_principal_components.h
 SOURCES += utils/get_principal_components.cpp
