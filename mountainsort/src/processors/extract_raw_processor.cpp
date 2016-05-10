@@ -22,7 +22,7 @@ extract_raw_Processor::extract_raw_Processor()
     d->q = this;
 
     this->setName("extract_raw");
-    this->setVersion("0.11");
+    this->setVersion("0.12");
     this->setInputFileParameters("timeseries");
     this->setOutputFileParameters("timeseries_out");
     this->setOptionalParameters("t1", "t2", "channels");
@@ -66,11 +66,11 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
     long N = X.N2();
 
     if (t1 < 0) {
-        t1 = 0;
-        t2 = N - 1;
+        t1 = 1;
+        t2 = N;
     }
 
-    if ((t1 < 0) || (t2 < t1) || (t2 >= N)) {
+    if ((t1 < 0) || (t2 < t1) || (t2 > N)) {
         printf("Unexpected input parameters, t1=%ld, t2=%ld, N=%ld\n", t1, t2, N);
         return false;
     }
@@ -103,7 +103,7 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
         if (t + aa > N2)
             aa = N2 - t;
         Mda chunk;
-        X.readChunk(chunk, 0, t1 + t, M, aa);
+        X.readChunk(chunk, 0, t1-1 + t, M, aa);
         Mda chunk2(M2, aa);
         for (int k = 0; k < aa; k++) {
             for (int j = 0; j < channels.count(); j++) {
