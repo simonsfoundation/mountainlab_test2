@@ -73,7 +73,15 @@ http.createServer(function (REQ, RESP) {
 		RESP.end();
 	}
 	else if(REQ.method=='GET') {
-		send_json_response({success:false,error:'mpserver does not support GET requests'});
+		var query=url_parts.query;
+		if (query.action=='getDaemonState') {
+			X.handleRequest({action:query.action},function(resp) {
+				send_json_response(resp);
+			});
+		}
+		else {
+			send_json_response({success:false,error:'GET not supported for this action'});
+		}
 	}
 	else if(REQ.method=='POST') {
 		receive_json_post(REQ,function(req) {

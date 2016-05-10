@@ -34,11 +34,13 @@ int main(int argc, char* argv[])
 
     QString mdaserver_url = config["mdaserver_url"].toString();
     QString mscmdserver_url = config["mscmdserver_url"].toString();
+    QString mpserver_url = config["mpserver_url"].toString();
 
     MBController controller;
     controller.setMountainBrowserUrl(mountainbrowser_url);
     controller.setMdaServerUrl(mdaserver_url);
     controller.setMscmdServerUrl(mscmdserver_url);
+    controller.setMPServerUrl(mpserver_url);
 
     QWebView* X = new QWebView;
     MyPage* page = new MyPage;
