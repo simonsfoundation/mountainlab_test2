@@ -22,8 +22,6 @@
 #include "processmanager.h"
 #include "mlutils.h"
 
-/// TODO check for bad situation of more than one daemon running simultaneously
-
 class MPDaemonPrivate {
 public:
     MPDaemon* q;
@@ -43,7 +41,7 @@ public:
     bool okay_to_run_process(const QString& key);
     QStringList get_input_paths(MPDaemonPript P);
     QStringList get_output_paths(MPDaemonPript P);
-    void write_running_file();
+    bool write_running_file();
     void write_daemon_state();
     int num_running_scripts()
     {
@@ -147,6 +145,11 @@ bool MPDaemon::run()
         qWarning() << "Unexpected problem in MPDaemon:run(). Daemon is already running.";
         return false;
     }
+
+    if (!d->write_running_file()) { //this also checks whether another daemon is running,
+        return false;
+    }
+
     d->m_is_running = true;
 
     d->writeLogRecord("start-daemon");
@@ -165,7 +168,7 @@ bool MPDaemon::run()
     long num_cycles = 0;
     while (d->m_is_running) {
         if (timer0.elapsed()>2000) {
-            d->write_running_file();
+            if (!d->write_running_file()) return false;
         }
         if (timer1.elapsed() > 5000) {
             d->writeLogRecord("timer1", "num_cycles", (long long)num_cycles);
@@ -661,7 +664,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
 
 ProcessResources MPDaemonPrivate::compute_process_resources_available()
 {
-    ProcessResources ret = m_total_resources_available; /// TODO make these configurable
+    ProcessResources ret = m_total_resources_available;
     QStringList keys = m_pripts.keys();
     foreach (QString key, keys) {
         if (m_pripts[key].prtype == ProcessType) {
@@ -801,11 +804,25 @@ QStringList MPDaemonPrivate::get_output_paths(MPDaemonPript P)
     return ret;
 }
 
-void MPDaemonPrivate::write_running_file()
+#include "signal.h"
+bool MPDaemonPrivate::write_running_file()
 {
     QString fname=cfp(qApp->applicationDirPath()+"/running.pid");
     QString txt=QString("%1").arg(qApp->applicationPid());
+
+    //check for another daemon running!
+    if (QFileInfo(fname).lastModified().secsTo(QDateTime::currentDateTime())<=60) {
+        QString txt0=read_text_file(fname);
+        if ((!txt0.isEmpty())&&(txt0!=txt)) {
+            if (kill(txt0.toLong(),0)==0) {
+                printf("Another daemon seems to be running. Closing.\n");
+                return false;
+            }
+        }
+    }
     write_text_file(fname,txt);
+    //we will be forgiving if we cannot write the text file, since it is more important that the daemon stays up
+    return true;
 }
 
 void MPDaemonPrivate::write_daemon_state()
@@ -902,13 +919,8 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
 #include "signal.h"
 bool MPDaemon::pidExists(qint64 pid)
 {
-    /// TODO is this the best way to see if process exists?
+    // check whether process exists (works on Linux)
     return (kill(pid, 0) == 0);
-    /*
-    QString i_am_alive_fname=CacheManager::globalInstance()->makeLocalFile(QString("i_am_alive.%1.txt").arg(pid));
-    return (QFileInfo(i_am_alive_fname).lastModified().secsTo(QDateTime::currentDateTime())<=5000);
-    */
-    //return QDir("/proc").exists(QString("%1").arg(pid));
 }
 
 bool MPDaemon::waitForFinishedAndWriteOutput(QProcess* P)

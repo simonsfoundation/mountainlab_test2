@@ -272,7 +272,6 @@ bool initialize_process_manager()
     foreach (QString processor_path, processor_paths) {
         QString p0 = processor_path;
         if (QFileInfo(p0).isRelative()) {
-            /// TODO use canonicalFilePath throughout, wherever appropriate so we don't get stuff like a/b/c/../../b/c/../d
             p0 = cfp(qApp->applicationDirPath() + "/" + p0);
         }
         printf("Searching for processors in %s\n", p0.toLatin1().data());
