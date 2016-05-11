@@ -281,7 +281,6 @@ bool initialize_process_manager()
 
 bool load_parameter_file(QVariantMap& params, const QString& fname)
 {
-    /// Witold maybe a bad idea but.... I would like for user to optionally specify the parameters in a more intuitive way than json. Like freq_min=300\nfreq_max=6000, etc. I'd like to support both formats and detect which one.
     QString json = read_text_file(fname);
     if (json.isEmpty()) {
         qWarning() << "Non-existent or empty parameter file: " + fname;
