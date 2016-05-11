@@ -15,9 +15,10 @@ function MPMonitor() {
 	
 	setGeom(0,0,800,800);
 	function setGeom(x,y,W,H) {
+		var topmargin=150;
 		absgeom(m_div,x,y,W,H);
 		m_dsv.setGeom(0,0,W*2/3,H);
-		m_pript_view.setGeom(W*2/3,0,W/3,H);
+		m_pript_view.setGeom(W*2/3,topmargin,W/3,H-topmargin);
 	}
 
 	m_div.find('#scripts').css('overflow','scroll');

@@ -60,7 +60,7 @@ function DaemonStateView() {
 		m_div.find('#daemon #running').html(running_str);
 
 		m_div.find('#scripts #running').empty();
-		m_div.find('#scripts #running').append('<tr><th>Script ID</th><th>Script Names</th></tr>');
+		m_div.find('#scripts #running').append('<tr><th>Script ID</th><th>Script Names</th><th>Status</th></tr>');
 		var scripts=m_state.scripts||{};
 		for (var key in scripts) {
 			var SS=scripts[key];
@@ -68,11 +68,12 @@ function DaemonStateView() {
 			var tr=$('#templates #dsv_script_row').clone();
 			tr.find('#pript_id').append(a0);
 			tr.find('#script_names').html(get_script_names(SS));
+			tr.find('#status').html(get_status(SS));
 			m_div.find('#scripts #running').append(tr);
 		}
 
 		m_div.find('#processes #running').empty();
-		m_div.find('#processes #running').append('<tr><th>Process ID</th><th>Processor Name</th></tr>');
+		m_div.find('#processes #running').append('<tr><th>Process ID</th><th>Processor Name</th><th>Status</th></tr>');
 		var processes=m_state.processes||{};
 		for (var key in processes) {
 			var PP=processes[key];
@@ -80,6 +81,7 @@ function DaemonStateView() {
 			var tr=$('#templates #dsv_process_row').clone();
 			tr.find('#pript_id').append(a0);
 			tr.find('#processor_name').html(PP.processor_name)
+			tr.find('#status').html(get_status(PP));
 			m_div.find('#processes #running').append(tr);
 		}
 
@@ -89,6 +91,11 @@ function DaemonStateView() {
 		m_div.find('.process_item').click(function(evt) {
 			m_div.trigger('process_item_clicked',[$(evt.target).attr('data-key')]);
 		});
+	}
+	function get_status(P) {
+		if (P.is_running) return 'running';
+		else if (P.is_finished) return 'finished';
+		else return 'not running';
 	}
 	function get_script_names(SS) {
 		var ret='';

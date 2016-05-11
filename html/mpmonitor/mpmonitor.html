@@ -22,7 +22,7 @@ $(document).ready(function() {
     $(window).resize(update_size);
     update_size();
     function update_size() {
-    	X.setGeom(0,0,$(window).width(),$(window).height());
+    	X.setGeom(0,0,$(window).width()-30,$(window).height()-30);
     }
 
     X.loadState();
@@ -70,16 +70,34 @@ $(document).ready(function() {
         	</table>
         </div>
     </div>
-    <table id=dummy>
+    
+    <table id=dummy_for_daemonstateview>
     <tr id=dsv_script_row>
         <td id=pript_id></td>
         <td id=script_names></td>
+        <td id=status></td>
     </tr>
     <tr id=dsv_process_row>
         <td id=pript_id></td>
         <td id=processor_name></td>
+        <td id=status></td>
     </tr>
     </table>
+
+    <div id="priptview">
+    	<table>
+    	<tr><th>ID:</th><td id=pript_id></td></tr>
+    	<tr><th>Type:</th><td id=type></td></tr>
+    	<tr><th id=name_label>Name:</th><td id=name></td></tr>
+    	<tr><th>Status:</th><td id=status></td></tr>
+    	<tr><th>Allotted:</th><td id=allotted></td></tr>
+    	</table>
+    	<textarea id="stdout"></textarea>
+    	<textarea id="stderr"></textarea>
+    	<textarea id="raw"></textarea>
+    </div>
+
+
 </div>
 
 </body>
