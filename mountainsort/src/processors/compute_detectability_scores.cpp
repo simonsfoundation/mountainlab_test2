@@ -14,6 +14,9 @@
 #include "get_pca_features.h"
 
 bool compute_detectability_scores(QString timeseries_path,QString firings_path,QString firings_out_path,const compute_detectability_scores_opts &opts) {
+
+    /// TODO this crashed... figure out how that could happen
+
     DiskReadMda raw; raw.setPath(timeseries_path);
     Mda firings; firings.read(firings_path);
 
@@ -36,7 +39,7 @@ bool compute_detectability_scores(QString timeseries_path,QString firings_path,Q
 
     QList<Subcluster> subclusters;
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int k=1; k<=K; k++) { //iterate through all clusters
         int count1=0;
         int count2=0;

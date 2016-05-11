@@ -69,6 +69,7 @@ function PriptView() {
 			m_div.css('visibility','hidden');
 		}
 		else {
+			console.log(m_pript);
 			var status='not running';
 			if (m_pript.is_running) status='running';
 			else if (m_pript.is_finished) {

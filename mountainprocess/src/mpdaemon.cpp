@@ -645,8 +645,6 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         printf("%s\n", cmd.toLatin1().data());
     }
 
-    write_pript_file(*S);
-
     QObject::connect(qprocess, SIGNAL(finished(int)), q, SLOT(slot_pript_qprocess_finished()));
 
     debug_log(__FUNCTION__, __FILE__, __LINE__);
@@ -663,6 +661,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
             }
         }
         S->is_running = true;
+        write_pript_file(*S);
         return true;
     } else {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
@@ -676,6 +675,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         qprocess->disconnect();
         delete qprocess;
         m_pripts.remove(pript_id);
+        write_pript_file(*S);
         return false;
     }
 }
