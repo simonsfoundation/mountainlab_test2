@@ -34,6 +34,7 @@
 #include "merge_across_channels_processor.h"
 #include "geom2adj_processor.h"
 
+/// TODO remove dependency on qjson
 #include "qjson.h"
 #include "textfile.h"
 #include <sys/stat.h>
@@ -341,7 +342,7 @@ void MSProcessManager::printJsonSpec() const
         QJsonObject obj;
         obj["name"] = P->name();
         obj["version"] = P->version();
-        obj["description"] = ""; /// TODO make a property of MSProcessor for this
+        obj["description"] = P->description();
         obj["inputs"] = inputs;
         obj["outputs"] = outputs;
         obj["parameters"] = parameters;

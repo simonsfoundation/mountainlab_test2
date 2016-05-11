@@ -230,7 +230,6 @@ int main(int argc, char* argv[])
         return 0;
     }
     else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
-        /// TODO Probably important to record the checksum of the script files so that we know whether things have changed by the time we come around to running the script
         return queue_pript(ScriptType, CLP);
     }
     else if (arg1 == "queue-process") {
