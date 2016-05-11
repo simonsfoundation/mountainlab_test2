@@ -33,8 +33,9 @@ public:
     MPDaemon();
     virtual ~MPDaemon();
     void setTotalResourcesAvailable(ProcessResources PR);
-    void setLogFilePath(const QString &path);
+    void setLogFilePath(const QString& path);
     bool run();
+    void clearProcessing();
 
     static QString daemonPath();
     static QString makeTimestamp(const QDateTime& dt = QDateTime::currentDateTime());
@@ -44,7 +45,8 @@ public:
     static bool pidExists(qint64 pid);
     static bool waitForFinishedAndWriteOutput(QProcess* P);
 
-private slots:
+private
+slots:
     void slot_commands_directory_changed();
     void slot_pript_qprocess_finished();
     void slot_qprocess_output();
@@ -62,7 +64,6 @@ struct ProcessRuntimeOpts {
     double num_cores_allotted;
     double memory_gb_allotted;
 };
-
 
 bool is_at_most(ProcessResources PR1, ProcessResources PR2);
 
@@ -110,7 +111,12 @@ struct MPDaemonPript {
     ProcessRuntimeOpts runtime_opts; //defined at run time
 };
 
-QJsonObject pript_struct_to_obj(MPDaemonPript S);
+enum RecordType {
+    AbbreviatedRecord,
+    FullRecord
+};
+
+QJsonObject pript_struct_to_obj(MPDaemonPript S, RecordType rt);
 MPDaemonPript pript_obj_to_struct(QJsonObject obj);
 QJsonArray stringlist_to_json_array(QStringList list);
 QStringList json_array_to_stringlist(QJsonArray X);

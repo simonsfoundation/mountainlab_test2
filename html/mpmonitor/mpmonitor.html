@@ -11,12 +11,62 @@ $(document).ready(function() {
     var url='http://localhost:8004';
     var DSV=new DaemonStateView();
     $('#dsv').append(DSV.div());
-    getDaemonState(function(state) {
-        DSV.setState(state);
-    });
 
-    function getDaemonState(callback) {
-        console.log('url: '+url);
+    update_daemon_state();
+    setInterval(update_daemon_state,1000);
+
+    function update_daemon_state() {
+    	getDaemonState(function(resp) {
+    		if (resp.success) {
+        		DSV.setState(resp.state);
+        	}
+        	else {
+        		console.log('setting error');
+        		DSV.setError('ERR: '+resp.error);
+        	}
+    	});
+    }
+    
+
+    $('#launch_test_script').click(launch_test_script);
+    function launch_test_script() {
+    	for (var j=0; j<200; j++) {
+	    	var opts={detach:true};
+			var num=j;
+	    	var script1="function main() {initialize_pipeline(); copy_with_delay('/home/magland/tmp/file1.txt','/home/magland/tmp/file1.txt."+num+"'); run_pipeline();}";
+			var scripts=[{code:script1,fname:'test1.js'}];
+			queueScript(scripts,opts,function(resp) {
+				console.log(resp);
+			});
+		}
+    }
+
+    $('#clear_processing').click(clear_processing);
+    function clear_processing() {
+    	$.ajax({
+			type:'POST',
+			url:url,
+			dataType:'json',
+			data:JSON.stringify({action:'clearProcessing'}),
+			success:on_success,
+			error:on_error
+		});
+    	function on_success() {alert('Processing cleared');}
+    	function on_error() {alert('Error clearing processing');}
+    }
+
+
+    function queueScript(scripts,opts,callback) {
+		$.ajax({
+			type:'POST',
+			url:url,
+			dataType:'json',
+			data:JSON.stringify({action:'queueScript',scripts:scripts,detach:opts.detach}),
+			success:callback
+		});
+	}
+
+	function getDaemonState(callback) {
         $.ajax({
             type:'POST',
             url:url,
@@ -24,14 +74,20 @@ $(document).ready(function() {
             data:JSON.stringify({action:'getDaemonState'}),
             success:function(resp) {
                 if (resp.success) {
-                    callback(resp.state);
+                    callback(resp);
                 }
                 else {
-                    alert('Problem getting daemon state: '+resp.error);
+                    console.log('Problem getting daemon state: '+resp.error);
+                    callback(resp);;
                 }
+            },
+            error:function() {
+            	console.log('Failed to get daemon state: '+url);
+            	callback({success:false,error:'Failed to get daemon state. Most likely we are unable to connect to server.'});
             }
         });
     }
+
 });
 </script>
 
@@ -39,25 +95,27 @@ $(document).ready(function() {
 
 <body>
 
-<h3>MountainProcess Monitor</h3>
+<h2>MountainProcess Monitor</h2>
 <span id=dsv></span>
 
 <div id=templates style="visibility: hidden;">
     <div id=daemonstateview>
         <table>
-        <tr><td>Daemon is running:</td><td id=running></td></tr>
+        <tr><th id=running></th></tr>
+        <tr><td><button id=launch_test_script>Launch test script</button></td>
+        <tr><td><button id=clear_processing>Clear processing</button></td></tr>
         </table>
         <h4>Running Scripts:</h4>
         <table id=running_scripts>
         </table>
         <h4>Running Processes:</h4>
         <table id=running_processes>
-        </tbody></table>
+        </table>
     </div>
     <table id=dummy>
     <tr id=dsv_script_row>
         <td id=pript_id></td>
-        <td id=script_file_names></td>
+        <td id=script_names></td>
     </tr>
     <tr id=dsv_process_row>
         <td id=pript_id></td>

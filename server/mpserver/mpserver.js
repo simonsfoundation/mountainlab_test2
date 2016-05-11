@@ -6,6 +6,7 @@ var http=require('http');
 var actions={};
 actions['queueScript']=require('./queuescript.js').queueScript;
 actions['getDaemonState']=require('./getdaemonstate.js').getDaemonState;
+actions['clearProcessing']=require('./clearprocessing.js').clearProcessing;
 
 //// configuration
 var config={};
@@ -42,9 +43,7 @@ function MPManager() {
 
 	function initialize_task(req,callback) {
 		if (req.action in actions) {
-			console.log(req.action);
 			return new actions[req.action](config,req,function(resp) {
-				console.log('Done with '+req.action);
 				callback(resp);
 			});
 		}

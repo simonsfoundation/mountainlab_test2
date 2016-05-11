@@ -1,30 +1,36 @@
 function DaemonStateView() {
 	this.setState=function(state) {setState(state);};
+	this.setError=function(err) {m_error=err; m_state={}; refresh();};
 	this.div=function() {return m_div;};
+
 
 	var m_div=$('#templates #daemonstateview').clone();
 	var m_state={};
+	var m_error='';
 
 	function setState(state) {
-		console.log(state);
+		console.log('setState');
 		m_state=state;
+		m_error='';
 		refresh();
 	}
 
 	function refresh() {
-		var running_str='NO';
-		if (m_state.is_running) running_str='YES';
+		var running_str='';
+		if (m_error) running_str=m_error; /// TODO show uptime
+		else if (m_state.is_running) running_str='Daemon is running';
+		else running_str='Daemon is NOT running';
 
 		m_div.find('#running').html(running_str);
 
 		m_div.find('#running_scripts').empty();
-		m_div.find('#running_scripts').append('<tr><th>Script ID</th><th>Script Files</th></tr>');
+		m_div.find('#running_scripts').append('<tr><th>Script ID</th><th>Script Names</th></tr>');
 		var scripts=m_state.scripts||{};
 		for (var key in scripts) {
 			var SS=scripts[key];
 			var tr=$('#templates #dsv_script_row').clone();
 			tr.find('#pript_id').html(key);
-			tr.find('#script_file_names').html(get_script_file_names(SS));
+			tr.find('#script_names').html(get_script_names(SS));
 			m_div.find('#running_scripts').append(tr);
 		}
 
@@ -39,20 +45,9 @@ function DaemonStateView() {
 			m_div.find('#running_processes').append(tr);
 		}
 	}
-	function get_script_file_names(SS) {
+	function get_script_names(SS) {
 		var ret='';
-		var pp=SS.script_paths||[];
-		for (var i=0; i<pp.length; i++) {
-			if (i>0) ret+=' ';
-			ret+=get_file_name(pp[i]);
-		}
-		return ret;
-	}
-	function get_file_name(path) {
-		ind=path.lastIndexOf('/');
-		if (ind>=0) {
-			return path.slice(ind+1);
-		}
-		else return path;
+		var aa=SS.script_names||[];
+		return aa.join(', ');
 	}
 }

@@ -72,8 +72,7 @@ bool MPDaemonInterface::stop()
     if (!d->daemon_is_running()) {
         printf("daemon has been stopped.\n");
         return true;
-    }
-    else {
+    } else {
         printf("Failed to stop daemon\n");
         return false;
     }
@@ -96,7 +95,7 @@ bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
         }
         */
     }
-    QJsonObject obj = pript_struct_to_obj(script);
+    QJsonObject obj = pript_struct_to_obj(script, FullRecord);
     obj["command"] = "queue-script";
     return d->send_daemon_command(obj, 0);
 }
@@ -113,19 +112,24 @@ bool MPDaemonInterface::queueProcess(const MPDaemonPript& process)
         }
         */
     }
-    QJsonObject obj = pript_struct_to_obj(process);
+    QJsonObject obj = pript_struct_to_obj(process, FullRecord);
     obj["command"] = "queue-process";
     return d->send_daemon_command(obj, 0);
 }
 
-/// TODO clang format to laptop
+bool MPDaemonInterface::clearProcessing()
+{
+    QJsonObject obj;
+    obj["command"] = "clear-processing";
+    return d->send_daemon_command(obj, 0);
+}
 
 #include "signal.h"
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
-    QString fname=cfp(qApp->applicationDirPath()+"/running.pid");
-    long pid=read_text_file(fname).toLongLong();
-    bool ret=(kill(pid,0)==0);
+    QString fname = cfp(qApp->applicationDirPath() + "/running.pid");
+    long pid = read_text_file(fname).toLongLong();
+    bool ret = (kill(pid, 0) == 0);
     return ret;
 }
 
@@ -150,7 +154,6 @@ bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_
     return (!QFile::exists(fname));
 }
 
-
 QString MPDaemonInterfacePrivate::last_daemon_state_fname()
 {
     QString path = MPDaemon::daemonPath() + "/daemon_state";
@@ -164,10 +167,12 @@ QJsonObject MPDaemonInterfacePrivate::get_last_daemon_state()
 {
     QJsonObject ret;
     QString fname = last_daemon_state_fname();
-    if (fname.isEmpty()) return ret;
+    if (fname.isEmpty())
+        return ret;
     QString json = read_text_file(fname);
     ret = QJsonDocument::fromJson(json.toLatin1()).object();
-    if (!daemon_is_running()) ret["is_running"]=false;
+    if (!daemon_is_running())
+        ret["is_running"] = false;
     return ret;
 }
 
