@@ -33,6 +33,7 @@ public:
     MPDaemon();
     virtual ~MPDaemon();
     void setTotalResourcesAvailable(ProcessResources PR);
+    void setLogFilePath(const QString &path);
     bool run();
 
     static QString daemonPath();

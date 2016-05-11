@@ -30,12 +30,15 @@ public:
     QFileSystemWatcher m_watcher;
     QMap<QString, MPDaemonPript> m_pripts;
     ProcessResources m_total_resources_available;
+    QString m_log_file_path;
 
-    void write_daemon_state();
     void process_command(QJsonObject obj);
+    void writeLogRecord(QString record_type, QString key1 = "", QVariant val1 = QVariant(), QString key2 = "", QVariant val2 = QVariant(), QString key3 = "", QVariant val3 = QVariant());
+    void writeLogRecord(QString record_type, const QJsonObject& obj);
 
     bool handle_scripts();
     bool handle_processes();
+    bool process_parameters_are_okay(const QString& key);
     bool okay_to_run_process(const QString& key);
     QStringList get_input_paths(MPDaemonPript P);
     QStringList get_output_paths(MPDaemonPript P);
@@ -103,8 +106,8 @@ MPDaemon::MPDaemon()
     d->q = this;
     d->m_is_running = false;
 
-    d->m_total_resources_available.num_cores=12;
-    d->m_total_resources_available.memory_gb=8;
+    d->m_total_resources_available.num_cores = 12;
+    d->m_total_resources_available.memory_gb = 8;
 
     connect(&d->m_watcher, SIGNAL(directoryChanged(QString)), this, SLOT(slot_commands_directory_changed()));
 }
@@ -125,7 +128,12 @@ MPDaemon::~MPDaemon()
 
 void MPDaemon::setTotalResourcesAvailable(ProcessResources PR)
 {
-    d->m_total_resources_available=PR;
+    d->m_total_resources_available = PR;
+}
+
+void MPDaemon::setLogFilePath(const QString& path)
+{
+    d->m_log_file_path = path;
 }
 
 bool MPDaemon::run()
@@ -138,43 +146,39 @@ bool MPDaemon::run()
     }
     d->m_is_running = true;
 
+    d->writeLogRecord("start-daemon");
+
     if (!d->m_watcher.directories().isEmpty()) {
         d->m_watcher.removePaths(d->m_watcher.directories());
     }
     d->m_watcher.addPath(MPDaemon::daemonPath() + "/daemon_commands");
 
-    QTime timer;
-    timer.start();
-    d->write_daemon_state();
-    QTime timer4;
-    timer4.start();
+    QTime timer1;
+    timer1.start();
+    QTime timer2;
+    timer2.start();
+    long num_cycles = 0;
     while (d->m_is_running) {
-        if (timer.elapsed() > 5000) {
-            d->write_daemon_state();
-            timer.restart();
+        if (timer1.elapsed() > 10000) {
+            d->writeLogRecord("timer1", "num_cycles", (long long)num_cycles);
+            timer1.restart();
             printf(".");
         }
-        if (timer4.elapsed() > 5 * 60000) {
+        if (timer2.elapsed() > 10 * 60000) {
+            d->writeLogRecord("timer2");
+            timer2.restart();
             printf("\n");
-            timer4.start();
         }
-        QTime timer2;
-        timer2.start();
         d->stop_orphan_processes_and_scripts();
         d->handle_scripts();
         d->handle_processes();
-        if (timer2.elapsed() > 3000) {
-            qWarning() << "This should not take this much time" << timer2.elapsed();
-        }
-        //
-        QTime timer3;
-        timer3.start();
         qApp->processEvents();
-        if (timer3.elapsed() > 3000) {
-            qWarning() << "Processing events should not take this much time" << timer2.elapsed();
-        }
         MPDaemon::wait(100);
+        num_cycles++;
     }
+
+    d->writeLogRecord("stop-daemon");
+
     return true;
 }
 
@@ -311,6 +315,7 @@ void MPDaemon::slot_pript_qprocess_finished()
         S = &d->m_pripts[pript_id];
     }
     else {
+        d->writeLogRecord("error", "message", "Unexpected problem in slot_pript_qprocess_finished. Unable to find script or process with id: " + pript_id);
         qWarning() << "Unexpected problem in slot_pript_qprocess_finished. Unable to find script or process with id: " + pript_id;
         return;
     }
@@ -332,10 +337,17 @@ void MPDaemon::slot_pript_qprocess_finished()
     else {
         S->success = true;
     }
+    QJsonObject obj0;
+    obj0["pript_id"] = pript_id;
+    obj0["reason"] = "finished";
+    obj0["success"] = S->success;
+    obj0["error"] = S->error;
     if (S->prtype == ScriptType) {
+        d->writeLogRecord("stop-script", obj0);
         printf("  Script %s finished ", pript_id.toLatin1().data());
     }
     else {
+        d->writeLogRecord("stop-process", obj0);
         printf("  Process %s %s finished ", S->processor_name.toLatin1().data(), pript_id.toLatin1().data());
     }
     if (S->success)
@@ -348,6 +360,7 @@ void MPDaemon::slot_pript_qprocess_finished()
                 delete S->qprocess;
             }
             else {
+                d->writeLogRecord("error", "pript_id", pript_id, "message", "Process did not finish after waiting even though we are in the slot for finished!!");
                 qWarning() << "Process did not finish after waiting even though we are in the slot for finished!!";
             }
         }
@@ -360,7 +373,6 @@ void MPDaemon::slot_pript_qprocess_finished()
         delete S->stdout_file;
         S->stdout_file = 0;
     }
-    d->write_daemon_state();
 }
 
 void MPDaemon::slot_qprocess_output()
@@ -382,6 +394,7 @@ void MPDaemon::slot_qprocess_output()
     }
 }
 
+/*
 void MPDaemonPrivate::write_daemon_state()
 {
     /// Witold rather than starting at 100000, I'd like to format the num in the fname to be like 0000023. Could you please help?
@@ -434,23 +447,26 @@ void MPDaemonPrivate::write_daemon_state()
         }
     }
 }
+*/
 
 void MPDaemonPrivate::process_command(QJsonObject obj)
 {
+    writeLogRecord("process-command", obj);
     QString command = obj.value("command").toString();
     if (command == "stop") {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
         m_is_running = false;
-        write_daemon_state();
     }
     else if (command == "queue-script") {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
         MPDaemonPript S = pript_obj_to_struct(obj);
         S.prtype = ScriptType;
         if (m_pripts.contains(S.id)) {
+            writeLogRecord("error", "message","Unable to queue script. Process or script with this id already exists: " + S.id);
             qWarning() << "Unable to queue script. Process or script with this id already exists: " + S.id;
             return;
         }
+        writeLogRecord("queue-script", obj);
         printf("QUEUING SCRIPT %s\n", S.id.toLatin1().data());
         m_pripts[S.id] = S;
     }
@@ -459,14 +475,45 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
         MPDaemonPript P = pript_obj_to_struct(obj);
         P.prtype = ProcessType;
         if (m_pripts.contains(P.id)) {
+            writeLogRecord("error", "message","Unable to queue process. Process or script with this id already exists: " + P.id);
             qWarning() << "Unable to queue process. Process or script with this id already exists: " + P.id;
             return;
         }
+        writeLogRecord("queue-process", obj);
         printf("QUEUING PROCESS %s %s\n", P.processor_name.toLatin1().data(), P.id.toLatin1().data());
         m_pripts[P.id] = P;
     }
     else {
         qWarning() << "Unrecognized command: " + command;
+        writeLogRecord("error", "message", "Unrecognized command: " + command);
+    }
+}
+
+void MPDaemonPrivate::writeLogRecord(QString record_type, QString key1, QVariant val1, QString key2, QVariant val2, QString key3, QVariant val3)
+{
+    QVariantMap map;
+    if (!key1.isEmpty()) {
+        map[key1] = val1;
+    }
+    if (!key2.isEmpty()) {
+        map[key2] = val2;
+    }
+    if (!key3.isEmpty()) {
+        map[key3] = val3;
+    }
+    QJsonObject obj = variantmap_to_json_obj(map);
+    writeLogRecord(record_type, obj);
+}
+
+void MPDaemonPrivate::writeLogRecord(QString record_type, const QJsonObject& obj)
+{
+    QJsonObject X;
+    X["record_type"] = record_type;
+    X["timestamp"] = QDateTime::currentDateTime().toString("yyyy-MM-dd|hh:mm:ss.zzz");
+    X["data"] = obj;
+    QString line = QJsonDocument(X).toJson(QJsonDocument::Compact);
+    if (!m_log_file_path.isEmpty()) {
+        append_line_to_file(m_log_file_path, line);
     }
 }
 
@@ -554,6 +601,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     QObject::connect(qprocess, SIGNAL(readyRead()), q, SLOT(slot_qprocess_output()));
     if (S->prtype == ScriptType) {
         printf("   Launching script %s: ", pript_id.toLatin1().data());
+        writeLogRecord("start-script", "pript_id", pript_id);
         foreach (QString fname, S->script_paths) {
             QString str = QFileInfo(fname).fileName();
             printf("%s ", str.toLatin1().data());
@@ -562,6 +610,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     }
     else {
         printf("   Launching process %s %s: ", S->processor_name.toLatin1().data(), pript_id.toLatin1().data());
+        writeLogRecord("start-process", "pript_id", pript_id);
         QString cmd = args.join(" ");
         printf("%s\n", cmd.toLatin1().data());
     }
@@ -569,6 +618,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     QObject::connect(qprocess, SIGNAL(finished(int)), q, SLOT(slot_pript_qprocess_finished()));
 
     debug_log(__FUNCTION__, __FILE__, __LINE__);
+
     qprocess->start(exe, args);
     if (qprocess->waitForStarted()) {
         S->qprocess = qprocess;
@@ -581,15 +631,16 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
             }
         }
         S->is_running = true;
-        this->write_daemon_state();
         return true;
     }
     else {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
         if (S->prtype == ScriptType) {
+            writeLogRecord("stop-script", "pript_id", pript_id, "reason", "Unable to start script.");
             qWarning() << "Unable to start script: " + S->id;
         }
         else {
+            writeLogRecord("stop-process", "pript_id", pript_id, "reason", "Unable to start process.");
             qWarning() << "Unable to start process: " + S->processor_name + " " + S->id;
         }
         qprocess->disconnect();
@@ -632,44 +683,45 @@ bool MPDaemonPrivate::handle_processes()
             if ((!m_pripts[key].is_running) && (!m_pripts[key].is_finished)) {
                 ProcessResources pr_needed = compute_process_resources_needed(m_pripts[key]);
                 if (is_at_most(pr_needed, pr_available)) {
-                    if (okay_to_run_process(key)) { //check whether there are io file conflicts at the moment
-                        launch_pript(key);
-                        pr_available.num_cores -= m_pripts[key].runtime_opts.num_cores_allotted;
-                        pr_available.memory_gb -= m_pripts[key].runtime_opts.memory_gb_allotted;
+                    if (process_parameters_are_okay(key)) {
+                        if (okay_to_run_process(key)) { //check whether there are io file conflicts at the moment
+                            launch_pript(key);
+                            pr_available.num_cores -= m_pripts[key].runtime_opts.num_cores_allotted;
+                            pr_available.memory_gb -= m_pripts[key].runtime_opts.memory_gb_allotted;
+                        }
+                    }
+                    else {
+                        writeLogRecord("unqueue-process", "pript_id", key, "reason", "processor not found or parameters are incorrect.");
+                        m_pripts.remove(key);
                     }
                 }
             }
         }
     }
-    /*
-    if (num_running_pripts(ProcessType) < max_simultaneous_processes) {
-        if (num_pending_processes() > 0) {
-            if (launch_next_process()) { //may not launch if there is an output file conflict with already running process
-                printf("%d processes running\n", num_running_processes());
-            }
-        }
+    return true;
+}
+
+bool MPDaemonPrivate::process_parameters_are_okay(const QString& key)
+{
+    //check that the processor is registered and that the parameters are okay
+    ProcessManager* PM = ProcessManager::globalInstance();
+    if (!m_pripts.contains(key))
+        return false;
+    MPDaemonPript P0 = m_pripts[key];
+    MLProcessor MLP = PM->processor(P0.processor_name);
+    if (MLP.name != P0.processor_name) {
+        qWarning() << "Unable to find processor **: " + P0.processor_name;
+        return false;
     }
-    */
+    if (!PM->checkParameters(P0.processor_name, P0.parameters)) {
+        qWarning() << "Failure in checkParameters: " + P0.processor_name;
+        return false;
+    }
     return true;
 }
 
 bool MPDaemonPrivate::okay_to_run_process(const QString& key)
 {
-    //first check that the processor is registered and that the parameters are okay
-    {
-        ProcessManager* PM = ProcessManager::globalInstance();
-        MPDaemonPript P0 = m_pripts[key];
-        MLProcessor MLP = PM->processor(P0.processor_name);
-        if (MLP.name != P0.processor_name) {
-            qWarning() << "Unable to find processor **: " + P0.processor_name;
-            return false;
-        }
-        if (!PM->checkParameters(P0.processor_name, P0.parameters)) {
-            qWarning() << "Failure in checkParameters: " + P0.processor_name;
-            return false;
-        }
-    }
-
     //next we check that there are no running processes where the input or output files conflict with the proposed input or output files
     //but note that it is okay for the same input file to be used in more than one simultaneous process
     QSet<QString> pending_input_paths;
@@ -749,11 +801,14 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
                 debug_log(__FUNCTION__, __FILE__, __LINE__);
                 if (m_pripts[key].qprocess) {
                     if (m_pripts[key].prtype == ScriptType) {
+                        writeLogRecord("stop-script", "pript_id", key, "reason", "orphan");
                         qWarning() << "Terminating script qprocess: " + key;
                     }
                     else {
+                        writeLogRecord("stop-process", "pript_id", key, "reason", "orphan");
                         qWarning() << "Terminating process qprocess: " + key;
                     }
+
                     m_pripts[key].qprocess->disconnect(); //so we don't go into the finished slot
                     m_pripts[key].qprocess->terminate();
                     delete m_pripts[key].qprocess;
@@ -761,9 +816,11 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
                 }
                 else {
                     if (m_pripts[key].prtype == ScriptType) {
+                        writeLogRecord("unqueue-script", "pript_id", key, "reason", "orphan");
                         qWarning() << "Removing orphan script: " + key + " " + m_pripts[key].script_paths.value(0);
                     }
                     else {
+                        writeLogRecord("unqueue-process", "pript_id", key, "reason", "orphan");
                         qWarning() << "Removing orphan process: " + key + " " + m_pripts[key].processor_name;
                     }
                     m_pripts.remove(key);

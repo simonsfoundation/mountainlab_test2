@@ -21,9 +21,6 @@ public:
 
     bool daemon_is_running();
     bool send_daemon_command(QJsonObject obj, qint64 timeout_msec);
-    QString last_daemon_state_fname();
-    QJsonObject get_last_daemon_state(qint64 max_elapsed_msec);
-    //qint64 msec_since_last_daemon_state(); //Maybe not used
     QDateTime get_time_from_timestamp_of_fname(QString fname);
 };
 
@@ -77,11 +74,6 @@ bool MPDaemonInterface::stop()
         printf("Failed to stop daemon\n");
         return false;
     }
-}
-
-QJsonObject MPDaemonInterface::getDaemonState()
-{
-    return d->get_last_daemon_state(10000);
 }
 
 bool MPDaemonInterface::queueScript(const MPDaemonPript& script)

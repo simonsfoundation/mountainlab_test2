@@ -175,6 +175,13 @@ int main(int argc, char* argv[])
         QString config_fname = qApp->applicationDirPath() + "/mountainprocess.ini";
         QSettings config(config_fname, QSettings::IniFormat);
         MPDaemon X;
+        QString log_file_path=config.value("log_file_path").toString();
+        if (!log_file_path.isEmpty()) {
+            if (QFileInfo(log_file_path).isRelative()) {
+                log_file_path=qApp->applicationDirPath()+"/"+log_file_path;
+            }
+            X.setLogFilePath(log_file_path);
+        }
         ProcessResources RR;
         RR.num_cores=config.value("num_cores",8).toDouble();
         RR.memory_gb=config.value("memory_gb",8).toDouble();
