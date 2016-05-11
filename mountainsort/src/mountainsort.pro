@@ -49,7 +49,6 @@ HEADERS += \
     processors/compute_outlier_scores.h \
     processors/copy_processor.h \
     processors/mda2txt_processor.h \
-    core/process_msh.h \
     processors/mask_out_artifacts_processor.h \
     processors/mask_out_artifacts.h \
     utils/get_pca_features.h \
@@ -110,7 +109,6 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/compute_outlier_scores.cpp \
     processors/copy_processor.cpp \
     processors/mda2txt_processor.cpp \
-    core/process_msh.cpp \
     processors/mask_out_artifacts_processor.cpp \
     processors/mask_out_artifacts.cpp \
     utils/get_pca_features.cpp \
@@ -151,6 +149,12 @@ SOURCES += remotereadmda.cpp diskreadmda.cpp diskwritemda.cpp usagetracking.cpp 
 
 HEADERS += utils/get_principal_components.h
 SOURCES += utils/get_principal_components.cpp
+
+INCLUDEPATH += ../../common
+DEPENDPATH += ../../common
+VPATH += ../../common
+HEADERS += mlutils.h
+SOURCES += mlutils.cpp
 
 DISTFILES += \
     ../version.txt

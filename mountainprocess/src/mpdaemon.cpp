@@ -20,6 +20,7 @@
 #include "unistd.h" //for usleep
 #include <sys/stat.h> //for mkfifo
 #include "processmanager.h"
+#include "mlutils.h"
 
 /// TODO check for bad situation of more than one daemon running simultaneously
 
@@ -42,6 +43,8 @@ public:
     bool okay_to_run_process(const QString& key);
     QStringList get_input_paths(MPDaemonPript P);
     QStringList get_output_paths(MPDaemonPript P);
+    void write_running_file();
+    void write_daemon_state();
     int num_running_scripts()
     {
         return num_running_pripts(ScriptType);
@@ -153,15 +156,21 @@ bool MPDaemon::run()
     }
     d->m_watcher.addPath(MPDaemon::daemonPath() + "/daemon_commands");
 
+    QTime timer0;
+    timer0.start();
     QTime timer1;
     timer1.start();
     QTime timer2;
     timer2.start();
     long num_cycles = 0;
     while (d->m_is_running) {
-        if (timer1.elapsed() > 10000) {
+        if (timer0.elapsed()>2000) {
+            d->write_running_file();
+        }
+        if (timer1.elapsed() > 5000) {
             d->writeLogRecord("timer1", "num_cycles", (long long)num_cycles);
             timer1.restart();
+            d->write_daemon_state();
             printf(".");
         }
         if (timer2.elapsed() > 10 * 60000) {
@@ -790,6 +799,66 @@ QStringList MPDaemonPrivate::get_output_paths(MPDaemonPript P)
         }
     }
     return ret;
+}
+
+void MPDaemonPrivate::write_running_file()
+{
+    QString fname=cfp(qApp->applicationDirPath()+"/running.pid");
+    QString txt=QString("%1").arg(qApp->applicationPid());
+    write_text_file(fname,txt);
+}
+
+void MPDaemonPrivate::write_daemon_state()
+{
+    /// Witold rather than starting at 100000, I'd like to format the num in the fname to be like 0000023. Could you please help?
+    static long num = 100000;
+    QString timestamp = MPDaemon::makeTimestamp();
+    QString fname = QString("%1/daemon_state/%2.%3.json").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
+    num++;
+
+    QJsonObject state;
+
+    state["is_running"] = m_is_running;
+
+    {
+        QJsonObject scripts;
+        QJsonObject processes;
+        QStringList keys = m_pripts.keys();
+        foreach (QString key, keys) {
+            if (m_pripts[key].prtype == ScriptType)
+                scripts[key] = pript_struct_to_obj(m_pripts[key]);
+            else
+                processes[key] = pript_struct_to_obj(m_pripts[key]);
+        }
+        state["scripts"] = scripts;
+        state["processes"] = processes;
+    }
+
+    QString json = QJsonDocument(state).toJson();
+    write_text_file(fname + ".tmp", json);
+    /// Witold I don't think rename is an atomic operation. Is there a way to guarantee that I don't read the file halfway through the rename?
+    QFile::rename(fname + ".tmp", fname);
+    QFile::setPermissions(fname, QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther);
+
+    //remove the pripts that are finished
+    {
+        QStringList keys = m_pripts.keys();
+        foreach (QString key, keys) {
+            if (m_pripts[key].is_finished) {
+                m_pripts.remove(key);
+            }
+        }
+    }
+
+    //finally, clean up
+    QStringList list = QDir(MPDaemon::daemonPath() + "/daemin_state").entryList(QStringList("*.json"), QDir::Files, QDir::Name);
+    foreach (QString fname, list) {
+        QString path0 = MPDaemon::daemonPath() + "/daemon_state/" + fname;
+        qint64 secs = QFileInfo(path0).lastModified().secsTo(QDateTime::currentDateTime());
+        if ((secs <= -60) || (secs >= 60)) { //I feel a bit paranoid. That's why I allow some future stuff.
+            QFile::remove(path0);
+        }
+    }
 }
 
 void MPDaemonPrivate::stop_orphan_processes_and_scripts()

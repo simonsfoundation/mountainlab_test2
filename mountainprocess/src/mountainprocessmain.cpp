@@ -21,6 +21,7 @@
 #include "processmanager.h"
 #include "textfile.h"
 #include "cachemanager.h"
+#include "mlutils.h"
 
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);
@@ -34,7 +35,7 @@ int main(int argc, char* argv[])
     QCoreApplication app(argc, argv);
     CLParams CLP = commandlineparams(argc, argv);
 
-    CacheManager::globalInstance()->setLocalBasePath(qApp->applicationDirPath() + "/../tmp");
+    CacheManager::globalInstance()->setLocalBasePath(cfp(qApp->applicationDirPath() + "/../tmp"));
 
     QString arg1 = CLP.unnamed_parameters.value(0);
     QString arg2 = CLP.unnamed_parameters.value(1);
@@ -172,13 +173,13 @@ int main(int argc, char* argv[])
     else if (arg1 == "daemon-start") {
         if (!initialize_process_manager())
             return -1;
-        QString config_fname = qApp->applicationDirPath() + "/mountainprocess.ini";
+        QString config_fname = cfp(qApp->applicationDirPath() + "/mountainprocess.ini");
         QSettings config(config_fname, QSettings::IniFormat);
         MPDaemon X;
         QString log_file_path=config.value("log_file_path").toString();
         if (!log_file_path.isEmpty()) {
             if (QFileInfo(log_file_path).isRelative()) {
-                log_file_path=qApp->applicationDirPath()+"/"+log_file_path;
+                log_file_path=cfp(qApp->applicationDirPath()+"/"+log_file_path);
             }
             X.setLogFilePath(log_file_path);
         }
@@ -248,7 +249,7 @@ bool initialize_process_manager()
     /*
      * Load configuration file. If it doesn't exist, copy example configuration file.
      */
-    QString config_fname = qApp->applicationDirPath() + "/mountainprocess.ini";
+    QString config_fname = cfp(qApp->applicationDirPath() + "/mountainprocess.ini");
     if (!QFile::exists(config_fname)) {
         if (!QFile::copy(config_fname + ".example", config_fname)) {
             qWarning() << "Unable to copy example configuration file to " + config_fname;
@@ -272,7 +273,7 @@ bool initialize_process_manager()
         QString p0 = processor_path;
         if (QFileInfo(p0).isRelative()) {
             /// TODO use canonicalFilePath throughout, wherever appropriate so we don't get stuff like a/b/c/../../b/c/../d
-            p0 = QFileInfo(qApp->applicationDirPath() + "/" + p0).canonicalFilePath();
+            p0 = cfp(qApp->applicationDirPath() + "/" + p0);
         }
         printf("Searching for processors in %s\n", p0.toLatin1().data());
         PM->loadProcessors(p0);
