@@ -101,6 +101,7 @@ struct MPDaemonPript {
 
     //For a script:
     QStringList script_paths;
+    QStringList script_path_checksums; //to ensure that scripts have not changed at time of running
 
     //For a process:
     QString processor_name;

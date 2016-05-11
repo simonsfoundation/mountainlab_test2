@@ -250,6 +250,7 @@ bool initialize_process_manager()
      * Load configuration file. If it doesn't exist, copy example configuration file.
      */
     QString config_fname = cfp(qApp->applicationDirPath() + "/mountainprocess.ini");
+    qDebug() << config_fname << qApp->applicationDirPath();
     if (!QFile::exists(config_fname)) {
         if (!QFile::copy(config_fname + ".example", config_fname)) {
             qWarning() << "Unable to copy example configuration file to " + config_fname;
@@ -380,6 +381,7 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
             QString str = CLP.unnamed_parameters[i];
             if (str.endsWith(".js")) {
                 PP.script_paths << str;
+                PP.script_path_checksums << compute_checksum_of_file(str);
             }
             if (str.endsWith(".par")) { // note that we can have multiple parameter files! the later ones override the earlier ones.
                 if (!load_parameter_file(params, str)) {

@@ -11,6 +11,7 @@
 #include <QDebug>
 
 QString cfp(const QString &path); //cannonical file path
+QString compute_checksum_of_file(const QString &path);
 
 #endif // MLUTILS_H
 

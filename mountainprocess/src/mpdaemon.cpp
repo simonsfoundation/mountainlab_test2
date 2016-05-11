@@ -172,6 +172,7 @@ bool MPDaemon::run()
         }
         if (timer1.elapsed() > 5000) {
             d->writeLogRecord("timer1", "num_cycles", (long long)num_cycles);
+            num_cycles=0;
             timer1.restart();
             d->write_daemon_state();
             printf(".");
@@ -583,7 +584,15 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         if (!S->output_fname.isEmpty()) {
             args << "--~script_output=" + S->output_fname;
         }
-        foreach (QString fname, S->script_paths) {
+        for (int ii=0; ii<S->script_paths.count(); ii++) {
+            QString fname=S->script_paths[ii];
+            if (compute_checksum_of_file(fname)!=S->script_path_checksums.value(ii)) {
+                QString message="Script checksums do not match. Script file has changed since queueing: "+fname+" Not launching process: "+pript_id;
+                qWarning() << message;
+                writeLogRecord("error","message",message);
+                writeLogRecord("unqueue-script", "pript_id", pript_id, "reason", "Script file has changed: "+fname);
+                return false;
+            }
             args << fname;
         }
         QJsonObject parameters = variantmap_to_json_obj(S->parameters);
@@ -697,9 +706,10 @@ bool MPDaemonPrivate::handle_processes()
                 if (is_at_most(pr_needed, pr_available)) {
                     if (process_parameters_are_okay(key)) {
                         if (okay_to_run_process(key)) { //check whether there are io file conflicts at the moment
-                            launch_pript(key);
-                            pr_available.num_cores -= m_pripts[key].runtime_opts.num_cores_allotted;
-                            pr_available.memory_gb -= m_pripts[key].runtime_opts.memory_gb_allotted;
+                            if (launch_pript(key)) {
+                                pr_available.num_cores -= m_pripts[key].runtime_opts.num_cores_allotted;
+                                pr_available.memory_gb -= m_pripts[key].runtime_opts.memory_gb_allotted;
+                            }
                         }
                     }
                     else {
@@ -868,7 +878,7 @@ void MPDaemonPrivate::write_daemon_state()
     }
 
     //finally, clean up
-    QStringList list = QDir(MPDaemon::daemonPath() + "/daemin_state").entryList(QStringList("*.json"), QDir::Files, QDir::Name);
+    QStringList list = QDir(MPDaemon::daemonPath() + "/daemon_state").entryList(QStringList("*.json"), QDir::Files, QDir::Name);
     foreach (QString fname, list) {
         QString path0 = MPDaemon::daemonPath() + "/daemon_state/" + fname;
         qint64 secs = QFileInfo(path0).lastModified().secsTo(QDateTime::currentDateTime());
