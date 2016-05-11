@@ -29,7 +29,7 @@ public:
     QFileSystemWatcher m_watcher;
     QMap<QString, MPDaemonPript> m_pripts;
     ProcessResources m_total_resources_available;
-    QString m_log_file_path;
+    QString m_log_path;
 
     void process_command(QJsonObject obj);
     void writeLogRecord(QString record_type, QString key1 = "", QVariant val1 = QVariant(), QString key2 = "", QVariant val2 = QVariant(), QString key3 = "", QVariant val3 = QVariant());
@@ -44,6 +44,7 @@ public:
     bool write_running_file();
     void write_daemon_state();
     bool stop_or_remove_pript(const QString& key);
+    void write_pript_file(const MPDaemonPript& P);
     int num_running_scripts()
     {
         return num_running_pripts(ScriptType);
@@ -108,7 +109,7 @@ MPDaemon::MPDaemon()
     d->q = this;
     d->m_is_running = false;
 
-    d->m_total_resources_available.num_cores = 12;
+    d->m_total_resources_available.num_threads = 12;
     d->m_total_resources_available.memory_gb = 8;
 
     connect(&d->m_watcher, SIGNAL(directoryChanged(QString)), this, SLOT(slot_commands_directory_changed()));
@@ -134,9 +135,12 @@ void MPDaemon::setTotalResourcesAvailable(ProcessResources PR)
     d->m_total_resources_available = PR;
 }
 
-void MPDaemon::setLogFilePath(const QString& path)
+void MPDaemon::setLogPath(const QString& path)
 {
-    d->m_log_file_path = path;
+    d->m_log_path = path;
+    mkdir_if_doesnt_exist(path);
+    mkdir_if_doesnt_exist(path + "/scripts");
+    mkdir_if_doesnt_exist(path + "/processes");
 }
 
 bool MPDaemon::run()
@@ -207,23 +211,21 @@ void MPDaemon::clearProcessing()
     }
 }
 
-void mkdir_if_doesnt_exist(QString path, QFile::Permissions perm)
+void mkdir_if_doesnt_exist(const QString& path)
 {
     /// Witold is there a better way to mkdir if not exists?
     if (!QDir(path).exists()) {
         QDir(QFileInfo(path).path()).mkdir(QFileInfo(path).fileName());
-        QFile(path).setPermissions(perm);
     }
 }
 
 QString MPDaemon::daemonPath()
 {
-    QFile::Permissions perm = QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther | QFile::ExeOwner | QFile::ExeGroup | QFile::ExeOther;
     QString ret = CacheManager::globalInstance()->localTempPath() + "/mpdaemon";
-    mkdir_if_doesnt_exist(ret, perm);
-    mkdir_if_doesnt_exist(ret + "/daemon_state", perm);
-    mkdir_if_doesnt_exist(ret + "/daemon_commands", perm);
-    mkdir_if_doesnt_exist(ret + "/completed_processes", perm);
+    mkdir_if_doesnt_exist(ret);
+    mkdir_if_doesnt_exist(ret + "/daemon_state");
+    mkdir_if_doesnt_exist(ret + "/daemon_commands");
+    mkdir_if_doesnt_exist(ret + "/completed_processes");
     return ret;
 }
 
@@ -364,6 +366,7 @@ void MPDaemon::slot_pript_qprocess_finished()
     obj0["reason"] = "finished";
     obj0["success"] = S->success;
     obj0["error"] = S->error;
+    d->write_pript_file(*S);
     if (S->prtype == ScriptType) {
         d->writeLogRecord("stop-script", obj0);
         printf("  Script %s finished ", pript_id.toLatin1().data());
@@ -444,7 +447,6 @@ void MPDaemonPrivate::write_daemon_state()
     write_text_file(fname + ".tmp", json);
     /// Witold I don't think rename is an atomic operation. Is there a way to guarantee that I don't read the file halfway through the rename?
     QFile::rename(fname + ".tmp", fname);
-    QFile::setPermissions(fname, QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther);
 
     //remove the pripts that are finished
     {
@@ -484,9 +486,10 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
             qWarning() << "Unable to queue script. Process or script with this id already exists: " + S.id;
             return;
         }
-        writeLogRecord("queue-script", obj);
+        writeLogRecord("queue-script", "pript_id", S.id);
         printf("QUEUING SCRIPT %s\n", S.id.toLatin1().data());
         m_pripts[S.id] = S;
+        write_pript_file(S);
     } else if (command == "queue-process") {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
         MPDaemonPript P = pript_obj_to_struct(obj);
@@ -496,9 +499,10 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
             qWarning() << "Unable to queue process. Process or script with this id already exists: " + P.id;
             return;
         }
-        writeLogRecord("queue-process", obj);
+        writeLogRecord("queue-process", P.id);
         printf("QUEUING PROCESS %s %s\n", P.processor_name.toLatin1().data(), P.id.toLatin1().data());
         m_pripts[P.id] = P;
+        write_pript_file(P);
     } else if (command == "clear-processing") {
         q->clearProcessing();
     } else {
@@ -530,8 +534,8 @@ void MPDaemonPrivate::writeLogRecord(QString record_type, const QJsonObject& obj
     X["timestamp"] = QDateTime::currentDateTime().toString("yyyy-MM-dd|hh:mm:ss.zzz");
     X["data"] = obj;
     QString line = QJsonDocument(X).toJson(QJsonDocument::Compact);
-    if (!m_log_file_path.isEmpty()) {
-        append_line_to_file(m_log_file_path, line);
+    if (!m_log_path.isEmpty()) {
+        append_line_to_file(m_log_path + "/mpdaemon.log", line);
     }
 }
 
@@ -605,7 +609,6 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         QString parameters_json = QJsonDocument(parameters).toJson();
         QString par_fname = CacheManager::globalInstance()->makeLocalFile(S->id + ".par", CacheManager::ShortTerm);
         write_text_file(par_fname, parameters_json);
-        QFile::setPermissions(par_fname, QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther);
         args << par_fname;
     } else if (S->prtype == ProcessType) {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
@@ -618,7 +621,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         {
             args << QString("--%1=%2").arg(pkey).arg(S->parameters[pkey].toString());
         }
-        S->runtime_opts.num_cores_allotted = S->num_cores_requested;
+        S->runtime_opts.num_threads_allotted = S->num_threads_requested;
         S->runtime_opts.memory_gb_allotted = S->memory_gb_requested;
     }
     debug_log(__FUNCTION__, __FILE__, __LINE__);
@@ -641,6 +644,8 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         QString cmd = args.join(" ");
         printf("%s\n", cmd.toLatin1().data());
     }
+
+    write_pript_file(*S);
 
     QObject::connect(qprocess, SIGNAL(finished(int)), q, SLOT(slot_pript_qprocess_finished()));
 
@@ -684,7 +689,7 @@ ProcessResources MPDaemonPrivate::compute_process_resources_available()
         if (m_pripts[key].prtype == ProcessType) {
             if (m_pripts[key].is_running) {
                 ProcessRuntimeOpts rtopts = m_pripts[key].runtime_opts;
-                ret.num_cores -= rtopts.num_cores_allotted;
+                ret.num_threads -= rtopts.num_threads_allotted;
                 ret.memory_gb -= rtopts.memory_gb_allotted;
             }
         }
@@ -695,7 +700,7 @@ ProcessResources MPDaemonPrivate::compute_process_resources_available()
 ProcessResources MPDaemonPrivate::compute_process_resources_needed(MPDaemonPript P)
 {
     ProcessResources ret;
-    ret.num_cores = P.num_cores_requested;
+    ret.num_threads = P.num_threads_requested;
     ret.memory_gb = P.memory_gb_requested;
     return ret;
 }
@@ -713,7 +718,7 @@ bool MPDaemonPrivate::handle_processes()
                     if (process_parameters_are_okay(key)) {
                         if (okay_to_run_process(key)) { //check whether there are io file conflicts at the moment
                             if (launch_pript(key)) {
-                                pr_available.num_cores -= m_pripts[key].runtime_opts.num_cores_allotted;
+                                pr_available.num_threads -= m_pripts[key].runtime_opts.num_threads_allotted;
                                 pr_available.memory_gb -= m_pripts[key].runtime_opts.memory_gb_allotted;
                             }
                         }
@@ -878,7 +883,6 @@ void MPDaemonPrivate::write_daemon_state()
     write_text_file(fname + ".tmp", json);
     /// Witold I don't think rename is an atomic operation. Is there a way to guarantee that I don't read the file halfway through the rename?
     QFile::rename(fname + ".tmp", fname);
-    QFile::setPermissions(fname, QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther);
 
     //remove the pripts that are finished
     {
@@ -929,6 +933,23 @@ bool MPDaemonPrivate::stop_or_remove_pript(const QString& key)
     return true;
 }
 
+void MPDaemonPrivate::write_pript_file(const MPDaemonPript& P)
+{
+    if (m_log_path.isEmpty())
+        return;
+    if (P.id.isEmpty())
+        return;
+    QString fname;
+    if (P.prtype == ScriptType) {
+        fname = QString("%1/scripts/%2.json").arg(m_log_path).arg(P.id);
+    } else if (P.prtype == ProcessType) {
+        fname = QString("%1/processes/%2.json").arg(m_log_path).arg(P.id);
+    }
+    QJsonObject obj = pript_struct_to_obj(P, RuntimeRecord);
+    QString json = QJsonDocument(obj).toJson();
+    write_text_file(fname, json);
+}
+
 void MPDaemonPrivate::stop_orphan_processes_and_scripts()
 {
     QStringList keys = m_pripts.keys();
@@ -960,6 +981,7 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
                     }
                     m_pripts.remove(key);
                 }
+                write_pript_file(m_pripts[key]);
             }
         }
     }
@@ -1080,7 +1102,7 @@ QJsonObject pript_struct_to_obj(MPDaemonPript S, RecordType rt)
     QJsonObject ret;
     ret["is_finished"] = S.is_finished;
     ret["is_running"] = S.is_running;
-    if (rt == FullRecord) {
+    if (rt != AbbreviatedRecord) {
         ret["parameters"] = variantmap_to_json_obj(S.parameters);
         ret["output_fname"] = S.output_fname;
         ret["stdout_fname"] = S.stdout_fname;
@@ -1091,7 +1113,7 @@ QJsonObject pript_struct_to_obj(MPDaemonPript S, RecordType rt)
     ret["error"] = S.error;
     if (S.prtype == ScriptType) {
         ret["prtype"] = "script";
-        if (rt == FullRecord) {
+        if (rt != AbbreviatedRecord) {
             ret["script_paths"] = stringlist_to_json_array(S.script_paths);
             ret["script_path_checksums"] = stringlist_to_json_array(S.script_path_checksums);
         } else {
@@ -1100,6 +1122,10 @@ QJsonObject pript_struct_to_obj(MPDaemonPript S, RecordType rt)
     } else {
         ret["prtype"] = "process";
         ret["processor_name"] = S.processor_name;
+    }
+    if (rt==RuntimeRecord) {
+        ret["runtime_opts"]=runtime_opts_struct_to_obj(S.runtime_opts);
+        ret["runtime_results"]=S.runtime_results;
     }
     return ret;
 }
@@ -1129,5 +1155,13 @@ MPDaemonPript pript_obj_to_struct(QJsonObject obj)
 
 bool is_at_most(ProcessResources PR1, ProcessResources PR2)
 {
-    return ((PR1.num_cores <= PR2.num_cores) && (PR1.memory_gb <= PR2.memory_gb));
+    return ((PR1.num_threads <= PR2.num_threads) && (PR1.memory_gb <= PR2.memory_gb));
+}
+
+QJsonObject runtime_opts_struct_to_obj(ProcessRuntimeOpts opts)
+{
+    QJsonObject ret;
+    ret["memory_gb_allotted"]=opts.memory_gb_allotted;
+    ret["num_threads_allotted"]=opts.num_threads_allotted;
+    return ret;
 }

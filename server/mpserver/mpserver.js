@@ -7,6 +7,7 @@ var actions={};
 actions['queueScript']=require('./queuescript.js').queueScript;
 actions['getDaemonState']=require('./getdaemonstate.js').getDaemonState;
 actions['clearProcessing']=require('./clearprocessing.js').clearProcessing;
+actions['getPript']=require('./getpript').getPript;
 
 //// configuration
 var config={};

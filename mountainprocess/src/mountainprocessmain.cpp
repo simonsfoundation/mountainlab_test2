@@ -42,6 +42,15 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, NULL);
 
+    QString config_fname = cfp(qApp->applicationDirPath() + "/mountainprocess.ini");
+    QSettings config(config_fname, QSettings::IniFormat);
+    QString log_path = config.value("log_path").toString();
+    if (!log_path.isEmpty()) {
+        if (QFileInfo(log_path).isRelative()) {
+            log_path = cfp(qApp->applicationDirPath() + "/" + log_path);
+        }
+    }
+
     if (arg1 == "list-processors") { //Provide a human-readable list of the available processors
         if (!initialize_process_manager())
             return -1; //load the processor plugins etc
@@ -170,18 +179,10 @@ int main(int argc, char* argv[])
     } else if (arg1 == "daemon-start") {
         if (!initialize_process_manager())
             return -1;
-        QString config_fname = cfp(qApp->applicationDirPath() + "/mountainprocess.ini");
-        QSettings config(config_fname, QSettings::IniFormat);
         MPDaemon X;
-        QString log_file_path = config.value("log_file_path").toString();
-        if (!log_file_path.isEmpty()) {
-            if (QFileInfo(log_file_path).isRelative()) {
-                log_file_path = cfp(qApp->applicationDirPath() + "/" + log_file_path);
-            }
-            X.setLogFilePath(log_file_path);
-        }
+        X.setLogPath(log_path);
         ProcessResources RR;
-        RR.num_cores = config.value("num_cores", 8).toDouble();
+        RR.num_threads = config.value("num_threads", 8).toDouble();
         RR.memory_gb = config.value("memory_gb", 8).toDouble();
         X.setTotalResourcesAvailable(RR);
         if (!X.run())
@@ -233,7 +234,20 @@ int main(int argc, char* argv[])
         return queue_pript(ScriptType, CLP);
     } else if (arg1 == "queue-process") {
         return queue_pript(ProcessType, CLP);
-    } else {
+    }
+    else if (arg1=="get-script") {
+        if (!log_path.isEmpty()) {
+            QString str=read_text_file(log_path+"/scripts/"+CLP.named_parameters["id"].toString()+".json");
+            printf("%s",str.toLatin1().data());
+        }
+    }
+    else if (arg1=="get-process") {
+        if (!log_path.isEmpty()) {
+            QString str=read_text_file(log_path+"/processes/"+CLP.named_parameters["id"].toString()+".json");
+            printf("%s",str.toLatin1().data());
+        }
+    }
+    else {
         print_usage(); //print usage information
         return -1;
     }

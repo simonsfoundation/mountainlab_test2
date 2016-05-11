@@ -18,10 +18,10 @@
 struct ProcessResources {
     ProcessResources()
     {
-        num_cores = 0;
+        num_threads = 0;
         memory_gb = 0;
     }
-    double num_cores;
+    double num_threads;
     double memory_gb;
 };
 
@@ -33,7 +33,7 @@ public:
     MPDaemon();
     virtual ~MPDaemon();
     void setTotalResourcesAvailable(ProcessResources PR);
-    void setLogFilePath(const QString& path);
+    void setLogPath(const QString& path);
     bool run();
     void clearProcessing();
 
@@ -58,10 +58,10 @@ private:
 struct ProcessRuntimeOpts {
     ProcessRuntimeOpts()
     {
-        num_cores_allotted = 1;
+        num_threads_allotted = 1;
         memory_gb_allotted = 1;
     }
-    double num_cores_allotted;
+    double num_threads_allotted;
     double memory_gb_allotted;
 };
 
@@ -83,7 +83,7 @@ struct MPDaemonPript {
         qprocess = 0;
         stdout_file = 0;
         prtype = ScriptType;
-        num_cores_requested = 1;
+        num_threads_requested = 1;
         memory_gb_requested = 1;
     }
     PriptType prtype;
@@ -106,14 +106,15 @@ struct MPDaemonPript {
 
     //For a process:
     QString processor_name;
-    double num_cores_requested;
+    double num_threads_requested;
     double memory_gb_requested;
     ProcessRuntimeOpts runtime_opts; //defined at run time
 };
 
 enum RecordType {
     AbbreviatedRecord,
-    FullRecord
+    FullRecord,
+    RuntimeRecord
 };
 
 QJsonObject pript_struct_to_obj(MPDaemonPript S, RecordType rt);
@@ -122,5 +123,7 @@ QJsonArray stringlist_to_json_array(QStringList list);
 QStringList json_array_to_stringlist(QJsonArray X);
 QJsonObject variantmap_to_json_obj(QVariantMap map);
 QVariantMap json_obj_to_variantmap(QJsonObject obj);
+void mkdir_if_doesnt_exist(const QString& path);
+QJsonObject runtime_opts_struct_to_obj(ProcessRuntimeOpts opts);
 
 #endif // MPDAEMON_H
