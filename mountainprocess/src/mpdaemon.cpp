@@ -589,6 +589,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
             if (compute_checksum_of_file(fname)!=S->script_path_checksums.value(ii)) {
                 QString message="Script checksums do not match. Script file has changed since queueing: "+fname+" Not launching process: "+pript_id;
                 qWarning() << message;
+                qWarning() << compute_checksum_of_file(fname) << "<>" << S->script_path_checksums.value(ii);
                 writeLogRecord("error","message",message);
                 writeLogRecord("unqueue-script", "pript_id", pript_id, "reason", "Script file has changed: "+fname);
                 return false;
@@ -1036,6 +1037,7 @@ QJsonObject pript_struct_to_obj(MPDaemonPript S)
     if (S.prtype == ScriptType) {
         ret["prtype"] = "script";
         ret["script_paths"] = stringlist_to_json_array(S.script_paths);
+        ret["script_path_checksums"] = stringlist_to_json_array(S.script_path_checksums);
     }
     else {
         ret["prtype"] = "process";
@@ -1059,6 +1061,7 @@ MPDaemonPript pript_obj_to_struct(QJsonObject obj)
     if (obj.value("prtype").toString() == "script") {
         ret.prtype = ScriptType;
         ret.script_paths = json_array_to_stringlist(obj.value("script_paths").toArray());
+        ret.script_path_checksums = json_array_to_stringlist(obj.value("script_path_checksums").toArray());
     }
     else {
         ret.prtype = ProcessType;
