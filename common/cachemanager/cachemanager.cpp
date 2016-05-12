@@ -10,8 +10,9 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QThread>
+#include "mlutils.h"
 
-#define DEFAULT_LOCAL_BASE_PATH QDir::tempPath()+"/mountainlab"
+#define DEFAULT_LOCAL_BASE_PATH mountainlabBasePath()+"/tmp"
 
 class CacheManagerPrivate {
 public:

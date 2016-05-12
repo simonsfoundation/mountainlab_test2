@@ -12,7 +12,7 @@
 #include <QString>
 #include <QStringList>
 #include "textfile.h"
-#include "mscachemanager.h"
+#include "cachemanager.h"
 
 void usage();
 QString get_chunk_code(const QString& fname, const QString& datatype, long index, long size);
@@ -87,8 +87,8 @@ int main(int argc, char* argv[])
             printf("Error computing chunk code.\n");
             return -1;
         }
-        MSCacheManager::globalInstance()->setLocalBasePath(outpath);
-        QString fname=MSCacheManager::globalInstance()->makeLocalFile(code+".mda");
+        CacheManager::globalInstance()->setLocalBasePath(outpath);
+        QString fname=CacheManager::globalInstance()->makeLocalFile(code+".mda");
         QString relative_fname=fname.mid(outpath.count());
         //QString fname = outpath + "/" + code + ".mda";
         if (!QFile::exists(fname)) {

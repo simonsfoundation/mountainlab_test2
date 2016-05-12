@@ -111,7 +111,7 @@ void MBController::openSortingResult(QString json)
         args << "--mscmdserver_url=" + d->m_mscmdserver_url;
         args << "--mode=overview2"
              << "--pre=" + pre << "--filt=" + filt << "--raw=" + raw << "--firings=" + firings;
-	QString mv_exe = cfp(qApp->applicationDirPath() + "/../../mountainview/bin/mountainview");
+        QString mv_exe = cfp(mountainlabBasePath()+"/mountainview/bin/mountainview");
         QProcess* process = new QProcess;
         process->setProcessChannelMode(QProcess::MergedChannels);
         connect(process, SIGNAL(readyRead()), this, SLOT(slot_ready_read()));

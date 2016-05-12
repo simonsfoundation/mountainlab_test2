@@ -30,10 +30,11 @@
 /// TODO add field linking process to parent script
 /// TODO improve stdout view
 /// TODO put mountainbrowser in html -- no qtwebkit
-/// TODO consolidate all temporary and data directories in mountainlab/data mountainlab/tmp
+/// TODO **** consolidate all temporary and data directories in mountainlab/data mountainlab/tmp
 /// TODO consolidate all configuration files in mountainlab/config
 /// TODO security in scripts that are able to be submitted
 /// TODO remove mscmdserver -- replace by mpserver
+/// TODO do we need process tracking in mountainsort -- thought it should be in mountainprocess
 
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);
@@ -47,7 +48,7 @@ int main(int argc, char* argv[])
     QCoreApplication app(argc, argv);
     CLParams CLP = commandlineparams(argc, argv);
 
-    CacheManager::globalInstance()->setLocalBasePath(cfp(qApp->applicationDirPath() + "/../tmp"));
+    CacheManager::globalInstance()->setLocalBasePath(mountainlabBasePath() + "/tmp");
 
     QString arg1 = CLP.unnamed_parameters.value(0);
     QString arg2 = CLP.unnamed_parameters.value(1);

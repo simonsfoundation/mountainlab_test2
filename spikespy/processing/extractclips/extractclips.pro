@@ -48,3 +48,9 @@ DEPENDPATH += ../../../mountainsort/src/utils
 VPATH += ../../../mountainsort/src/utils
 HEADERS += msmisc.h
 SOURCES += msmisc.cpp
+
+INCLUDEPATH += ../../../common
+DEPENDPATH += ../../../common
+VPATH += ../../../common
+HEADERS += mlutils.h
+SOURCES += mlutils.cpp

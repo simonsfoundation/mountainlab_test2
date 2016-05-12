@@ -63,6 +63,12 @@ SOURCES += ssmain.cpp \
     extractclipsdialog.cpp \
     plotarea_prev.cpp
 
+INCLUDEPATH += ../../common
+DEPENDPATH += ../../common
+VPATH += ../../common
+HEADERS += mlutils.h
+SOURCES += mlutils.cpp
+
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils
 VPATH += ../../mountainsort/src/utils
@@ -89,12 +95,6 @@ DEPENDPATH += ../../common/cachemanager
 VPATH += ../../common/cachemanager
 HEADERS += cachemanager.h
 SOURCES += cachemanager.cpp
-
-INCLUDEPATH += ../../common
-DEPENDPATH += ../../common
-VPATH += ../../common
-HEADERS += mlutils.h
-SOURCES += mlutils.cpp
 
 HEADERS += textfile.h
 SOURCES += textfile.cpp

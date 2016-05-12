@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     setbuf(stdout, NULL);
 
 
-    CacheManager::globalInstance()->setLocalBasePath(cfp(app.applicationDirPath() + "/../../tmp"));
+    //CacheManager::globalInstance()->setLocalBasePath(cfp(app.applicationDirPath() + "/../../tmp"));
 
     CLParams CLP = get_command_line_params(argc, argv);
 

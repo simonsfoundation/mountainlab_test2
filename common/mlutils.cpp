@@ -8,6 +8,7 @@
 
 #include <QCryptographicHash>
 #include <QFileInfo>
+#include <QCoreApplication>
 
 QString cfp(const QString &path)
 {
@@ -36,4 +37,18 @@ QString compute_checksum_of_file(const QString &path)
     file.close();
     QString ret = QString(hash.result().toHex());
     return ret;
+}
+
+QString find_ancestor_path_with_name(QString path,QString name) {
+    if (name.isEmpty()) return "";
+    while (QFileInfo(path).fileName()!=name) {
+        path=QFileInfo(path).path();
+        if (!path.contains(name)) return ""; //guarantees that we eventually exit the while loop
+    }
+    return path; //the directory name must equal the name argument
+}
+
+QString mountainlabBasePath()
+{
+    return find_ancestor_path_with_name(qApp->applicationDirPath(),"mountainlab");
 }

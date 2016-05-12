@@ -32,6 +32,7 @@
 #include "extract_raw_processor.h"
 #include "merge_across_channels_processor.h"
 #include "geom2adj_processor.h"
+#include "mlutils.h"
 
 /// TODO remove dependency on qjson
 #include "qjson.h"
@@ -151,12 +152,12 @@ QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& process
         version = PP->version();
         input_file_parameters = PP->inputFileParameters();
         output_file_parameters = PP->outputFileParameters();
-    }
-    else
+    } else
         return ret; //can't even find the processor (not registered)
 
     QVariantMap input_file_codes;
-    foreach (const QString& pp, input_file_parameters) {
+    foreach(const QString & pp, input_file_parameters)
+    {
         QString path0 = parameters[pp].toString();
         if (!path0.isEmpty()) {
             QString code0 = compute_file_code(path0);
@@ -164,7 +165,8 @@ QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& process
         }
     }
     QVariantMap output_file_codes;
-    foreach (const QString& pp, output_file_parameters) {
+    foreach(const QString & pp, output_file_parameters)
+    {
         QString path0 = parameters[pp].toString();
         if (!path0.isEmpty()) {
             QString code0 = compute_file_code(path0);
@@ -204,8 +206,7 @@ bool MSProcessManager::runProcess(const QString& processor_name, const QVariantM
     if (ret) {
         printf("Elapsed time for processor %s: %g sec\n", processor_name.toLatin1().data(), timer.elapsed() * 1.0 / 1000);
         d->write_process_record(processor_name, parameters);
-    }
-    else {
+    } else {
         qWarning() << "Error in processor->run" << processor_name;
     }
 
@@ -225,13 +226,11 @@ bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_na
     if ((!force_run) && (this->findCompletedProcess(processor_name, parameters))) {
         printf("Process already completed: %s\n", processor_name.toLatin1().data());
         return true;
-    }
-    else {
+    } else {
         if (!this->runProcess(processor_name, parameters)) {
             printf("Problem running processor: %s\n", processor_name.toLatin1().data());
             return 0;
-        }
-        else
+        } else
             return true;
     }
 }
@@ -300,7 +299,8 @@ void MSProcessManager::printJsonSpec() const
         QJsonArray inputs;
         {
             QStringList input_file_parameters = P->inputFileParameters();
-            foreach (QString pname, input_file_parameters) {
+            foreach(QString pname, input_file_parameters)
+            {
                 QJsonObject P;
                 P["name"] = pname;
                 inputs.append(P);
@@ -310,7 +310,8 @@ void MSProcessManager::printJsonSpec() const
         QJsonArray outputs;
         {
             QStringList output_file_parameters = P->outputFileParameters();
-            foreach (QString pname, output_file_parameters) {
+            foreach(QString pname, output_file_parameters)
+            {
                 QJsonObject P;
                 P["name"] = pname;
                 outputs.append(P);
@@ -320,7 +321,8 @@ void MSProcessManager::printJsonSpec() const
         QJsonArray parameters;
         {
             QStringList parameters0 = P->requiredParameters();
-            foreach (QString pname, parameters0) {
+            foreach(QString pname, parameters0)
+            {
                 QJsonObject P;
                 P["name"] = pname;
                 P["optional"] = false;
@@ -329,7 +331,8 @@ void MSProcessManager::printJsonSpec() const
         }
         {
             QStringList parameters0 = P->optionalParameters();
-            foreach (QString pname, parameters0) {
+            foreach(QString pname, parameters0)
+            {
                 QJsonObject P;
                 P["name"] = pname;
                 P["optional"] = true;
@@ -366,9 +369,12 @@ MSProcessor* MSProcessManagerPrivate::find_processor(const QString& name)
 
 QString MSProcessManagerPrivate::process_directory()
 {
-    QString path0 = qApp->applicationDirPath();
-    if (!QDir(path0).exists(".process_tracker")) {
-        QDir(path0).mkdir(".process_tracker");
+    QString path0 = mountainlabBasePath() + "/tmp";
+    if (!QDir(path0).exists()) {
+        QDir(QFileInfo(path0).path()).mkdir(QFileInfo(path0).fileName());
     }
-    return path0 + "/.process_tracker";
+    if (!QDir(path0).exists("msprocess_process_tracker")) {
+        QDir(path0).mkdir("msprocess_process_tracker");
+    }
+    return path0 + "/msprocess_process_tracker";
 }

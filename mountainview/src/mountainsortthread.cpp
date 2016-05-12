@@ -64,7 +64,7 @@ void MountainsortThread::compute()
 {
 
     if (d->m_mscmdserver_url.isEmpty()) {
-	QString mountainsort_exe = cfp(qApp->applicationDirPath() + "/../../mountainsort/bin/mountainsort");
+        QString mountainsort_exe = mountainlabBasePath()+"/mountainsort/bin/mountainsort";
         QStringList args;
         args << d->m_processor_name;
         QStringList keys = d->m_parameters.keys();
