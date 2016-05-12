@@ -27,7 +27,6 @@ function MPMonitor() {
 	var m_client=null;
 
 	m_dsv.onScriptItemClicked(function(evt,key) {
-		console.log('test a: '+key);
 		m_pript_view.loadScript(key);
 	});
 	m_dsv.onProcessItemClicked(function(evt,key) {

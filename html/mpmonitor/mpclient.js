@@ -56,6 +56,9 @@ function MPClient(url) {
 					resp.script={};
 				}
 				callback(resp);
+			},
+			error:function() {
+				console.log('Error in POST of getScript.');
 			}
 		});	
 	}
@@ -73,6 +76,9 @@ function MPClient(url) {
 					resp.process={};
 				}
 				callback(resp);
+			},
+			error:function() {
+				console.log('Error in POST of getProcess.');
 			}
 		});	
 	}

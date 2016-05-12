@@ -35,6 +35,20 @@ function DaemonStateView() {
 		refresh();
 	}
 
+	function get_sorted_pript_keys(pripts) {
+		var keys=[];
+		for (var key in pripts) keys.push(key);
+		//running pripts at top
+		function compare0(a,b) {
+			if ((pripts[a].is_running)&&(!pripts[b].is_running)) return -1;
+			if ((pripts[a].is_finished)&&(!pripts[b].is_finished)) return -1;
+			if ((pripts[b].is_running)&&(!pripts[a].is_running)) return 1;
+			if ((pripts[b].is_finished)&&(!pripts[a].is_finished)) return 1;
+			return 0;
+		}
+		return keys.sort(compare0);
+	}
+
 	function set_error(err) {
 		m_error=err; m_state={}; refresh();
 	}
@@ -62,7 +76,9 @@ function DaemonStateView() {
 		m_div.find('#scripts #running').empty();
 		m_div.find('#scripts #running').append('<tr><th>Script ID</th><th>Script Names</th><th>Status</th></tr>');
 		var scripts=m_state.scripts||{};
-		for (var key in scripts) {
+		var sorted_keys=get_sorted_pript_keys(scripts);
+		for (var ikey in sorted_keys) {
+			var key=sorted_keys[ikey];
 			var SS=scripts[key];
 			var a0=$('<a href=# class=script_item data-key='+key+'>'+key+'</a>');
 			var tr=$('#templates #dsv_script_row').clone();
@@ -75,7 +91,9 @@ function DaemonStateView() {
 		m_div.find('#processes #running').empty();
 		m_div.find('#processes #running').append('<tr><th>Process ID</th><th>Processor Name</th><th>Status</th></tr>');
 		var processes=m_state.processes||{};
-		for (var key in processes) {
+		var sorted_keys=get_sorted_pript_keys(processes);
+		for (var ikey in sorted_keys) {
+			var key=sorted_keys[ikey];
 			var PP=processes[key];
 			var a0=$('<a href=# class=process_item data-key='+key+'>'+key+'</a>');
 			var tr=$('#templates #dsv_process_row').clone();
@@ -94,7 +112,14 @@ function DaemonStateView() {
 	}
 	function get_status(P) {
 		if (P.is_running) return 'running';
-		else if (P.is_finished) return 'finished';
+		else if (P.is_finished) {
+			if (P.success) {
+				return 'finished';
+			}
+			else {
+				return 'error';
+			}
+		}
 		else return 'not running';
 	}
 	function get_script_names(SS) {

@@ -29,26 +29,34 @@ function PriptView() {
 
 	function load_script(key) {
 		if (!m_client) return;
+		m_pript={};
+		refresh();
 		m_client.getScript(key,function(resp) {
     		if (resp.success) {
     			m_pript=resp.script;
         		refresh();
         	}
         	else {
+        		console.log('Error loading script: '+resp.error);
         		m_pript={error:'ERR: '+resp.error};
+        		refresh();
         	}
     	});
 	}
 
 	function load_process(key) {
 		if (!m_client) return;
+		m_pript={};
+		refresh();
 		m_client.getProcess(key,function(resp) {
     		if (resp.success) {
     			m_pript=resp.process;
         		refresh();
         	}
         	else {
+        		console.log('Error loading process: '+resp.error);
         		m_pript={error:'ERR: '+resp.error};
+        		refresh();
         	}
     	});
 	}
@@ -69,7 +77,6 @@ function PriptView() {
 			m_div.css('visibility','hidden');
 		}
 		else {
-			console.log(m_pript);
 			var status='not running';
 			if (m_pript.is_running) status='running';
 			else if (m_pript.is_finished) {
@@ -94,8 +101,13 @@ function PriptView() {
 				m_div.find('#name').html(m_pript.processor_name||'<>');
 			}
 			m_div.find('#status').html(status);
-			m_div.find('#raw').val(JSON.stringify(m_pript));
+			m_div.find('#raw').val('RAW:\n'+JSON.stringify(m_pript));
+			m_div.find('#stdout').val('STDOUT:\n'+get_stdout(m_pript));
 		}
+	}
+	function get_stdout(P) {
+		var rr=P.runtime_results||{};
+		return rr.stdout||'';
 	}
 	function get_script_file_name_list(S) {
 		var paths=S.script_paths||[];

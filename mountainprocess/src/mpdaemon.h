@@ -97,6 +97,9 @@ struct MPDaemonPript {
     QString error;
     QJsonObject runtime_results;
     qint64 parent_pid;
+    QDateTime timestamp_queued;
+    QDateTime timestamp_started;
+    QDateTime timestamp_finished;
     QProcess* qprocess;
     QFile* stdout_file;
 

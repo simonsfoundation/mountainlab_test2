@@ -1,6 +1,20 @@
 //// requires
 var	url=require('url');
 var http=require('http');
+var fs=require('fs');
+
+///polyfill
+if (!String.prototype.endsWith) {
+  String.prototype.endsWith = function(searchString, position) {
+      var subjectString = this.toString();
+      if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+        position = subjectString.length;
+      }
+      position -= searchString.length;
+      var lastIndex = subjectString.indexOf(searchString, position);
+      return lastIndex !== -1 && lastIndex === position;
+  };
+}
 
 //// tasks
 var actions={};
@@ -10,10 +24,22 @@ actions['clearProcessing']=require('./clearprocessing.js').clearProcessing;
 actions['getPript']=require('./getpript').getPript;
 
 //// configuration
-var config={};
-config.listen_port=8004;
-config.mountainprocess_exe='/home/magland/dev/mountainlab/mountainprocess/bin/mountainprocess';
-config.tmp_mpserver_path='/home/magland/dev/mountainlab/tmp_mpserver';
+var config_fname='config.json';
+try {
+	var config = JSON.parse(fs.readFileSync(config_fname, 'utf8'));
+}
+catch(err) {
+	console.log('Problem parsing config file. Copy config.example.json to config.json and then modify');
+	return;
+}
+
+//make the configuration paths absolute!
+for (var key in config) {
+	if (config[key].indexOf('/')>=0) {
+		config[key]=require('path').resolve(__dirname,config[key]);	
+	}
+}
+console.log(JSON.stringify(config));
 
 //// setup
 mkdir_if_needed(config.tmp_mpserver_path);
@@ -75,8 +101,11 @@ http.createServer(function (REQ, RESP) {
 	else if(REQ.method=='GET') {
 		var path=url_parts.pathname;
 		var query=url_parts.query;
-		if ((path0endsWith('.html'))||(path.endsWith('.js'))||(path.endsWith('.css'))) {
-			var filename = require('path').join("/home/magland/dev/mountainlab/html", path);
+		var suffixes=['html','js','css','json','txt','jpg','png','gif'];
+		var suf=path.split('.').pop();
+		if (suffixes.indexOf(suf)>=0) {
+			var filename = require('path').join(config.html_path, path);
+			console.log('SERVING FILE: '+filename);
 			serve_file(filename,RESP);
 		}
 		else if (query.action=='getDaemonState') {
@@ -153,3 +182,4 @@ function mkdir_if_needed(path) {
     	fs.mkdirSync(path);
 	}
 }
+

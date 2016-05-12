@@ -12,36 +12,39 @@
 <script>
 $(document).ready(function() {
 
-	var url='http://datalaboratory.org:8004';
-    var client=new MPClient(url);
+    $.getJSON('config.json',function(config) {
+    	//var url='http://datalaboratory.org:8004';
+        var url=config.mpserver_url;
+        var client=new MPClient(url);
 
-    var X=new MPMonitor();
-    X.setClient(client);
-    $('#monitor').append(X.div());
+        var X=new MPMonitor();
+        X.setClient(client);
+        $('#monitor').append(X.div());
 
-    $(window).resize(update_size);
-    update_size();
-    function update_size() {
-    	X.setGeom(0,0,$(window).width()-30,$(window).height()-30);
-    }
+        $(window).resize(update_size);
+        update_size();
+        function update_size() {
+        	X.setGeom(0,0,$(window).width()-30,$(window).height()-30);
+        }
 
-    X.loadState();
-    setInterval(X.loadState,1000);
+        X.loadState();
+        setInterval(X.loadState,1000);
 
-    $('#launch_test_script').click(launch_test_script);
-    function launch_test_script() {
-    	for (var j=0; j<20; j++) {
-	    	var opts={detach:true};
-			var num=j;
-	    	var script1="function main() {initialize_pipeline(); copy_with_delay('/home/magland/tmp/file1.txt','/home/magland/tmp/file1.txt."+num+"'); run_pipeline();}";
-			var scripts=[{code:script1,fname:'test1.js'}];
-			client.queueScript(scripts,opts,function(resp) {
-				//console.log(resp);
-			});
-		}
-    }
+        $('#launch_test_script').click(launch_test_script);
+        function launch_test_script() {
+        	for (var j=0; j<20; j++) {
+    	    	var opts={detach:true};
+    			var num=j;
+    	    	var script1="function main() {console.log('initialize'); initialize_pipeline(); console.log('copy'); copy_with_delay('/home/magland/tmp/file1.txt','/home/magland/tmp/file1.txt."+num+"'); console.log('run'); run_pipeline(); console.log('done');}";
+    			var scripts=[{code:script1,fname:'test1.js'}];
+    			client.queueScript(scripts,opts,function(resp) {
+    				//console.log(resp);
+    			});
+    		}
+        }
 
-    $('#clear_processing').click(client.clearProcessing);
+        $('#clear_processing').click(client.clearProcessing);
+    });
 
 });
 </script>
@@ -93,7 +96,6 @@ $(document).ready(function() {
     	<tr><th>Allotted:</th><td id=allotted></td></tr>
     	</table>
     	<textarea id="stdout"></textarea>
-    	<textarea id="stderr"></textarea>
     	<textarea id="raw"></textarea>
     </div>
 
