@@ -16,7 +16,7 @@
 bool compute_detectability_scores(QString timeseries_path, QString firings_path, QString firings_out_path, const compute_detectability_scores_opts& opts)
 {
 
-    /// TODO this crashed... figure out how that could happen
+    /// TODO figure out what is the bottleneck and try to speed it up
 
     DiskReadMda timeseries;
     timeseries.setPath(timeseries_path);

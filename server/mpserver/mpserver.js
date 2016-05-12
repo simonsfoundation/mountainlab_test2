@@ -73,8 +73,13 @@ http.createServer(function (REQ, RESP) {
 		RESP.end();
 	}
 	else if(REQ.method=='GET') {
+		var path=url_parts.pathname;
 		var query=url_parts.query;
-		if (query.action=='getDaemonState') {
+		if ((path0endsWith('.html'))||(path.endsWith('.js'))||(path.endsWith('.css'))) {
+			var filename = require('path').join("/home/magland/dev/mountainlab/html", path);
+			serve_file(filename,RESP);
+		}
+		else if (query.action=='getDaemonState') {
 			X.handleRequest({action:query.action},function(resp) {
 				send_json_response(resp);
 			});
@@ -92,6 +97,30 @@ http.createServer(function (REQ, RESP) {
 			});
 			X.handleRequest(req,function(resp) {
 				send_json_response(resp);	
+			});
+		});
+	}
+
+	function serve_file(filename,response) {
+		fs.exists(filename,function(exists) {
+			if (!exists) {
+				response.writeHead(404, {"Content-Type": "text/plain"});
+				response.write("404 Not Found\n");
+				response.end();
+				return;
+			}
+
+			fs.readFile(filename, "binary", function(err, file) {
+				if(err) {        
+					response.writeHead(500, {"Content-Type": "text/plain"});
+					response.write(err + "\n");
+					response.end();
+					return;
+				}
+
+				response.writeHead(200);
+				response.write(file, "binary");
+				response.end();
 			});
 		});
 	}
