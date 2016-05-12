@@ -55,14 +55,18 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, NULL);
 
-    QString config_fname = cfp(qApp->applicationDirPath() + "/mountainprocess.ini");
+    QString config_fname = mountainlabBasePath() + "/config/mountainprocess.ini";
     QSettings config(config_fname, QSettings::IniFormat);
+    QString log_path = mountainlabBasePath() + "/log/mountainprocess";
+    /// TODO we no longer need config value log_path
+    /*
     QString log_path = config.value("log_path").toString();
     if (!log_path.isEmpty()) {
         if (QFileInfo(log_path).isRelative()) {
-            log_path = cfp(qApp->applicationDirPath() + "/" + log_path);
+            log_path = mountainlabBasePath() + "/config/" + log_path;
         }
     }
+    */
 
     if (arg1 == "list-processors") { //Provide a human-readable list of the available processors
         if (!initialize_process_manager())
@@ -279,7 +283,7 @@ bool initialize_process_manager()
     /*
      * Load configuration file. If it doesn't exist, copy example configuration file.
      */
-    QString config_fname = cfp(qApp->applicationDirPath() + "/mountainprocess.ini");
+    QString config_fname = mountainlabBasePath() + "/config/mountainprocess.ini";
     if (!QFile::exists(config_fname)) {
         if (!QFile::copy(config_fname + ".example", config_fname)) {
             qWarning() << "Unable to copy example configuration file to " + config_fname;
@@ -302,6 +306,7 @@ bool initialize_process_manager()
     foreach (QString processor_path, processor_paths) {
         QString p0 = processor_path;
         if (QFileInfo(p0).isRelative()) {
+            /// TODO fix this - processor paths
             p0 = cfp(qApp->applicationDirPath() + "/" + p0);
         }
         printf("Searching for processors in %s\n", p0.toLatin1().data());
