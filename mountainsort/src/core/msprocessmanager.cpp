@@ -14,7 +14,6 @@
 #include "adjust_times_processor.h"
 #include "branch_cluster_v2_processor.h"
 #include "remove_duplicate_clusters_processor.h"
-#include "remove_noise_subclusters_processor.h"
 #include "compute_outlier_scores_processor.h"
 #include "compute_detectability_scores_processor.h"
 #include "copy_processor.h"
@@ -81,7 +80,6 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new adjust_times_Processor);
     loadProcessor(new branch_cluster_v2_Processor);
     loadProcessor(new remove_duplicate_clusters_Processor);
-    loadProcessor(new remove_noise_subclusters_Processor);
     loadProcessor(new compute_outlier_scores_Processor);
     loadProcessor(new compute_detectability_scores_Processor);
     loadProcessor(new copy_Processor);

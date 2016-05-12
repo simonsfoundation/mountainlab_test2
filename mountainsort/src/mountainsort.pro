@@ -43,8 +43,6 @@ HEADERS += \
     utils/msmisc.h \
     processors/remove_duplicate_clusters_processor.h \
     processors/remove_duplicate_clusters.h \
-    processors/remove_noise_subclusters_processor.h \
-    processors/remove_noise_subclusters.h \
     processors/compute_outlier_scores_processor.h \
     processors/compute_outlier_scores.h \
     processors/copy_processor.h \
@@ -103,8 +101,6 @@ SOURCES += utils/get_command_line_params.cpp \
     utils/msmisc.cpp \
     processors/remove_duplicate_clusters_processor.cpp \
     processors/remove_duplicate_clusters.cpp \
-    processors/remove_noise_subclusters_processor.cpp \
-    processors/remove_noise_subclusters.cpp \
     processors/compute_outlier_scores_processor.cpp \
     processors/compute_outlier_scores.cpp \
     processors/copy_processor.cpp \
