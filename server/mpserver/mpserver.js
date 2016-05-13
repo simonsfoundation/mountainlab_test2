@@ -29,7 +29,7 @@ try {
 	var config = JSON.parse(fs.readFileSync(config_fname, 'utf8'));
 }
 catch(err) {
-	console.log('Problem parsing config file. Copy mountainlab/config/config.json.config to mountainlab/config/config.json and then modify');
+	console.log('Problem parsing config file. Copy mountainlab/config/config.json.example to mountainlab/config/config.json and then modify');
 	return;
 }
 
