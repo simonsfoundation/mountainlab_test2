@@ -1,9 +1,10 @@
 #ifndef SSTIMESERIESWIDGET_H
 #define SSTIMESERIESWIDGET_H
 
-#include <QMainWindow>
 #include "sscommon.h"
 #include "ssabstractview_prev.h"
+
+/// Todo, remove this file, obsolete
 
 class SSTimeSeriesWidgetPrivate;
 class SSTimeSeriesWidget : public QWidget

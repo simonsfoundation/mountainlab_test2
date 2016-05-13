@@ -210,14 +210,6 @@ void MPDaemon::clearProcessing()
     }
 }
 
-void mkdir_if_doesnt_exist(const QString& path)
-{
-    /// Witold is there a better way to mkdir if not exists?
-    if (!QDir(path).exists()) {
-        QDir(QFileInfo(path).path()).mkdir(QFileInfo(path).fileName());
-    }
-}
-
 QString MPDaemon::daemonPath()
 {
     QString ret = CacheManager::globalInstance()->localTempPath() + "/mpdaemon";
@@ -851,7 +843,7 @@ QStringList MPDaemonPrivate::get_output_paths(MPDaemonPript P)
 #include "signal.h"
 bool MPDaemonPrivate::write_running_file()
 {
-    QString fname = cfp(qApp->applicationDirPath() + "/running.pid");
+    QString fname = cfp(mlTmpPath() + "/mpdaemon_running.pid");
     QString txt = QString("%1").arg(qApp->applicationPid());
 
     //check for another daemon running!

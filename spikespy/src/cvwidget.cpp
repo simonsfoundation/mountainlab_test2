@@ -176,7 +176,7 @@ QColor CVWidgetPrivate::get_label_color(int label)
 
 void CVWidgetPrivate::generate_features_from_clips()
 {
-	//TO DO -- this should be replaced by a procedure that does not involve system call
+        //This should be replaced by a procedure that does not involve system call, but in the end we're going to remove this class
 	/*
     if (m_clips.totalSize()<=1) {
 		QMessageBox::critical(q,"Problem generating features.","Problem generating features. m_clips is null.");

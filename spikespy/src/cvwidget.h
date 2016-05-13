@@ -4,6 +4,8 @@
 #include <QWidget>
 #include "diskreadmdaold.h"
 
+/// TODO remove this class
+
 class CVWidgetPrivate;
 class CVWidget : public QWidget
 {

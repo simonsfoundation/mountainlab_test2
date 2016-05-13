@@ -9,8 +9,10 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QDir>
-#include <QApplication>
 #include <QFileInfo>
+#include "mlutils.h"
+
+/// TODO remove unnecessary includes throughout (does QtCreator highlight them?)
 
 class CloseMeHandlerPrivate {
 public:
@@ -38,7 +40,7 @@ void CloseMeHandler::start()
 
 void CloseMeHandler::slot_timer()
 {
-    QString fname = qApp->applicationDirPath() + "/closeme.tmp";
+    QString fname = mlTmpPath() + "/closeme.tmp";
     if (QFile::exists(fname)) {
         QDateTime dt = QFileInfo(fname).created();
         if (dt > d->m_start_time) {

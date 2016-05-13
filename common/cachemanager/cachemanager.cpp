@@ -12,7 +12,7 @@
 #include <QThread>
 #include "mlutils.h"
 
-#define DEFAULT_LOCAL_BASE_PATH mountainlabBasePath()+"/tmp"
+#define DEFAULT_LOCAL_BASE_PATH mlTmpPath()
 
 class CacheManagerPrivate {
 public:
@@ -36,22 +36,18 @@ CacheManager::~CacheManager()
 void CacheManager::setLocalBasePath(const QString& path)
 {
     d->m_local_base_path = path;
-    QFile::Permissions perm=QFile::ReadOwner|QFile::ReadGroup|QFile::ReadOther|QFile::WriteOwner|QFile::WriteGroup|QFile::WriteOther|QFile::ExeOwner|QFile::ExeGroup|QFile::ExeOther;
     if (!QDir(path).exists()) {
         QString parent = QFileInfo(path).path();
         QString name = QFileInfo(path).fileName();
         if (!QDir(parent).mkdir(name)) {
             qWarning() << "Unable to create local base path" << path;
         }
-        QFile(path).setPermissions(perm);
     }
     if (!QDir(path + "/tmp_short_term").exists()) {
         QDir(path).mkdir("tmp_short_term");
-        QFile(path+"/tmp_short_term").setPermissions(perm);
     }
     if (!QDir(path + "/tmp_long_term").exists()) {
         QDir(path).mkdir("tmp_long_term");
-        QFile(path+"/tmp_long_term").setPermissions(perm);
     }
 }
 

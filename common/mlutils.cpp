@@ -10,7 +10,7 @@
 #include <QFileInfo>
 #include <QCoreApplication>
 
-QString cfp(const QString &path)
+QString cfp(const QString& path)
 {
     /// Witold. How can I return a can a canonical file path when the file does not yet exist? This can be important for consistency!
     //for now I just return the path
@@ -26,8 +26,7 @@ QString cfp(const QString &path)
     */
 }
 
-
-QString compute_checksum_of_file(const QString &path)
+QString compute_checksum_of_file(const QString& path)
 {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly))
@@ -39,16 +38,48 @@ QString compute_checksum_of_file(const QString &path)
     return ret;
 }
 
-QString find_ancestor_path_with_name(QString path,QString name) {
-    if (name.isEmpty()) return "";
-    while (QFileInfo(path).fileName()!=name) {
-        path=QFileInfo(path).path();
-        if (!path.contains(name)) return ""; //guarantees that we eventually exit the while loop
+QString find_ancestor_path_with_name(QString path, QString name)
+{
+    if (name.isEmpty())
+        return "";
+    while (QFileInfo(path).fileName() != name) {
+        path = QFileInfo(path).path();
+        if (!path.contains(name))
+            return ""; //guarantees that we eventually exit the while loop
     }
     return path; //the directory name must equal the name argument
 }
 
 QString mountainlabBasePath()
 {
-    return find_ancestor_path_with_name(qApp->applicationDirPath(),"mountainlab");
+    return find_ancestor_path_with_name(qApp->applicationDirPath(), "mountainlab");
+}
+
+void mkdir_if_doesnt_exist(const QString& path)
+{
+    /// Witold is there a better way to mkdir if not exists?
+    if (!QDir(path).exists()) {
+        QDir(QFileInfo(path).path()).mkdir(QFileInfo(path).fileName());
+    }
+}
+
+QString mlTmpPath()
+{
+    QString ret = mountainlabBasePath() + "/tmp";
+    mkdir_if_doesnt_exist(ret);
+    return ret;
+}
+
+QString mlLogPath()
+{
+    QString ret = mountainlabBasePath() + "/log";
+    mkdir_if_doesnt_exist(ret);
+    return ret;
+}
+
+QString mlConfigPath()
+{
+    QString ret = mountainlabBasePath() + "/config";
+    mkdir_if_doesnt_exist(ret);
+    return ret;
 }

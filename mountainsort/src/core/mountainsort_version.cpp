@@ -4,12 +4,9 @@
 #include <QCoreApplication>
 #include <QDebug>
 
+/// Witold, how would you recommend handling versioning? I am terrible at it
+
 QString mountainsort_version()
 {
-	return read_text_file(bin_path()+"/../version.txt");
-}
-
-QString bin_path()
-{
-	return qApp->applicationDirPath();
+    return read_text_file(mountainlabBasePath() + "/version.txt");
 }

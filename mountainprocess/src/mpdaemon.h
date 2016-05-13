@@ -126,7 +126,6 @@ QJsonArray stringlist_to_json_array(QStringList list);
 QStringList json_array_to_stringlist(QJsonArray X);
 QJsonObject variantmap_to_json_obj(QVariantMap map);
 QVariantMap json_obj_to_variantmap(QJsonObject obj);
-void mkdir_if_doesnt_exist(const QString& path);
 QJsonObject runtime_opts_struct_to_obj(ProcessRuntimeOpts opts);
 
 #endif // MPDAEMON_H

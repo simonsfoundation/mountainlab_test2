@@ -127,7 +127,7 @@ bool MPDaemonInterface::clearProcessing()
 #include "signal.h"
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
-    QString fname = cfp(qApp->applicationDirPath() + "/running.pid");
+    QString fname = cfp(mlTmpPath() + "/mpdaemon_running.pid");
     long pid = read_text_file(fname).toLongLong();
     bool ret = (kill(pid, 0) == 0);
     return ret;
@@ -145,7 +145,6 @@ bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_
 
     QString json = QJsonDocument(obj).toJson();
     write_text_file(fname, json);
-    QFile::setPermissions(fname, QFile::ReadOwner | QFile::ReadGroup | QFile::ReadOther | QFile::WriteOwner | QFile::WriteGroup | QFile::WriteOther);
     QTime timer;
     timer.start();
     //wait until it has been received by the daemon

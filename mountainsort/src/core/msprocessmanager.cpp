@@ -369,7 +369,7 @@ MSProcessor* MSProcessManagerPrivate::find_processor(const QString& name)
 
 QString MSProcessManagerPrivate::process_directory()
 {
-    QString path0 = mountainlabBasePath() + "/tmp";
+    QString path0 = mlTmpPath();
     if (!QDir(path0).exists()) {
         QDir(QFileInfo(path0).path()).mkdir(QFileInfo(path0).fileName());
     }

@@ -9,6 +9,8 @@
 
 #include <QObject>
 
+/// TODO remove this file because replaced by CacheManager
+
 class MSCacheManagerPrivate;
 class MSCacheManager : public QObject {
 public:

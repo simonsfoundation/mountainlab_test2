@@ -39,7 +39,7 @@ void CloseMeHandler::start()
 
 void CloseMeHandler::slot_timer()
 {
-    QString fname = cfp(qApp->applicationDirPath() + "/closeme.tmp");
+    QString fname = cfp(mlTmpPath() + "/closeme.tmp");
     if (QFile::exists(fname)) {
         QDateTime dt = QFileInfo(fname).created();
         if (dt > d->m_start_time) {
