@@ -41,6 +41,7 @@
 /// TODO remove mscmdserver
 /// TODO error checking in mountainview -- don't load anything if the processing failed (cache worries)ls da
 /// TODO title on mountainview from mountainbrowser
+/// TODO the paths in mpserver config should be relative to the location of the config file itself
 
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);

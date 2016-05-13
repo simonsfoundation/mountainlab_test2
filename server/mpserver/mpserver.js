@@ -100,6 +100,7 @@ http.createServer(function (REQ, RESP) {
 	}
 	else if(REQ.method=='GET') {
 		var path=url_parts.pathname;
+		console.log(path);
 		var query=url_parts.query;
 		var suffixes=['html','js','css','json','txt','jpg','png','gif'];
 		var suf=path.split('.').pop();

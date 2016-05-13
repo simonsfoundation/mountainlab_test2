@@ -69,7 +69,7 @@ function DaemonStateView() {
 		var running_str='';
 		if (m_error) running_str='MountainProcess daemon: '+m_error; /// TODO show uptime
 		else if (m_state.is_running) running_str='MountainProcess daemon is running';
-		else running_str='MountainProcess is NOT running';
+		else running_str='MountainProcess daemon is NOT running';
 
 		m_div.find('#daemon #running').html(running_str);
 
