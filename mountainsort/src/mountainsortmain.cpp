@@ -16,18 +16,15 @@
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <msscriptcontroller.h>
 #include "diskreadmda.h"
 #include "unit_tests.h"
 #include "textfile.h"
-#include <QJSEngine>
 #include "cachemanager.h"
 #include "mlutils.h"
 
 void print_usage();
 void list_processors(const MSProcessManager* PM);
 bool run_process(MSProcessManager* PM, QJsonObject process, bool force_run);
-int run_script(const QStringList& script_fnames, const QVariantMap& params);
 
 int main(int argc, char* argv[])
 {
@@ -42,16 +39,6 @@ int main(int argc, char* argv[])
 
     QString arg1 = CLP.unnamed_parameters.value(0);
     QString arg2 = CLP.unnamed_parameters.value(1);
-
-    QStringList script_fnames;
-    for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
-        if ((CLP.unnamed_parameters[i].endsWith(".js")) || (CLP.unnamed_parameters[i].endsWith(".ms"))) {
-            script_fnames << CLP.unnamed_parameters[i];
-        }
-    }
-    if (!script_fnames.isEmpty()) {
-        return run_script(script_fnames, CLP.named_parameters);
-    }
 
     if (arg1 == "process") {
         if (arg2.isEmpty()) {
@@ -138,50 +125,10 @@ bool run_process(MSProcessManager* PM, QJsonObject process, bool force_run)
         params[key] = parameters[key].toString();
     }
 
-    if (!PM->checkAndRunProcessIfNecessary(processor_name, params, force_run)) {
+    if (!PM->checkAndRunProcess(processor_name, params, force_run)) {
         return false;
     }
 
     return true;
 }
 
-void display_error(QJSValue result)
-{
-    qDebug() << result.property("name").toString();
-    qDebug() << result.property("message").toString();
-    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
-}
-
-int run_script(const QStringList& script_fnames, const QVariantMap& params)
-{
-    QJSEngine engine;
-    MSScriptController Controller;
-    QJSValue MS = engine.newQObject(&Controller);
-    engine.globalObject().setProperty("MS", MS);
-    foreach (QString fname, script_fnames) {
-        QJSValue result = engine.evaluate(read_text_file(fname), fname);
-        if (result.isError()) {
-            display_error(result);
-            qCritical() << "Error running script.";
-            return -1;
-        }
-    }
-
-    {
-        QStringList param_keys = params.keys();
-        QJsonObject params_obj;
-        foreach (QString key, param_keys) {
-            params_obj[key] = params[key].toString();
-        }
-        QString params_json = QJsonDocument(params_obj).toJson(QJsonDocument::Compact);
-        QString str = QString("main(JSON.parse('%1'));").arg(params_json);
-        QJSValue result = engine.evaluate(str);
-        if (result.isError()) {
-            display_error(result);
-            qCritical() << "Error running script.";
-            return -1;
-        }
-    }
-
-    return 0;
-}

@@ -4,8 +4,6 @@ QT -= gui
 #CONFIG -= debug
 CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
-QT += qml
-
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
 MOC_DIR=../build
@@ -70,7 +68,6 @@ HEADERS += \
     processors/filter_events.h \
     processors/filter_events_processor.h \
     processors/confusion_matrix.h \
-    core/msscriptcontroller.h \
     processors/extract_raw_processor.h \
     processors/merge_across_channels.h \
     processors/merge_across_channels_processor.h \
@@ -129,7 +126,6 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/filter_events_processor.cpp \
     processors/confusion_matrix.cpp \
     processors/confusion_matrix_processor.cpp \
-    core/msscriptcontroller.cpp \
     processors/extract_raw_processor.cpp \
     processors/fit_stage_new.cpp \
     processors/merge_across_channels.cpp \

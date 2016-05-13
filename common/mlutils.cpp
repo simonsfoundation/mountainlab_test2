@@ -9,6 +9,7 @@
 #include <QCryptographicHash>
 #include <QFileInfo>
 #include <QCoreApplication>
+#include <QDir>
 
 QString cfp(const QString& path)
 {
