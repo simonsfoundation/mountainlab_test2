@@ -30,6 +30,7 @@
 /// TODO add field linking process to parent script
 /// TODO improve stdout view
 /// TODO put mountainbrowser in html -- no qtwebkit
+/// TODO open mountainview with .mv file, so that this can be downloaded from website
 /// TODO consolidate all temporary and data directories in mountainlab/tmp mountainlab/log mountainlog/config
 /// TODO work on config files for server
 /// TODO security in scripts that are able to be submitted
@@ -42,6 +43,9 @@
 /// TODO error checking in mountainview -- don't load anything if the processing failed (cache worries)ls da
 /// TODO title on mountainview from mountainbrowser
 /// TODO the paths in mpserver config should be relative to the location of the config file itself
+/// TODO devtools/open_* for opening tmux sessions for the servers and the daemon
+/// TODO consolidate mountainview and spikespy
+/// TODO fix bug in synchronizing current/selected clusters in mountainview
 
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);
