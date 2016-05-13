@@ -30,11 +30,17 @@
 /// TODO add field linking process to parent script
 /// TODO improve stdout view
 /// TODO put mountainbrowser in html -- no qtwebkit
-/// TODO **** consolidate all temporary and data directories in mountainlab/data mountainlab/tmp
-/// TODO consolidate all configuration files in mountainlab/config
+/// TODO consolidate all temporary and data directories in mountainlab/tmp mountainlab/log mountainlog/config
+/// TODO work on config files for server
 /// TODO security in scripts that are able to be submitted
 /// TODO remove mscmdserver -- replace by mpserver
 /// TODO do we need process tracking in mountainsort -- thought it should be in mountainprocess
+/// TODO change all .ini and .cfg to .json
+/// TODO change python servers to node js
+/// TODO update installation instructions
+/// TODO remove mscmdserver
+/// TODO error checking in mountainview -- don't load anything if the processing failed (cache worries)ls da
+/// TODO title on mountainview from mountainbrowser
 
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);
@@ -269,14 +275,12 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-/// TODO change all .ini to .json
-
 bool initialize_process_manager()
 {
     /*
      * Load configuration file. If it doesn't exist, copy example configuration file.
      */
-    QString config_fname = mlConfigPath() + "/config/mountainprocess.ini";
+    QString config_fname = mlConfigPath() + "/mountainprocess.ini";
     if (!QFile::exists(config_fname)) {
         if (!QFile::copy(config_fname + ".example", config_fname)) {
             qWarning() << "Unable to copy example configuration file to " + config_fname;

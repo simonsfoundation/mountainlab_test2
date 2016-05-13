@@ -24,12 +24,12 @@ actions['clearProcessing']=require('./clearprocessing.js').clearProcessing;
 actions['getPript']=require('./getpript').getPript;
 
 //// configuration
-var config_fname='config.json';
+var config_fname='../../config/mpserver.json';
 try {
 	var config = JSON.parse(fs.readFileSync(config_fname, 'utf8'));
 }
 catch(err) {
-	console.log('Problem parsing config file. Copy config.example.json to config.json and then modify');
+	console.log('Problem parsing config file. Copy mountainlab/config/config.json.config to mountainlab/config/config.json and then modify');
 	return;
 }
 

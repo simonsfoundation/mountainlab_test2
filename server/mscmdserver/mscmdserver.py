@@ -19,14 +19,14 @@ class ConfigReader(object):
 
 class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_GET(self): #handle a GET request
-        mountainsort_exe        = self.cfg("mountainsort_exe")
+        mountainprocess_exe        = self.cfg("mountainprocess_exe")
         mdaserver_basepath            = self.cfg("mdaserver_basepath")
         mdaserver_url   = self.cfg("mdaserver_url")
         processor_name=self.query("processor")
         self.mkdir_if_needed(mdaserver_basepath+"/tmp_short_term")
         self.mkdir_if_needed(mdaserver_basepath+"/tmp_long_term")
         keys0=self.query_keys()
-        cmd = mountainsort_exe+" "+processor_name
+        cmd = mountainprocess_exe+" run-process "+processor_name
         for j in range(0,len(keys0)):
             if not keys0[j]=="processor":
                 val=self.query(keys0[j])
@@ -81,8 +81,8 @@ class MyTCPServer(SocketServer.TCPServer):
     allow_reuse_address = True
 
 def main():
-    config_fname='mscmdserver.cfg'
-    example_config_fname='mscmdserver.example.cfg'
+    config_fname='../../config/mscmdserver.cfg'
+    example_config_fname='../../config/mscmdserver.example.cfg'
     if not os.path.isfile(config_fname):
         shutil.copyfile(example_config_fname,config_fname)
         print("Please edit the configuration file "+config_fname+" and then re-run this program")

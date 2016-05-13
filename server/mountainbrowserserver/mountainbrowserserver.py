@@ -88,13 +88,9 @@ class MyRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 class MyTCPServer(SocketServer.TCPServer):
     allow_reuse_address = True
 
-#Witold, curious. In nodejs, I found the server would stop running if there was an error. For python it seems like it recovers gracefully
-#and keeps running. Will the server ever crash? If it does, what's the probable cause -- what do we need to watch for?
-
 def main():
-    #Witold, since this behavior is common to all three servers, what's the best way to make it non-redundant?
-    config_fname = 'mountainbrowserserver.cfg'
-    example_config_fname = 'mountainbrowserserver.example.cfg'
+    config_fname = '../../config/mountainbrowserserver.cfg'
+    example_config_fname = '../../config/mountainbrowserserver.example.cfg'
     if not os.path.isfile(config_fname):
         shutil.copyfile(example_config_fname, config_fname)
         print("Please edit the configuration file " + config_fname +
