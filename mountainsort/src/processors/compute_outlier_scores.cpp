@@ -3,7 +3,6 @@
 #include "mda.h"
 #include "diskreadmda.h"
 #include "msmisc.h"
-//#include "remove_noise_subclusters.h"
 #include <math.h>
 #include "extract_clips.h"
 #include "compute_detectability_scores.h"
