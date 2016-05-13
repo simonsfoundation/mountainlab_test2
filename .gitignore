@@ -36,3 +36,6 @@ Makefile*
 *.qmlproject.user.*
 
 *server.cfg
+
+*/bin
+*/tmp
