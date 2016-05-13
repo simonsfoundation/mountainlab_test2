@@ -3,9 +3,9 @@
 #include "mda.h"
 #include "diskreadmda.h"
 #include "msmisc.h"
-#include "remove_noise_subclusters.h"
 #include <math.h>
 #include "extract_clips.h"
+#include "compute_detectability_scores.h"
 
 QList<double> grab_sublist(const QList<double> &X,const QList<int> &inds);
 QList<double> compute_outlier_scores(Mda &clips,Mda &random_clips);
