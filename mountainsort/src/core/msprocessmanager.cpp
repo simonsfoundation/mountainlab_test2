@@ -49,9 +49,7 @@ public:
     example_Processor m_dummy_processor;
 
     MSProcessor* find_processor(const QString& name);
-    QString process_directory();
     QVariantMap compute_process_info(const QString& processor_name, const QVariantMap& parameters);
-    void write_process_record(const QString& processor_name, const QVariantMap& parameters);
 };
 
 MSProcessManager::MSProcessManager()
@@ -129,19 +127,6 @@ QString compute_file_code(const QString& path)
     return id_string;
 }
 
-bool MSProcessManager::findCompletedProcess(const QString& processor_name, const QVariantMap& parameters) const
-{
-    QString path = d->process_directory();
-    QString code = compute_process_code(processor_name, parameters); //this code just depends on processor name and parameters
-    QString fname = path + "/" + code + ".process";
-    if (!QFile::exists(fname))
-        return false; //file doesn't exist
-    QVariantMap info = d->compute_process_info(processor_name, parameters); //this depends on processor name, version, parameters, and input/output file codes
-    QString txt = read_text_file(fname);
-    QVariantMap info_from_file = parseJSON(txt).toMap();
-    return (toJSON(info) == toJSON(info_from_file)); //note: toJSON should be replaced by a canonical version (ie, one that produces a canonical test string, for example by alphabetizing the fields)
-}
-
 QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& processor_name, const QVariantMap& parameters)
 {
     QVariantMap ret;
@@ -181,15 +166,6 @@ QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& process
     return ret;
 }
 
-void MSProcessManagerPrivate::write_process_record(const QString& processor_name, const QVariantMap& parameters)
-{
-    QString path = process_directory();
-    QString code = compute_process_code(processor_name, parameters);
-    QString fname = path + "/" + code + ".process";
-    QVariantMap info = compute_process_info(processor_name, parameters);
-    write_text_file(fname, toJSON(info));
-}
-
 bool MSProcessManager::runProcess(const QString& processor_name, const QVariantMap& parameters_in)
 {
     QVariantMap parameters = parameters_in;
@@ -205,7 +181,6 @@ bool MSProcessManager::runProcess(const QString& processor_name, const QVariantM
     bool ret = processor->run(parameters);
     if (ret) {
         printf("Elapsed time for processor %s: %g sec\n", processor_name.toLatin1().data(), timer.elapsed() * 1.0 / 1000);
-        d->write_process_record(processor_name, parameters);
     } else {
         qWarning() << "Error in processor->run" << processor_name;
     }
@@ -213,7 +188,7 @@ bool MSProcessManager::runProcess(const QString& processor_name, const QVariantM
     return ret;
 }
 
-bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_name, const QVariantMap& parameters, bool force_run)
+bool MSProcessManager::checkAndRunProcess(const QString& processor_name, const QVariantMap& parameters, bool force_run)
 {
     if (!this->containsProcessor(processor_name)) {
         printf("Unable to find processor: %s\n", processor_name.toLatin1().data());
@@ -223,10 +198,7 @@ bool MSProcessManager::checkAndRunProcessIfNecessary(const QString& processor_na
         printf("Problem checking processor: %s\n", processor_name.toLatin1().data());
         return false;
     }
-    if ((!force_run) && (this->findCompletedProcess(processor_name, parameters))) {
-        printf("Process already completed: %s\n", processor_name.toLatin1().data());
-        return true;
-    } else {
+    {
         if (!this->runProcess(processor_name, parameters)) {
             printf("Problem running processor: %s\n", processor_name.toLatin1().data());
             return 0;
@@ -365,16 +337,4 @@ MSProcessor* MSProcessManagerPrivate::find_processor(const QString& name)
         return &m_dummy_processor;
     }
     return m_processors[name];
-}
-
-QString MSProcessManagerPrivate::process_directory()
-{
-    QString path0 = mlTmpPath();
-    if (!QDir(path0).exists()) {
-        QDir(QFileInfo(path0).path()).mkdir(QFileInfo(path0).fileName());
-    }
-    if (!QDir(path0).exists("msprocess_process_tracker")) {
-        QDir(path0).mkdir("msprocess_process_tracker");
-    }
-    return path0 + "/msprocess_process_tracker";
 }
