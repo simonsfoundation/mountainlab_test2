@@ -112,6 +112,7 @@ void ComputationThread::setStatus(QString label, QString description, double pro
         d->m_task_progress.setDescription(description);
     if (progress >= 0)
         d->m_task_progress.setProgress(progress);
+    d->m_task_progress.log(label+": "+description);
 }
 
 bool ComputationThread::stopRequested()

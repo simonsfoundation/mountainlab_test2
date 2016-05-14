@@ -1,24 +1,24 @@
 /******************************************************
 ** See the accompanying README and LICENSE files
-** Author(s): Jeremy Magland
+** Author(s): Jeremy Magland and Witold Wysota
 ** Created: 4/30/2016
 *******************************************************/
 
 #ifndef TASKPROGRESSVIEW_H
 #define TASKPROGRESSVIEW_H
 
-#include <QWidget>
+#include <QTreeView>
 
 class TaskProgressViewPrivate;
-class TaskProgressView : public QWidget {
+class TaskProgressView : public QTreeView {
     Q_OBJECT
 public:
     friend class TaskProgressViewPrivate;
     TaskProgressView();
     virtual ~TaskProgressView();
-private slots:
-    void slot_refresh();
-
+public slots:
+    void copySelectedToClipboard();
+    void showLogMessages(const QModelIndex &index);
 private:
     TaskProgressViewPrivate* d;
 };

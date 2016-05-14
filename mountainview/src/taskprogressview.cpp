@@ -1,6 +1,6 @@
 /******************************************************
 ** See the accompanying README and LICENSE files
-** Author(s): Jeremy Magland
+** Author(s): Jeremy Magland and Witold Wysota
 ** Created: 4/30/2016
 *******************************************************/
 
@@ -10,12 +10,232 @@
 #include <QVBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
+#include <QStyledItemDelegate>
+#include <QPainter>
+#include <QtDebug>
+#include <QPlainTextEdit>
+#include <QDialogButtonBox>
+#include <QDialog>
+#include <QShortcut>
+#include <QApplication>
+#include <QClipboard>
+
+/// Witold - please no line wrap in popup log editor
+/// Witold - fyi I changed the date format on the log so I can see the seconds/milliseconds. Useful for seeing what takes the most time.
+/// Witold - for long tasks, the duration only updates when mouse moves (odd behavior) perhaps should update every second for ongoing tasks.
+
+class TaskProgressViewDelegate : public QStyledItemDelegate {
+public:
+    TaskProgressViewDelegate(QObject *parent = 0) : QStyledItemDelegate(parent) {}
+    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const {
+        if (index.parent().isValid())
+            return QStyledItemDelegate::sizeHint(option, index);
+        QSize sh = QStyledItemDelegate::sizeHint(option, index);
+        sh.setHeight(sh.height()*2);
+        return sh;
+    }
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const {
+        if (index.internalId() != 0xDEADBEEF || index.column() != 0) {
+            QStyledItemDelegate::paint(painter, option, index);
+            return;
+        }
+        QStyleOptionViewItem opt = option;
+        opt.text = "";
+        opt.displayAlignment = Qt::AlignTop|Qt::AlignLeft;
+        QStyledItemDelegate::paint(painter, opt, index);
+        qreal progress = index.data(Qt::UserRole).toDouble();
+        if (progress < 1.0) {
+            QPen p = painter->pen();
+            QFont f = painter->font();
+            p.setColor((option.state & QStyle::State_Selected) ? Qt::white : Qt::darkGray);
+            f.setPointSize(f.pointSize()-3);
+            QFontMetrics smallFm(f);
+            int elapsedWidth = smallFm.width("MMMMM");
+            QStyleOptionProgressBar progOpt;
+            progOpt.initFrom(opt.widget);
+            progOpt.rect = option.rect;
+            progOpt.minimum = 0;
+            progOpt.maximum = 100;
+            progOpt.progress = progress*100;
+            progOpt.rect.setTop(progOpt.rect.center().y());
+            progOpt.rect.adjust(4+elapsedWidth+4, 2, -4, -2);
+            if (option.widget) {
+                option.widget->style()->drawControl(QStyle::CE_ProgressBar, &progOpt, painter, option.widget);
+            }
+            painter->save();
+            painter->setPen(p);
+            painter->setFont(f);
+            QRect r = option.rect;
+            r.setTop(option.rect.center().y());
+            r.adjust(4, 2, -4, -2);
+            r.setRight(r.left()+elapsedWidth);
+
+            qreal duration = index.data(Qt::UserRole+1).toDateTime().msecsTo(QDateTime::currentDateTime()) / 1000.0;
+            if (duration < 100)
+                painter->drawText(r, Qt::AlignRight|Qt::AlignVCenter, QString("%1s").arg(duration, 0, 'f', 2));
+            else
+                painter->drawText(r, Qt::AlignRight|Qt::AlignVCenter, QString("%1s").arg(qRound(duration)));
+            painter->restore();
+        } else {
+            painter->save();
+            QPen p = painter->pen();
+            QFont f = painter->font();
+            p.setColor((option.state & QStyle::State_Selected) ? Qt::white : Qt::darkGray);
+            f.setPointSize(f.pointSize()-2);
+            painter->setPen(p);
+            painter->setFont(f);
+            QRect r = option.rect;
+            r.setTop(option.rect.center().y());
+            r.adjust(4, 2, -4, -2);
+
+            qreal duration = index.data(Qt::UserRole+1).toDateTime().msecsTo(index.data(Qt::UserRole+2).toDateTime()) / 1000.0;
+            painter->drawText(r, Qt::AlignLeft|Qt::AlignVCenter, QString("Completed in %1s").arg(duration));
+            painter->restore();
+        }
+    }
+};
+
+class TaskProgressModel : public QAbstractItemModel {
+public:
+    enum {
+        ProgressRole = Qt::UserRole,
+        StartTimeRole,
+        EndTimeRole,
+        LogRole,
+        IndentedLogRole
+    };
+    enum {
+        InvalidId = 0xDEADBEEF
+    };
+    TaskProgressModel(QObject* parent = 0)
+        : QAbstractItemModel(parent)
+    {
+        m_agent = TaskProgressAgent::globalInstance();
+        connect(m_agent, &TaskProgressAgent::tasksChanged, this, &TaskProgressModel::update);
+        update();
+    }
+
+    QModelIndex index(int row, int column,
+        const QModelIndex& parent = QModelIndex()) const override
+    {
+        if (parent.isValid() && parent.internalId() != InvalidId) return QModelIndex();
+        if (parent.isValid()) {
+            return createIndex(row, column, parent.row());
+        }
+        return createIndex(row, column, InvalidId);
+    }
+
+    QModelIndex parent(const QModelIndex& child) const override {
+        if (child.internalId() == InvalidId)
+            return QModelIndex();
+        return createIndex(child.internalId(), 0, InvalidId);
+    }
+
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override
+    {
+        if (parent.isValid() && parent.internalId() != InvalidId)
+            return 0;
+        if (parent.isValid()) {
+            if (parent.row() < 0) return 0;
+            return m_data.at(parent.row()).log_messages.size();
+        }
+        return m_data.size();
+    }
+
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override
+    {
+        if (parent.isValid())
+            return 2; // 2
+        return 2;
+    }
+
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override
+    {
+        if (!index.isValid())
+            return QVariant();
+        if (index.parent().isValid()) {
+            return logData(index, role);
+        }
+        return taskData(index, role);
+    }
+
+    QVariant logData(const QModelIndex &index, int role = Qt::DisplayRole) const {
+        const TaskInfo& task = m_data.at(index.internalId());
+        const auto &logMessages = task.log_messages;
+        auto logMessage = logMessages.at(logMessages.count() - 1 - index.row()); // newest first
+        switch (role) {
+        case Qt::EditRole:
+        case Qt::DisplayRole:
+            if (index.column() == 0)
+                return logMessage.time;
+            return logMessage.message;
+        case Qt::UserRole:
+            return logMessage.time;
+        case LogRole:
+            return singleLog(logMessage);
+        case IndentedLogRole:
+            return singleLog(logMessage, "\t");
+        default: return QVariant();
+        }
+    }
+    QVariant taskData(const QModelIndex &index, int role = Qt::DisplayRole) const {
+        if(index.column() !=0) return QVariant();
+        const TaskInfo& task = m_data.at(index.row());
+        switch (role) {
+        case Qt::EditRole:
+        case Qt::DisplayRole:
+            return task.label;
+        case Qt::ToolTipRole:
+            return task.description;
+        case Qt::ForegroundRole: {
+            if (task.progress < 1)
+                return QColor(Qt::blue);
+            return QVariant();
+        }
+        case ProgressRole:
+            return task.progress;
+        case StartTimeRole:
+            return task.start_time;
+        case EndTimeRole:
+            return task.end_time;
+        case LogRole:
+            return assembleLog(task);
+        case IndentedLogRole:
+            return assembleLog(task, "\t");
+        }
+        return QVariant();
+    }
+
+protected:
+    void update()
+    {
+        beginResetModel();
+        m_data.clear();
+        m_data.append(m_agent->activeTasks());
+        m_data.append(m_agent->completedTasks());
+        endResetModel();
+    }
+
+    QString assembleLog(const TaskInfo &task, const QString &prefix = QString()) const {
+        QStringList entries;
+        foreach(const TaskProgressLogMessage &msg, task.log_messages) {
+            entries << singleLog(msg, prefix);
+        }
+        return entries.join("\n");
+    }
+    QString singleLog(const TaskProgressLogMessage &msg, const QString &prefix = QString()) const {
+        QString format="yyyy-MM-dd|hh:mm:ss.zzz"; //format by jfm
+        return QString("%1%2: %3").arg(prefix).arg(msg.time.toString(format)).arg(msg.message);
+    }
+
+private:
+    QList<TaskInfo> m_data;
+    TaskProgressAgent* m_agent;
+};
 
 class TaskProgressViewPrivate {
 public:
     TaskProgressView* q;
-    TaskProgressAgent* m_agent;
-    QTreeWidget* m_tree;
 
     QString shortened(QString txt, int maxlen);
 };
@@ -24,18 +244,19 @@ TaskProgressView::TaskProgressView()
 {
     d = new TaskProgressViewPrivate;
     d->q = this;
-    d->m_agent = TaskProgressAgent::globalInstance();
-
-    d->m_tree = new QTreeWidget;
-    d->m_tree->header()->hide();
-
-    QVBoxLayout* vlayout = new QVBoxLayout;
-    vlayout->addWidget(d->m_tree);
-    vlayout->setMargin(0);
-    vlayout->setSpacing(0);
-    this->setLayout(vlayout);
-
-    connect(d->m_agent, SIGNAL(tasksChanged()), this, SLOT(slot_refresh()));
+    setSelectionMode(ContiguousSelection);
+    setItemDelegate(new TaskProgressViewDelegate(this));
+    TaskProgressModel *model = new TaskProgressModel(this);
+    setModel(model);
+    header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    header()->hide();
+    connect(this, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showLogMessages(QModelIndex)));
+    QShortcut *copyToClipboard = new QShortcut(QKeySequence(QKeySequence::Copy), this);
+    connect(copyToClipboard, SIGNAL(activated()), this, SLOT(copySelectedToClipboard()));
+    connect(model, &QAbstractItemModel::modelReset, [this, model](){
+        for(int i = 0; i < model->rowCount(); ++i)
+            this->setFirstColumnSpanned(i, QModelIndex(), true);
+    });
 }
 
 TaskProgressView::~TaskProgressView()
@@ -43,45 +264,51 @@ TaskProgressView::~TaskProgressView()
     delete d;
 }
 
-void TaskProgressView::slot_refresh()
+void TaskProgressView::copySelectedToClipboard()
 {
-    QTreeWidget* T = d->m_tree;
-    TaskProgressAgent* A = d->m_agent;
-
-    T->clear();
-    QStringList labels;
-    labels << "Task";
-    T->setHeaderLabels(labels);
-
-    QList<TaskInfo> tasks1 = A->activeTasks();
-    QList<TaskInfo> tasks2 = A->completedTasks();
-    QList<TaskInfo> tasks;
-    tasks.append(tasks1);
-    tasks.append(tasks2);
-    for (int i=0; i<tasks.count(); i++) {
-        TaskInfo info=tasks[i];
-        QTreeWidgetItem* it = new QTreeWidgetItem;
-        QString txt;
-        QString col;
-        if (i<tasks1.count()) { //active
-            txt = QString("%1 (%2%) %3").arg(info.label).arg((int)(info.progress * 100)).arg(info.description);
-            col = "blue";
+    QItemSelectionModel *selectionModel = this->selectionModel();
+    const auto selRows = selectionModel->selectedRows();
+    if (selRows.isEmpty()) return;
+    // if first selected entry is a task, we ignore all non-tasks
+    bool selectingTasks = !selRows.first().parent().isValid();
+    QStringList result;
+    QModelIndex lastTask;
+    foreach(QModelIndex row, selRows) {
+        if (selectingTasks == row.parent().isValid()) continue;
+        if (selectingTasks) {
+            // for each task get the name of the task
+            result << row.data().toString();
+            // for each task get its log messages
+            result << row.data(TaskProgressModel::IndentedLogRole).toString();
+        } else {
+            // for each log see if it belongs to the previos task
+            // if not, add the task name to the log
+            if (row.parent() != lastTask) {
+                result << row.parent().data().toString();
+                lastTask = row.parent();
+            }
+             result << row.data(TaskProgressModel::IndentedLogRole).toString();
         }
-        else {
-            txt = QString("%1 (%2 sec) %3").arg(info.label).arg(info.start_time.msecsTo(info.end_time) / 1000.0).arg(info.description);
-            col = "black";
-        }
-        QLabel* label = new QLabel(d->shortened(txt, 150));
-
-        label->setStyleSheet(QString("QLabel { color: %1 }").arg(col));
-
-        it->setToolTip(0, txt);
-        T->addTopLevelItem(it);
-        T->setItemWidget(it, 0, label);
     }
-    for (int i = 0; i < T->columnCount(); i++) {
-        T->resizeColumnToContents(i);
-    }
+    QApplication::clipboard()->setText(result.join("\n"));
+}
+
+void TaskProgressView::showLogMessages(const QModelIndex &index)
+{
+    if (index.parent().isValid()) return;
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("Log messages for %1").arg(index.data().toString()));
+    QPlainTextEdit *te = new QPlainTextEdit;
+    te->setReadOnly(true);
+    QDialogButtonBox *bb = new QDialogButtonBox;
+    QObject::connect(bb, SIGNAL(accepted()), &dlg, SLOT(accept()));
+    QObject::connect(bb, SIGNAL(rejected()), &dlg, SLOT(reject()));
+    bb->setStandardButtons(QDialogButtonBox::Close);
+    QVBoxLayout *l = new QVBoxLayout(&dlg);
+    l->addWidget(te);
+    l->addWidget(bb);
+    te->setPlainText(index.data(TaskProgressModel::LogRole).toString());
+    dlg.exec();
 }
 
 QString TaskProgressViewPrivate::shortened(QString txt, int maxlen)
