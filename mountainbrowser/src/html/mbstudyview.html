@@ -10,17 +10,22 @@
 
 <script>
 $(document).ready(function() {
+    console.log('READY');
     var mountainbrowser_url=MB.mountainBrowserUrl();
+    console.log('url='+mountainbrowser_url);
     load_json(mountainbrowser_url+"/index.mb.json?a=readJson",function(obj0) {
         console.log('testing 2...');
         console.log(JSON.stringify(obj0));
         index=obj0.index;
+	console.log(JSON.stringify(index);
         for (var j=0; j<index.length; j++) {
             (function() {
                 var index0=index[j];
                 var X=new MBExperimentList();
                 $('#experiment_list').append(X.div);
                 var basepath=get_file_path(index0);
+		console.log(basepath);
+		console.log(index0);
                 console.log('basepath = '+basepath);
                 X.setBasePath(basepath);
                 load_json(mountainbrowser_url+"/"+index0+"?a=readJson",function(Y) {

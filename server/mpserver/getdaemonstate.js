@@ -20,6 +20,8 @@ function getDaemonState(config,req,callback) {
 		}
 		catch(err) {
 			console.log('Error parsing output of daemon-state.');
+			callback({success:false,error:'Error parsing output of daemon-state.'});
+			return;
 		}
 		callback({success:true,exit_code:code,stdout:stdout,stderr:stderr,state:state});
 	});

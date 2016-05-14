@@ -29,7 +29,7 @@
 /// TODO web page that checks status of all services
 /// TODO add field linking process to parent script
 /// TODO improve stdout view
-/// TODO put mountainbrowser in html -- no qtwebkit
+/// TODO ***** put mountainbrowser in html -- no qtwebkit
 /// TODO open mountainview with .mv file, so that this can be downloaded from website
 /// TODO consolidate all temporary and data directories in mountainlab/tmp mountainlab/log mountainlog/config
 /// TODO work on config files for server
@@ -46,6 +46,11 @@
 /// TODO devtools/open_* for opening tmux sessions for the servers and the daemon
 /// TODO consolidate mountainview and spikespy
 /// TODO fix bug in synchronizing current/selected clusters in mountainview
+/// TODO on startup of mountainprocess daemon show all the loaded processors
+/// TODO don't show message every time mountainprocess processors are loaded
+/// TODO remove all references to datalaboratory.org and magland.org in the repository (don't just search .h/.cpp files)
+/// TODO rigorously check mpserver for potential crashes, unhandled exceptions
+/// TODO when mountainprocess binary does not exist, mpserver crashes, not sure how to deal with it tried try/catch debugging, etc can't find it
 
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);

@@ -70,14 +70,21 @@ function MPManager() {
 
 	function initialize_task(req,callback) {
 		if (req.action in actions) {
-			return new actions[req.action](config,req,function(resp) {
-				callback(resp);
-			});
+			try {
+				return new actions[req.action](config,req,function(resp) {
+					callback(resp);
+					return;
+				});
+			}
+			catch (err) {
+				callback({success:false,error:JSON.stringify(err)});
+				return;
+			}
 		}
 		else {
 			console.log('Unrecognized action: '+req.action);
 			callback({success:false,error:'Unrecognized action: '+req.action});
-			return null;
+			return;
 		}
 	}
 }
