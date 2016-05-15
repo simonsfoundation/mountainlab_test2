@@ -64,7 +64,7 @@ public:
 	long N6() const;
 	///The product of N1() through N6()
 	long totalSize() const;
-    long size(int dimension_index); //zero-based
+	long size(int dimension_index) const; //zero-based
 
 	///The value of the ith entry of the vectorized array. For example get(3+N1()*4)==get(3,4). Use the slower value(i) to safely return 0 when i is out of bounds.
 	double get(long i) const;
