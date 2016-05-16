@@ -10,6 +10,20 @@
 QList<double> grab_sublist(const QList<double> &X,const QList<int> &inds);
 QList<double> compute_outlier_scores(Mda &clips,Mda &random_clips);
 
+/*
+Email exchange with Jason on 5/16/2016
+
+On the one hand, yes, you can think of this is basically a z-scored distance to the template. But there are a few important differences, and this needs to be documented in the code and in the paper. Since this is fairly technical you may want to refer to this email during your presentation. See if people want more specifics.
+
+1. The comparison template is for the average waveform in the subcluster (not the cluster). The cluster is the amplitude shell corresponding to the spike of interest.
+2. (Important) The waveform (both template and spike) is weighted according to where the template is supported. This is very important in the case of nearby spikes, or simultaneous spikes on different channels. We don't want to classify a spike as an outlier just because another spike occurs nearby in time or space, but is not REALLY overlapping where the template is supported.
+3. The noise distribution (or spread) is not estimated from the subcluster itself but from a random collection of clips, which are assumed to be noise. Again these clips are weighted by the
+4. It's not the mahalanobis distance (which I believe is problematic). Instead it is the 1D z-score distance from the average sum-of-squares of the weighted events for the random collection of spikes. Yikes.
+
+This can be improved, especially number 4, to be more based on theory. Eg, taking into account the covariance between timepoints and channels. Alex and I have discussed it.
+
+ */
+
 bool compute_outlier_scores(const QString &timeseries_path,const QString &firings_path, const QString &firings_out_path, const Compute_Outlier_Scores_Opts &opts)
 {
 
