@@ -203,7 +203,7 @@ long Mda::totalSize() const
     return d->m_total_size;
 }
 
-long Mda::size(int dimension_index)
+long Mda::size(int dimension_index) const
 {
     if (dimension_index < 0)
         return 0;
