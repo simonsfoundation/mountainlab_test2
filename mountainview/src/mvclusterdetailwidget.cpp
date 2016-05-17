@@ -296,6 +296,12 @@ void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks_in)
     update();
 }
 
+void MVClusterDetailWidget::zoomAllTheWayOut()
+{
+    d->m_space_ratio=0;
+    update();
+}
+
 QImage MVClusterDetailWidget::renderImage(int W, int H)
 {
     if (!W)

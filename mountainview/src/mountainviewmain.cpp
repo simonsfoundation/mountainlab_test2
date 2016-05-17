@@ -26,7 +26,7 @@
 #include "remotereadmda.h"
 #include "taskprogress.h"
 
-void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions);
+//void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions);
 
 int main(int argc, char* argv[])
 {
@@ -110,6 +110,8 @@ int main(int argc, char* argv[])
         W->setFiringsPath(firings_path);
         W->setSampleRate(samplerate);
 
+        /// The following code block was disabled because we are moving away from using mountainview to generate images on the server. Need to think about this
+        /*
         QStringList keys = CLP.named_parameters.keys();
         foreach(QString key, keys)
         {
@@ -119,9 +121,12 @@ int main(int argc, char* argv[])
                 W->setParameterValue(pname, pvalue);
             }
         }
+        */
 
         W->setDefaultInitialization();
 
+        /// TODO export_image no longer supported -- think about this and clean up the code
+        /*
         if (mode == "export_image") {
             QString output_fname = CLP.named_parameters.value("output").toString();
             if (output_fname.isEmpty()) {
@@ -144,6 +149,7 @@ int main(int argc, char* argv[])
             run_export_instructions(W, instructions.split("\n"));
             return 0;
         }
+        */
     }
     /*
     else if (mode == "view_clusters") {
@@ -198,6 +204,7 @@ int main(int argc, char* argv[])
     return ret;
 }
 
+/*
 void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions)
 {
     foreach(QString instruction, instructions)
@@ -224,3 +231,4 @@ void run_export_instructions(MVOverview2Widget* W, const QStringList& instructio
         }
     }
 }
+*/

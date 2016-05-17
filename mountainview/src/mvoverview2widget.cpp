@@ -70,7 +70,6 @@ public:
     MVEvent m_current_event;
     QString m_mscmdserver_url;
 
-    MVOverview2WidgetControlPanel* m_control_panel;
     MVControlPanel* m_control_panel_new;
     TaskProgressView* m_task_progress_view;
 
@@ -97,7 +96,7 @@ public:
     void update_clips();
     void update_cluster_views();
     void update_firing_event_views();
-    void do_shell_split();
+    void do_shell_split_and_event_filter();
     void add_tab(QWidget* W, QString label);
 
     MVCrossCorrelogramsWidget2* open_auto_correlograms();
@@ -173,11 +172,6 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     d->m_current_event.time = -1;
     d->m_current_event.label = -1;
 
-    d->m_control_panel = new MVOverview2WidgetControlPanel;
-    connect(d->m_control_panel, SIGNAL(signalButtonClicked(QString)), this, SLOT(slot_control_panel_button_clicked(QString)));
-    connect(d->m_control_panel, SIGNAL(signalComboBoxActivated(QString)), this, SLOT(slot_control_panel_combobox_activated(QString)));
-    //d->m_control_panel->show();
-
     d->m_control_panel_new = new MVControlPanel;
     connect(d->m_control_panel_new, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
 
@@ -190,7 +184,6 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     d->m_splitter2 = splitter2;
 
     QScrollArea* CP = new QScrollArea;
-    //CP->setWidget(d->m_control_panel);
     CP->setWidget(d->m_control_panel_new);
     CP->setWidgetResizable(true);
 
@@ -250,7 +243,6 @@ void MVOverview2Widget::addTimeseriesPath(const QString& name, const QString& pa
     d->m_timeseries_paths[name] = path;
     QStringList choices = d->m_timeseries_paths.keys();
     qSort(choices);
-    d->m_control_panel->setParameterChoices("timeseries_name", choices);
     d->m_control_panel_new->setTimeseriesChoices(choices);
     if (d->m_timeseries_paths.count() == 1) {
         this->setCurrentTimeseriesName(name);
@@ -261,7 +253,6 @@ void MVOverview2Widget::setCurrentTimeseriesName(const QString& name)
 {
     d->m_current_timeseries_name = name;
     d->m_timeseries.setPath(d->m_timeseries_paths[d->m_current_timeseries_name]);
-    d->m_control_panel->setParameterValue("timeseries_name", name);
 
     MVViewOptions opts = d->m_control_panel_new->viewOptions();
     opts.timeseries = name;
@@ -277,7 +268,7 @@ void MVOverview2Widget::setCurrentTimeseriesName(const QString& name)
 void MVOverview2Widget::setFiringsPath(const QString& firings)
 {
     d->m_firings_original.setPath(firings);
-    d->do_shell_split();
+    d->do_shell_split_and_event_filter();
     d->update_cross_correlograms();
     d->update_cluster_details();
     d->update_timeseries_views();
@@ -303,21 +294,7 @@ void MVOverview2Widget::setEpochs(const QList<Epoch>& epochs)
     d->m_epochs = epochs;
 }
 
-void MVOverview2Widget::setParameterValue(const QString& name, const QVariant& value)
-{
-    d->m_control_panel->setParameterValue(name, value);
-}
-
-QVariant MVOverview2Widget::getParameterValue(const QString& name, const QVariant& defaultval)
-{
-    return d->m_control_panel->getParameterValue(name, defaultval);
-}
-
-void MVOverview2Widget::clickButton(const QString& name)
-{
-    slot_control_panel_button_clicked(name);
-}
-
+/*
 QImage MVOverview2Widget::generateImage(const QMap<QString, QVariant>& params)
 {
     QString type0 = params.value("type").toString();
@@ -339,6 +316,7 @@ QImage MVOverview2Widget::generateImage(const QMap<QString, QVariant>& params)
         return QImage();
     }
 }
+*/
 
 int MVOverview2Widget::getMaxLabel()
 {
@@ -371,6 +349,7 @@ void MVOverview2Widget::keyPressEvent(QKeyEvent* evt)
         evt->ignore();
 }
 
+/*
 void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
 {
     if (str == "update_cross_correlograms") {
@@ -386,7 +365,7 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
         d->update_cluster_details();
     }
     else if ((str == "update_shell_split") || (str == "use_shell_split")) {
-        d->do_shell_split();
+        d->do_shell_split_and_event_filter();
         d->remove_widgets_of_type("cross_correlograms");
         d->remove_widgets_of_type("matrix_of_cross_correlograms");
         d->remove_widgets_of_type("clips");
@@ -397,7 +376,7 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
         d->update_cross_correlograms();
     }
     else if ((str == "update_event_filter") || (str == "use_event_filter")) {
-        d->do_shell_split();
+        d->do_shell_split_and_event_filter();
         //d->do_event_filter();
         //d->start_cross_correlograms_computer();
         d->update_all_widgets();
@@ -433,20 +412,16 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
         d->update_cluster_details();
     }
 }
-
-void MVOverview2Widget::slot_control_panel_combobox_activated(QString str)
-{
-    if (str == "timeseries_name") {
-        this->setCurrentTimeseriesName(d->m_control_panel->getParameterValue("timeseries_name").toString());
-    }
-}
+*/
 
 /// TODO important: allow errors in task progress.. and highlight in red.
+/// TODO when user applies the filter with new shell split options, we need to close many of the views because the clusters have been relabeled
 
 void MVOverview2Widget::slot_control_panel_user_action(QString str)
 {
-    if (str == "apply_shell_splitting") {
-        /// TODO finish this apply_shell_splitting
+    if ((str == "apply_shell_splitting") || (str == "apply_filter")) {
+        d->do_shell_split_and_event_filter();
+        d->update_all_widgets();
     }
     else if (str == "update_all_open_views") {
         d->update_all_widgets();
@@ -555,157 +530,6 @@ void MVOverview2Widget::slot_cluster_view_current_event_changed()
     MVEvent evt = W->currentEvent();
     d->set_current_event(evt);
 }
-
-//void MVOverview2Widget::slot_cross_correlogram_computer_finished()
-//{
-//d->m_cross_correlogram_computer.stopComputation(); //because I'm paranoid
-//d->m_cross_correlograms_data=d->m_cross_correlogram_computer.cross_correlograms_data;
-//d->update_cross_correlograms();
-//}
-
-/*
-void MVOverview2WidgetPrivate::create_cross_correlograms_data()
-{
-    m_cross_correlograms_data_update_needed = false;
-
-    set_progress("Computing", "Creating cross correlograms data", 0);
-    QList<long> times, labels;
-    long L = m_firings.N2();
-    float samplefreq = 30000;
-    int max_dt = (int)(m_control_panel->getParameterValue("max_dt").toInt() * samplefreq / 1000);
-
-    printf("Setting up times and labels...\n");
-    for (int n = 0; n < L; n++) {
-        times << (long)m_firings.value(1, n);
-        labels << (long)m_firings.value(2, n);
-    }
-    int K = 0;
-    for (int n = 0; n < labels.count(); n++) {
-        if (labels[n] > K)
-            K = labels[n];
-    }
-
-    printf("Sorting by times...\n");
-    QList<long> indices = get_sort_indices(times);
-    QList<long> times2, labels2;
-    for (int i = 0; i < indices.count(); i++) {
-        times2 << times[indices[i]];
-        labels2 << labels[indices[i]];
-    }
-    times = times2;
-    labels = labels2;
-
-    printf("Initializing output...\n");
-    QList<IntList> out;
-    IntList empty_list;
-    for (int k1 = 1; k1 <= K; k1++) {
-        for (int k2 = 1; k2 <= K; k2++) {
-            out << empty_list;
-        }
-    }
-
-    printf("Setting time differences...\n");
-    int i1 = 0;
-    for (int i2 = 0; i2 < L; i2++) {
-        if (i2 % 100 == 0) {
-            set_progress("Computing", "Creating cross correlograms data", i2 * 1.0 / L);
-        }
-        while ((i1 + 1 < L) && (times[i1] < times[i2] - max_dt))
-            i1++;
-        int k2 = labels[i2];
-        int t2 = times[i2];
-        if (k2 >= 1) {
-            for (int jj = i1; jj < i2; jj++) {
-                int k1 = labels[jj];
-                int t1 = times[jj];
-                if (k1 >= 1) {
-                    out[(k1 - 1) + K * (k2 - 1)] << t2 - t1;
-                    out[(k2 - 1) + K * (k1 - 1)] << t1 - t2;
-                }
-            }
-        }
-    }
-
-    printf("Counting...\n");
-    int ct = 0;
-    for (int k1 = 1; k1 <= K; k1++) {
-        for (int k2 = 1; k2 <= K; k2++) {
-            ct += out[(k1 - 1) + K * (k2 - 1)].count();
-        }
-    }
-
-    printf("Creating mda...\n");
-    Mda ret;
-    ret.allocate(3, ct);
-
-    ct = 0;
-    for (int k1 = 1; k1 <= K; k1++) {
-        for (int k2 = 1; k2 <= K; k2++) {
-            IntList* tmp = &out[(k1 - 1) + K * (k2 - 1)];
-            for (int jj = 0; jj < tmp->count(); jj++) {
-                ret.setValue(k1, 0, ct);
-                ret.setValue(k2, 1, ct);
-                ret.setValue((*tmp)[jj], 2, ct);
-                ct++;
-            }
-        }
-    }
-    printf(".\n");
-
-    m_cross_correlograms_data = ret;
-
-    set_progress("Computing", "Creating cross correlograms data", 1);
-}
-*/
-
-//void MVOverview2WidgetPrivate::create_templates_data()
-//{
-//	set_progress("Computing","Creating templates",0);
-//	QList<long> times,labels;
-//	long L=m_firings.N2();
-//	int M=m_timeseries.N1();
-//	int T=m_control_panel->getParameterValue("clip_size").toInt();
-
-//	printf("Setting up times and labels...\n");
-//	for (int n=0; n<L; n++) {
-//		times << (long)m_firings.value(1,n)-1; //convert to 0-based indexing
-//		labels << (long)m_firings.value(2,n);
-//	}
-//	int K=0;
-//	for (int n=0; n<labels.count(); n++) {
-//		if (labels[n]>K) K=labels[n];
-//	}
-
-//	printf("Creating mda...\n");
-//	Mda ret; ret.allocate(M,T,K);
-//	for (int k=1; k<=K; k++) {
-//		set_progress("Computing","Creating templates",k*1.0/(K+1));
-//		QList<long> times_k;
-//		for (int ii=0; ii<times.count(); ii++) {
-//			if (labels[ii]==k) times_k << times[ii];
-//		}
-//		Mda clips_k=extract_clips(m_timeseries,times_k,T);
-//		Mda template_k;
-//		if (m_control_panel->getParameterValue("template_method").toString()=="centroids") {
-//			template_k=compute_centroid(clips_k);
-//		}
-//		else if (m_control_panel->getParameterValue("template_method").toString()=="geometric medians") {
-//			int num_iterations=10;
-//			template_k=compute_geometric_median(clips_k,num_iterations);
-//		}
-//		for (int t=0; t<T; t++) {
-//			for (int m=0; m<M; m++) {
-//				double val=template_k.value(m,t);
-//				ret.setValue(val,m,t,k-1);
-//			}
-//		}
-//	}
-//	printf(".\n");
-
-//	m_templates_data=ret;
-
-//	set_progress("Computing","Creating templates closing",1);
-//}
 
 void MVOverview2WidgetPrivate::update_sizes()
 {
@@ -927,9 +751,9 @@ void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<d
     }
 }
 
-void MVOverview2WidgetPrivate::do_shell_split()
+void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
 {
-    TaskProgress task("do_shell_split()");
+    TaskProgress task("do_shell_split_and_event_filter()");
 
     MountainsortThread MT;
     QString processor_name = "mv_firings_filter";
@@ -937,18 +761,7 @@ void MVOverview2WidgetPrivate::do_shell_split()
     MT.setProcessorName(processor_name);
 
     QMap<QString, QVariant> params;
-    /*
-    params["use_shell_split"] = m_control_panel->getParameterValue("use_shell_split").toInt();
-    params["shell_width"] = m_control_panel->getParameterValue("shell_width").toDouble();
-    params["min_per_shell"] = m_control_panel->getParameterValue("min_per_shell").toInt();
-    params["use_event_filter"] = m_control_panel->getParameterValue("use_event_filter").toInt();
-    params["min_amplitude"] = m_control_panel->getParameterValue("min_amplitude").toDouble();
-    double min_detectability_score = m_control_panel->getParameterValue("min_detectability_score").toDouble();
-    if (min_detectability_score) {
-        params["min_detectability_score"] = min_detectability_score;
-    }
-    params["max_outlier_score"] = m_control_panel->getParameterValue("max_outlier_score").toDouble();
-    */
+
     MVEventFilter evt_filter = m_control_panel_new->eventFilter();
 
     /// TODO shell_width should be changed to shell_increment in params
@@ -1398,6 +1211,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setClipSize(clip_size);
         WW->setFirings(DiskReadMda(m_firings));
         WW->setGroupNumbers(m_original_cluster_numbers);
+        WW->zoomAllTheWayOut();
         task.log(QString("clip_size=%1, m_firings.N1()=%2, m_firings.N2()=%3").arg(clip_size).arg(m_firings.N1()).arg(m_firings.N2()));
     }
     else if (widget_type == "clips") {

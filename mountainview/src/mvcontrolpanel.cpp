@@ -135,7 +135,7 @@ MVControlPanel::MVControlPanel()
         QObject::connect(d->m_controls.checkbox("use_shell_split"), SIGNAL(toggled(bool)), this, SLOT(slot_update_enabled_controls()));
         d->m_controls.add_float_box(G, "shell_increment", "Shell increment", 2, 0.1, 1e6)->setToolTip("Minimum thickness of a peak amplitude shell.");
         d->m_controls.add_int_box(G, "min_per_shell", "Min per shell", 150, 0, 1e6)->setToolTip("Minimum number of points in peak amplitude shell.");
-        QPushButton* BB = new QPushButton("Apply");
+        QPushButton* BB = new QPushButton("Apply Shell Splitting");
         BB->setProperty("action_name", "apply_shell_splitting");
         QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
         layout->addWidget(BB);
@@ -152,8 +152,8 @@ MVControlPanel::MVControlPanel()
         QObject::connect(d->m_controls.checkbox("use_event_filter"), SIGNAL(toggled(bool)), this, SLOT(slot_update_enabled_controls()));
         d->m_controls.add_float_box(G, "min_detectability_score", "Min detectability score", 0, 0, 1e6)->setToolTip("Filter events by detectability score. Use 0 for no filter.");
         d->m_controls.add_float_box(G, "max_outlier_score", "Max outlier score", 3, 0, 1e6)->setToolTip("Filter events by outlier score. Use 0 for no filter.");
-        QPushButton* BB = new QPushButton("Update all open views");
-        BB->setProperty("action_name", "update_all_open_views");
+        QPushButton* BB = new QPushButton("Apply Filter");
+        BB->setProperty("action_name", "apply_filter");
         QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
         layout->addWidget(BB);
         d->m_controls.add_horizontal_divider_line(layout);
