@@ -96,7 +96,7 @@ MVControlPanel::MVControlPanel()
         BB << abi("find-nearby-events", "Find Nearby Events");
         for (int i = 0; i < BB.count(); i++) {
             QToolButton* button = new QToolButton;
-            QFont font=button->font();
+            QFont font = button->font();
             font.setPixelSize(14);
             button->setFont(font);
             button->setText(BB[i].label);
@@ -156,6 +156,24 @@ MVControlPanel::MVControlPanel()
         BB->setProperty("action_name", "apply_filter");
         QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
         layout->addWidget(BB);
+        d->m_controls.add_horizontal_divider_line(layout);
+    }
+
+    {
+        //Download
+        layout->addWidget(d->create_group_label("Download"));
+        {
+            QPushButton* BB = new QPushButton("Original firings file");
+            BB->setProperty("action_name", "download_original_firings");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
+        {
+            QPushButton* BB = new QPushButton("Filtered firings file");
+            BB->setProperty("action_name", "download_filtered_firings");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
         d->m_controls.add_horizontal_divider_line(layout);
     }
 

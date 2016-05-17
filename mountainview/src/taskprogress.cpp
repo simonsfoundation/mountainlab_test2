@@ -78,6 +78,12 @@ void TaskProgress::log(const QString& log_message)
     emit changed();
 }
 
+void TaskProgress::error(const QString &error_message)
+{
+    this->log("ERROR: "+error_message);
+    d->m_info.error=error_message;
+}
+
 void TaskProgress::setProgress(double pct)
 {
     QMutexLocker locker(&d->m_mutex);

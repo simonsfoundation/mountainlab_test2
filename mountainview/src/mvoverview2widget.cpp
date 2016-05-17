@@ -451,7 +451,8 @@ void MVOverview2Widget::slot_control_panel_user_action(QString str)
         d->find_nearby_events();
     }
     else {
-        TaskProgress task("user action not yet implemented: " + str);
+        TaskProgress task(str);
+        task.error("user action not yet implemented.");
     }
 }
 

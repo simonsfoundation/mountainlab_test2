@@ -184,12 +184,28 @@ public:
         switch (role) {
         case Qt::EditRole:
         case Qt::DisplayRole:
-            return task.label;
+            // modified by jfm -- 5/17/2016
+            if (!task.error.isEmpty()) {
+                return task.label+": "+task.error;
+            }
+            else {
+                return task.label;
+            }
         case Qt::ToolTipRole:
-            return task.description;
+            // modified by jfm -- 5/17/2016
+            if (!task.description.isEmpty())
+                return task.description;
+            else
+                return taskData(index,Qt::DisplayRole);
         case Qt::ForegroundRole: {
-            if (task.progress < 1)
-                return QColor(Qt::blue);
+            // modified by jfm -- 5/17/2016
+            if (!task.error.isEmpty()) {
+                return QColor(Qt::red);
+            }
+            else {
+                if (task.progress < 1)
+                    return QColor(Qt::blue);
+            }
             return QVariant();
         }
         case ProgressRole:
