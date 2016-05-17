@@ -125,6 +125,9 @@ QList<TaskInfo> TaskProgressAgent::activeTasks()
 
 QList<TaskInfo> TaskProgressAgent::completedTasks()
 {
+    for (int i=0; i<d->m_completed_tasks.count(); i++) {
+        d->m_completed_tasks[i].progress=1; // kind of a hack to make sure the progress is 1 for all completed tasks
+    }
     return d->m_completed_tasks;
 }
 

@@ -10,6 +10,7 @@
 #include <QDateTime>
 #include <QObject>
 #include <QString>
+#include <QDebug>
 
 struct TaskProgressLogMessage {
     QString message;
@@ -56,7 +57,7 @@ public:
     TaskProgressAgent();
     virtual ~TaskProgressAgent();
     void addTask(TaskProgress* T);
-    void removeTask(TaskProgress *T);
+    void removeTask(TaskProgress* T);
 
     QList<TaskInfo> activeTasks();
     QList<TaskInfo> completedTasks();
