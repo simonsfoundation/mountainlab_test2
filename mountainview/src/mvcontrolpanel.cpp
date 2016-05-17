@@ -115,7 +115,7 @@ MVControlPanel::MVControlPanel()
 
         d->m_controls.add_combo_box(G, "timeseries", "Use timeseries:")->setToolTip("Set the timeseries used for display");
         /// TODO provide a discrete set of choices for cc_max_dt and clip_size
-        d->m_controls.add_float_box(G, "cc_max_dt", "Max. dt (ms)", 100, 1, 1e6)->setToolTip("Maximum dt for display of cross-correlograms");
+        d->m_controls.add_float_box(G, "cc_max_dt_msec", "Max. dt (ms)", 100, 1, 1e6)->setToolTip("Maximum dt for display of cross-correlograms");
         d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", 150, 1, 1e5)->setToolTip("Set clips size used for display");
         QPushButton* BB = new QPushButton("Update all open views");
         BB->setProperty("action_name", "update_all_open_views");
@@ -196,7 +196,7 @@ void MVControlPanel::setTimeseriesChoices(const QStringList& names)
 MVViewOptions MVControlPanel::viewOptions() const
 {
     MVViewOptions opts;
-    opts.cc_max_dt = d->m_controls.get_parameter_value("cc_max_dt").toDouble();
+    opts.cc_max_dt_msec = d->m_controls.get_parameter_value("cc_max_dt_msec").toDouble();
     opts.clip_size = d->m_controls.get_parameter_value("clip_size").toInt();
     opts.timeseries = d->m_controls.get_parameter_value("timeseries").toString();
     return opts;
@@ -217,7 +217,7 @@ MVEventFilter MVControlPanel::eventFilter() const
 
 void MVControlPanel::setViewOptions(MVViewOptions opts)
 {
-    d->m_controls.set_parameter_value("cc_max_dt", opts.cc_max_dt);
+    d->m_controls.set_parameter_value("cc_max_dt_msec", opts.cc_max_dt_msec);
     d->m_controls.set_parameter_value("clip_size", opts.clip_size);
     d->m_controls.set_parameter_value("timeseries", opts.timeseries);
 }

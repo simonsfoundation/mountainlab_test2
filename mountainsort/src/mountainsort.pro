@@ -71,8 +71,7 @@ HEADERS += \
     processors/extract_raw_processor.h \
     processors/merge_across_channels.h \
     processors/merge_across_channels_processor.h \
-    processors/geom2adj_processor.h \
-    processors/mvcontrolpanel.h
+    processors/geom2adj_processor.h
 
 SOURCES += utils/get_command_line_params.cpp \
     core/msprocessmanager.cpp \
@@ -131,8 +130,7 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/fit_stage_new.cpp \
     processors/merge_across_channels.cpp \
     processors/merge_across_channels_processor.cpp \
-    processors/geom2adj_processor.cpp \
-    processors/mvcontrolpanel.cpp
+    processors/geom2adj_processor.cpp
 
 DEFINES += USE_REMOTE_MDA
 INCLUDEPATH += ../../common/mda

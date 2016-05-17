@@ -135,7 +135,7 @@ public:
     void set_progress(QString title, QString text, float frac);
     void set_current_event(MVEvent evt);
 
-    long cc_max_dt();
+    long cc_max_dt_timepoints();
 
     void download_original_firings();
     void download_filtered_firings();
@@ -1121,11 +1121,13 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
 {
     QString widget_type = W->property("widget_type").toString();
     if (widget_type == "auto_correlograms") {
+        TaskProgress task("update auto correlograms");
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         WW->setSampleRate(m_samplerate);
-        WW->setMaxDt(cc_max_dt());
+        WW->setMaxDtTimepoints(cc_max_dt_timepoints());
         WW->setColors(m_colors);
         WW->setFirings(m_firings);
+        task.log(QString("m_samplerate = %1").arg(m_samplerate));
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         QStringList text_labels;
         QList<int> labels1, labels2;
@@ -1147,7 +1149,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         int k = W->property("kk").toInt();
         WW->setColors(m_colors);
         WW->setSampleRate(m_samplerate);
-        WW->setMaxDt(cc_max_dt());
+        WW->setMaxDtTimepoints(cc_max_dt_timepoints());
         WW->setFirings(DiskReadMda(m_firings));
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setBaseLabel(k);
@@ -1171,7 +1173,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         WW->setColors(m_colors);
         WW->setSampleRate(m_samplerate);
-        WW->setMaxDt(cc_max_dt());
+        WW->setMaxDtTimepoints(cc_max_dt_timepoints());
         WW->setFirings(DiskReadMda(m_firings));
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setLabelNumbers(ks);
@@ -1690,10 +1692,10 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
     }
 }
 
-long MVOverview2WidgetPrivate::cc_max_dt()
+long MVOverview2WidgetPrivate::cc_max_dt_timepoints()
 {
     //return (int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
-    return m_control_panel_new->viewOptions().cc_max_dt;
+    return m_control_panel_new->viewOptions().cc_max_dt_msec * m_samplerate / 1000;
 }
 
 class DownloadComputer : public ComputationThread {

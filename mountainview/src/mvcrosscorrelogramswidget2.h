@@ -22,7 +22,7 @@ public:
     void setLabelPairs(const QList<int>& labels1, const QList<int>& labels2, const QList<QString>& text_labels);
     void setFirings(const DiskReadMda& F);
     void setSampleRate(double rate);
-    void setMaxDt(int max_dt);
+    void setMaxDtTimepoints(int max_dt);
     void setColors(const QMap<QString, QColor>& colors);
     void setCurrentIndex(int index);
     int currentIndex();

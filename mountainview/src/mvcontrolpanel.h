@@ -12,7 +12,7 @@
 
 struct MVViewOptions {
     QString timeseries;
-    double cc_max_dt;
+    double cc_max_dt_msec;
     double clip_size;
 };
 

@@ -279,7 +279,7 @@ void MVCrossCorrelogramsWidget2::setSampleRate(double rate)
     d->start_computation();
 }
 
-void MVCrossCorrelogramsWidget2::setMaxDt(int max_dt)
+void MVCrossCorrelogramsWidget2::setMaxDtTimepoints(int max_dt)
 {
     d->m_max_dt = max_dt;
 }
