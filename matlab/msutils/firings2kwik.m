@@ -13,6 +13,8 @@ if nargin<1, test_firings2kwik; return; end;
 mfile_path=fileparts(mfilename('fullpath'));
 template=[mfile_path,'/template.kwik'];
 
+addpath([mfile_path,'/hdf5tools']);
+
 if (ischar(firings))
     firings=readmda(firings);
 end;
@@ -86,6 +88,13 @@ grp2=sprintf('/recordings/0');
 h5copy(template,outfile,grp1,grp2);
 h5writeatt(outfile,grp2,'sample_rate',samplerate);
 h5writeatt(outfile,[grp2,'/raw'],dat_path,dat_path);
+
+h5writeatt(outfile,'/','TITLE','');
+h5writeatt(outfile,'/','CLASS','GROUP');
+h5writeatt(outfile,'/','VERSION','1.0');
+h5writeatt(outfile,'/','PYTABLES_FORMAT_VERSION','2.1');
+h5writeatt(outfile,'/','kwik_version',2);
+h5writeatt(outfile,'/','name','');
 
 end
 
