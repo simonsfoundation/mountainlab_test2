@@ -103,6 +103,7 @@ QString ComputationThread::errorMessage()
     return d->m_error_message;
 }
 
+    d->m_task_progress.log(label+": "+description);
 bool ComputationThread::stopRequested()
 {
     QMutexLocker locker(&d->m_mutex);
