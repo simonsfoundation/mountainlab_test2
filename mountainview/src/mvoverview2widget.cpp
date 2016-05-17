@@ -36,6 +36,7 @@
 #include <QStringList>
 #include <QSet>
 #include <QKeyEvent>
+#include <QFileDialog>
 
 /// TODO important: splitter between control panel and task view
 /// TODO show summary stats for dataset in mountainview
@@ -135,6 +136,10 @@ public:
     void set_current_event(MVEvent evt);
 
     long cc_max_dt();
+
+    void download_original_firings();
+    void download_filtered_firings();
+    void download_file(QString source_path, QString dest_path, bool use_float64);
 
     //void start_cross_correlograms_computer();
 };
@@ -449,6 +454,12 @@ void MVOverview2Widget::slot_control_panel_user_action(QString str)
     }
     else if (str == "find-nearby-events") {
         d->find_nearby_events();
+    }
+    else if (str == "download_original_firings") {
+        d->download_original_firings();
+    }
+    else if (str == "download_filtered_firings") {
+        d->download_filtered_firings();
     }
     else {
         TaskProgress task(str);
@@ -1181,26 +1192,26 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         //WW->updateWidget();
     }
     /*else if (widget_type=="templates") {
-		printf("Setting templates data...\n");
-		SSTimeSeriesView *WW=(SSTimeSeriesView *)W;
-		Mda TD=m_templates_data;
-		DiskArrayModel_New *MM=new DiskArrayModel_New;
-		MM->setFromMda(TD);
-		int KK=TD.N3();
-		QList<long> times,labels;
-		int last_k=-1;
-		for (int kk=1; kk<=KK; kk++) {
-			int k=m_original_cluster_numbers.value(kk);
-			if (k!=last_k) {
-				times << (long)(TD.N2()*(kk-1+0.5));
-				labels << k;
-			}
-			last_k=k;
-		}
-		WW->setData(MM,true);
-		WW->setTimesLabels(times,labels);
-		WW->setMarkerLinesVisible(false);
-		printf(".\n");
+        printf("Setting templates data...\n");
+        SSTimeSeriesView *WW=(SSTimeSeriesView *)W;
+        Mda TD=m_templates_data;
+        DiskArrayModel_New *MM=new DiskArrayModel_New;
+        MM->setFromMda(TD);
+        int KK=TD.N3();
+        QList<long> times,labels;
+        int last_k=-1;
+        for (int kk=1; kk<=KK; kk++) {
+            int k=m_original_cluster_numbers.value(kk);
+            if (k!=last_k) {
+                times << (long)(TD.N2()*(kk-1+0.5));
+                labels << k;
+            }
+            last_k=k;
+        }
+        WW->setData(MM,true);
+        WW->setTimesLabels(times,labels);
+        WW->setMarkerLinesVisible(false);
+        printf(".\n");
     }*/
     else if (widget_type == "cluster_details") {
         MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
@@ -1422,15 +1433,15 @@ QList<QWidget*> MVOverview2WidgetPrivate::get_all_widgets()
 {
     return m_tabber->allWidgets();
     /*
-	QList<QWidget *> ret;
-	for (int i=0; i<m_tabs1->count(); i++) {
-		ret << m_tabs1->widget(i);
-	}
-	for (int i=0; i<m_tabs2->count(); i++) {
-		ret << m_tabs2->widget(i);
-	}
-	return ret;
-	*/
+    QList<QWidget *> ret;
+    for (int i=0; i<m_tabs1->count(); i++) {
+        ret << m_tabs1->widget(i);
+    }
+    for (int i=0; i<m_tabs2->count(); i++) {
+        ret << m_tabs2->widget(i);
+    }
+    return ret;
+    */
 }
 
 TabberTabWidget* MVOverview2WidgetPrivate::tab_widget_of(QWidget* W)
@@ -1683,6 +1694,58 @@ long MVOverview2WidgetPrivate::cc_max_dt()
 {
     //return (int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
     return m_control_panel_new->viewOptions().cc_max_dt;
+}
+
+class DownloadComputer : public ComputationThread {
+public:
+    //inputs
+    QString source_path;
+    QString dest_path;
+    bool use_float64;
+
+    void compute();
+};
+void DownloadComputer::compute()
+{
+    DiskReadMda X(source_path);
+    Mda Y;
+    this->setStatus("Downloading " + source_path, "", 0.1);
+    X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3());
+    if (use_float64) {
+        this->setStatus("Writing " + dest_path, "", 0.5);
+        Y.write64(dest_path);
+    }
+    else {
+        Y.write32(dest_path);
+    }
+}
+
+void MVOverview2WidgetPrivate::download_original_firings()
+{
+    QString default_dir = "";
+    QString fname = QFileDialog::getSaveFileName(q, "Download original firings", default_dir, "*.mda");
+    if (!fname.isEmpty()) {
+        download_file(m_firings_original.path(), fname, true);
+    }
+}
+
+void MVOverview2WidgetPrivate::download_filtered_firings()
+{
+    QString default_dir = "";
+    QString fname = QFileDialog::getSaveFileName(q, "Download filtered firings", default_dir, "*.mda");
+    if (!fname.isEmpty()) {
+        download_file(m_firings.path(), fname, true);
+    }
+}
+
+void MVOverview2WidgetPrivate::download_file(QString source_path, QString dest_path, bool use_float64)
+{
+    DownloadComputer* C = new DownloadComputer;
+    C->source_path = source_path;
+    C->dest_path = dest_path;
+    C->use_float64 = use_float64;
+    C->setDeleteOnComplete(true);
+    C->startComputation();
 }
 
 typedef QList<long> IntList;
