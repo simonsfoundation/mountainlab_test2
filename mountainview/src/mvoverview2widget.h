@@ -42,6 +42,7 @@ public:
     Q_INVOKABLE void setMscmdServerUrl(const QString& url);
 
     void loadMVFile(const QString &mv_fname);
+    void saveMVFile(const QString &mv_fname);
 
 protected:
     void resizeEvent(QResizeEvent* evt);

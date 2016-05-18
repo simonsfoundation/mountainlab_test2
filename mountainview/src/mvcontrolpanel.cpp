@@ -160,17 +160,23 @@ MVControlPanel::MVControlPanel()
     }
 
     {
-        //Download
-        layout->addWidget(d->create_group_label("Download"));
+        //Export
+        layout->addWidget(d->create_group_label("Export"));
         {
-            QPushButton* BB = new QPushButton("Original firings file");
-            BB->setProperty("action_name", "download_original_firings");
+            QPushButton* BB = new QPushButton("MountainView Document");
+            BB->setProperty("action_name", "export_mountainview_document");
             QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
             layout->addWidget(BB);
         }
         {
-            QPushButton* BB = new QPushButton("Filtered firings file");
-            BB->setProperty("action_name", "download_filtered_firings");
+            QPushButton* BB = new QPushButton("Original firings");
+            BB->setProperty("action_name", "export_original_firings");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
+        {
+            QPushButton* BB = new QPushButton("Filtered firings");
+            BB->setProperty("action_name", "export_filtered_firings");
             QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
             layout->addWidget(BB);
         }

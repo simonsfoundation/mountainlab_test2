@@ -39,6 +39,7 @@
 #include <QFileDialog>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include "textfile.h"
 
 /// TODO important: splitter between control panel and task view
@@ -73,6 +74,7 @@ public:
     float m_samplerate;
     MVEvent m_current_event;
     QString m_mscmdserver_url;
+    QString m_mv_fname;
 
     MVControlPanel* m_control_panel_new;
     TaskProgressView* m_task_progress_view;
@@ -140,9 +142,12 @@ public:
 
     long cc_max_dt_timepoints();
 
-    void download_original_firings();
-    void download_filtered_firings();
-    void download_file(QString source_path, QString dest_path, bool use_float64);
+    void export_mountainview_document();
+    void export_original_firings();
+    void export_filtered_firings();
+    void export_file(QString source_path, QString dest_path, bool use_float64);
+
+    QString make_absolute_path(QString path); //use basepath of m_mv_fname if path is relative
 
     //void start_cross_correlograms_computer();
 };
@@ -260,7 +265,7 @@ void MVOverview2Widget::addTimeseriesPath(const QString& name, const QString& pa
 void MVOverview2Widget::setCurrentTimeseriesName(const QString& name)
 {
     d->m_current_timeseries_name = name;
-    d->m_timeseries.setPath(d->m_timeseries_paths[d->m_current_timeseries_name]);
+    d->m_timeseries.setPath(d->make_absolute_path(d->m_timeseries_paths[d->m_current_timeseries_name]));
 
     MVViewOptions opts = d->m_control_panel_new->viewOptions();
     opts.timeseries = name;
@@ -275,7 +280,7 @@ void MVOverview2Widget::setCurrentTimeseriesName(const QString& name)
 
 void MVOverview2Widget::setFiringsPath(const QString& firings)
 {
-    d->m_firings_original.setPath(firings);
+    d->m_firings_original.setPath(d->make_absolute_path(firings));
     d->do_shell_split_and_event_filter();
     d->update_cross_correlograms();
     d->update_cluster_details();
@@ -346,44 +351,86 @@ void MVOverview2Widget::setMscmdServerUrl(const QString& url)
 
 void MVOverview2Widget::loadMVFile(const QString& mv_fname)
 {
+    d->m_mv_fname=mv_fname;
+
+    TaskProgress task("loading .mv file: " + mv_fname);
     QString json = read_text_file(mv_fname);
     QJsonParseError err;
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &err).object();
     if (err.error != QJsonParseError::NoError) {
-        TaskProgress errtask;
-        errtask.error("Error parsing .mv file: " + mv_fname);
-        errtask.log("JSON parse error: " + err.errorString());
+        task.error("Error parsing .mv file: " + mv_fname);
+        task.log("JSON parse error: " + err.errorString());
         return;
     }
 
+    QString mv_version = obj["mv_version"].toString();
+    task.log("MV version: " + mv_version);
+
     if (obj.contains("firings")) {
-        this->setFiringsPath(obj["firings"].toString());
+        QString path = obj["firings"].toString();
+        task.log("Setting firings path: " + path);
+        this->setFiringsPath(path);
     }
     if (obj.contains("timeseries")) {
-        QJsonObject tsobj=obj["timeseries"].toObject();
-        QStringList list;
-        list << "raw"
-             << "filt"
-             << "pre";
-        foreach (QString str, list) {
-            if (tsobj.contains(str)) {
-                this->addTimeseriesPath(str, tsobj["str"].toString());
-            }
+        QJsonArray ts = obj["timeseries"].toArray();
+        for (int i = 0; i < ts.count(); i++) {
+            QJsonObject tsobj = ts[i].toObject();
+            QString name = tsobj["name"].toString();
+            QString path = tsobj["path"].toString();
+            task.log("Adding timeseries " + name + ": " + path);
+            this->addTimeseriesPath(name, path);
         }
     }
 
     if (obj.contains("samplerate")) {
-        this->setSampleRate(obj["samplerate"].toDouble());
+        double rate = obj["samplerate"].toDouble();
+        task.log(QString("samplerate = %1").arg(rate));
+        this->setSampleRate(rate);
     }
 
     if (obj.contains("view_options")) {
-        MVViewOptions opts = MVViewOptions::fromJsonObject(obj["view_options"].toObject());
+        QJsonObject obj0 = obj["view_options"].toObject();
+        task.log("VIEW OPTIONS:");
+        task.log(QJsonDocument(obj0).toJson());
+        MVViewOptions opts = MVViewOptions::fromJsonObject(obj0);
         d->m_control_panel_new->setViewOptions(opts);
     }
 
     if (obj.contains("event_filter")) {
-        MVEventFilter filter = MVEventFilter::fromJsonObject(obj["event_filter"].toObject());
+        QJsonObject obj0 = obj["event_filter"].toObject();
+        task.log("EVENT FILTER:");
+        task.log(QJsonDocument(obj0).toJson());
+        MVEventFilter filter = MVEventFilter::fromJsonObject(obj0);
         d->m_control_panel_new->setEventFilter(filter);
+    }
+}
+
+void MVOverview2Widget::saveMVFile(const QString &mv_fname)
+{
+    TaskProgress task("saving .mv file: " + mv_fname);
+
+    QJsonObject obj;
+
+    obj["mv_version"]=0.1;
+
+    obj["firings"]=d->m_firings.path();
+    QJsonArray ts;
+    QStringList keys=d->m_timeseries_paths.keys();
+    foreach (QString key,keys) {
+        QJsonObject tsobj;
+        tsobj["name"]=key;
+        tsobj["path"]=d->m_timeseries_paths[key];
+        ts << tsobj;
+    }
+    obj["timeseries"]=ts;
+
+    obj["samplerate"]=d->m_samplerate;
+
+    obj["view_options"]=d->m_control_panel_new->viewOptions().toJsonObject();
+    obj["event_filter"]=d->m_control_panel_new->eventFilter().toJsonObject();
+
+    if (!write_text_file(mv_fname,QJsonDocument(obj).toJson())) {
+        task.error("Error writing .mv file: "+mv_fname);
     }
 }
 
@@ -503,11 +550,14 @@ void MVOverview2Widget::slot_control_panel_user_action(QString str)
     else if (str == "find-nearby-events") {
         d->find_nearby_events();
     }
-    else if (str == "download_original_firings") {
-        d->download_original_firings();
+    else if (str == "export_mountainview_document") {
+        d->export_mountainview_document();
     }
-    else if (str == "download_filtered_firings") {
-        d->download_filtered_firings();
+    else if (str == "export_original_firings") {
+        d->export_original_firings();
+    }
+    else if (str == "export_filtered_firings") {
+        d->export_filtered_firings();
     }
     else {
         TaskProgress task(str);
@@ -1399,7 +1449,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
     else if (widget_type == "timeseries") {
         SSTimeSeriesWidget* WW = (SSTimeSeriesWidget*)W;
         DiskArrayModel_New* X = new DiskArrayModel_New;
-        X->setPath(m_timeseries_paths[m_current_timeseries_name]);
+        X->setPath(make_absolute_path(m_timeseries_paths[m_current_timeseries_name]));
         ((SSTimeSeriesView*)(WW->view()))->setData(X, true);
         set_times_labels_for_timeseries_widget(WW);
     }
@@ -1770,25 +1820,38 @@ void DownloadComputer::compute()
     }
 }
 
-void MVOverview2WidgetPrivate::download_original_firings()
+void MVOverview2WidgetPrivate::export_mountainview_document()
 {
     QString default_dir = "";
-    QString fname = QFileDialog::getSaveFileName(q, "Download original firings", default_dir, "*.mda");
+    QString fname = QFileDialog::getSaveFileName(q, "Export mountainview document", default_dir, "*.mv");
+    if (QFileInfo(fname).suffix() != "mv")
+        fname = fname + ".mv";
+    q->saveMVFile(fname);
+}
+
+void MVOverview2WidgetPrivate::export_original_firings()
+{
+    QString default_dir = "";
+    QString fname = QFileDialog::getSaveFileName(q, "Export original firings", default_dir, "*.mda");
+    if (QFileInfo(fname).suffix() != "mda")
+        fname = fname + ".mda";
     if (!fname.isEmpty()) {
-        download_file(m_firings_original.path(), fname, true);
+        export_file(m_firings_original.path(), fname, true);
     }
 }
 
-void MVOverview2WidgetPrivate::download_filtered_firings()
+void MVOverview2WidgetPrivate::export_filtered_firings()
 {
     QString default_dir = "";
-    QString fname = QFileDialog::getSaveFileName(q, "Download filtered firings", default_dir, "*.mda");
+    QString fname = QFileDialog::getSaveFileName(q, "Export filtered firings", default_dir, "*.mda");
+    if (QFileInfo(fname).suffix() != "mda")
+        fname = fname + ".mda";
     if (!fname.isEmpty()) {
-        download_file(m_firings.path(), fname, true);
+        export_file(m_firings.path(), fname, true);
     }
 }
 
-void MVOverview2WidgetPrivate::download_file(QString source_path, QString dest_path, bool use_float64)
+void MVOverview2WidgetPrivate::export_file(QString source_path, QString dest_path, bool use_float64)
 {
     DownloadComputer* C = new DownloadComputer;
     C->source_path = source_path;
@@ -1796,6 +1859,15 @@ void MVOverview2WidgetPrivate::download_file(QString source_path, QString dest_p
     C->use_float64 = use_float64;
     C->setDeleteOnComplete(true);
     C->startComputation();
+}
+
+QString MVOverview2WidgetPrivate::make_absolute_path(QString path)
+{
+    if (QFileInfo(path).isAbsolute()) return path;
+    if ((!m_mv_fname.isEmpty())&&(QFileInfo(m_mv_fname).isAbsolute())) {
+        return QFileInfo(m_mv_fname).path()+"/"+path;
+    }
+    return path;
 }
 
 typedef QList<long> IntList;
