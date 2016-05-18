@@ -54,7 +54,9 @@ HEADERS += \
     mountainsortthread.h \
     mvclipswidget.h \
     taskprogress.h \
-    taskprogressview.h
+    taskprogressview.h \
+    mvcontrolpanel.h \
+    flowlayout.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -93,7 +95,9 @@ SOURCES += mountainviewmain.cpp \
     mountainsortthread.cpp \
     mvclipswidget.cpp \
     taskprogress.cpp \
-    taskprogressview.cpp
+    taskprogressview.cpp \
+    mvcontrolpanel.cpp \
+    flowlayout.cpp
 
 HEADERS += textfile.h
 SOURCES += textfile.cpp

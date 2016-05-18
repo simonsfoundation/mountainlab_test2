@@ -9,6 +9,8 @@
 #include <QScriptEngine>
 #include "mvclusterdetailwidget.h"
 
+/// TODO get rid of mountainview scripting and non-gui image export
+
 int run_mountainview_script(const QString& script, QMap<QString, QVariant>& params)
 {
     QScriptEngine* engine = new QScriptEngine;

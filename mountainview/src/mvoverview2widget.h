@@ -17,6 +17,8 @@
  *  Presents user with a rich set of views. Cross-correlograms, raw data, cluster details, rotatable 3D views, firing rate vs. time view, etc.
  */
 
+/// TODO don't let this stuff scriptable be scriptable anymore (MVOverview2Widget)
+
 class MVOverview2WidgetPrivate;
 class MVOverview2Widget : public QWidget {
     Q_OBJECT
@@ -36,10 +38,6 @@ public:
     Q_INVOKABLE void setDefaultInitialization();
     ///Corresponds to MVFiringRateView::setEpochs()
     Q_INVOKABLE void setEpochs(const QList<Epoch>& epochs);
-    Q_INVOKABLE void setParameterValue(const QString& name, const QVariant& value);
-    Q_INVOKABLE QVariant getParameterValue(const QString& name, const QVariant& defaultval);
-    Q_INVOKABLE void clickButton(const QString& name);
-    Q_INVOKABLE QImage generateImage(const QMap<QString, QVariant>& params);
     Q_INVOKABLE int getMaxLabel();
     Q_INVOKABLE void setMscmdServerUrl(const QString& url);
 
@@ -52,8 +50,7 @@ signals:
 public slots:
 
 private slots:
-    void slot_control_panel_button_clicked(QString str);
-    void slot_control_panel_combobox_activated(QString str);
+    void slot_control_panel_user_action(QString str);
     void slot_auto_correlogram_activated(int k);
     //void slot_templates_clicked();
     void slot_details_current_k_changed();

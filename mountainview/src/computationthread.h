@@ -20,6 +20,7 @@ public:
 
     virtual void compute() = 0;
 
+    void setDeleteOnComplete(bool val);
     void startComputation(); //will stop existing computation
     void stopComputation(); //will wait for stop before returning
     bool isComputing();

@@ -59,6 +59,8 @@ public:
     ///Set selected label numbers (affects highlighting)
     void setSelectedKs(const QList<int>& ks);
 
+    void zoomAllTheWayOut();
+
     ///Create an image of the current view
     QImage renderImage(int W = 0, int H = 0);
 

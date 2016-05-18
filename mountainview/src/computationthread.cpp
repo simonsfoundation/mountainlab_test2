@@ -14,6 +14,7 @@
 class ComputationThreadPrivate {
 public:
     ComputationThread* q;
+    bool m_delete_on_complete;
     bool m_is_computing;
     bool m_stop_requested;
     bool m_is_finished;
@@ -35,12 +36,18 @@ ComputationThread::ComputationThread()
     d->m_stop_requested = false;
     d->m_is_finished = false;
     d->m_start_scheduled = false;
+    d->m_delete_on_complete = false;
     this->setStatus("ComputationThread");
 }
 
 ComputationThread::~ComputationThread()
 {
     delete d;
+}
+
+void ComputationThread::setDeleteOnComplete(bool val)
+{
+    d->m_delete_on_complete = val;
 }
 
 void ComputationThread::startComputation()
@@ -112,7 +119,7 @@ void ComputationThread::setStatus(QString label, QString description, double pro
         d->m_task_progress.setDescription(description);
     if (progress >= 0)
         d->m_task_progress.setProgress(progress);
-    d->m_task_progress.log(label+": "+description);
+    d->m_task_progress.log(label + ": " + description);
 }
 
 bool ComputationThread::stopRequested()
@@ -143,6 +150,8 @@ void ComputationThread::run()
     else {
         this->setStatus("", "Stopped", 1);
     }
+    if (d->m_delete_on_complete)
+        this->deleteLater();
 }
 
 void ComputationThread::slot_start()

@@ -94,38 +94,59 @@ QDateTime RemoteReadMda::fileLastModified()
 
 bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
 {
-    X.allocate(size, 1);
-    double* Xptr = X.dataPtr();
-    long ii1 = i;
-    long ii2 = i + size - 1;
-    long jj1 = ii1 / REMOTE_READ_MDA_CHUNK_SIZE;
-    long jj2 = ii2 / REMOTE_READ_MDA_CHUNK_SIZE;
-    if (jj1 == jj2) {
-        QString fname = d->download_chunk_at_index(jj1);
+    //read a chunk of the remote array considered as a 1D array
+    X.allocate(size, 1); //allocate the output array
+    double* Xptr = X.dataPtr(); //pointer to the output data
+    long ii1 = i; //start index of the remote array
+    long ii2 = i + size - 1; //end index of the remote array
+    long jj1 = ii1 / REMOTE_READ_MDA_CHUNK_SIZE; //start chunk index of the remote array
+    long jj2 = ii2 / REMOTE_READ_MDA_CHUNK_SIZE; //end chunk index of the remote array
+    if (jj1 == jj2) { //in this case there is only one chunk we need to worry about
+        QString fname = d->download_chunk_at_index(jj1); //download the single chunk
         if (fname.isEmpty())
             return false;
         DiskReadMda A(fname);
-        A.readChunk(X, ii1 - jj1 * REMOTE_READ_MDA_CHUNK_SIZE, size);
+        A.readChunk(X, ii1 - jj1 * REMOTE_READ_MDA_CHUNK_SIZE, size); //starting reading at the offset of ii1 relative to the start index of the chunk
         return true;
-    } else {
-        for (long jj = jj1; jj <= jj2; jj++) {
-            QString fname = d->download_chunk_at_index(jj);
+    }
+    else {
+        for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
+            QString fname = d->download_chunk_at_index(jj); //download the chunk at index jj
             if (fname.isEmpty())
                 return false;
             DiskReadMda A(fname);
-            if (jj == jj1) {
+            if (jj == jj1) { //case 1/3, this is the first chunk
                 Mda tmp;
-                long size0 = (jj1 + 1) * REMOTE_READ_MDA_CHUNK_SIZE - ii1;
-                A.readChunk(tmp, ii1 - jj1 * REMOTE_READ_MDA_CHUNK_SIZE, size0);
-                double* tmp_ptr = tmp.dataPtr();
+                long size0 = (jj1 + 1) * REMOTE_READ_MDA_CHUNK_SIZE - ii1; //the size is going to be the difference between ii1 and the start index of the next chunk
+                A.readChunk(tmp, ii1 - jj1 * REMOTE_READ_MDA_CHUNK_SIZE, size0); //again we start reading at the offset of ii1 relative to the start index of the chunk
+                double* tmp_ptr = tmp.dataPtr(); //copy the data directly from tmp_ptr to Xptr
                 long b = 0;
                 for (long a = 0; a < size0; a++) {
                     Xptr[b] = tmp_ptr[a];
                     b++;
                 }
-            } else if (jj == jj2) {
+            }
+
+            else if (jj == jj2) { //case 2/3, this is the last chunk
+                Mda tmp;
+                long size0 = ii2 + 1 - jj2 * REMOTE_READ_MDA_CHUNK_SIZE; //the size is going to be the difference between the start index of the last chunk and ii2+1
+                A.readChunk(tmp, 0, size0); //we start reading at position zero
+                double* tmp_ptr = tmp.dataPtr();
+                //copy the data to the last part of X
+                long b = size - size0;
+                for (long a = 0; a < size0; a++) {
+                    Xptr[b] = tmp_ptr[a];
+                    b++;
+                }
+            }
+
+            /*
+             ///this was the old code, which was wrong!!!!!!!!! -- fixed on 5/16/2016
+            else if (jj == jj2) {
+                qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
                 Mda tmp;
                 long size0 = ii2 + 1 - jj2 * REMOTE_READ_MDA_CHUNK_SIZE;
+                qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "size0=" << size0;
                 A.readChunk(tmp, REMOTE_READ_MDA_CHUNK_SIZE - size0, size0);
                 double* tmp_ptr = tmp.dataPtr();
                 long b = jj2 * REMOTE_READ_MDA_CHUNK_SIZE - ii1;
@@ -133,11 +154,14 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
                     Xptr[b] = tmp_ptr[a];
                     b++;
                 }
-            } else {
+            }
+            */
+
+            else { //case 3/3, this is a middle chunk
                 Mda tmp;
-                A.readChunk(tmp, 0, REMOTE_READ_MDA_CHUNK_SIZE);
+                A.readChunk(tmp, 0, REMOTE_READ_MDA_CHUNK_SIZE); //read the entire chunk, because we'll use it all
                 double* tmp_ptr = tmp.dataPtr();
-                long b = jj * REMOTE_READ_MDA_CHUNK_SIZE - ii1;
+                long b = jj * REMOTE_READ_MDA_CHUNK_SIZE - ii1; //we start writing at the offset between the start index of the chunk and the start index
                 for (long a = 0; a < REMOTE_READ_MDA_CHUNK_SIZE; a++) {
                     Xptr[b] = tmp_ptr[a];
                     b++;
