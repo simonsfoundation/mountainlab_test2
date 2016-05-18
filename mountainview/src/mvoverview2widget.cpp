@@ -37,6 +37,9 @@
 #include <QSet>
 #include <QKeyEvent>
 #include <QFileDialog>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include "textfile.h"
 
 /// TODO important: splitter between control panel and task view
 /// TODO show summary stats for dataset in mountainview
@@ -337,6 +340,51 @@ int MVOverview2Widget::getMaxLabel()
 void MVOverview2Widget::setMscmdServerUrl(const QString& url)
 {
     d->m_mscmdserver_url = url;
+}
+
+/// TODO implement TaskProgress::error(QString errmsg, QString details=""); static function for reporting errors into the task view
+
+void MVOverview2Widget::loadMVFile(const QString& mv_fname)
+{
+    QString json = read_text_file(mv_fname);
+    QJsonParseError err;
+    QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &err).object();
+    if (err.error != QJsonParseError::NoError) {
+        TaskProgress errtask;
+        errtask.error("Error parsing .mv file: " + mv_fname);
+        errtask.log("JSON parse error: " + err.errorString());
+        return;
+    }
+
+    if (obj.contains("firings")) {
+        this->setFiringsPath(obj["firings"].toString());
+    }
+    if (obj.contains("timeseries")) {
+        QJsonObject tsobj=obj["timeseries"].toObject();
+        QStringList list;
+        list << "raw"
+             << "filt"
+             << "pre";
+        foreach (QString str, list) {
+            if (tsobj.contains(str)) {
+                this->addTimeseriesPath(str, tsobj["str"].toString());
+            }
+        }
+    }
+
+    if (obj.contains("samplerate")) {
+        this->setSampleRate(obj["samplerate"].toDouble());
+    }
+
+    if (obj.contains("view_options")) {
+        MVViewOptions opts = MVViewOptions::fromJsonObject(obj["view_options"].toObject());
+        d->m_control_panel_new->setViewOptions(opts);
+    }
+
+    if (obj.contains("event_filter")) {
+        MVEventFilter filter = MVEventFilter::fromJsonObject(obj["event_filter"].toObject());
+        d->m_control_panel_new->setEventFilter(filter);
+    }
 }
 
 void MVOverview2Widget::resizeEvent(QResizeEvent* evt)

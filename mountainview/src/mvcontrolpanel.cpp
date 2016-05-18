@@ -443,3 +443,49 @@ QLabel* MVControlPanelPrivate::create_group_label(QString label)
     ret->setFont(font);
     return ret;
 }
+
+MVViewOptions MVViewOptions::fromJsonObject(QJsonObject obj)
+{
+    MVViewOptions ret;
+    ret.timeseries = obj["timeseries"].toString();
+    if (obj.contains("cc_max_dt_msec"))
+        ret.cc_max_dt_msec = obj["cc_max_dt_msec"].toDouble();
+    if (obj.contains("clip_size"))
+        ret.clip_size = obj["clip_size"].toInt();
+    return ret;
+}
+
+QJsonObject MVViewOptions::toJsonObject() const
+{
+    QJsonObject obj;
+    obj["timeseries"] = this->timeseries;
+    obj["cc_max_dt_msec"] = this->cc_max_dt_msec;
+    obj["clip_size"] = this->clip_size;
+    return obj;
+}
+
+MVEventFilter MVEventFilter::fromJsonObject(QJsonObject obj)
+{
+    MVEventFilter ret;
+    ret.use_shell_split = obj["use_shell_split"].toBool();
+    if (obj.contains("shell_increment"))
+        ret.shell_increment = obj["shell_increment"].toDouble();
+    if (obj.contains("min_per_shell"))
+        ret.min_per_shell = obj["min_per_shell"].toInt();
+    ret.use_event_filter = obj["use_event_filter"].toBool();
+    ret.min_detectability_score = obj["min_detectability_score"].toDouble();
+    ret.max_outlier_score = obj["max_outlier_score"].toDouble();
+    return ret;
+}
+
+QJsonObject MVEventFilter::toJsonObject() const
+{
+    QJsonObject obj;
+    obj["use_shell_split"] = this->use_shell_split;
+    obj["shell_increment"] = this->shell_increment;
+    obj["min_per_shell"] = this->min_per_shell;
+    obj["use_event_filter"] = this->use_event_filter;
+    obj["min_detectability_score"] = this->min_detectability_score;
+    obj["max_outlier_score"] = this->max_outlier_score;
+    return obj;
+}

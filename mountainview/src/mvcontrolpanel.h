@@ -7,13 +7,22 @@
 #ifndef MVCONTROLPANEL_H
 #define MVCONTROLPANEL_H
 
+#include <QJsonObject>
 #include <QString>
 #include <QWidget>
 
 struct MVViewOptions {
+    MVViewOptions()
+    {
+        cc_max_dt_msec = 100;
+        clip_size = 100;
+    }
+
     QString timeseries;
     double cc_max_dt_msec;
-    double clip_size;
+    int clip_size;
+    static MVViewOptions fromJsonObject(QJsonObject obj);
+    QJsonObject toJsonObject() const;
 };
 
 struct MVEventFilter {
@@ -33,6 +42,8 @@ struct MVEventFilter {
     bool use_event_filter;
     double min_detectability_score;
     double max_outlier_score;
+    static MVEventFilter fromJsonObject(QJsonObject obj);
+    QJsonObject toJsonObject() const;
 };
 
 class MVControlPanelPrivate;
