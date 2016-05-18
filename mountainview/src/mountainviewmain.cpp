@@ -45,14 +45,21 @@ int main(int argc, char* argv[])
         return run_mountainview_script(script, CLP.named_parameters);
     }
 
+    QString mv_fname;
+    if (CLP.unnamed_parameters.value(0).endsWith(".mv")) {
+        mv_fname = CLP.unnamed_parameters.value(0);
+    }
+
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
-        } else if (arg2 == "remotereadmda2") {
+        }
+        else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
-        } else {
+        }
+        else {
             qWarning() << "No such unit test: " + arg2;
         }
         return 0;
@@ -69,6 +76,9 @@ int main(int argc, char* argv[])
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         MVOverview2Widget* W = new MVOverview2Widget;
+        if (!mv_fname.isEmpty()) {
+            W->loadMVFile(mv_fname);
+        }
         if (mode == "overview2") {
             W->setWindowTitle(window_title);
             W->show();
@@ -79,7 +89,8 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            } else {
+            }
+            else {
                 W->resize(W0, H0);
             }
 
@@ -107,8 +118,12 @@ int main(int argc, char* argv[])
             window_title = filt_path;
         if (window_title.isEmpty())
             window_title = raw_path;
-        W->setFiringsPath(firings_path);
-        W->setSampleRate(samplerate);
+        if (!firings_path.isEmpty()) {
+            W->setFiringsPath(firings_path);
+        }
+        if (samplerate) {
+            W->setSampleRate(samplerate);
+        }
 
         /// The following code block was disabled because we are moving away from using mountainview to generate images on the server. Need to think about this
         /*
