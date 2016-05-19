@@ -61,8 +61,6 @@ class MVOverview2WidgetPrivate {
 public:
     MVOverview2Widget* q;
     QMap<QString, QString> m_timeseries_paths;
-    QString m_current_timeseries_name;
-    DiskReadMda m_timeseries;
     DiskReadMda m_firings_original;
     Mda m_firings_split;
     DiskReadMda m_firings;
@@ -148,6 +146,7 @@ public:
     void export_file(QString source_path, QString dest_path, bool use_float64);
 
     QString make_absolute_path(QString path); //use basepath of m_mv_fname if path is relative
+    QString current_timeseries_path();
 
     //void start_cross_correlograms_computer();
 };
@@ -264,12 +263,11 @@ void MVOverview2Widget::addTimeseriesPath(const QString& name, const QString& pa
 
 void MVOverview2Widget::setCurrentTimeseriesName(const QString& name)
 {
-    d->m_current_timeseries_name = name;
-    d->m_timeseries.setPath(d->make_absolute_path(d->m_timeseries_paths[d->m_current_timeseries_name]));
-
-    MVViewOptions opts = d->m_control_panel_new->viewOptions();
-    opts.timeseries = name;
-    d->m_control_panel_new->setViewOptions(opts);
+    {
+        MVViewOptions opts = d->m_control_panel_new->viewOptions();
+        opts.timeseries = name;
+        d->m_control_panel_new->setViewOptions(opts);
+    }
 
     d->update_timeseries_views();
     d->update_cluster_details();
@@ -351,7 +349,7 @@ void MVOverview2Widget::setMscmdServerUrl(const QString& url)
 
 void MVOverview2Widget::loadMVFile(const QString& mv_fname)
 {
-    d->m_mv_fname=mv_fname;
+    d->m_mv_fname = mv_fname;
 
     TaskProgress task("loading .mv file: " + mv_fname);
     QString json = read_text_file(mv_fname);
@@ -405,32 +403,32 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
     }
 }
 
-void MVOverview2Widget::saveMVFile(const QString &mv_fname)
+void MVOverview2Widget::saveMVFile(const QString& mv_fname)
 {
     TaskProgress task("saving .mv file: " + mv_fname);
 
     QJsonObject obj;
 
-    obj["mv_version"]=0.1;
+    obj["mv_version"] = 0.1;
 
-    obj["firings"]=d->m_firings.path();
+    obj["firings"] = d->m_firings.path();
     QJsonArray ts;
-    QStringList keys=d->m_timeseries_paths.keys();
-    foreach (QString key,keys) {
+    QStringList keys = d->m_timeseries_paths.keys();
+    foreach (QString key, keys) {
         QJsonObject tsobj;
-        tsobj["name"]=key;
-        tsobj["path"]=d->m_timeseries_paths[key];
+        tsobj["name"] = key;
+        tsobj["path"] = d->m_timeseries_paths[key];
         ts << tsobj;
     }
-    obj["timeseries"]=ts;
+    obj["timeseries"] = ts;
 
-    obj["samplerate"]=d->m_samplerate;
+    obj["samplerate"] = d->m_samplerate;
 
-    obj["view_options"]=d->m_control_panel_new->viewOptions().toJsonObject();
-    obj["event_filter"]=d->m_control_panel_new->eventFilter().toJsonObject();
+    obj["view_options"] = d->m_control_panel_new->viewOptions().toJsonObject();
+    obj["event_filter"] = d->m_control_panel_new->eventFilter().toJsonObject();
 
-    if (!write_text_file(mv_fname,QJsonDocument(obj).toJson())) {
-        task.error("Error writing .mv file: "+mv_fname);
+    if (!write_text_file(mv_fname, QJsonDocument(obj).toJson())) {
+        task.error("Error writing .mv file: " + mv_fname);
     }
 }
 
@@ -880,7 +878,7 @@ void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
     params["use_shell_split"] = evt_filter.use_shell_split;
     params["shell_width"] = evt_filter.shell_increment;
     params["min_per_shell"] = evt_filter.min_per_shell;
-    params["use_event_filter"] = true;
+    params["use_event_filter"] = evt_filter.use_event_filter;
     if (evt_filter.min_detectability_score) {
         params["min_detectability_score"] = evt_filter.min_detectability_score;
     }
@@ -1001,7 +999,8 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
     MVClusterDetailWidget* X = new MVClusterDetailWidget;
     X->setMscmdServerUrl(m_mscmdserver_url);
     X->setChannelColors(m_channel_colors);
-    X->setTimeseries(m_timeseries);
+    DiskReadMda TT(current_timeseries_path());
+    X->setTimeseries(TT);
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
     X->setSampleRate(m_samplerate);
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
@@ -1319,7 +1318,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         TaskProgress task("Update cluster details");
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         WW->setColors(m_colors);
-        WW->setTimeseries(m_timeseries);
+        DiskReadMda TT(current_timeseries_path());
+        WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         WW->setFirings(DiskReadMda(m_firings));
         WW->setGroupNumbers(m_original_cluster_numbers);
@@ -1330,7 +1330,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         MVClipsWidget* WW = (MVClipsWidget*)W;
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
-        WW->setTimeseries(m_timeseries);
+        DiskReadMda TT(current_timeseries_path());
+        WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         WW->setFirings(m_firings);
         WW->setLabelsToUse(ks);
@@ -1401,7 +1402,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
             labels_kk << labels[n];
         }
 
-        Mda clips = extract_clips(m_timeseries, times_kk, clip_size);
+        DiskReadMda TT(current_timeseries_path());
+        Mda clips = extract_clips(TT, times_kk, clip_size);
         printf("Setting data...\n");
         //DiskArrayModel_New *DAM=new DiskArrayModel_New;
         //DAM->setFromMda(clips);
@@ -1415,7 +1417,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         MVClusterWidget* WW = (MVClusterWidget*)W;
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
-        WW->setTimeseries(m_timeseries);
+        DiskReadMda TT(current_timeseries_path());
+        WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         WW->setFirings(m_firings);
         WW->setLabelsToUse(ks);
@@ -1449,7 +1452,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
     else if (widget_type == "timeseries") {
         SSTimeSeriesWidget* WW = (SSTimeSeriesWidget*)W;
         DiskArrayModel_New* X = new DiskArrayModel_New;
-        X->setPath(make_absolute_path(m_timeseries_paths[m_current_timeseries_name]));
+        X->setPath(current_timeseries_path());
         ((SSTimeSeriesView*)(WW->view()))->setData(X, true);
         set_times_labels_for_timeseries_widget(WW);
     }
@@ -1863,11 +1866,17 @@ void MVOverview2WidgetPrivate::export_file(QString source_path, QString dest_pat
 
 QString MVOverview2WidgetPrivate::make_absolute_path(QString path)
 {
-    if (QFileInfo(path).isAbsolute()) return path;
-    if ((!m_mv_fname.isEmpty())&&(QFileInfo(m_mv_fname).isAbsolute())) {
-        return QFileInfo(m_mv_fname).path()+"/"+path;
+    if (QFileInfo(path).isAbsolute())
+        return path;
+    if (!m_mv_fname.isEmpty()) {
+        return QFileInfo(m_mv_fname).path() + "/" + path;
     }
     return path;
+}
+
+QString MVOverview2WidgetPrivate::current_timeseries_path()
+{
+    return make_absolute_path(m_timeseries_paths.value(m_control_panel_new->viewOptions().timeseries));
 }
 
 typedef QList<long> IntList;
