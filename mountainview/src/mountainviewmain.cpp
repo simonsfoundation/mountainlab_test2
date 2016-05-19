@@ -97,7 +97,9 @@ int main(int argc, char* argv[])
             qApp->processEvents();
         }
 
-        W->setMscmdServerUrl(CLP.named_parameters.value("mscmdserver_url", "").toString());
+        if (CLP.named_parameters.contains("mscmdserver_url")) {
+            W->setMscmdServerUrl(CLP.named_parameters.value("mscmdserver_url", "").toString());
+        }
         if (!pre_path.isEmpty()) {
             W->addTimeseriesPath("Preprocessed Data", pre_path);
         }
