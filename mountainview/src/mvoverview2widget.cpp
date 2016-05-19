@@ -380,6 +380,12 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
         }
     }
 
+    if (obj.contains("mscmdserver_url")) {
+        QString url = obj["mscmdserver_url"].toString();
+        task.log(QString("mscmdserver_url = %1").arg(url));
+        this->setMscmdServerUrl(url);
+    }
+
     if (obj.contains("samplerate")) {
         double rate = obj["samplerate"].toDouble();
         task.log(QString("samplerate = %1").arg(rate));
@@ -428,6 +434,8 @@ void MVOverview2Widget::saveMVFile(const QString& mv_fname)
 
     obj["view_options"] = d->m_control_panel_new->viewOptions().toJsonObject();
     obj["event_filter"] = d->m_control_panel_new->eventFilter().toJsonObject();
+
+    obj["mscmdserver_url"] = d->m_mscmdserver_url;
 
     if (!write_text_file(mv_fname, QJsonDocument(obj).toJson())) {
         task.error("Error writing .mv file: " + mv_fname);
@@ -1868,6 +1876,8 @@ void MVOverview2WidgetPrivate::export_file(QString source_path, QString dest_pat
 
 QString MVOverview2WidgetPrivate::make_absolute_path(QString path)
 {
+    if (path.startsWith("http"))
+        return path;
     if (QFileInfo(path).isAbsolute())
         return path;
     if (!m_mv_fname.isEmpty()) {
