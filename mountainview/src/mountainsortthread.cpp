@@ -68,21 +68,24 @@ void MountainsortThread::compute()
         QStringList args;
         args << d->m_processor_name;
         QStringList keys = d->m_parameters.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             args << QString("--%1=%2").arg(key).arg(d->m_parameters.value(key).toString());
         }
         this->setStatus("Local " + d->m_processor_name, "Executing locally: " + mountainsort_exe, 0.5);
+        foreach (QString key, keys) {
+            this->setStatus("", key + " = " + d->m_parameters[key].toString());
+        }
+
         if (QProcess::execute(mountainsort_exe, args) != 0) {
             qWarning() << "Problem running mountainsort" << mountainsort_exe << args;
         }
         this->setStatus("", "Done.", 1);
-    } else {
+    }
+    else {
         QString url = d->m_mscmdserver_url + "/?";
         url += "processor=" + d->m_processor_name + "&";
         QStringList keys = d->m_parameters.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             url += QString("%1=%2&").arg(key).arg(d->m_parameters.value(key).toString());
         }
         this->setStatus("Remote " + d->m_processor_name, "http_get_text: " + url, 0.5);
@@ -96,8 +99,7 @@ QString MountainsortThreadPrivate::create_temporary_output_file_name(const QStri
     QString str = processor_name + ":";
     QStringList keys = params.keys();
     qSort(keys);
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         str += key + "=" + params.value(key).toString() + "&";
     }
 
@@ -110,8 +112,7 @@ QString MountainsortThreadPrivate::get_remote_url_from_parameters()
 {
     QString ret;
     QStringList keys = m_parameters.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         QString val = m_parameters.value(key).toString();
         if (val.startsWith("http://")) {
             QString remote_url = remote_url_of_path(val);
@@ -119,7 +120,8 @@ QString MountainsortThreadPrivate::get_remote_url_from_parameters()
                 if (ret.isEmpty()) {
                     ret = remote_url;
                 }
-            } else {
+            }
+            else {
                 qWarning() << QString("More than one remote name in parameters for %1. Using %2.").arg(m_processor_name).arg(ret);
                 qWarning() << m_parameters;
             }
@@ -135,7 +137,8 @@ QString MountainsortThreadPrivate::remote_url_of_path(const QString& path)
         if (ind < 0)
             return "";
         return path.mid(0, ind);
-    } else {
+    }
+    else {
         return "";
     }
 }

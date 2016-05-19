@@ -401,6 +401,8 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
         MVEventFilter filter = MVEventFilter::fromJsonObject(obj0);
         d->m_control_panel_new->setEventFilter(filter);
     }
+
+    d->do_shell_split_and_event_filter();
 }
 
 void MVOverview2Widget::saveMVFile(const QString& mv_fname)
@@ -411,7 +413,7 @@ void MVOverview2Widget::saveMVFile(const QString& mv_fname)
 
     obj["mv_version"] = 0.1;
 
-    obj["firings"] = d->m_firings.path();
+    obj["firings"] = d->m_firings_original.path();
     QJsonArray ts;
     QStringList keys = d->m_timeseries_paths.keys();
     foreach (QString key, keys) {
@@ -879,12 +881,12 @@ void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
     params["shell_width"] = evt_filter.shell_increment;
     params["min_per_shell"] = evt_filter.min_per_shell;
     params["use_event_filter"] = evt_filter.use_event_filter;
-    if (evt_filter.min_detectability_score) {
-        params["min_detectability_score"] = evt_filter.min_detectability_score;
-    }
-    if (evt_filter.max_outlier_score) {
-        params["max_outlier_score"] = evt_filter.max_outlier_score;
-    }
+    //if (evt_filter.min_detectability_score) {
+    params["min_detectability_score"] = evt_filter.min_detectability_score;
+    //}
+    //if (evt_filter.max_outlier_score) {
+    params["max_outlier_score"] = evt_filter.max_outlier_score;
+    //}
     /// TODO min_amplitude and max_outlier_score should NOT be required parameters in the processor
     params["min_amplitude"] = 0;
 
