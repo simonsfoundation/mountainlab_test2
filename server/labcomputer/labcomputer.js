@@ -15,7 +15,7 @@ function forward_ports() {
 	var args=['setup_port_forward.sh',remote_host,remote_port,local_port,user_name];
 	console.log(exe+' '+args.join(' '));
 	var process=require('child_process').spawn(exe,args,{stdio:[0,1,2]});
-	process.on('exit',function(code) {
+	process.on('close',function(code) {
 		console.log('Exited with code: '+code);
 		setTimeout(forward_ports,time_interval);
 	});	

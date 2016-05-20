@@ -1,3 +1,5 @@
+console.log('Running mpserver...');
+
 //// requires
 var	url=require('url');
 var http=require('http');
@@ -24,25 +26,18 @@ actions['clearProcessing']=require('./clearprocessing.js').clearProcessing;
 actions['getPript']=require('./getpript').getPript;
 
 //// configuration
-var config_fname='../../config/mpserver.json';
-try {
-	var config = JSON.parse(fs.readFileSync(config_fname, 'utf8'));
-}
-catch(err) {
-	console.log('Problem parsing config file. Copy mountainlab/config/config.json.example to mountainlab/config/config.json and then modify');
-	return;
-}
+var config_fname='../labcomputer.json';
+var config_path=require('path').dirname(config_fname);
+var config = JSON.parse(fs.readFileSync(config_fname, 'utf8'));
 
-//make the configuration paths absolute!
-for (var key in config) {
-	if (config[key].indexOf('/')>=0) {
-		config[key]=require('path').resolve(__dirname,config[key]);	
-	}
-}
 console.log(JSON.stringify(config));
 
+var mpserver_tmp_path=require('path').resolve(config_path,config.mpserver_tmp_path);
+var mpserver_html_path=require('path').resolve(config_path,config.mpserver_html_path);
+var mpserver_listen_port=config.mpserver_listen_port;
+
 //// setup
-mkdir_if_needed(config.tmp_mpserver_path);
+mkdir_if_needed(mpserver_tmp_path);
 var X=new MPManager();
 var last_request_id=0;
 
@@ -112,7 +107,7 @@ http.createServer(function (REQ, RESP) {
 		var suffixes=['html','js','css','json','txt','jpg','png','gif'];
 		var suf=path.split('.').pop();
 		if (suffixes.indexOf(suf)>=0) {
-			var filename = require('path').join(config.html_path, path);
+			var filename = require('path').join(mpserver_html_path, path);
 			console.log('SERVING FILE: '+filename);
 			serve_file(filename,RESP);
 		}
@@ -181,8 +176,8 @@ http.createServer(function (REQ, RESP) {
 		RESP.writeHead(200, {"Access-Control-Allow-Origin":"*", "Content-Type":"text/plain"});
 		RESP.end(text);
 	}
-}).listen(config.listen_port);
-console.log ('Listening on port '+config.listen_port);
+}).listen(mpserver_listen_port);
+console.log ('Listening on port '+mpserver_listen_port);
 
 function mkdir_if_needed(path) {
 	var fs=require('fs');

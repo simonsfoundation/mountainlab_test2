@@ -143,12 +143,9 @@ class MyTCPServer(SocketServer.TCPServer):
     allow_reuse_address = True
 
 def main():
-    config_fname='../../config/mdaserver.cfg'
-    example_config_fname='../../config/mdaserver.example.cfg'
-    if not os.path.isfile(config_fname):
-        shutil.copyfile(example_config_fname,config_fname)
-        print("Please edit the configuration file "+config_fname+" and then re-run this program")
-        return
+    config_fname='mdaserver.cfg'
+    
+    
     Handler = MyRequestHandler
 
     config = ConfigParser.ConfigParser(allow_no_value=True)
