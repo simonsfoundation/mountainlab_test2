@@ -69,7 +69,8 @@ public:
     QSet<int> m_selected_ks;
     float m_samplerate;
     MVEvent m_current_event;
-    QString m_mscmdserver_url;
+    //QString m_mscmdserver_url;
+    QString m_mpserver_url;
 
     MVControlPanel* m_control_panel_new;
     TaskProgressView* m_task_progress_view;
@@ -334,9 +335,17 @@ int MVOverview2Widget::getMaxLabel()
     return ret;
 }
 
+/*
 void MVOverview2Widget::setMscmdServerUrl(const QString& url)
 {
     d->m_mscmdserver_url = url;
+}
+*/
+
+void MVOverview2Widget::setMPServerUrl(const QString& url)
+{
+    qDebug() << "@@@@@@@@@@@@@@@@@@@ setting mpserverurl " << url;
+    d->m_mpserver_url = url;
 }
 
 void MVOverview2Widget::resizeEvent(QResizeEvent* evt)
@@ -349,8 +358,7 @@ void MVOverview2Widget::keyPressEvent(QKeyEvent* evt)
 {
     if ((evt->key() == Qt::Key_W) && (evt->modifiers() & Qt::ControlModifier)) {
         this->close();
-    }
-    else
+    } else
         evt->ignore();
 }
 
@@ -427,41 +435,29 @@ void MVOverview2Widget::slot_control_panel_user_action(QString str)
     if ((str == "apply_shell_splitting") || (str == "apply_filter")) {
         d->do_shell_split_and_event_filter();
         d->update_all_widgets();
-    }
-    else if (str == "update_all_open_views") {
+    } else if (str == "update_all_open_views") {
         d->update_all_widgets();
-    }
-    else if (str == "open-cluster-details") {
+    } else if (str == "open-cluster-details") {
         d->open_cluster_details();
-    }
-    else if (str == "open-auto-correlograms") {
+    } else if (str == "open-auto-correlograms") {
         d->open_auto_correlograms();
-    }
-    else if (str == "open-matrix-of-cross-correlograms") {
+    } else if (str == "open-matrix-of-cross-correlograms") {
         d->open_matrix_of_cross_correlograms();
-    }
-    else if (str == "open-timeseries-data") {
+    } else if (str == "open-timeseries-data") {
         d->open_timeseries();
-    }
-    else if (str == "open-clips") {
+    } else if (str == "open-clips") {
         d->open_clips();
-    }
-    else if (str == "open-clusters") {
+    } else if (str == "open-clusters") {
         d->open_clusters();
-    }
-    else if (str == "open-firing-events") {
+    } else if (str == "open-firing-events") {
         d->open_firing_events();
-    }
-    else if (str == "find-nearby-events") {
+    } else if (str == "find-nearby-events") {
         d->find_nearby_events();
-    }
-    else if (str == "download_original_firings") {
+    } else if (str == "download_original_firings") {
         d->download_original_firings();
-    }
-    else if (str == "download_filtered_firings") {
+    } else if (str == "download_filtered_firings") {
         d->download_filtered_firings();
-    }
-    else {
+    } else {
         TaskProgress task(str);
         task.error("user action not yet implemented.");
     }
@@ -488,8 +484,8 @@ void MVOverview2Widget::slot_details_selected_ks_changed()
     MVClusterDetailWidget* X = (MVClusterDetailWidget*)sender();
     QList<int> ks = X->selectedKs();
     QList<int> indices;
-    foreach (int k, ks)
-        indices << k - 1;
+    foreach(int k, ks)
+    indices << k - 1;
     d->m_selected_ks = ks.toSet();
     d->set_cross_correlograms_selected_indices(indices);
 }
@@ -574,7 +570,8 @@ void MVOverview2WidgetPrivate::update_sizes()
 void MVOverview2WidgetPrivate::update_all_widgets()
 {
     QList<QWidget*> list = get_all_widgets();
-    foreach (QWidget* W, list) {
+    foreach(QWidget * W, list)
+    {
         update_widget(W);
     }
 }
@@ -582,7 +579,8 @@ void MVOverview2WidgetPrivate::update_all_widgets()
 void MVOverview2WidgetPrivate::update_cluster_details()
 {
     QList<QWidget*> list = get_all_widgets();
-    foreach (QWidget* W, list) {
+    foreach(QWidget * W, list)
+    {
         if (W->property("widget_type") == "cluster_details") {
             update_widget(W);
         }
@@ -592,7 +590,8 @@ void MVOverview2WidgetPrivate::update_cluster_details()
 void MVOverview2WidgetPrivate::update_clips()
 {
     QList<QWidget*> list = get_all_widgets();
-    foreach (QWidget* W, list) {
+    foreach(QWidget * W, list)
+    {
         if (W->property("widget_type") == "clips") {
             update_widget(W);
         }
@@ -605,7 +604,8 @@ void MVOverview2WidgetPrivate::update_clips()
 void MVOverview2WidgetPrivate::update_cluster_views()
 {
     QList<QWidget*> list = get_all_widgets();
-    foreach (QWidget* W, list) {
+    foreach(QWidget * W, list)
+    {
         if (W->property("widget_type") == "clusters") {
             update_widget(W);
         }
@@ -615,7 +615,8 @@ void MVOverview2WidgetPrivate::update_cluster_views()
 void MVOverview2WidgetPrivate::update_firing_event_views()
 {
     QList<QWidget*> list = get_all_widgets();
-    foreach (QWidget* W, list) {
+    foreach(QWidget * W, list)
+    {
         if (W->property("widget_type") == "firing_events") {
             update_widget(W);
         }
@@ -681,13 +682,11 @@ void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<d
                     count_in = counts[min_b];
                 else
                     count_in = 0;
-            }
-            else {
+            } else {
                 max_b++;
                 if (max_b < num_bins) {
                     count_in += counts[max_b];
-                }
-                else {
+                } else {
                     if (count_in > 0) {
                         shell_mins_pos << min_b* shell_increment;
                         shell_maxs_pos << (max_b + 1) * shell_increment;
@@ -735,13 +734,11 @@ void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<d
                     count_in = counts[min_b];
                 else
                     count_in = 0;
-            }
-            else {
+            } else {
                 max_b++;
                 if (max_b < num_bins) {
                     count_in += counts[max_b];
-                }
-                else {
+                } else {
                     if (count_in > 0) {
                         shell_mins_neg << min_b* shell_increment;
                         shell_maxs_neg << (max_b + 1) * shell_increment;
@@ -795,12 +792,14 @@ void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
     params["firings"] = m_firings_original.makePath();
 
     QStringList debug_keys = params.keys();
-    foreach (QString key, debug_keys) {
+    foreach(QString key, debug_keys)
+    {
         task.log(QString("%1 = %2").arg(key).arg(params[key].toString()));
     }
 
     MT.setInputParameters(params);
-    MT.setMscmdServerUrl(m_mscmdserver_url);
+    //MT.setMscmdServerUrl(m_mscmdserver_url);
+    MT.setMPServerUrl(m_mpserver_url);
 
     QString firings_out = MT.makeOutputFilePath("firings_out");
     QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
@@ -901,7 +900,8 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_matrix_of_cross_corre
 MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget;
-    X->setMscmdServerUrl(m_mscmdserver_url);
+    //X->setMscmdServerUrl(m_mscmdserver_url);
+    X->setMPServerUrl(m_mpserver_url);
     X->setChannelColors(m_channel_colors);
     X->setTimeseries(m_timeseries);
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
@@ -937,7 +937,8 @@ void MVOverview2WidgetPrivate::open_clips()
     }
 
     MVClipsWidget* X = new MVClipsWidget;
-    X->setMscmdServerUrl(m_mscmdserver_url);
+    //X->setMscmdServerUrl(m_mscmdserver_url);
+    X->setMPServerUrl(m_mpserver_url);
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_widget_current_event_changed()));
@@ -975,7 +976,8 @@ void MVOverview2WidgetPrivate::open_clusters()
         return;
     }
     MVClusterWidget* X = new MVClusterWidget;
-    X->setMscmdServerUrl(m_mscmdserver_url);
+    //X->setMscmdServerUrl(m_mscmdserver_url);
+    X->setMPServerUrl(m_mpserver_url);
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_cluster_view_current_event_changed()));
@@ -1031,7 +1033,8 @@ void MVOverview2WidgetPrivate::find_nearby_events()
 void MVOverview2WidgetPrivate::update_cross_correlograms()
 {
     QList<QWidget*> widgets = get_all_widgets();
-    foreach (QWidget* W, widgets) {
+    foreach(QWidget * W, widgets)
+    {
         QString widget_type = W->property("widget_type").toString();
         if ((widget_type == "auto_correlograms") || (widget_type == "cross_correlograms")) {
             update_widget(W);
@@ -1042,7 +1045,8 @@ void MVOverview2WidgetPrivate::update_cross_correlograms()
 void MVOverview2WidgetPrivate::update_timeseries_views()
 {
     QList<QWidget*> widgets = get_all_widgets();
-    foreach (QWidget* W, widgets) {
+    foreach(QWidget * W, widgets)
+    {
         QString widget_type = W->property("widget_type").toString();
         if (widget_type == "timeseries") {
             update_widget(W);
@@ -1053,7 +1057,8 @@ void MVOverview2WidgetPrivate::update_timeseries_views()
 void MVOverview2WidgetPrivate::move_to_timepoint(double tp)
 {
     QList<QWidget*> widgets = get_all_widgets();
-    foreach (QWidget* W, widgets) {
+    foreach(QWidget * W, widgets)
+    {
         QString widget_type = W->property("widget_type").toString();
         if (widget_type == "timeseries") {
             SSTimeSeriesWidget* V = (SSTimeSeriesWidget*)W;
@@ -1100,8 +1105,7 @@ void normalize_features(Mda& F, bool individual_channels)
             for (int i = 0; i < NN; i++)
                 F.setValue(F.value(m, i) / norm, m, i);
         }
-    }
-    else {
+    } else {
         double sumsqr = 0;
         double sum = 0;
         int NN = F.totalSize();
@@ -1136,15 +1140,13 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
             labels2 << i;
             if ((i == 1) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
                 text_labels << QString("Auto %1").arg(m_original_cluster_numbers[i]);
-            }
-            else
+            } else
                 text_labels << "";
         }
         //WW->setTextLabels(labels);
         WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
-    }
-    else if (widget_type == "cross_correlograms") {
+    } else if (widget_type == "cross_correlograms") {
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         int k = W->property("kk").toInt();
         WW->setColors(m_colors);
@@ -1160,15 +1162,13 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
             labels2 << i;
             if ((i == 1) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
                 text_labels << QString("Cross %1(%2)/%3").arg(m_original_cluster_numbers[k + 1]).arg(m_original_cluster_offsets.value(k + 1)).arg(m_original_cluster_numbers[i]);
-            }
-            else
+            } else
                 text_labels << "";
         }
         //WW->setTextLabels(labels);
         WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
-    }
-    else if (widget_type == "matrix_of_cross_correlograms") {
+    } else if (widget_type == "matrix_of_cross_correlograms") {
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         WW->setColors(m_colors);
@@ -1227,8 +1227,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setGroupNumbers(m_original_cluster_numbers);
         WW->zoomAllTheWayOut();
         task.log(QString("clip_size=%1, m_firings.N1()=%2, m_firings.N2()=%3").arg(clip_size).arg(m_firings.N1()).arg(m_firings.N2()));
-    }
-    else if (widget_type == "clips") {
+    } else if (widget_type == "clips") {
         MVClipsWidget* WW = (MVClipsWidget*)W;
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
@@ -1236,8 +1235,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setClipSize(clip_size);
         WW->setFirings(m_firings);
         WW->setLabelsToUse(ks);
-    }
-    else if (widget_type == "find_nearby_events") {
+    } else if (widget_type == "find_nearby_events") {
         printf("Extracting clips...\n");
         MVClipsView* WW = (MVClipsView*)W;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
@@ -1262,8 +1260,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
                     }
                 }
             }
-        }
-        else if (widget_type == "find_nearby_events") {
+        } else if (widget_type == "find_nearby_events") {
             long max_time = (long)(compute_max(times) + 1);
             Mda occupied(ks.count(), max_time + 1);
             for (int ik = 0; ik < ks.count(); ik++) {
@@ -1312,8 +1309,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setTimes(times_kk);
         WW->setLabels(labels_kk);
         printf(".\n");
-    }
-    else if (widget_type == "clusters") {
+    } else if (widget_type == "clusters") {
         MVClusterWidget* WW = (MVClusterWidget*)W;
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
@@ -1321,8 +1317,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setClipSize(clip_size);
         WW->setFirings(m_firings);
         WW->setLabelsToUse(ks);
-    }
-    else if (widget_type == "firing_events") {
+    } else if (widget_type == "firing_events") {
         MVFiringRateView* WW = (MVFiringRateView*)W;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
         QSet<int> ks_set = ks.toSet();
@@ -1347,8 +1342,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setFirings(firings2);
         WW->setSampleRate(m_samplerate);
         WW->setEpochs(m_epochs);
-    }
-    else if (widget_type == "timeseries") {
+    } else if (widget_type == "timeseries") {
         SSTimeSeriesWidget* WW = (SSTimeSeriesWidget*)W;
         DiskArrayModel_New* X = new DiskArrayModel_New;
         X->setPath(m_timeseries_paths[m_current_timeseries_name]);
@@ -1360,7 +1354,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
 void MVOverview2WidgetPrivate::set_cross_correlograms_current_index(int index)
 {
     QList<QWidget*> widgets = get_all_widgets();
-    foreach (QWidget* W, widgets) {
+    foreach(QWidget * W, widgets)
+    {
         QString widget_type = W->property("widget_type").toString();
         if ((widget_type == "auto_correlograms") || (widget_type == "cross_correlograms")) {
             MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
@@ -1372,7 +1367,8 @@ void MVOverview2WidgetPrivate::set_cross_correlograms_current_index(int index)
 void MVOverview2WidgetPrivate::set_cross_correlograms_selected_indices(const QList<int>& indices)
 {
     QList<QWidget*> widgets = get_all_widgets();
-    foreach (QWidget* W, widgets) {
+    foreach(QWidget * W, widgets)
+    {
         QString widget_type = W->property("widget_type").toString();
         if ((widget_type == "auto_correlograms") || (widget_type == "cross_correlograms")) {
             MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
@@ -1384,7 +1380,8 @@ void MVOverview2WidgetPrivate::set_cross_correlograms_selected_indices(const QLi
 void MVOverview2WidgetPrivate::set_templates_current_number(int kk)
 {
     QList<QWidget*> widgets = get_all_widgets();
-    foreach (QWidget* W, widgets) {
+    foreach(QWidget * W, widgets)
+    {
         QString widget_type = W->property("widget_type").toString();
         if (widget_type == "cluster_details") {
             MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
@@ -1396,7 +1393,8 @@ void MVOverview2WidgetPrivate::set_templates_current_number(int kk)
 void MVOverview2WidgetPrivate::set_templates_selected_numbers(const QList<int>& kks)
 {
     QList<QWidget*> widgets = get_all_widgets();
-    foreach (QWidget* W, widgets) {
+    foreach(QWidget * W, widgets)
+    {
         QString widget_type = W->property("widget_type").toString();
         if (widget_type == "cluster_details") {
             MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
@@ -1462,7 +1460,8 @@ TabberTabWidget* MVOverview2WidgetPrivate::tab_widget_of(QWidget* W)
 void MVOverview2WidgetPrivate::remove_widgets_of_type(QString widget_type)
 {
     QList<QWidget*> list = get_all_widgets();
-    foreach (QWidget* W, list) {
+    foreach(QWidget * W, list)
+    {
         if (W->property("widget_type") == widget_type) {
             delete W;
         }
@@ -1658,31 +1657,27 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
     }
     m_current_event = evt;
     QList<QWidget*> widgets = get_all_widgets();
-    foreach (QWidget* W, widgets) {
+    foreach(QWidget * W, widgets)
+    {
         QString widget_type = W->property("widget_type").toString();
         if (widget_type == "clips") {
             MVClipsWidget* WW = (MVClipsWidget*)W;
             WW->setCurrentEvent(evt);
-        }
-        else if (widget_type == "find_nearby_events") {
+        } else if (widget_type == "find_nearby_events") {
             MVClipsView* WW = (MVClipsView*)W;
             WW->setCurrentEvent(evt);
-        }
-        else if (widget_type == "clusters") {
+        } else if (widget_type == "clusters") {
             MVClusterWidget* WW = (MVClusterWidget*)W;
             WW->setCurrentEvent(evt);
-        }
-        else if (widget_type == "firing_events") {
+        } else if (widget_type == "firing_events") {
             MVFiringRateView* WW = (MVFiringRateView*)W;
             WW->setCurrentEvent(evt);
-        }
-        else if (widget_type == "cluster_details") {
+        } else if (widget_type == "cluster_details") {
             MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
             if (evt.label > 0) {
                 WW->setCurrentK(evt.label);
             }
-        }
-        else if (widget_type == "timeseries") {
+        } else if (widget_type == "timeseries") {
             SSTimeSeriesWidget* WW = (SSTimeSeriesWidget*)W;
             SSTimeSeriesView* VV = (SSTimeSeriesView*)WW->view(0);
             if (evt.time >= 0) {
@@ -1716,8 +1711,7 @@ void DownloadComputer::compute()
     if (use_float64) {
         this->setStatus("Writing " + dest_path, "", 0.5);
         Y.write64(dest_path);
-    }
-    else {
+    } else {
         Y.write32(dest_path);
     }
 }

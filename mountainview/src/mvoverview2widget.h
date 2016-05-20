@@ -39,7 +39,8 @@ public:
     ///Corresponds to MVFiringRateView::setEpochs()
     Q_INVOKABLE void setEpochs(const QList<Epoch>& epochs);
     Q_INVOKABLE int getMaxLabel();
-    Q_INVOKABLE void setMscmdServerUrl(const QString& url);
+    //Q_INVOKABLE void setMscmdServerUrl(const QString& url);
+    Q_INVOKABLE void setMPServerUrl(const QString& url);
 
 protected:
     void resizeEvent(QResizeEvent* evt);
@@ -47,9 +48,11 @@ protected:
 
 signals:
 
-public slots:
+public
+slots:
 
-private slots:
+private
+slots:
     void slot_control_panel_user_action(QString str);
     void slot_auto_correlogram_activated(int k);
     //void slot_templates_clicked();

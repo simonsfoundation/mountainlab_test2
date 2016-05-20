@@ -18,7 +18,8 @@ public:
     friend class MVClipsWidgetPrivate;
     MVClipsWidget();
     virtual ~MVClipsWidget();
-    void setMscmdServerUrl(const QString& url);
+    //void setMscmdServerUrl(const QString& url);
+    void setMPServerUrl(const QString& url);
     void setTimeseries(DiskReadMda& X);
     void setFirings(DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
@@ -29,7 +30,8 @@ public:
     void setCurrentEvent(MVEvent evt);
 signals:
     void currentEventChanged();
-private slots:
+private
+slots:
     void slot_computation_finished();
 
 private:

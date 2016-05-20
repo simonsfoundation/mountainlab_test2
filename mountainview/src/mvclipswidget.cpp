@@ -16,7 +16,8 @@ public:
     //input
     DiskReadMda firings;
     DiskReadMda timeseries;
-    QString mscmdserver_url;
+    //QString mscmdserver_url;
+    QString mpserver_url;
     int clip_size;
     QList<int> labels_to_use;
 
@@ -30,7 +31,8 @@ public:
 class MVClipsWidgetPrivate {
 public:
     MVClipsWidget* q;
-    QString m_mscmdserver_url;
+    //QString m_mscmdserver_url;
+    QString m_mpserver_url;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     QList<int> m_labels_to_use;
@@ -61,9 +63,16 @@ MVClipsWidget::~MVClipsWidget()
     delete d;
 }
 
+/*
 void MVClipsWidget::setMscmdServerUrl(const QString& url)
 {
     d->m_mscmdserver_url = url;
+}
+*/
+
+void MVClipsWidget::setMPServerUrl(const QString& url)
+{
+    d->m_mpserver_url = url;
 }
 
 void MVClipsWidget::setTimeseries(DiskReadMda& X)
@@ -117,7 +126,8 @@ void MVClipsWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach (int x, labels_to_use) {
+        foreach(int x, labels_to_use)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -131,7 +141,8 @@ void MVClipsWidgetComputer::compute()
         params["firings"] = firings.path();
         params["labels"] = labels_str;
         MT.setInputParameters(params);
-        MT.setMscmdServerUrl(mscmdserver_url);
+        //MT.setMscmdServerUrl(mscmdserver_url);
+        MT.setMPServerUrl(mpserver_url);
 
         firings_out_path = MT.makeOutputFilePath("firings_out");
 
@@ -149,7 +160,8 @@ void MVClipsWidgetComputer::compute()
         params["firings"] = firings_out_path;
         params["clip_size"] = clip_size;
         MT.setInputParameters(params);
-        MT.setMscmdServerUrl(mscmdserver_url);
+        //MT.setMscmdServerUrl(mscmdserver_url);
+        MT.setMPServerUrl(mpserver_url);
 
         clips_path = MT.makeOutputFilePath("clips");
 
@@ -167,7 +179,8 @@ void MVClipsWidgetComputer::compute()
 void MVClipsWidgetPrivate::start_computation()
 {
     m_computer.stopComputation();
-    m_computer.mscmdserver_url = m_mscmdserver_url;
+    //m_computer.mscmdserver_url = m_mscmdserver_url;
+    m_computer.mpserver_url = m_mpserver_url;
     m_computer.firings = m_firings;
     m_computer.timeseries = m_timeseries;
     m_computer.labels_to_use = m_labels_to_use;

@@ -24,7 +24,8 @@ public:
     MVClusterDetailWidget(QWidget* parent = 0);
     virtual ~MVClusterDetailWidget();
 
-    void setMscmdServerUrl(const QString& url);
+    //void setMscmdServerUrl(const QString& url);
+    void setMPServerUrl(const QString& url);
 
     ///Set the time series, from which the templates and stats will be derived
     void setTimeseries(DiskReadMda& X);
@@ -81,7 +82,8 @@ signals:
     void signalSelectedKsChanged();
     ///The user has zoomed in (or out?). TODO: low-priority Is this needed?
     void signalZoomedIn();
-private slots:
+private
+slots:
     void slot_context_menu(const QPoint& pos);
     void slot_calculator_finished();
 

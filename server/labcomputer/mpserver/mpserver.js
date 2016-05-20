@@ -32,8 +32,13 @@ var config = JSON.parse(fs.readFileSync(config_fname, 'utf8'));
 
 console.log(JSON.stringify(config));
 
-var mpserver_tmp_path=require('path').resolve(config_path,config.mpserver_tmp_path);
-var mpserver_html_path=require('path').resolve(config_path,config.mpserver_html_path);
+config.mdaserver_base_path=require('path').resolve(config_path,config.mdaserver_base_path);
+config.mpserver_tmp_path=require('path').resolve(config_path,config.mpserver_tmp_path);
+config.mpserver_html_path=require('path').resolve(config_path,config.mpserver_html_path);
+config.mountainprocess_exe=require('path').resolve(config_path,config.mountainprocess_exe);
+
+var mpserver_tmp_path=config.mpserver_tmp_path;
+var mpserver_html_path=config.mpserver_html_path;
 var mpserver_listen_port=config.mpserver_listen_port;
 
 //// setup

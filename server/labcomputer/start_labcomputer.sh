@@ -4,7 +4,6 @@ main()
 {
   start_it mlproxy
   start_it mdaserver
-  start_it mscmdserver
   start_it mbserver
   start_it mpserver
 }

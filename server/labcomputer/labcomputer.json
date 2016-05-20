@@ -12,7 +12,9 @@
 	"mscmdserver_url":"http://localhost:8001",
 	"mbserver_listen_port":8002,
 	"mpserver_listen_port":8004,
-	"mpserver_tmp_path":"./tmp",
+	"mpserver_tmp_path":"../../tmp/mpserver_tmp",
 	"mpserver_html_path":"../../html",
+	"mpserver_url":"http://localhost:8004",
+	"mountainprocess_exe":"../../mountainprocess/bin/mountainprocess",
 	"mbserver_base_path":"/home/magland/sorting_results"
 }
