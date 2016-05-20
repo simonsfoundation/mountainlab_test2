@@ -89,7 +89,7 @@ bool whiten(const QString &input, const QString &output)
 			double *chunk_in_ptr=chunk_in.dataPtr();
 			Mda chunk_out(M,chunk_in.N2());
 			double *chunk_out_ptr=chunk_out.dataPtr();
-			for (long i=0; i<chunk_in.N2(); i++) {
+			for (long i=0; i<chunk_in.N2(); i++) {               // explicitly do mat-mat mult
 				long aa=M*i;
 				long bb=0;
 				for (int m1=0; m1<M; m1++) {
@@ -117,15 +117,16 @@ bool whiten(const QString &input, const QString &output)
 }
 
 Mda get_whitening_matrix(Mda &COV) {
+  // return M*M mixing matrix to be applied to channels
 	int M=COV.N1();
 	Mda U(M,M),S(1,M);
-	eigenvalue_decomposition_sym(U,S,COV);
+	eigenvalue_decomposition_sym(U,S,COV);   // S is list of eigenvalues
 	Mda S2(M,M);
 	for (int m=0; m<M; m++) {
 		if (S.get(m)) {
 			S2.set(1/sqrt(S.get(m)),m,m);
 		}
 	}
-	Mda W=matrix_multiply(matrix_multiply(U,S2),matrix_transpose(U));
+	Mda W=matrix_multiply(matrix_multiply(U,S2),matrix_transpose(U)); // ok for small matrices only
 	return W;
 }
