@@ -19,6 +19,10 @@ var mdachunk_exe=require('path').resolve(config_path,config.mdachunk_exe);
 var mdaserver_base_path=require('path').resolve(config_path,config.mdaserver_base_path);
 
 mkdir_if_needed(mdachunk_data_path);
+//the following two folders are created because this is where the mountainview client will store temporary stuff
+//TODO fix this -- let server choose where to put it?
+mkdir_if_needed(mdaserver_base_path+'/tmp_short_term');
+mkdir_if_needed(mdaserver_base_path+'/tmp_long_term');
 
 http.createServer(function (REQ, RESP) {
 	var url_parts = url.parse(REQ.url,true);	

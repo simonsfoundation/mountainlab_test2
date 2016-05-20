@@ -10,6 +10,8 @@ var config_fname='../labcomputer.json';
 var config_path=require('path').dirname(config_fname);
 var config = JSON.parse(fs.readFileSync(config_fname, 'utf8'));
 
+config.mbserver_base_path=require('path').resolve(config_path,config.mbserver_base_path);
+
 console.log(JSON.stringify(config));
 
 var mbserver_listen_port=config.mbserver_listen_port;
@@ -36,13 +38,13 @@ http.createServer(function (REQ, RESP) {
 	}
 	else if (REQ.method=='GET') {
 		var path=url_parts.pathname;
-		console.log(path);
+		console.log('GET: '+REQ.url);
 		var query=url_parts.query;
 		var method=query.a||'';
 		if (method=="readJson") {
 			/// TODO this needs to be made secure
-			var json=safe_read_json_file(mbserver_base_path+'/'+path); 
-			send_json_response(json);
+			var obj=safe_read_json_file(mbserver_base_path+'/'+path); 
+			send_json_response(obj);
 		}
 		else if (method=="getConfig") {
 			var obj={
@@ -74,9 +76,12 @@ console.log ('Listening on port '+mbserver_listen_port);
 
 function safe_read_json_file(fname) {
 	try {
-		return JSON.parse(fs.readFileSync(fname, 'utf8'))
+		var json=fs.readFileSync(fname, 'utf8');
+		return JSON.parse(json);
 	}
 	catch(err) {
+		console.log('ERROR parsing or reading json file: '+fname);
+		console.log(JSON.stringify(err));
 		return {};
 	}
 }
