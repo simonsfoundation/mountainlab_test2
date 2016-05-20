@@ -5,11 +5,15 @@ The software suite (in flux) comprises the following:
 
 * MountainSort -- Core C++ library for sorting of multi-electride recordings.
 
+* MountainProcess -- System for queuing and running processing pipelines
+
 * MountainView -- Collection of Qt/C++ widgets for visualizing generic electrophysiological datasets and sorting results.
 
 * MountainBrowser -- Web-browser based exploration of studies and experiments on a server.
 
 * A Matlab toolset for processing, visualizing, and validating spike sorting data and a set of Matlab wrappers to MountainSort and MountainView.
+
+* Client/Server architecture for interactive remote access to sorting results
 
 ## Developers
 
@@ -32,11 +36,15 @@ General instructions for all operating systems (see specifics below):
 
 * Install Qt5 and Lapack development libraries.
 
+* Compile MountainProcess by running qmake and make from a terminal inside the mountainlab/mountainprocess/src directory.
+
 * Compile MountainSort by running qmake and make from a terminal inside the mountainlab/mountainsort/src directory.
 
 * Compile MountainView by running qmake and make from a terminal inside the mountainlab/mountainview/src directory.
 
 * (Optional) From within Matlab navigate to mountainlab/matlab and run mountainlab_setup.m.
+
+* (Optional) Set up the client/server component -- instructions coming soon
 
 Several demo command-line and Matlab scripts are found in /demo and /matlab/demo, respectively.
 
