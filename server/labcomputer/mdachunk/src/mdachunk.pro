@@ -26,33 +26,33 @@ HEADERS += \
     utils/textfile.h
 
 DEFINES += USE_REMOTE_MDA
-INCLUDEPATH += ../../../common/mda
-DEPENDPATH += ../../../common/mda
-VPATH += ../../../common/mda
+INCLUDEPATH += ../../../../common/mda
+DEPENDPATH += ../../../../common/mda
+VPATH += ../../../../common/mda
 HEADERS += remotereadmda.h diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
 SOURCES += remotereadmda.cpp diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
 
-INCLUDEPATH += ../../../common/cachemanager
-DEPENDPATH += ../../../common/cachemanager
-VPATH += ../../../common/cachemanager
+INCLUDEPATH += ../../../../common/cachemanager
+DEPENDPATH += ../../../../common/cachemanager
+VPATH += ../../../../common/cachemanager
 HEADERS += cachemanager.h
 SOURCES += cachemanager.cpp
 
-INCLUDEPATH += ../../../common
-DEPENDPATH += ../../../common
-VPATH += ../../../common
+INCLUDEPATH += ../../../../common
+DEPENDPATH += ../../../../common
+VPATH += ../../../../common
 HEADERS += mlutils.h
 SOURCES += mlutils.cpp
 
-INCLUDEPATH += ../../../mountainsort/src/utils
-DEPENDPATH += ../../../mountainsort/src/utils
-VPATH += ../../../mountainsort/src/utils
+INCLUDEPATH += ../../../../mountainsort/src/utils
+DEPENDPATH += ../../../../mountainsort/src/utils
+VPATH += ../../../../mountainsort/src/utils
 HEADERS += msmisc.h
 SOURCES += msmisc.cpp
 
-INCLUDEPATH += ../../../mountainsort/src/core
-DEPENDPATH += ../../../mountainsort/src/core
-VPATH += ../../../mountainsort/src/core
+INCLUDEPATH += ../../../../mountainsort/src/core
+DEPENDPATH += ../../../../mountainsort/src/core
+VPATH += ../../../../mountainsort/src/core
 HEADERS += mscachemanager.h
 SOURCES += mscachemanager.cpp
 

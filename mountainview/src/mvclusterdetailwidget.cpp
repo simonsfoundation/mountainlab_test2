@@ -37,7 +37,8 @@ struct ChannelSpacingInfo {
 class MVClusterDetailWidgetCalculator : public ComputationThread {
 public:
     //input
-    QString mscmdserver_url;
+    //QString mscmdserver_url;
+    QString mpserver_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
     int clip_size;
@@ -122,7 +123,8 @@ class MVClusterDetailWidgetPrivate {
 public:
     MVClusterDetailWidget* q;
 
-    QString m_mscmdserver_url;
+    //QString m_mscmdserver_url;
+    QString m_mpserver_url;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     double m_samplerate;
@@ -207,9 +209,16 @@ MVClusterDetailWidget::~MVClusterDetailWidget()
     delete d;
 }
 
+/*
 void MVClusterDetailWidget::setMscmdServerUrl(const QString& url)
 {
     d->m_mscmdserver_url = url;
+}
+*/
+
+void MVClusterDetailWidget::setMPServerUrl(const QString& url)
+{
+    d->m_mpserver_url = url;
 }
 
 void MVClusterDetailWidget::setTimeseries(DiskReadMda& X)
@@ -274,11 +283,13 @@ void MVClusterDetailWidget::setCurrentK(int k)
 
 bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach (int val, S1) {
+    foreach(int val, S1)
+    {
         if (!S2.contains(val))
             return false;
     }
-    foreach (int val, S2) {
+    foreach(int val, S2)
+    {
         if (!S1.contains(val))
             return false;
     }
@@ -298,7 +309,7 @@ void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks_in)
 
 void MVClusterDetailWidget::zoomAllTheWayOut()
 {
-    d->m_space_ratio=0;
+    d->m_space_ratio = 0;
     update();
 }
 
@@ -368,25 +379,20 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_vscale_factor *= factor;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_vscale_factor /= factor;
         update();
-    }
-    else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
+    } else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
         d->zoom(1.1);
-    }
-    else if (evt->key() == Qt::Key_Minus) {
+    } else if (evt->key() == Qt::Key_Minus) {
         d->zoom(1 / 1.1);
-    }
-    else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
+    } else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
         QList<int> ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             ks << d->m_views[i]->k();
         }
         this->setSelectedKs(ks);
-    }
-    else if (evt->key() == Qt::Key_Left) {
+    } else if (evt->key() == Qt::Key_Left) {
         int view_index = d->get_current_view_index();
         if (view_index > 0) {
             int k = d->m_views[view_index - 1]->k();
@@ -398,8 +404,7 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    }
-    else if (evt->key() == Qt::Key_Right) {
+    } else if (evt->key() == Qt::Key_Right) {
         int view_index = d->get_current_view_index();
         if ((view_index >= 0) && (view_index + 1 < d->m_views.count())) {
             int k = d->m_views[view_index + 1]->k();
@@ -411,8 +416,7 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    }
-    else
+    } else
         evt->ignore();
 }
 
@@ -447,8 +451,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 d->m_selected_ks.remove(k);
                 emit signalSelectedKsChanged();
                 update();
-            }
-            else {
+            } else {
                 d->m_anchor_view_index = view_index;
                 if (k)
                     d->m_selected_ks.insert(k);
@@ -456,8 +459,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 update();
             }
         }
-    }
-    else if (evt->modifiers() & Qt::ShiftModifier) {
+    } else if (evt->modifiers() & Qt::ShiftModifier) {
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             if (d->m_anchor_view_index >= 0) {
@@ -474,16 +476,14 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 update();
             }
         }
-    }
-    else {
+    } else {
         d->m_anchor_view_index = -1;
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             d->m_anchor_view_index = view_index;
             int k = d->m_views[view_index]->k();
             if (d->m_current_k == k) {
-            }
-            else {
+            } else {
                 d->set_current_k(k);
                 d->m_selected_ks.clear();
                 if (k)
@@ -491,8 +491,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 emit signalSelectedKsChanged();
                 update();
             }
-        }
-        else {
+        } else {
             d->set_current_k(-1);
             d->m_selected_ks.clear();
             emit signalSelectedKsChanged();
@@ -513,8 +512,7 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
     int view_index = d->find_view_index_at(pt);
     if (view_index >= 0) {
         d->set_hovered_k(d->m_views[view_index]->k());
-    }
-    else {
+    } else {
         d->set_hovered_k(-1);
     }
 }
@@ -614,8 +612,7 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
         m_scroll_x = x0 - 100;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    }
-    else if (x0 > m_scroll_x + q->width()) {
+    } else if (x0 > m_scroll_x + q->width()) {
         m_scroll_x = x0 - q->width() + 100;
     }
 }
@@ -629,8 +626,7 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
         m_scroll_x = view->x_position_before_scaling * m_space_ratio - current_screen_x;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    }
-    else {
+    } else {
         m_space_ratio *= factor;
     }
     q->update();
@@ -874,7 +870,8 @@ void MVClusterDetailWidgetPrivate::export_image()
 void MVClusterDetailWidgetPrivate::start_calculation()
 {
     m_calculator.stopComputation();
-    m_calculator.mscmdserver_url = m_mscmdserver_url;
+    //m_calculator.mscmdserver_url = m_mscmdserver_url;
+    m_calculator.mpserver_url = m_mpserver_url;
     m_calculator.timeseries = m_timeseries;
     m_calculator.firings = m_firings;
     m_calculator.clip_size = m_clip_size;
@@ -906,6 +903,7 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
     return QColor(50, 0, 0);
 }
 
+/*
 DiskReadMda mscmd_compute_templates(const QString& mscmdserver_url, const QString& timeseries, const QString& firings, int clip_size)
 {
     MountainsortThread X;
@@ -925,12 +923,33 @@ DiskReadMda mscmd_compute_templates(const QString& mscmdserver_url, const QStrin
     DiskReadMda ret(templates_fname);
     return ret;
 }
+*/
+
+DiskReadMda mp_compute_templates(const QString& mpserver_url, const QString& timeseries, const QString& firings, int clip_size)
+{
+    MountainsortThread X;
+    QString processor_name = "compute_templates";
+    X.setProcessorName(processor_name);
+
+    QMap<QString, QVariant> params;
+    params["timeseries"] = timeseries;
+    params["firings"] = firings;
+    params["clip_size"] = clip_size;
+    X.setInputParameters(params);
+    X.setMPServerUrl(mpserver_url);
+
+    QString templates_fname = X.makeOutputFilePath("templates");
+
+    X.compute();
+    DiskReadMda ret(templates_fname);
+    return ret;
+}
 
 void MVClusterDetailWidgetCalculator::compute()
 {
     QTime timer;
     timer.start();
-    this->setStatus("Cluster Detail Calculator", "Calculating1",0);
+    this->setStatus("Cluster Detail Calculator", "Calculating1", 0);
 
     int M = timeseries.N1();
     //int N = timeseries.N2();
@@ -963,14 +982,18 @@ void MVClusterDetailWidgetCalculator::compute()
 
     QString timeseries_path = timeseries.makePath();
     QString firings_path = firings.makePath();
+    /*
     this->setStatus("", "mscmd_compute_templates: "+mscmdserver_url+" timeseries_path="+timeseries_path+" firings_path="+firings_path, 0.6);
     DiskReadMda templates0 = mscmd_compute_templates(mscmdserver_url, timeseries_path, firings_path, T);
+    */
+    this->setStatus("", "mp_compute_templates: " + mpserver_url + " timeseries_path=" + timeseries_path + " firings_path=" + firings_path, 0.6);
+    DiskReadMda templates0 = mp_compute_templates(mpserver_url, timeseries_path, firings_path, T);
     //Mda templates0 = compute_templates_0(timeseries, times, labels, T);
 
     this->setStatus("", "Setting cluster data", 0.75);
     for (int k = 1; k <= K; k++) {
         if (this->stopRequested()) {
-            this->setStatus("","Stopped.",1);
+            this->setStatus("", "Stopped.", 1);
             return; ////////////////////////////
         }
         ClusterData CD;
@@ -985,7 +1008,7 @@ void MVClusterDetailWidgetCalculator::compute()
             }
         }
         if (this->stopRequested()) {
-            this->setStatus("","Stopped.",1);
+            this->setStatus("", "Stopped.", 1);
             return; ////////////////////////////
         }
         templates0.readChunk(CD.template0, 0, 0, k - 1, M, T, 1);

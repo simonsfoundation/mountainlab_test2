@@ -19,9 +19,9 @@ public:
     MBController* q;
 
     QString m_mountainbrowser_url;
-    QString m_mscmdserver_url;
-    QString m_mdaserver_url;
+    //QString m_mscmdserver_url;
     QString m_mpserver_url;
+    QString m_mdaserver_url;
     QList<QProcess*> m_processes;
 };
 
@@ -33,7 +33,8 @@ MBController::MBController()
 
 MBController::~MBController()
 {
-    foreach (QProcess* P, d->m_processes) {
+    foreach(QProcess * P, d->m_processes)
+    {
         P->terminate();
         delete P;
     }
@@ -46,19 +47,21 @@ void MBController::setMountainBrowserUrl(const QString& url)
     d->m_mountainbrowser_url = url;
 }
 
+/*
 void MBController::setMscmdServerUrl(const QString& url)
 {
     d->m_mscmdserver_url = url;
+}
+*/
+
+void MBController::setMPServerUrl(const QString& url)
+{
+    d->m_mpserver_url = url;
 }
 
 void MBController::setMdaServerUrl(const QString& url)
 {
     d->m_mdaserver_url = url;
-}
-
-void MBController::setMPServerUrl(const QString& url)
-{
-    d->m_mpserver_url = url;
 }
 
 QString MBController::mountainBrowserUrl()
@@ -76,8 +79,7 @@ QString MBController::getJson(QString url_or_path)
     /// Witold it would be great if we could return a javascript object directly here, rather than the json text
     if (url_or_path.startsWith("http")) {
         return http_get_text(url_or_path);
-    }
-    else {
+    } else {
         return read_text_file(url_or_path);
     }
 }
@@ -86,8 +88,7 @@ QString MBController::getText(QString url_or_path)
 {
     if (url_or_path.startsWith("http")) {
         return http_get_text(url_or_path);
-    }
-    else {
+    } else {
         return read_text_file(url_or_path);
     }
 }
@@ -108,10 +109,12 @@ void MBController::openSortingResult(QString json)
         QString raw = basepath + E.json["raw"].toString();
         QString firings = basepath + E.json["firings"].toString();
         QStringList args;
-        args << "--mscmdserver_url=" + d->m_mscmdserver_url;
+        //args << "--mscmdserver_url=" + d->m_mscmdserver_url;
+        args << "--mpserver_url=" + d->m_mpserver_url;
         args << "--mode=overview2"
              << "--pre=" + pre << "--filt=" + filt << "--raw=" + raw << "--firings=" + firings;
-        QString mv_exe = mountainlabBasePath()+"/mountainview/bin/mountainview";
+        qDebug() << "ARGS:::::::::::::::::::::::::::::::::::" << args;
+        QString mv_exe = mountainlabBasePath() + "/mountainview/bin/mountainview";
         QProcess* process = new QProcess;
         process->setProcessChannelMode(QProcess::MergedChannels);
         connect(process, SIGNAL(readyRead()), this, SLOT(slot_ready_read()));

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Compiling mdachunk"
-cd server/mdachunk/src
+cd server/labcomputer/mdachunk/src
 qmake
 make -j 8
 EXIT_CODE=$?

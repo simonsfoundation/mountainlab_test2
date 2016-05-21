@@ -1,4 +1,6 @@
 function queueScript(config,req,callback) {
+	console.log('queueScript');
+
 	var m_script=req.script||'';
 	var m_scripts=req.scripts||[];
 	var m_id='queueScript-'+req.request_id+'-'+make_random_id(10);
@@ -6,6 +8,11 @@ function queueScript(config,req,callback) {
 	var args=['queue-script'];
 	/// TODO make this path relative to source file
 	m_scripts.push({fname:'include.js',code:read_text_file('./include.js')}); 
+
+	if (m_script) {
+		console.log(m_script);
+		m_scripts.push({fname:'main.js',code:m_script});
+	}
 
 	for (var i in m_scripts) {
 		var script=m_scripts[i];
@@ -18,7 +25,9 @@ function queueScript(config,req,callback) {
 			return;	
 		}
 		
-		var fname=config.tmp_mpserver_path+'/'+m_id+'-'+script.fname;
+		var fname=config.mpserver_tmp_path+'/'+m_id+'-'+script.fname;
+		/// TODO oh boy, the next line is a hack... need to handle it!!!
+		script.code=script.code.split(config.mdaserver_url).join(config.mdaserver_base_path);
 		if (!write_text_file(fname,script.code)) {
 			console.error('Unable to write file: '+fname);
 			callback({success:false,error:'Unable to write file: '+script.fname}); //don't return the entire path, for privacy/security
@@ -37,6 +46,10 @@ function queueScript(config,req,callback) {
 	var process=spawn(exe,args);
 	var stdout='';
 	var stderr='';
+	process.on('error',function(err) {
+		console.log('Error running process: '+exe+' '+args.join(' '));
+		callback({success:false,error:'Error running process: '+exe});
+	});
 	process.stdout.on('data',function(chunk) {
 		stdout+=chunk;
 	});
@@ -48,7 +61,6 @@ function queueScript(config,req,callback) {
 	});
 
 	this.close=function() {
-		console.log('queueScript task closed.');
 		process.stdout.pause();
 		process.stderr.pause();
 		process.kill();
@@ -89,7 +101,7 @@ function write_text_file(fname,txt) {
 function read_text_file(fname) {
 	var fs = require('fs');
 	try {
-		var txt=fs.readFileSync(fname, txt)
+		var txt=fs.readFileSync(fname, 'utf8');
 		return txt;
 	}
 	catch(err) {

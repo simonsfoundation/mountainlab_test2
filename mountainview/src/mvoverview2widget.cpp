@@ -61,6 +61,8 @@ class MVOverview2WidgetPrivate {
 public:
     MVOverview2Widget* q;
     QMap<QString, QString> m_timeseries_paths;
+    QString m_current_timeseries_name;
+    DiskReadMda m_timeseries;
     DiskReadMda m_firings_original;
     Mda m_firings_split;
     DiskReadMda m_firings;
@@ -71,7 +73,8 @@ public:
     QSet<int> m_selected_ks;
     float m_samplerate;
     MVEvent m_current_event;
-    QString m_mscmdserver_url;
+    //QString m_mscmdserver_url;
+    QString m_mpserver_url;
     QString m_mv_fname;
 
     MVControlPanel* m_control_panel_new;
@@ -340,10 +343,12 @@ int MVOverview2Widget::getMaxLabel()
     return ret;
 }
 
+/*
 void MVOverview2Widget::setMscmdServerUrl(const QString& url)
 {
     d->m_mscmdserver_url = url;
 }
+*/
 
 /// TODO implement TaskProgress::error(QString errmsg, QString details=""); static function for reporting errors into the task view
 
@@ -906,7 +911,8 @@ void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
     }
 
     MT.setInputParameters(params);
-    MT.setMscmdServerUrl(m_mscmdserver_url);
+    //MT.setMscmdServerUrl(m_mscmdserver_url);
+    MT.setMPServerUrl(m_mpserver_url);
 
     QString firings_out = MT.makeOutputFilePath("firings_out");
     QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
@@ -1007,7 +1013,8 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_matrix_of_cross_corre
 MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget;
-    X->setMscmdServerUrl(m_mscmdserver_url);
+    //X->setMscmdServerUrl(m_mscmdserver_url);
+    X->setMPServerUrl(m_mpserver_url);
     X->setChannelColors(m_channel_colors);
     DiskReadMda TT(current_timeseries_path());
     X->setTimeseries(TT);
@@ -1044,7 +1051,8 @@ void MVOverview2WidgetPrivate::open_clips()
     }
 
     MVClipsWidget* X = new MVClipsWidget;
-    X->setMscmdServerUrl(m_mscmdserver_url);
+    //X->setMscmdServerUrl(m_mscmdserver_url);
+    X->setMPServerUrl(m_mpserver_url);
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_widget_current_event_changed()));
@@ -1082,7 +1090,8 @@ void MVOverview2WidgetPrivate::open_clusters()
         return;
     }
     MVClusterWidget* X = new MVClusterWidget;
-    X->setMscmdServerUrl(m_mscmdserver_url);
+    //X->setMscmdServerUrl(m_mscmdserver_url);
+    X->setMPServerUrl(m_mpserver_url);
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_cluster_view_current_event_changed()));

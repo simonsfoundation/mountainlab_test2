@@ -23,7 +23,8 @@ public:
     MVClusterWidget();
     virtual ~MVClusterWidget();
 
-    void setMscmdServerUrl(const QString& url);
+    //void setMscmdServerUrl(const QString& url);
+    void setMPServerUrl(const QString& url);
 
     void setClipSize(int clip_size);
     ///Set the time series for purpose of computing the clip to display when corresponding datapoint is selected
@@ -54,7 +55,8 @@ private:
 signals:
     ///Just as in MVClusterView::currentEventChanged()
     void currentEventChanged();
-private slots:
+private
+slots:
     void slot_view_current_event_changed();
     void slot_view_transformation_changed();
     void slot_show_clip_view_toggled(bool val);
