@@ -178,7 +178,8 @@ void MountainsortThread::compute()
         req["action"] = "queueScript";
         req["script"] = script;
         QString url = d->m_mpserver_url;
-        task.log("POSTING...");
+        task.log("POSTING: "+url);
+        task.log(QJsonDocument(req).toJson());
         QJsonObject resp = http_post(url, req);
         task.log("GOT RESPONSE: ");
         task.log(QJsonDocument(resp).toJson());

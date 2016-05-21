@@ -14,8 +14,8 @@
 class TaskProgressPrivate {
 public:
     TaskProgress* q;
-
     TaskInfo m_info;
+    /// Witold, I need to make sure all this stuff is thread safe, so that we can create TaskProgress objects on other threads
     QMutex m_mutex;
 };
 
@@ -26,6 +26,7 @@ public:
     QList<TaskProgress*> m_active_tasks;
     bool m_emit_tasks_changed_scheduled;
     QDateTime m_last_emit_tasks_changed;
+    QMutex m_addtask_removetask_mutex;
 };
 
 TaskProgress::TaskProgress(const QString& label, const QString& description)
@@ -38,6 +39,7 @@ TaskProgress::TaskProgress(const QString& label, const QString& description)
     d->m_info.progress = 0;
     d->m_info.start_time = QDateTime::currentDateTime();
 
+    /// Witold is this going to give me a safe global object across all threads?
     TaskProgressAgent::globalInstance()->addTask(this);
 }
 
@@ -81,7 +83,10 @@ void TaskProgress::log(const QString& log_message)
 void TaskProgress::error(const QString &error_message)
 {
     this->log("ERROR: "+error_message);
-    d->m_info.error=error_message;
+    {
+        QMutexLocker locker(&d->m_mutex);
+        d->m_info.error=error_message;
+    }
 }
 
 void TaskProgress::setProgress(double pct)
@@ -158,8 +163,10 @@ void TaskProgressAgent::slot_schedule_emit_tasks_changed()
 
 void TaskProgressAgent::slot_emit_tasks_changed()
 {
-    d->m_last_emit_tasks_changed = QDateTime::currentDateTime();
-    d->m_emit_tasks_changed_scheduled = false;
+    {
+        d->m_last_emit_tasks_changed = QDateTime::currentDateTime();
+        d->m_emit_tasks_changed_scheduled = false;
+    }
     emit tasksChanged();
 }
 
@@ -173,7 +180,7 @@ void TaskProgressAgent::addTask(TaskProgress* T)
     d->m_active_tasks.prepend(T);
     connect(T, SIGNAL(changed()), this, SLOT(slot_schedule_emit_tasks_changed()), Qt::QueuedConnection);
     connect(T, SIGNAL(completed(TaskInfo)), this, SLOT(slot_task_completed(TaskInfo)), Qt::QueuedConnection);
-    slot_schedule_emit_tasks_changed();
+    emit tasksChanged();
 }
 
 void TaskProgressAgent::removeTask(TaskProgress* T)
@@ -183,5 +190,5 @@ void TaskProgressAgent::removeTask(TaskProgress* T)
         d->m_completed_tasks.prepend(T->getInfo());
     }
     d->m_active_tasks.removeAll(T);
-    slot_schedule_emit_tasks_changed();
+    emit tasksChanged();
 }

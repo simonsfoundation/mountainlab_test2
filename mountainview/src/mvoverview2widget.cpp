@@ -343,6 +343,11 @@ int MVOverview2Widget::getMaxLabel()
     return ret;
 }
 
+void MVOverview2Widget::setMPServerUrl(const QString& url)
+{
+    d->m_mpserver_url = url;
+}
+
 /*
 void MVOverview2Widget::setMscmdServerUrl(const QString& url)
 {
@@ -385,10 +390,10 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
         }
     }
 
-    if (obj.contains("mscmdserver_url")) {
-        QString url = obj["mscmdserver_url"].toString();
-        task.log(QString("mscmdserver_url = %1").arg(url));
-        this->setMscmdServerUrl(url);
+    if (obj.contains("mpserver_url")) {
+        QString url = obj["mpserver_url"].toString();
+        task.log(QString("mpserver_url = %1").arg(url));
+        this->setMPServerUrl(url);
     }
 
     if (obj.contains("samplerate")) {
@@ -440,7 +445,7 @@ void MVOverview2Widget::saveMVFile(const QString& mv_fname)
     obj["view_options"] = d->m_control_panel_new->viewOptions().toJsonObject();
     obj["event_filter"] = d->m_control_panel_new->eventFilter().toJsonObject();
 
-    obj["mscmdserver_url"] = d->m_mscmdserver_url;
+    obj["mpserver_url"] = d->m_mpserver_url;
 
     if (!write_text_file(mv_fname, QJsonDocument(obj).toJson())) {
         task.error("Error writing .mv file: " + mv_fname);
