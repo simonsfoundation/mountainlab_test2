@@ -5,7 +5,6 @@
 *******************************************************/
 
 #include "computationthread.h"
-#include "taskprogress.h"
 
 #include <QMutex>
 #include <QTimer>
@@ -23,7 +22,6 @@ public:
     QMutex m_status_mutex;
     bool m_start_scheduled;
     long m_randomization_seed;
-    TaskProgress m_task_progress;
 
     void schedule_start();
 };
@@ -37,7 +35,6 @@ ComputationThread::ComputationThread()
     d->m_is_finished = false;
     d->m_start_scheduled = false;
     d->m_delete_on_complete = false;
-    this->setStatus("ComputationThread");
 }
 
 ComputationThread::~ComputationThread()
@@ -72,17 +69,17 @@ void ComputationThread::stopComputation()
         d->m_stop_requested = true; //attempt to end gracefully
     }
     if (this->isRunning()) {
-        this->setStatus("", "Stopping...");
         this->wait(1000); //we will wait a second
     }
     if (this->isRunning()) {
         qWarning() << "TERMINATING COMPUTATION";
         this->terminate();
-        this->setStatus("", "Terminated");
     }
     if (this->isRunning()) {
-        this->setStatus("", "Unexpected problem, unable to terminate.");
         this->wait(1000);
+    }
+    if (this->isRunning()) {
+        qWarning() << "Unable to terminate computation thread";
     }
 }
 
@@ -110,18 +107,6 @@ QString ComputationThread::errorMessage()
     return d->m_error_message;
 }
 
-void ComputationThread::setStatus(QString label, QString description, double progress)
-{
-    QMutexLocker locker(&d->m_status_mutex);
-    if (!label.isEmpty())
-        d->m_task_progress.setLabel(label);
-    if (!description.isEmpty())
-        d->m_task_progress.setDescription(description);
-    if (progress >= 0)
-        d->m_task_progress.setProgress(progress);
-    d->m_task_progress.log(label + ": " + description);
-}
-
 bool ComputationThread::stopRequested()
 {
     QMutexLocker locker(&d->m_mutex);
@@ -142,13 +127,11 @@ void ComputationThread::run()
     }
     if (!stopRequested()) {
         QMutexLocker locker(&d->m_mutex);
-        this->setStatus("", "Finished", 1);
         d->m_is_finished = true;
         d->m_is_computing = false;
         emit computationFinished();
     }
     else {
-        this->setStatus("", "Stopped", 1);
     }
     if (d->m_delete_on_complete)
         this->deleteLater();
@@ -163,7 +146,6 @@ void ComputationThread::slot_start()
             return;
         d->m_start_scheduled = false;
     }
-    this->setStatus("", "Started");
     this->start();
 }
 

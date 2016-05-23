@@ -13,6 +13,7 @@
 #include "computationthread.h"
 #include "mvutils.h"
 #include "set_progress.h"
+#include "taskprogress.h"
 
 typedef QList<float> FloatList;
 class MVCrossCorrelogramsWidgetComputer : public ComputationThread {
@@ -223,16 +224,15 @@ float compute_max(const QList<FloatList>& data0)
 
 void MVCrossCorrelogramsWidgetComputer::compute()
 {
-    this->setStatus("Cross-correlograms computer","",0);
+    TaskProgress task("Cross Correlograms Computer");
     if (the_label_numbers.isEmpty()) {
-        this->setStatus("","get_cross_correlogram_datas_2",0.5);
+        task.log("get_cross_correlogram_datas_2");
         data0 = get_cross_correlogram_datas_2(the_data, the_base_label_num);
     }
     else {
-        this->setStatus("","get_cross_correlogram_datas_3",0.5);
+        task.log("get_cross_correlogram_datas_3");
         data0 = get_cross_correlogram_datas_3(the_data, the_label_numbers);
     }
-    this->setStatus("","",1);
 }
 
 void MVCrossCorrelogramsWidget::updateWidget()

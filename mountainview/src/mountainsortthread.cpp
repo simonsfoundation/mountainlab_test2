@@ -48,7 +48,6 @@ MountainsortThread::~MountainsortThread()
 void MountainsortThread::setProcessorName(const QString& pname)
 {
     d->m_processor_name = pname;
-    this->setStatus(pname);
 }
 
 QString MountainsortThread::makeOutputFilePath(const QString& pname)
@@ -79,8 +78,7 @@ QJsonObject variantmap_to_json_obj(QVariantMap map)
 {
     QJsonObject ret;
     QStringList keys = map.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         /// Witold I would like to map numbers to numbers here. Can you help?
         ret[key] = QJsonValue::fromVariant(map[key]);
     }
@@ -91,21 +89,21 @@ QVariantMap json_obj_to_variantmap(QJsonObject obj)
 {
     QVariantMap ret;
     QStringList keys = obj.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ret[key] = obj[key].toVariant();
     }
     return ret;
 }
 
-QJsonObject http_post(QString url, QJsonObject req) {
+QJsonObject http_post(QString url, QJsonObject req)
+{
     QTime timer;
     timer.start();
     QNetworkAccessManager manager;
     QNetworkRequest request;
     request.setUrl(url);
-    QByteArray json_data=QJsonDocument(req).toJson();
-    QNetworkReply* reply = manager.post(request,json_data);
+    QByteArray json_data = QJsonDocument(req).toJson();
+    QNetworkReply* reply = manager.post(request, json_data);
     QEventLoop loop;
     QString ret;
     QObject::connect(reply, &QNetworkReply::readyRead, [&]() {
@@ -114,15 +112,17 @@ QJsonObject http_post(QString url, QJsonObject req) {
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
     printf("RECEIVED TEXT (%d ms, %d bytes) from %s\n", timer.elapsed(), ret.count(), url.toLatin1().data());
-    QString str = ret.mid(0,5000)+"...";
-    str.replace("\\n","\n");
-    printf("%s\n",(str.toLatin1().data()));
-    QJsonObject obj=QJsonDocument::fromJson(ret.toLatin1()).object();
+    QString str = ret.mid(0, 5000) + "...";
+    str.replace("\\n", "\n");
+    printf("%s\n", (str.toLatin1().data()));
+    QJsonObject obj = QJsonDocument::fromJson(ret.toLatin1()).object();
     return obj;
 }
 
 void MountainsortThread::compute()
 {
+
+    TaskProgress task("MS: " + d->m_processor_name);
 
     //if (d->m_mscmdserver_url.isEmpty()) {
     if (d->m_mpserver_url.isEmpty()) {
@@ -130,20 +130,25 @@ void MountainsortThread::compute()
         QStringList args;
         args << d->m_processor_name;
         QStringList keys = d->m_parameters.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             args << QString("--%1=%2").arg(key).arg(d->m_parameters.value(key).toString());
         }
-        this->setStatus("Local " + d->m_processor_name, "Executing locally: " + mountainsort_exe, 0.5);
+        task.log(QString("Executing locally: %1").arg(mountainsort_exe));
         foreach (QString key, keys) {
-            this->setStatus("", key + " = " + d->m_parameters[key].toString());
+            QString val = d->m_parameters[key].toString();
+            task.log(QString("%1 = %2").arg(key).arg(val));
+            if (val.startsWith("http")) {
+                task.error("Executing locally, but parameter starts with http. Probably mpserver url has not been set.");
+                return;
+            }
         }
 
         if (QProcess::execute(mountainsort_exe, args) != 0) {
             qWarning() << "Problem running mountainsort" << mountainsort_exe << args;
+            task.error("Problem running mountainsort");
         }
-        this->setStatus("", "Done.", 1);
-    } else {
+    }
+    else {
         /*
         QString url = d->m_mscmdserver_url + "/?";
         url += "processor=" + d->m_processor_name + "&";
@@ -157,8 +162,7 @@ void MountainsortThread::compute()
         this->setStatus("", "", 1);
         */
 
-        TaskProgress task("Submitting process");
-
+        task.log("Setting up pp_process");
         QJsonObject pp_process;
         pp_process["processor_name"] = d->m_processor_name;
         pp_process["parameters"] = variantmap_to_json_obj(d->m_parameters);
@@ -168,17 +172,18 @@ void MountainsortThread::compute()
         pp["processes"] = pp_processes;
         QString pipeline_json = QJsonDocument(pp).toJson(QJsonDocument::Compact);
 
+        task.log(pipeline_json);
+
         QString script;
         script += QString("function main(params) {\n");
         script += QString("  MP.runPipeline('%1');\n").arg(pipeline_json);
         script += QString("}\n");
 
-        task.log("SCRIPT: "+script);
         QJsonObject req;
         req["action"] = "queueScript";
         req["script"] = script;
         QString url = d->m_mpserver_url;
-        task.log("POSTING: "+url);
+        task.log("POSTING: " + url);
         task.log(QJsonDocument(req).toJson());
         QJsonObject resp = http_post(url, req);
         task.log("GOT RESPONSE: ");
@@ -191,8 +196,7 @@ QString MountainsortThreadPrivate::create_temporary_output_file_name(const QStri
     QString str = processor_name + ":";
     QStringList keys = params.keys();
     qSort(keys);
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         str += key + "=" + params.value(key).toString() + "&";
     }
 
@@ -205,8 +209,7 @@ QString MountainsortThreadPrivate::get_remote_url_from_parameters()
 {
     QString ret;
     QStringList keys = m_parameters.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         QString val = m_parameters.value(key).toString();
         if (val.startsWith("http://")) {
             QString remote_url = remote_url_of_path(val);
@@ -214,7 +217,8 @@ QString MountainsortThreadPrivate::get_remote_url_from_parameters()
                 if (ret.isEmpty()) {
                     ret = remote_url;
                 }
-            } else {
+            }
+            else {
                 qWarning() << QString("More than one remote name in parameters for %1. Using %2.").arg(m_processor_name).arg(ret);
                 qWarning() << m_parameters;
             }
@@ -230,7 +234,8 @@ QString MountainsortThreadPrivate::remote_url_of_path(const QString& path)
         if (ind < 0)
             return "";
         return path.mid(0, ind);
-    } else {
+    }
+    else {
         return "";
     }
 }

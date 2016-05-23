@@ -39,7 +39,7 @@ public:
     void setLabel(const QString& label);
     void setDescription(const QString& description);
     void log(const QString& log_message);
-    void error(const QString &error_message);
+    void error(const QString& error_message);
     void setProgress(double pct);
 
     TaskInfo getInfo() const;

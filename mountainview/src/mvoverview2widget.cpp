@@ -377,6 +377,13 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
         return;
     }
 
+    //important to do this first
+    if (obj.contains("mpserver_url")) {
+        QString url = obj["mpserver_url"].toString();
+        task.log(QString("mpserver_url = %1").arg(url));
+        this->setMPServerUrl(url);
+    }
+
     QString mv_version = obj["mv_version"].toString();
     task.log("MV version: " + mv_version);
 
@@ -396,11 +403,7 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
         }
     }
 
-    if (obj.contains("mpserver_url")) {
-        QString url = obj["mpserver_url"].toString();
-        task.log(QString("mpserver_url = %1").arg(url));
-        this->setMPServerUrl(url);
-    }
+
 
     if (obj.contains("samplerate")) {
         double rate = obj["samplerate"].toDouble();
@@ -1885,15 +1888,20 @@ public:
 };
 void DownloadComputer::compute()
 {
+    TaskProgress task("Downlading");
+    task.setDescription(QString("Downloading %1 to %2").arg(source_path).arg(dest_path));
     DiskReadMda X(source_path);
     Mda Y;
-    this->setStatus("Downloading " + source_path, "", 0.1);
+    task.setProgress(0.2);
+    task.log(QString("Reading/Downloading %1x%2x%3").arg(X.N1()).arg(X.N2()).arg(X.N3()));
     X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3());
+    task.setProgress(0.8);
     if (use_float64) {
-        this->setStatus("Writing " + dest_path, "", 0.5);
+        task.log("Writing 64-bit to " + dest_path);
         Y.write64(dest_path);
     }
     else {
+        task.log("Writing 32-bit to " + dest_path);
         Y.write32(dest_path);
     }
 }

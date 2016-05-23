@@ -1,4 +1,5 @@
 #include "mvclusterdetailwidget.h"
+#include "taskprogress.h"
 
 #include <QPainter>
 #include "mvutils.h"
@@ -67,8 +68,9 @@ public:
     {
         m_CD = CD;
     }
-    void setAttributes(QJsonObject aa) {
-        m_attributes=aa;
+    void setAttributes(QJsonObject aa)
+    {
+        m_attributes = aa;
     }
 
     int k()
@@ -290,13 +292,11 @@ void MVClusterDetailWidget::setCurrentK(int k)
 
 bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach(int val, S1)
-    {
+    foreach (int val, S1) {
         if (!S2.contains(val))
             return false;
     }
-    foreach(int val, S2)
-    {
+    foreach (int val, S2) {
         if (!S1.contains(val))
             return false;
     }
@@ -316,7 +316,7 @@ void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks_in)
 
 void MVClusterDetailWidget::setClusterAttributes(const QList<QJsonObject> attributes)
 {
-    d->m_cluster_attributes=attributes;
+    d->m_cluster_attributes = attributes;
     update();
 }
 
@@ -392,20 +392,25 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_vscale_factor *= factor;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_vscale_factor /= factor;
         update();
-    } else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
+    }
+    else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
         d->zoom(1.1);
-    } else if (evt->key() == Qt::Key_Minus) {
+    }
+    else if (evt->key() == Qt::Key_Minus) {
         d->zoom(1 / 1.1);
-    } else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
+    }
+    else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
         QList<int> ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             ks << d->m_views[i]->k();
         }
         this->setSelectedKs(ks);
-    } else if (evt->key() == Qt::Key_Left) {
+    }
+    else if (evt->key() == Qt::Key_Left) {
         int view_index = d->get_current_view_index();
         if (view_index > 0) {
             int k = d->m_views[view_index - 1]->k();
@@ -417,7 +422,8 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    } else if (evt->key() == Qt::Key_Right) {
+    }
+    else if (evt->key() == Qt::Key_Right) {
         int view_index = d->get_current_view_index();
         if ((view_index >= 0) && (view_index + 1 < d->m_views.count())) {
             int k = d->m_views[view_index + 1]->k();
@@ -429,7 +435,8 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             this->setSelectedKs(ks);
             this->setCurrentK(k);
         }
-    } else
+    }
+    else
         evt->ignore();
 }
 
@@ -464,7 +471,8 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 d->m_selected_ks.remove(k);
                 emit signalSelectedKsChanged();
                 update();
-            } else {
+            }
+            else {
                 d->m_anchor_view_index = view_index;
                 if (k)
                     d->m_selected_ks.insert(k);
@@ -472,7 +480,8 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 update();
             }
         }
-    } else if (evt->modifiers() & Qt::ShiftModifier) {
+    }
+    else if (evt->modifiers() & Qt::ShiftModifier) {
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             if (d->m_anchor_view_index >= 0) {
@@ -489,14 +498,16 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 update();
             }
         }
-    } else {
+    }
+    else {
         d->m_anchor_view_index = -1;
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             d->m_anchor_view_index = view_index;
             int k = d->m_views[view_index]->k();
             if (d->m_current_k == k) {
-            } else {
+            }
+            else {
                 d->set_current_k(k);
                 d->m_selected_ks.clear();
                 if (k)
@@ -504,7 +515,8 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 emit signalSelectedKsChanged();
                 update();
             }
-        } else {
+        }
+        else {
             d->set_current_k(-1);
             d->m_selected_ks.clear();
             emit signalSelectedKsChanged();
@@ -525,7 +537,8 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
     int view_index = d->find_view_index_at(pt);
     if (view_index >= 0) {
         d->set_hovered_k(d->m_views[view_index]->k());
-    } else {
+    }
+    else {
         d->set_hovered_k(-1);
     }
 }
@@ -625,7 +638,8 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
         m_scroll_x = x0 - 100;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    } else if (x0 > m_scroll_x + q->width()) {
+    }
+    else if (x0 > m_scroll_x + q->width()) {
         m_scroll_x = x0 - q->width() + 100;
     }
 }
@@ -639,7 +653,8 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
         m_scroll_x = view->x_position_before_scaling * m_space_ratio - current_screen_x;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    } else {
+    }
+    else {
         m_space_ratio *= factor;
     }
     q->update();
@@ -820,7 +835,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height * 3, m_bottom_rect.width(), text_height);
         QString aa = m_attributes["assessment"].toString();
         pen.setColor(get_cluster_assessment_text_color(aa));
-        txt=aa;
+        txt = aa;
         painter->setFont(font);
         painter->setPen(pen);
         painter->drawText(RR, Qt::AlignCenter | Qt::AlignBottom, txt);
@@ -931,6 +946,7 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
 
 QColor ClusterView::get_cluster_assessment_text_color(QString aa)
 {
+    /// TODO get_cluster_assessment_text_color
     return Qt::black;
 }
 
@@ -958,6 +974,8 @@ DiskReadMda mscmd_compute_templates(const QString& mscmdserver_url, const QStrin
 
 DiskReadMda mp_compute_templates(const QString& mpserver_url, const QString& timeseries, const QString& firings, int clip_size)
 {
+    TaskProgress task("mp_compute_templates");
+    task.log("mpserver_url: " + mpserver_url);
     MountainsortThread X;
     QString processor_name = "compute_templates";
     X.setProcessorName(processor_name);
@@ -971,29 +989,32 @@ DiskReadMda mp_compute_templates(const QString& mpserver_url, const QString& tim
 
     QString templates_fname = X.makeOutputFilePath("templates");
 
+    task.log("X.compute()");
     X.compute();
+    task.log("Returning DiskReadMda: " + templates_fname);
     DiskReadMda ret(templates_fname);
     return ret;
 }
 
 void MVClusterDetailWidgetCalculator::compute()
 {
+    TaskProgress task("Cluster Details");
+
     QTime timer;
     timer.start();
-    this->setStatus("Cluster Detail Calculator", "Calculating1", 0);
+    task.setProgress(0.1);
 
     int M = timeseries.N1();
     //int N = timeseries.N2();
     int L = firings.N2();
     int T = clip_size;
 
-    this->setStatus("Cluster Detail Calculator", "Calculating2");
-
     QList<double> times;
     QList<int> channels, labels;
     QList<double> peaks;
 
-    this->setStatus("", "Setting up times/channels/labels/peaks", 0.25);
+    task.log("Setting up times/channels/labels/peaks");
+    task.setProgress(0.2);
     for (int i = 0; i < L; i++) {
         times << firings.value(1, i) - 1; //convert to 0-based indexing
         channels << (int)firings.value(0, i) - 1; //convert to 0-based indexing
@@ -1001,11 +1022,15 @@ void MVClusterDetailWidgetCalculator::compute()
         peaks << firings.value(3, i);
     }
 
-    if (this->stopRequested())
+    if (this->stopRequested()) {
+        task.log("Cluster details - stop requested");
         return; ////////////////////////////
+    }
+    task.log("Clearing data");
     cluster_data.clear();
 
-    this->setStatus("", "Computing templates", 0.5);
+    task.setLabel("Computing templates");
+    task.setProgress(0.4);
     int K = 0;
     for (int i = 0; i < L; i++)
         if (labels[i] > K)
@@ -1017,14 +1042,16 @@ void MVClusterDetailWidgetCalculator::compute()
     this->setStatus("", "mscmd_compute_templates: "+mscmdserver_url+" timeseries_path="+timeseries_path+" firings_path="+firings_path, 0.6);
     DiskReadMda templates0 = mscmd_compute_templates(mscmdserver_url, timeseries_path, firings_path, T);
     */
-    this->setStatus("", "mp_compute_templates: " + mpserver_url + " timeseries_path=" + timeseries_path + " firings_path=" + firings_path, 0.6);
-    DiskReadMda templates0 = mp_compute_templates(mpserver_url, timeseries_path, firings_path, T);
-    //Mda templates0 = compute_templates_0(timeseries, times, labels, T);
 
-    this->setStatus("", "Setting cluster data", 0.75);
+    task.log("mp_compute_templates: " + mpserver_url + " timeseries_path=" + timeseries_path + " firings_path=" + firings_path);
+    task.setProgress(0.6);
+    DiskReadMda templates0 = mp_compute_templates(mpserver_url, timeseries_path, firings_path, T);
+
+    task.setLabel("Setting cluster data");
+    task.setProgress(0.75);
     for (int k = 1; k <= K; k++) {
         if (this->stopRequested()) {
-            this->setStatus("", "Stopped.", 1);
+            task.setLabel("Setting cluster data - stop requested");
             return; ////////////////////////////
         }
         ClusterData CD;
@@ -1039,12 +1066,10 @@ void MVClusterDetailWidgetCalculator::compute()
             }
         }
         if (this->stopRequested()) {
-            this->setStatus("", "Stopped.", 1);
+            task.setLabel("Setting cluster data - stop requested");
             return; ////////////////////////////
         }
         templates0.readChunk(CD.template0, 0, 0, k - 1, M, T, 1);
         cluster_data << CD;
     }
-
-    this->setStatus("", "Done.", 1);
 }

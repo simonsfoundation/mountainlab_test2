@@ -6,6 +6,7 @@
 
 #include "mvclipswidget.h"
 #include "mvclipsview.h"
+#include "taskprogress.h"
 #include <QHBoxLayout>
 #include "computationthread.h"
 #include "mountainsortthread.h"
@@ -123,11 +124,11 @@ void MVClipsWidget::slot_computation_finished()
 
 void MVClipsWidgetComputer::compute()
 {
+    TaskProgress task("Clips Widget Computer");
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -167,11 +168,13 @@ void MVClipsWidgetComputer::compute()
 
         MT.compute();
     }
+    task.log("Reading: " + firings_out_path);
     DiskReadMda firings_out(firings_out_path);
     times.clear();
     for (long j = 0; j < firings_out.N2(); j++) {
         times << firings_out.value(1, j);
     }
+    task.log("Reading: " + clips_path);
     DiskReadMda CC(clips_path);
     CC.readChunk(clips, 0, 0, 0, CC.N1(), CC.N2(), CC.N3());
 }

@@ -76,6 +76,7 @@ int main(int argc, char* argv[])
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         MVOverview2Widget* W = new MVOverview2Widget;
+        W->setMPServerUrl(CLP.named_parameters.value("mpserver_url", "").toString());
         if (!mv_fname.isEmpty()) {
             W->loadMVFile(mv_fname);
         }
@@ -97,9 +98,6 @@ int main(int argc, char* argv[])
             qApp->processEvents();
         }
 
-        //W->setMscmdServerUrl(CLP.named_parameters.value("mscmdserver_url", "").toString());
-        qDebug() << "^^^^^^^^^^^^^^^&&&&&&&&&&&&&&&&&&&&&&&&&&**********************" << CLP.named_parameters.value("mpserver_url").toString();
-        W->setMPServerUrl(CLP.named_parameters.value("mpserver_url", "").toString());
         if (!pre_path.isEmpty()) {
             W->addTimeseriesPath("Preprocessed Data", pre_path);
         }

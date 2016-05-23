@@ -45,6 +45,7 @@ TaskProgress::TaskProgress(const QString& label, const QString& description)
 
 TaskProgress::~TaskProgress()
 {
+    this->log("Destructor");
     if (d->m_info.progress != 1) {
         d->m_info.end_time = QDateTime::currentDateTime();
     }
@@ -54,20 +55,26 @@ TaskProgress::~TaskProgress()
 
 void TaskProgress::setLabel(const QString& label)
 {
-    QMutexLocker locker(&d->m_mutex);
-    if (d->m_info.label == label)
-        return;
-    d->m_info.label = label;
-    emit changed();
+    {
+        QMutexLocker locker(&d->m_mutex);
+        if (d->m_info.label == label)
+            return;
+        d->m_info.label = label;
+        emit changed();
+    }
+    this->log(label);
 }
 
 void TaskProgress::setDescription(const QString& description)
 {
-    QMutexLocker locker(&d->m_mutex);
-    if (d->m_info.description == description)
-        return;
-    d->m_info.description = description;
-    emit changed();
+    {
+        QMutexLocker locker(&d->m_mutex);
+        if (d->m_info.description == description)
+            return;
+        d->m_info.description = description;
+        emit changed();
+    }
+    this->log(description);
 }
 
 void TaskProgress::log(const QString& log_message)
@@ -80,12 +87,13 @@ void TaskProgress::log(const QString& log_message)
     emit changed();
 }
 
-void TaskProgress::error(const QString &error_message)
+void TaskProgress::error(const QString& error_message)
 {
-    this->log("ERROR: "+error_message);
+    qWarning() << "TaskProgress Error:: "+error_message;
+    this->log("ERROR: " + error_message);
     {
         QMutexLocker locker(&d->m_mutex);
-        d->m_info.error=error_message;
+        d->m_info.error = error_message;
     }
 }
 
@@ -136,8 +144,8 @@ QList<TaskInfo> TaskProgressAgent::activeTasks()
 
 QList<TaskInfo> TaskProgressAgent::completedTasks()
 {
-    for (int i=0; i<d->m_completed_tasks.count(); i++) {
-        d->m_completed_tasks[i].progress=1; // kind of a hack to make sure the progress is 1 for all completed tasks
+    for (int i = 0; i < d->m_completed_tasks.count(); i++) {
+        d->m_completed_tasks[i].progress = 1; // kind of a hack to make sure the progress is 1 for all completed tasks
     }
     return d->m_completed_tasks;
 }

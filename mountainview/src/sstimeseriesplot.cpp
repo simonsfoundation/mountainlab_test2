@@ -9,6 +9,7 @@
 #include <QMouseEvent>
 #include "sscommon.h"
 #include "computationthread.h"
+#include "taskprogress.h"
 #define MIN_NUM_PIXELS 4000
 
 class DataLoaderThread : public ComputationThread {
@@ -735,5 +736,7 @@ void SSTimeSeriesPlot::setYRange(const Vec2& range)
 
 void DataLoaderThread::compute()
 {
+    TaskProgress task("SSTimeSeriesPlot Data Loader");
+    task.log(QString("loadData %1 %2 %3").arg(msfactor).arg(x1 / msfactor).arg(x2 / msfactor));
     data = array_model->loadData(msfactor, x1 / msfactor, x2 / msfactor);
 }
