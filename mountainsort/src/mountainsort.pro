@@ -187,9 +187,11 @@ test {
     DEPENDPATH += unit_tests
     SOURCES += unit_tests/testMda.cpp	\
 	unit_tests/testMain.cpp	\
-	unit_tests/testMdaIO.cpp
+        unit_tests/testMdaIO.cpp \
+        unit_tests/testBandpassFilter.cpp
     HEADERS += unit_tests/testMda.h \
-	unit_tests/testMdaIO.h
+        unit_tests/testMdaIO.h  \
+        unit_tests/testBandpassFilter.h
 } else {
     SOURCES += mountainsortmain.cpp
 }
