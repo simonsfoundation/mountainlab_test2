@@ -56,7 +56,8 @@ HEADERS += \
     taskprogress.h \
     taskprogressview.h \
     mvcontrolpanel.h \
-    flowlayout.h
+    flowlayout.h \
+    clustermerge.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -97,7 +98,8 @@ SOURCES += mountainviewmain.cpp \
     taskprogress.cpp \
     taskprogressview.cpp \
     mvcontrolpanel.cpp \
-    flowlayout.cpp
+    flowlayout.cpp \
+    clustermerge.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams
