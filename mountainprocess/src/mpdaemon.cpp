@@ -280,7 +280,7 @@ bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove
             break;
 
         if (debug_timer.elapsed() > 20000) {
-            qWarning() << QString("Still waiting for file to appear after %1 sec: %2").arg(timer.elapsed()*1.0/1000).arg(fname);
+            qWarning() << QString("Still waiting for file to appear after %1 sec: %2").arg(timer.elapsed() * 1.0 / 1000).arg(fname);
         }
     }
     if (stdout_file.isOpen())
@@ -310,8 +310,14 @@ void MPDaemon::slot_commands_directory_changed()
         }
         else {
             QString json = read_text_file(path0);
-            QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
-            d->process_command(obj);
+            QJsonParseError error;
+            QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
+            if (error.error != QJsonParseError::NoError) {
+                qCritical() << "Error in slot_commands_directory_changed parsing json file";
+            }
+            else {
+                d->process_command(obj);
+            }
             if (!QFile::remove(path0)) {
                 qCritical() << "Problem removing command file: " + path0;
             }
@@ -344,9 +350,16 @@ void MPDaemon::slot_pript_qprocess_finished()
             S->error = "Could not read results file: " + S->output_fname;
         }
         else {
-            S->runtime_results = QJsonDocument::fromJson(runtime_results_json.toLatin1()).object();
-            S->success = S->runtime_results["success"].toBool();
-            S->error = S->runtime_results["error"].toString();
+            QJsonParseError error;
+            S->runtime_results = QJsonDocument::fromJson(runtime_results_json.toLatin1(), &error).object();
+            if (error.error != QJsonParseError::NoError) {
+                S->success = false;
+                S->error = "Error parsing json of runtime results.";
+            }
+            else {
+                S->success = S->runtime_results["success"].toBool();
+                S->error = S->runtime_results["error"].toString();
+            }
         }
     }
     else {

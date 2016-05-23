@@ -72,7 +72,8 @@ bool MPDaemonInterface::stop()
     if (!d->daemon_is_running()) {
         printf("daemon has been stopped.\n");
         return true;
-    } else {
+    }
+    else {
         printf("Failed to stop daemon\n");
         return false;
     }
@@ -169,7 +170,11 @@ QJsonObject MPDaemonInterfacePrivate::get_last_daemon_state()
     if (fname.isEmpty())
         return ret;
     QString json = read_text_file(fname);
-    ret = QJsonDocument::fromJson(json.toLatin1()).object();
+    QJsonParseError error;
+    ret = QJsonDocument::fromJson(json.toLatin1(), &error).object();
+    if (error.error != QJsonParseError::NoError) {
+        qWarning() << "Error in get_last_daemon_state parsing json";
+    }
     if (!daemon_is_running())
         ret["is_running"] = false;
     return ret;

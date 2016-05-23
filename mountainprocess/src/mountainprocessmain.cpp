@@ -494,7 +494,12 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
     if (!detach) {
         qint64 parent_pid = CLP.named_parameters.value("~parent_pid", 0).toLongLong();
         MPDaemon::waitForFileToAppear(PP.output_fname, -1, false, parent_pid, PP.stdout_fname);
-        QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(PP.output_fname).toLatin1()).object();
+        QJsonParseError error;
+        QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(PP.output_fname).toLatin1(), &error).object();
+        if (error.error != QJsonParseError::NoError) {
+            qWarning() << "Error in queue_pript in parsing output json file.";
+            return -1;
+        }
         bool success = results_obj["success"].toBool();
         if (!success) {
             if (prtype == ScriptType) {
