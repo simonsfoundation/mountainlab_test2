@@ -67,6 +67,10 @@ public:
     {
         m_CD = CD;
     }
+    void setAttributes(QJsonObject aa) {
+        m_attributes=aa;
+    }
+
     int k()
     {
         return this->clusterData()->k;
@@ -114,9 +118,11 @@ private:
     bool m_highlighted;
     bool m_hovered;
     bool m_selected;
+    QJsonObject m_attributes;
 
     QPointF template_coord2pix(int m, double t, double val);
     QColor get_firing_rate_text_color(double rate);
+    QColor get_cluster_assessment_text_color(QString aa);
 };
 
 class MVClusterDetailWidgetPrivate {
@@ -147,6 +153,7 @@ public:
     double m_anchor_x;
     double m_anchor_scroll_x;
     int m_anchor_view_index;
+    QList<QJsonObject> m_cluster_attributes;
     MVClusterDetailWidgetCalculator m_calculator;
 
     QList<ClusterView*> m_views;
@@ -304,6 +311,12 @@ void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks_in)
         return;
     d->m_selected_ks = ks.toSet();
     emit this->signalSelectedKsChanged();
+    update();
+}
+
+void MVClusterDetailWidget::setClusterAttributes(const QList<QJsonObject> attributes)
+{
+    d->m_cluster_attributes=attributes;
     update();
 }
 
@@ -708,7 +721,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     int Tmid = (int)((T + 1) / 2) - 1;
     m_T = T;
 
-    int top_height = 20, bottom_height = 40;
+    int top_height = 20, bottom_height = 60;
     m_rect = rect;
     m_top_rect = QRectF(rect2.x(), rect2.y(), rect2.width(), top_height);
     m_template_rect = QRectF(rect2.x(), rect2.y() + top_height, rect2.width(), rect2.height() - bottom_height - top_height);
@@ -800,6 +813,18 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         painter->setPen(pen);
         painter->drawText(RR, Qt::AlignCenter | Qt::AlignBottom, txt);
     }
+
+    {
+        QPen pen;
+        pen.setWidth(1);
+        RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height * 3, m_bottom_rect.width(), text_height);
+        QString aa = m_attributes["assessment"].toString();
+        pen.setColor(get_cluster_assessment_text_color(aa));
+        txt=aa;
+        painter->setFont(font);
+        painter->setPen(pen);
+        painter->drawText(RR, Qt::AlignCenter | Qt::AlignBottom, txt);
+    }
 }
 
 double ClusterView::spaceNeeded()
@@ -828,6 +853,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
         V->setSelected(m_selected_ks.contains(CD->k));
         V->setHovered(CD->k == m_hovered_k);
         V->setClusterData(CD);
+        V->setAttributes(m_cluster_attributes.value(CD->k));
         m_views << V;
     }
 
@@ -901,6 +927,11 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
     if (rate <= 10)
         return QColor(0, 50, 0);
     return QColor(50, 0, 0);
+}
+
+QColor ClusterView::get_cluster_assessment_text_color(QString aa)
+{
+    return Qt::black;
 }
 
 /*
