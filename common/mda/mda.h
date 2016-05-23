@@ -11,6 +11,8 @@
 #include <QDebug>
 #endif
 
+extern void* allocate(const size_t nbytes);
+
 class MdaPrivate;
 /** \class Mda - a multi-dimensional array corresponding to the .mda file format
  * @brief The Mda class

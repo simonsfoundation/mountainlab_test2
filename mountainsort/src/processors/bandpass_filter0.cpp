@@ -9,6 +9,11 @@
 #include "msprefs.h"
 #include <QTime>
 
+#ifdef USE_SSE2
+#include <emmintrin.h>
+#include <immintrin.h>
+#endif
+
 Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_max);
 bool do_fft_1d_r2c(int M, int N, double* out, double* in);
 bool do_ifft_1d_c2r(int M, int N, double* out, double* in);
@@ -95,7 +100,17 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
 
 void multiply_by_factor(long N, double* X, double factor)
 {
-    for (long i = 0; i < N; i++)
+    long start = 0;
+#ifdef USE_SSE2
+    __m128d factor_m128 = _mm_load_pd1(&factor);
+    for (; start < (N / 2) * 2 ; start += 2) {
+        double* chunk = X + start;
+        __m128d x = _mm_load_pd(chunk);
+        __m128d result = _mm_mul_pd(x, factor_m128);
+        _mm_store_pd(chunk, result);
+    }
+#endif
+	for (long i = start; i < N; i++)
         X[i] *= factor;
 }
 
@@ -108,10 +123,10 @@ Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_
     double* Xptr = X.dataPtr();
     double* Yptr = Y.dataPtr();
 
-    double* kernel0 = (double*)malloc(sizeof(double) * N);
+    double* kernel0 = (double*)allocate(sizeof(double) * N);
+    double* Xhat = (double*)allocate(sizeof(double) * MN * 2);
     define_kernel(N, kernel0, samplerate, freq_min, freq_max);
 
-    double* Xhat = (double*)malloc(sizeof(double) * MN * 2);
     do_fft_1d_r2c(M, N, Xhat, Xptr);
     multiply_complex_by_real_kernel(M, N, Xhat, kernel0);
     do_ifft_1d_c2r(M, N, Yptr, Xhat);
@@ -270,6 +285,18 @@ void multiply_complex_by_real_kernel(int M, int N, double* Y, double* kernel)
 {
     int bb = 0;
     int aa = 0;
+#ifdef USE_SSE2
+    for (int i = 0; i < N; i++) {
+        __m128d kernel_m128 = _mm_load_pd1(kernel + aa);
+        for (int j = 0; j < M; j++) {
+            __m128d Y_m128 = _mm_load_pd(Y + bb * 2);
+            __m128d result = _mm_mul_pd(Y_m128, kernel_m128);
+            _mm_store_pd(Y + bb * 2, result);
+            bb++;
+        }
+        aa++;
+    }
+#else
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < M; j++) {
             Y[bb * 2] *= kernel[aa];
@@ -278,6 +305,7 @@ void multiply_complex_by_real_kernel(int M, int N, double* Y, double* kernel)
         }
         aa++;
     }
+#endif
 }
 
 void define_kernel(int N, double* kernel, double samplefreq, double freq_min, double freq_max)
@@ -286,19 +314,12 @@ void define_kernel(int N, double* kernel, double samplefreq, double freq_min, do
     double T = N / samplefreq; //total time
     //frequency grid
     double df = 1 / T;
-    double* fgrid = (double*)malloc(sizeof(double) * N);
-    for (int i = 0; i < N; i++) {
-        if (i <= (N + 1) / 2)
-            fgrid[i] = df * i;
-        else
-            fgrid[i] = df * (i - N);
-    }
-
     double fwidlo = 100; // roll-off width (Hz). Sets ringing timescale << 10 ms
     double fwidhi = 1000; // roll-off width (Hz). Sets ringing timescale << 1 ms
 
     for (int i = 0; i < N; i++) {
-        double absf = fabs(fgrid[i]);
+        const double fgrid = (i <= (N + 1) / 2) ? df * i : df * (i - N);
+        const double absf = fabs(fgrid);
         double val = 1;
         if (freq_min != 0) { //(suggested by ahb) added on 3/3/16 by jfm
             val *= (1 + tanh((absf - freq_min) / fwidlo)) / 2;
@@ -308,6 +329,4 @@ void define_kernel(int N, double* kernel, double samplefreq, double freq_min, do
         }
         kernel[i] = val;
     }
-
-    free(fgrid);
 }

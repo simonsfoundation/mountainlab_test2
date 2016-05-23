@@ -5,6 +5,28 @@
 
 #define MDA_MAX_DIMS 6
 
+
+#ifdef USE_SSE2
+static void* malloc_aligned(const size_t alignValue, const size_t nbytes) {
+    void* result = 0;
+#ifdef __linux__
+    if(posix_memalign(&result, alignValue, nbytes) != 0)
+        result = 0;
+#elif defined(__WIN32)
+    result = _aligned_malloc(nbytes, alignValue);
+#endif
+    return result;
+}
+#endif
+
+void* allocate(const size_t nbytes) {
+#ifdef USE_SSE2
+    return malloc_aligned(16, nbytes);
+#else
+    return malloc(nbytes);
+#endif
+}
+
 class MdaPrivate {
 public:
     Mda* q;
@@ -74,7 +96,7 @@ bool Mda::allocate(long N1, long N2, long N3, long N4, long N5, long N6)
         free(d->m_data);
     d->m_data = 0;
     if (d->m_total_size > 0) {
-        d->m_data = (double*)malloc(sizeof(double) * d->m_total_size);
+        d->m_data = (double*)::allocate(sizeof(double) * d->m_total_size);
         for (long i = 0; i < d->m_total_size; i++)
             d->m_data[i] = 0;
     }
@@ -615,7 +637,7 @@ void Mda::set(double val, long i1, long i2, long i3, long i4, long i5, long i6)
 
 void MdaPrivate::do_construct()
 {
-    m_data = (double*)malloc(sizeof(double) * 1);
+    m_data = (double*)::allocate(sizeof(double) * 1);
     for (int i = 0; i < MDA_MAX_DIMS; i++) {
         m_dims[i] = 1;
     }
@@ -624,14 +646,16 @@ void MdaPrivate::do_construct()
 
 void MdaPrivate::copy_from(const Mda& other)
 {
-    if (m_data)
+    const bool needResize = m_total_size != other.d->m_total_size;
+    if (needResize && m_data) {
         free(m_data);
-    m_data = 0;
+        m_data = 0;
+    }
     m_total_size = other.d->m_total_size;
-    for (int i = 0; i < MDA_MAX_DIMS; i++)
-        m_dims[i] = other.d->m_dims[i];
+    memcpy(m_dims, other.d->m_dims, MDA_MAX_DIMS * sizeof(m_dims[0]));
     if (m_total_size > 0) {
-        m_data = (double*)malloc(sizeof(double) * m_total_size);
+        if (needResize)
+            m_data = (double*)::allocate(sizeof(double) * m_total_size);
         memcpy(m_data, other.d->m_data, sizeof(double) * m_total_size);
     }
 }

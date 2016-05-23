@@ -133,6 +133,7 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/geom2adj_processor.cpp
 
 DEFINES += USE_REMOTE_MDA
+DEFINES += USE_SSE2
 INCLUDEPATH += ../../common/mda
 DEPENDPATH += ../../common/mda
 VPATH += ../../common/mda
