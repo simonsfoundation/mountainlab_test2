@@ -279,10 +279,12 @@ bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove
         if (terminate_file_exists)
             break;
 
+        /*
         if (debug_timer.elapsed() > 20000) {
             qWarning() << QString("Still waiting for file to appear after %1 sec: %2").arg(timer.elapsed() * 1.0 / 1000).arg(fname);
             debug_timer.restart();
         }
+        */
     }
     if (stdout_file.isOpen())
         stdout_file.close();
