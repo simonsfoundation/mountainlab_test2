@@ -163,19 +163,19 @@ MVControlPanel::MVControlPanel()
         //Export
         layout->addWidget(d->create_group_label("Export"));
         {
-            QPushButton* BB = new QPushButton("MountainView Document");
+            QPushButton* BB = new QPushButton("Export MountainView Document (.mv)...");
             BB->setProperty("action_name", "export_mountainview_document");
             QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
             layout->addWidget(BB);
         }
         {
-            QPushButton* BB = new QPushButton("Original firings");
+            QPushButton* BB = new QPushButton("Export Original Firings...");
             BB->setProperty("action_name", "export_original_firings");
             QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
             layout->addWidget(BB);
         }
         {
-            QPushButton* BB = new QPushButton("Filtered firings");
+            QPushButton* BB = new QPushButton("Export Filtered Firings...");
             BB->setProperty("action_name", "export_filtered_firings");
             QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
             layout->addWidget(BB);

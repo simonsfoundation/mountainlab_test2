@@ -77,9 +77,6 @@ int main(int argc, char* argv[])
         QString window_title = CLP.named_parameters["window_title"].toString();
         MVOverview2Widget* W = new MVOverview2Widget;
         W->setMPServerUrl(CLP.named_parameters.value("mpserver_url", "").toString());
-        if (!mv_fname.isEmpty()) {
-            W->loadMVFile(mv_fname);
-        }
         if (mode == "overview2") {
             W->setWindowTitle(window_title);
             W->show();
@@ -96,6 +93,10 @@ int main(int argc, char* argv[])
             }
 
             qApp->processEvents();
+        }
+
+        if (!mv_fname.isEmpty()) {
+            W->loadMVFile(mv_fname);
         }
 
         if (!pre_path.isEmpty()) {

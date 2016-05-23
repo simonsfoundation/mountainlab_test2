@@ -46,6 +46,7 @@
 /// TODO important: splitter between control panel and task view
 /// TODO show summary stats for dataset in mountainview
 /// TODO look into find nearby events... needs explanation, testing etc
+/// TODO important: show data download activity (monitor downloads at low level?)
 
 class CrossCorrelogramComputer : public ComputationThread {
 public:
