@@ -40,6 +40,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QInputDialog>
 #include "textfile.h"
 
 /// TODO important: splitter between control panel and task view
@@ -69,6 +70,7 @@ public:
     QList<Epoch> m_epochs;
     QList<int> m_original_cluster_numbers;
     QList<int> m_original_cluster_offsets;
+    QList<QJsonObject> m_cluster_attributes;
     int m_current_k;
     QSet<int> m_selected_ks;
     float m_samplerate;
@@ -150,6 +152,10 @@ public:
 
     QString make_absolute_path(QString path); //use basepath of m_mv_fname if path is relative
     QString current_timeseries_path();
+
+    QVariant get_cluster_attribute(int k, QString attr);
+    void set_cluster_attribute(int k, QString attr, QVariant val);
+    void update_cluster_attributes();
 
     //void start_cross_correlograms_computer();
 };
@@ -418,6 +424,15 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
         d->m_control_panel_new->setEventFilter(filter);
     }
 
+    /// TODO when load a .mv file,keep the original contents, so when saving we don't overwrite any custom fields
+    d->m_cluster_attributes.clear();
+    if (obj.contains("annotations")) {
+        QJsonArray CA = obj["annotations"].toObject()["cluster_attributes"].toArray();
+        for (int i = 0; i < CA.count(); i++) {
+            d->m_cluster_attributes << CA[i].toObject();
+        }
+    }
+
     d->do_shell_split_and_event_filter();
 }
 
@@ -447,6 +462,15 @@ void MVOverview2Widget::saveMVFile(const QString& mv_fname)
 
     obj["mpserver_url"] = d->m_mpserver_url;
 
+    QJsonArray cluster_attributes;
+    for (int i = 0; i < d->m_cluster_attributes.count(); i++) {
+        cluster_attributes.append(d->m_cluster_attributes[i]);
+    }
+
+    QJsonObject annotations;
+    annotations["cluster_attributes"] = cluster_attributes;
+    obj["annotations"] = annotations;
+
     if (!write_text_file(mv_fname, QJsonDocument(obj).toJson())) {
         task.error("Error writing .mv file: " + mv_fname);
     }
@@ -462,6 +486,29 @@ void MVOverview2Widget::keyPressEvent(QKeyEvent* evt)
 {
     if ((evt->key() == Qt::Key_W) && (evt->modifiers() & Qt::ControlModifier)) {
         this->close();
+    }
+    if (evt->key() == Qt::Key_A) {
+        if (d->m_selected_ks.isEmpty())
+            return;
+        QList<int> ks = d->m_selected_ks.toList();
+        QString common_assessment;
+        for (int i = 0; i < ks.count(); i++) {
+            QString aa = d->get_cluster_attribute(ks[i], "assessment").toString();
+            if (i == 0)
+                common_assessment = aa;
+            else {
+                if (common_assessment != aa)
+                    common_assessment = "";
+            }
+        }
+        bool ok;
+        QString new_assessment = QInputDialog::getText(0, "Set cluster assessment", "Cluster assessment:", QLineEdit::Normal, common_assessment, &ok);
+        if (ok) {
+            for (int i = 0; i < ks.count(); i++) {
+                d->set_cluster_attribute(ks[i], "assessment", new_assessment);
+            }
+            d->update_cluster_attributes();
+        }
     }
     else
         evt->ignore();
@@ -1017,6 +1064,8 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_matrix_of_cross_corre
 
 MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 {
+    qDebug() << "*************************"
+             << "open_cluster_details" << m_cluster_attributes.count();
     MVClusterDetailWidget* X = new MVClusterDetailWidget;
     //X->setMscmdServerUrl(m_mscmdserver_url);
     X->setMPServerUrl(m_mpserver_url);
@@ -1348,6 +1397,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setFirings(DiskReadMda(m_firings));
         WW->setGroupNumbers(m_original_cluster_numbers);
         WW->zoomAllTheWayOut();
+        qDebug() << "setting cluster attributes..." << m_cluster_attributes.count();
+        WW->setClusterAttributes(m_cluster_attributes);
         task.log(QString("clip_size=%1, m_firings.N1()=%2, m_firings.N2()=%3").arg(clip_size).arg(m_firings.N1()).arg(m_firings.N2()));
     }
     else if (widget_type == "clips") {
@@ -1903,6 +1954,30 @@ QString MVOverview2WidgetPrivate::make_absolute_path(QString path)
 QString MVOverview2WidgetPrivate::current_timeseries_path()
 {
     return make_absolute_path(m_timeseries_paths.value(m_control_panel_new->viewOptions().timeseries));
+}
+
+QVariant MVOverview2WidgetPrivate::get_cluster_attribute(int k, QString attr)
+{
+    return m_cluster_attributes.value(k).value(attr).toVariant();
+}
+
+void MVOverview2WidgetPrivate::set_cluster_attribute(int k, QString attr, QVariant val)
+{
+    while (k >= m_cluster_attributes.count()) {
+        m_cluster_attributes << QJsonObject();
+    }
+    m_cluster_attributes[k][attr] = QJsonValue::fromVariant(val);
+}
+
+void MVOverview2WidgetPrivate::update_cluster_attributes()
+{
+    QList<QWidget*> list = get_all_widgets();
+    foreach (QWidget* W, list) {
+        if (W->property("widget_type") == "cluster_details") {
+            MVClusterDetailWidget* WW = qobject_cast<MVClusterDetailWidget*>(W);
+            WW->setClusterAttributes(m_cluster_attributes);
+        }
+    }
 }
 
 typedef QList<long> IntList;

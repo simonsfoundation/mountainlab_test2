@@ -60,6 +60,9 @@ public:
     ///Set selected label numbers (affects highlighting)
     void setSelectedKs(const QList<int>& ks);
 
+    ///
+    void setClusterAttributes(const QList<QJsonObject> attributes);
+
     void zoomAllTheWayOut();
 
     ///Create an image of the current view
