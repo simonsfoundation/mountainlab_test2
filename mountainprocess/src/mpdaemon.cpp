@@ -45,7 +45,7 @@ public:
     void write_daemon_state();
     bool stop_or_remove_pript(const QString& key);
     void write_pript_file(const MPDaemonPript& P);
-    void finish_and_finalize(MPDaemonPript &P);
+    void finish_and_finalize(MPDaemonPript& P);
     int num_running_scripts()
     {
         return num_running_pripts(ScriptType);
@@ -86,7 +86,7 @@ void append_line_to_file(QString fname, QString line)
         static bool reported = false;
         if (!reported) {
             reported = true;
-            qWarning() << "Unable to write to log file" << fname;
+            qCritical() << "Unable to write to log file" << fname;
         }
     }
 }
@@ -237,7 +237,7 @@ bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove
     QTime timer;
     timer.start();
     QFile stdout_file(stdout_fname);
-    bool failed_to_open = false;
+    bool failed_to_open_stdout_file = false;
 
     /*
     QString i_am_alive_fname;
@@ -247,16 +247,10 @@ bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove
     QTime timer_i_am_alive; timer_i_am_alive.start();
     */
 
+    QTime debug_timer;
+    debug_timer.start();
     while (1) {
         wait(200);
-        /*
-        if (timer_i_am_alive.elapsed()>1000) {
-            if (parent_pid) {
-                write_text_file(i_am_alive_fname,QString("Process is alive: %1").arg(parent_pid));
-            }
-            timer_i_am_alive.restart();
-        }
-        */
 
         bool terminate_file_exists = QFile::exists(fname); //do this before we check other things, like the stdout
 
@@ -266,12 +260,12 @@ bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove
             qWarning() << "Exiting waitForFileToAppear because parent process is gone.";
             break;
         }
-        if ((!stdout_fname.isEmpty()) && (!failed_to_open)) {
+        if ((!stdout_fname.isEmpty()) && (!failed_to_open_stdout_file)) {
             if (QFile::exists(stdout_fname)) {
                 if (!stdout_file.isOpen()) {
                     if (!stdout_file.open(QFile::ReadOnly)) {
-                        qWarning() << "Unable to open stdout file for reading: " + stdout_fname;
-                        failed_to_open = true;
+                        qCritical() << "Unable to open stdout file for reading: " + stdout_fname;
+                        failed_to_open_stdout_file = true;
                     }
                 }
                 if (stdout_file.isOpen()) {
@@ -284,6 +278,10 @@ bool MPDaemon::waitForFileToAppear(QString fname, qint64 timeout_ms, bool remove
         }
         if (terminate_file_exists)
             break;
+
+        if (debug_timer.elapsed() > 20000) {
+            qWarning() << QString("Still waiting for file to appear after %1 sec: %2").arg(timer.elapsed()*1.0/1000).arg(fname);
+        }
     }
     if (stdout_file.isOpen())
         stdout_file.close();
@@ -306,15 +304,16 @@ void MPDaemon::slot_commands_directory_changed()
         QString path0 = path + "/" + fname;
         qint64 elapsed_sec = QFileInfo(path0).lastModified().secsTo(QDateTime::currentDateTime());
         if (elapsed_sec > 20) {
-            qWarning() << "Removing old command file:" << path0;
-            QFile::remove(path0);
+            if (!QFile::remove(path0)) {
+                qCritical() << "Unable to remove command file: " + path0;
+            }
         }
         else {
             QString json = read_text_file(path0);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
             d->process_command(obj);
             if (!QFile::remove(path0)) {
-                qWarning() << "Problem removing command file: " + path0;
+                qCritical() << "Problem removing command file: " + path0;
             }
         }
     }
@@ -334,7 +333,7 @@ void MPDaemon::slot_pript_qprocess_finished()
     }
     else {
         d->writeLogRecord("error", "message", "Unexpected problem in slot_pript_qprocess_finished. Unable to find script or process with id: " + pript_id);
-        qWarning() << "Unexpected problem in slot_pript_qprocess_finished. Unable to find script or process with id: " + pript_id;
+        qCritical() << "Unexpected problem in slot_pript_qprocess_finished. Unable to find script or process with id: " + pript_id;
         return;
     }
     if (!S->output_fname.isEmpty()) {
@@ -354,7 +353,6 @@ void MPDaemon::slot_pript_qprocess_finished()
         S->success = true;
     }
     d->finish_and_finalize(*S);
-
 
     QJsonObject obj0;
     obj0["pript_id"] = pript_id;
@@ -380,7 +378,7 @@ void MPDaemon::slot_pript_qprocess_finished()
             }
             else {
                 d->writeLogRecord("error", "pript_id", pript_id, "message", "Process did not finish after waiting even though we are in the slot for finished!!");
-                qWarning() << "Process did not finish after waiting even though we are in the slot for finished!!";
+                qCritical() << "Process did not finish after waiting even though we are in the slot for finished!!";
             }
         }
         S->qprocess = 0;
@@ -482,7 +480,7 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
         S.timestamp_queued = QDateTime::currentDateTime();
         if (m_pripts.contains(S.id)) {
             writeLogRecord("error", "message", "Unable to queue script. Process or script with this id already exists: " + S.id);
-            qWarning() << "Unable to queue script. Process or script with this id already exists: " + S.id;
+            qCritical() << "Unable to queue script. Process or script with this id already exists: " + S.id;
             return;
         }
         writeLogRecord("queue-script", "pript_id", S.id);
@@ -497,7 +495,7 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
         P.timestamp_queued = QDateTime::currentDateTime();
         if (m_pripts.contains(P.id)) {
             writeLogRecord("error", "message", "Unable to queue process. Process or script with this id already exists: " + P.id);
-            qWarning() << "Unable to queue process. Process or script with this id already exists: " + P.id;
+            qCritical() << "Unable to queue process. Process or script with this id already exists: " + P.id;
             return;
         }
         writeLogRecord("queue-process", P.id);
@@ -509,7 +507,7 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
         q->clearProcessing();
     }
     else {
-        qWarning() << "Unrecognized command: " + command;
+        qCritical() << "Unrecognized command: " + command;
         writeLogRecord("error", "message", "Unrecognized command: " + command);
     }
 }
@@ -551,7 +549,7 @@ bool MPDaemonPrivate::handle_scripts()
                 printf("%d scripts running.\n", num_running_scripts());
             }
             else {
-                qWarning() << "Unexpected problem. Failed to launch_next_script";
+                qCritical() << "Unexpected problem. Failed to launch_next_script";
                 return false;
             }
         }
@@ -669,7 +667,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         if (!S->stdout_fname.isEmpty()) {
             S->stdout_file = new QFile(S->stdout_fname);
             if (!S->stdout_file->open(QFile::WriteOnly)) {
-                qWarning() << "Unable to open stdout file for writing: " + S->stdout_fname;
+                qCritical() << "Unable to open stdout file for writing: " + S->stdout_fname;
                 delete S->stdout_file;
                 S->stdout_file = 0;
             }
@@ -683,11 +681,11 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         debug_log(__FUNCTION__, __FILE__, __LINE__);
         if (S->prtype == ScriptType) {
             writeLogRecord("stop-script", "pript_id", pript_id, "reason", "Unable to start script.");
-            qWarning() << "Unable to start script: " + S->id;
+            qCritical() << "Unable to start script: " + S->id;
         }
         else {
             writeLogRecord("stop-process", "pript_id", pript_id, "reason", "Unable to start process.");
-            qWarning() << "Unable to start process: " + S->processor_name + " " + S->id;
+            qCritical() << "Unable to start process: " + S->processor_name + " " + S->id;
         }
         qprocess->disconnect();
         delete qprocess;
@@ -897,8 +895,8 @@ void MPDaemonPrivate::write_daemon_state()
         QStringList keys = m_pripts.keys();
         foreach (QString key, keys) {
             if (m_pripts[key].is_finished) {
-                double elapsed_sec=m_pripts[key].timestamp_finished.secsTo(QDateTime::currentDateTime());
-                if (elapsed_sec>20) {
+                double elapsed_sec = m_pripts[key].timestamp_finished.secsTo(QDateTime::currentDateTime());
+                if (elapsed_sec > 20) {
                     m_pripts.remove(key);
                 }
             }
@@ -962,13 +960,13 @@ void MPDaemonPrivate::write_pript_file(const MPDaemonPript& P)
     write_text_file(fname, json);
 }
 
-void MPDaemonPrivate::finish_and_finalize(MPDaemonPript &P)
+void MPDaemonPrivate::finish_and_finalize(MPDaemonPript& P)
 {
     P.is_finished = true;
     P.is_running = false;
     P.timestamp_finished = QDateTime::currentDateTime();
     if (!P.stdout_fname.isEmpty()) {
-        P.runtime_results["stdout"]=read_text_file(P.stdout_fname);
+        P.runtime_results["stdout"] = read_text_file(P.stdout_fname);
     }
     write_pript_file(P);
 }
@@ -983,11 +981,11 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
                 if (m_pripts[key].qprocess) {
                     if (m_pripts[key].prtype == ScriptType) {
                         writeLogRecord("stop-script", "pript_id", key, "reason", "orphan");
-                        qWarning() << "Terminating script qprocess: " + key;
+                        qWarning() << "Terminating orphan script qprocess: " + key;
                     }
                     else {
                         writeLogRecord("stop-process", "pript_id", key, "reason", "orphan");
-                        qWarning() << "Terminating process qprocess: " + key;
+                        qWarning() << "Terminating orphan process qprocess: " + key;
                     }
 
                     m_pripts[key].qprocess->disconnect(); //so we don't go into the finished slot
@@ -1008,7 +1006,6 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
                     finish_and_finalize(m_pripts[key]);
                     m_pripts.remove(key);
                 }
-
             }
         }
     }
@@ -1132,9 +1129,9 @@ QJsonObject pript_struct_to_obj(MPDaemonPript S, RecordType rt)
     ret["id"] = S.id;
     ret["success"] = S.success;
     ret["error"] = S.error;
-    ret["timestamp_queued"]=S.timestamp_queued.toString("yyyy-MM-dd|hh:mm:ss.zzz");
-    ret["timestamp_started"]=S.timestamp_started.toString("yyyy-MM-dd|hh:mm:ss.zzz");
-    ret["timestamp_finished"]=S.timestamp_finished.toString("yyyy-MM-dd|hh:mm:ss.zzz");
+    ret["timestamp_queued"] = S.timestamp_queued.toString("yyyy-MM-dd|hh:mm:ss.zzz");
+    ret["timestamp_started"] = S.timestamp_started.toString("yyyy-MM-dd|hh:mm:ss.zzz");
+    ret["timestamp_finished"] = S.timestamp_finished.toString("yyyy-MM-dd|hh:mm:ss.zzz");
     if (S.prtype == ScriptType) {
         ret["prtype"] = "script";
         if (rt != AbbreviatedRecord) {
@@ -1168,9 +1165,9 @@ MPDaemonPript pript_obj_to_struct(QJsonObject obj)
     ret.success = obj.value("success").toBool();
     ret.error = obj.value("error").toString();
     ret.parent_pid = obj.value("parent_pid").toString().toLongLong();
-    ret.timestamp_queued=QDateTime::fromString(obj.value("timestamp_queued").toString(),"yyyy-MM-dd|hh:mm:ss.zzz");
-    ret.timestamp_started=QDateTime::fromString(obj.value("timestamp_started").toString(),"yyyy-MM-dd|hh:mm:ss.zzz");
-    ret.timestamp_finished=QDateTime::fromString(obj.value("timestamp_finished").toString(),"yyyy-MM-dd|hh:mm:ss.zzz");
+    ret.timestamp_queued = QDateTime::fromString(obj.value("timestamp_queued").toString(), "yyyy-MM-dd|hh:mm:ss.zzz");
+    ret.timestamp_started = QDateTime::fromString(obj.value("timestamp_started").toString(), "yyyy-MM-dd|hh:mm:ss.zzz");
+    ret.timestamp_finished = QDateTime::fromString(obj.value("timestamp_finished").toString(), "yyyy-MM-dd|hh:mm:ss.zzz");
     if (obj.value("prtype").toString() == "script") {
         ret.prtype = ScriptType;
         ret.script_paths = json_array_to_stringlist(obj.value("script_paths").toArray());

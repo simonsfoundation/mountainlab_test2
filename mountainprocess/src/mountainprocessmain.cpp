@@ -59,8 +59,13 @@ bool initialize_process_manager();
 void remove_system_parameters(QVariantMap& params);
 int queue_pript(PriptType prtype, const CLParams& CLP);
 
+#define EXIT_ON_CRITICAL_ERROR
+void mountainprocessMessageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg);
+
 int main(int argc, char* argv[])
 {
+    qInstallMessageHandler(mountainprocessMessageOutput);
+
     QCoreApplication app(argc, argv);
     CLParams CLP = commandlineparams(argc, argv);
 
@@ -90,12 +95,12 @@ int main(int argc, char* argv[])
         ProcessManager* PM = ProcessManager::globalInstance();
         QStringList pnames = PM->processorNames();
         qSort(pnames);
-        foreach(QString pname, pnames)
-        {
+        foreach (QString pname, pnames) {
             printf("%s\n", pname.toLatin1().data());
         }
         return 0;
-    } else if (arg1 == "run-process") { //Run a process synchronously
+    }
+    else if (arg1 == "run-process") { //Run a process synchronously
         if (!initialize_process_manager())
             return -1; //load the processor plugins etc
         ProcessManager* PM = ProcessManager::globalInstance();
@@ -110,13 +115,15 @@ int main(int argc, char* argv[])
 
         if (PM->processAlreadyCompleted(processor_name, process_parameters)) { //do we have a record of this procesor already completing? If so, we save a lot of time by not re-running
             printf("Process already completed: %s\n", processor_name.toLatin1().data());
-        } else {
+        }
+        else {
             QString id;
 
             if (!PM->checkParameters(processor_name, process_parameters)) { //check to see that all our parameters are in order for the given processor
                 error_message = "Problem checking process: " + processor_name;
                 ret = -1;
-            } else {
+            }
+            else {
                 id = PM->startProcess(processor_name, process_parameters); //start the process and retrieve a unique id
                 if (id.isEmpty()) {
                     error_message = "Problem starting process: " + processor_name;
@@ -155,15 +162,16 @@ int main(int argc, char* argv[])
         if (!output_fname.isEmpty()) { //The user wants the results to go in this file
             QString obj_json = QJsonDocument(obj).toJson();
             if (!write_text_file(output_fname, obj_json)) {
-                qWarning() << "Unable to write results to: " + output_fname;
+                qCritical() << "Unable to write results to: " + output_fname;
             }
         }
         if (!error_message.isEmpty()) {
-            qWarning() << error_message;
+            qCritical() << "Error in mountainprocessmain" << error_message;
         }
 
         return ret; //returns exit code 0 if okay
-    } else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued, but the script will wait for them to complete)
+    }
+    else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued, but the script will wait for them to complete)
         if (!initialize_process_manager())
             return -1;
 
@@ -186,8 +194,7 @@ int main(int argc, char* argv[])
             }
         }
         QStringList keys0 = CLP.named_parameters.keys();
-        foreach(QString key0, keys0)
-        {
+        foreach (QString key0, keys0) {
             params[key0] = CLP.named_parameters[key0];
         }
         remove_system_parameters(params);
@@ -204,12 +211,13 @@ int main(int argc, char* argv[])
         if (!output_fname.isEmpty()) { //The user wants the results to go in this file
             QString obj_json = QJsonDocument(obj).toJson();
             if (!write_text_file(output_fname, obj_json)) {
-                qWarning() << "Unable to write results to: " + output_fname;
+                qCritical() << "Unable to write results to: " + output_fname;
             }
         }
 
         return ret;
-    } else if (arg1 == "daemon-start") {
+    }
+    else if (arg1 == "daemon-start") {
         if (!initialize_process_manager())
             return -1;
         MPDaemon X;
@@ -259,25 +267,31 @@ int main(int argc, char* argv[])
         QString json = QJsonDocument(state).toJson();
         printf("%s", json.toLatin1().data());
         return 0;
-    } else if (arg1 == "clear-processing") {
+    }
+    else if (arg1 == "clear-processing") {
         MPDaemonInterface X;
         X.clearProcessing();
         return 0;
-    } else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
+    }
+    else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
         return queue_pript(ScriptType, CLP);
-    } else if (arg1 == "queue-process") {
+    }
+    else if (arg1 == "queue-process") {
         return queue_pript(ProcessType, CLP);
-    } else if (arg1 == "get-script") {
+    }
+    else if (arg1 == "get-script") {
         if (!log_path.isEmpty()) {
             QString str = read_text_file(log_path + "/scripts/" + CLP.named_parameters["id"].toString() + ".json");
             printf("%s", str.toLatin1().data());
         }
-    } else if (arg1 == "get-process") {
+    }
+    else if (arg1 == "get-process") {
         if (!log_path.isEmpty()) {
             QString str = read_text_file(log_path + "/processes/" + CLP.named_parameters["id"].toString() + ".json");
             printf("%s", str.toLatin1().data());
         }
-    } else {
+    }
+    else {
         print_usage(); //print usage information
         return -1;
     }
@@ -293,7 +307,7 @@ bool initialize_process_manager()
     QString config_fname = mlConfigPath() + "/mountainprocess.ini";
     if (!QFile::exists(config_fname)) {
         if (!QFile::copy(config_fname + ".example", config_fname)) {
-            qWarning() << "Unable to copy example configuration file to " + config_fname;
+            qCritical() << "Unable to copy example configuration file to " + config_fname;
             return false;
         }
     }
@@ -303,15 +317,14 @@ bool initialize_process_manager()
      */
     QStringList processor_paths = config.value("processor_paths").toStringList();
     if (processor_paths.isEmpty()) {
-        qWarning() << "No processor paths found in " + config_fname;
+        qCritical() << "No processor paths found in " + config_fname;
     }
 
     /*
      * Load the processors
      */
     ProcessManager* PM = ProcessManager::globalInstance();
-    foreach(QString processor_path, processor_paths)
-    {
+    foreach (QString processor_path, processor_paths) {
         QString p0 = processor_path;
         if (QFileInfo(p0).isRelative()) {
             p0 = cfp(QFileInfo(config_fname).path() + "/" + p0);
@@ -327,19 +340,18 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
 {
     QString json = read_text_file(fname);
     if (json.isEmpty()) {
-        qWarning() << "Non-existent or empty parameter file: " + fname;
+        qCritical() << "Non-existent or empty parameter file: " + fname;
         return false;
     }
     QJsonParseError error;
     /// Witold I use toLatin1() everywhere. Is this the appropriate way to convert to byte array?
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
     if (error.error != QJsonParseError::NoError) {
-        qWarning() << "Error parsing json file: " + fname + " : " + error.errorString();
+        qCritical() << "Error parsing json file: " + fname + " : " + error.errorString();
         return false;
     }
     QStringList keys = obj.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         params[key] = obj[key].toVariant();
     }
     return true;
@@ -362,8 +374,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, QSt
     ScriptController Controller;
     QJSValue MP = engine.newQObject(&Controller);
     engine.globalObject().setProperty("MP", MP);
-    foreach(QString fname, script_fnames)
-    {
+    foreach (QString fname, script_fnames) {
         QJSValue result = engine.evaluate(read_text_file(fname), fname);
         if (result.isError()) {
             display_error(result);
@@ -404,8 +415,7 @@ void print_usage()
 void remove_system_parameters(QVariantMap& params)
 {
     QStringList keys = params.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         if (key.startsWith("~")) {
             params.remove(key);
         }
@@ -433,14 +443,14 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
             }
         }
         QStringList pkeys = CLP.named_parameters.keys();
-        foreach(QString pkey, pkeys)
-        {
+        foreach (QString pkey, pkeys) {
             params[pkey] = CLP.named_parameters[pkey];
         }
         remove_system_parameters(params);
         PP.parameters = params;
         PP.prtype = ScriptType;
-    } else {
+    }
+    else {
         PP.parameters = CLP.named_parameters;
         PP.prtype = ProcessType;
         remove_system_parameters(PP.parameters);
@@ -451,7 +461,8 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
 
     if (prtype == ScriptType) {
         PP.output_fname = CLP.named_parameters["~script_output"].toString();
-    } else {
+    }
+    else {
         PP.output_fname = CLP.named_parameters["~process_output"].toString();
     }
     if (PP.output_fname.isEmpty()) {
@@ -474,7 +485,8 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
         if (!X.queueScript(PP)) { //queue the script
             return -1;
         }
-    } else {
+    }
+    else {
         if (!X.queueProcess(PP)) { //queue the process
             return -1;
         }
@@ -487,11 +499,38 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
         if (!success) {
             if (prtype == ScriptType) {
                 qWarning() << "Error in script " + PP.id + ": " + results_obj["error"].toString();
-            } else {
+            }
+            else {
                 qWarning() << "Error in process " + PP.processor_name + " " + PP.id + ": " + results_obj["error"].toString();
             }
             return -1;
         }
     }
     return 0;
+}
+
+void mountainprocessMessageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg)
+{
+    QByteArray localMsg = msg.toLocal8Bit();
+    switch (type) {
+    case QtDebugMsg:
+        fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtInfoMsg:
+        fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtWarningMsg:
+        fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtCriticalMsg:
+        /// TODO write to an error log file
+        fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+#ifdef EXIT_ON_CRITICAL_ERROR
+        exit(-1);
+#endif
+        break;
+    case QtFatalMsg:
+        fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        exit(-1);
+    }
 }
