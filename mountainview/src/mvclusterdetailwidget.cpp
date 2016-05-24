@@ -160,7 +160,6 @@ public:
     double m_anchor_x;
     double m_anchor_scroll_x;
     int m_anchor_view_index;
-    QList<QJsonObject> m_cluster_attributes;
     MVClusterDetailWidgetCalculator m_calculator;
 
     MVViewAgent* m_view_agent;
@@ -322,12 +321,6 @@ void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks_in)
         return;
     d->m_selected_ks = ks.toSet();
     emit this->signalSelectedKsChanged();
-    update();
-}
-
-void MVClusterDetailWidget::setClusterAttributes(const QList<QJsonObject> attributes)
-{
-    d->m_cluster_attributes = attributes;
     update();
 }
 
@@ -879,8 +872,10 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
     }
 
     QList<ClusterData> cluster_data_merged;
+    QMap<int, QJsonObject> cluster_attributes;
     if (m_view_agent) {
         cluster_data_merged = merge_cluster_data(m_view_agent->clusterMerge(), m_cluster_data);
+        cluster_attributes = m_view_agent->clusterAttributes();
     }
     else {
         cluster_data_merged = m_cluster_data;
@@ -895,7 +890,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
         V->setSelected(m_selected_ks.contains(CD.k));
         V->setHovered(CD.k == m_hovered_k);
         V->setClusterData(CD);
-        V->setAttributes(m_cluster_attributes.value(CD.k));
+        V->setAttributes(cluster_attributes[CD.k]);
         m_views << V;
     }
 
