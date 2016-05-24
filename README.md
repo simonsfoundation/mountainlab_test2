@@ -26,6 +26,10 @@ The software suite (in flux) comprises the following:
 
 This is open source software released under the terms of the GPLv3. For alternative licensing options, please contact scdainfo@simonsfoundation.org.
 
+## News
+
+See [NEWS](news.md)
+
 ## Installation and Basic Usage
 
 MountainLab has been developed and tested in Linux (Ubuntu and CentOS), but should also run (with some expertise) on any operating sytem that supports Qt/C++ such as Windows or Mac OS X. Much of the Matlab functionality is available without needing to install the C++ programs. C++ programs also run independently (without Matlab) from the command line.
