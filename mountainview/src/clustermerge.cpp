@@ -8,6 +8,7 @@
 
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QSet>
 
 struct merge_pair {
     merge_pair(int l1, int l2)
@@ -15,15 +16,24 @@ struct merge_pair {
         label1 = l1;
         label2 = l2;
     }
+    bool operator==(const merge_pair &other) const {
+        return ((label1==other.label1)&&(label2==other.label2));
+    }
+
     int label1, label2;
 };
+uint qHash(const merge_pair &mp) {
+    return qHash(QString("%1:::%2").arg(mp.label1).arg(mp.label2));
+}
 
 class ClusterMergePrivate {
 public:
     ClusterMerge* q;
-    QList<merge_pair> m_merge_pairs;
+    QSet<merge_pair> m_merge_pairs;
 
     bool is_merged(int label1, int label2);
+    void make_transitive();
+
 };
 
 ClusterMerge::ClusterMerge()
@@ -50,11 +60,17 @@ void ClusterMerge::operator=(const ClusterMerge& other)
     d->m_merge_pairs = other.d->m_merge_pairs;
 }
 
-void ClusterMerge::merge(int label1, int label2)
+bool ClusterMerge::operator==(const ClusterMerge &other)
 {
-    if (d->is_merged(label1, label2))
-        return;
-    d->m_merge_pairs << merge_pair(label1, label2) << merge_pair(label2, label2);
+    if (d->m_merge_pairs.count()!=other.d->m_merge_pairs.count()) return false;
+    foreach (merge_pair mp,d->m_merge_pairs) if (!other.d->m_merge_pairs.contains(mp)) return false;
+    foreach (merge_pair mp,other.d->m_merge_pairs) if (!d->m_merge_pairs.contains(mp)) return false;
+    return true;
+}
+
+void ClusterMerge::clear()
+{
+    d->m_merge_pairs.clear();
 }
 
 void ClusterMerge::merge(const QSet<int>& labels)
@@ -65,18 +81,24 @@ void ClusterMerge::merge(const QSet<int>& labels)
 void ClusterMerge::merge(const QList<int>& labels)
 {
     for (int i = 0; i < labels.count(); i++) {
-        for (int j = 0; j < labels.count(); i++) {
-            merge(labels[i], labels[j]);
+        for (int j = 0; j < labels.count(); j++) {
+            if (labels[i]!=labels[j]) {
+                if (!d->is_merged(labels[i],labels[j])) {
+                    d->m_merge_pairs.insert(merge_pair(labels[i],labels[j]));
+                    d->m_merge_pairs.insert(merge_pair(labels[j],labels[i]));
+                }
+            }
         }
     }
+    d->make_transitive();
 }
 
 void ClusterMerge::unmerge(int label)
 {
-    QList<merge_pair> new_pairs;
-    for (int i = 0; i < d->m_merge_pairs.count(); i++) {
-        if ((d->m_merge_pairs[i].label1 != label) && (d->m_merge_pairs[i].label2 != label)) {
-            new_pairs << d->m_merge_pairs[i];
+    QSet<merge_pair> new_pairs;
+    foreach (merge_pair mp,d->m_merge_pairs) {
+        if ((mp.label1 != label) && (mp.label2 != label)) {
+            new_pairs.insert(mp);
         }
     }
     d->m_merge_pairs = new_pairs;
@@ -97,10 +119,10 @@ void ClusterMerge::unmerge(const QList<int>& labels)
 int ClusterMerge::representativeLabel(int label) const
 {
     int ret = label;
-    for (int i = 0; i < d->m_merge_pairs.count(); i++) {
-        if (d->m_merge_pairs[i].label1 == label) {
-            if (d->m_merge_pairs[i].label2 < ret)
-                ret = d->m_merge_pairs[i].label2;
+    foreach (merge_pair mp,d->m_merge_pairs) {
+        if (mp.label1 == label) {
+            if (mp.label2 < ret)
+                ret = mp.label2;
         }
     }
     return ret;
@@ -109,8 +131,8 @@ int ClusterMerge::representativeLabel(int label) const
 QList<int> ClusterMerge::representativeLabels() const
 {
     QSet<int> ret;
-    for (int i = 0; i < d->m_merge_pairs.count(); i++) {
-        ret.insert(this->representativeLabel(d->m_merge_pairs[i].label1));
+    foreach (merge_pair mp,d->m_merge_pairs) {
+        ret.insert(this->representativeLabel(mp.label1));
     }
     QList<int> ret2 = ret.toList();
     qSort(ret2);
@@ -120,9 +142,9 @@ QList<int> ClusterMerge::representativeLabels() const
 QList<int> ClusterMerge::getMergeGroup(int label) const
 {
     QList<int> ret;
-    for (int i = 0; i < d->m_merge_pairs.count(); i++) {
-        if (d->m_merge_pairs[i].label1 == label) {
-            ret << d->m_merge_pairs[i].label2;
+    foreach (merge_pair mp,d->m_merge_pairs) {
+        if (mp.label1 == label) {
+            ret << mp.label2;
         }
     }
     qSort(ret);
@@ -162,9 +184,33 @@ bool ClusterMergePrivate::is_merged(int label1, int label2)
 {
     if (label1 == label2)
         return true;
-    for (int i = 0; i < m_merge_pairs.count(); i++) {
-        if ((m_merge_pairs[i].label1 == label1) && (m_merge_pairs[i].label2 == label2))
-            return true;
-    }
-    return false;
+    return m_merge_pairs.contains(merge_pair(label1,label2));
 }
+
+void ClusterMergePrivate::make_transitive()
+{
+    QSet<int> all_labels;
+    foreach (merge_pair mp,m_merge_pairs) {
+        all_labels.insert(mp.label1);
+    }
+    QList<int> all_labels0=all_labels.toList();
+    bool done=false;
+    while (!done) {
+        done=true;
+        for (int i=0; i<all_labels0.count(); i++) {
+            for (int j=0; j<all_labels0.count(); j++) {
+                for (int k=0; k<all_labels0.count(); k++) {
+                    int label1=all_labels0[i];
+                    int label2=all_labels0[j];
+                    int label3=all_labels0[k];
+                    if ((is_merged(label1,label2))&&(is_merged(label2,label3))&&(!is_merged(label1,label3))) {
+                        m_merge_pairs.insert(merge_pair(label1,label3));
+                        done=false;
+                    }
+                }
+            }
+        }
+    }
+}
+
+

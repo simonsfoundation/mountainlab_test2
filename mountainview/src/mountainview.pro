@@ -57,7 +57,8 @@ HEADERS += \
     taskprogressview.h \
     mvcontrolpanel.h \
     flowlayout.h \
-    clustermerge.h
+    clustermerge.h \
+    mvviewagent.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -99,7 +100,8 @@ SOURCES += mountainviewmain.cpp \
     taskprogressview.cpp \
     mvcontrolpanel.cpp \
     flowlayout.cpp \
-    clustermerge.cpp
+    clustermerge.cpp \
+    mvviewagent.cpp
 
 HEADERS += textfile.h
 SOURCES += textfile.cpp
