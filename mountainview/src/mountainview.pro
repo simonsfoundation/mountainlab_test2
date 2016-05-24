@@ -19,7 +19,6 @@ HEADERS += \
     histogramview.h \
     mvstatisticswidget.h \
     mvlabelcomparewidget.h \
-    diskarraymodelclipssubset.h \
     mvcdfview.h \
     static_neuron_colors.h \
     mvutils.h \
@@ -31,7 +30,6 @@ HEADERS += \
     mvclusterview.h \
     mvclusterwidget.h \
     mvfiringrateview.h \
-    diskarraymodel.h \
     diskarraymodel_new.h \
     sstimeserieswidget.h \
     sstimeseriesview.h \
@@ -62,7 +60,6 @@ SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
     mvlabelcomparewidget.cpp \
-    diskarraymodelclipssubset.cpp \
     mvcdfview.cpp \
     static_neuron_colors.cpp \
     mvutils.cpp \
@@ -74,7 +71,6 @@ SOURCES += mountainviewmain.cpp \
     mvclusterview.cpp \
     mvclusterwidget.cpp \
     mvfiringrateview.cpp \
-    diskarraymodel.cpp \
     diskarraymodel_new.cpp \
     sstimeserieswidget.cpp \
     sstimeseriesview.cpp \

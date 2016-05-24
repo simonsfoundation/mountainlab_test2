@@ -1022,7 +1022,6 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
 
 QColor ClusterView::get_cluster_assessment_text_color(QString aa)
 {
-    /// TODO get_cluster_assessment_text_color
     return Qt::black;
 }
 

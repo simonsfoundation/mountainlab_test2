@@ -43,10 +43,10 @@ public:
     ///So we can display the firing rate (events per second)
     void setSampleRate(double freq);
 
-    ///To make the color scheme uniform. TODO: handle this correctly
+    ///To make the color scheme uniform.
     void setChannelColors(const QList<QColor>& colors);
 
-    ///To make the color scheme uniform. TODO: handle this correctly
+    ///To make the color scheme uniform.
     void setColors(const QMap<QString, QColor>& colors);
 
     ///The current label number (selected by user)
@@ -83,8 +83,6 @@ signals:
     void signalCurrentKChanged();
     ///The selected label numbers have changed
     void signalSelectedKsChanged();
-    ///The user has zoomed in (or out?). TODO: low-priority Is this needed?
-    void signalZoomedIn();
 private
 slots:
     void slot_context_menu(const QPoint& pos);

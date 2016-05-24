@@ -45,11 +45,6 @@
 #include <QInputDialog>
 #include "textfile.h"
 
-/// TODO important: splitter between control panel and task view
-/// TODO show summary stats for dataset in mountainview
-/// TODO look into find nearby events... needs explanation, testing etc
-/// TODO important: show data download activity (monitor downloads at low level?)
-
 class CrossCorrelogramComputer : public ComputationThread {
 public:
     //inputs
@@ -373,8 +368,6 @@ void MVOverview2Widget::setMscmdServerUrl(const QString& url)
 }
 */
 
-/// TODO implement TaskProgress::error(QString errmsg, QString details=""); static function for reporting errors into the task view
-
 void MVOverview2Widget::loadMVFile(const QString& mv_fname)
 {
     d->m_mv_fname = mv_fname;
@@ -437,7 +430,6 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
         d->m_control_panel_new->setEventFilter(filter);
     }
 
-    /// TODO when load a .mv file,keep the original contents, so when saving we don't overwrite any custom fields
     if (obj.contains("annotations")) {
         if (obj["annotations"].toObject().contains("cluster_attributes")) {
             QJsonObject obj2 = obj["annotations"].toObject()["cluster_attributes"].toObject();
@@ -603,9 +595,6 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
     }
 }
 */
-
-/// TODO important: allow errors in task progress.. and highlight in red.
-/// TODO when user applies the filter with new shell split options, we need to close many of the views because the clusters have been relabeled
 
 void MVOverview2Widget::slot_control_panel_user_action(QString str)
 {
@@ -973,9 +962,6 @@ void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
 
     MVEventFilter evt_filter = m_control_panel_new->eventFilter();
 
-    /// TODO shell_width should be changed to shell_increment in params
-    /// TODO should use_shell_split etc be separated out from evt filter?
-    /// /// TODO should we check whether we need to use a filter at all? (see use_event_filter below)
     params["use_shell_split"] = evt_filter.use_shell_split;
     params["shell_width"] = evt_filter.shell_increment;
     params["min_per_shell"] = evt_filter.min_per_shell;
@@ -986,7 +972,6 @@ void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
     //if (evt_filter.max_outlier_score) {
     params["max_outlier_score"] = evt_filter.max_outlier_score;
     //}
-    /// TODO min_amplitude and max_outlier_score should NOT be required parameters in the processor
     params["min_amplitude"] = 0;
 
     params["firings"] = m_firings_original.makePath();
@@ -1197,7 +1182,6 @@ void MVOverview2WidgetPrivate::open_firing_events()
         QMessageBox::information(q, "Unable to open firing events", "You must select at least one cluster.");
         return;
     }
-    /// TODO rename MVFiringRateView to something like MVFiringEventsView
     MVFiringRateView* X = new MVFiringRateView;
     X->setProperty("widget_type", "firing_events");
     X->setProperty("ks", int_list_to_string_list(ks));

@@ -18,8 +18,6 @@
  *  Presents user with a rich set of views. Cross-correlograms, raw data, cluster details, rotatable 3D views, firing rate vs. time view, etc.
  */
 
-/// TODO don't let this stuff scriptable be scriptable anymore (MVOverview2Widget)
-
 class MVOverview2WidgetPrivate;
 class MVOverview2Widget : public QWidget {
     Q_OBJECT
@@ -28,20 +26,20 @@ public:
     MVOverview2Widget(QWidget* parent = 0);
     virtual ~MVOverview2Widget();
     ///The path to the timeseries that was sorted. For example, raw, filtered, or pre-processed. Usually all three of these are set, so user can choose between them in dropdown selection box
-    Q_INVOKABLE void addTimeseriesPath(const QString& name, const QString& path);
+    void addTimeseriesPath(const QString& name, const QString& path);
     ///The name of the timeseries being viewed... corresponds to name in addTimeseriesPath()
-    Q_INVOKABLE void setCurrentTimeseriesName(const QString& name);
+    void setCurrentTimeseriesName(const QString& name);
     ///Set the path to the results of sorting.
-    Q_INVOKABLE void setFiringsPath(const QString& firings);
+    void setFiringsPath(const QString& firings);
     ///The sample rate for the dataset
-    Q_INVOKABLE void setSampleRate(float freq);
+    void setSampleRate(float freq);
     ///Open the initial views
-    Q_INVOKABLE void setDefaultInitialization();
+    void setDefaultInitialization();
     ///Corresponds to MVFiringRateView::setEpochs()
-    Q_INVOKABLE void setEpochs(const QList<Epoch>& epochs);
-    Q_INVOKABLE int getMaxLabel();
-    //Q_INVOKABLE void setMscmdServerUrl(const QString& url);
-    Q_INVOKABLE void setMPServerUrl(const QString& url);
+    void setEpochs(const QList<Epoch>& epochs);
+    int getMaxLabel();
+    //void setMscmdServerUrl(const QString& url);
+    void setMPServerUrl(const QString& url);
     void setClusterMerge(ClusterMerge CM);
 
     void loadMVFile(const QString& mv_fname);

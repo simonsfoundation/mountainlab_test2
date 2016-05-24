@@ -38,7 +38,6 @@ void DiskArrayModel_New::setPath(const QString& path)
     d->m_path = path;
     d->m_X.setPath(path);
     d->m_dim3 = d->m_X.N3();
-    //TODO: reshape here!
     d->m_use_memory_array = false;
 
     d->m_multiscale_file_name = QFileInfo(d->m_path).path() + "/spikespy." + d->get_file_timestamp(d->m_path) + "." + QFileInfo(d->m_path).fileName();

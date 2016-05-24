@@ -58,7 +58,6 @@ QString mountainlabBasePath()
 
 void mkdir_if_doesnt_exist(const QString& path)
 {
-    /// Witold is there a better way to mkdir if not exists?
     if (!QDir(path).exists()) {
         QDir(QFileInfo(path).path()).mkdir(QFileInfo(path).fileName());
     }

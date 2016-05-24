@@ -66,8 +66,6 @@ action_button_info abi(QString name, QString label)
     return ret;
 }
 
-/// TODO BUG problem when opening matrix of cross-correlograms when nothing selected
-
 MVControlPanel::MVControlPanel()
 {
     d = new MVControlPanelPrivate;
@@ -114,7 +112,6 @@ MVControlPanel::MVControlPanel()
         layout->addLayout(G);
 
         d->m_controls.add_combo_box(G, "timeseries", "Use timeseries:")->setToolTip("Set the timeseries used for display");
-        /// TODO provide a discrete set of choices for cc_max_dt and clip_size
         d->m_controls.add_float_box(G, "cc_max_dt_msec", "Max. dt (ms)", 100, 1, 1e6)->setToolTip("Maximum dt for display of cross-correlograms");
         d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", 150, 1, 1e5)->setToolTip("Set clips size used for display");
         QPushButton* BB = new QPushButton("Update all open views");

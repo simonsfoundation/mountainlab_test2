@@ -78,8 +78,8 @@ QJsonObject variantmap_to_json_obj(QVariantMap map)
 {
     QJsonObject ret;
     QStringList keys = map.keys();
+    // Use fromVariantMap
     foreach (QString key, keys) {
-        /// Witold I would like to map numbers to numbers here. Can you help?
         ret[key] = QJsonValue::fromVariant(map[key]);
     }
     return ret;

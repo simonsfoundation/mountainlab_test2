@@ -11,11 +11,6 @@
 
 /** \class MVClipsView
  *  \brief View a set of clips. Usually each clip contains a single spike.
- *
- *  What is a clip? you may ask. TODO: explain this somewhere in the docs
- *
- * TODO: don't piggy back on SSTimeSeriesView for this widget -- make a new special widget for this purpose
- * TODO: do we want to handle huge arrays? (e.g., like DiskArrayModel?)
  */
 
 class MVClipsView : public SSTimeSeriesView {

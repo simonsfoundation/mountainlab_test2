@@ -28,8 +28,6 @@
 
 //void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions);
 
-/// TODO parallelize mv_compute_templates
-
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -143,7 +141,6 @@ int main(int argc, char* argv[])
 
         W->setDefaultInitialization();
 
-        /// TODO export_image no longer supported -- think about this and clean up the code
         /*
         if (mode == "export_image") {
             QString output_fname = CLP.named_parameters.value("output").toString();
