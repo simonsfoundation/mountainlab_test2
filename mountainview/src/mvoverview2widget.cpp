@@ -73,8 +73,6 @@ public:
     QList<Epoch> m_epochs;
     QList<int> m_original_cluster_numbers;
     QList<int> m_original_cluster_offsets;
-    QList<QJsonObject> m_cluster_attributes;
-    ClusterMerge m_cluster_merge;
     int m_current_k;
     QSet<int> m_selected_ks;
     float m_samplerate;
@@ -165,7 +163,6 @@ public:
 
     QVariant get_cluster_attribute(int k, QString attr);
     void set_cluster_attribute(int k, QString attr, QVariant val);
-    void update_cluster_attributes();
 
     //void start_cross_correlograms_computer();
 };
@@ -366,8 +363,7 @@ void MVOverview2Widget::setMPServerUrl(const QString& url)
 
 void MVOverview2Widget::setClusterMerge(ClusterMerge CM)
 {
-    d->m_cluster_merge = CM;
-    d->update_all_widgets();
+    d->m_view_agent.setClusterMerge(CM);
 }
 
 /*
@@ -428,7 +424,7 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
     if (obj.contains("view_options")) {
         QJsonObject obj0 = obj["view_options"].toObject();
         task.log("VIEW OPTIONS:");
-        task.log(QJsonDocument(obj0).toJson());
+        task.log(QJsonDocument(obj0).toJson(QJsonDocument::Compact));
         MVViewOptions opts = MVViewOptions::fromJsonObject(obj0);
         d->m_control_panel_new->setViewOptions(opts);
     }
@@ -436,17 +432,35 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
     if (obj.contains("event_filter")) {
         QJsonObject obj0 = obj["event_filter"].toObject();
         task.log("EVENT FILTER:");
-        task.log(QJsonDocument(obj0).toJson());
+        task.log(QJsonDocument(obj0).toJson(QJsonDocument::Compact));
         MVEventFilter filter = MVEventFilter::fromJsonObject(obj0);
         d->m_control_panel_new->setEventFilter(filter);
     }
 
     /// TODO when load a .mv file,keep the original contents, so when saving we don't overwrite any custom fields
-    d->m_cluster_attributes.clear();
     if (obj.contains("annotations")) {
-        QJsonArray CA = obj["annotations"].toObject()["cluster_attributes"].toArray();
-        for (int i = 0; i < CA.count(); i++) {
-            d->m_cluster_attributes << CA[i].toObject();
+        if (obj["annotations"].toObject().contains("cluster_attributes")) {
+            QJsonObject obj2 = obj["annotations"].toObject()["cluster_attributes"].toObject();
+            QMap<int, QJsonObject> CA;
+            QStringList keys = obj2.keys();
+            foreach (QString key, keys) {
+                bool ok;
+                int num = key.toInt(&ok);
+                if (ok) {
+                    CA[num] = obj2[key].toObject();
+                }
+            }
+            d->m_view_agent.setClusterAttributes(CA);
+        }
+        else
+            d->m_view_agent.setClusterAttributes(QMap<int, QJsonObject>());
+        if (obj["annotations"].toObject().contains("cluster_merge")) {
+            QJsonArray CM = obj["annotations"].toObject()["cluster_merge"].toArray();
+            QString json = QJsonDocument(CM).toJson(QJsonDocument::Compact);
+            d->m_view_agent.setClusterMerge(ClusterMerge::fromJson(json));
+        }
+        else {
+            d->m_view_agent.setClusterMerge(ClusterMerge());
         }
     }
 
@@ -463,14 +477,16 @@ void MVOverview2Widget::saveMVFile(const QString& mv_fname)
 
     obj["firings"] = d->m_firings_original.path();
     QJsonArray ts;
-    QStringList keys = d->m_timeseries_paths.keys();
-    foreach (QString key, keys) {
-        QJsonObject tsobj;
-        tsobj["name"] = key;
-        tsobj["path"] = d->m_timeseries_paths[key];
-        ts << tsobj;
+    {
+        QStringList keys = d->m_timeseries_paths.keys();
+        foreach (QString key, keys) {
+            QJsonObject tsobj;
+            tsobj["name"] = key;
+            tsobj["path"] = d->m_timeseries_paths[key];
+            ts << tsobj;
+        }
+        obj["timeseries"] = ts;
     }
-    obj["timeseries"] = ts;
 
     obj["samplerate"] = d->m_samplerate;
 
@@ -479,13 +495,19 @@ void MVOverview2Widget::saveMVFile(const QString& mv_fname)
 
     obj["mpserver_url"] = d->m_mpserver_url;
 
-    QJsonArray cluster_attributes;
-    for (int i = 0; i < d->m_cluster_attributes.count(); i++) {
-        cluster_attributes.append(d->m_cluster_attributes[i]);
+    QJsonObject cluster_attributes;
+    QMap<int, QJsonObject> CA = d->m_view_agent.clusterAttributes();
+    {
+        QList<int> keys = CA.keys();
+        foreach (int key, keys) {
+            if (!CA[key].isEmpty())
+                cluster_attributes[QString("%1").arg(key)] = CA[key];
+        }
     }
 
     QJsonObject annotations;
     annotations["cluster_attributes"] = cluster_attributes;
+    annotations["cluster_merge"] = QJsonDocument::fromJson(d->m_view_agent.clusterMerge().toJson().toLatin1()).array();
     obj["annotations"] = annotations;
 
     if (!write_text_file(mv_fname, QJsonDocument(obj).toJson())) {
@@ -1076,8 +1098,6 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_matrix_of_cross_corre
 
 MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 {
-    qDebug() << "*************************"
-             << "open_cluster_details" << m_cluster_attributes.count();
     MVClusterDetailWidget* X = new MVClusterDetailWidget;
     //X->setMscmdServerUrl(m_mscmdserver_url);
     X->setViewAgent(&m_view_agent);
@@ -1232,7 +1252,6 @@ void MVOverview2WidgetPrivate::annotate_selected()
         for (int i = 0; i < ks.count(); i++) {
             set_cluster_attribute(ks[i], "assessment", new_assessment);
         }
-        update_cluster_attributes();
     }
 }
 
@@ -1449,8 +1468,6 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setFirings(DiskReadMda(m_firings));
         WW->setGroupNumbers(m_original_cluster_numbers);
         WW->zoomAllTheWayOut();
-        qDebug() << "setting cluster attributes..." << m_cluster_attributes.count();
-        WW->setClusterAttributes(m_cluster_attributes);
         task.log(QString("clip_size=%1, m_firings.N1()=%2, m_firings.N2()=%3").arg(clip_size).arg(m_firings.N1()).arg(m_firings.N2()));
     }
     else if (widget_type == "clips") {
@@ -2015,26 +2032,14 @@ QString MVOverview2WidgetPrivate::current_timeseries_path()
 
 QVariant MVOverview2WidgetPrivate::get_cluster_attribute(int k, QString attr)
 {
-    return m_cluster_attributes.value(k).value(attr).toVariant();
+    return m_view_agent.clusterAttributes().value(k).value(attr).toVariant();
 }
 
 void MVOverview2WidgetPrivate::set_cluster_attribute(int k, QString attr, QVariant val)
 {
-    while (k >= m_cluster_attributes.count()) {
-        m_cluster_attributes << QJsonObject();
-    }
-    m_cluster_attributes[k][attr] = QJsonValue::fromVariant(val);
-}
-
-void MVOverview2WidgetPrivate::update_cluster_attributes()
-{
-    QList<QWidget*> list = get_all_widgets();
-    foreach (QWidget* W, list) {
-        if (W->property("widget_type") == "cluster_details") {
-            MVClusterDetailWidget* WW = qobject_cast<MVClusterDetailWidget*>(W);
-            WW->setClusterAttributes(m_cluster_attributes);
-        }
-    }
+    QMap<int, QJsonObject> CA = m_view_agent.clusterAttributes();
+    CA[k][attr] = QJsonValue::fromVariant(val);
+    m_view_agent.setClusterAttributes(CA);
 }
 
 typedef QList<long> IntList;

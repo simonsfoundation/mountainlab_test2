@@ -9,26 +9,30 @@
 
 #include "clustermerge.h"
 
+#include <QJsonObject>
+#include <QMap>
 #include <QObject>
 
-
 class MVViewAgentPrivate;
-class MVViewAgent : public QObject
-{
+class MVViewAgent : public QObject {
     Q_OBJECT
 public:
     friend class MVViewAgentPrivate;
     MVViewAgent();
     virtual ~MVViewAgent();
 
-    ClusterMerge clusterMerge();
+    ClusterMerge clusterMerge() const;
+    QMap<int, QJsonObject> clusterAttributes() const;
 
-    void setClusterMerge(const ClusterMerge &CM);
+    void setClusterMerge(const ClusterMerge& CM);
+    void setClusterAttributes(const QMap<int, QJsonObject>& A);
 
 signals:
     void clusterMergeChanged();
+    void clusterAttributesChanged();
+
 private:
-    MVViewAgentPrivate *d;
+    MVViewAgentPrivate* d;
 };
 
 #endif // MVVIEWAGENT_H

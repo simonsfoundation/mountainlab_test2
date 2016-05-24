@@ -37,15 +37,17 @@ bool write_text_file(const QString& fname, const QString& txt, QTextCodec* codec
     //(should we really do this before testing whether writing is successful? I think yes)
     if (QFile::exists(fname)) {
         if (!QFile::remove(fname)) {
-            QFile::remove(tmp_fname);
+            qWarning() << "Problem in write_text_file" << __FUNCTION__ << __FILE__ << __LINE__;
             return false;
         }
     }
 
     //write text to temporary file
     QFile file(tmp_fname);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qWarning() << "Problem in write_text_file" << __FUNCTION__ << __FILE__ << __LINE__;
         return false;
+    }
     QTextStream ts(&file);
     if (codec != 0) {
         ts.setAutoDetectUnicode(false);
@@ -59,11 +61,13 @@ bool write_text_file(const QString& fname, const QString& txt, QTextCodec* codec
     QString txt_test = read_text_file(tmp_fname, codec);
     if (txt_test != txt) {
         QFile::remove(tmp_fname);
+        qWarning() << "Problem in write_text_file" << __FUNCTION__ << __FILE__ << __LINE__;
         return false;
     }
 
     //finally, rename the file
     if (!QFile::rename(tmp_fname, fname)) {
+        qWarning() << "Problem in write_text_file" << __FUNCTION__ << __FILE__ << __LINE__;
         return false;
     }
 
