@@ -25,6 +25,7 @@ public:
     DiskReadMda firings;
     QList<int> labels1, labels2;
     int max_dt;
+    ClusterMerge cluster_merge;
 
     void compute();
 
@@ -43,6 +44,7 @@ public:
     int m_max_dt;
     int m_current_index;
     QSet<int> m_selected_indices;
+    MVViewAgent* m_view_agent;
 
     QGridLayout* m_grid_layout;
     QList<HistogramView*> m_histogram_views;
@@ -65,6 +67,7 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2()
     d->m_num_columns = -1;
     d->m_current_index = -1;
     d->m_max_dt = 0;
+    d->m_view_agent = 0;
 
     QGridLayout* GL = new QGridLayout;
     GL->setHorizontalSpacing(20);
@@ -90,6 +93,13 @@ MVCrossCorrelogramsWidget2::~MVCrossCorrelogramsWidget2()
 {
     d->m_computer.stopComputation();
     delete d;
+}
+
+void MVCrossCorrelogramsWidget2::setViewAgent(MVViewAgent* agent)
+{
+    d->m_view_agent = agent;
+    QObject::connect(agent, SIGNAL(clusterAttributesChanged()), this, SLOT(slot_cluster_attributes_changed()));
+    QObject::connect(agent, SIGNAL(clusterMergeChanged()), this, SLOT(slot_cluster_merge_changed()));
 }
 
 void MVCrossCorrelogramsWidget2::setLabelPairs(const QList<int>& labels1, const QList<int>& labels2, const QList<QString>& text_labels)
@@ -451,6 +461,16 @@ void MVCrossCorrelogramsWidget2::slot_export_image()
     user_save_image(img);
 }
 
+void MVCrossCorrelogramsWidget2::slot_cluster_attributes_changed()
+{
+    /// TODO implement slot_cluster_attributes_changed
+}
+
+void MVCrossCorrelogramsWidget2::slot_cluster_merge_changed()
+{
+    d->start_computation();
+}
+
 QList<float> compute_cc_data(const QList<double>& times1_in, const QList<double>& times2_in, int max_dt, bool exclude_matches)
 {
     QList<float> ret;
@@ -505,7 +525,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
     for (long ii = 0; ii < labels.count(); ii++) {
         int k = labels[ii];
-        the_times[k] << times[ii];
+        int k2 = cluster_merge.representativeLabel(k);
+        the_times[k2] << times[ii];
     }
 
     task.log("Setting data");
@@ -546,5 +567,11 @@ void MVCrossCorrelogramsWidget2Private::start_computation()
     m_computer.labels1 = m_labels1;
     m_computer.labels2 = m_labels2;
     m_computer.max_dt = m_max_dt;
+    if (m_view_agent) {
+        m_computer.cluster_merge = m_view_agent->clusterMerge();
+    }
+    else {
+        m_computer.cluster_merge.clear();
+    }
     m_computer.startComputation();
 }

@@ -45,7 +45,7 @@ bool write_text_file(const QString& fname, const QString& txt, QTextCodec* codec
     //write text to temporary file
     QFile file(tmp_fname);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning() << "Problem in write_text_file" << __FUNCTION__ << __FILE__ << __LINE__;
+        qWarning() << "Problem in write_text_file could not open for writing... " << __FUNCTION__ << __FILE__ << __LINE__ << tmp_fname;
         return false;
     }
     QTextStream ts(&file);
@@ -90,6 +90,7 @@ QChar make_random_alphanumeric_tf()
     val++;
     QTime time = QTime::currentTime();
     int num = qHash(time.toString("hh:mm:ss:zzz") + QString::number(qrand() + val));
+    if (num<0) num=-num;
     num = num % 36;
     if (num < 26)
         return QChar('A' + num);

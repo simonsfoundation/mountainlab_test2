@@ -8,6 +8,7 @@
 #define MVCROSSCORRELOGRAMSWIDGET2_H
 
 #include "diskreadmda.h"
+#include "mvviewagent.h"
 
 #include <QWidget>
 
@@ -19,6 +20,7 @@ public:
     MVCrossCorrelogramsWidget2();
     virtual ~MVCrossCorrelogramsWidget2();
 
+    void setViewAgent(MVViewAgent* agent);
     void setLabelPairs(const QList<int>& labels1, const QList<int>& labels2, const QList<QString>& text_labels);
     void setFirings(const DiskReadMda& F);
     void setSampleRate(double rate);
@@ -47,6 +49,8 @@ private slots:
     void slot_histogram_view_clicked();
     void slot_histogram_view_activated();
     void slot_export_image();
+    void slot_cluster_attributes_changed();
+    void slot_cluster_merge_changed();
 
 private:
     MVCrossCorrelogramsWidget2Private* d;
