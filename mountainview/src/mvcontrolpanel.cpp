@@ -160,6 +160,30 @@ MVControlPanel::MVControlPanel()
     }
 
     {
+        //Annotate/Merge
+        layout->addWidget(d->create_group_label("Annotate / Merge"));
+
+        {
+            QPushButton* BB = new QPushButton("Annotate selected (A)...");
+            BB->setProperty("action_name", "annotate_selected");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
+        {
+            QPushButton* BB = new QPushButton("Merge selected (M)...");
+            BB->setProperty("action_name", "merge_selected");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
+        {
+            QPushButton* BB = new QPushButton("Unmerge selected (U)...");
+            BB->setProperty("action_name", "unmerge_selected");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
+    }
+
+    {
         //Export
         layout->addWidget(d->create_group_label("Export"));
         {
