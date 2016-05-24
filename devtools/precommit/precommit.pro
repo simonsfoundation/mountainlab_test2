@@ -14,8 +14,8 @@ TEMPLATE = app
 
 SOURCES += main.cpp
 
-INCLUDEPATH += ../../common
-DEPENDPATH += ../../common
-VPATH += ../../common
+INCLUDEPATH += ../../common/utils
+DEPENDPATH += ../../common/utils
+VPATH += ../../common/utils
 HEADERS += textfile.h
 SOURCES += textfile.cpp

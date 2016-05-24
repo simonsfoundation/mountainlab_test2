@@ -28,6 +28,8 @@
 
 //void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions);
 
+/// TODO parallelize mv_compute_templates
+
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
