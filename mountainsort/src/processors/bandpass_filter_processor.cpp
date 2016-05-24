@@ -16,6 +16,7 @@ bandpass_filter_Processor::bandpass_filter_Processor() {
     this->setInputFileParameters("timeseries");
     this->setOutputFileParameters("timeseries_out");
     this->setRequiredParameters("samplerate","freq_min","freq_max");
+    this->setOptionalParameters("processing_chunk_size", "chunk_overlap_size");
 }
 
 bandpass_filter_Processor::~bandpass_filter_Processor() {
@@ -35,5 +36,7 @@ bool bandpass_filter_Processor::run(const QMap<QString, QVariant> &params)
     double samplerate=params["samplerate"].toDouble();
 	double freq_min=params["freq_min"].toDouble();
 	double freq_max=params["freq_max"].toDouble();
-    return bandpass_filter0(input,output,samplerate,freq_min,freq_max);
+    const long chunkSize = params.value("processing_chunk_size", -1).toLongLong();
+    const long overlapSize = params.value("chunk_overlap_size", -1).toLongLong();
+    return bandpass_filter0(input,output,samplerate,freq_min,freq_max,chunkSize,overlapSize);
 }
