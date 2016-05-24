@@ -4,7 +4,7 @@
 echo "Compiling mountainview"
 cd mountainview/src
 qmake
-make -j 8
+make $1 -j 8
 EXIT_CODE=$?
 cd ../..
 if [[ $EXIT_CODE -ne 0 ]]; then
