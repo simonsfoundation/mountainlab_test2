@@ -40,7 +40,12 @@ for j=1:num_dims
 end;
 N=prod(S);
 
-A=zeros(S);
+if num_dims == 1,
+  A = zeros(1,S);
+else
+  A=zeros(S);
+end
+
 if (code==-1)
     M=zeros(1,N*2);
     M(:)=fread(F,N*2,'float');
