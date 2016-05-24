@@ -13,7 +13,7 @@
 #include <QDesktopWidget>
 #include <QDir>
 #include <QImageWriter>
-#include "get_command_line_params.h"
+#include "commandlineparams.h"
 #include "diskarraymodel_new.h"
 #include "histogramview.h"
 #include "mvlabelcomparewidget.h"
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     /// Witold I don't want to do this here! It should be in the taskprogress.h. What can I do?
     qRegisterMetaType<TaskInfo>();
 
-    CLParams CLP = get_command_line_params(argc, argv);
+    CLParams CLP = commandlineparams(argc, argv);
 
     if (CLP.unnamed_parameters.value(0).endsWith(".js")) {
         QString script = read_text_file(CLP.unnamed_parameters.value(0));

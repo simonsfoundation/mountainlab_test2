@@ -99,6 +99,13 @@ SOURCES += mountainviewmain.cpp \
     mvcontrolpanel.cpp \
     flowlayout.cpp
 
+INCLUDEPATH += ../../common/commandlineparams
+VPATH += ../../common/commandlineparams
+HEADERS += commandlineparams.h
+SOURCES += commandlineparams.cpp
+
+INCLUDEPATH += ../../common/utils
+VPATH += ../../common/utils
 HEADERS += textfile.h
 SOURCES += textfile.cpp
 
@@ -109,8 +116,6 @@ HEADERS += get_sort_indices.h msmisc.h
 SOURCES += get_sort_indices.cpp msmisc.cpp
 HEADERS += get_pca_features.h get_principal_components.h eigenvalue_decomposition.h
 SOURCES += get_pca_features.cpp get_principal_components.cpp eigenvalue_decomposition.cpp
-HEADERS += get_command_line_params.h
-SOURCES += get_command_line_params.cpp
 HEADERS += affinetransformation.h
 SOURCES += affinetransformation.cpp
 HEADERS += compute_templates_0.h

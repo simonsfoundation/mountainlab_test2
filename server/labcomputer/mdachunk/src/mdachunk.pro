@@ -17,13 +17,17 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
-SOURCES += main.cpp \
-    utils/get_command_line_params.cpp \
-    utils/textfile.cpp
-INCLUDEPATH += utils
-HEADERS += \
-    utils/get_command_line_params.h \
-    utils/textfile.h
+SOURCES += main.cpp
+
+INCLUDEPATH += ../../../../common/commandlineparams
+VPATH += ../../../../common/commandlineparams
+HEADERS += commandlineparams.h
+SOURCES += commandlineparams.cpp
+
+INCLUDEPATH += ../../../../common/utils
+VPATH += ../../../../common/utils
+HEADERS += textfile.h
+SOURCES += textfile.cpp
 
 DEFINES += USE_REMOTE_MDA
 INCLUDEPATH += ../../../../common/mda

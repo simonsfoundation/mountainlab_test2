@@ -5,7 +5,7 @@
 *******************************************************/
 
 #include <QApplication>
-#include "get_command_line_params.h"
+#include "commandlineparams.h"
 #include "textfile.h"
 #include <QDebug>
 #include <QWebInspector>
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
 
-    CLParams CLP = get_command_line_params(argc, argv);
+    CLParams CLP = commandlineparams(argc, argv);
 
     QString mountainbrowser_url = CLP.named_parameters.value("url", "http://datalaboratory.org:8002").toString();
 

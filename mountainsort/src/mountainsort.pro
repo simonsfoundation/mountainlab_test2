@@ -15,10 +15,8 @@ QMAKE_POST_LINK += cp $$PWD/../bin/mountainsort $$PWD/../../mountainprocess/proc
 INCLUDEPATH += utils core processors mda unit_tests 3rdparty isosplit ../../common/cachemanager
 
 HEADERS += \
-    utils/get_command_line_params.h \
     core/msprocessmanager.h \
     core/mountainsort_version.h \
-    utils/textfile.h \
     core/msprocessor.h \
     processors/example_processor.h \
     processors/bandpass_filter_processor.h \
@@ -73,10 +71,9 @@ HEADERS += \
     processors/merge_across_channels_processor.h \
     processors/geom2adj_processor.h
 
-SOURCES += utils/get_command_line_params.cpp \
+SOURCES += \
     core/msprocessmanager.cpp \
     core/mountainsort_version.cpp \
-    utils/textfile.cpp \
     core/msprocessor.cpp \
     processors/example_processor.cpp \
     processors/bandpass_filter_processor.cpp \
@@ -131,6 +128,16 @@ SOURCES += utils/get_command_line_params.cpp \
     processors/merge_across_channels.cpp \
     processors/merge_across_channels_processor.cpp \
     processors/geom2adj_processor.cpp
+
+INCLUDEPATH += ../../common/commandlineparams
+VPATH += ../../common/commandlineparams
+HEADERS += commandlineparams.h
+SOURCES += commandlineparams.cpp
+
+INCLUDEPATH += ../../common/utils
+VPATH += ../../common/utils
+HEADERS += textfile.h
+SOURCES += textfile.cpp
 
 DEFINES += USE_REMOTE_MDA
 DEFINES += USE_SSE2

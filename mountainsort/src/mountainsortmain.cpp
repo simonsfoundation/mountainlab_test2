@@ -11,7 +11,7 @@
 
 #include <QCoreApplication>
 #include <stdio.h>
-#include "get_command_line_params.h"
+#include "commandlineparams.h"
 #include "msprocessmanager.h"
 #include <QDebug>
 #include <QJsonDocument>
@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, NULL);
 
-    CLParams CLP = get_command_line_params(argc, argv);
+    CLParams CLP = commandlineparams(argc, argv);
 
     MSProcessManager* PM = MSProcessManager::globalInstance();
     PM->loadDefaultProcessors();

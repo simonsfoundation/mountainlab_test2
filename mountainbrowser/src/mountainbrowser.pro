@@ -22,8 +22,8 @@ SOURCES += mountainbrowsermain.cpp \
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils
 VPATH += ../../mountainsort/src/utils
-HEADERS += get_command_line_params.h textfile.h msmisc.h
-SOURCES += get_command_line_params.cpp textfile.cpp msmisc.cpp
+HEADERS +=  msmisc.h
+SOURCES += msmisc.cpp
 
 INCLUDEPATH += ../../common/cachemanager
 DEPENDPATH += ../../common/cachemanager
@@ -56,6 +56,15 @@ VPATH += ../../common/mda
 HEADERS += remotereadmda.h diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
 SOURCES += remotereadmda.cpp diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
 
+INCLUDEPATH += ../../common/commandlineparams
+VPATH += ../../common/commandlineparams
+HEADERS += commandlineparams.h
+SOURCES += commandlineparams.cpp
+
+INCLUDEPATH += ../../common/utils
+VPATH += ../../common/utils
+HEADERS += textfile.h
+SOURCES += textfile.cpp
 
 DISTFILES += \
     experiments.json \

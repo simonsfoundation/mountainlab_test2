@@ -4,7 +4,7 @@
 ** Created: 3/30/2016
 *******************************************************/
 
-#include "get_command_line_params.h"
+#include "commandlineparams.h"
 #include "diskreadmda.h"
 #include "mda.h"
 #include <QDateTime>
@@ -20,7 +20,7 @@ QString get_sha1_code(const QString& fname);
 
 int main(int argc, char* argv[])
 {
-    CLParams CLP = get_command_line_params(argc, argv);
+    CLParams CLP = commandlineparams(argc, argv);
     QString arg0 = CLP.unnamed_parameters.value(0);
     QString arg1 = CLP.unnamed_parameters.value(1);
 
