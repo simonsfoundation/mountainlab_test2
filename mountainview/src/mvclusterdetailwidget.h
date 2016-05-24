@@ -9,6 +9,7 @@
 #include "diskreadmda.h"
 #include "mda.h"
 #include <QWidget>
+#include "mvviewagent.h"
 
 /** \class MVClusterDetailWidget
  *  \brief Display a view of each cluster -- mainly the template shapes and some stats
@@ -62,6 +63,8 @@ public:
 
     ///
     void setClusterAttributes(const QList<QJsonObject> attributes);
+
+    void setViewAgent(MVViewAgent *agent);
 
     void zoomAllTheWayOut();
 

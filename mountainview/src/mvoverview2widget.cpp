@@ -22,6 +22,8 @@
 #include "taskprogressview.h"
 #include "mvcontrolpanel.h"
 #include "taskprogress.h"
+#include "clustermerge.h"
+#include "mvviewagent.h"
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -72,6 +74,7 @@ public:
     QList<int> m_original_cluster_numbers;
     QList<int> m_original_cluster_offsets;
     QList<QJsonObject> m_cluster_attributes;
+    ClusterMerge m_cluster_merge;
     int m_current_k;
     QSet<int> m_selected_ks;
     float m_samplerate;
@@ -90,6 +93,8 @@ public:
 
     Mda m_cross_correlograms_data;
     //Mda m_templates_data;
+
+    MVViewAgent m_view_agent;
 
     QList<QColor> m_channel_colors;
     QMap<QString, QColor> m_colors;
@@ -119,6 +124,10 @@ public:
     void open_clusters();
     void open_firing_events();
     void find_nearby_events();
+
+    void annotate_selected();
+    void merge_selected();
+    void unmerge_selected();
 
     void update_cross_correlograms();
     void update_timeseries_views();
@@ -355,6 +364,12 @@ void MVOverview2Widget::setMPServerUrl(const QString& url)
     d->m_mpserver_url = url;
 }
 
+void MVOverview2Widget::setClusterMerge(ClusterMerge CM)
+{
+    d->m_cluster_merge = CM;
+    d->update_all_widgets();
+}
+
 /*
 void MVOverview2Widget::setMscmdServerUrl(const QString& url)
 {
@@ -403,8 +418,6 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
             this->addTimeseriesPath(name, path);
         }
     }
-
-
 
     if (obj.contains("samplerate")) {
         double rate = obj["samplerate"].toDouble();
@@ -491,28 +504,14 @@ void MVOverview2Widget::keyPressEvent(QKeyEvent* evt)
     if ((evt->key() == Qt::Key_W) && (evt->modifiers() & Qt::ControlModifier)) {
         this->close();
     }
-    if (evt->key() == Qt::Key_A) {
-        if (d->m_selected_ks.isEmpty())
-            return;
-        QList<int> ks = d->m_selected_ks.toList();
-        QString common_assessment;
-        for (int i = 0; i < ks.count(); i++) {
-            QString aa = d->get_cluster_attribute(ks[i], "assessment").toString();
-            if (i == 0)
-                common_assessment = aa;
-            else {
-                if (common_assessment != aa)
-                    common_assessment = "";
-            }
-        }
-        bool ok;
-        QString new_assessment = QInputDialog::getText(0, "Set cluster assessment", "Cluster assessment:", QLineEdit::Normal, common_assessment, &ok);
-        if (ok) {
-            for (int i = 0; i < ks.count(); i++) {
-                d->set_cluster_attribute(ks[i], "assessment", new_assessment);
-            }
-            d->update_cluster_attributes();
-        }
+    else if (evt->key() == Qt::Key_A) {
+        d->annotate_selected();
+    }
+    else if (evt->key() == Qt::Key_M) {
+        d->merge_selected();
+    }
+    else if (evt->key() == Qt::Key_U) {
+        d->unmerge_selected();
     }
     else
         evt->ignore();
@@ -618,6 +617,15 @@ void MVOverview2Widget::slot_control_panel_user_action(QString str)
     }
     else if (str == "find-nearby-events") {
         d->find_nearby_events();
+    }
+    else if (str == "annotate_selected") {
+        d->annotate_selected();
+    }
+    else if (str == "merge_selected") {
+        d->merge_selected();
+    }
+    else if (str == "unmerge_selected") {
+        d->unmerge_selected();
     }
     else if (str == "export_mountainview_document") {
         d->export_mountainview_document();
@@ -1072,6 +1080,7 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
              << "open_cluster_details" << m_cluster_attributes.count();
     MVClusterDetailWidget* X = new MVClusterDetailWidget;
     //X->setMscmdServerUrl(m_mscmdserver_url);
+    X->setViewAgent(&m_view_agent);
     X->setMPServerUrl(m_mpserver_url);
     X->setChannelColors(m_channel_colors);
     DiskReadMda TT(current_timeseries_path());
@@ -1200,6 +1209,45 @@ void MVOverview2WidgetPrivate::find_nearby_events()
     add_tab(X, tab_title);
     update_widget(X);
     X->setXRange(vec2(0, 5000));
+}
+
+void MVOverview2WidgetPrivate::annotate_selected()
+{
+    if (m_selected_ks.isEmpty())
+        return;
+    QList<int> ks = m_selected_ks.toList();
+    QString common_assessment;
+    for (int i = 0; i < ks.count(); i++) {
+        QString aa = get_cluster_attribute(ks[i], "assessment").toString();
+        if (i == 0)
+            common_assessment = aa;
+        else {
+            if (common_assessment != aa)
+                common_assessment = "";
+        }
+    }
+    bool ok;
+    QString new_assessment = QInputDialog::getText(0, "Set cluster assessment", "Cluster assessment:", QLineEdit::Normal, common_assessment, &ok);
+    if (ok) {
+        for (int i = 0; i < ks.count(); i++) {
+            set_cluster_attribute(ks[i], "assessment", new_assessment);
+        }
+        update_cluster_attributes();
+    }
+}
+
+void MVOverview2WidgetPrivate::merge_selected()
+{
+    ClusterMerge CM = m_view_agent.clusterMerge();
+    CM.merge(m_selected_ks);
+    m_view_agent.setClusterMerge(CM);
+}
+
+void MVOverview2WidgetPrivate::unmerge_selected()
+{
+    ClusterMerge CM = m_view_agent.clusterMerge();
+    CM.unmerge(m_selected_ks);
+    m_view_agent.setClusterMerge(CM);
 }
 
 void MVOverview2WidgetPrivate::update_cross_correlograms()

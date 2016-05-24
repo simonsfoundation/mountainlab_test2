@@ -22,6 +22,12 @@
 #include "mountainsortthread.h"
 
 struct ClusterData {
+    ClusterData()
+    {
+        k = 0;
+        channel = 0;
+    }
+
     int k;
     int channel;
     Mda template0;
@@ -59,12 +65,11 @@ public:
         q = q0;
         d = d0;
         m_T = 1;
-        m_CD = 0;
         m_highlighted = false;
         m_hovered = false;
         x_position_before_scaling = 0;
     }
-    void setClusterData(ClusterData* CD)
+    void setClusterData(const ClusterData& CD)
     {
         m_CD = CD;
     }
@@ -98,7 +103,7 @@ public:
     double spaceNeeded();
     ClusterData* clusterData()
     {
-        return m_CD;
+        return &m_CD;
     }
     QRectF rect()
     {
@@ -110,7 +115,7 @@ public:
     double x_position_before_scaling;
 
 private:
-    ClusterData* m_CD;
+    ClusterData m_CD;
     ChannelSpacingInfo m_csi;
     int m_T;
     QRectF m_rect;
@@ -158,6 +163,8 @@ public:
     QList<QJsonObject> m_cluster_attributes;
     MVClusterDetailWidgetCalculator m_calculator;
 
+    MVViewAgent* m_view_agent;
+
     QList<ClusterView*> m_views;
 
     void compute_total_time();
@@ -174,6 +181,8 @@ public:
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
     void start_calculation();
+
+    static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
 
 MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
@@ -202,6 +211,8 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
     d->m_colors["view_background_selected"] = QColor(250, 240, 230);
     d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
     d->m_channel_colors << Qt::black;
+
+    d->m_view_agent = 0;
 
     this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
@@ -318,6 +329,14 @@ void MVClusterDetailWidget::setClusterAttributes(const QList<QJsonObject> attrib
 {
     d->m_cluster_attributes = attributes;
     update();
+}
+
+void MVClusterDetailWidget::setViewAgent(MVViewAgent* agent)
+{
+    d->m_view_agent = agent;
+    if (agent) {
+        QObject::connect(agent, SIGNAL(clusterMergeChanged()), this, SLOT(update()));
+    }
 }
 
 void MVClusterDetailWidget::zoomAllTheWayOut()
@@ -730,7 +749,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     painter->setPen(pen_frame);
     painter->drawRect(rect2);
 
-    Mda template0 = m_CD->template0;
+    Mda template0 = m_CD.template0;
     int M = template0.N1();
     int T = template0.N2();
     int Tmid = (int)((T + 1) / 2) - 1;
@@ -778,7 +797,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     if (rect2.width() < 60)
         compressed_info = true;
 
-    QString group_label = d->group_label_for_k(m_CD->k);
+    QString group_label = d->group_label_for_k(m_CD.k);
     if ((!group_label.isEmpty()) && (d->has_nontrivial_group_numbers())) {
         QPen pen;
         pen.setWidth(1);
@@ -805,7 +824,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
 
     if (!compressed_info) {
         RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height, m_bottom_rect.width(), text_height);
-        txt = QString("%1 spikes").arg(m_CD->inds.count());
+        txt = QString("%1 spikes").arg(m_CD.inds.count());
         QPen pen;
         pen.setWidth(1);
         pen.setColor(d->m_colors["info_text"]);
@@ -818,7 +837,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         QPen pen;
         pen.setWidth(1);
         RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height * 2, m_bottom_rect.width(), text_height);
-        double rate = m_CD->inds.count() * 1.0 / d->m_total_time_sec;
+        double rate = m_CD.inds.count() * 1.0 / d->m_total_time_sec;
         pen.setColor(get_firing_rate_text_color(rate));
         if (!compressed_info)
             txt = QString("%1 sp/sec").arg(QString::number(rate, 'g', 2));
@@ -859,16 +878,24 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
         return;
     }
 
+    QList<ClusterData> cluster_data_merged;
+    if (m_view_agent) {
+        cluster_data_merged = merge_cluster_data(m_view_agent->clusterMerge(), m_cluster_data);
+    }
+    else {
+        cluster_data_merged = m_cluster_data;
+    }
+
     qDeleteAll(m_views);
     m_views.clear();
-    for (int i = 0; i < m_cluster_data.count(); i++) {
-        ClusterData* CD = &m_cluster_data[i];
+    for (int i = 0; i < cluster_data_merged.count(); i++) {
+        ClusterData CD = cluster_data_merged[i];
         ClusterView* V = new ClusterView(q, this);
-        V->setHighlighted(CD->k == m_current_k);
-        V->setSelected(m_selected_ks.contains(CD->k));
-        V->setHovered(CD->k == m_hovered_k);
+        V->setHighlighted(CD.k == m_current_k);
+        V->setSelected(m_selected_ks.contains(CD.k));
+        V->setHovered(CD.k == m_hovered_k);
         V->setClusterData(CD);
-        V->setAttributes(m_cluster_attributes.value(CD->k));
+        V->setAttributes(m_cluster_attributes.value(CD.k));
         m_views << V;
     }
 
@@ -889,7 +916,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
             m_space_ratio = 300;
     }
 
-    ChannelSpacingInfo csi = compute_channel_spacing_info(m_cluster_data, m_vscale_factor);
+    ChannelSpacingInfo csi = compute_channel_spacing_info(cluster_data_merged, m_vscale_factor);
 
     float x0_before_scaling = 0;
     for (int i = 0; i < m_views.count(); i++) {
@@ -918,6 +945,60 @@ void MVClusterDetailWidgetPrivate::start_calculation()
     m_calculator.clip_size = m_clip_size;
     m_calculator.startComputation();
     q->update();
+}
+
+ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterData main_CD)
+{
+    ClusterData ret;
+    ret.k = main_CD.k;
+    ret.channel = main_CD.channel;
+    if (group.count() > 0) {
+        ret.template0.allocate(group[0].template0.N1(), group[0].template0.N2(), group[0].template0.N3());
+    }
+    double total_weight = 0;
+    for (int i = 0; i < group.count(); i++) {
+        ret.inds << group[i].inds;
+        ret.peaks << group[i].peaks;
+        ret.times << group[i].times;
+        double weight = ret.inds.count();
+        for (int i3 = 0; i3 < ret.template0.N3(); i3++) {
+            for (int i2 = 0; i2 < ret.template0.N2(); i2++) {
+                for (int i1 = 0; i1 < ret.template0.N1(); i1++) {
+                    ret.template0.setValue(ret.template0.value(i1, i2, i3) + weight * group[i].template0.value(i1, i2, i3), i1, i2, i3);
+                }
+            }
+        }
+        total_weight += weight;
+    }
+    if (total_weight) {
+        for (long i = 0; i < ret.template0.totalSize(); i++) {
+            ret.template0.set(ret.template0.get(i) / total_weight, i);
+        }
+    }
+    return ret;
+}
+
+QList<ClusterData> MVClusterDetailWidgetPrivate::merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD)
+{
+    QList<ClusterData> ret;
+    for (int i = 0; i < CD.count(); i++) {
+        if (CM.representativeLabel(CD[i].k) == CD[i].k) {
+            QList<ClusterData> group;
+            for (int j = 0; j < CD.count(); j++) {
+                if (CM.representativeLabel(CD[j].k) == CD[i].k) {
+                    group << CD[j];
+                }
+            }
+            ret << combine_cluster_data_group(group, CD[i]);
+        }
+        else {
+            ClusterData CD0;
+            CD0.k = CD[i].k;
+            CD0.channel = CD[i].channel;
+            ret << CD0;
+        }
+    }
+    return ret;
 }
 
 QPointF ClusterView::template_coord2pix(int m, double t, double val)
