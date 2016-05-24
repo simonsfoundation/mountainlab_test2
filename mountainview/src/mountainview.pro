@@ -18,7 +18,6 @@ TEMPLATE = app
 HEADERS += \
     histogramview.h \
     mvstatisticswidget.h \
-    mvcrosscorrelogramswidget.h \
     mvlabelcomparewidget.h \
     diskarraymodelclipssubset.h \
     mvcdfview.h \
@@ -62,7 +61,6 @@ HEADERS += \
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
-    mvcrosscorrelogramswidget.cpp \
     mvlabelcomparewidget.cpp \
     diskarraymodelclipssubset.cpp \
     mvcdfview.cpp \
