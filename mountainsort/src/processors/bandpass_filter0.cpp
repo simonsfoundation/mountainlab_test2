@@ -30,8 +30,9 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
     const long M = X.N1();
     const long N = X.N2();
 
-    long chunk_size = processingChunkSize > -1 ? processingChunkSize : PROCESSING_CHUNK_SIZE;
-    long overlap_size = chunkOverlapSize > -1 ? chunkOverlapSize : PROCESSING_CHUNK_OVERLAP_SIZE;
+    /// TODO tell sb that I changed -1 to 0 here
+    long chunk_size = processingChunkSize > 0 ? processingChunkSize : PROCESSING_CHUNK_SIZE;
+    long overlap_size = chunkOverlapSize > 0 ? chunkOverlapSize : PROCESSING_CHUNK_OVERLAP_SIZE;
     if (N < chunk_size) {
         chunk_size = N;
         overlap_size = 0;

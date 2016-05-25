@@ -188,7 +188,7 @@ bool MSProcessManager::runProcess(const QString& processor_name, const QVariantM
     return ret;
 }
 
-bool MSProcessManager::checkAndRunProcess(const QString& processor_name, const QVariantMap& parameters, bool force_run)
+bool MSProcessManager::checkAndRunProcess(const QString& processor_name, const QVariantMap& parameters)
 {
     if (!this->containsProcessor(processor_name)) {
         printf("Unable to find processor: %s\n", processor_name.toLatin1().data());
