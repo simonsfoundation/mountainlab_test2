@@ -195,7 +195,6 @@ QString MountainsortThreadPrivate::create_temporary_output_file_name(const QStri
     }
 
     QString file_name = QString("%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
-    qDebug() << "************************************************ mlproxy_url = " << mlproxy_url;
     QString ret = CacheManager::globalInstance()->makeRemoteFile(mlproxy_url, file_name, CacheManager::LongTerm);
     return ret;
 }

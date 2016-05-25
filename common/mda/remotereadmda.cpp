@@ -143,10 +143,8 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
             /*
              ///this was the old code, which was wrong!!!!!!!!! -- fixed on 5/16/2016
             else if (jj == jj2) {
-                qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
                 Mda tmp;
                 long size0 = ii2 + 1 - jj2 * REMOTE_READ_MDA_CHUNK_SIZE;
-                qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "size0=" << size0;
                 A.readChunk(tmp, REMOTE_READ_MDA_CHUNK_SIZE - size0, size0);
                 double* tmp_ptr = tmp.dataPtr();
                 long b = jj2 * REMOTE_READ_MDA_CHUNK_SIZE - ii1;

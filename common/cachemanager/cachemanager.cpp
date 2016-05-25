@@ -53,7 +53,6 @@ void CacheManager::setLocalBasePath(const QString& path)
 
 QString CacheManager::makeRemoteFile(const QString& mlproxy_url, const QString& file_name_in, CacheManager::Duration duration)
 {
-    qDebug() << "++++++++++++++++++++++++++++++ makeRemoteFile" << mlproxy_url;
     if (mlproxy_url.isEmpty()) {
         return makeLocalFile(file_name_in,duration);
     }

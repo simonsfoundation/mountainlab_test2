@@ -1049,7 +1049,6 @@ DiskReadMda mscmd_compute_templates(const QString& mscmdserver_url, const QStrin
 
 DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
 {
-    qDebug() << "&&&&&&&&&&&&&&&&&&&&&&& mp_compute_templates" << mlproxy_url << timeseries << firings << clip_size;
     TaskProgress task("mp_compute_templates");
     task.log("mlproxy_url: " + mlproxy_url);
     MountainsortThread X;

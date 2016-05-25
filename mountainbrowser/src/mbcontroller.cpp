@@ -94,7 +94,6 @@ void MBController::openSortingResult(QString json)
         process->setProcessChannelMode(QProcess::MergedChannels);
         connect(process, SIGNAL(readyRead()), this, SLOT(slot_ready_read()));
         process->start(mv_exe, args);
-        qDebug() << ":::::::::::::" << mv_exe+" "+args.join(" ");
         d->m_processes << process;
     }
 }
