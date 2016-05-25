@@ -29,7 +29,7 @@ HEADERS += \
     mvclipsview.h \
     mvclusterview.h \
     mvclusterwidget.h \
-    mvfiringrateview.h \
+    mvfiringeventview.h \
     diskarraymodel_new.h \
     sstimeserieswidget.h \
     sstimeseriesview.h \
@@ -43,7 +43,6 @@ HEADERS += \
     cvcommon.h \
     tabber.h \
     imagesavedialog.h \
-    run_mountainview_script.h \
     closemehandler.h \
     computationthread.h \
     set_progress.h \
@@ -70,7 +69,7 @@ SOURCES += mountainviewmain.cpp \
     mvclipsview.cpp \
     mvclusterview.cpp \
     mvclusterwidget.cpp \
-    mvfiringrateview.cpp \
+    mvfiringeventview.cpp \
     diskarraymodel_new.cpp \
     sstimeserieswidget.cpp \
     sstimeseriesview.cpp \
@@ -83,7 +82,6 @@ SOURCES += mountainviewmain.cpp \
     cvcommon.cpp \
     tabber.cpp \
     imagesavedialog.cpp \
-    run_mountainview_script.cpp \
     closemehandler.cpp \
     computationthread.cpp \
     set_progress.cpp \

@@ -13,7 +13,7 @@
 #include "mvclusterdetailwidget.h"
 #include "mvclipsview.h"
 #include "mvclusterwidget.h"
-#include "mvfiringrateview.h"
+#include "mvfiringeventview.h"
 #include "extract_clips.h"
 #include "tabber.h"
 #include "computationthread.h"
@@ -1076,7 +1076,7 @@ void MVOverview2WidgetPrivate::open_firing_events()
         QMessageBox::information(q, "Unable to open firing events", "You must select at least one cluster.");
         return;
     }
-    MVFiringRateView* X = new MVFiringRateView;
+    MVFiringEventView* X = new MVFiringEventView;
     X->setProperty("widget_type", "firing_events");
     X->setProperty("ks", int_list_to_string_list(ks));
     //q->connect(X,SIGNAL(currentEventChanged()),q,SLOT(slot_firing_events_view_current_event_changed()));
@@ -1442,7 +1442,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setFirings(m_firings);
         WW->setLabelsToUse(ks);
     } else if (widget_type == "firing_events") {
-        MVFiringRateView* WW = (MVFiringRateView*)W;
+        MVFiringEventView* WW = (MVFiringEventView*)W;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
         QSet<int> ks_set = ks.toSet();
 
@@ -1794,7 +1794,7 @@ void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
             MVClusterWidget* WW = (MVClusterWidget*)W;
             WW->setCurrentEvent(evt);
         } else if (widget_type == "firing_events") {
-            MVFiringRateView* WW = (MVFiringRateView*)W;
+            MVFiringEventView* WW = (MVFiringEventView*)W;
             WW->setCurrentEvent(evt);
         } else if (widget_type == "cluster_details") {
             MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;

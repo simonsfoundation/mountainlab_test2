@@ -17,7 +17,7 @@ public:
     explicit SSTimeSeriesWidget(QWidget* parent = 0);
     ~SSTimeSeriesWidget();
 
-    Q_INVOKABLE void addView(SSAbstractView* V);
+    void addView(SSAbstractView* V);
     void setClipData(const Mda& X);
     SSAbstractView* view(int index = 0);
 
