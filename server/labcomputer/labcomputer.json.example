@@ -1,10 +1,14 @@
 {
 	"mdaserver_base_path":"/home/magland/sorting_results",
 	"mbserver_base_path":"/home/magland/sorting_results",
-	
+	"num_cores":8,
+	"memory_gb":8,
+	"server_urls":["http://localhost:8020"],
 	"mlhub_host":"",
 	"mlhub_forwarded_port":0,
 	"mlhub_user":"",
+
+	"processor_paths":["../../mountainprocess/processors"],
 	"mlproxy_listen_port":8020,
 	"mdaserver_listen_port":8000,
 	"mdachunk_data_path":"../../tmp/mdachunk_data",
