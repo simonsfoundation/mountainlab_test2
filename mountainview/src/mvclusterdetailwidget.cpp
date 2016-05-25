@@ -45,7 +45,7 @@ class MVClusterDetailWidgetCalculator : public ComputationThread {
 public:
     //input
     //QString mscmdserver_url;
-    QString mpserver_url;
+    QString mlproxy_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
     int clip_size;
@@ -137,7 +137,7 @@ public:
     MVClusterDetailWidget* q;
 
     //QString m_mscmdserver_url;
-    QString m_mpserver_url;
+    QString m_mlproxy_url;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     double m_samplerate;
@@ -235,9 +235,9 @@ void MVClusterDetailWidget::setMscmdServerUrl(const QString& url)
 }
 */
 
-void MVClusterDetailWidget::setMPServerUrl(const QString& url)
+void MVClusterDetailWidget::setMLProxyUrl(const QString& url)
 {
-    d->m_mpserver_url = url;
+    d->m_mlproxy_url = url;
 }
 
 void MVClusterDetailWidget::setTimeseries(DiskReadMda& X)
@@ -934,7 +934,7 @@ void MVClusterDetailWidgetPrivate::start_calculation()
 {
     m_calculator.stopComputation();
     //m_calculator.mscmdserver_url = m_mscmdserver_url;
-    m_calculator.mpserver_url = m_mpserver_url;
+    m_calculator.mlproxy_url = m_mlproxy_url;
     m_calculator.timeseries = m_timeseries;
     m_calculator.firings = m_firings;
     m_calculator.clip_size = m_clip_size;
@@ -1047,10 +1047,11 @@ DiskReadMda mscmd_compute_templates(const QString& mscmdserver_url, const QStrin
 }
 */
 
-DiskReadMda mp_compute_templates(const QString& mpserver_url, const QString& timeseries, const QString& firings, int clip_size)
+DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
 {
+    qDebug() << "&&&&&&&&&&&&&&&&&&&&&&& mp_compute_templates" << mlproxy_url << timeseries << firings << clip_size;
     TaskProgress task("mp_compute_templates");
-    task.log("mpserver_url: " + mpserver_url);
+    task.log("mlproxy_url: " + mlproxy_url);
     MountainsortThread X;
     QString processor_name = "compute_templates";
     X.setProcessorName(processor_name);
@@ -1060,7 +1061,7 @@ DiskReadMda mp_compute_templates(const QString& mpserver_url, const QString& tim
     params["firings"] = firings;
     params["clip_size"] = clip_size;
     X.setInputParameters(params);
-    X.setMPServerUrl(mpserver_url);
+    X.setMLProxyUrl(mlproxy_url);
 
     QString templates_fname = X.makeOutputFilePath("templates");
 
@@ -1118,9 +1119,9 @@ void MVClusterDetailWidgetCalculator::compute()
     DiskReadMda templates0 = mscmd_compute_templates(mscmdserver_url, timeseries_path, firings_path, T);
     */
 
-    task.log("mp_compute_templates: " + mpserver_url + " timeseries_path=" + timeseries_path + " firings_path=" + firings_path);
+    task.log("mp_compute_templates: " + mlproxy_url + " timeseries_path=" + timeseries_path + " firings_path=" + firings_path);
     task.setProgress(0.6);
-    DiskReadMda templates0 = mp_compute_templates(mpserver_url, timeseries_path, firings_path, T);
+    DiskReadMda templates0 = mp_compute_templates(mlproxy_url, timeseries_path, firings_path, T);
 
     task.setLabel("Setting cluster data");
     task.setProgress(0.75);

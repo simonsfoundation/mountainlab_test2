@@ -17,6 +17,8 @@ public:
     ScriptController();
     virtual ~ScriptController();
     void setNoDaemon(bool val);
+    void setServerUrls(const QStringList& urls);
+    void setServerBasePath(const QString& path);
 
     Q_INVOKABLE QString fileChecksum(const QString& fname);
     Q_INVOKABLE QString stringChecksum(const QString& str);
@@ -28,5 +30,7 @@ public:
 private:
     ScriptControllerPrivate* d;
 };
+
+QString resolve_file_name(QStringList server_urls, QString server_base_path, QString fname_in);
 
 #endif // SCRIPTCONTROLLER_H

@@ -26,7 +26,7 @@ public:
     virtual ~MVClusterDetailWidget();
 
     //void setMscmdServerUrl(const QString& url);
-    void setMPServerUrl(const QString& url);
+    void setMLProxyUrl(const QString& url);
 
     ///Set the time series, from which the templates and stats will be derived
     void setTimeseries(DiskReadMda& X);

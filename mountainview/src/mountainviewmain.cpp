@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         MVOverview2Widget* W = new MVOverview2Widget;
-        W->setMPServerUrl(CLP.named_parameters.value("mpserver_url", "").toString());
+        W->setMLProxyUrl(CLP.named_parameters.value("mlproxy_url", "").toString());
         if (mode == "overview2") {
             W->setWindowTitle(window_title);
             W->show();

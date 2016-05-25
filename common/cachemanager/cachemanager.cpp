@@ -51,9 +51,10 @@ void CacheManager::setLocalBasePath(const QString& path)
     }
 }
 
-QString CacheManager::makeRemoteFile(const QString& remote_url, const QString& file_name_in, CacheManager::Duration duration)
+QString CacheManager::makeRemoteFile(const QString& mlproxy_url, const QString& file_name_in, CacheManager::Duration duration)
 {
-    if (remote_url.isEmpty()) {
+    qDebug() << "++++++++++++++++++++++++++++++ makeRemoteFile" << mlproxy_url;
+    if (mlproxy_url.isEmpty()) {
         return makeLocalFile(file_name_in,duration);
     }
 
@@ -68,7 +69,7 @@ QString CacheManager::makeRemoteFile(const QString& remote_url, const QString& f
         qWarning() << "Unexpected problem" << __FUNCTION__ << __FILE__ << __LINE__;
         return "";
     }
-    return QString("%1/%2/%3").arg(remote_url).arg(str).arg(file_name);
+    return QString("%1/mdaserver/%2/%3").arg(mlproxy_url).arg(str).arg(file_name);
 }
 
 QString CacheManager::makeLocalFile(const QString& file_name_in, CacheManager::Duration duration)

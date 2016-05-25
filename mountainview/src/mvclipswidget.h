@@ -18,8 +18,7 @@ public:
     friend class MVClipsWidgetPrivate;
     MVClipsWidget();
     virtual ~MVClipsWidget();
-    //void setMscmdServerUrl(const QString& url);
-    void setMPServerUrl(const QString& url);
+    void setMLProxyUrl(const QString& url);
     void setTimeseries(DiskReadMda& X);
     void setFirings(DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);

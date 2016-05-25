@@ -28,11 +28,15 @@ public:
 
     ScriptController* q;
     bool m_nodaemon;
+    QStringList m_server_urls;
+    QString m_server_base_path;
 
-    static QProcess* queue_process(QString processor_name, const QVariantMap& parameters, bool use_run=false);
-    static QProcess* run_process(QString processor_name, const QVariantMap& parameters);
+    QProcess* queue_process(QString processor_name, const QVariantMap& parameters, bool use_run = false);
+    QProcess* run_process(QString processor_name, const QVariantMap& parameters);
     //static bool queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters);
     static void wait(qint64 msec);
+
+    QString resolve_file_name_p(QString fname);
 };
 
 ScriptController::ScriptController()
@@ -51,8 +55,19 @@ void ScriptController::setNoDaemon(bool val)
     d->m_nodaemon = val;
 }
 
-QString ScriptController::fileChecksum(const QString& fname)
+void ScriptController::setServerUrls(const QStringList& urls)
 {
+    d->m_server_urls = urls;
+}
+
+void ScriptController::setServerBasePath(const QString& path)
+{
+    d->m_server_base_path = path;
+}
+
+QString ScriptController::fileChecksum(const QString& fname_in)
+{
+    QString fname = d->resolve_file_name_p(fname_in);
     QTime timer;
     timer.start();
     printf("Computing checksum for file %s\n", fname.toLatin1().data());
@@ -156,12 +171,14 @@ bool ScriptController::runPipeline(const QString& json)
         }
         QStringList input_pnames = PP.inputs.keys();
         QStringList output_pnames = PP.outputs.keys();
-        foreach (QString pname, input_pnames) {
+        foreach(QString pname, input_pnames)
+        {
             QString path0 = node.parameters.value(pname).toString();
             if (!path0.isEmpty())
                 node.input_paths << path0;
         }
-        foreach (QString pname, output_pnames) {
+        foreach(QString pname, output_pnames)
+        {
             QString path0 = node.parameters.value(pname).toString();
             if (!path0.isEmpty())
                 node.output_paths << path0;
@@ -172,7 +189,8 @@ bool ScriptController::runPipeline(const QString& json)
     //record which outputs get created by which nodes (by index)
     QMap<QString, int> node_indices_for_outputs;
     for (int i = 0; i < nodes.count(); i++) {
-        foreach (QString path, nodes[i].output_paths) {
+        foreach(QString path, nodes[i].output_paths)
+        {
             if (!path.isEmpty()) {
                 if (node_indices_for_outputs.contains(path)) {
                     qWarning() << "Same output is created twice in pipeline.";
@@ -193,13 +211,12 @@ bool ScriptController::runPipeline(const QString& json)
         for (int i = 0; i < nodes.count(); i++) {
             if (nodes[i].completed) {
                 node_indices_completed << i;
-            }
-            else if (nodes[i].running) {
+            } else if (nodes[i].running) {
                 node_indices_running << i;
-            }
-            else {
+            } else {
                 bool ready_to_go = true;
-                foreach (QString path, nodes[i].input_paths) {
+                foreach(QString path, nodes[i].input_paths)
+                {
                     if (node_indices_for_outputs.contains(path)) {
                         int ii = node_indices_for_outputs[path];
                         if (!nodes[ii].completed) {
@@ -233,21 +250,19 @@ bool ScriptController::runPipeline(const QString& json)
             if (PM->processAlreadyCompleted(node->processor_name, node->parameters)) {
                 this->log(QString("Process already completed: %1").arg(node->processor_name));
                 node->completed = true;
-            }
-            else {
+            } else {
 
                 QProcess* P1;
                 if (d->m_nodaemon) {
                     printf("Launching process %s\n", node->processor_name.toLatin1().data());
-                    P1=d->run_process(node->processor_name, node->parameters);
+                    P1 = d->run_process(node->processor_name, node->parameters);
                     if (!P1) {
                         qWarning() << "Unable to launch process: " + node->processor_name;
                         return false;
                     }
-                }
-                else {
+                } else {
                     printf("Queuing process %s\n", node->processor_name.toLatin1().data());
-                    P1=ScriptControllerPrivate::queue_process(node->processor_name, node->parameters);
+                    P1 = d->queue_process(node->processor_name, node->parameters);
                     if (!P1) {
                         qWarning() << "Unable to queue process: " + node->processor_name;
                         return false;
@@ -313,13 +328,13 @@ QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const Q
     QStringList args;
     if (use_run) {
         args << "run-process";
-    }
-    else {
+    } else {
         args << "queue-process";
     }
     args << processor_name;
     QStringList pkeys = parameters.keys();
-    foreach (QString pkey, pkeys) {
+    foreach(QString pkey, pkeys)
+    {
         args << QString("--%1=%2").arg(pkey).arg(parameters[pkey].toString());
     }
     /// TODO switch all --~* parameters to --_* (more readable)
@@ -335,7 +350,7 @@ QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const Q
     return P1;
 }
 
-QProcess *ScriptControllerPrivate::run_process(QString processor_name, const QVariantMap &parameters)
+QProcess* ScriptControllerPrivate::run_process(QString processor_name, const QVariantMap& parameters)
 {
     return ScriptControllerPrivate::queue_process(processor_name, parameters, true);
 }
@@ -375,4 +390,28 @@ bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString proces
 void ScriptControllerPrivate::wait(qint64 msec)
 {
     usleep(msec * 1000);
+}
+
+QString ScriptControllerPrivate::resolve_file_name_p(QString fname_in)
+{
+    return resolve_file_name(m_server_urls, m_server_base_path, fname_in);
+}
+
+QString resolve_file_name(QStringList server_urls, QString server_base_path, QString fname_in)
+{
+    QString fname = fname_in;
+    foreach(QString str, server_urls)
+    {
+        if (fname.startsWith(str))
+            fname = server_base_path + "/" + fname.mid(str.count());
+    }
+    if (!fname.startsWith(server_base_path)) {
+        qWarning() << "Path does not start with " + server_base_path + ": " + fname;
+        fname = "";
+    }
+    if (fname.mid(server_base_path.count()).contains("..")) {
+        qWarning() << "Illegal .. in file path: " + fname;
+        fname = "";
+    }
+    return fname;
 }

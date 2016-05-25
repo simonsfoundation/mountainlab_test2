@@ -198,7 +198,7 @@ QString http_get_text(const QString& url)
     });
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
-    printf("RECEIVED TEXT (%d ms, %d bytes) from %s\n", timer.elapsed(), ret.count(), url.toLatin1().data());
+    printf("RECEIVED TEXT (%d ms, %d bytes) from GET %s\n", timer.elapsed(), ret.count(), url.toLatin1().data());
     QString str = abbreviate(ret, 200, 200);
     printf("%s\n",(str.toLatin1().data()));
     return ret;

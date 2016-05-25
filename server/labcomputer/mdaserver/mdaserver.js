@@ -13,7 +13,6 @@ var config = JSON.parse(fs.readFileSync(config_fname, 'utf8'));
 console.log(JSON.stringify(config));
 
 var mdaserver_listen_port=config.mdaserver_listen_port;
-var mdaserver_url=config.mdaserver_url;
 var mdachunk_data_path=require('path').resolve(config_path,config.mdachunk_data_path);
 var mdachunk_exe=require('path').resolve(config_path,config.mdachunk_exe);
 var mdaserver_base_path=require('path').resolve(config_path,config.mdaserver_base_path);
@@ -101,19 +100,18 @@ http.createServer(function (REQ, RESP) {
 					send_json_response({success:false,error:"Chunk file does not exist in mdachunk_data_path: "+txt});
 					return;	
 				}
-				var url0=mdaserver_url+"/"+txt;
 				if (query.output=='text') {
-					send_text_response(url0);
+					send_text_response(txt);
 					return;
 				}
 				var obj={
-					path:url0
+					path:txt
 				};
 				send_json_response(obj);
 			});
 		}
 		else {
-			/// TODO make this secure
+			/// TODO important make this secure
 			var fname=mdachunk_data_path+"/"+path;
 			if (!require('fs').existsSync(fname)) {
 				send_json_response({success:false,error:"File does not exist in mdachunk_data_path: "+path});		

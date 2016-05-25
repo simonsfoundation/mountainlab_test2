@@ -22,7 +22,7 @@ public:
     virtual ~CacheManager();
 
     void setLocalBasePath(const QString& path);
-    QString makeRemoteFile(const QString& remote_name, const QString& file_name = "", Duration duration = ShortTerm);
+    QString makeRemoteFile(const QString& mlproxy_url, const QString& file_name = "", Duration duration = ShortTerm);
     QString makeLocalFile(const QString& file_name = "", Duration duration = ShortTerm);
     QString localTempPath();
     void cleanUp();

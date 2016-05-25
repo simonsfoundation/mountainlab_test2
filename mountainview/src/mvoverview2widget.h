@@ -38,8 +38,7 @@ public:
     ///Corresponds to MVFiringRateView::setEpochs()
     void setEpochs(const QList<Epoch>& epochs);
     int getMaxLabel();
-    //void setMscmdServerUrl(const QString& url);
-    void setMPServerUrl(const QString& url);
+    void setMLProxyUrl(const QString& url);
     void setClusterMerge(ClusterMerge CM);
 
     void loadMVFile(const QString& mv_fname);

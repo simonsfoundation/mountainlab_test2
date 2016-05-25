@@ -26,11 +26,8 @@ public:
     QString m_processor_name;
     QMap<QString, QVariant> m_parameters;
     //QString m_mscmdserver_url;
-    QString m_mpserver_url;
-    QString m_mdaserver_url;
+    QString m_mlproxy_url;
 
-    QString get_remote_url_from_parameters();
-    QString remote_url_of_path(const QString& path);
     QString create_temporary_output_file_name(const QString& remote_url, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name);
 };
 
@@ -52,7 +49,7 @@ void MountainsortThread::setProcessorName(const QString& pname)
 
 QString MountainsortThread::makeOutputFilePath(const QString& pname)
 {
-    QString ret = d->create_temporary_output_file_name(d->get_remote_url_from_parameters(), d->m_processor_name, d->m_parameters, pname);
+    QString ret = d->create_temporary_output_file_name(d->m_mlproxy_url, d->m_processor_name, d->m_parameters, pname);
     d->m_parameters[pname] = ret;
     return ret;
 }
@@ -62,16 +59,9 @@ void MountainsortThread::setInputParameters(const QMap<QString, QVariant>& param
     d->m_parameters = parameters;
 }
 
-/*
-void MountainsortThread::setMscmdServerUrl(const QString& url)
+void MountainsortThread::setMLProxyUrl(const QString& url)
 {
-    d->m_mscmdserver_url = url;
-}
-*/
-
-void MountainsortThread::setMPServerUrl(const QString& url)
-{
-    d->m_mpserver_url = url;
+    d->m_mlproxy_url = url;
 }
 
 QJsonObject variantmap_to_json_obj(QVariantMap map)
@@ -79,7 +69,8 @@ QJsonObject variantmap_to_json_obj(QVariantMap map)
     QJsonObject ret;
     QStringList keys = map.keys();
     // Use fromVariantMap
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         ret[key] = QJsonValue::fromVariant(map[key]);
     }
     return ret;
@@ -89,7 +80,8 @@ QVariantMap json_obj_to_variantmap(QJsonObject obj)
 {
     QVariantMap ret;
     QStringList keys = obj.keys();
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         ret[key] = obj[key].toVariant();
     }
     return ret;
@@ -111,7 +103,7 @@ QJsonObject http_post(QString url, QJsonObject req)
     });
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
-    printf("RECEIVED TEXT (%d ms, %d bytes) from %s\n", timer.elapsed(), ret.count(), url.toLatin1().data());
+    printf("RECEIVED TEXT (%d ms, %d bytes) from POST %s\n", timer.elapsed(), ret.count(), url.toLatin1().data());
     QString str = ret.mid(0, 5000) + "...";
     str.replace("\\n", "\n");
     printf("%s\n", (str.toLatin1().data()));
@@ -125,16 +117,18 @@ void MountainsortThread::compute()
     TaskProgress task("MS: " + d->m_processor_name);
 
     //if (d->m_mscmdserver_url.isEmpty()) {
-    if (d->m_mpserver_url.isEmpty()) {
+    if (d->m_mlproxy_url.isEmpty()) {
         QString mountainsort_exe = mountainlabBasePath() + "/mountainsort/bin/mountainsort";
         QStringList args;
         args << d->m_processor_name;
         QStringList keys = d->m_parameters.keys();
-        foreach (QString key, keys) {
+        foreach(QString key, keys)
+        {
             args << QString("--%1=%2").arg(key).arg(d->m_parameters.value(key).toString());
         }
         task.log(QString("Executing locally: %1").arg(mountainsort_exe));
-        foreach (QString key, keys) {
+        foreach(QString key, keys)
+        {
             QString val = d->m_parameters[key].toString();
             task.log(QString("%1 = %2").arg(key).arg(val));
             if (val.startsWith("http")) {
@@ -147,8 +141,7 @@ void MountainsortThread::compute()
             qWarning() << "Problem running mountainsort" << mountainsort_exe << args;
             task.error("Problem running mountainsort");
         }
-    }
-    else {
+    } else {
         /*
         QString url = d->m_mscmdserver_url + "/?";
         url += "processor=" + d->m_processor_name + "&";
@@ -182,7 +175,7 @@ void MountainsortThread::compute()
         QJsonObject req;
         req["action"] = "queueScript";
         req["script"] = script;
-        QString url = d->m_mpserver_url;
+        QString url = d->m_mlproxy_url+"/mpserver";
         task.log("POSTING: " + url);
         task.log(QJsonDocument(req).toJson());
         QJsonObject resp = http_post(url, req);
@@ -191,51 +184,18 @@ void MountainsortThread::compute()
     }
 }
 
-QString MountainsortThreadPrivate::create_temporary_output_file_name(const QString& remote_url, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name)
+QString MountainsortThreadPrivate::create_temporary_output_file_name(const QString& mlproxy_url, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name)
 {
     QString str = processor_name + ":";
     QStringList keys = params.keys();
     qSort(keys);
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         str += key + "=" + params.value(key).toString() + "&";
     }
 
     QString file_name = QString("%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
-    QString ret = CacheManager::globalInstance()->makeRemoteFile(remote_url, file_name, CacheManager::LongTerm);
+    qDebug() << "************************************************ mlproxy_url = " << mlproxy_url;
+    QString ret = CacheManager::globalInstance()->makeRemoteFile(mlproxy_url, file_name, CacheManager::LongTerm);
     return ret;
-}
-
-QString MountainsortThreadPrivate::get_remote_url_from_parameters()
-{
-    QString ret;
-    QStringList keys = m_parameters.keys();
-    foreach (QString key, keys) {
-        QString val = m_parameters.value(key).toString();
-        if (val.startsWith("http://")) {
-            QString remote_url = remote_url_of_path(val);
-            if (!remote_url.isEmpty()) {
-                if (ret.isEmpty()) {
-                    ret = remote_url;
-                }
-            }
-            else {
-                qWarning() << QString("More than one remote name in parameters for %1. Using %2.").arg(m_processor_name).arg(ret);
-                qWarning() << m_parameters;
-            }
-        }
-    }
-    return ret;
-}
-
-QString MountainsortThreadPrivate::remote_url_of_path(const QString& path)
-{
-    if (path.startsWith("http://")) {
-        int ind = path.indexOf("/", QString("http://").count());
-        if (ind < 0)
-            return "";
-        return path.mid(0, ind);
-    }
-    else {
-        return "";
-    }
 }

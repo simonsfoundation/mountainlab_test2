@@ -10,9 +10,9 @@
 
 <script>
 $(document).ready(function() {
-    var mountainbrowser_url=MB.mountainBrowserUrl();
-    console.log('url='+mountainbrowser_url);
-    load_json(mountainbrowser_url+"/index.mb.json?a=readJson",function(obj0) {
+    var mlproxy_url=MB.mlProxyUrl();
+    console.log('url='+mlproxy_url);
+    load_json(mlproxy_url+"/mbserver/index.mb.json?a=readJson",function(obj0) {
         console.log('testing 2...');
         console.log(JSON.stringify(obj0));
         index=obj0.index;
@@ -27,7 +27,7 @@ $(document).ready(function() {
 		console.log(index0);
                 console.log('basepath = '+basepath);
                 X.setBasePath(basepath);
-                load_json(mountainbrowser_url+"/"+index0+"?a=readJson",function(Y) {
+                load_json(mlproxy_url+"/mbserver/"+index0+"?a=readJson",function(Y) {
                     X.setExperiments(Y.experiments||[]);
                     X.refresh();
                 });

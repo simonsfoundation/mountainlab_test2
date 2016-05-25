@@ -27,7 +27,7 @@ function queueScript(config,req,callback) {
 		
 		var fname=config.mpserver_tmp_path+'/'+m_id+'-'+script.fname;
 		/// TODO oh boy, the next line is a hack... need to handle it!!!
-		script.code=script.code.split(config.mdaserver_url).join(config.mdaserver_base_path);
+		//script.code=script.code.split(config.mdaserver_url).join(config.mdaserver_base_path);
 		if (!write_text_file(fname,script.code)) {
 			console.error('Unable to write file: '+fname);
 			callback({success:false,error:'Unable to write file: '+script.fname}); //don't return the entire path, for privacy/security
@@ -55,6 +55,9 @@ function queueScript(config,req,callback) {
 	});
 	process.stderr.on('data',function(chunk) {
 		stderr+=chunk;
+	});
+	process.on('exit',function(code) { //might be important to handle this so no crash?
+		console.log('on exit with code '+code);
 	});
 	process.on('close',function(code) {
 		callback({success:true,exit_code:code,stdout:stdout,stderr:stderr});

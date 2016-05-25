@@ -50,6 +50,9 @@ public:
     ProcessManager();
     virtual ~ProcessManager();
 
+    void setServerUrls(const QStringList &urls);
+    void setServerBasePath(const QString &path);
+
     bool loadProcessors(const QString& path, bool recursive = true);
     bool loadProcessorFile(const QString& path);
     QStringList processorNames() const;

@@ -24,12 +24,8 @@ public:
     MBController();
     virtual ~MBController();
 
-    void setMountainBrowserUrl(const QString& url);
-    //void setMscmdServerUrl(const QString& url);
-    void setMPServerUrl(const QString& url);
-    void setMdaServerUrl(const QString& url);
-    Q_INVOKABLE QString mountainBrowserUrl();
-    Q_INVOKABLE QString mpServerUrl();
+    void setMLProxyUrl(const QString& url);
+    Q_INVOKABLE QString mlProxyUrl();
 
 
     Q_INVOKABLE QString getJson(QString url_or_path);

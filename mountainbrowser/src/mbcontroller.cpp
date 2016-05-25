@@ -20,8 +20,7 @@ public:
 
     QString m_mountainbrowser_url;
     //QString m_mscmdserver_url;
-    QString m_mpserver_url;
-    QString m_mdaserver_url;
+    QString m_mlproxy_url;
     QList<QProcess*> m_processes;
 };
 
@@ -42,36 +41,14 @@ MBController::~MBController()
     delete d;
 }
 
-void MBController::setMountainBrowserUrl(const QString& url)
+void MBController::setMLProxyUrl(const QString& url)
 {
-    d->m_mountainbrowser_url = url;
+    d->m_mlproxy_url = url;
 }
 
-/*
-void MBController::setMscmdServerUrl(const QString& url)
+QString MBController::mlProxyUrl()
 {
-    d->m_mscmdserver_url = url;
-}
-*/
-
-void MBController::setMPServerUrl(const QString& url)
-{
-    d->m_mpserver_url = url;
-}
-
-void MBController::setMdaServerUrl(const QString& url)
-{
-    d->m_mdaserver_url = url;
-}
-
-QString MBController::mountainBrowserUrl()
-{
-    return d->m_mountainbrowser_url;
-}
-
-QString MBController::mpServerUrl()
-{
-    return d->m_mpserver_url;
+    return d->m_mlproxy_url;
 }
 
 QString MBController::getJson(QString url_or_path)
@@ -100,7 +77,7 @@ void MBController::openSortingResult(QString json)
     E.exp_id = E.json["exp_id"].toString();
     QString exp_type = E.json["exp_type"].toString();
     QString basepath = E.json["basepath"].toString();
-    basepath = d->m_mdaserver_url + "/" + basepath;
+    basepath = d->m_mlproxy_url + "/mdaserver/" + basepath;
     if ((!basepath.isEmpty()) && (!basepath.endsWith("/")))
         basepath += "/";
     if (exp_type == "sorting_result") {
@@ -109,8 +86,7 @@ void MBController::openSortingResult(QString json)
         QString raw = basepath + E.json["raw"].toString();
         QString firings = basepath + E.json["firings"].toString();
         QStringList args;
-        //args << "--mscmdserver_url=" + d->m_mscmdserver_url;
-        args << "--mpserver_url=" + d->m_mpserver_url;
+        args << "--mlproxy_url=" + d->m_mlproxy_url;
         args << "--mode=overview2"
              << "--pre=" + pre << "--filt=" + filt << "--raw=" + raw << "--firings=" + firings << "--window_title=" + firings;
         QString mv_exe = mountainlabBasePath() + "/mountainview/bin/mountainview";
@@ -118,6 +94,7 @@ void MBController::openSortingResult(QString json)
         process->setProcessChannelMode(QProcess::MergedChannels);
         connect(process, SIGNAL(readyRead()), this, SLOT(slot_ready_read()));
         process->start(mv_exe, args);
+        qDebug() << ":::::::::::::" << mv_exe+" "+args.join(" ");
         d->m_processes << process;
     }
 }

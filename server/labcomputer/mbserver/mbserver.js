@@ -15,9 +15,6 @@ config.mbserver_base_path=require('path').resolve(config_path,config.mbserver_ba
 console.log(JSON.stringify(config));
 
 var mbserver_listen_port=config.mbserver_listen_port;
-var mdaserver_url=config.mdaserver_url;
-var mscmdserver_url=config.mscmdserver_url;
-var mpserver_url=config.mpserver_url;
 var mbserver_base_path=config.mbserver_base_path;
 
 http.createServer(function (REQ, RESP) {
@@ -44,14 +41,6 @@ http.createServer(function (REQ, RESP) {
 		if (method=="readJson") {
 			/// TODO this needs to be made secure
 			var obj=safe_read_json_file(mbserver_base_path+'/'+path); 
-			send_json_response(obj);
-		}
-		else if (method=="getConfig") {
-			var obj={
-				mdaserver_url:mdaserver_url,
-				mscmdserver_url:mscmdserver_url,
-				mpserver_url:mpserver_url
-			};
 			send_json_response(obj);
 		}
 		else {

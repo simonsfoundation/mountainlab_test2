@@ -73,7 +73,7 @@ public:
     float m_samplerate;
     MVEvent m_current_event;
     //QString m_mscmdserver_url;
-    QString m_mpserver_url;
+    QString m_mlproxy_url;
     QString m_mv_fname;
 
     MVControlPanel* m_control_panel_new;
@@ -351,9 +351,9 @@ int MVOverview2Widget::getMaxLabel()
     return ret;
 }
 
-void MVOverview2Widget::setMPServerUrl(const QString& url)
+void MVOverview2Widget::setMLProxyUrl(const QString& url)
 {
-    d->m_mpserver_url = url;
+    d->m_mlproxy_url = url;
 }
 
 void MVOverview2Widget::setClusterMerge(ClusterMerge CM)
@@ -383,10 +383,10 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
     }
 
     //important to do this first
-    if (obj.contains("mpserver_url")) {
-        QString url = obj["mpserver_url"].toString();
-        task.log(QString("mpserver_url = %1").arg(url));
-        this->setMPServerUrl(url);
+    if (obj.contains("mlproxy_url")) {
+        QString url = obj["mlproxy_url"].toString();
+        task.log(QString("mlproxy_url = %1").arg(url));
+        this->setMLProxyUrl(url);
     }
 
     QString mv_version = obj["mv_version"].toString();
@@ -485,7 +485,7 @@ void MVOverview2Widget::saveMVFile(const QString& mv_fname)
     obj["view_options"] = d->m_control_panel_new->viewOptions().toJsonObject();
     obj["event_filter"] = d->m_control_panel_new->eventFilter().toJsonObject();
 
-    obj["mpserver_url"] = d->m_mpserver_url;
+    obj["mlproxy_url"] = d->m_mlproxy_url;
 
     QJsonObject cluster_attributes;
     QMap<int, QJsonObject> CA = d->m_view_agent.clusterAttributes();
@@ -983,7 +983,7 @@ void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
 
     MT.setInputParameters(params);
     //MT.setMscmdServerUrl(m_mscmdserver_url);
-    MT.setMPServerUrl(m_mpserver_url);
+    MT.setMLProxyUrl(m_mlproxy_url);
 
     QString firings_out = MT.makeOutputFilePath("firings_out");
     QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
@@ -1089,7 +1089,7 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
     MVClusterDetailWidget* X = new MVClusterDetailWidget;
     //X->setMscmdServerUrl(m_mscmdserver_url);
     X->setViewAgent(&m_view_agent);
-    X->setMPServerUrl(m_mpserver_url);
+    X->setMLProxyUrl(m_mlproxy_url);
     X->setChannelColors(m_channel_colors);
     DiskReadMda TT(current_timeseries_path());
     X->setTimeseries(TT);
@@ -1127,7 +1127,7 @@ void MVOverview2WidgetPrivate::open_clips()
 
     MVClipsWidget* X = new MVClipsWidget;
     //X->setMscmdServerUrl(m_mscmdserver_url);
-    X->setMPServerUrl(m_mpserver_url);
+    X->setMLProxyUrl(m_mlproxy_url);
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_widget_current_event_changed()));
@@ -1166,7 +1166,7 @@ void MVOverview2WidgetPrivate::open_clusters()
     }
     MVClusterWidget* X = new MVClusterWidget;
     //X->setMscmdServerUrl(m_mscmdserver_url);
-    X->setMPServerUrl(m_mpserver_url);
+    X->setMLProxyUrl(m_mlproxy_url);
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
     q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_cluster_view_current_event_changed()));

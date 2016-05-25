@@ -23,8 +23,7 @@ public:
     MVClusterWidget();
     virtual ~MVClusterWidget();
 
-    //void setMscmdServerUrl(const QString& url);
-    void setMPServerUrl(const QString& url);
+    void setMLProxyUrl(const QString& url);
 
     void setClipSize(int clip_size);
     ///Set the time series for purpose of computing the clip to display when corresponding datapoint is selected

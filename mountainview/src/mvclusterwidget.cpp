@@ -15,7 +15,7 @@ class MVClusterWidgetComputer : public ComputationThread {
 public:
     //input
     //QString mscmdserver_url;
-    QString mpserver_url;
+    QString mlproxy_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
     int clip_size;
@@ -36,7 +36,7 @@ public:
     QLabel* m_info_bar;
     Mda m_data;
     //QString m_mscmdserver_url;
-    QString m_mpserver_url;
+    QString m_mlproxy_url;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     QList<int> m_labels_to_use;
@@ -176,9 +176,9 @@ void MVClusterWidget::setMscmdServerUrl(const QString& url)
 }
 */
 
-void MVClusterWidget::setMPServerUrl(const QString& url)
+void MVClusterWidget::setMLProxyUrl(const QString& url)
 {
-    d->m_mpserver_url = url;
+    d->m_mlproxy_url = url;
 }
 
 void MVClusterWidget::setData(const Mda& X)
@@ -398,7 +398,7 @@ void MVClusterWidgetPrivate::start_computation()
 {
     m_computer.stopComputation();
     //m_computer.mscmdserver_url = m_mscmdserver_url;
-    m_computer.mpserver_url = m_mpserver_url;
+    m_computer.mlproxy_url = m_mlproxy_url;
     m_computer.timeseries = m_timeseries;
     m_computer.firings = m_firings;
     m_computer.clip_size = m_clip_size;
@@ -427,7 +427,7 @@ void MVClusterWidgetComputer::compute()
         params["labels"] = labels_str;
         MT.setInputParameters(params);
         //MT.setMscmdServerUrl(mscmdserver_url);
-        MT.setMPServerUrl(mpserver_url);
+        MT.setMLProxyUrl(mlproxy_url);
 
         firings_out_path = MT.makeOutputFilePath("firings_out");
 
@@ -447,7 +447,7 @@ void MVClusterWidgetComputer::compute()
         params["num_features"] = 3;
         MT.setInputParameters(params);
         //MT.setMscmdServerUrl(mscmdserver_url);
-        MT.setMPServerUrl(mpserver_url);
+        MT.setMLProxyUrl(mlproxy_url);
 
         features_path = MT.makeOutputFilePath("features");
 
