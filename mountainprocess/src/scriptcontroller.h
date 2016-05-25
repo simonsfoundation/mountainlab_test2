@@ -16,7 +16,7 @@ public:
     friend class ScriptControllerPrivate;
     ScriptController();
     virtual ~ScriptController();
-    bool setNoDaemon(bool val);
+    void setNoDaemon(bool val);
 
     Q_INVOKABLE QString fileChecksum(const QString& fname);
     Q_INVOKABLE QString stringChecksum(const QString& str);

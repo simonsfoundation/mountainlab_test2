@@ -46,7 +46,7 @@ ScriptController::~ScriptController()
     delete d;
 }
 
-bool ScriptController::setNoDaemon(bool val)
+void ScriptController::setNoDaemon(bool val)
 {
     d->m_nodaemon = val;
 }

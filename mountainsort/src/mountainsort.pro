@@ -177,15 +177,6 @@ LIBS += -fopenmp -lfftw3 -lfftw3_threads
 }
 #-std=c++11   # AHB removed since not in GNU gcc 4.6.3
 
-#QJSON
-HEADERS += 3rdparty/qjson.h
-SOURCES += 3rdparty/qjson.cpp
-INCLUDEPATH += 3rdparty/qjson
-DEPENDPATH += 3rdparty/qjson
-VPATH += 3rdparty/qjson
-HEADERS += serializer.h serializerrunnable.h parser.h parserrunnable.h json_scanner.h json_parser.hh
-SOURCES += serializer.cpp serializerrunnable.cpp parser.cpp parserrunnable.cpp json_scanner.cpp json_parser.cc
-
 #tests
 test {
     QT += testlib

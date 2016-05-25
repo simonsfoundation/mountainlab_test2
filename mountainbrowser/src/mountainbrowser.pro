@@ -37,18 +37,6 @@ VPATH += ../../common
 HEADERS += mlutils.h
 SOURCES += mlutils.cpp
 
-#QJSON
-INCLUDEPATH += ../../mountainsort/src/3rdparty
-DEPENDPATH += ../../mountainsort/src/3rdparty
-VPATH += ../../mountainsort/src/3rdparty
-INCLUDEPATH += ../../mountainsort/src/3rdparty/qjson
-DEPENDPATH += ../../mountainsort/src/3rdparty/qjson
-VPATH += ../../mountainsort/src/3rdparty/qjson
-HEADERS += qjson.h
-SOURCES += qjson.cpp
-HEADERS += serializer.h serializerrunnable.h parser.h parserrunnable.h json_scanner.h json_parser.hh
-SOURCES += serializer.cpp serializerrunnable.cpp parser.cpp parserrunnable.cpp json_scanner.cpp json_parser.cc
-
 DEFINES += USE_REMOTE_MDA
 INCLUDEPATH += ../../common/mda
 DEPENDPATH += ../../common/mda

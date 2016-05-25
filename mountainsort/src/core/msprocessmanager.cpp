@@ -34,8 +34,6 @@
 #include "geom2adj_processor.h"
 #include "mlutils.h"
 
-/// TODO remove dependency on qjson
-#include "qjson.h"
 #include "textfile.h"
 #include <sys/stat.h>
 #include <QJsonArray>
@@ -110,10 +108,11 @@ bool MSProcessManager::checkProcess(const QString& processor_name, const QVarian
 
 QString compute_process_code(const QString& processor_name, const QVariantMap& parameters)
 {
-    QVariantMap X;
+    QJsonObject X;
     X["processor_name"] = processor_name;
-    X["parameters"] = parameters;
-    QString json = toJSON(X);
+    X["parameters"] = QJsonObject::fromVariantMap(parameters);
+    QString json = QJsonDocument(X).toJson();
+    /// Witold I need a canonical json here so that the hash is always the same. (relatively important)
     return compute_hash(json);
 }
 
