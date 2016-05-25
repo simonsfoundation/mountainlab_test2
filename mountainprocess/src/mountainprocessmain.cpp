@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     ProcessManager* PM = ProcessManager::globalInstance();
     QStringList server_urls = json_array_to_stringlist(config["server_urls"].toArray());
     PM->setServerUrls(server_urls);
-    QString server_base_path = config["server_base_path"].toString();
+    QString server_base_path = config["mdaserver_base_path"].toString();
     PM->setServerBasePath(server_base_path);
 
     QString arg1 = CLP.unnamed_parameters.value(0);

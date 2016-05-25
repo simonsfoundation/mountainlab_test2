@@ -153,8 +153,10 @@ QString ProcessManager::startProcess(const QString& processor_name, const QVaria
 {
     QVariantMap parameters = d->resolve_file_names_in_parameters(processor_name, parameters_in);
 
-    if (!this->checkParameters(processor_name, parameters))
+    if (!this->checkParameters(processor_name, parameters)) {
+        qWarning() << "Problem checking parameters";
         return "";
+    }
 
     if (!d->m_processors.contains(processor_name)) {
         qWarning() << "Unable to find processor: " + processor_name;

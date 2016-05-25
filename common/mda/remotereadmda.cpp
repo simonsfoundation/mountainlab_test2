@@ -210,6 +210,13 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
     QString binary_url = http_get_text(url0).trimmed();
     if (binary_url.isEmpty())
         return "";
+
+    //the following is ugly
+    int ind=m_path.indexOf("/mdaserver");
+    if (ind>0) {
+        binary_url=m_path.mid(0,ind)+"/mdaserver/"+binary_url;
+    }
+
     QString mda_fname = http_get_binary_file(binary_url);
     if (mda_fname.isEmpty())
         return "";
