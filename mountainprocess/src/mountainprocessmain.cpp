@@ -28,8 +28,6 @@
 /// TODO on startup of mountainprocess daemon show all the loaded processors
 /// TODO remove all references to datalaboratory.org and magland.org in the repository (don't just search .h/.cpp files)
 /// TODO rigorously check mpserver for potential crashes, unhandled exceptions
-/// TODO unit test that runs through all the mountainprocess functionality (sample pipeline run)
-/// TODO handle http paths in script running etc mpdaemon, etc
 
 struct run_script_opts;
 void print_usage();
@@ -524,7 +522,7 @@ void mountainprocessMessageOutput(QtMsgType type, const QMessageLogContext& cont
         fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         break;
     case QtCriticalMsg:
-        /// TODO write to an error log file
+        //write to error log here
         fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
 #ifdef EXIT_ON_CRITICAL_ERROR
         exit(-1);
