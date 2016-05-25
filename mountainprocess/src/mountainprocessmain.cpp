@@ -33,7 +33,7 @@ struct run_script_opts;
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);
 bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message);
-bool initialize_process_manager();
+bool initialize_process_manager(QString config_fname, QJsonObject config);
 void remove_system_parameters(QVariantMap& params);
 bool queue_pript(PriptType prtype, const CLParams& CLP);
 
@@ -62,15 +62,20 @@ int main(int argc, char* argv[])
 
     /// TODO don't need to always load the process manager?
 
-    /// TODO change this config to .json
-    QString config_fname = mlConfigPath() + "/mountainprocess.ini";
-    QSettings config(config_fname, QSettings::IniFormat);
+    /// TODO get rid of mlConfigPath()
+    QString config_fname = mountainlabBasePath() + "/server/labcomputer/labserver.json";
+    QJsonParseError parse_error;
+    QJsonObject config = QJsonDocument::fromJson(read_text_file(config_fname).toLatin1(), &parse_error).object();
+    if (parse_error.error != QJsonParseError::NoError) {
+        qWarning() << "Unable to parse confuration file: " + config_fname;
+        return -1;
+    }
     QString log_path = mlLogPath() + "/mountainprocess";
 
     ProcessManager* PM = ProcessManager::globalInstance();
-    QStringList server_urls = config.value("server_urls").toStringList();
+    QStringList server_urls = json_array_to_stringlist(config["server_urls"].toArray());
     PM->setServerUrls(server_urls);
-    QString server_base_path = config.value("server_base_path").toString();
+    QString server_base_path = config["server_base_path"].toString();
     PM->setServerBasePath(server_base_path);
 
     QString arg1 = CLP.unnamed_parameters.value(0);
@@ -78,17 +83,8 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, NULL);
 
-    /*
-    QString log_path = config.value("log_path").toString();
-    if (!log_path.isEmpty()) {
-        if (QFileInfo(log_path).isRelative()) {
-            log_path = mlConfigPath() + "/" + log_path;
-        }
-    }
-    */
-
     if (arg1 == "list-processors") { //Provide a human-readable list of the available processors
-        if (!initialize_process_manager())
+        if (!initialize_process_manager(config_fname, config))
             return -1; //load the processor plugins etc
         QStringList pnames = PM->processorNames();
         qSort(pnames);
@@ -98,7 +94,7 @@ int main(int argc, char* argv[])
         }
         return 0;
     } else if (arg1 == "run-process") { //Run a process synchronously
-        if (!initialize_process_manager())
+        if (!initialize_process_manager(config_fname, config))
             return -1; //load the processor plugins etc
         QString output_fname = CLP.named_parameters.value("~process_output").toString(); //maybe the user specified where output is to be reported
         QString processor_name = arg2; //name of the processor is the second user-supplied arg
@@ -164,7 +160,7 @@ int main(int argc, char* argv[])
 
         return ret; //returns exit code 0 if okay
     } else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued (unless --_nodaemon is specified), but the script will wait for them to complete)
-        if (!initialize_process_manager())
+        if (!initialize_process_manager(config_fname, config))
             return -1;
 
         QString output_fname = CLP.named_parameters.value("~script_output").toString(); //maybe the user specified where output is to be reported
@@ -214,13 +210,13 @@ int main(int argc, char* argv[])
 
         return ret;
     } else if (arg1 == "daemon-start") {
-        if (!initialize_process_manager())
+        if (!initialize_process_manager(config_fname, config))
             return -1;
         MPDaemon X;
         X.setLogPath(log_path);
         ProcessResources RR;
-        RR.num_threads = config.value("num_threads", 8).toDouble();
-        RR.memory_gb = config.value("memory_gb", 8).toDouble();
+        RR.num_threads = qMax(1.0, config["num_threads"].toDouble());
+        RR.memory_gb = qMax(1.0, config["memory_gb"].toDouble());
         X.setTotalResourcesAvailable(RR);
         if (!X.run())
             return -1;
@@ -295,25 +291,22 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-bool initialize_process_manager()
+bool initialize_process_manager(QString config_fname, QJsonObject config)
 {
-    /*
-     * Load configuration file. If it doesn't exist, copy example configuration file.
-     */
-    QString config_fname = mlConfigPath() + "/mountainprocess.ini";
-    if (!QFile::exists(config_fname)) {
-        if (!QFile::copy(config_fname + ".example", config_fname)) {
-            qCritical() << "Unable to copy example configuration file to " + config_fname;
-            return false;
-        }
-    }
-    QSettings config(config_fname, QSettings::IniFormat);
     /*
      * Load the processor paths
      */
-    QStringList processor_paths = config.value("processor_paths").toStringList();
+    QStringList processor_paths = json_array_to_stringlist(config["processor_paths"].toArray());
     if (processor_paths.isEmpty()) {
         qCritical() << "No processor paths found in " + config_fname;
+        return false;
+    }
+    for (int i = 0; i < processor_paths.count(); i++) {
+        QString path0 = processor_paths[i];
+        if (QFileInfo(path0).isRelative()) {
+            path0 = QFileInfo(config_fname).path() + "/" + path0;
+        }
+        processor_paths[i] = path0;
     }
 
     /*
