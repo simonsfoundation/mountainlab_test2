@@ -129,6 +129,10 @@ bool MPDaemonInterface::clearProcessing()
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
     QString fname = cfp(mlTmpPath() + "/mpdaemon_running.pid");
+    if (!QFile::exists(fname)) return false;
+    if (QFileInfo(fname).lastModified().secsTo(QDateTime::currentDateTime())>120) { // time since last write
+        return false;
+    }
     long pid = read_text_file(fname).toLongLong();
     bool ret = (kill(pid, 0) == 0);
     return ret;
@@ -166,17 +170,20 @@ QString MPDaemonInterfacePrivate::last_daemon_state_fname()
 QJsonObject MPDaemonInterfacePrivate::get_last_daemon_state()
 {
     QJsonObject ret;
+    if (!daemon_is_running()) {
+        ret["is_running"] = false;
+        return ret;
+    }
     QString fname = last_daemon_state_fname();
     if (fname.isEmpty())
         return ret;
     QString json = read_text_file(fname);
+    if (json.isEmpty()) return ret;
     QJsonParseError error;
     ret = QJsonDocument::fromJson(json.toLatin1(), &error).object();
     if (error.error != QJsonParseError::NoError) {
         qWarning() << "Error in get_last_daemon_state parsing json";
     }
-    if (!daemon_is_running())
-        ret["is_running"] = false;
     return ret;
 }
 

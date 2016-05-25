@@ -23,44 +23,31 @@
 #include "cachemanager.h"
 #include "mlutils.h"
 
-/// TODO change all .ini config files to json
-/// TODO convert python web servers to nodejs
-/// TODO make central list of all servers/services to be running
-/// TODO web page that checks status of all services
-/// TODO add field linking process to parent script
-/// TODO improve stdout view
-/// TODO ***** put mountainbrowser in html -- no qtwebkit
-/// TODO open mountainview with .mv file, so that this can be downloaded from website
-/// TODO consolidate all temporary and data directories in mountainlab/tmp mountainlab/log mountainlog/config
-/// TODO work on config files for server
 /// TODO security in scripts that are able to be submitted
-/// TODO remove mscmdserver -- replace by mpserver
-/// TODO do we need process tracking in mountainsort -- thought it should be in mountainprocess
-/// TODO change all .ini and .cfg to .json
-/// TODO change python servers to node js
-/// TODO update installation instructions
-/// TODO remove mscmdserver
-/// TODO error checking in mountainview -- don't load anything if the processing failed (cache worries)ls da
 /// TODO title on mountainview from mountainbrowser
-/// TODO the paths in mpserver config should be relative to the location of the config file itself
-/// TODO devtools/open_* for opening tmux sessions for the servers and the daemon
-/// TODO consolidate mountainview and spikespy
-/// TODO fix bug in synchronizing current/selected clusters in mountainview
 /// TODO on startup of mountainprocess daemon show all the loaded processors
-/// TODO don't show message every time mountainprocess processors are loaded
 /// TODO remove all references to datalaboratory.org and magland.org in the repository (don't just search .h/.cpp files)
 /// TODO rigorously check mpserver for potential crashes, unhandled exceptions
-/// TODO when mountainprocess binary does not exist, mpserver crashes, not sure how to deal with it tried try/catch debugging, etc can't find it
 
+struct run_script_opts;
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);
-bool run_script(const QStringList& script_fnames, const QVariantMap& params, QString& error_message);
+bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts &opts, QString& error_message);
 bool initialize_process_manager();
 void remove_system_parameters(QVariantMap& params);
-int queue_pript(PriptType prtype, const CLParams& CLP);
+bool queue_pript(PriptType prtype, const CLParams& CLP);
+
 
 #define EXIT_ON_CRITICAL_ERROR
 void mountainprocessMessageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg);
+
+struct run_script_opts {
+    run_script_opts() {
+        nodaemon=false;
+    }
+
+    bool nodaemon;
+};
 
 int main(int argc, char* argv[])
 {
@@ -171,7 +158,7 @@ int main(int argc, char* argv[])
 
         return ret; //returns exit code 0 if okay
     }
-    else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued, but the script will wait for them to complete)
+    else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued (unless --_nodaemon is specified), but the script will wait for them to complete)
         if (!initialize_process_manager())
             return -1;
 
@@ -199,7 +186,9 @@ int main(int argc, char* argv[])
         }
         remove_system_parameters(params);
 
-        if (!run_script(script_fnames, params, error_message)) { //actually run the script
+        run_script_opts opts;
+        opts.nodaemon=CLP.named_parameters.contains("_nodaemon");
+        if (!run_script(script_fnames, params, opts, error_message)) { //actually run the script
             ret = -1;
         }
 
@@ -274,10 +263,12 @@ int main(int argc, char* argv[])
         return 0;
     }
     else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
-        return queue_pript(ScriptType, CLP);
+        if (queue_pript(ScriptType, CLP)) return 0;
+        else return -1;
     }
     else if (arg1 == "queue-process") {
-        return queue_pript(ProcessType, CLP);
+        if (queue_pript(ProcessType, CLP)) return 0;
+        else return -1;
     }
     else if (arg1 == "get-script") {
         if (!log_path.isEmpty()) {
@@ -366,12 +357,13 @@ void display_error(QJSValue result)
     qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
 }
 
-bool run_script(const QStringList& script_fnames, const QVariantMap& params, QString& error_message)
+bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts &opts, QString& error_message)
 {
     QJsonObject parameters = variantmap_to_json_obj(params);
 
     QJSEngine engine;
     ScriptController Controller;
+    Controller.setNoDaemon(opts.nodaemon);
     QJSValue MP = engine.newQObject(&Controller);
     engine.globalObject().setProperty("MP", MP);
     foreach (QString fname, script_fnames) {
@@ -422,7 +414,7 @@ void remove_system_parameters(QVariantMap& params)
     }
 }
 
-int queue_pript(PriptType prtype, const CLParams& CLP)
+bool queue_pript(PriptType prtype, const CLParams& CLP)
 {
     MPDaemonPript PP;
 
@@ -438,7 +430,8 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
             }
             if (str.endsWith(".par")) { // note that we can have multiple parameter files! the later ones override the earlier ones.
                 if (!load_parameter_file(params, str)) {
-                    return -1;
+                    qWarning() << "Error loading parameter file" << str;
+                    return false;
                 }
             }
         }
@@ -483,12 +476,14 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
     MPDaemonInterface X;
     if (prtype == ScriptType) {
         if (!X.queueScript(PP)) { //queue the script
-            return -1;
+            qWarning() << "Error queueing script";
+            return false;
         }
     }
     else {
         if (!X.queueProcess(PP)) { //queue the process
-            return -1;
+            qWarning() << "Error queueing process";
+            return false;
         }
     }
     if (!detach) {
@@ -498,7 +493,7 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
         QJsonObject results_obj = QJsonDocument::fromJson(read_text_file(PP.output_fname).toLatin1(), &error).object();
         if (error.error != QJsonParseError::NoError) {
             qWarning() << "Error in queue_pript in parsing output json file.";
-            return -1;
+            return false;
         }
         bool success = results_obj["success"].toBool();
         if (!success) {
@@ -508,10 +503,10 @@ int queue_pript(PriptType prtype, const CLParams& CLP)
             else {
                 qWarning() << "Error in process " + PP.processor_name + " " + PP.id + ": " + results_obj["error"].toString();
             }
-            return -1;
+            return false;
         }
     }
-    return 0;
+    return true;
 }
 
 void mountainprocessMessageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg)
@@ -539,3 +534,4 @@ void mountainprocessMessageOutput(QtMsgType type, const QMessageLogContext& cont
         exit(-1);
     }
 }
+

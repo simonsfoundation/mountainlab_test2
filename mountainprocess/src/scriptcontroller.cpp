@@ -21,9 +21,16 @@
 
 class ScriptControllerPrivate {
 public:
-    ScriptController* q;
+    ScriptControllerPrivate()
+    {
+        m_nodaemon = false;
+    }
 
-    static QProcess* queue_process(QString processor_name, const QVariantMap& parameters);
+    ScriptController* q;
+    bool m_nodaemon;
+
+    static QProcess* queue_process(QString processor_name, const QVariantMap& parameters, bool use_run=false);
+    static QProcess* run_process(QString processor_name, const QVariantMap& parameters);
     //static bool queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters);
     static void wait(qint64 msec);
 };
@@ -37,6 +44,11 @@ ScriptController::ScriptController()
 ScriptController::~ScriptController()
 {
     delete d;
+}
+
+bool ScriptController::setNoDaemon(bool val)
+{
+    d->m_nodaemon = val;
 }
 
 QString ScriptController::fileChecksum(const QString& fname)
@@ -223,12 +235,25 @@ bool ScriptController::runPipeline(const QString& json)
                 node->completed = true;
             }
             else {
-                printf("Queuing process %s\n", node->processor_name.toLatin1().data());
-                QProcess* P1 = d->queue_process(node->processor_name, node->parameters);
-                if (!P1) {
-                    qWarning() << "Unable to queue process: " + node->processor_name;
-                    return false;
+
+                QProcess* P1;
+                if (d->m_nodaemon) {
+                    printf("Launching process %s\n", node->processor_name.toLatin1().data());
+                    P1=d->run_process(node->processor_name, node->parameters);
+                    if (!P1) {
+                        qWarning() << "Unable to launch process: " + node->processor_name;
+                        return false;
+                    }
                 }
+                else {
+                    printf("Queuing process %s\n", node->processor_name.toLatin1().data());
+                    P1=ScriptControllerPrivate::queue_process(node->processor_name, node->parameters);
+                    if (!P1) {
+                        qWarning() << "Unable to queue process: " + node->processor_name;
+                        return false;
+                    }
+                }
+
                 node->running = true;
                 node->qprocess = P1;
             }
@@ -282,16 +307,22 @@ void ScriptController::log(const QString& message)
     printf("SCRIPT: %s\n", message.toLatin1().data());
 }
 
-QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const QVariantMap& parameters)
+QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const QVariantMap& parameters, bool use_run)
 {
     QString exe = qApp->applicationFilePath();
     QStringList args;
-    args << "queue-process";
+    if (use_run) {
+        args << "run-process";
+    }
+    else {
+        args << "queue-process";
+    }
     args << processor_name;
     QStringList pkeys = parameters.keys();
     foreach (QString pkey, pkeys) {
         args << QString("--%1=%2").arg(pkey).arg(parameters[pkey].toString());
     }
+    /// TODO switch all --~* parameters to --_* (more readable)
     args << QString("--~parent_pid=%1").arg(QCoreApplication::applicationPid());
     QProcess* P1 = new QProcess;
     P1->setReadChannelMode(QProcess::MergedChannels);
@@ -302,6 +333,11 @@ QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const Q
         return 0;
     }
     return P1;
+}
+
+QProcess *ScriptControllerPrivate::run_process(QString processor_name, const QVariantMap &parameters)
+{
+    return ScriptControllerPrivate::queue_process(processor_name, parameters, true);
 }
 
 /*

@@ -155,6 +155,7 @@ bool MPDaemon::run()
     if (!d->write_running_file()) { //this also checks whether another daemon is running,
         return false;
     }
+    d->write_daemon_state();
 
     d->m_is_running = true;
 
