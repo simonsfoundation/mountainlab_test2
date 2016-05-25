@@ -1,6 +1,6 @@
 #include <QCoreApplication>
 #include <QFileInfo>
-#include "get_command_line_params.h"
+#include "commandlineparams.h"
 #include "extractclips2.h"
 #include <QDebug>
 
@@ -11,9 +11,7 @@ void usage() {
 
 int main(int argc, char *argv[])
 {
-	QStringList required_params,optional_params;
-	required_params << "clipsize" << "labels";
-	CLParams params=get_command_line_params(argc,argv,required_params,optional_params);
+    CLParams params=commandlineparams(argc,argv);
 
 	if (!params.success) {
 		qCritical() << params.error_message;
@@ -42,7 +40,7 @@ int main(int argc, char *argv[])
 	}
 	runparams["clipsize"]=clipsize;
 
-	QStringList labels=params.named_parameters["labels"].split(",");
+    QStringList labels=params.named_parameters["labels"].toString().split(",");
 	if (labels.count()!=2) {
 		qCritical() << "invalid labels" << params.named_parameters["labels"];
 		usage(); return -1;

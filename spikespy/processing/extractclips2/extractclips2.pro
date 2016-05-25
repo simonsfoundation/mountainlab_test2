@@ -39,9 +39,10 @@ VPATH += ../../../common/utils
 HEADERS += textfile.h
 SOURCES += textfile.cpp
 
-INCLUDEPATH += ../common
-HEADERS += ../common/get_command_line_params.h
-SOURCES += ../common/get_command_line_params.cpp
+INCLUDEPATH += ../../../common/commandlineparams
+VPATH += ../../../common/commandlineparams
+HEADERS += commandlineparams.h
+SOURCES += commandlineparams.cpp
 
 INCLUDEPATH += ../../../mountainsort/src/utils
 DEPENDPATH += ../../../mountainsort/src/utils
