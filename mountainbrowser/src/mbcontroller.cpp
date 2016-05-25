@@ -112,7 +112,7 @@ void MBController::openSortingResult(QString json)
         //args << "--mscmdserver_url=" + d->m_mscmdserver_url;
         args << "--mpserver_url=" + d->m_mpserver_url;
         args << "--mode=overview2"
-             << "--pre=" + pre << "--filt=" + filt << "--raw=" + raw << "--firings=" + firings;
+             << "--pre=" + pre << "--filt=" + filt << "--raw=" + raw << "--firings=" + firings << "--window_title=" + firings;
         qDebug() << "ARGS:::::::::::::::::::::::::::::::::::" << args;
         QString mv_exe = mountainlabBasePath() + "/mountainview/bin/mountainview";
         QProcess* process = new QProcess;

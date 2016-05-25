@@ -29,6 +29,7 @@
 /// TODO remove all references to datalaboratory.org and magland.org in the repository (don't just search .h/.cpp files)
 /// TODO rigorously check mpserver for potential crashes, unhandled exceptions
 /// TODO unit test that runs through all the mountainprocess functionality (sample pipeline run)
+/// TODO handle http paths in script running etc mpdaemon, etc
 
 struct run_script_opts;
 void print_usage();
@@ -67,7 +68,6 @@ int main(int argc, char* argv[])
     QString config_fname = mlConfigPath() + "/mountainprocess.ini";
     QSettings config(config_fname, QSettings::IniFormat);
     QString log_path = mlLogPath() + "/mountainprocess";
-    /// TODO we no longer need config value log_path
     /*
     QString log_path = config.value("log_path").toString();
     if (!log_path.isEmpty()) {
