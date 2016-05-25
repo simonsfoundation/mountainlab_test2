@@ -7,6 +7,7 @@
 #ifndef MVCONTROLPANEL_H
 #define MVCONTROLPANEL_H
 
+#include <QAbstractButton>
 #include <QJsonObject>
 #include <QString>
 #include <QWidget>
@@ -62,10 +63,13 @@ public:
     void setViewOptions(MVViewOptions opts);
     void setEventFilter(MVEventFilter X);
 
+    QAbstractButton* findButton(const QString& name);
+
 signals:
     void userAction(QString name);
 
-private slots:
+private
+slots:
     void slot_update_enabled_controls();
     void slot_button_clicked();
 

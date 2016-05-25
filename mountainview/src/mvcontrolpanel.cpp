@@ -52,6 +52,7 @@ public:
     ControlManager m_controls;
 
     QLabel* create_group_label(QString label);
+    QAbstractButton *find_action_button(QString name);
 };
 
 struct action_button_info {
@@ -161,19 +162,19 @@ MVControlPanel::MVControlPanel()
         layout->addWidget(d->create_group_label("Annotate / Merge"));
 
         {
-            QPushButton* BB = new QPushButton("Annotate selected (A)...");
+            QPushButton* BB = new QPushButton("Annotate selected (A) ...");
             BB->setProperty("action_name", "annotate_selected");
             QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
             layout->addWidget(BB);
         }
         {
-            QPushButton* BB = new QPushButton("Merge selected (M)...");
+            QPushButton* BB = new QPushButton("Merge selected (M)");
             BB->setProperty("action_name", "merge_selected");
             QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
             layout->addWidget(BB);
         }
         {
-            QPushButton* BB = new QPushButton("Unmerge selected (U)...");
+            QPushButton* BB = new QPushButton("Unmerge selected (U)");
             BB->setProperty("action_name", "unmerge_selected");
             QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
             layout->addWidget(BB);
@@ -257,6 +258,11 @@ void MVControlPanel::setEventFilter(MVEventFilter X)
     d->m_controls.set_parameter_value("use_shell_split", X.use_shell_split);
     d->m_controls.set_parameter_value("shell_increment", X.shell_increment);
     d->m_controls.set_parameter_value("min_per_shell", X.min_per_shell);
+}
+
+QAbstractButton* MVControlPanel::findButton(const QString &name)
+{
+    return d->find_action_button(name);
 }
 
 void MVControlPanel::slot_update_enabled_controls()
@@ -469,6 +475,15 @@ QLabel* MVControlPanelPrivate::create_group_label(QString label)
     font.setPixelSize(16);
     ret->setFont(font);
     return ret;
+}
+
+QAbstractButton *MVControlPanelPrivate::find_action_button(QString name)
+{
+    QList<QAbstractButton *> buttons=q->findChildren<QAbstractButton *>("",Qt::FindChildrenRecursively);
+    foreach (QAbstractButton *B, buttons) {
+        if (B->property("action_name").toString()==name) return B;
+    }
+    return 0;
 }
 
 MVViewOptions MVViewOptions::fromJsonObject(QJsonObject obj)

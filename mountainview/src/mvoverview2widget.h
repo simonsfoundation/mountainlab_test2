@@ -65,6 +65,7 @@ private slots:
     void slot_clips_widget_current_event_changed();
     void slot_cluster_view_current_event_changed();
     //void slot_cross_correlogram_computer_finished();
+    void slot_update_buttons();
 
 private:
     MVOverview2WidgetPrivate* d;

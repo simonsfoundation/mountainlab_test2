@@ -28,7 +28,7 @@ start_server()
   echo ""
   echo "****************** Starting $1 *********************"
   tmux kill-session -t $1
-  tmux new -d -s $1 "cd $DIR/$1 ; node $1.js ; bash"
+  tmux new -d -s $1 "cd $DIR/$1 ; ((nodejs $1.js) || (node $1.js)) ; bash" # handle both cases for node on the system (1) nodejs (2) node
   sleep 0.5
   tmux capture-pane -t $1
   tmux show-buffer | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba' # This new lines at end
