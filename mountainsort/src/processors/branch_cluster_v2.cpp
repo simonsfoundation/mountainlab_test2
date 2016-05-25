@@ -144,7 +144,7 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
 
     firings.write64(output_firings_path);
 
-    printf("Found %d clusters and %d events", K, firings.N2());
+    printf("Found %d clusters and %ld events", K, firings.N2());
 
     return true;
 }
