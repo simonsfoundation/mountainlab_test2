@@ -28,6 +28,7 @@
 /// TODO on startup of mountainprocess daemon show all the loaded processors
 /// TODO remove all references to datalaboratory.org and magland.org in the repository (don't just search .h/.cpp files)
 /// TODO rigorously check mpserver for potential crashes, unhandled exceptions
+/// TODO unit test that runs through all the mountainprocess functionality (sample pipeline run)
 
 struct run_script_opts;
 void print_usage();
