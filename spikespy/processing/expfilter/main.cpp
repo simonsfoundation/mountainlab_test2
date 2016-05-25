@@ -1,5 +1,6 @@
 #include <QCoreApplication>
-#include "get_command_line_params.h"
+#include "commandlineparams.h"
+#include <QDebug>
 //extern "C" {
 #include "expfilter.h"
 //}
@@ -10,9 +11,7 @@ void usage() {
 
 int main(int argc, char *argv[])
 {
-	QStringList required_params,optional_params;
-	required_params << "tau" << "ftype";
-	CLParams params=get_command_line_params(argc,argv,required_params,optional_params);
+	CLParams params=commandlineparams(argc,argv);
 
 	if (!params.success) {
 		qCritical() << params.error_message;
