@@ -93,6 +93,7 @@ void MBController::openSortingResult(QString json)
         QProcess* process = new QProcess;
         process->setProcessChannelMode(QProcess::MergedChannels);
         connect(process, SIGNAL(readyRead()), this, SLOT(slot_ready_read()));
+        qDebug() << "EXECUTING" << mv_exe+" "+args.join(" ");
         process->start(mv_exe, args);
         d->m_processes << process;
     }

@@ -27,6 +27,10 @@
 
 //void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions);
 
+/// TODO provide mountainview usage information
+/// TODO auto correlograms for selected clusters
+/// TODO figure out what to do when #channels and/or #clusters is huge
+
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
