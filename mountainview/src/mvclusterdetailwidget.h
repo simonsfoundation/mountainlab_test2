@@ -61,7 +61,7 @@ public:
     ///Set selected label numbers (affects highlighting)
     void setSelectedKs(const QList<int>& ks);
 
-    void setViewAgent(MVViewAgent *agent);
+    void setViewAgent(MVViewAgent* agent);
 
     void zoomAllTheWayOut();
 

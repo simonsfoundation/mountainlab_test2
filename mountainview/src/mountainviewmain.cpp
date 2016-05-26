@@ -52,12 +52,10 @@ int main(int argc, char* argv[])
         QString arg2 = CLP.unnamed_parameters.value(1);
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
-        }
-        else if (arg2 == "remotereadmda2") {
+        } else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
-        }
-        else {
+        } else {
             qWarning() << "No such unit test: " + arg2;
         }
         return 0;
@@ -85,8 +83,7 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            }
-            else {
+            } else {
                 W->resize(W0, H0);
             }
 
@@ -125,8 +122,7 @@ int main(int argc, char* argv[])
         }
 
         W->setDefaultInitialization();
-    }
-    else if (mode == "spikespy") {
+    } else if (mode == "spikespy") {
         printf("spikespy...\n");
         QString timeseries_path = CLP.named_parameters["timeseries"].toString();
         QString firings_path = CLP.named_parameters["firings"].toString();

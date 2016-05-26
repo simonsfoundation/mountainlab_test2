@@ -112,8 +112,7 @@ double compute_stdev(const QList<double>& X)
     int ct = X.count();
     if (ct >= 2) {
         return sqrt((sumsqr - sum * sum / ct) / (ct - 1));
-    }
-    else
+    } else
         return 0;
 }
 Mda grab_clips_subset(Mda& clips, const QList<int>& inds)
@@ -158,7 +157,7 @@ QString abbreviate(const QString& str, int len1, int len2)
 {
     if (str.count() <= len1 + len2 + 20)
         return str;
-    return str.mid(0, len1)+"...\n...\n..."+str.mid(str.count()-len2);
+    return str.mid(0, len1) + "...\n...\n..." + str.mid(str.count() - len2);
 }
 
 #ifdef USE_NETWORK
@@ -200,7 +199,7 @@ QString http_get_text(const QString& url)
     loop.exec();
     printf("RECEIVED TEXT (%d ms, %d bytes) from GET %s\n", timer.elapsed(), ret.count(), url.toLatin1().data());
     QString str = abbreviate(ret, 200, 200);
-    printf("%s\n",(str.toLatin1().data()));
+    printf("%s\n", (str.toLatin1().data()));
     return ret;
 }
 #else
@@ -208,7 +207,7 @@ QString http_get_binary_file(const QString& url)
 {
     QString tmp_fname = get_temp_fname();
     QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
-    qDebug()  << cmd;
+    qDebug() << cmd;
     int exit_code = system(cmd.toLatin1().data());
     if (exit_code != 0) {
         qWarning() << "Problem with system call: " + cmd;
@@ -221,7 +220,7 @@ QString http_get_text(const QString& url)
 {
     QString tmp_fname = get_temp_fname();
     QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
-    qDebug()  << cmd;
+    qDebug() << cmd;
     int exit_code = system(cmd.toLatin1().data());
     if (exit_code != 0) {
         qWarning() << "Problem with system call: " + cmd;
@@ -230,7 +229,7 @@ QString http_get_text(const QString& url)
     }
     QString ret = read_text_file(tmp_fname);
     QFile::remove(tmp_fname);
-    qDebug()  << "RESPONSE: " << ret;
+    qDebug() << "RESPONSE: " << ret;
     return ret;
 }
 #endif
@@ -241,4 +240,3 @@ QString compute_hash(const QString& str)
     hash.addData(str.toLatin1());
     return QString(hash.result().toHex());
 }
-

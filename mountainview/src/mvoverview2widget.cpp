@@ -46,17 +46,6 @@
 #include <QAbstractButton>
 #include "textfile.h"
 
-class CrossCorrelogramComputer : public ComputationThread {
-public:
-    //inputs
-    DiskReadMda firings;
-    int max_dt;
-
-    void compute();
-
-    Mda cross_correlograms_data;
-};
-
 class MVOverview2WidgetPrivate {
 public:
     MVOverview2Widget* q;
@@ -92,8 +81,6 @@ public:
 
     QList<QColor> m_channel_colors;
     QMap<QString, QColor> m_colors;
-
-    //CrossCorrelogramComputer m_cross_correlogram_computer;
 
     void create_cross_correlograms_data();
     //void create_templates_data();
@@ -730,12 +717,12 @@ void MVOverview2Widget::slot_update_buttons()
     d->set_button_enabled("open-firing-events", (something_selected) && (has_peaks));
     d->set_button_enabled("find-nearby-events", d->m_selected_ks.count() >= 2);
 
-    d->set_button_enabled("annotate_selected",something_selected);
-    d->set_button_enabled("merge_selected",d->m_selected_ks.count()>=2);
-    d->set_button_enabled("unmerge_selected",something_selected);
-    d->set_button_enabled("export_mountainview_document",true);
-    d->set_button_enabled("export_original_firings",true);
-    d->set_button_enabled("export_filtered_firings",true);
+    d->set_button_enabled("annotate_selected", something_selected);
+    d->set_button_enabled("merge_selected", d->m_selected_ks.count() >= 2);
+    d->set_button_enabled("unmerge_selected", something_selected);
+    d->set_button_enabled("export_mountainview_document", true);
+    d->set_button_enabled("export_original_firings", true);
+    d->set_button_enabled("export_filtered_firings", true);
 }
 
 void MVOverview2WidgetPrivate::update_sizes()
@@ -846,7 +833,7 @@ void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
 {
     TaskProgress task("do_shell_split_and_event_filter()");
 
-    MountainsortThread MT;
+    MountainProcessRunner MT;
     QString processor_name = "mv_firings_filter";
 
     MT.setProcessorName(processor_name);
@@ -881,7 +868,8 @@ void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
 
     QString firings_out = MT.makeOutputFilePath("firings_out");
     QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
-    MT.compute();
+    /// TODO this should be called in a separate thread MT.runProcess
+    MT.runProcess(0);
     m_firings.setPath(firings_out);
     task.log("m_firings path = " + firings_out);
     task.log(QString("m_firings.N1()=%1 m_firings.N2()=%2").arg(m_firings.N1()).arg(m_firings.N2()));
@@ -1831,10 +1819,18 @@ void DownloadComputer::compute()
     TaskProgress task("Downlading");
     task.setDescription(QString("Downloading %1 to %2").arg(source_path).arg(dest_path));
     DiskReadMda X(source_path);
+    X.setComputationHalter(this);
     Mda Y;
     task.setProgress(0.2);
     task.log(QString("Reading/Downloading %1x%2x%3").arg(X.N1()).arg(X.N2()).arg(X.N3()));
-    X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3());
+    if (!X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3())) {
+        if (this->stopRequested()) {
+            task.error("Halted download: " + source_path);
+        } else {
+            task.error("Failed to readChunk from: " + source_path);
+        }
+        return;
+    }
     task.setProgress(0.8);
     if (use_float64) {
         task.log("Writing 64-bit to " + dest_path);
@@ -1920,91 +1916,4 @@ void MVOverview2WidgetPrivate::set_button_enabled(QString name, bool val)
     QAbstractButton* B = m_control_panel_new->findButton(name);
     if (B)
         B->setEnabled(val);
-}
-
-typedef QList<long> IntList;
-void CrossCorrelogramComputer::compute()
-{
-    QList<long> times, labels;
-    long L = firings.N2();
-
-    printf("Setting up times and labels...\n");
-    for (int n = 0; n < L; n++) {
-        times << (long)firings.value(1, n);
-        labels << (long)firings.value(2, n);
-    }
-    int K = 0;
-    for (int n = 0; n < labels.count(); n++) {
-        if (labels[n] > K)
-            K = labels[n];
-    }
-
-    printf("Sorting by times...\n");
-    QList<long> indices = get_sort_indices(times);
-    QList<long> times2, labels2;
-    for (int i = 0; i < indices.count(); i++) {
-        times2 << times[indices[i]];
-        labels2 << labels[indices[i]];
-    }
-    times = times2;
-    labels = labels2;
-
-    printf("Initializing output...\n");
-    QList<IntList> out;
-    IntList empty_list;
-    for (int k1 = 1; k1 <= K; k1++) {
-        for (int k2 = 1; k2 <= K; k2++) {
-            out << empty_list;
-        }
-    }
-
-    printf("Setting time differences...\n");
-    int i1 = 0;
-    for (int i2 = 0; i2 < L; i2++) {
-        if (i2 % 100 == 0) {
-            //set_progress("Computing", "Creating cross correlograms data", i2 * 1.0 / L);
-        }
-        while ((i1 + 1 < L) && (times[i1] < times[i2] - max_dt))
-            i1++;
-        int k2 = labels[i2];
-        int t2 = times[i2];
-        if (k2 >= 1) {
-            for (int jj = i1; jj < i2; jj++) {
-                int k1 = labels[jj];
-                int t1 = times[jj];
-                if (k1 >= 1) {
-                    out[(k1 - 1) + K * (k2 - 1)] << t2 - t1;
-                    out[(k2 - 1) + K * (k1 - 1)] << t1 - t2;
-                }
-            }
-        }
-    }
-
-    printf("Counting...\n");
-    int ct = 0;
-    for (int k1 = 1; k1 <= K; k1++) {
-        for (int k2 = 1; k2 <= K; k2++) {
-            ct += out[(k1 - 1) + K * (k2 - 1)].count();
-        }
-    }
-
-    printf("Creating mda...\n");
-    Mda ret;
-    ret.allocate(3, ct);
-
-    ct = 0;
-    for (int k1 = 1; k1 <= K; k1++) {
-        for (int k2 = 1; k2 <= K; k2++) {
-            IntList* tmp = &out[(k1 - 1) + K * (k2 - 1)];
-            for (int jj = 0; jj < tmp->count(); jj++) {
-                ret.setValue(k1, 0, ct);
-                ret.setValue(k2, 1, ct);
-                ret.setValue((*tmp)[jj], 2, ct);
-                ct++;
-            }
-        }
-    }
-    printf(".\n");
-
-    cross_correlograms_data = ret;
 }
