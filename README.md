@@ -5,7 +5,7 @@ MountainLab is a collection of processing, visualization, and validation tools f
 
 [Installation instructions](https://mountainlab.vbulletin.net/articles/19-installing-mountainlab)
 
-[MountainLab Forum](https://mountainlab.vbulletin.net/) -- including documentation and latest developments
+[Forum](https://mountainlab.vbulletin.net/) -- including documentation and latest developments
 
 ## References
 
