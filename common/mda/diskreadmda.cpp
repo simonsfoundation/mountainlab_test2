@@ -117,7 +117,9 @@ void DiskReadMda::setPath(const char* file_path)
 void DiskReadMda::setComputationHalter(ComputationHalter* halter)
 {
     d->m_halter = halter;
+#ifdef USE_REMOTE_MDA
     d->m_remote_mda.setComputationHalter(halter);
+#endif
 }
 
 QString DiskReadMda::path()
