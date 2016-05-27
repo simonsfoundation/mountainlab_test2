@@ -28,6 +28,10 @@
 /// TODO on startup of mountainprocess daemon show all the loaded processors
 /// TODO remove all references to datalaboratory.org and magland.org in the repository (don't just search .h/.cpp files)
 /// TODO rigorously check mpserver for potential crashes, unhandled exceptions
+/// TODO make MAX_SHORT_TERM_GB and MAX_LONG_TERM_GB configurable (but default should be zero - so we don't interrupt every run -- so like the daemon should be handling it)
+
+#define MAX_SHORT_TERM_GB 100
+#define MAX_LONG_TERM_GB 100
 
 struct run_script_opts;
 void print_usage();
@@ -212,6 +216,8 @@ int main(int argc, char* argv[])
     } else if (arg1 == "daemon-start") {
         if (!initialize_process_manager(config_fname, config))
             return -1;
+        CacheManager::globalInstance()->setMaxShortTermGB(MAX_SHORT_TERM_GB);
+        CacheManager::globalInstance()->setMaxLongTermGB(MAX_LONG_TERM_GB);
         MPDaemon X;
         X.setLogPath(log_path);
         ProcessResources RR;
