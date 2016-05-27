@@ -25,14 +25,11 @@ public:
     QString makeRemoteFile(const QString& mlproxy_url, const QString& file_name = "", Duration duration = ShortTerm);
     QString makeLocalFile(const QString& file_name = "", Duration duration = ShortTerm);
     QString localTempPath();
-    void setMaxShortTermGB(double val);
-    void setMaxLongTermGB(double val);
-    void cleanUp();
 
-    static CacheManager *globalInstance();
+    static CacheManager* globalInstance();
 
-//private slots:
-//    void slot_remove_on_delete();
+    //private slots:
+    //    void slot_remove_on_delete();
 
 private:
     CacheManagerPrivate* d;

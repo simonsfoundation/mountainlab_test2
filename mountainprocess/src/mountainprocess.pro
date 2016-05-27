@@ -33,8 +33,8 @@ SOURCES += mlutils.cpp
 
 INCLUDEPATH += ../../common/cachemanager
 VPATH += ../../common/cachemanager
-HEADERS += cachemanager.h
-SOURCES += cachemanager.cpp
+HEADERS += cachemanager.h tempfilecleaner.h
+SOURCES += cachemanager.cpp tempfilecleaner.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

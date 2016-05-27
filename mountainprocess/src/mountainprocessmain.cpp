@@ -18,6 +18,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFileInfo>
+#include <tempfilecleaner.h>
 #include "processmanager.h"
 #include "textfile.h"
 #include "cachemanager.h"
@@ -32,6 +33,7 @@
 
 #define MAX_SHORT_TERM_GB 100
 #define MAX_LONG_TERM_GB 100
+#define MAX_MDACHUNK_GB 20
 
 struct run_script_opts;
 void print_usage();
@@ -68,6 +70,7 @@ int main(int argc, char* argv[])
 
     /// TODO get rid of mlConfigPath()
     QString config_fname = mountainlabBasePath() + "/server/labcomputer/labcomputer.json";
+    QString config_path = QFileInfo(config_fname).path();
     QJsonParseError parse_error;
     QJsonObject config = QJsonDocument::fromJson(read_text_file(config_fname).toLatin1(), &parse_error).object();
     if (parse_error.error != QJsonParseError::NoError) {
@@ -79,7 +82,7 @@ int main(int argc, char* argv[])
     ProcessManager* PM = ProcessManager::globalInstance();
     QStringList server_urls = json_array_to_stringlist(config["server_urls"].toArray());
     PM->setServerUrls(server_urls);
-    QString server_base_path = config["mdaserver_base_path"].toString();
+    QString server_base_path = resolve_path(config_path, config["mdaserver_base_path"].toString());
     PM->setServerBasePath(server_base_path);
 
     QString arg1 = CLP.unnamed_parameters.value(0);
@@ -216,8 +219,13 @@ int main(int argc, char* argv[])
     } else if (arg1 == "daemon-start") {
         if (!initialize_process_manager(config_fname, config))
             return -1;
-        CacheManager::globalInstance()->setMaxShortTermGB(MAX_SHORT_TERM_GB);
-        CacheManager::globalInstance()->setMaxLongTermGB(MAX_LONG_TERM_GB);
+        TempFileCleaner cleaner;
+        cleaner.addPath(mlTmpPath() + "/tmp_short_term", MAX_SHORT_TERM_GB);
+        cleaner.addPath(mlTmpPath() + "/tmp_long_term", MAX_LONG_TERM_GB);
+        cleaner.addPath(resolve_path(config_path, config["mdaserver_base_path"].toString()) + "/tmp_short_term", MAX_SHORT_TERM_GB);
+        cleaner.addPath(resolve_path(config_path, config["mdaserver_base_path"].toString()) + "/tmp_long_term", MAX_LONG_TERM_GB);
+        cleaner.addPath(resolve_path(config_path, config["mdachunk_data_path"].toString()+"/tmp_short_term"), MAX_MDACHUNK_GB);
+        cleaner.addPath(resolve_path(config_path, config["mdachunk_data_path"].toString()+"/tmp_long_term"), MAX_MDACHUNK_GB);
         MPDaemon X;
         X.setLogPath(log_path);
         ProcessResources RR;
@@ -309,9 +317,7 @@ bool initialize_process_manager(QString config_fname, QJsonObject config)
     }
     for (int i = 0; i < processor_paths.count(); i++) {
         QString path0 = processor_paths[i];
-        if (QFileInfo(path0).isRelative()) {
-            path0 = QFileInfo(config_fname).path() + "/" + path0;
-        }
+        path0 = resolve_path(QFileInfo(config_fname).path(), path0);
         processor_paths[i] = path0;
     }
 

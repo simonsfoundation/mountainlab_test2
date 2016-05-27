@@ -83,3 +83,11 @@ QString mlConfigPath()
     mkdir_if_doesnt_exist(ret);
     return ret;
 }
+
+QString resolve_path(QString basepath, QString path)
+{
+    if (QFileInfo(path).isRelative()) {
+        return basepath + "/" + path;
+    } else
+        return path;
+}
