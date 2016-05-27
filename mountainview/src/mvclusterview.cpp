@@ -486,8 +486,8 @@ void MVClusterViewPrivate::update_grid()
         if (max_abs_val) {
             for (double aa = -max_abs_val * factor; aa <= max_abs_val * factor; aa += max_abs_val * factor / 50) {
                 {
-                    CVPoint pt1 = cvpoint(aa, 0, 0);
-                    CVPoint pt2 = m_transformation.map(pt1);
+                    Point3D pt1 = Point3D(aa, 0, 0);
+                    Point3D pt2 = m_transformation.map(pt1);
                     x0s << pt2.x;
                     y0s << pt2.y;
                     z0s << pt2.z;
@@ -496,8 +496,8 @@ void MVClusterViewPrivate::update_grid()
                     amp0s << 0;
                 }
                 {
-                    CVPoint pt1 = cvpoint(0, aa, 0);
-                    CVPoint pt2 = m_transformation.map(pt1);
+                    Point3D pt1 = Point3D(0, aa, 0);
+                    Point3D pt2 = m_transformation.map(pt1);
                     x0s << pt2.x;
                     y0s << pt2.y;
                     z0s << pt2.z;
@@ -506,8 +506,8 @@ void MVClusterViewPrivate::update_grid()
                     amp0s << 0;
                 }
                 {
-                    CVPoint pt1 = cvpoint(0, 0, aa);
-                    CVPoint pt2 = m_transformation.map(pt1);
+                    Point3D pt1 = Point3D(0, 0, aa);
+                    Point3D pt2 = m_transformation.map(pt1);
                     x0s << pt2.x;
                     y0s << pt2.y;
                     z0s << pt2.z;
@@ -589,10 +589,10 @@ void MVClusterViewPrivate::update_grid()
                 a2 = max_abs_val * factor;
             if (pass == 3)
                 a3 = max_abs_val * factor;
-            CVPoint pt1 = cvpoint(-a1, -a2, -a3);
-            CVPoint pt2 = cvpoint(a1, a2, a3);
-            CVPoint pt1b = m_transformation.map(pt1);
-            CVPoint pt2b = m_transformation.map(pt2);
+            Point3D pt1 = Point3D(-a1, -a2, -a3);
+            Point3D pt2 = Point3D(a1, a2, a3);
+            Point3D pt1b = m_transformation.map(pt1);
+            Point3D pt2b = m_transformation.map(pt2);
             double x1, y1, x2, y2;
             coord2gridindex(pt1b.x, pt1b.y, x1, y1);
             coord2gridindex(pt2b.x, pt2b.y, x2, y2);

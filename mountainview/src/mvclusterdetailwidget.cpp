@@ -20,6 +20,7 @@
 #include "compute_templates_0.h"
 #include "computationthread.h"
 #include "mountainprocessrunner.h"
+#include "toolbuttonmenu.h"
 
 struct ClusterData {
     ClusterData()
@@ -69,6 +70,7 @@ public:
         m_highlighted = false;
         m_hovered = false;
         x_position_before_scaling = 0;
+        m_stdev_shading = false;
     }
     void setClusterData(const ClusterData& CD)
     {
@@ -100,6 +102,15 @@ public:
     {
         m_selected = val;
     }
+    void setStdevShading(bool val)
+    {
+        m_stdev_shading = val;
+    }
+    bool stdevShading()
+    {
+        return m_stdev_shading;
+    }
+
     void paint(QPainter* painter, QRectF rect);
     double spaceNeeded();
     ClusterData* clusterData()
@@ -127,6 +138,7 @@ private:
     bool m_hovered;
     bool m_selected;
     QJsonObject m_attributes;
+    bool m_stdev_shading;
 
     QPointF template_coord2pix(int m, double t, double val);
     QColor get_firing_rate_text_color(double rate);
@@ -162,6 +174,7 @@ public:
     double m_anchor_scroll_x;
     int m_anchor_view_index;
     MVClusterDetailWidgetCalculator m_calculator;
+    bool m_stdev_shading;
 
     MVViewAgent* m_view_agent;
 
@@ -181,6 +194,7 @@ public:
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
     void start_calculation();
+    void toggle_stdev_shading();
 
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
@@ -202,6 +216,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
     d->m_anchor_x = -1;
     d->m_anchor_scroll_x = -1;
     d->m_anchor_view_index = -1;
+    d->m_stdev_shading = false;
 
     d->m_colors["background"] = QColor(240, 240, 240);
     d->m_colors["frame1"] = QColor(245, 245, 245);
@@ -216,10 +231,27 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
 
     this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
-    this->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
+    //this->setContextMenuPolicy(Qt::CustomContextMenu);
+    //connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
 
     connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
+
+    this->setContextMenuPolicy(Qt::ActionsContextMenu);
+    ToolButtonMenu *MM=new ToolButtonMenu(this);
+    QToolButton *tb=MM->activateOn(this);
+    QIcon icon(":images/gear.png");
+    tb->setIcon(icon);
+    tb->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
+    {
+        QAction *a=new QAction("Export image",this);
+        this->addAction(a);
+        connect(a,SIGNAL(triggered(bool)),this,SLOT(slot_export_image()));
+    }
+    {
+        QAction *a=new QAction("Toggle std. dev. shading",this);
+        this->addAction(a);
+        connect(a,SIGNAL(triggered(bool)),this,SLOT(slot_toggle_stdev_shading()));
+    }
 }
 
 MVClusterDetailWidget::~MVClusterDetailWidget()
@@ -562,21 +594,36 @@ void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
     d->zoom(factor);
 }
 
+/*
 void MVClusterDetailWidget::slot_context_menu(const QPoint& pos)
 {
     QMenu M;
     QAction* export_image = M.addAction("Export Image");
+    QAction* toggle_stdev_shading = M.addAction("Toggle std. dev. shading");
     QAction* selected = M.exec(this->mapToGlobal(pos));
     if (selected == export_image) {
         d->export_image();
+    } else if (selected == toggle_stdev_shading) {
+        d->toggle_stdev_shading();
     }
 }
+*/
 
 void MVClusterDetailWidget::slot_calculator_finished()
 {
     d->m_calculator.stopComputation(); //because I'm paranoid!
     d->m_cluster_data = d->m_calculator.cluster_data;
     this->update();
+}
+
+void MVClusterDetailWidget::slot_export_image()
+{
+    d->export_image();
+}
+
+void MVClusterDetailWidget::slot_toggle_stdev_shading()
+{
+    d->toggle_stdev_shading();
 }
 
 void MVClusterDetailWidgetPrivate::compute_total_time()
@@ -760,7 +807,8 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         pen.setWidth(1);
         pen.setColor(col);
         painter->setPen(pen);
-        { //the stdev
+        if (d->m_stdev_shading) {
+            QColor quite_light_gray(200, 200, 205);
             QPainterPath path;
             for (int t = 0; t < T; t++) {
                 QPointF pt = template_coord2pix(m, t, template0.value(m, t) - stdev0.value(m, t));
@@ -777,7 +825,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
                 QPointF pt = template_coord2pix(m, t, template0.value(m, t) - stdev0.value(m, t));
                 path.lineTo(pt);
             }
-            painter->fillPath(path, QBrush(Qt::lightGray));
+            painter->fillPath(path, QBrush(quite_light_gray));
         }
         { // the template
             QPainterPath path;
@@ -873,6 +921,9 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
 {
     painter.fillRect(0, 0, W, H, m_colors["background"]);
 
+    int right_margin=10; //make some room for the icon
+    W=W-right_margin;
+
     if (m_calculator.isComputing()) {
         QFont font = painter.font();
         font.setPointSize(30);
@@ -895,6 +946,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
     for (int i = 0; i < cluster_data_merged.count(); i++) {
         ClusterData CD = cluster_data_merged[i];
         ClusterView* V = new ClusterView(q, this);
+        V->setStdevShading(m_stdev_shading);
         V->setHighlighted(CD.k == m_current_k);
         V->setSelected(m_selected_ks.contains(CD.k));
         V->setHovered(CD.k == m_hovered_k);
@@ -937,6 +989,12 @@ void MVClusterDetailWidgetPrivate::export_image()
 {
     QImage img = q->renderImage();
     user_save_image(img);
+}
+
+void MVClusterDetailWidgetPrivate::toggle_stdev_shading()
+{
+    m_stdev_shading = !m_stdev_shading;
+    q->update();
 }
 
 void MVClusterDetailWidgetPrivate::start_calculation()

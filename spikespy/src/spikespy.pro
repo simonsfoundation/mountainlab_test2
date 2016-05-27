@@ -19,9 +19,6 @@ HEADERS += \
     sscontroller.h \
     sslabelview.h \
     sstimeseriesplot_prev.h \
-    cvview.h \
-    cvcommon.h \
-    cvcombowidget.h \
     closemehandler.h \
     sstimeserieswidget_prev.h \
     sscommon.h \
@@ -35,7 +32,6 @@ HEADERS += \
     sslabelsmodel_prev.h \
     diskreadmdaold.h \
     sslabelplot_prev.h \
-    cvwidget.h \
     diskwritemdaold.h \
     extractclipsdialog.h \
     plotarea_prev.h
@@ -43,9 +39,6 @@ SOURCES += ssmain.cpp \
     sscontroller.cpp \
     sslabelview.cpp \
     sstimeseriesplot_prev.cpp \
-    cvview.cpp \
-    cvcommon.cpp \
-    cvcombowidget.cpp \
     closemehandler.cpp \
     sstimeserieswidget_prev.cpp \
     sscommon.cpp \
@@ -58,7 +51,6 @@ SOURCES += ssmain.cpp \
     mdaobject.cpp \
     diskreadmdaold.cpp \
     sslabelplot_prev.cpp \
-    cvwidget.cpp \
     diskwritemdaold.cpp \
     extractclipsdialog.cpp \
     plotarea_prev.cpp

@@ -40,7 +40,6 @@ HEADERS += \
     sslabelsmodel.h \
     sslabelsmodel1.h \
     sscommon.h \
-    cvcommon.h \
     tabber.h \
     imagesavedialog.h \
     closemehandler.h \
@@ -79,7 +78,6 @@ SOURCES += mountainviewmain.cpp \
     plotarea.cpp \
     sslabelsmodel1.cpp \
     sscommon.cpp \
-    cvcommon.cpp \
     tabber.cpp \
     imagesavedialog.cpp \
     closemehandler.cpp \
@@ -102,8 +100,8 @@ SOURCES += commandlineparams.cpp
 
 INCLUDEPATH += ../../common/utils
 VPATH += ../../common/utils
-HEADERS += textfile.h haltagent.h taskprogress.h
-SOURCES += textfile.cpp haltagent.cpp taskprogress.cpp
+HEADERS += textfile.h haltagent.h taskprogress.h toolbuttonmenu.h
+SOURCES += textfile.cpp haltagent.cpp taskprogress.cpp toolbuttonmenu.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils
