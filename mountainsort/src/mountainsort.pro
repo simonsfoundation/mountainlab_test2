@@ -69,7 +69,9 @@ HEADERS += \
     processors/extract_raw_processor.h \
     processors/merge_across_channels.h \
     processors/merge_across_channels_processor.h \
-    processors/geom2adj_processor.h
+    processors/geom2adj_processor.h \
+    processors/mv_compute_templates_processor.h \
+    processors/mv_compute_templates.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -127,7 +129,9 @@ SOURCES += \
     processors/fit_stage_new.cpp \
     processors/merge_across_channels.cpp \
     processors/merge_across_channels_processor.cpp \
-    processors/geom2adj_processor.cpp
+    processors/geom2adj_processor.cpp \
+    processors/mv_compute_templates_processor.cpp \
+    processors/mv_compute_templates.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

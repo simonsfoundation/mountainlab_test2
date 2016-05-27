@@ -165,6 +165,7 @@ bool Mda::write32(const char* path) const
         H.dims[i] = d->m_dims[i];
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
+    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
     TaskProgressAgent::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
@@ -190,6 +191,7 @@ bool Mda::write64(const char* path) const
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
     mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
+    TaskProgressAgent::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }

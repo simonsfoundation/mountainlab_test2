@@ -30,6 +30,7 @@
 /// TODO provide mountainview usage information
 /// TODO auto correlograms for selected clusters
 /// TODO figure out what to do when #channels and/or #clusters is huge
+/// TODO 0.9.1 -- make sure to handle merging with other views, such as clips etc. Make elegant way
 
 int main(int argc, char* argv[])
 {

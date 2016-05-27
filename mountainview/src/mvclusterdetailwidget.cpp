@@ -31,6 +31,7 @@ struct ClusterData {
     int k;
     int channel;
     Mda template0;
+    Mda stdev0;
     QList<int> inds;
     QList<double> times;
     QList<double> peaks;
@@ -730,6 +731,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     painter->drawRect(rect2);
 
     Mda template0 = m_CD.template0;
+    Mda stdev0 = m_CD.stdev0;
     int M = template0.N1();
     int T = template0.N2();
     int Tmid = (int)((T + 1) / 2) - 1;
@@ -758,15 +760,36 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         pen.setWidth(1);
         pen.setColor(col);
         painter->setPen(pen);
-        QPainterPath path;
-        for (int t = 0; t < T; t++) {
-            QPointF pt = template_coord2pix(m, t, template0.value(m, t));
-            if (t == 0)
-                path.moveTo(pt);
-            else
+        { //the stdev
+            QPainterPath path;
+            for (int t = 0; t < T; t++) {
+                QPointF pt = template_coord2pix(m, t, template0.value(m, t) - stdev0.value(m, t));
+                if (t == 0)
+                    path.moveTo(pt);
+                else
+                    path.lineTo(pt);
+            }
+            for (int t = T - 1; t >= 0; t--) {
+                QPointF pt = template_coord2pix(m, t, template0.value(m, t) + stdev0.value(m, t));
                 path.lineTo(pt);
+            }
+            for (int t = 0; t <= 0; t++) {
+                QPointF pt = template_coord2pix(m, t, template0.value(m, t) - stdev0.value(m, t));
+                path.lineTo(pt);
+            }
+            painter->fillPath(path, QBrush(Qt::lightGray));
         }
-        painter->drawPath(path);
+        { // the template
+            QPainterPath path;
+            for (int t = 0; t < T; t++) {
+                QPointF pt = template_coord2pix(m, t, template0.value(m, t));
+                if (t == 0)
+                    path.moveTo(pt);
+                else
+                    path.lineTo(pt);
+            }
+            painter->drawPath(path);
+        }
     }
 
     QFont font = painter->font();
@@ -933,8 +956,11 @@ ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterD
     ClusterData ret;
     ret.k = main_CD.k;
     ret.channel = main_CD.channel;
+    Mda sum0;
+    Mda sumsqr0;
     if (group.count() > 0) {
-        ret.template0.allocate(group[0].template0.N1(), group[0].template0.N2(), group[0].template0.N3());
+        sum0.allocate(group[0].template0.N1(), group[0].template0.N2(), group[0].template0.N3());
+        sumsqr0.allocate(group[0].template0.N1(), group[0].template0.N2(), group[0].template0.N3());
     }
     double total_weight = 0;
     for (int i = 0; i < group.count(); i++) {
@@ -942,18 +968,26 @@ ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterD
         ret.peaks << group[i].peaks;
         ret.times << group[i].times;
         double weight = ret.inds.count();
-        for (int i3 = 0; i3 < ret.template0.N3(); i3++) {
-            for (int i2 = 0; i2 < ret.template0.N2(); i2++) {
-                for (int i1 = 0; i1 < ret.template0.N1(); i1++) {
-                    ret.template0.setValue(ret.template0.value(i1, i2, i3) + weight * group[i].template0.value(i1, i2, i3), i1, i2, i3);
+        for (int i3 = 0; i3 < sum0.N3(); i3++) {
+            for (int i2 = 0; i2 < sum0.N2(); i2++) {
+                for (int i1 = 0; i1 < sum0.N1(); i1++) {
+                    double val1 = group[i].template0.value(i1, i2, i3) * weight;
+                    double val2 = group[i].stdev0.value(i1, i2, i3) * group[i].stdev0.value(i1, i2, i3) * weight;
+                    sum0.setValue(sum0.value(i1, i2, i3) + val1, i1, i2, i3);
+                    sumsqr0.setValue(sumsqr0.value(i1, i2, i3) + (val2 + val1 * val1 / weight), i1, i2, i3);
                 }
             }
         }
         total_weight += weight;
     }
+    ret.template0.allocate(sum0.N1(), sum0.N2(), sum0.N3());
+    ret.stdev0.allocate(sum0.N1(), sum0.N2(), sum0.N3());
     if (total_weight) {
         for (long i = 0; i < ret.template0.totalSize(); i++) {
-            ret.template0.set(ret.template0.get(i) / total_weight, i);
+            double val_sum = sum0.get(i);
+            double val_sumsqr = sumsqr0.get(i);
+            ret.template0.set(val_sum / total_weight, i);
+            ret.stdev0.set(sqrt((val_sumsqr - val_sum * val_sum / total_weight) / total_weight), i);
         }
     }
     return ret;
@@ -1034,6 +1068,31 @@ DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& time
     return ret;
 }
 
+void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs_out, const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size, HaltAgent* halt_agent)
+{
+    TaskProgress task("mp_compute_templates_stdevs");
+    task.log("mlproxy_url: " + mlproxy_url);
+    MountainProcessRunner X;
+    QString processor_name = "mv_compute_templates";
+    X.setProcessorName(processor_name);
+
+    QMap<QString, QVariant> params;
+    params["timeseries"] = timeseries;
+    params["firings"] = firings;
+    params["clip_size"] = clip_size;
+    X.setInputParameters(params);
+    X.setMLProxyUrl(mlproxy_url);
+
+    QString templates_fname = X.makeOutputFilePath("templates");
+    QString stdevs_fname = X.makeOutputFilePath("stdevs");
+
+    task.log("X.compute()");
+    X.runProcess(halt_agent);
+    task.log("Returning DiskReadMda: " + templates_fname + " " + stdevs_fname);
+    templates_out.setPath(templates_fname);
+    stdevs_out.setPath(stdevs_fname);
+}
+
 void MVClusterDetailWidgetCalculator::compute()
 {
     TaskProgress task("Cluster Details");
@@ -1081,9 +1140,11 @@ void MVClusterDetailWidgetCalculator::compute()
     DiskReadMda templates0 = mscmd_compute_templates(mscmdserver_url, timeseries_path, firings_path, T);
     */
 
-    task.log("mp_compute_templates: " + mlproxy_url + " timeseries_path=" + timeseries_path + " firings_path=" + firings_path);
+    task.log("mp_compute_templates_stdevs: " + mlproxy_url + " timeseries_path=" + timeseries_path + " firings_path=" + firings_path);
     task.setProgress(0.6);
-    DiskReadMda templates0 = mp_compute_templates(mlproxy_url, timeseries_path, firings_path, T, this);
+    //DiskReadMda templates0 = mp_compute_templates(mlproxy_url, timeseries_path, firings_path, T, this);
+    DiskReadMda templates0, stdevs0;
+    mp_compute_templates_stdevs(templates0, stdevs0, mlproxy_url, timeseries_path, firings_path, T, this);
     if (this->stopRequested()) {
         task.error("Halted **");
         return;
@@ -1112,6 +1173,7 @@ void MVClusterDetailWidgetCalculator::compute()
             return;
         }
         templates0.readChunk(CD.template0, 0, 0, k - 1, M, T, 1);
+        stdevs0.readChunk(CD.stdev0, 0, 0, k - 1, M, T, 1);
         cluster_data << CD;
     }
 }
