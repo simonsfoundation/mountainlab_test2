@@ -182,7 +182,7 @@ QString http_get_binary_file(const QString& url)
     loop.exec();
     printf("RECEIVED BINARY (%d ms, %ld bytes) from %s\n", timer.elapsed(), num_bytes, url.toLatin1().data());
 
-    TaskProgress task(QString("DOWNLOADED: %1").arg(num_bytes));
+    TaskProgressAgent::globalInstance()->incrementQuantity("bytes_downloaded", num_bytes);
 
     return fname;
 }
@@ -205,7 +205,7 @@ QString http_get_text(const QString& url)
     QString str = abbreviate(ret, 200, 200);
     printf("%s\n", (str.toLatin1().data()));
 
-    TaskProgress task(QString("DOWNLOADED: %1").arg(ret.count()));
+    TaskProgressAgent::globalInstance()->incrementQuantity("bytes_downloaded", ret.count());
 
     return ret;
 }

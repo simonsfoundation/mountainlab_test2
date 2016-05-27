@@ -9,7 +9,7 @@
 #include "taskprogress.h"
 #include <QHBoxLayout>
 #include "computationthread.h"
-#include "mountainsortthread.h"
+#include "mountainprocessrunner.h"
 #include "msmisc.h"
 
 class MVClipsWidgetComputer : public ComputationThread {

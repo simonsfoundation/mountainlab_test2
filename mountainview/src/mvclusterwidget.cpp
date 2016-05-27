@@ -9,7 +9,7 @@
 #include "msmisc.h"
 #include <math.h>
 #include "extract_clips.h"
-#include "mountainsortthread.h"
+#include "mountainprocessrunner.h"
 
 class MVClusterWidgetComputer : public ComputationThread {
 public:

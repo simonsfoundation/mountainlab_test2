@@ -19,7 +19,7 @@
 #include <QTimer>
 #include "compute_templates_0.h"
 #include "computationthread.h"
-#include "mountainsortthread.h"
+#include "mountainprocessrunner.h"
 
 struct ClusterData {
     ClusterData()
@@ -1009,28 +1009,6 @@ QColor ClusterView::get_cluster_assessment_text_color(QString aa)
 {
     return Qt::black;
 }
-
-/*
-DiskReadMda mscmd_compute_templates(const QString& mscmdserver_url, const QString& timeseries, const QString& firings, int clip_size)
-{
-    MountainsortThread X;
-    QString processor_name = "compute_templates";
-    X.setProcessorName(processor_name);
-
-    QMap<QString, QVariant> params;
-    params["timeseries"] = timeseries;
-    params["firings"] = firings;
-    params["clip_size"] = clip_size;
-    X.setInputParameters(params);
-    X.setMscmdServerUrl(mscmdserver_url);
-
-    QString templates_fname = X.makeOutputFilePath("templates");
-
-    X.compute();
-    DiskReadMda ret(templates_fname);
-    return ret;
-}
-*/
 
 DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size, HaltAgent* halt_agent)
 {

@@ -4,7 +4,7 @@
 ** Created: 4/4/2016
 *******************************************************/
 
-#include "mountainsortthread.h"
+#include "mountainprocessrunner.h"
 #include <QCoreApplication>
 #include <QMap>
 #include <QProcess>
@@ -126,7 +126,7 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
         printf("%s\n", (str.toLatin1().data()));
         QJsonObject obj = QJsonDocument::fromJson(ret.toLatin1()).object();
 
-        TaskProgress task(QString("DOWNLOADED: %1").arg(ret.count()));
+        TaskProgressAgent::globalInstance()->incrementQuantity("bytes_downloaded", ret.count());
 
         return obj;
     }
@@ -204,7 +204,10 @@ void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
             task.error("Halted before post.");
             return;
         }
+        QTime post_timer;
+        post_timer.start();
         QJsonObject resp = http_post(url, req, halt_agent);
+        TaskProgressAgent::globalInstance()->incrementQuantity("remote_processing_time", post_timer.elapsed());
         if ((halt_agent) && (halt_agent->stopRequested())) {
             task.error("Halted during post: " + url);
             return;
