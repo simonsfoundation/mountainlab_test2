@@ -19,6 +19,7 @@ public:
                 w->installEventFilter(this);
                 w->setAttribute(Qt::WA_Hover);
                 QToolButton *tb = new QToolButton(w);
+                tb->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
                 connect(tb, SIGNAL(clicked()), this, SLOT(openMenu()));
                 QGraphicsOpacityEffect *eff = new QGraphicsOpacityEffect(tb);
                 tb->setGraphicsEffect(eff);

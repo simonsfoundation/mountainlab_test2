@@ -241,7 +241,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
     QToolButton *tb=MM->activateOn(this);
     QIcon icon(":images/gear.png");
     tb->setIcon(icon);
-    tb->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
     {
         QAction *a=new QAction("Export image",this);
         this->addAction(a);
