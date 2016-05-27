@@ -9,7 +9,7 @@
 
 #include <QString>
 #include "mda.h"
-#include "computationhalter.h"
+#include "haltagent.h"
 
 class RemoteReadMdaPrivate;
 /**
@@ -25,7 +25,7 @@ public:
 
     void setPath(const QString& path);
     QString path() const;
-    void setComputationHalter(ComputationHalter* halter);
+    void setHaltAgent(HaltAgent* halt_agent);
 
     long N1();
     long N2();

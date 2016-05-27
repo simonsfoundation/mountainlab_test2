@@ -455,9 +455,9 @@ void MVClusterWidgetComputer::compute()
         MT.runProcess(this);
     }
     firings_subset = DiskReadMda(firings_out_path);
-    firings_subset.setComputationHalter(this);
+    firings_subset.setHaltAgent(this);
 
     DiskReadMda features(features_path);
-    features.setComputationHalter(this);
+    features.setHaltAgent(this);
     features.readChunk(data, 0, 0, features.N1(), features.N2());
 }

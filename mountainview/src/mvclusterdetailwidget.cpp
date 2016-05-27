@@ -1032,7 +1032,7 @@ DiskReadMda mscmd_compute_templates(const QString& mscmdserver_url, const QStrin
 }
 */
 
-DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size, ComputationHalter* halter)
+DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size, HaltAgent* halt_agent)
 {
     TaskProgress task("mp_compute_templates");
     task.log("mlproxy_url: " + mlproxy_url);
@@ -1050,7 +1050,7 @@ DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& time
     QString templates_fname = X.makeOutputFilePath("templates");
 
     task.log("X.compute()");
-    X.runProcess(halter);
+    X.runProcess(halt_agent);
     task.log("Returning DiskReadMda: " + templates_fname);
     DiskReadMda ret(templates_fname);
     return ret;

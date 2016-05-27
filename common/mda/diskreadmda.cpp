@@ -25,7 +25,7 @@ public:
     long m_current_internal_chunk_index;
     Mda m_memory_mda;
     bool m_use_memory_mda;
-    ComputationHalter* m_halter;
+    HaltAgent* m_halt_agent;
 
 #ifdef USE_REMOTE_MDA
     bool m_use_remote_mda;
@@ -114,11 +114,11 @@ void DiskReadMda::setPath(const char* file_path)
     }
 }
 
-void DiskReadMda::setComputationHalter(ComputationHalter* halter)
+void DiskReadMda::setHaltAgent(HaltAgent* halt_agent)
 {
-    d->m_halter = halter;
+    d->m_halt_agent = halt_agent;
 #ifdef USE_REMOTE_MDA
-    d->m_remote_mda.setComputationHalter(halter);
+    d->m_remote_mda.setHaltAgent(halt_agent);
 #endif
 }
 
@@ -436,7 +436,7 @@ void DiskReadMdaPrivate::do_construct()
     m_file = 0;
     m_current_internal_chunk_index = -1;
     m_use_memory_mda = false;
-    m_halter = 0;
+    m_halt_agent = 0;
 #ifdef USE_REMOTE_MDA
     m_use_remote_mda = false;
 #endif

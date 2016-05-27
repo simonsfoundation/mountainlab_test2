@@ -87,7 +87,7 @@ QVariantMap json_obj_to_variantmap(QJsonObject obj)
     return ret;
 }
 
-QJsonObject http_post(QString url, QJsonObject req, ComputationHalter* halter)
+QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
 {
     QTime timer;
     timer.start();
@@ -106,7 +106,7 @@ QJsonObject http_post(QString url, QJsonObject req, ComputationHalter* halter)
     loop.exec();
     */
     while (!reply->isFinished()) {
-        if ((halter) && (halter->stopRequested())) {
+        if ((halt_agent) && (halt_agent->stopRequested())) {
             qWarning() << "Halting in http_post: " + url;
             reply->abort();
             loop.quit();
@@ -114,7 +114,7 @@ QJsonObject http_post(QString url, QJsonObject req, ComputationHalter* halter)
         loop.processEvents();
     }
 
-    if ((halter) && (halter->stopRequested())) {
+    if ((halt_agent) && (halt_agent->stopRequested())) {
         QJsonObject obj;
         obj["success"] = false;
         obj["error"] = "Halting in http_post: " + url;
@@ -125,11 +125,14 @@ QJsonObject http_post(QString url, QJsonObject req, ComputationHalter* halter)
         str.replace("\\n", "\n");
         printf("%s\n", (str.toLatin1().data()));
         QJsonObject obj = QJsonDocument::fromJson(ret.toLatin1()).object();
+
+        TaskProgress task(QString("DOWNLOADED: %1").arg(ret.count()));
+
         return obj;
     }
 }
 
-void MountainProcessRunner::runProcess(ComputationHalter* halter)
+void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
 {
 
     TaskProgress task("MS: " + d->m_processor_name);
@@ -197,12 +200,12 @@ void MountainProcessRunner::runProcess(ComputationHalter* halter)
         QString url = d->m_mlproxy_url + "/mpserver";
         task.log("POSTING: " + url);
         task.log(QJsonDocument(req).toJson());
-        if ((halter) && (halter->stopRequested())) {
+        if ((halt_agent) && (halt_agent->stopRequested())) {
             task.error("Halted before post.");
             return;
         }
-        QJsonObject resp = http_post(url, req, halter);
-        if ((halter) && (halter->stopRequested())) {
+        QJsonObject resp = http_post(url, req, halt_agent);
+        if ((halt_agent) && (halt_agent->stopRequested())) {
             task.error("Halted during post: " + url);
             return;
         }

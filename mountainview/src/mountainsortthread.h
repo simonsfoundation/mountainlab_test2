@@ -8,7 +8,7 @@
 #define MOUNTAINSORTTHREAD_H
 
 #include "computationthread.h"
-#include "computationhalter.h"
+#include "haltagent.h"
 
 class MountainProcessRunnerPrivate;
 class MountainProcessRunner {
@@ -21,7 +21,7 @@ public:
     void setInputParameters(const QMap<QString, QVariant>& parameters);
     void setMLProxyUrl(const QString& url);
     QString makeOutputFilePath(const QString& pname);
-    void runProcess(ComputationHalter* halter);
+    void runProcess(HaltAgent* halt_agent);
 
 private:
     MountainProcessRunnerPrivate* d;

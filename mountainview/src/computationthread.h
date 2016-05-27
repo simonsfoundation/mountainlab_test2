@@ -11,10 +11,10 @@
 #include <QString>
 #include <QMutex>
 
-#include "computationhalter.h"
+#include "haltagent.h"
 
 class ComputationThreadPrivate;
-class ComputationThread : public QThread, public ComputationHalter {
+class ComputationThread : public QThread, public HaltAgent {
     Q_OBJECT
 public:
     friend class ComputationThreadPrivate;

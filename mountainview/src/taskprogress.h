@@ -64,6 +64,9 @@ public:
     QList<TaskInfo> activeTasks();
     QList<TaskInfo> completedTasks();
 
+    /// Witold I have a bunch of hacks here, since you will ultimately replace this with a better solution, I feel okay
+    long bytesDownloaded();
+
     static TaskProgressAgent* globalInstance();
 signals:
     void tasksChanged();

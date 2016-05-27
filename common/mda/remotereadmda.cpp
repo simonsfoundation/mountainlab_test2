@@ -9,6 +9,7 @@
 #include <QStringList>
 #include <QDir>
 #include <QDateTime>
+#include <taskprogress.h>
 #include "cachemanager.h"
 #include "msmisc.h"
 
@@ -27,7 +28,7 @@ public:
     QString m_path;
     RemoteReadMdaInfo m_info;
     bool m_info_downloaded;
-    ComputationHalter* m_halter;
+    HaltAgent* m_halt_agent;
 
     void download_info_if_needed();
     QString download_chunk_at_index(long ii);
@@ -37,7 +38,7 @@ RemoteReadMda::RemoteReadMda(const QString& path)
 {
     d = new RemoteReadMdaPrivate;
     d->q = this;
-    d->m_halter = 0;
+    d->m_halt_agent = 0;
     this->setPath(path);
 }
 
@@ -45,13 +46,13 @@ RemoteReadMda::RemoteReadMda(const RemoteReadMda& other)
 {
     d = new RemoteReadMdaPrivate;
     d->q = this;
-    d->m_halter = 0;
+    d->m_halt_agent = 0;
     this->setPath(other.d->m_path);
 }
 
 void RemoteReadMda::operator=(const RemoteReadMda& other)
 {
-    /// TODO should I copy the halter?
+    /// TODO should I copy the halt_agent?
     this->setPath(other.d->m_path);
 }
 
@@ -72,9 +73,9 @@ QString RemoteReadMda::path() const
     return d->m_path;
 }
 
-void RemoteReadMda::setComputationHalter(ComputationHalter* halter)
+void RemoteReadMda::setHaltAgent(HaltAgent* halt_agent)
 {
-    d->m_halter = halter;
+    d->m_halt_agent = halt_agent;
 }
 
 long RemoteReadMda::N1()
@@ -103,6 +104,13 @@ QDateTime RemoteReadMda::fileLastModified()
 
 bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
 {
+    /// TODO handle both size=8 and 4 bytes
+    int datatype_size=8;
+    double size_mb=size*datatype_size*1.0/1e6;
+    TaskProgress task;
+    if (size_mb>0.5) {
+        task.setLabel(QString("Downloading array chunk: %1 MB").arg(size_mb));
+    }
     //read a chunk of the remote array considered as a 1D array
     X.allocate(size, 1); //allocate the output array
     double* Xptr = X.dataPtr(); //pointer to the output data
@@ -111,6 +119,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     long jj1 = ii1 / REMOTE_READ_MDA_CHUNK_SIZE; //start chunk index of the remote array
     long jj2 = ii2 / REMOTE_READ_MDA_CHUNK_SIZE; //end chunk index of the remote array
     if (jj1 == jj2) { //in this case there is only one chunk we need to worry about
+        task.setProgress(0.5);
         QString fname = d->download_chunk_at_index(jj1); //download the single chunk
         if (fname.isEmpty())
             return false;
@@ -119,8 +128,8 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
         return true;
     } else {
         for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
-            if ((d->m_halter) && (d->m_halter->stopRequested())) {
-                qWarning() << "Halting in RemoteReadMda::readChunk() :::::::::::::::::::::::::::::::::::::::::::::::::::::::: ";
+            task.setProgress((jj-jj1+0.5)/(jj2-jj1+1));
+            if ((d->m_halt_agent) && (d->m_halt_agent->stopRequested())) {
                 //X = Mda(); //maybe it's better to return the right size.
                 return false;
             }
@@ -200,6 +209,7 @@ void RemoteReadMdaPrivate::download_info_if_needed()
 }
 #endif
 
+/// TODO only download float64 when necessary!
 QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
 {
     long Ntot = m_info.N1 * m_info.N2 * m_info.N3;

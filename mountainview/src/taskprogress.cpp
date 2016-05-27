@@ -27,6 +27,7 @@ public:
     bool m_emit_tasks_changed_scheduled;
     QDateTime m_last_emit_tasks_changed;
     QMutex m_addtask_removetask_mutex;
+    long m_bytes_downloaded;
 };
 
 TaskProgress::TaskProgress(const QString& label, const QString& description)
@@ -89,7 +90,7 @@ void TaskProgress::log(const QString& log_message)
 
 void TaskProgress::error(const QString& error_message)
 {
-    qWarning() << "TaskProgress Error:: "+error_message;
+    qWarning() << "TaskProgress Error:: " + error_message;
     this->log("ERROR: " + error_message);
     {
         QMutexLocker locker(&d->m_mutex);
@@ -121,6 +122,7 @@ TaskProgressAgent::TaskProgressAgent()
     d = new TaskProgressAgentPrivate;
     d->q = this;
     d->m_emit_tasks_changed_scheduled = false;
+    d->m_bytes_downloaded = 0;
 }
 
 TaskProgressAgent::~TaskProgressAgent()
@@ -134,8 +136,10 @@ QList<TaskInfo> TaskProgressAgent::activeTasks()
     QList<TaskProgress*> to_remove;
     foreach (TaskProgress* X, d->m_active_tasks) {
         TaskInfo info = X->getInfo();
-        if (info.progress < 1) {
-            ret << X->getInfo();
+        if (!info.label.isEmpty()) {
+            if (info.progress < 1) {
+                ret << X->getInfo();
+            }
         }
     }
 
@@ -147,7 +151,17 @@ QList<TaskInfo> TaskProgressAgent::completedTasks()
     for (int i = 0; i < d->m_completed_tasks.count(); i++) {
         d->m_completed_tasks[i].progress = 1; // kind of a hack to make sure the progress is 1 for all completed tasks
     }
-    return d->m_completed_tasks;
+    QList<TaskInfo> ret;
+    for (int i = 0; i < d->m_completed_tasks.count(); i++) {
+        if (!d->m_completed_tasks[i].label.isEmpty())
+            ret << d->m_completed_tasks[i];
+    }
+    return ret;
+}
+
+long TaskProgressAgent::bytesDownloaded()
+{
+    return d->m_bytes_downloaded;
 }
 
 Q_GLOBAL_STATIC(TaskProgressAgent, theInstance)
@@ -185,6 +199,11 @@ void TaskProgressAgent::slot_task_completed(TaskInfo info)
 
 void TaskProgressAgent::addTask(TaskProgress* T)
 {
+    QString label=T->getInfo().label;
+    if (label.startsWith("DOWNLOADED: ")) {
+        d->m_bytes_downloaded += label.mid(QString("DOWNLOADED: ").count()).toLong();
+        return;
+    }
     d->m_active_tasks.prepend(T);
     connect(T, SIGNAL(changed()), this, SLOT(slot_schedule_emit_tasks_changed()), Qt::QueuedConnection);
     connect(T, SIGNAL(completed(TaskInfo)), this, SLOT(slot_task_completed(TaskInfo)), Qt::QueuedConnection);
@@ -193,6 +212,10 @@ void TaskProgressAgent::addTask(TaskProgress* T)
 
 void TaskProgressAgent::removeTask(TaskProgress* T)
 {
+    QString label=T->getInfo().label;
+    if (label.startsWith("DOWNLOADED: ")) {
+        return;
+    }
     TaskInfo info = T->getInfo();
     if (info.progress != 1) {
         d->m_completed_tasks.prepend(T->getInfo());

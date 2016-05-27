@@ -15,6 +15,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QTemporaryFile>
+#include "taskprogress.h"
 #endif
 
 #include "textfile.h"
@@ -180,6 +181,9 @@ QString http_get_binary_file(const QString& url)
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
     printf("RECEIVED BINARY (%d ms, %ld bytes) from %s\n", timer.elapsed(), num_bytes, url.toLatin1().data());
+
+    TaskProgress task(QString("DOWNLOADED: %1").arg(num_bytes));
+
     return fname;
 }
 
@@ -200,6 +204,9 @@ QString http_get_text(const QString& url)
     printf("RECEIVED TEXT (%d ms, %d bytes) from GET %s\n", timer.elapsed(), ret.count(), url.toLatin1().data());
     QString str = abbreviate(ret, 200, 200);
     printf("%s\n", (str.toLatin1().data()));
+
+    TaskProgress task(QString("DOWNLOADED: %1").arg(ret.count()));
+
     return ret;
 }
 #else
