@@ -36,6 +36,9 @@
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
+    // make sure task progress monitor is instantiated in the main thread
+    TaskManager::TaskProgressMonitor *monitor = TaskManager::TaskProgressMonitor::globalInstance();
+    Q_UNUSED(monitor);
     CloseMeHandler::start();
 
     //MultiScaleTimeSeries::unit_test(3,10);

@@ -3,4 +3,8 @@
         <file>statistics.css</file>
         <file>images/gear.png</file>
     </qresource>
+    <qresource prefix="/images">
+        <file>calculator.png</file>
+        <file>down.png</file>
+    </qresource>
 </RCC>

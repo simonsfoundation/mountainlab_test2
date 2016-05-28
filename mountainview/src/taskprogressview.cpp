@@ -20,6 +20,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopWidget>
+#include <QStandardItemModel>
 
 class TaskProgressViewDelegate : public QStyledItemDelegate {
 public:
@@ -43,6 +44,7 @@ public:
         }
         QStyleOptionViewItem opt = option;
         opt.text = "";
+        opt.rect.adjust(34, 0, 0, 0);
         opt.displayAlignment = Qt::AlignTop | Qt::AlignLeft;
         QStyledItemDelegate::paint(painter, opt, index);
         qreal progress = index.data(Qt::UserRole).toDouble();
@@ -55,7 +57,7 @@ public:
             int elapsedWidth = smallFm.width("MMMMM");
             QStyleOptionProgressBar progOpt;
             progOpt.initFrom(opt.widget);
-            progOpt.rect = option.rect;
+            progOpt.rect = opt.rect;
             progOpt.minimum = 0;
             progOpt.maximum = 100;
             progOpt.progress = progress * 100;
@@ -67,7 +69,7 @@ public:
             painter->save();
             painter->setPen(p);
             painter->setFont(f);
-            QRect r = option.rect;
+            QRect r = opt.rect;
             r.setTop(option.rect.center().y());
             r.adjust(4, 2, -4, -2);
             r.setRight(r.left() + elapsedWidth);
@@ -95,9 +97,26 @@ public:
             painter->drawText(r, Qt::AlignLeft | Qt::AlignVCenter, QString("Completed in %1s").arg(duration));
             painter->restore();
         }
+
+        QStringList tags = index.data(TaskManager::TaskProgressModel::TagsRole).toStringList();
+        QIcon icon;
+        if (tags.contains("calculate")) {
+            QPixmap px(":/images/calculator.png");
+            icon.addPixmap(px);
+        } else if (tags.contains("download")) {
+            QPixmap px(":/images/down.png");
+            icon.addPixmap(px);
+        }
+        if (!icon.isNull()) {
+            QRect iconRect = option.rect;
+            iconRect.setWidth(32);
+            iconRect.adjust(1, 1, -1, -1);
+            painter->drawPixmap(iconRect, icon.pixmap(QSize(iconRect.height()-2, iconRect.height()-2)));
+        }
     }
 };
 
+#if 0
 class TaskProgressModel : public QAbstractItemModel {
 public:
     enum {
@@ -259,7 +278,7 @@ private:
     QList<TaskInfo> m_data;
     TaskProgressAgent* m_agent;
 };
-
+#endif
 class TaskProgressViewPrivate {
 public:
     TaskProgressView* q;
@@ -273,7 +292,11 @@ TaskProgressView::TaskProgressView()
     d->q = this;
     setSelectionMode(ContiguousSelection);
     setItemDelegate(new TaskProgressViewDelegate(this));
+#if 0
     TaskProgressModel* model = new TaskProgressModel(this);
+#else
+    TaskManager::TaskProgressModel *model = new TaskManager::TaskProgressModel(this);
+#endif
     setModel(model);
     header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     header()->hide();
@@ -285,6 +308,21 @@ TaskProgressView::TaskProgressView()
         for(int i = 0; i < model->rowCount(); ++i)
             this->setFirstColumnSpanned(i, QModelIndex(), true);
     });
+
+    connect(model, &QAbstractItemModel::rowsInserted, [this, model](const QModelIndex &parent, int from, int to) {
+        if (parent.isValid()) return;
+        for(int i = from; i <=to; ++i)
+            this->setFirstColumnSpanned(i, QModelIndex(), true);
+    });
+    for(int i = 0; i < model->rowCount(); ++i)
+        setFirstColumnSpanned(i, QModelIndex(), true);
+    connect(model, &QAbstractItemModel::dataChanged, [this, model](const QModelIndex &from, const QModelIndex &to) {
+        if (from.parent().isValid()) return;
+        for (int i = from.row(); i<=to.row(); ++i) {
+            setFirstColumnSpanned(i, QModelIndex(), true);
+        }
+    });
+
 }
 
 TaskProgressView::~TaskProgressView()
@@ -294,6 +332,7 @@ TaskProgressView::~TaskProgressView()
 
 void TaskProgressView::copySelectedToClipboard()
 {
+#if 0
     QItemSelectionModel* selectionModel = this->selectionModel();
     const auto selRows = selectionModel->selectedRows();
     if (selRows.isEmpty())
@@ -322,10 +361,12 @@ void TaskProgressView::copySelectedToClipboard()
         }
     }
     QApplication::clipboard()->setText(result.join("\n"));
+#endif
 }
 
 void TaskProgressView::showLogMessages(const QModelIndex& index)
 {
+#if 0
     if (index.parent().isValid())
         return;
     QDialog dlg(this);
@@ -348,6 +389,7 @@ void TaskProgressView::showLogMessages(const QModelIndex& index)
     r.setHeight(r.height() / 2);
     dlg.resize(r.size());
     dlg.exec();
+#endif
 }
 
 QString TaskProgressViewPrivate::shortened(QString txt, int maxlen)
