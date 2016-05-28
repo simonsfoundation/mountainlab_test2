@@ -292,11 +292,7 @@ TaskProgressView::TaskProgressView()
     d->q = this;
     setSelectionMode(ContiguousSelection);
     setItemDelegate(new TaskProgressViewDelegate(this));
-#if 0
-    TaskProgressModel* model = new TaskProgressModel(this);
-#else
     TaskManager::TaskProgressModel *model = new TaskManager::TaskProgressModel(this);
-#endif
     setModel(model);
     header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     header()->hide();
@@ -332,7 +328,6 @@ TaskProgressView::~TaskProgressView()
 
 void TaskProgressView::copySelectedToClipboard()
 {
-#if 0
     QItemSelectionModel* selectionModel = this->selectionModel();
     const auto selRows = selectionModel->selectedRows();
     if (selRows.isEmpty())
@@ -348,7 +343,7 @@ void TaskProgressView::copySelectedToClipboard()
             // for each task get the name of the task
             result << row.data().toString();
             // for each task get its log messages
-            result << row.data(TaskProgressModel::IndentedLogRole).toString();
+            result << row.data(TaskManager::TaskProgressModel::IndentedLogRole).toString();
         }
         else {
             // for each log see if it belongs to the previos task
@@ -357,16 +352,14 @@ void TaskProgressView::copySelectedToClipboard()
                 result << row.parent().data().toString();
                 lastTask = row.parent();
             }
-            result << row.data(TaskProgressModel::IndentedLogRole).toString();
+            result << row.data(TaskManager::TaskProgressModel::IndentedLogRole).toString();
         }
     }
     QApplication::clipboard()->setText(result.join("\n"));
-#endif
 }
 
 void TaskProgressView::showLogMessages(const QModelIndex& index)
 {
-#if 0
     if (index.parent().isValid())
         return;
     QDialog dlg(this);
@@ -383,13 +376,12 @@ void TaskProgressView::showLogMessages(const QModelIndex& index)
     QVBoxLayout* l = new QVBoxLayout(&dlg);
     l->addWidget(te);
     l->addWidget(bb);
-    te->setPlainText(index.data(TaskProgressModel::LogRole).toString());
+    te->setPlainText(index.data(TaskManager::TaskProgressModel::LogRole).toString());
     QRect r = QApplication::desktop()->screenGeometry(&dlg);
     r.setWidth(r.width() / 2);
     r.setHeight(r.height() / 2);
     dlg.resize(r.size());
     dlg.exec();
-#endif
 }
 
 QString TaskProgressViewPrivate::shortened(QString txt, int maxlen)
