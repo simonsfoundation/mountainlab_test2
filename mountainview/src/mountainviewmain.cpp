@@ -38,8 +38,8 @@ int main(int argc, char* argv[])
     QApplication a(argc, argv);
     CloseMeHandler::start();
 
-    MultiScaleTimeSeries::unit_test(3,10);
-    return -1;
+    //MultiScaleTimeSeries::unit_test(3,10);
+    //return -1;
 
     setbuf(stdout, 0);
 
