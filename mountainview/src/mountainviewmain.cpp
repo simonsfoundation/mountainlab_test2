@@ -32,10 +32,14 @@
 /// TODO figure out what to do when #channels and/or #clusters is huge
 /// TODO 0.9.1 -- make sure to handle merging with other views, such as clips etc. Make elegant way
 
+#include "multiscaletimeseries.h"
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
     CloseMeHandler::start();
+
+    MultiScaleTimeSeries::unit_test(3,10);
+    return -1;
 
     setbuf(stdout, 0);
 

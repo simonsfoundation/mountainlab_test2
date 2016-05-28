@@ -53,7 +53,9 @@ HEADERS += \
     flowlayout.h \
     clustermerge.h \
     mvviewagent.h \
-    mvstatusbar.h
+    mvstatusbar.h \
+    mvtimeseriesview.h \
+    multiscaletimeseries.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -91,7 +93,9 @@ SOURCES += mountainviewmain.cpp \
     flowlayout.cpp \
     clustermerge.cpp \
     mvviewagent.cpp \
-    mvstatusbar.cpp
+    mvstatusbar.cpp \
+    mvtimeseriesview.cpp \
+    multiscaletimeseries.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams
