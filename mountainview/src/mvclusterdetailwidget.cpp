@@ -238,7 +238,9 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
 
     this->setContextMenuPolicy(Qt::ActionsContextMenu);
     ToolButtonMenu *MM=new ToolButtonMenu(this);
+    MM->setOffset(QSize(4, 4));
     QToolButton *tb=MM->activateOn(this);
+    tb->setIconSize(QSize(24,24));
     QIcon icon(":images/gear.png");
     tb->setIcon(icon);
     {
