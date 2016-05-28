@@ -9,6 +9,8 @@ CONFIG -= app_bundle #Please apple, don't make a bundle today
 #greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += widgets
 
+QT+=concurrent
+
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
 MOC_DIR=../build
