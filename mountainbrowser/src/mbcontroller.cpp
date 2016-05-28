@@ -106,6 +106,9 @@ void MBController::slot_ready_read()
         qWarning() << "Unexpected problem in slot_ready_read";
         return;
     }
-    QByteArray str = P->readAll();
-    printf("%s", str.data());
+    while (P->canReadLine()) {
+	QByteArray str = P->readLine();
+	printf("%s", str.constData());
+	fflush(stdout);
+    }
 }
