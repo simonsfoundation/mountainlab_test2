@@ -21,6 +21,7 @@
 #include <QClipboard>
 #include <QDesktopWidget>
 #include <QStandardItemModel>
+#include <QTimer>
 
 class TaskProgressViewDelegate : public QStyledItemDelegate {
 public:
@@ -42,10 +43,25 @@ public:
             QStyledItemDelegate::paint(painter, option, index);
             return;
         }
+        QStringList tags = index.data(TaskManager::TaskProgressModel::TagsRole).toStringList();
+        QIcon icon;
+        if (tags.contains("calculate")) {
+            QPixmap px(":/images/calculator.png");
+            icon.addPixmap(px);
+        } else if (tags.contains("download")) {
+            QPixmap px(":/images/down.png");
+            icon.addPixmap(px);
+        } else if (tags.contains("process")) {
+            QPixmap px(":/images/process.png");
+            icon.addPixmap(px);
+        }
         QStyleOptionViewItem opt = option;
         opt.text = "";
-        opt.rect.adjust(34, 0, 0, 0);
         opt.displayAlignment = Qt::AlignTop | Qt::AlignLeft;
+        opt.decorationPosition = QStyleOptionViewItem::Left;
+        opt.decorationAlignment = Qt::AlignTop | Qt::AlignLeft;
+        opt.features |= QStyleOptionViewItem::HasDecoration;
+        opt.icon = icon;
         QStyledItemDelegate::paint(painter, opt, index);
         qreal progress = index.data(Qt::UserRole).toDouble();
         if (progress < 1.0) {
@@ -96,22 +112,6 @@ public:
             qreal duration = index.data(Qt::UserRole + 1).toDateTime().msecsTo(index.data(Qt::UserRole + 2).toDateTime()) / 1000.0;
             painter->drawText(r, Qt::AlignLeft | Qt::AlignVCenter, QString("Completed in %1s").arg(duration));
             painter->restore();
-        }
-
-        QStringList tags = index.data(TaskManager::TaskProgressModel::TagsRole).toStringList();
-        QIcon icon;
-        if (tags.contains("calculate")) {
-            QPixmap px(":/images/calculator.png");
-            icon.addPixmap(px);
-        } else if (tags.contains("download")) {
-            QPixmap px(":/images/down.png");
-            icon.addPixmap(px);
-        }
-        if (!icon.isNull()) {
-            QRect iconRect = option.rect;
-            iconRect.setWidth(32);
-            iconRect.adjust(1, 1, -1, -1);
-            painter->drawPixmap(iconRect, icon.pixmap(QSize(iconRect.height()-2, iconRect.height()-2)));
         }
     }
 };
@@ -318,7 +318,9 @@ TaskProgressView::TaskProgressView()
             setFirstColumnSpanned(i, QModelIndex(), true);
         }
     });
-
+    QTimer * timer = new QTimer(this);
+    timer->start(1000);
+    connect(timer, SIGNAL(timeout()), viewport(), SLOT(update()));
 }
 
 TaskProgressView::~TaskProgressView()

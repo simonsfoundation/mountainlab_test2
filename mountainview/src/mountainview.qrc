@@ -6,5 +6,6 @@
     <qresource prefix="/images">
         <file>calculator.png</file>
         <file>down.png</file>
+        <file>process.png</file>
     </qresource>
 </RCC>

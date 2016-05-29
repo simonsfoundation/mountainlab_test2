@@ -7,7 +7,7 @@
 class MVStatusBarPrivate {
 public:
     MVStatusBar* q;
-    TaskProgressAgent* m_tp_agent;
+    TaskManager::TaskProgressMonitor* m_tp_agent;
     QLabel m_bytes_downloaded_label;
     QLabel m_tasks_running_label;
     QLabel m_remote_processing_time_label;
@@ -43,9 +43,10 @@ MVStatusBar::MVStatusBar()
     layout->setAlignment(Qt::AlignLeft);
     setLayout(layout);
 
-    d->m_tp_agent = TaskProgressAgent::globalInstance();
+    d->m_tp_agent = TaskManager::TaskProgressMonitor::globalInstance();
     connect(d->m_tp_agent, SIGNAL(quantitiesChanged()), this, SLOT(slot_update_quantities()));
-    connect(d->m_tp_agent, SIGNAL(tasksChanged()), this, SLOT(slot_update_tasks()));
+    connect(d->m_tp_agent, SIGNAL(added(TaskProgressAgent*)), this, SLOT(slot_update_tasks()));
+    connect(d->m_tp_agent, SIGNAL(changed(TaskProgressAgent*)), this, SLOT(slot_update_tasks()));
 }
 
 MVStatusBar::~MVStatusBar()
@@ -93,8 +94,8 @@ void MVStatusBar::slot_update_tasks()
 {
     d->update_font();
     {
-        QString txt = QString("%1 tasks running |").arg(d->m_tp_agent->activeTasks().count());
-        d->m_tasks_running_label.setText(txt);
+//        QString txt = QString("%1 tasks running |").arg(d->m_tp_agent->activeTasks().count());
+//        d->m_tasks_running_label.setText(txt);
     }
 }
 

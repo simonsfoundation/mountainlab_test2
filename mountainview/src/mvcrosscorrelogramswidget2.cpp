@@ -505,7 +505,7 @@ typedef QList<double> DoubleList;
 typedef QList<int> IntList;
 void MVCrossCorrelogramsWidget2Computer::compute()
 {
-    TaskProgress task("Cross Correlogram Computer 2");
+    TaskProgress task(TaskProgress::Calculate, "Cross Correlogram Computer 2");
 
     QList<double> times;
     QList<int> labels;

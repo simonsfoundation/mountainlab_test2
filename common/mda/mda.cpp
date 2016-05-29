@@ -81,7 +81,7 @@ Mda::~Mda()
 {
     if (d->m_data) {
         free(d->m_data);
-        TaskProgressAgent::globalInstance()->incrementQuantity("bytes_freed", d->m_total_size);
+        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", d->m_total_size);
     }
     delete d;
 }
@@ -90,7 +90,7 @@ bool Mda::allocate(long N1, long N2, long N3, long N4, long N5, long N6)
 {
     if (d->m_data) {
         free(d->m_data);
-        TaskProgressAgent::globalInstance()->incrementQuantity("bytes_freed", d->m_total_size);
+        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", d->m_total_size);
     }
 
     d->m_dims[0] = N1;
@@ -104,7 +104,7 @@ bool Mda::allocate(long N1, long N2, long N3, long N4, long N5, long N6)
     d->m_data = 0;
     if (d->m_total_size > 0) {
         d->m_data = (double*)::allocate(sizeof(double) * d->m_total_size);
-        TaskProgressAgent::globalInstance()->incrementQuantity("bytes_allocated", d->m_total_size);
+        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", d->m_total_size);
         for (long i = 0; i < d->m_total_size; i++)
             d->m_data[i] = 0;
     }
@@ -141,7 +141,7 @@ bool Mda::read(const char* path)
     mda_read_header(&H, input_file);
     this->allocate(H.dims[0], H.dims[1], H.dims[2], H.dims[3], H.dims[4], H.dims[5]);
     mda_read_float64(d->m_data, &H, d->m_total_size, input_file);
-    TaskProgressAgent::globalInstance()->incrementQuantity("bytes_read", d->m_total_size * H.num_bytes_per_entry);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", d->m_total_size * H.num_bytes_per_entry);
     fclose(input_file);
     return true;
 }
@@ -166,7 +166,7 @@ bool Mda::write32(const char* path) const
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
     mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
-    TaskProgressAgent::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -191,7 +191,7 @@ bool Mda::write64(const char* path) const
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
     mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
-    TaskProgressAgent::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -649,7 +649,7 @@ void Mda::set(double val, long i1, long i2, long i3, long i4, long i5, long i6)
 void MdaPrivate::do_construct()
 {
     m_data = (double*)::allocate(sizeof(double) * 1);
-    TaskProgressAgent::globalInstance()->incrementQuantity("bytes_allocated", 1);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", 1);
     for (int i = 0; i < MDA_MAX_DIMS; i++) {
         m_dims[i] = 1;
     }
@@ -661,7 +661,7 @@ void MdaPrivate::copy_from(const Mda& other)
     const bool needResize = m_total_size != other.d->m_total_size;
     if (needResize && m_data) {
         free(m_data);
-        TaskProgressAgent::globalInstance()->incrementQuantity("bytes_freed", m_total_size);
+        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", m_total_size);
         m_data = 0;
     }
     m_total_size = other.d->m_total_size;
@@ -669,7 +669,7 @@ void MdaPrivate::copy_from(const Mda& other)
     if (m_total_size > 0) {
         if (needResize) {
             m_data = (double*)::allocate(sizeof(double) * m_total_size);
-            TaskProgressAgent::globalInstance()->incrementQuantity("bytes_allocated", m_total_size);
+            TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", m_total_size);
         }
         memcpy(m_data, other.d->m_data, sizeof(double) * m_total_size);
     }

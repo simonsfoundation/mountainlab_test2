@@ -274,7 +274,7 @@ bool DiskReadMda::readChunk(Mda& X, long i, long size) const
     if (size_to_read > 0) {
         fseek(d->m_file, d->m_header.header_size + d->m_header.num_bytes_per_entry * (jA), SEEK_SET);
         long bytes_read = mda_read_float64(&X.dataPtr()[jA - i], &d->m_header, size_to_read, d->m_file);
-        TaskProgressAgent::globalInstance()->incrementQuantity("bytes_read", bytes_read);
+        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", bytes_read);
         if (bytes_read != size_to_read) {
             printf("Warning problem reading chunk in diskreadmda: %ld<>%ld\n", bytes_read, size_to_read);
             return false;
@@ -321,7 +321,7 @@ bool DiskReadMda::readChunk(Mda& X, long i1, long i2, long size1, long size2) co
         if (size2_to_read > 0) {
             fseek(d->m_file, d->m_header.header_size + d->m_header.num_bytes_per_entry * (i1 + N1() * jA), SEEK_SET);
             long bytes_read = mda_read_float64(&X.dataPtr()[(jA - i2) * size1], &d->m_header, size1 * size2_to_read, d->m_file);
-            TaskProgressAgent::globalInstance()->incrementQuantity("bytes_read", bytes_read);
+            TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", bytes_read);
             if (bytes_read != size1 * size2_to_read) {
                 printf("Warning problem reading 2d chunk in diskreadmda: %ld<>%ld\n", bytes_read, size1 * size2);
                 return false;
@@ -377,7 +377,7 @@ bool DiskReadMda::readChunk(Mda& X, long i1, long i2, long i3, long size1, long 
         if (size3_to_read > 0) {
             fseek(d->m_file, d->m_header.header_size + d->m_header.num_bytes_per_entry * (i1 + N1() * i2 + N1() * N2() * jA), SEEK_SET);
             long bytes_read = mda_read_float64(&X.dataPtr()[(jA - i3) * size1 * size2], &d->m_header, size1 * size2 * size3_to_read, d->m_file);
-            TaskProgressAgent::globalInstance()->incrementQuantity("bytes_read", bytes_read);
+            TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", bytes_read);
             if (bytes_read != size1 * size2 * size3_to_read) {
                 printf("Warning problem reading 3d chunk in diskreadmda: %ld<>%ld\n", bytes_read, size1 * size2 * size3_to_read);
                 return false;

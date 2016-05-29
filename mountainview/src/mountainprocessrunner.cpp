@@ -125,9 +125,7 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
         str.replace("\\n", "\n");
         printf("%s\n", (str.toLatin1().data()));
         QJsonObject obj = QJsonDocument::fromJson(ret.toLatin1()).object();
-
-        TaskProgressAgent::globalInstance()->incrementQuantity("bytes_downloaded", ret.count());
-
+        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_downloaded", ret.count());
         return obj;
     }
 }
@@ -135,7 +133,7 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
 void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
 {
 
-    TaskProgress task("MS: " + d->m_processor_name);
+    TaskProgress task(TaskProgress::Calculate, "MS: " + d->m_processor_name);
 
     //if (d->m_mscmdserver_url.isEmpty()) {
     if (d->m_mlproxy_url.isEmpty()) {
@@ -207,7 +205,7 @@ void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
         QTime post_timer;
         post_timer.start();
         QJsonObject resp = http_post(url, req, halt_agent);
-        TaskProgressAgent::globalInstance()->incrementQuantity("remote_processing_time", post_timer.elapsed());
+        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("remote_processing_time", post_timer.elapsed());
         if ((halt_agent) && (halt_agent->stopRequested())) {
             task.error("Halted during post: " + url);
             return;

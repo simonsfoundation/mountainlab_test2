@@ -11,6 +11,9 @@
 #include <QDebug>
 #include <QMutex>
 #include <QThread>
+#ifdef QT_WIDGETS_LIB
+#include <QColor>
+#endif
 
 #if 0
 
@@ -352,6 +355,7 @@ QStringList TaskProgress::catsToString(StandardCategories cats) const
     QStringList result;
     if (cats.testFlag(Download)) result << "download";
     if (cats.testFlag(Calculate)) result << "calculate";
+    if (cats.testFlag(Process)) result << "process";
     return result;
 }
 
@@ -360,6 +364,7 @@ QString TaskProgress::catToString(TaskProgress::StandardCategory cat) const
     switch (cat) {
     case Download: return "download";
     case Calculate: return "calculate";
+    case Process: return "process";
     case None:
     default:
         return QString();
@@ -451,11 +456,28 @@ public:
         emit moved(agent, from, to);
     }
 
+    void incrementQuantity(QString name, double val) override
+    {
+        QMutexLocker locker(&lock);
+        m_quantities.insert(name, m_quantities.value(name, 0)+val);
+        emit quantitiesChanged();
+    }
+    double getQuantity(QString name) const override
+    {
+        QMutexLocker locker(&lock);
+        return m_quantities.value(name, 0);
+    }
+
     mutable QMutex lock;
 
     static TaskProgressMonitorPrivate* privateInstance();
 private:
     QList<TaskProgressAgent*> m_data;
+    QMap<QString, double> m_quantities;
+
+    // TaskProgressMonitor interface
+public:
+
 };
 
 Q_GLOBAL_STATIC(TaskProgressMonitorPrivate, _q_tpm_instance)
@@ -612,6 +634,7 @@ void TaskProgressAgent::finish()
     lockForWrite();
     if (m_info.progress < 1.0) {
         m_info.end_time = QDateTime::currentDateTime();
+        m_info.progress = 1;
     }
     unlock();
 }
@@ -814,6 +837,7 @@ QVariant TaskProgressModel::taskData(const QModelIndex &index, int role) const
             return task.description;
         else
             return taskData(index, Qt::DisplayRole);
+#ifdef QT_WIDGETS_LIB
     case Qt::ForegroundRole: {
         // modified by jfm -- 5/17/2016
         if (!task.error.isEmpty()) {
@@ -825,6 +849,7 @@ QVariant TaskProgressModel::taskData(const QModelIndex &index, int role) const
         }
         return QVariant();
     }
+#endif
     case ProgressRole:
         return task.progress;
     case StartTimeRole:

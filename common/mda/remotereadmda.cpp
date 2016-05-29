@@ -107,7 +107,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     /// TODO handle both size=8 and 4 bytes
     int datatype_size=8;
     double size_mb=size*datatype_size*1.0/1e6;
-    TaskProgress task;
+    TaskProgress task(TaskProgress::Download, "Downloading array chunk");
     if (size_mb>0.5) {
         task.setLabel(QString("Downloading array chunk: %1 MB").arg(size_mb));
     }

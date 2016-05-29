@@ -125,7 +125,7 @@ void MVClipsWidget::slot_computation_finished()
 
 void MVClipsWidgetComputer::compute()
 {
-    TaskProgress task("Clips Widget Computer");
+    TaskProgress task(TaskProgress::Calculate, "Clips Widget Computer");
     QString firings_out_path;
     {
         QString labels_str;

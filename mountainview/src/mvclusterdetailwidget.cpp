@@ -1105,7 +1105,7 @@ QColor ClusterView::get_cluster_assessment_text_color(QString aa)
 
 DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size, HaltAgent* halt_agent)
 {
-    TaskProgress task("mp_compute_templates");
+    TaskProgress task(TaskProgress::Calculate, "mp_compute_templates");
     task.log("mlproxy_url: " + mlproxy_url);
     MountainProcessRunner X;
     QString processor_name = "compute_templates";
@@ -1129,7 +1129,7 @@ DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& time
 
 void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs_out, const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size, HaltAgent* halt_agent)
 {
-    TaskProgress task("mp_compute_templates_stdevs");
+    TaskProgress task(TaskProgress::Calculate, "mp_compute_templates_stdevs");
     task.log("mlproxy_url: " + mlproxy_url);
     MountainProcessRunner X;
     QString processor_name = "mv_compute_templates";
@@ -1154,7 +1154,7 @@ void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs
 
 void MVClusterDetailWidgetCalculator::compute()
 {
-    TaskProgress task("Cluster Details");
+    TaskProgress task(TaskProgress::Calculate, "Cluster Details");
 
     QTime timer;
     timer.start();

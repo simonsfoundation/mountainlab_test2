@@ -13,7 +13,6 @@
 #include <QDebug>
 #include <QAbstractItemModel>
 #include <QReadWriteLock>
-#include <QColor>
 
 struct TaskProgressLogMessage {
     QString message;
@@ -103,7 +102,8 @@ public:
     enum StandardCategory {
         None = 0,
         Download = (1 << 0),
-        Calculate = (1 << 1)
+        Calculate = (1 << 1),
+        Process = (1 << 2)
     };
     Q_DECLARE_FLAGS(StandardCategories, StandardCategory)
 
@@ -202,11 +202,15 @@ public:
     virtual TaskProgressAgent* at(int index) const = 0;
     virtual int indexOf(TaskProgressAgent*) const = 0;
     static TaskProgressMonitor *globalInstance();
+
+    virtual void incrementQuantity(QString name, double val) = 0;
+    virtual double getQuantity(QString name) const = 0;
 signals:
     void added(TaskProgressAgent*);
     void changed(TaskProgressAgent*);
     void logAdded(TaskProgressAgent*);
     void moved(TaskProgressAgent*, int from, int to);
+    void quantitiesChanged();
 };
 
 class TaskProgressModel : public QAbstractItemModel {
