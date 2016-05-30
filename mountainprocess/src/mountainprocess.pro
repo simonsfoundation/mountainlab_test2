@@ -4,6 +4,8 @@ CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
 QT += qml
 
+CONFIG += c++11
+
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
 MOC_DIR=../build

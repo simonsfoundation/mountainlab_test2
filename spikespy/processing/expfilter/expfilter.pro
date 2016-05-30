@@ -8,6 +8,8 @@ QT       += core
 
 QT       -= gui
 
+CONFIG += c++11
+
 OBJECTS_DIR = build
 MOC_DIR = build
 DESTDIR = ../../bin
