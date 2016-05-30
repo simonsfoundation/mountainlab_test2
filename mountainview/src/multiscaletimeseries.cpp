@@ -6,8 +6,10 @@
 
 #include "multiscaletimeseries.h"
 #include "cachemanager.h"
+#include "msmisc.h"
 
 #include <QFile>
+#include <diskwritemda.h>
 
 #define MSTS_TOTAL_CHUNK_SIZE 32 * 100
 
@@ -25,6 +27,8 @@ public:
     long m_chunk_size;
 
     msts_chunk load_chunk(long ds_factor, long chunk_num);
+    QString get_multiscale_fname();
+    bool create_multiscale_file(const QString &mspath);
 };
 
 MultiScaleTimeSeries::MultiScaleTimeSeries()
@@ -48,31 +52,52 @@ void MultiScaleTimeSeries::setData(const DiskReadMda& X)
     }
 }
 
-void MultiScaleTimeSeries::getData(Mda& min, Mda& max, long i1, long i2, long ds_factor)
+bool MultiScaleTimeSeries::getData(Mda& min, Mda& max, long t1, long t2, long ds_factor)
 {
-    long M = d->m_data.N1();
-    min.allocate(M, i2 - i1 + 1);
-    max.allocate(M, i2 - i1 + 1);
-    long chunk_num = i1 / d->m_chunk_size;
-    while (chunk_num * d->m_chunk_size <= i2) {
-        msts_chunk chunk = d->load_chunk(ds_factor, chunk_num);
-        for (long aa = 0; aa < d->m_chunk_size; aa++) {
-            if ((i1 <= chunk_num * d->m_chunk_size + aa) && (chunk_num * d->m_chunk_size + aa <= i2)) {
-                for (long m = 0; m < M; m++) {
-                    min.setValue(chunk.data_min.value(m, aa), m, chunk_num * d->m_chunk_size + aa - i1);
-                    max.setValue(chunk.data_max.value(m, aa), m, chunk_num * d->m_chunk_size + aa - i1);
-                }
-            }
-        }
-        chunk_num++;
+    long M=d->m_data.N1();
+    long N=d->m_data.N2();
+
+    if (ds_factor==1) {
+        d->m_data.readChunk(min,0,t1,M,t2-t1+1);
+        max=min;
+        return true;
     }
+
+    //check if power of 3
+    double factor=ds_factor;
+    while (factor>1) {
+        factor/=3;
+    }
+    if (factor<1) {
+        qWarning() << "Invalid ds_factor: "+ds_factor;
+        return false;
+    }
+
+    QString multiscale_fname=d->get_multiscale_fname();
+    if (!QFile(multiscale_fname).exists()) {
+        if (!d->create_multiscale_file(multiscale_fname)) {
+            qWarning() << "Unable to create multiscale file";
+            return false;
+        }
+    }
+
+    DiskReadMda Y(multiscale_fname);
+    long t_offset_min=0;
+    long ds_factor_0=3;
+    while (ds_factor_0<ds_factor) {
+        t_offset+=2*(ceil(N*1.0/ds_factor_0));
+        ds_factor_0*=3;
+    }
+    long t_offset_max=t_offset_min+ceil(N*1.0/ds_factor);
+
+    Y.readChunk(min,0,t1+t_offset_min,M,t2-t1+1);
+    Y.readChunk(max,0,t1+t_offset_max,M,t2-t1+1);
+
+    return true;
 }
 
 bool MultiScaleTimeSeries::unit_test(long M, long N)
 {
-
-
-
     Mda X(M, N);
     for (long n = 0; n < N; n++) {
         for (long m = 0; m < M; m++) {
@@ -144,4 +169,32 @@ msts_chunk MultiScaleTimeSeriesPrivate::load_chunk(long ds_factor, long chunk_nu
     X.data_max.setPath(path_max);
 
     return X;
+}
+
+QString compute_file_code(const QString& path)
+{
+    //the code comprises the device,inode,size, and modification time (in seconds)
+    //note that it is not dependent on the file name
+    struct stat SS;
+    stat(path.toLatin1().data(), &SS);
+    QString id_string = QString("%1:%2:%3:%4").arg(SS.st_dev).arg(SS.st_ino).arg(SS.st_size).arg(SS.st_mtim.tv_sec);
+    return id_string;
+}
+
+
+QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
+{
+    QString path=m_data.path();
+    if (path.isEmpty()) {
+        qWarning() << "Unable to get_multiscale_fname.... path is empty.";
+        return "";
+    }
+    QString code=compute_hash(compute_file_code(path));
+    return CacheManager::globalInstance()->makeLocalFile(code+".multiscale.mda",ShortTerm);
+}
+
+bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString &mspath)
+{
+    DiskWriteMda Y;
+    /// TODO finish
 }

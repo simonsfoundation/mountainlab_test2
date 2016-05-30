@@ -979,10 +979,12 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
     for (int i = 0; i < m_views.count(); i++) {
         ClusterView* V = m_views[i];
         QRectF rect(x0_before_scaling * m_space_ratio - m_scroll_x, 0, V->spaceNeeded() * m_space_ratio, H);
-        V->setChannelSpacingInfo(csi);
-        V->paint(&painter, rect);
-        V->x_position_before_scaling = x0_before_scaling;
-        x0_before_scaling += V->spaceNeeded();
+        if ((rect.x()+rect.width()>=0)&&(rect.x()<=W)) {
+            V->setChannelSpacingInfo(csi);
+            V->paint(&painter, rect);
+            V->x_position_before_scaling = x0_before_scaling;
+            x0_before_scaling += V->spaceNeeded();
+        }
     }
 }
 
