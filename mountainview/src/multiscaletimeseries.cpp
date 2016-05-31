@@ -12,6 +12,7 @@
 #include <diskwritemda.h>
 #include <taskprogress.h>
 #include <sys/stat.h>
+#include <math.h>
 
 class MultiScaleTimeSeriesPrivate {
 public:

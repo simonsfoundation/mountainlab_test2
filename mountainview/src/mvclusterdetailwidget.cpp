@@ -21,6 +21,7 @@
 #include "computationthread.h"
 #include "mountainprocessrunner.h"
 #include "toolbuttonmenu.h"
+#include <math.h>
 
 struct ClusterData {
     ClusterData()

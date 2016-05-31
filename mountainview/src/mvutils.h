@@ -10,6 +10,7 @@
 #include "diskreadmda.h"
 #include <QList>
 #include <QColor>
+#include <math.h>
 
 ///A firing event defined by a time and a label
 struct MVEvent {

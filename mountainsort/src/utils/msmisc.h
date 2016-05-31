@@ -8,6 +8,7 @@
 
 #include <QList>
 #include "mda.h"
+#include <math.h>
 
 double compute_min(const QList<double> &X);
 double compute_max(const QList<double> &X);
