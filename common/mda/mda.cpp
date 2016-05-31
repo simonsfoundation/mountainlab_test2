@@ -348,19 +348,19 @@ double* Mda::dataPtr(long i1, long i2, long i3, long i4, long i5, long i6)
 
 void Mda::getChunk(Mda& ret, long i, long size)
 {
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
+    // A lot of bugs fixed on 5/31/16
     long a_begin = i;
     long x_begin = 0;
     long a_end = i + size - 1;
     long x_end = size - 1;
 
     if (a_begin < 0) {
-        a_begin += 0 - a_begin;
         x_begin += 0 - a_begin;
+        a_begin += 0 - a_begin;
     }
     if (a_end >= d->m_total_size) {
-        a_end += d->m_total_size - 1 - a_end;
         x_end += d->m_total_size - 1 - a_end;
+        a_end += d->m_total_size - 1 - a_end;
     }
 
     ret.allocate(1, size);
@@ -377,18 +377,18 @@ void Mda::getChunk(Mda& ret, long i, long size)
 
 void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2)
 {
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
+    // A lot of bugs fixed on 5/31/16
     long a1_begin = i1;
     long x1_begin = 0;
     long a1_end = i1 + size1 - 1;
     long x1_end = size1 - 1;
     if (a1_begin < 0) {
-        a1_begin += 0 - a1_begin;
         x1_begin += 0 - a1_begin;
+        a1_begin += 0 - a1_begin;
     }
     if (a1_end >= N1()) {
-        a1_end += N1() - 1 - a1_end;
         x1_end += N1() - 1 - a1_end;
+        a1_end += N1() - 1 - a1_end;
     }
 
     long a2_begin = i2;
@@ -396,12 +396,12 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2)
     long a2_end = i2 + size2 - 1;
     long x2_end = size2 - 1;
     if (a2_begin < 0) {
-        a2_begin += 0 - a2_begin;
         x2_begin += 0 - a2_begin;
+        a2_begin += 0 - a2_begin;
     }
     if (a2_end >= N2()) {
-        a2_end += N2() - 1 - a2_end;
         x2_end += N2() - 1 - a2_end;
+        a2_end += N2() - 1 - a2_end;
     }
 
     ret.allocate(size1, size2);
@@ -422,18 +422,18 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2)
 
 void Mda::getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, long size3)
 {
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
+    // A lot of bugs fixed on 5/31/16
     long a1_begin = i1;
     long x1_begin = 0;
     long a1_end = i1 + size1 - 1;
     long x1_end = size1 - 1;
     if (a1_begin < 0) {
-        a1_begin += 0 - a1_begin;
         x1_begin += 0 - a1_begin;
+        a1_begin += 0 - a1_begin;
     }
     if (a1_end >= N1()) {
-        a1_end += N1() - 1 - a1_end;
         x1_end += N1() - 1 - a1_end;
+        a1_end += N1() - 1 - a1_end;
     }
 
     long a2_begin = i2;
@@ -441,12 +441,12 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, 
     long a2_end = i2 + size2 - 1;
     long x2_end = size2 - 1;
     if (a2_begin < 0) {
-        a2_begin += 0 - a2_begin;
         x2_begin += 0 - a2_begin;
+        a2_begin += 0 - a2_begin;
     }
     if (a2_end >= N2()) {
-        a2_end += N2() - 1 - a2_end;
         x2_end += N2() - 1 - a2_end;
+        a2_end += N2() - 1 - a2_end;
     }
 
     long a3_begin = i3;
@@ -454,12 +454,12 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, 
     long a3_end = i3 + size3 - 1;
     long x3_end = size3 - 1;
     if (a3_begin < 0) {
-        a2_begin += 0 - a3_begin;
         x3_begin += 0 - a3_begin;
+        a3_begin += 0 - a3_begin;
     }
     if (a3_end >= N3()) {
-        a3_end += N3() - 1 - a3_end;
         x3_end += N3() - 1 - a3_end;
+        a3_end += N3() - 1 - a3_end;
     }
 
     ret.allocate(size1, size2, size3);
@@ -734,7 +734,8 @@ bool MdaPrivate::read_from_text_file(const QString& path)
                 if (ok) {
                     lines2 << line;
                 }
-            } else {
+            }
+            else {
                 lines2 << line;
             }
         }
