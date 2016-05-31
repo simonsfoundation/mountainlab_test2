@@ -21,6 +21,9 @@ struct mvtsv_coord {
     long channel;
     double t;
     double y;
+    static mvtsv_coord from_t(double t) {
+        return mvtsv_coord(0,t,0);
+    }
 };
 
 struct mvtsv_channel {
@@ -35,10 +38,9 @@ struct mvtsv_channel {
     QVector<double> max_values;
     QRectF geometry;
     double vertical_scale_factor;
-    double view_t1, view_t2;
 
-    QPointF coord2pix(mvtsv_coord C);
-    mvtsv_coord pix2coord(QPointF pix);
+    QPointF coord2pix(mvtsv_coord C, MVRange view_t_range);
+    mvtsv_coord pix2coord(QPointF pix, MVRange view_t_range);
 };
 struct mvtsv_layout_settings {
     mvtsv_layout_settings()
@@ -139,6 +141,11 @@ void MVTimeSeriesView::setSelectedTimeRange(MVRange range)
     update();
 }
 
+double MVTimeSeriesView::currentTimepoint() const
+{
+    return d->m_current_t;
+}
+
 void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt)
@@ -178,7 +185,6 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     d->m_ds_factor = ds_factor;
 
     Mda Xmin, Xmax;
-    qDebug() << "+++++++++++++++++++++++ getData" << data_i1 << data_i2 << ds_factor;
     d->m_ts.getData(Xmin, Xmax, data_i1 / ds_factor, data_i2 / ds_factor, ds_factor);
     Xmin.write32("debug_min.mda");
     Xmax.write32("debug_max.mda");
@@ -189,8 +195,6 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         CH->label = QString("%1").arg(m + 1);
         CH->vertical_scale_factor = d->m_vertical_scale_factor;
         CH->color = Qt::black;
-        CH->view_t1 = d->m_view_t1;
-        CH->view_t2 = d->m_view_t2;
         for (long i = 0; i < Xmin.N2(); i++) {
             CH->min_values << Xmin.value(m, i);
             CH->max_values << Xmax.value(m, i);
@@ -251,15 +255,15 @@ void MVTimeSeriesView::mouseMoveEvent(QMouseEvent* evt)
     //set_cursor();
 }
 
-void MVTimeSeriesView::mouseWheelEvent(QWheelEvent* evt)
+void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
 {
     int delta = evt->delta();
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
-            d->zoom_out();
+            d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
         }
         else if (delta > 0) {
-            d->zoom_in();
+            d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
         }
     }
     else {
@@ -333,8 +337,8 @@ void MVTimeSeriesViewPrivate::paint_channel(QPainter* painter, mvtsv_channel* CH
         double tt = m_channel_i1 - m_data_t0 + n * m_ds_factor;
         double yy1 = CH->min_values[n];
         double yy2 = CH->max_values[n];
-        QPointF pt1 = CH->coord2pix(mvtsv_coord(CH->channel, tt, yy1));
-        QPointF pt2 = CH->coord2pix(mvtsv_coord(CH->channel, tt, yy2));
+        QPointF pt1 = CH->coord2pix(mvtsv_coord(CH->channel, tt, yy1),q->timeRange());
+        QPointF pt2 = CH->coord2pix(mvtsv_coord(CH->channel, tt, yy2),q->timeRange());
         if (n == 0) {
             path.moveTo(pt1);
             path.lineTo(pt2);
@@ -413,23 +417,24 @@ QPointF MVTimeSeriesViewPrivate::coord2pix(mvtsv_coord C)
 {
     if (C.channel >= m_channels.count())
         return QPointF(0, 0);
-    return m_channels[C.channel].coord2pix(C);
+    return m_channels[C.channel].coord2pix(C,q->timeRange());
 }
 
 mvtsv_coord MVTimeSeriesViewPrivate::pix2coord(long channel, QPointF pix)
 {
     if (channel >= m_channels.count())
         return mvtsv_coord(0, 0, 0);
-    return m_channels[channel].pix2coord(pix);
+    return m_channels[channel].pix2coord(pix,q->timeRange());
 }
 
 void MVTimeSeriesViewPrivate::zoom_out(mvtsv_coord about_coord, double frac)
 {
     QPointF about_pix = coord2pix(about_coord);
-    q->setTimeRange(q->timeRange() * frac);
-    mvtsv_coord new_coord = pix2coord(about_pix);
+    q->setTimeRange(q->timeRange() * (1/frac));
+    mvtsv_coord new_coord = pix2coord(0,about_pix);
+    qDebug() << "@@@@@@@@@@@" << about_coord.t << new_coord.t;
     double dt = about_coord.t - new_coord.t;
-    q->setTimeRange(q->timeRange() + dt);
+    q->setTimeRange(q->timeRange() + (dt));
 }
 
 void MVTimeSeriesViewPrivate::zoom_in(mvtsv_coord about_coord, double frac)
@@ -437,22 +442,22 @@ void MVTimeSeriesViewPrivate::zoom_in(mvtsv_coord about_coord, double frac)
     zoom_out(about_coord, 1 / frac);
 }
 
-QPointF mvtsv_channel::coord2pix(mvtsv_coord C)
+QPointF mvtsv_channel::coord2pix(mvtsv_coord C, MVRange view_t_range)
 {
-    double xpct = (C.t - view_t1) / (view_t2 - view_t1);
+    double xpct = (C.t - view_t_range.min) / (view_t_range.max - view_t_range.min);
     double px = geometry.x() + xpct * geometry.width();
     double py = geometry.y() + geometry.height() / 2 + geometry.height() / 2 * (C.y * vertical_scale_factor);
     return QPointF(px, py);
 }
 
-mvtsv_coord mvtsv_channel::pix2coord(QPointF pix)
+mvtsv_coord mvtsv_channel::pix2coord(QPointF pix, MVRange view_t_range)
 {
     mvtsv_coord C;
     double xpct = 0;
     if (geometry.height()) {
         xpct = (pix.x() - geometry.x()) / (geometry.width());
     }
-    C.t = view_t1 + xpct * (view_t2 - view_t1);
+    C.t = view_t_range.min + xpct * (view_t_range.max - view_t_range.min);
     if (vertical_scale_factor) {
         C.y = (pix.y() - (geometry.y() + geometry.height() / 2)) / vertical_scale_factor / (geometry.height() / 2);
     }

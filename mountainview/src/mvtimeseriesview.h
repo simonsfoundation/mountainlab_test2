@@ -43,7 +43,7 @@ public:
     void mousePressEvent(QMouseEvent* evt);
     void mouseReleaseEvent(QMouseEvent* evt);
     void mouseMoveEvent(QMouseEvent *evt);
-    void mouseWheelEvent(QWheelEvent *evt);
+    void wheelEvent(QWheelEvent *evt);
 
     static void unit_test();
 

@@ -270,6 +270,7 @@ bool DiskReadMda::readChunk(Mda& X, long i, long size) const
     long jA = qMax(i, 0L);
     long jB = qMin(i + size - 1, d->total_size() - 1);
     long size_to_read = jB - jA + 1;
+    qDebug() << "+++++++++++++++++++++++++++" << i << size << jA << jB << size_to_read;
     if (size_to_read > 0) {
         fseek(d->m_file, d->m_header.header_size + d->m_header.num_bytes_per_entry * (jA), SEEK_SET);
         long bytes_read = mda_read_float64(&X.dataPtr()[jA - i], &d->m_header, size_to_read, d->m_file);
