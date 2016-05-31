@@ -24,7 +24,6 @@ public:
     static bool downsample_min(const DiskReadMda& X, QString out_fname, long N);
     static bool downsample_max(const DiskReadMda& X, QString out_fname, long N);
     static bool write_concatenation(QStringList input_fnames, QString output_fname);
-    static long smallest_power_of_3_larger_than(long N);
     static bool is_power_of_3(long N);
 };
 
@@ -47,7 +46,7 @@ void MultiScaleTimeSeries::setData(const DiskReadMda& X)
 bool MultiScaleTimeSeries::getData(Mda& min, Mda& max, long t1, long t2, long ds_factor)
 {
     long M = d->m_data.N1();
-    long N = MultiScaleTimeSeriesPrivate::smallest_power_of_3_larger_than(d->m_data.N2());
+    long N = MultiScaleTimeSeries::smallest_power_of_3_larger_than(d->m_data.N2());
 
     if (ds_factor == 1) {
         d->m_data.readChunk(min, 0, t1, M, t2 - t1 + 1);
@@ -117,6 +116,15 @@ bool MultiScaleTimeSeries::unit_test(long M, long N)
     return true;
 }
 
+long MultiScaleTimeSeries::smallest_power_of_3_larger_than(long N)
+{
+    long ret = 1;
+    while (ret < N) {
+        ret *= 3;
+    }
+    return ret;
+}
+
 QString compute_file_code(const QString& path)
 {
     //the code comprises the device,inode,size, and modification time (in seconds)
@@ -129,7 +137,7 @@ QString compute_file_code(const QString& path)
 
 QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
 {
-    QString path = m_data.path();
+    QString path = m_data.makePath();
     if (path.isEmpty()) {
         qWarning() << "Unable to get_multiscale_fname.... path is empty.";
         return "";
@@ -141,6 +149,7 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
 bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
 {
     TaskProgress task("Create multiscale file");
+    task.log(mspath);
     if (QFile::exists(mspath)) {
         if (!QFile::remove(mspath)) {
             task.error("Unable to remove file: " + mspath);
@@ -149,7 +158,7 @@ bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
         }
     }
 
-    long N = smallest_power_of_3_larger_than(m_data.N2());
+    long N = MultiScaleTimeSeries::smallest_power_of_3_larger_than(m_data.N2());
 
     QStringList file_names;
     QString prev_min_fname;
@@ -202,7 +211,7 @@ bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
 
 bool MultiScaleTimeSeriesPrivate::downsample_min(const DiskReadMda& X, QString out_fname, long N)
 {
-    /// TO DO do this in chunks to avoid using RAM
+    /// TODO do this in chunks to avoid using RAM
     Mda input;
     if (!X.readChunk(input, 0, 0, X.N1(), N)) {
         qWarning() << "Problem reading chunk in downsample_min";
@@ -275,15 +284,6 @@ bool MultiScaleTimeSeriesPrivate::write_concatenation(QStringList input_fnames, 
     Y.close();
 
     return true;
-}
-
-long MultiScaleTimeSeriesPrivate::smallest_power_of_3_larger_than(long N)
-{
-    long ret = 1;
-    while (ret < N) {
-        ret *= 3;
-    }
-    return ret;
 }
 
 bool MultiScaleTimeSeriesPrivate::is_power_of_3(long N)

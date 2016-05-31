@@ -24,6 +24,7 @@
 #include "closemehandler.h"
 #include "remotereadmda.h"
 #include "taskprogress.h"
+#include "mvtimeseriesview.h" //for unit test
 
 #include <QRunnable>
 #include <QThreadPool>
@@ -105,10 +106,12 @@ int main(int argc, char* argv[])
         QString arg2 = CLP.unnamed_parameters.value(1);
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
+            return 0;
         }
         else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
+            return 0;
         }
         else if (arg2 == "taskprogressview") {
             MVOverview2Widget* W = new MVOverview2Widget;
@@ -125,11 +128,16 @@ int main(int argc, char* argv[])
             }
             test_taskprogressview();
             qWarning() << "No such unit test: " + arg2;
+            return 0;
         }
         else if (arg2 == "multiscaletimeseries") {
             MultiScaleTimeSeries::unit_test(3, 10);
+            return 0;
         }
-        return 0;
+        else if (arg2 == "mvtimeseriesview") {
+            MVTimeSeriesView::unit_test();
+        }
+
     }
 
     QString mode = CLP.named_parameters.value("mode", "overview2").toString();
@@ -194,8 +202,6 @@ int main(int argc, char* argv[])
         }
 
         W->setDefaultInitialization();
-
-        MultiScaleTimeSeries::unit_test(3, 10);
     }
     else if (mode == "spikespy") {
         printf("spikespy...\n");
