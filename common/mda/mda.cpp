@@ -348,6 +348,7 @@ double* Mda::dataPtr(long i1, long i2, long i3, long i4, long i5, long i6)
 
 void Mda::getChunk(Mda& ret, long i, long size)
 {
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
     long a_begin = i;
     long x_begin = 0;
     long a_end = i + size - 1;
@@ -376,6 +377,7 @@ void Mda::getChunk(Mda& ret, long i, long size)
 
 void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2)
 {
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
     long a1_begin = i1;
     long x1_begin = 0;
     long a1_end = i1 + size1 - 1;
@@ -408,8 +410,8 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2)
     double* ptr2 = ret.dataPtr();
 
     for (long ind2 = 0; ind2 <= a2_end - a2_begin; ind2++) {
-        long ii_out = (ind2 + x2_begin) * size1;
-        long ii_in = (ind2 + a2_begin) * N1();
+        long ii_out = (ind2 + x2_begin) * size1 + x1_begin; //bug fixed on 5/31/16 by jfm
+        long ii_in = (ind2 + a2_begin) * N1() + a1_begin; //bug fixed on 5/31/16 by jfm
         for (long ind1 = 0; ind1 <= a1_end - a1_begin; ind1++) {
             ptr2[ii_out] = ptr1[ii_in];
             ii_in++;
@@ -420,6 +422,7 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2)
 
 void Mda::getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, long size3)
 {
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
     long a1_begin = i1;
     long x1_begin = 0;
     long a1_end = i1 + size1 - 1;
@@ -466,8 +469,8 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, 
 
     for (long ind3 = 0; ind3 <= a3_end - a3_begin; ind3++) {
         for (long ind2 = 0; ind2 <= a2_end - a2_begin; ind2++) {
-            long ii_out = (ind2 + x2_begin) * size1 + (ind3 + x3_begin) * size1 * size2;
-            long ii_in = (ind2 + a2_begin) * N1() + (ind3 + a3_begin) * N1() * N2();
+            long ii_out = x1_begin + (ind2 + x2_begin) * size1 + (ind3 + x3_begin) * size1 * size2; //bug fixed on 5/31/16 by jfm
+            long ii_in = a1_begin + (ind2 + a2_begin) * N1() + (ind3 + a3_begin) * N1() * N2(); //bug fixed on 5/31/16 by jfm
             for (long ind1 = 0; ind1 <= a1_end - a1_begin; ind1++) {
                 ptr2[ii_out] = ptr1[ii_in];
                 ii_in++;

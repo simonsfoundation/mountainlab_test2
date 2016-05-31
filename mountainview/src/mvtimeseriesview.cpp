@@ -184,6 +184,8 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     d->m_channel_i1 = data_i1;
     d->m_ds_factor = ds_factor;
 
+    qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << d->m_ds_factor << (data_i2-data_i1+1)/d->m_ds_factor;
+
     Mda Xmin, Xmax;
     d->m_ts.getData(Xmin, Xmax, data_i1 / ds_factor, data_i2 / ds_factor, ds_factor);
     Xmin.write32("debug_min.mda");
@@ -432,7 +434,6 @@ void MVTimeSeriesViewPrivate::zoom_out(mvtsv_coord about_coord, double frac)
     QPointF about_pix = coord2pix(about_coord);
     q->setTimeRange(q->timeRange() * (1/frac));
     mvtsv_coord new_coord = pix2coord(0,about_pix);
-    qDebug() << "@@@@@@@@@@@" << about_coord.t << new_coord.t;
     double dt = about_coord.t - new_coord.t;
     q->setTimeRange(q->timeRange() + (dt));
 }
