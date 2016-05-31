@@ -10,6 +10,7 @@
 
 #include <QFile>
 #include <diskwritemda.h>
+#include <taskprogress.h>
 #include <sys/stat.h>
 
 class MultiScaleTimeSeriesPrivate {
@@ -20,9 +21,11 @@ public:
 
     QString get_multiscale_fname();
     bool create_multiscale_file(const QString& mspath);
-    void downsample_min(DiskReadMda& source, long source_offset, long source_size, DiskWriteMda& dest, long dest_offset);
-    void downsample_max(DiskReadMda& source, long source_offset, long source_size, DiskWriteMda& dest, long dest_offset);
+    static bool downsample_min(const DiskReadMda& X, QString out_fname, long N);
+    static bool downsample_max(const DiskReadMda& X, QString out_fname, long N);
+    static bool write_concatenation(QStringList input_fnames, QString output_fname);
     static long smallest_power_of_3_larger_than(long N);
+    static bool is_power_of_3(long N);
 };
 
 MultiScaleTimeSeries::MultiScaleTimeSeries()
@@ -52,34 +55,30 @@ bool MultiScaleTimeSeries::getData(Mda& min, Mda& max, long t1, long t2, long ds
         return true;
     }
 
-    //check if power of 3
-    double factor = ds_factor;
-    while (factor > 1) {
-        factor /= 3;
-    }
-    if (factor < 1) {
+    if (!d->is_power_of_3(ds_factor)) {
         qWarning() << "Invalid ds_factor: " + ds_factor;
         return false;
     }
 
     QString multiscale_fname = d->get_multiscale_fname();
     /// TODO also check whether multiscale file has the correct size (and/or dimensions). If not, then recreate it
-    if (!QFile(multiscale_fname).exists()) {
-        if (!d->create_multiscale_file(multiscale_fname)) {
-            qWarning() << "Unable to create multiscale file";
-            return false;
-        }
+    //if (!QFile(multiscale_fname).exists()) {
+    if (!d->create_multiscale_file(multiscale_fname)) {
+        qWarning() << "Unable to create multiscale file";
+        return false;
     }
+    //}
 
     DiskReadMda Y(multiscale_fname);
     long t_offset_min = 0;
     long ds_factor_0 = 3;
     while (ds_factor_0 < ds_factor) {
-        t_offset_min += 2 * (ceil(N * 1.0 / ds_factor_0));
+        t_offset_min += 2 * (N / ds_factor_0);
         ds_factor_0 *= 3;
     }
-    long t_offset_max = t_offset_min + ceil(N * 1.0 / ds_factor);
+    long t_offset_max = t_offset_min + N / ds_factor;
 
+    /// TODO what if t1 and t2 are out of bounds? I think we want to put zeros in ... otherwise contaminated by other downsampling factors
     Y.readChunk(min, 0, t1 + t_offset_min, M, t2 - t1 + 1);
     Y.readChunk(max, 0, t1 + t_offset_max, M, t2 - t1 + 1);
 
@@ -88,24 +87,32 @@ bool MultiScaleTimeSeries::getData(Mda& min, Mda& max, long t1, long t2, long ds
 
 bool MultiScaleTimeSeries::unit_test(long M, long N)
 {
+    QString fname1 = "tmp1.mda";
+    QString fname_min = "tmp1_min.mda";
+    QString fname_max = "tmp1_max.mda";
+
+    //write an array
     Mda X(M, N);
     for (long n = 0; n < N; n++) {
         for (long m = 0; m < M; m++) {
             X.setValue(sin(m + m * n), m, n);
         }
     }
-    DiskReadMda Y(X);
+    X.write32(fname1);
 
+    //load it as a diskreadmda
+    DiskReadMda Y(fname1);
+
+    //open it as a multiscale time series
     MultiScaleTimeSeries Z;
     Z.setData(Y);
+
+    //get some data
     Mda min0, max0;
-    Z.getData(min0, max0, 0, 0, 3);
+    Z.getData(min0, max0, 0, N - 1, 9);
 
-    QString out_path_min = CacheManager::globalInstance()->makeLocalFile("multiscaletimeseries_unit_test.min.mda");
-    QString out_path_max = CacheManager::globalInstance()->makeLocalFile("multiscaletimeseries_unit_test.max.mda");
-
-    min0.write32(out_path_min);
-    max0.write32(out_path_max);
+    min0.write32(fname_min);
+    max0.write32(fname_max);
 
     return true;
 }
@@ -133,97 +140,141 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
 
 bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
 {
-
+    TaskProgress task("Create multiscale file");
     if (QFile::exists(mspath)) {
         if (!QFile::remove(mspath)) {
+            task.error("Unable to remove file: " + mspath);
             qWarning() << "Unable to remove file: " + mspath;
             return false;
         }
     }
 
-    long M = m_data.N1();
     long N = smallest_power_of_3_larger_than(m_data.N2());
 
-    QString tmp_mspath = mspath + ".tmp";
-
-    long NY = 0;
+    QStringList file_names;
+    QString prev_min_fname;
+    QString prev_max_fname;
+    double progress_numer = 0;
+    double progress_denom = N * 3 / 2; //3+9+27+...+N; //approximately
     for (long ds_factor = 3; ds_factor <= N; ds_factor *= 3) {
-        NY += 2 * (ceil(N * 1.0 / ds_factor));
-    }
-
-    DiskWriteMda Y_write;
-    if (!Y_write.open(MDAIO_TYPE_FLOAT32, tmp_mspath, M, NY)) {
-        qWarning() << "Unable to open diskwritemda: " + mspath;
-        return false;
-    }
-
-    DiskReadMda Y_read(tmp_mspath);
-
-    long offset_min = 0;
-    long offset_max = offset_min + (ceil(N * 1.0 / 3));
-    long prev_offset_min;
-    long prev_offset_max;
-    long prev_N = N;
-    for (long ds_factor = 3; ds_factor <= N; ds_factor *= 3) {
+        task.setProgress(progress_numer / progress_denom);
+        task.log(QString("ds_factor = %1").arg(ds_factor));
+        QString min_fname = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
+        QString max_fname = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
         if (ds_factor == 3) {
-            downsample_min(m_data, 9, N, Y_write, offset_min);
-            downsample_max(m_data, 0, N, Y_write, offset_max);
+            if (!downsample_min(m_data, min_fname, N)) {
+                task.error("Problem in downsample_min");
+                return false;
+            }
+            if (!downsample_max(m_data, max_fname, N)) {
+                task.error("Problem in downsample_max");
+                return false;
+            }
         }
         else {
-            downsample_min(Y_read, prev_offset_min, prev_N, Y_write, offset_min);
-            downsample_max(Y_read, prev_offset_max, prev_N, Y_write, offset_max);
+            if (!downsample_min(DiskReadMda(prev_min_fname), min_fname, (N * 3) / ds_factor)) {
+                task.error("Problem in downsample_min");
+                return false;
+            }
+            if (!downsample_max(DiskReadMda(prev_max_fname), max_fname, (N * 3) / ds_factor)) {
+                task.error("Problem in downsample_max");
+                return false;
+            }
         }
-        prev_offset_min = offset_min;
-        prev_offset_max = offset_max;
-        prev_N = ceil(N * 1.0 / ds_factor);
-        offset_min += 2 * (ceil(N * 1.0 / ds_factor));
-        offset_max = offset_min + (ceil(N * 1.0 / ds_factor));
+        file_names << min_fname;
+        file_names << max_fname;
+        prev_min_fname = min_fname;
+        prev_max_fname = max_fname;
+        progress_numer += N / ds_factor;
     }
 
-    Y_write.close();
-
-    if (!QFile::rename(tmp_mspath, mspath)) {
-        qWarning() << "Unable to rename file: " + tmp_mspath + " to " + mspath;
+    if (!write_concatenation(file_names, mspath)) {
+        task.error("Problem in write_concatenation");
         return false;
+    }
+    task.log("Removing temporary files");
+    foreach (QString fname, file_names) {
+        QFile::remove(fname);
     }
 
     return true;
 }
 
-void MultiScaleTimeSeriesPrivate::downsample_min(DiskReadMda& source, long source_offset, long source_size, DiskWriteMda& dest, long dest_offset)
+bool MultiScaleTimeSeriesPrivate::downsample_min(const DiskReadMda& X, QString out_fname, long N)
 {
-    long M = source.N1();
-    /// TODO read this in chunks so as not to use RAM
-    Mda X;
-    source.readChunk(X, 0, source_offset, source.N1(), source_size);
-    Mda X2(M, source_size / 3);
-    for (int t = 0; t < source_size / 3; t++) {
-        for (int m = 0; m < M; m++) {
-            double val1 = X.value(m, t * 3);
-            double val2 = X.value(m, t * 3 + 1);
-            double val3 = X.value(m, t * 3 + 2);
-            X2.setValue(qMin(qMin(val1, val2), val3), m, t);
+    /// TO DO do this in chunks to avoid using RAM
+    Mda input;
+    if (!X.readChunk(input, 0, 0, X.N1(), N)) {
+        qWarning() << "Problem reading chunk in downsample_min";
+        return false;
+    }
+    Mda output(X.N1(), N / 3);
+    for (long i = 0; i < N / 3; i++) {
+        for (long m = 0; m < X.N1(); m++) {
+            double val1 = input.value(m, i * 3);
+            double val2 = input.value(m, i * 3 + 1);
+            double val3 = input.value(m, i * 3 + 2);
+            double val = qMin(qMin(val1, val2), val3);
+            output.setValue(val, m, i);
         }
     }
-    dest.writeChunk(X2, 0, dest_offset);
+    if (!output.write32(out_fname)) {
+        qWarning() << "Problem write output file in downsample_min: " + out_fname;
+        return false;
+    }
+    return true;
 }
 
-void MultiScaleTimeSeriesPrivate::downsample_max(DiskReadMda& source, long source_offset, long source_size, DiskWriteMda& dest, long dest_offset)
+bool MultiScaleTimeSeriesPrivate::downsample_max(const DiskReadMda& X, QString out_fname, long N)
 {
-    long M = source.N1();
-    /// TODO read this in chunks so as not to use RAM
-    Mda X;
-    source.readChunk(X, 0, source_offset, source.N1(), source_size);
-    Mda X2(M, source_size / 3);
-    for (int t = 0; t < source_size / 3; t++) {
-        for (int m = 0; m < M; m++) {
-            double val1 = X.value(m, t * 3);
-            double val2 = X.value(m, t * 3 + 1);
-            double val3 = X.value(m, t * 3 + 2);
-            X2.setValue(qMax(qMax(val1, val2), val3), m, t);
+    /// TO DO do this in chunks to avoid using RAM
+    Mda input;
+    if (!X.readChunk(input, 0, 0, X.N1(), N)) {
+        qWarning() << "Problem reading chunk in downsample_max";
+        return false;
+    }
+    Mda output(X.N1(), N / 3);
+    for (long i = 0; i < N / 3; i++) {
+        for (long m = 0; m < X.N1(); m++) {
+            double val1 = input.value(m, i * 3);
+            double val2 = input.value(m, i * 3 + 1);
+            double val3 = input.value(m, i * 3 + 2);
+            double val = qMax(qMax(val1, val2), val3);
+            output.setValue(val, m, i);
         }
     }
-    dest.writeChunk(X2, 0, dest_offset);
+    if (!output.write32(out_fname)) {
+        qWarning() << "Problem write output file in downsample_max: " + out_fname;
+        return false;
+    }
+    return true;
+}
+
+bool MultiScaleTimeSeriesPrivate::write_concatenation(QStringList input_fnames, QString output_fname)
+{
+    long M = 1, N = 0;
+    foreach (QString fname, input_fnames) {
+        DiskReadMda X(fname);
+        M = X.N1();
+        N += X.N2();
+    }
+    DiskWriteMda Y;
+    if (!Y.open(MDAIO_TYPE_FLOAT32, output_fname, M, N)) {
+        qWarning() << "Unable to open output file: " + output_fname;
+        return false;
+    }
+    long offset = 0;
+    foreach (QString fname, input_fnames) {
+        DiskReadMda X(fname);
+        /// TODO do this in chunks so we don't use RAM
+        Mda tmp;
+        X.readChunk(tmp, 0, 0, M, X.N2());
+        Y.writeChunk(tmp, 0, offset);
+        offset += X.N2();
+    }
+    Y.close();
+
+    return true;
 }
 
 long MultiScaleTimeSeriesPrivate::smallest_power_of_3_larger_than(long N)
@@ -233,4 +284,13 @@ long MultiScaleTimeSeriesPrivate::smallest_power_of_3_larger_than(long N)
         ret *= 3;
     }
     return ret;
+}
+
+bool MultiScaleTimeSeriesPrivate::is_power_of_3(long N)
+{
+    double val = N;
+    while (val > 1) {
+        val /= 3;
+    }
+    return (val == 1);
 }

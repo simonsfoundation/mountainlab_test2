@@ -25,31 +25,37 @@
 #include "remotereadmda.h"
 #include "taskprogress.h"
 
-
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtConcurrentRun>
 
 class TaskProgressViewThread : public QRunnable {
 public:
-    TaskProgressViewThread(int idx) : QRunnable(), m_idx(idx) {
+    TaskProgressViewThread(int idx)
+        : QRunnable()
+        , m_idx(idx)
+    {
         setAutoDelete(true);
     }
-    void run() {
+    void run()
+    {
         qsrand(QDateTime::currentDateTime().currentMSecsSinceEpoch());
         QThread::msleep(qrand() % 1000);
         TaskProgress TP1(QString("Test task %1").arg(m_idx));
-        if (m_idx % 3 == 0) TP1.addTag(TaskProgress::Download);
-        else if(m_idx % 3 == 1) TP1.addTag(TaskProgress::Calculate);
+        if (m_idx % 3 == 0)
+            TP1.addTag(TaskProgress::Download);
+        else if (m_idx % 3 == 1)
+            TP1.addTag(TaskProgress::Calculate);
         TP1.setDescription("The description of the task. This should complete on destruct.");
-        for(int i=0; i <= 100; ++i) {
-            TP1.setProgress(i*1.0/100.0);
-            TP1.setLabel(QString("Test task %1 (%2)").arg(m_idx).arg(i*1.0/100.0));
-            TP1.log(QString("Log #%1").arg(i+1));
-            int rand = 1+(qrand() % 10);
-            QThread::msleep(100*rand);
+        for (int i = 0; i <= 100; ++i) {
+            TP1.setProgress(i * 1.0 / 100.0);
+            TP1.setLabel(QString("Test task %1 (%2)").arg(m_idx).arg(i * 1.0 / 100.0));
+            TP1.log(QString("Log #%1").arg(i + 1));
+            int rand = 1 + (qrand() % 10);
+            QThread::msleep(100 * rand);
         }
     }
+
 private:
     int m_idx;
 };
@@ -58,9 +64,9 @@ void test_taskprogressview()
 {
     int num_jobs = 30; //can increase to test a large number of jobs
     qsrand(QDateTime::currentDateTime().currentMSecsSinceEpoch());
-    for(int i = 0; i < num_jobs; ++i) {
+    for (int i = 0; i < num_jobs; ++i) {
         QThreadPool::globalInstance()->releaseThread();
-        QThreadPool::globalInstance()->start(new TaskProgressViewThread(i+1));
+        QThreadPool::globalInstance()->start(new TaskProgressViewThread(i + 1));
         QThread::msleep(qrand() % 10);
     }
     QApplication::instance()->exec();
@@ -79,12 +85,9 @@ int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
     // make sure task progress monitor is instantiated in the main thread
-    TaskManager::TaskProgressMonitor *monitor = TaskManager::TaskProgressMonitor::globalInstance();
+    TaskManager::TaskProgressMonitor* monitor = TaskManager::TaskProgressMonitor::globalInstance();
     Q_UNUSED(monitor);
     CloseMeHandler::start();
-
-    //MultiScaleTimeSeries::unit_test(3,10);
-    //return -1;
 
     setbuf(stdout, 0);
 
@@ -102,10 +105,12 @@ int main(int argc, char* argv[])
         QString arg2 = CLP.unnamed_parameters.value(1);
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
-        } else if (arg2 == "remotereadmda2") {
+        }
+        else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
-        } else if (arg2 == "taskprogressview") {
+        }
+        else if (arg2 == "taskprogressview") {
             MVOverview2Widget* W = new MVOverview2Widget;
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
@@ -120,6 +125,9 @@ int main(int argc, char* argv[])
             }
             test_taskprogressview();
             qWarning() << "No such unit test: " + arg2;
+        }
+        else if (arg2 == "multiscaletimeseries") {
+            MultiScaleTimeSeries::unit_test(3, 10);
         }
         return 0;
     }
@@ -146,7 +154,8 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            } else {
+            }
+            else {
                 W->resize(W0, H0);
             }
 
@@ -185,7 +194,10 @@ int main(int argc, char* argv[])
         }
 
         W->setDefaultInitialization();
-    } else if (mode == "spikespy") {
+
+        MultiScaleTimeSeries::unit_test(3, 10);
+    }
+    else if (mode == "spikespy") {
         printf("spikespy...\n");
         QString timeseries_path = CLP.named_parameters["timeseries"].toString();
         QString firings_path = CLP.named_parameters["firings"].toString();
