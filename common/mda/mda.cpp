@@ -370,6 +370,7 @@ void Mda::getChunk(Mda& ret, long i, long size)
     long ii = 0;
     for (long a = a_begin; a <= a_end; a++) {
         ptr2[x_begin + ii] = ptr1[a_begin + ii];
+        ii++; //it was a bug that this was left out, fixed on 5/31/16 by jfm
     }
 }
 
