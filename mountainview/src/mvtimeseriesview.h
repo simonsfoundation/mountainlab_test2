@@ -39,6 +39,7 @@ public:
     double currentTimepoint() const;
     MVRange timeRange() const;
 
+    void resizeEvent(QResizeEvent *evt);
     void paintEvent(QPaintEvent* evt);
     void mousePressEvent(QMouseEvent* evt);
     void mouseReleaseEvent(QMouseEvent* evt);
