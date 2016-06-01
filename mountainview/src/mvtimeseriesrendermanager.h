@@ -10,16 +10,8 @@
 #include "multiscaletimeseries.h"
 
 #include <QImage>
+#include <QRunnable>
 #include <QThread>
-
-struct MVTimeSeriesRenderManagerPrefs {
-    double margins[4];
-    double space_between_channels;
-    MVTimeSeriesRenderManagerPrefs() {
-        margins[0]=margins[1]=margins[2]=margins[3]=30;
-        space_between_channels=8;
-    }
-};
 
 class MVTimeSeriesRenderManagerPrivate;
 class MVTimeSeriesRenderManager : public QObject {
@@ -30,7 +22,6 @@ public:
     virtual ~MVTimeSeriesRenderManager();
 
     void setMultiScaleTimeSeries(MultiScaleTimeSeries* ts);
-    void setPrefs(MVTimeSeriesRenderManagerPrefs prefs);
 
     QImage getImage(double t1, double t2, double amp_factor, double W, double H);
 
@@ -51,13 +42,25 @@ public:
     double t1, t2, amp_factor;
     double W, H;
     long data_ds_factor;
-    MVTimeSeriesRenderManagerPrefs prefs;
     MultiScaleTimeSeries *ts;
 
     //output
     QImage image;
 
     void run();
+};
+
+class ThreadManager : public QObject {\
+    Q_OBJECT
+public:
+    ThreadManager();
+    void start(QThread *thread);
+private slots:
+    void slot_timer();
+    void slot_thread_finished();
+private:
+    QList<QThread *> m_queued_threads;
+    QSet<QThread *> m_running_threads;
 };
 
 

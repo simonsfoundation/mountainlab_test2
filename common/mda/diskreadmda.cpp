@@ -69,8 +69,9 @@ DiskReadMda::DiskReadMda(const Mda& X)
 
 DiskReadMda::~DiskReadMda()
 {
-    if (d->m_file)
+    if (d->m_file) {
         fclose(d->m_file);
+    }
     delete d;
 }
 

@@ -45,6 +45,7 @@ public:
     void mouseReleaseEvent(QMouseEvent* evt);
     void mouseMoveEvent(QMouseEvent *evt);
     void wheelEvent(QWheelEvent *evt);
+    void keyPressEvent(QKeyEvent *evt);
 
     static void unit_test();
 

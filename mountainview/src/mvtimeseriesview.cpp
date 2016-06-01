@@ -45,8 +45,7 @@ public:
     double m_current_t;
     MVRange m_selected_t_range;
     bool m_activated;
-
-    MVTimeSeriesRenderManagerPrefs m_prefs;
+    double m_margins[4];
 
     bool m_layout_needed;
 
@@ -79,7 +78,9 @@ MVTimeSeriesView::MVTimeSeriesView()
     d->m_layout_needed = true;
     this->setMouseTracking(true);
     d->m_render_manager.setMultiScaleTimeSeries(&d->m_ts);
-    d->m_render_manager.setPrefs(d->m_prefs);
+    d->m_margins[0] = d->m_margins[1] = d->m_margins[2] = d->m_margins[3] = 30;
+
+    QObject::connect(&d->m_render_manager, SIGNAL(updated()), this, SLOT(update()));
 }
 
 MVTimeSeriesView::~MVTimeSeriesView()
@@ -141,6 +142,9 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
+    double mtop=d->m_margins[2];
+    double mbottom=d->m_margins[3];
+
     double W0 = this->width();
     double H0 = this->height();
     long M = d->m_data.N1();
@@ -171,10 +175,11 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         double t2 = t1 + panel_size;
         QPointF pix1 = d->coord2pix(mvtsv_coord::from_t(t1));
         QPointF pix2 = d->coord2pix(mvtsv_coord::from_t(t2));
-        double xx = pix2.x();
+        double xx = pix1.x();
         double WW = pix2.x() - pix1.x();
-        QImage img = d->m_render_manager.getImage(t1, t2, d->m_amplitude_factor, WW, H0);
-        painter.drawImage(xx, 0, img);
+        double HH = H0-mtop-mbottom;
+        QImage img = d->m_render_manager.getImage(t1, t2, d->m_amplitude_factor, WW, HH);
+        painter.drawImage(xx, mtop, img);
     }
 }
 
@@ -247,9 +252,25 @@ void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
     }
 }
 
+void MVTimeSeriesView::keyPressEvent(QKeyEvent *evt)
+{
+    if (evt->key() == Qt::Key_Up) {
+        d->m_amplitude_factor*=1.2;
+        update();
+    }
+    else if (evt->key()==Qt::Key_Down) {
+        d->m_amplitude_factor/=1.2;
+        update();
+    }
+    else {
+        QWidget::keyPressEvent(evt);
+    }
+}
+
 void MVTimeSeriesView::unit_test()
 {
-    long M = 4;
+    /*
+    long M = 40;
     long N = 100000;
     Mda X(M, N);
     for (long n = 0; n < N; n++) {
@@ -262,9 +283,14 @@ void MVTimeSeriesView::unit_test()
         }
     }
     DiskReadMda X0(X);
+    */
+
+    //DiskReadMda X0("/home/magland/sorting_results/franklab/results/ex001_20160424/pre2.mda");
+    DiskReadMda X0("http://datalaboratory.org:8020/mdaserver/franklab/results/ex001_20160424/pre2.mda");
+
     MVTimeSeriesView* W = new MVTimeSeriesView;
     W->setData(X0);
-    W->setTimeRange(MVRange(0, 1000));
+    W->setTimeRange(MVRange(0, 1e6));
     W->show();
 }
 
@@ -273,12 +299,11 @@ QList<mvtsv_channel> MVTimeSeriesViewPrivate::make_channel_layout(double W, doub
     QList<mvtsv_channel> channels;
     if (!M)
         return channels;
-    MVTimeSeriesRenderManagerPrefs P = m_prefs;
-    double mleft = P.margins[0];
-    double mright = P.margins[1];
-    double mtop = P.margins[2];
-    double mbottom = P.margins[3];
-    double space = P.space_between_channels;
+    double mleft = m_margins[0];
+    double mright = m_margins[1];
+    double mtop = m_margins[2];
+    double mbottom = m_margins[3];
+    double space = 0;
     double channel_height = (H - mbottom - mtop - (M - 1) * space) / M;
     double y0 = mtop;
     for (int m = 0; m < M; m++) {
@@ -295,10 +320,8 @@ void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H
     Q_UNUSED(W)
     Q_UNUSED(H)
 
-
-    MVTimeSeriesRenderManagerPrefs P = m_prefs;
-    double mtop = P.margins[2];
-    double mbottom = P.margins[3];
+    double mtop = m_margins[2];
+    double mbottom = m_margins[3];
 
     if (m_selected_t_range.min < 0) {
         QPointF p0 = coord2pix(mvtsv_coord(0, m_current_t, 0));
