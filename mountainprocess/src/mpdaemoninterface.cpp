@@ -72,8 +72,7 @@ bool MPDaemonInterface::stop()
     if (!d->daemon_is_running()) {
         printf("daemon has been stopped.\n");
         return true;
-    }
-    else {
+    } else {
         printf("Failed to stop daemon\n");
         return false;
     }
@@ -129,8 +128,9 @@ bool MPDaemonInterface::clearProcessing()
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
     QString fname = cfp(mlTmpPath() + "/mpdaemon_running.pid");
-    if (!QFile::exists(fname)) return false;
-    if (QFileInfo(fname).lastModified().secsTo(QDateTime::currentDateTime())>120) { // time since last write
+    if (!QFile::exists(fname))
+        return false;
+    if (QFileInfo(fname).lastModified().secsTo(QDateTime::currentDateTime()) > 120) { // time since last write
         return false;
     }
     long pid = read_text_file(fname).toLongLong();
@@ -178,7 +178,8 @@ QJsonObject MPDaemonInterfacePrivate::get_last_daemon_state()
     if (fname.isEmpty())
         return ret;
     QString json = read_text_file(fname);
-    if (json.isEmpty()) return ret;
+    if (json.isEmpty())
+        return ret;
     QJsonParseError error;
     ret = QJsonDocument::fromJson(json.toLatin1(), &error).object();
     if (error.error != QJsonParseError::NoError) {

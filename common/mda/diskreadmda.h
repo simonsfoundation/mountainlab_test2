@@ -36,6 +36,7 @@ public:
 #endif
     ///Set the path (file name) of the .mda file to read.
     void setPath(const char* file_path);
+    void setRemoteDataType(const QString& dtype);
 
     void setHaltAgent(HaltAgent* halt_agent);
 

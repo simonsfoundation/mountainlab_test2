@@ -25,6 +25,7 @@
 #include "clustermerge.h"
 #include "mvviewagent.h"
 #include "mvstatusbar.h"
+#include "mvtimeseriesview.h"
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -1011,6 +1012,11 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 
 void MVOverview2WidgetPrivate::open_timeseries()
 {
+    MVTimeSeriesView* X = new MVTimeSeriesView;
+    X->setProperty("widget_type", "mvtimeseries");
+    add_tab(X, QString("Timeseries"));
+    update_widget(X);
+    /*
     SSTimeSeriesWidget* X = new SSTimeSeriesWidget;
     SSTimeSeriesView* V = new SSTimeSeriesView;
     V->initialize();
@@ -1019,6 +1025,7 @@ void MVOverview2WidgetPrivate::open_timeseries()
     X->setProperty("widget_type", "timeseries");
     add_tab(X, QString("Timeseries"));
     update_widget(X);
+    */
 }
 
 void MVOverview2WidgetPrivate::open_clips()
@@ -1179,7 +1186,7 @@ void MVOverview2WidgetPrivate::update_timeseries_views()
     foreach(QWidget * W, widgets)
     {
         QString widget_type = W->property("widget_type").toString();
-        if (widget_type == "timeseries") {
+        if ((widget_type == "timeseries") || (widget_type == "mvtimeseries")) {
             update_widget(W);
         }
     }
@@ -1483,6 +1490,10 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         X->setPath(current_timeseries_path());
         ((SSTimeSeriesView*)(WW->view()))->setData(X, true);
         set_times_labels_for_timeseries_widget(WW);
+    } else if (widget_type == "mvtimeseries") {
+        MVTimeSeriesView* WW = (MVTimeSeriesView*)W;
+        WW->setData(DiskReadMda(current_timeseries_path()));
+        WW->setTimeRange(MVRange(0, 5000));
     }
 }
 

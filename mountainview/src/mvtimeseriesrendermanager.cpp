@@ -50,7 +50,6 @@ void MVTimeSeriesRenderManager::setMultiScaleTimeSeries(MultiScaleTimeSeries* ts
     /// TODO clear all the records and stop all the running threads
 }
 
-
 QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_factor, double W, double H)
 {
     if (!d->m_ts)
@@ -84,7 +83,7 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
                 return img.scaled(W, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
             } else {
                 ImageRecord rec1 = rec;
-                rec1.W = W / 27;
+                rec1.W = W / 9;
                 d->start_compute_image(rec1);
                 return QImage();
             }
@@ -103,7 +102,6 @@ void MVTimeSeriesRenderManager::slot_thread_finished()
     rec.amp_factor = thread->amp_factor;
     rec.W = thread->W;
     rec.H = thread->H;
-    qDebug() << "slot_thread_finished" << rec.make_code();
     QString code = rec.make_code();
     d->m_image_records[code] = rec;
     d->m_image_records[code].image = thread->image;
@@ -125,7 +123,7 @@ long MVTimeSeriesRenderManagerPrivate::get_preferred_data_ds_factor(double t1, d
     double timepoints_per_pixel = (t2 - t1) / W;
     if (!timepoints_per_pixel)
         return 1;
-    return MultiScaleTimeSeries::smallest_power_of_3_larger_than((1 / timepoints_per_pixel) / 3); //err on the side of less downsampling
+    return MultiScaleTimeSeries::smallest_power_of_3_larger_than(timepoints_per_pixel / 3); //err on the side of less downsampling
 }
 
 ImageRecord MVTimeSeriesRenderManagerPrivate::find_closest_record_matching_t1t2amp(double t1, double t2, double amp_factor, double W, double H)
@@ -203,7 +201,6 @@ void MVTimeSeriesRenderManagerPrivate::start_compute_image(ImageRecord rec)
     thread->H = rec.H;
     thread->data_ds_factor = get_preferred_data_ds_factor(rec.t1, rec.t2, rec.amp_factor, rec.W, rec.H);
     thread->ts = m_ts;
-    qDebug() << "start_compute_image" << rec.make_code() << thread->data_ds_factor;
     m_running_record_codes.insert(rec.make_code());
     m_thread_manager.start(thread);
 }

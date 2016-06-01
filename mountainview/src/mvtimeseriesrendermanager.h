@@ -28,7 +28,8 @@ public:
 signals:
     void updated();
 
-private slots:
+private
+slots:
     void slot_thread_finished();
 
 private:
@@ -42,7 +43,7 @@ public:
     double t1, t2, amp_factor;
     double W, H;
     long data_ds_factor;
-    MultiScaleTimeSeries *ts;
+    MultiScaleTimeSeries* ts;
 
     //output
     QImage image;
@@ -50,18 +51,19 @@ public:
     void run();
 };
 
-class ThreadManager : public QObject {\
+class ThreadManager : public QObject {
     Q_OBJECT
 public:
     ThreadManager();
-    void start(QThread *thread);
-private slots:
+    void start(QThread* thread);
+private
+slots:
     void slot_timer();
     void slot_thread_finished();
-private:
-    QList<QThread *> m_queued_threads;
-    QSet<QThread *> m_running_threads;
-};
 
+private:
+    QList<QThread*> m_queued_threads;
+    QSet<QThread*> m_running_threads;
+};
 
 #endif // MVTIMESERIESRENDERMANAGER_H

@@ -116,6 +116,15 @@ void DiskReadMda::setPath(const char* file_path)
     }
 }
 
+void DiskReadMda::setRemoteDataType(const QString& dtype)
+{
+#ifdef USE_REMOTE_MDA
+    d->m_remote_mda.setRemoteDataType(dtype);
+#else
+    Q_UNUSED(dtype)
+#endif
+}
+
 void DiskReadMda::setHaltAgent(HaltAgent* halt_agent)
 {
     d->m_halt_agent = halt_agent;
@@ -156,7 +165,7 @@ QString DiskReadMda::makePath()
         return ret;
     if (d->m_use_memory_mda) {
         QString checksum = compute_mda_checksum(d->m_memory_mda);
-        QString fname = CacheManager::globalInstance()->makeLocalFile(checksum+".makePath.mda", CacheManager::ShortTerm);
+        QString fname = CacheManager::globalInstance()->makeLocalFile(checksum + ".makePath.mda", CacheManager::ShortTerm);
         if (QFile::exists(fname))
             return fname;
         if (d->m_memory_mda.write64(fname + ".tmp")) {
@@ -271,7 +280,6 @@ bool DiskReadMda::readChunk(Mda& X, long i, long size) const
     long jA = qMax(i, 0L);
     long jB = qMin(i + size - 1, d->total_size() - 1);
     long size_to_read = jB - jA + 1;
-    qDebug() << "+++++++++++++++++++++++++++" << i << size << jA << jB << size_to_read;
     if (size_to_read > 0) {
         fseek(d->m_file, d->m_header.header_size + d->m_header.num_bytes_per_entry * (jA), SEEK_SET);
         long bytes_read = mda_read_float64(&X.dataPtr()[jA - i], &d->m_header, size_to_read, d->m_file);

@@ -29,6 +29,7 @@ public:
     RemoteReadMdaInfo m_info;
     bool m_info_downloaded;
     HaltAgent* m_halt_agent;
+    QString m_remote_datatype;
 
     void download_info_if_needed();
     QString download_chunk_at_index(long ii);
@@ -39,6 +40,7 @@ RemoteReadMda::RemoteReadMda(const QString& path)
     d = new RemoteReadMdaPrivate;
     d->q = this;
     d->m_halt_agent = 0;
+    d->m_remote_datatype = "float64";
     this->setPath(path);
 }
 
@@ -59,6 +61,11 @@ void RemoteReadMda::operator=(const RemoteReadMda& other)
 RemoteReadMda::~RemoteReadMda()
 {
     delete d;
+}
+
+void RemoteReadMda::setRemoteDataType(QString dtype)
+{
+    d->m_remote_datatype = dtype;
 }
 
 void RemoteReadMda::setPath(const QString& path)
@@ -105,10 +112,10 @@ QDateTime RemoteReadMda::fileLastModified()
 bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
 {
     /// TODO handle both size=8 and 4 bytes
-    int datatype_size=8;
-    double size_mb=size*datatype_size*1.0/1e6;
+    int datatype_size = 8;
+    double size_mb = size * datatype_size * 1.0 / 1e6;
     TaskProgress task(TaskProgress::Download, "Downloading array chunk");
-    if (size_mb>0.5) {
+    if (size_mb > 0.5) {
         task.setLabel(QString("Downloading array chunk: %1 MB").arg(size_mb));
     }
     //read a chunk of the remote array considered as a 1D array
@@ -128,7 +135,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
         return true;
     } else {
         for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
-            task.setProgress((jj-jj1+0.5)/(jj2-jj1+1));
+            task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
             if ((d->m_halt_agent) && (d->m_halt_agent->stopRequested())) {
                 //X = Mda(); //maybe it's better to return the right size.
                 return false;
@@ -209,9 +216,9 @@ void RemoteReadMdaPrivate::download_info_if_needed()
 }
 #endif
 
-/// TODO only download float64 when necessary!
 QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
 {
+    download_info_if_needed();
     long Ntot = m_info.N1 * m_info.N2 * m_info.N3;
     long size = REMOTE_READ_MDA_CHUNK_SIZE;
     if (ii * REMOTE_READ_MDA_CHUNK_SIZE + size > Ntot) {
@@ -226,7 +233,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
     if (QFile::exists(fname))
         return fname;
     QString url = m_path;
-    QString url0 = url + QString("?a=readChunk&output=text&index=%1&size=%2&datatype=float64").arg((long)(ii * REMOTE_READ_MDA_CHUNK_SIZE)).arg(size);
+    QString url0 = url + QString("?a=readChunk&output=text&index=%1&size=%2&datatype=%3").arg((long)(ii * REMOTE_READ_MDA_CHUNK_SIZE)).arg(size).arg(m_remote_datatype);
     QString binary_url = http_get_text(url0).trimmed();
     if (binary_url.isEmpty())
         return "";
@@ -254,7 +261,6 @@ void unit_test_remote_read_mda()
 {
     QString url = "http://localhost:8000/firings.mda";
     RemoteReadMda X(url);
-    qDebug() << X.N1() << X.N2() << X.N3();
     Mda chunk;
     X.readChunk(chunk, 0, 100);
     for (int j = 0; j < 10; j++) {

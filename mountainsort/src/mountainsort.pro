@@ -73,7 +73,9 @@ HEADERS += \
     processors/merge_across_channels_processor.h \
     processors/geom2adj_processor.h \
     processors/mv_compute_templates_processor.h \
-    processors/mv_compute_templates.h
+    processors/mv_compute_templates.h \
+    processors/create_multiscale_timeseries_processor.h \
+    processors/create_multiscale_timeseries.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -133,7 +135,9 @@ SOURCES += \
     processors/merge_across_channels_processor.cpp \
     processors/geom2adj_processor.cpp \
     processors/mv_compute_templates_processor.cpp \
-    processors/mv_compute_templates.cpp
+    processors/mv_compute_templates.cpp \
+    processors/create_multiscale_timeseries_processor.cpp \
+    processors/create_multiscale_timeseries.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

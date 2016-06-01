@@ -17,7 +17,7 @@ struct MVRange {
         min = min0;
         max = max0;
     }
-    bool operator==(const MVRange &other);
+    bool operator==(const MVRange& other);
     MVRange operator+(double offset);
     MVRange operator*(double scale);
     double min, max;
@@ -32,6 +32,7 @@ public:
     virtual ~MVTimeSeriesView();
 
     void setData(const DiskReadMda& X);
+    void setMLProxyUrl(const QString& url);
     void setTimeRange(MVRange);
     void setCurrentTimepoint(double t);
     void setSelectedTimeRange(MVRange range);
@@ -39,13 +40,13 @@ public:
     double currentTimepoint() const;
     MVRange timeRange() const;
 
-    void resizeEvent(QResizeEvent *evt);
+    void resizeEvent(QResizeEvent* evt);
     void paintEvent(QPaintEvent* evt);
     void mousePressEvent(QMouseEvent* evt);
     void mouseReleaseEvent(QMouseEvent* evt);
-    void mouseMoveEvent(QMouseEvent *evt);
-    void wheelEvent(QWheelEvent *evt);
-    void keyPressEvent(QKeyEvent *evt);
+    void mouseMoveEvent(QMouseEvent* evt);
+    void wheelEvent(QWheelEvent* evt);
+    void keyPressEvent(QKeyEvent* evt);
 
     static void unit_test();
 

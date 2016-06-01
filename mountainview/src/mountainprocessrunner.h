@@ -21,7 +21,7 @@ public:
     void setInputParameters(const QMap<QString, QVariant>& parameters);
     void setMLProxyUrl(const QString& url);
     QString makeOutputFilePath(const QString& pname);
-    void runProcess(HaltAgent* halt_agent);
+    void runProcess(HaltAgent* halt_agent = 0);
 
 private:
     MountainProcessRunnerPrivate* d;

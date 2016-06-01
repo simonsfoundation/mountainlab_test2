@@ -72,7 +72,7 @@ MVTimeSeriesView::MVTimeSeriesView()
     d->m_current_t = 0;
     d->m_selected_t_range = MVRange(-1, -1);
     d->m_activated = true; /// TODO set activated only when window is active (like in sstimeseriesview, I think)
-    d->m_amplitude_factor = 1;
+    d->m_amplitude_factor = 1.0 / 40;
     d->m_left_click_anchor_pix = QPointF(-1, -1);
     d->m_left_click_dragging = false;
     d->m_layout_needed = true;
@@ -93,6 +93,12 @@ void MVTimeSeriesView::setData(const DiskReadMda& X)
     d->m_data = X;
     d->m_ts.setData(X);
     d->m_layout_needed = true;
+    update();
+}
+
+void MVTimeSeriesView::setMLProxyUrl(const QString& url)
+{
+    d->m_ts.setMLProxyUrl(url);
     update();
 }
 
@@ -142,8 +148,8 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    double mtop=d->m_margins[2];
-    double mbottom=d->m_margins[3];
+    double mtop = d->m_margins[2];
+    double mbottom = d->m_margins[3];
 
     double W0 = this->width();
     double H0 = this->height();
@@ -165,7 +171,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     long num_t = d->m_view_t2 - d->m_view_t1;
     long panel_size = 100;
-    while (num_t / panel_size > 10) {
+    while (num_t / panel_size > 2) {
         panel_size *= 10;
     }
     long panel_index_1 = d->m_view_t1 / panel_size;
@@ -177,7 +183,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         QPointF pix2 = d->coord2pix(mvtsv_coord::from_t(t2));
         double xx = pix1.x();
         double WW = pix2.x() - pix1.x();
-        double HH = H0-mtop-mbottom;
+        double HH = H0 - mtop - mbottom;
         QImage img = d->m_render_manager.getImage(t1, t2, d->m_amplitude_factor, WW, HH);
         painter.drawImage(xx, mtop, img);
     }
@@ -252,23 +258,39 @@ void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
     }
 }
 
-void MVTimeSeriesView::keyPressEvent(QKeyEvent *evt)
+void MVTimeSeriesView::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->key() == Qt::Key_Up) {
-        d->m_amplitude_factor*=1.2;
+        d->m_amplitude_factor *= 1.2;
         update();
-    }
-    else if (evt->key()==Qt::Key_Down) {
-        d->m_amplitude_factor/=1.2;
+    } else if (evt->key() == Qt::Key_Down) {
+        d->m_amplitude_factor /= 1.2;
         update();
-    }
-    else {
+    } else {
         QWidget::keyPressEvent(evt);
     }
 }
 
 void MVTimeSeriesView::unit_test()
 {
+
+    /*
+    DiskReadMda X1("/home/magland/sorting_results/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
+    DiskReadMda X2("http://datalaboratory.org:8020/mdaserver/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
+    qDebug() << X1.N1() << X1.N2();
+    qDebug() << X2.N1() << X2.N2();
+
+    Mda A1,A2;
+    long index=8e7+1;
+    X1.readChunk(A1,0,index,X1.N1(),1);
+    X2.readChunk(A2,0,index,X2.N1(),1);
+
+    A1.write32("/home/magland/tmp/A1.mda");
+    A2.write32("/home/magland/tmp/A2.mda");
+    return;
+
+    */
+
     /*
     long M = 40;
     long N = 100000;
@@ -286,11 +308,17 @@ void MVTimeSeriesView::unit_test()
     */
 
     //DiskReadMda X0("/home/magland/sorting_results/franklab/results/ex001_20160424/pre2.mda");
-    DiskReadMda X0("http://datalaboratory.org:8020/mdaserver/franklab/results/ex001_20160424/pre2.mda");
+
+    QString proxy_url = "http://datalaboratory.org:8020";
+    //DiskReadMda X0("http://datalaboratory.org:8020/mdaserver/franklab/results/ex001_20160424/pre2.mda");
+    DiskReadMda X0("http://datalaboratory.org:8020/mdaserver/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
+    //DiskReadMda X0("/home/magland/sorting_results/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
 
     MVTimeSeriesView* W = new MVTimeSeriesView;
     W->setData(X0);
-    W->setTimeRange(MVRange(0, 1e6));
+    W->setMLProxyUrl(proxy_url);
+    //W->setTimeRange(MVRange(0, X0.N2()-1));
+    W->setTimeRange(MVRange(0, 1e7));
     W->show();
 }
 

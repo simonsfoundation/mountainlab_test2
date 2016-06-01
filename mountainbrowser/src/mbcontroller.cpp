@@ -107,8 +107,8 @@ void MBController::slot_ready_read()
         return;
     }
     while (P->canReadLine()) {
-	QByteArray str = P->readLine();
-	printf("%s", str.constData());
-	fflush(stdout);
+        QByteArray str = P->readLine();
+        printf("%s", str.constData());
+        fflush(stdout);
     }
 }
