@@ -12,6 +12,7 @@
 #include <diskwritemda.h>
 #include <taskprogress.h>
 #include <sys/stat.h>
+#include <QMutex>
 #include <math.h>
 
 class MultiScaleTimeSeriesPrivate {
@@ -22,10 +23,13 @@ public:
 
     QString get_multiscale_fname();
     bool create_multiscale_file(const QString& mspath);
+
     static bool downsample_min(const DiskReadMda& X, QString out_fname, long N);
     static bool downsample_max(const DiskReadMda& X, QString out_fname, long N);
     static bool write_concatenation(QStringList input_fnames, QString output_fname);
     static bool is_power_of_3(long N);
+
+    QMutex m_mutex;
 };
 
 MultiScaleTimeSeries::MultiScaleTimeSeries()
@@ -41,11 +45,13 @@ MultiScaleTimeSeries::~MultiScaleTimeSeries()
 
 void MultiScaleTimeSeries::setData(const DiskReadMda& X)
 {
+    QMutexLocker locker(&d->m_mutex);
     d->m_data = X;
 }
 
 bool MultiScaleTimeSeries::getData(Mda& min, Mda& max, long t1, long t2, long ds_factor)
 {
+    QMutexLocker locker(&d->m_mutex);
     long M = d->m_data.N1();
     long N = MultiScaleTimeSeries::smallest_power_of_3_larger_than(d->m_data.N2());
 
