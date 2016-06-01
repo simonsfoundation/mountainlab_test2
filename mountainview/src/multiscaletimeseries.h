@@ -19,6 +19,8 @@ public:
     virtual ~MultiScaleTimeSeries();
     void setData(const DiskReadMda &X);
 
+    long N1();
+    long N2();
     bool getData(Mda &min, Mda &max, long t1, long t2, long ds_factor); //returns values at timepoints i1*ds_factor:ds_factor:i2*ds_factor
 
     static bool unit_test(long M=20, long N=1000);

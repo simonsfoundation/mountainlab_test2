@@ -6,20 +6,11 @@
 
 #include "mvtimeseriesview.h"
 #include "multiscaletimeseries.h"
+#include "mvtimeseriesrendermanager.h"
 #include <math.h>
 
 #include <QMouseEvent>
 #include <QPainter>
-
-struct mvtsv_segment {
-    long ds_factor;
-    long i1, i2;
-    QImage image;
-    QString makeCode()
-    {
-        return QString("%1--%2--%3").arg(ds_factor).arg(i1).arg(i2);
-    }
-};
 
 struct mvtsv_coord {
     mvtsv_coord(long channel0 = 0, double t0 = 0, double y0 = 0)
@@ -40,22 +31,7 @@ struct mvtsv_coord {
 struct mvtsv_channel {
     long channel;
     QString label;
-    QColor color;
     QRectF geometry;
-};
-struct mvtsv_layout_settings {
-    mvtsv_layout_settings()
-    {
-        margin_left = 30;
-        margin_right = 30;
-        margin_top = 30;
-        margin_bottom = 30;
-        vertical_space_between_channel_rects = 4;
-    }
-
-    double margin_left, margin_right;
-    double margin_top, margin_bottom;
-    double vertical_space_between_channel_rects;
 };
 
 class MVTimeSeriesViewPrivate {
@@ -63,25 +39,23 @@ public:
     MVTimeSeriesView* q;
     MultiScaleTimeSeries m_ts;
     DiskReadMda m_data;
-    double m_data_t0;
     double m_view_t1, m_view_t2;
-    double m_vertical_scale_factor;
+    double m_amplitude_factor;
     QList<mvtsv_channel> m_channels;
-    long m_ds_factor;
     double m_current_t;
     MVRange m_selected_t_range;
     bool m_activated;
 
-    mvtsv_layout_settings m_layout_settings;
+    MVTimeSeriesRenderManagerPrefs m_prefs;
 
     bool m_layout_needed;
+
+    MVTimeSeriesRenderManager m_render_manager;
 
     QPointF m_left_click_anchor_pix;
     mvtsv_coord m_left_click_anchor_coord;
     MVRange m_left_click_anchor_t_range;
     bool m_left_click_dragging;
-
-    QMap<QString, mvtsv_segment> m_segments;
 
     QList<mvtsv_channel> make_channel_layout(double W, double H, long M);
     void paint_cursor(QPainter* painter, double W, double H);
@@ -90,10 +64,6 @@ public:
 
     void zoom_out(mvtsv_coord about_coord, double frac = 0.8);
     void zoom_in(mvtsv_coord about_coord, double frac = 0.8);
-
-    QList<mvtsv_segment> get_required_segments(long ds_factor);
-    void load_segment_image(mvtsv_segment& S);
-    void paint_segment(QPainter* painter, mvtsv_segment& S);
 };
 
 MVTimeSeriesView::MVTimeSeriesView()
@@ -103,11 +73,13 @@ MVTimeSeriesView::MVTimeSeriesView()
     d->m_current_t = 0;
     d->m_selected_t_range = MVRange(-1, -1);
     d->m_activated = true; /// TODO set activated only when window is active (like in sstimeseriesview, I think)
-    d->m_vertical_scale_factor = 1;
+    d->m_amplitude_factor = 1;
     d->m_left_click_anchor_pix = QPointF(-1, -1);
     d->m_left_click_dragging = false;
     d->m_layout_needed = true;
     this->setMouseTracking(true);
+    d->m_render_manager.setMultiScaleTimeSeries(&d->m_ts);
+    d->m_render_manager.setPrefs(d->m_prefs);
 }
 
 MVTimeSeriesView::~MVTimeSeriesView()
@@ -115,9 +87,8 @@ MVTimeSeriesView::~MVTimeSeriesView()
     delete d;
 }
 
-void MVTimeSeriesView::setData(double t0, const DiskReadMda& X)
+void MVTimeSeriesView::setData(const DiskReadMda& X)
 {
-    d->m_data_t0 = t0;
     d->m_data = X;
     d->m_ts.setData(X);
     d->m_layout_needed = true;
@@ -177,46 +148,33 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         return;
 
     if (d->m_layout_needed) {
-        d->m_layout_needed=false;
+        d->m_layout_needed = false;
         d->m_channels = d->make_channel_layout(W0, H0, M);
-        d->m_segments.clear();
         for (long m = 0; m < M; m++) {
             mvtsv_channel* CH = &d->m_channels[m];
             CH->channel = m;
             CH->label = QString("%1").arg(m + 1);
-            CH->color = Qt::black;
         }
     }
 
     d->paint_cursor(&painter, W0, H0);
 
-    long minimum_num_timepoints = W0;
-    if (minimum_num_timepoints > 5000)
-        minimum_num_timepoints = 5000; /// TODO this should be a constant
-
-    long ds_factor;
-    /*
-     * What we want:
-     *   data_i1,data_i2 must be divisible by ds_factor
-     *   (data_i2-data_i1)/ds_factor >= minimum_num_timepoints (but minimal)
-     *   data_i1 < (d->m_view_t1-d->m_data_t0)
-     *   data_i2 > (d->m_view_t2-d->m_data_t0)
-     */
-    {
-        long i1 = floor(d->m_view_t1 - d->m_data_t0);
-        long i2 = ceil(d->m_view_t2 - d->m_data_t0);
-        ds_factor = MultiScaleTimeSeries::smallest_power_of_3_larger_than((i2 - i1) / minimum_num_timepoints);
+    long num_t = d->m_view_t2 - d->m_view_t1;
+    long panel_size = 100;
+    while (num_t / panel_size > 10) {
+        panel_size *= 10;
     }
-    d->m_ds_factor = ds_factor;
-
-    QList<mvtsv_segment> required_segments = d->get_required_segments(ds_factor);
-
-    //Mda Xmin, Xmax;
-    //d->m_ts.getData(Xmin, Xmax, data_i1 / ds_factor, data_i2 / ds_factor, ds_factor);
-
-    for (int i = 0; i < required_segments.count(); i++) {
-        d->load_segment_image(required_segments[i]);
-        d->paint_segment(&painter, required_segments[i]);
+    long panel_index_1 = d->m_view_t1 / panel_size;
+    long panel_index_2 = d->m_view_t2 / panel_size;
+    for (long panel_index = panel_index_1; panel_index <= panel_index_2; panel_index++) {
+        double t1 = panel_index * panel_size;
+        double t2 = t1 + panel_size;
+        QPointF pix1 = d->coord2pix(mvtsv_coord::from_t(t1));
+        QPointF pix2 = d->coord2pix(mvtsv_coord::from_t(t2));
+        double xx = pix2.x();
+        double WW = pix2.x() - pix1.x();
+        QImage img = d->m_render_manager.getImage(t1, t2, d->m_amplitude_factor, WW, H0);
+        painter.drawImage(xx, 0, img);
     }
 }
 
@@ -272,12 +230,10 @@ void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
             d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-        }
-        else if (delta > 0) {
+        } else if (delta > 0) {
             d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
         }
-    }
-    else {
+    } else {
         //This used to allow zooming at hover position -- probably not needed
         /*
         float frac = 1;
@@ -307,7 +263,7 @@ void MVTimeSeriesView::unit_test()
     }
     DiskReadMda X0(X);
     MVTimeSeriesView* W = new MVTimeSeriesView;
-    W->setData(0, X0);
+    W->setData(X0);
     W->setTimeRange(MVRange(0, 1000));
     W->show();
 }
@@ -317,14 +273,19 @@ QList<mvtsv_channel> MVTimeSeriesViewPrivate::make_channel_layout(double W, doub
     QList<mvtsv_channel> channels;
     if (!M)
         return channels;
-    mvtsv_layout_settings L = m_layout_settings;
-    double channel_height = (H - L.margin_bottom - L.margin_top - (M - 1) * L.vertical_space_between_channel_rects) / M;
-    double y0 = L.margin_top;
+    MVTimeSeriesRenderManagerPrefs P = m_prefs;
+    double mleft = P.margins[0];
+    double mright = P.margins[1];
+    double mtop = P.margins[2];
+    double mbottom = P.margins[3];
+    double space = P.space_between_channels;
+    double channel_height = (H - mbottom - mtop - (M - 1) * space) / M;
+    double y0 = mtop;
     for (int m = 0; m < M; m++) {
         mvtsv_channel X;
-        X.geometry = QRectF(L.margin_left, y0, W - L.margin_left - L.margin_right, channel_height);
+        X.geometry = QRectF(mleft, y0, W - mleft - mright, channel_height);
         channels << X;
-        y0 += channel_height + L.vertical_space_between_channel_rects;
+        y0 += channel_height + space;
     }
     return channels;
 }
@@ -333,13 +294,17 @@ void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H
 {
     Q_UNUSED(W)
     Q_UNUSED(H)
-    mvtsv_layout_settings L = m_layout_settings;
+
+
+    MVTimeSeriesRenderManagerPrefs P = m_prefs;
+    double mtop = P.margins[2];
+    double mbottom = P.margins[3];
 
     if (m_selected_t_range.min < 0) {
         QPointF p0 = coord2pix(mvtsv_coord(0, m_current_t, 0));
         QPointF p1 = coord2pix(mvtsv_coord(0, m_current_t, 0));
-        p0.setY(L.margin_top);
-        p1.setY(H - L.margin_bottom);
+        p0.setY(mtop);
+        p1.setY(H - mbottom);
 
         for (int pass = 1; pass <= 2; pass++) {
             QPainterPath path;
@@ -374,8 +339,8 @@ void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H
     if (m_selected_t_range.min >= 0) {
         QPointF p0 = coord2pix(mvtsv_coord(0, m_selected_t_range.min, 0));
         QPointF p1 = coord2pix(mvtsv_coord(0, m_selected_t_range.max, 0));
-        p0.setY(L.margin_top);
-        p1.setY(H - L.margin_bottom);
+        p0.setY(mtop);
+        p1.setY(H - mbottom);
 
         QPainterPath path;
         path.moveTo(p0.x(), p0.y());
@@ -400,7 +365,7 @@ QPointF MVTimeSeriesViewPrivate::coord2pix(mvtsv_coord C)
 
     double xpct = (C.t - m_view_t1) / (m_view_t2 - m_view_t1);
     double px = CH->geometry.x() + xpct * CH->geometry.width();
-    double py = CH->geometry.y() + CH->geometry.height() / 2 + CH->geometry.height() / 2 * (C.y * m_vertical_scale_factor);
+    double py = CH->geometry.y() + CH->geometry.height() / 2 + CH->geometry.height() / 2 * (C.y * m_amplitude_factor);
     return QPointF(px, py);
 }
 
@@ -417,8 +382,8 @@ mvtsv_coord MVTimeSeriesViewPrivate::pix2coord(long channel, QPointF pix)
         xpct = (pix.x() - CH->geometry.x()) / (CH->geometry.width());
     }
     C.t = m_view_t1 + xpct * (m_view_t2 - m_view_t1);
-    if (m_vertical_scale_factor) {
-        C.y = (pix.y() - (CH->geometry.y() + CH->geometry.height() / 2)) / m_vertical_scale_factor / (CH->geometry.height() / 2);
+    if (m_amplitude_factor) {
+        C.y = (pix.y() - (CH->geometry.y() + CH->geometry.height() / 2)) / m_amplitude_factor / (CH->geometry.height() / 2);
     }
     return C;
 }
@@ -435,106 +400,6 @@ void MVTimeSeriesViewPrivate::zoom_out(mvtsv_coord about_coord, double frac)
 void MVTimeSeriesViewPrivate::zoom_in(mvtsv_coord about_coord, double frac)
 {
     zoom_out(about_coord, 1 / frac);
-}
-
-QList<mvtsv_segment> MVTimeSeriesViewPrivate::get_required_segments(long ds_factor)
-{
-    long i1 = floor(m_view_t1 - m_data_t0);
-    long i2 = ceil(m_view_t2 - m_data_t0);
-
-    long j1 = floor(i1 * 1.0 / ds_factor);
-    long j2 = ceil(i2 * 1.0 / ds_factor);
-
-    long chunk_size = 100;
-    int chunk_num1 = j1 / chunk_size;
-    int chunk_num2 = j2 / chunk_size;
-
-    QList<mvtsv_segment> ret;
-    for (int chunk_num = chunk_num1; chunk_num <= chunk_num2; chunk_num++) {
-        mvtsv_segment SS;
-        SS.ds_factor = ds_factor;
-        SS.i1 = chunk_num * chunk_size;
-        SS.i2 = (chunk_num + 1) * chunk_size;
-        ret << SS;
-    }
-
-    return ret;
-}
-
-void MVTimeSeriesViewPrivate::load_segment_image(mvtsv_segment& S)
-{
-    QString code = S.makeCode();
-    if (m_segments.contains(code)) {
-        S.image = m_segments[code].image;
-        return;
-    }
-
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
-    long NN = S.i2 - S.i1 + 1;
-
-    int oversamp=5;
-
-    int W = NN*oversamp;
-    int H = q->height();
-    QImage img = QImage(W, H, QImage::Format_ARGB32);
-    QColor transparent(0, 0, 0, 0);
-    img.fill(transparent);
-
-    QPainter painter(&img);
-    painter.setRenderHint(QPainter::Antialiasing);
-
-    Mda Xmin, Xmax;
-    m_ts.getData(Xmin, Xmax, S.i1, S.i2, S.ds_factor);
-
-    for (int m = 0; m < m_channels.count(); m++) {
-        mvtsv_channel* CH = &m_channels[m];
-
-        QVector<double> min_values, max_values;
-        for (int ii = 0; ii < NN; ii++) {
-            min_values << Xmin.value(m, ii);
-            max_values << Xmax.value(m, ii);
-        }
-
-        //draw data
-        QPen pen = painter.pen();
-        pen.setColor(CH->color);
-        painter.setPen(pen);
-        QPainterPath path;
-        for (long n = 0; n < NN; n++) {
-            double y1 = CH->geometry.top() + CH->geometry.height() / 2 + CH->geometry.height() / 2 * (min_values[n] * m_vertical_scale_factor);
-            double y2 = CH->geometry.top() + CH->geometry.height() / 2 + CH->geometry.height() / 2 * (max_values[n] * m_vertical_scale_factor);
-            QPointF pt1 = QPointF((n+0.5)*oversamp, y1);
-            QPointF pt2 = QPointF((n+0.5)*oversamp, y2);
-            if (n == 0) {
-                path.moveTo(pt1);
-                path.lineTo(pt2);
-            }
-            else {
-                path.lineTo(pt1);
-                path.lineTo(pt2);
-            }
-        }
-        painter.drawPath(path);
-    }
-    S.image = img;
-
-    m_segments[code] = S;
-
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
-}
-
-void MVTimeSeriesViewPrivate::paint_segment(QPainter* painter, mvtsv_segment& S)
-{
-    mvtsv_layout_settings L = m_layout_settings;
-    double xfactor = (q->width() - L.margin_left - L.margin_right) * 1.0 / (m_view_t2 - m_view_t1);
-    double x0 = L.margin_left + (S.i1 * S.ds_factor - m_view_t1) * xfactor;
-    double y0 = 0;
-    double w0 = (S.i2 - S.i1 + 1) * S.ds_factor * xfactor;
-    double h0 = q->height();
-    QImage img=S.image.scaled(w0,h0,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-    painter->drawImage(x0,y0,img);
-    //QRectF R(x0, y0, w0, h0);
-    //painter->drawPixmap(R, S.image, QRectF(0, 0, S.image.width(), S.image.height()));
 }
 
 bool MVRange::operator==(const MVRange& other)

@@ -49,6 +49,18 @@ void MultiScaleTimeSeries::setData(const DiskReadMda& X)
     d->m_data = X;
 }
 
+long MultiScaleTimeSeries::N1()
+{
+    QMutexLocker locker(&d->m_mutex);
+    return d->m_data.N1();
+}
+
+long MultiScaleTimeSeries::N2()
+{
+    QMutexLocker locker(&d->m_mutex);
+    return d->m_data.N2();
+}
+
 bool MultiScaleTimeSeries::getData(Mda& min, Mda& max, long t1, long t2, long ds_factor)
 {
     QMutexLocker locker(&d->m_mutex);

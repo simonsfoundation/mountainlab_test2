@@ -12,10 +12,13 @@
 #include <QImage>
 #include <QThread>
 
-struct MVTimeSeriesRenderManagerInfo {
-    double W, H;
-    double t1, t2;
-    QString make_code();
+struct MVTimeSeriesRenderManagerPrefs {
+    double margins[4];
+    double space_between_channels;
+    MVTimeSeriesRenderManagerPrefs() {
+        margins[0]=margins[1]=margins[2]=margins[3]=30;
+        space_between_channels=8;
+    }
 };
 
 class MVTimeSeriesRenderManagerPrivate;
@@ -27,29 +30,29 @@ public:
     virtual ~MVTimeSeriesRenderManager();
 
     void setMultiScaleTimeSeries(MultiScaleTimeSeries* ts);
-    void setMargins(double left, double right, double top, double bottom);
-    void setSpaceBetweenChannels(double pix);
+    void setPrefs(MVTimeSeriesRenderManagerPrefs prefs);
 
-    void setInfo(MVTimeSeriesRenderManagerInfo info);
-    void getImage(QImage& img0);
+    QImage getImage(double t1, double t2, double amp_factor, double W, double H);
 
 signals:
     void updated();
 
 private slots:
-    void slot_update_thread_finished();
+    void slot_thread_finished();
 
 private:
     MVTimeSeriesRenderManagerPrivate* d;
 };
 
-class MVTimeSeriesRenderManagerUpdateThread : public QThread {
+class MVTimeSeriesRenderManagerThread : public QThread {
     Q_OBJECT
 public:
     //input
-    MVTimeSeriesRenderManagerInfo info;
-    int ds_x;
-    int ds_y;
+    double t1, t2, amp_factor;
+    double W, H;
+    long data_ds_factor;
+    MVTimeSeriesRenderManagerPrefs prefs;
+    MultiScaleTimeSeries *ts;
 
     //output
     QImage image;
@@ -57,9 +60,5 @@ public:
     void run();
 };
 
-void MVTimeSeriesRenderManagerUpdateThread::run()
-{
-
-}
 
 #endif // MVTIMESERIESRENDERMANAGER_H

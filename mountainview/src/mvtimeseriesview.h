@@ -31,7 +31,7 @@ public:
     MVTimeSeriesView();
     virtual ~MVTimeSeriesView();
 
-    void setData(double t0, const DiskReadMda& X);
+    void setData(const DiskReadMda& X);
     void setTimeRange(MVRange);
     void setCurrentTimepoint(double t);
     void setSelectedTimeRange(MVRange range);
