@@ -169,7 +169,7 @@ bool write_concatenation(QStringList input_fnames, QString output_fname)
             Mda tmp;
             X.readChunk(tmp, 0, ii, M, size0);
             Y.writeChunk(tmp, 0, offset);
-            offset += X.N2();
+            offset += size0;
         }
     }
     Y.close();

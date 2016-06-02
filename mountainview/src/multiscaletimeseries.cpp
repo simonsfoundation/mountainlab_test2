@@ -136,7 +136,7 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
         return "";
     }
 
-    if (path.startsWith("http:")) {
+    //if (path.startsWith("http:")) {
         MountainProcessRunner MPR;
         MPR.setProcessorName("create_multiscale_timeseries");
         QVariantMap params;
@@ -144,9 +144,11 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
         MPR.setInputParameters(params);
         MPR.setMLProxyUrl(m_ml_proxy_url);
         QString path_out = MPR.makeOutputFilePath("timeseries_out");
+        MPR.setDetach(true);
         MPR.runProcess();
         return path_out;
-    } else {
+    //} else {
+        /*
         QString code = compute_hash(compute_file_code(path));
         QString ret = CacheManager::globalInstance()->makeLocalFile(code + ".multiscale.mda", CacheManager::ShortTerm);
         if (!QFile::exists(ret)) {
@@ -157,7 +159,8 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
             return ret;
         else
             return "";
-    }
+            */
+    //}
 }
 
 bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
@@ -273,9 +276,9 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
     }
 
     if (m_multiscale_data.path().isEmpty()) {
-        m_multiscale_data.setPath(m_data.makePath() + ".multiscale");
-        m_multiscale_data.setRemoteDataType("float32"); //to save download time!
-        /*
+        //m_multiscale_data.setPath(m_data.makePath() + ".multiscale");
+        //m_multiscale_data.setRemoteDataType("float32"); //to save download time!
+
         QString multiscale_fname = get_multiscale_fname();
         if (multiscale_fname.isEmpty()) {
             qWarning() << "Unable to create multiscale file";
@@ -283,7 +286,7 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         }
         m_multiscale_data.setPath(multiscale_fname);
         m_multiscale_data.setRemoteDataType("float32"); //to save download time!
-        */
+
     }
 
     long t_offset_min = 0;

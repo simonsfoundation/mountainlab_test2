@@ -20,6 +20,7 @@ public:
     void setInputParameters(const QMap<QString, QVariant>& parameters);
     void setMLProxyUrl(const QString& url);
     QString makeOutputFilePath(const QString& pname);
+    void setDetach(bool val);
     void runProcess();
 
 private:

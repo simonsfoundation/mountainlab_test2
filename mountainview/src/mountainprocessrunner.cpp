@@ -27,6 +27,7 @@ public:
     QMap<QString, QVariant> m_parameters;
     //QString m_mscmdserver_url;
     QString m_mlproxy_url;
+    bool m_detach;
 
     QString create_temporary_output_file_name(const QString& remote_url, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name);
 };
@@ -35,6 +36,7 @@ MountainProcessRunner::MountainProcessRunner()
 {
     d = new MountainProcessRunnerPrivate;
     d->q = this;
+    d->m_detach = false;
 }
 
 MountainProcessRunner::~MountainProcessRunner()
@@ -52,6 +54,11 @@ QString MountainProcessRunner::makeOutputFilePath(const QString& pname)
     QString ret = d->create_temporary_output_file_name(d->m_mlproxy_url, d->m_processor_name, d->m_parameters, pname);
     d->m_parameters[pname] = ret;
     return ret;
+}
+
+void MountainProcessRunner::setDetach(bool val)
+{
+    d->m_detach = val;
 }
 
 void MountainProcessRunner::setInputParameters(const QMap<QString, QVariant>& parameters)
@@ -150,13 +157,16 @@ void MountainProcessRunner::runProcess()
         {
             args << QString("--%1=%2").arg(key).arg(d->m_parameters.value(key).toString());
         }
+        if (d->m_detach) {
+            args << QString("--~detach=1");
+        }
         task.log(QString("Executing locally: %1").arg(mountainsort_exe));
         foreach(QString key, keys)
         {
             QString val = d->m_parameters[key].toString();
             task.log(QString("%1 = %2").arg(key).arg(val));
             if (val.startsWith("http")) {
-                task.error("Executing locally, but parameter starts with http. Probably mpserver url has not been set.");
+                task.error("Executing locally, but parameter starts with http. Probably mmlproxy url has not been set.");
                 return;
             }
         }
@@ -200,6 +210,9 @@ void MountainProcessRunner::runProcess()
         QJsonObject req;
         req["action"] = "queueScript";
         req["script"] = script;
+        if (d->m_detach) {
+            req["detach"] = 1;
+        }
         QString url = d->m_mlproxy_url + "/mpserver";
         task.log("POSTING: " + url);
         task.log(QJsonDocument(req).toJson());

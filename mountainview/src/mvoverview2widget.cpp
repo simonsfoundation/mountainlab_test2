@@ -990,6 +990,7 @@ void MVOverview2WidgetPrivate::open_timeseries()
 {
     MVTimeSeriesView* X = new MVTimeSeriesView;
     X->setProperty("widget_type", "mvtimeseries");
+    X->setMLProxyUrl(m_mlproxy_url);
     add_tab(X, QString("Timeseries"));
     update_widget(X);
     /*
