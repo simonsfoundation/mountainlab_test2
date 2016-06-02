@@ -12,6 +12,7 @@
 #include <taskprogress.h>
 #include "cachemanager.h"
 #include "msmisc.h"
+#include "mlutils.h"
 
 #define REMOTE_READ_MDA_CHUNK_SIZE 5e5
 
@@ -113,11 +114,11 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
 {
     /// TODO handle both size=8 and 4 bytes
     int datatype_size = 8;
-    double size_mb = size * datatype_size * 1.0 / 1e6;
-    TaskProgress task(TaskProgress::Download, "Downloading array chunk");
-    if (size_mb > 0.5) {
-        task.setLabel(QString("Downloading array chunk: %1 MB").arg(size_mb));
-    }
+    //double size_mb = size * datatype_size * 1.0 / 1e6;
+    //TaskProgress task(TaskProgress::Download, "Downloading array chunk");
+    //if (size_mb > 0.5) {
+    //    task.setLabel(QString("Downloading array chunk: %1 MB").arg(size_mb));
+    //}
     //read a chunk of the remote array considered as a 1D array
     X.allocate(size, 1); //allocate the output array
     double* Xptr = X.dataPtr(); //pointer to the output data
@@ -126,23 +127,28 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     long jj1 = ii1 / REMOTE_READ_MDA_CHUNK_SIZE; //start chunk index of the remote array
     long jj2 = ii2 / REMOTE_READ_MDA_CHUNK_SIZE; //end chunk index of the remote array
     if (jj1 == jj2) { //in this case there is only one chunk we need to worry about
-        task.setProgress(0.5);
+        //task.setProgress(0.5);
         QString fname = d->download_chunk_at_index(jj1); //download the single chunk
-        if (fname.isEmpty())
+        if (fname.isEmpty()) {
+            //task.error("fname is empty");
             return false;
+        }
         DiskReadMda A(fname);
         A.readChunk(X, ii1 - jj1 * REMOTE_READ_MDA_CHUNK_SIZE, size); //starting reading at the offset of ii1 relative to the start index of the chunk
         return true;
     } else {
         for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
-            task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
+            //task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
             if ((d->m_halt_agent) && (d->m_halt_agent->stopRequested())) {
                 //X = Mda(); //maybe it's better to return the right size.
+                //task.error("Halted");
                 return false;
             }
             QString fname = d->download_chunk_at_index(jj); //download the chunk at index jj
-            if (fname.isEmpty())
+            if (fname.isEmpty()) {
+                //task.error("fname is empty *");
                 return false;
+            }
             DiskReadMda A(fname);
             if (jj == jj1) { //case 1/3, this is the first chunk
                 Mda tmp;
@@ -201,6 +207,10 @@ void RemoteReadMdaPrivate::download_info_if_needed()
 {
     if (m_info_downloaded)
         return;
+    //if (in_gui_thread()) {
+    //    qCritical() << "Cannot call download_info_if_needed from within the GUI thread!";
+    //    exit(-1);
+    //}
     m_info_downloaded = true;
     //QString url=file_url_for_remote_path(m_path);
     QString url = m_path;

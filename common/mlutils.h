@@ -18,5 +18,6 @@ QString mlLogPath();
 QString mlConfigPath();
 void mkdir_if_doesnt_exist(const QString& path);
 QString resolve_path(QString basepath, QString path);
+bool in_gui_thread();
 
 #endif // MLUTILS_H

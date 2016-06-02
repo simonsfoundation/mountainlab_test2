@@ -181,15 +181,17 @@ QString DiskReadMda::makePath()
 
 long DiskReadMda::N1() const
 {
-    if (d->m_use_memory_mda)
+    if (d->m_use_memory_mda) {
         return d->m_memory_mda.N1();
+    }
 #ifdef USE_REMOTE_MDA
     if (d->m_use_remote_mda) {
         return d->m_remote_mda.N1();
     }
 #endif
-    if (!d->open_file_if_needed())
+    if (!d->open_file_if_needed()) {
         return 0;
+    }
     return d->m_header.dims[0];
 }
 

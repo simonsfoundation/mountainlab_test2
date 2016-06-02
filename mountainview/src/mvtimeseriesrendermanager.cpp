@@ -66,9 +66,7 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
     } else {
         ImageRecord rec0 = d->find_closest_record_matching_t1t2amp(t1, t2, amp_factor, W, H);
         if (rec0.W) {
-            ImageRecord rec1 = rec;
-            rec1.W = qMin(rec0.W * 3, W);
-            d->start_compute_image(rec1);
+            d->start_compute_image(rec);
             return rec0.image.scaled(W, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         } else {
             rec0 = d->find_closest_record_containing_t1t2amp(t1, t2, amp_factor, W, H);
@@ -77,14 +75,11 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
                 double a1 = (t1 - rec0.t1) / (rec0.t2 - rec0.t1) * rec0.W;
                 double a2 = (t2 - rec0.t1) / (rec0.t2 - rec0.t1) * rec0.W;
                 img = img.copy(a1, 0, a2 - a1, rec0.H);
-                ImageRecord rec1 = rec;
-                rec1.W = qMin((a2 - a1) * 3, W);
-                d->start_compute_image(rec1);
+                d->start_compute_image(rec);
                 return img.scaled(W, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
             } else {
                 ImageRecord rec1 = rec;
-                rec1.W = W / 9;
-                d->start_compute_image(rec1);
+                d->start_compute_image(rec);
                 return QImage();
             }
         }

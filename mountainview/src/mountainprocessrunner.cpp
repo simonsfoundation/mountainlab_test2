@@ -133,6 +133,11 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
 void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
 {
 
+    if (in_gui_thread()) {
+        qCritical() << "Cannot run mountain process in gui thread: "+d->m_processor_name;
+        exit(-1);
+    }
+
     TaskProgress task(TaskProgress::Calculate, "MS: " + d->m_processor_name);
 
     //if (d->m_mscmdserver_url.isEmpty()) {

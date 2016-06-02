@@ -91,6 +91,7 @@ MVTimeSeriesView::~MVTimeSeriesView()
 void MVTimeSeriesView::setData(const DiskReadMda& X)
 {
     d->m_data = X;
+    d->m_data.N1();
     d->m_ts.setData(X);
     d->m_layout_needed = true;
     update();
@@ -153,6 +154,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     double W0 = this->width();
     double H0 = this->height();
+
     long M = d->m_data.N1();
     if (!M)
         return;
@@ -241,10 +243,12 @@ void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
             d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-        } else if (delta > 0) {
+        }
+        else if (delta > 0) {
             d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
         }
-    } else {
+    }
+    else {
         //This used to allow zooming at hover position -- probably not needed
         /*
         float frac = 1;
@@ -263,10 +267,18 @@ void MVTimeSeriesView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    } else {
+    }
+    else if (evt->key() == Qt::Key_Equal) {
+        d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
+    }
+    else if (evt->key() == Qt::Key_Minus) {
+        d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
+    }
+    else {
         QWidget::keyPressEvent(evt);
     }
 }

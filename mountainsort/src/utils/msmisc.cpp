@@ -5,6 +5,7 @@
 #include <QCryptographicHash>
 #include <QThread>
 #include "cachemanager.h"
+#include "mlutils.h"
 
 //I have to temporarily put this code in to get code completion to work in QtCreator
 //even though DEFINES+=USE_NETWORK is in the .pro file.
@@ -17,6 +18,8 @@
 #include <QTemporaryFile>
 #include "taskprogress.h"
 #endif
+
+#include <QCoreApplication>
 
 #include "textfile.h"
 
@@ -113,7 +116,8 @@ double compute_stdev(const QList<double>& X)
     int ct = X.count();
     if (ct >= 2) {
         return sqrt((sumsqr - sum * sum / ct) / (ct - 1));
-    } else
+    }
+    else
         return 0;
 }
 Mda grab_clips_subset(Mda& clips, const QList<int>& inds)
@@ -164,6 +168,12 @@ QString abbreviate(const QString& str, int len1, int len2)
 #ifdef USE_NETWORK
 QString http_get_binary_file(const QString& url)
 {
+    //if (in_gui_thread()) {
+    //    qCritical() << "Cannot call http_get_binary_file from within the GUI thread!";
+    //    exit(-1);
+    //}
+    TaskProgress task("Downloading binary file");
+    task.log(url);
     QTime timer;
     timer.start();
     QString fname = get_temp_fname();
@@ -180,6 +190,7 @@ QString http_get_binary_file(const QString& url)
     });
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
+    task.setLabel(QString("Downloaded %1 MB in %2 sec").arg(num_bytes * 1.0 / 1e6).arg(timer.elapsed() * 1.0 / 1000));
     printf("RECEIVED BINARY (%d ms, %ld bytes) from %s\n", timer.elapsed(), num_bytes, url.toLatin1().data());
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_downloaded", num_bytes);
     return fname;
@@ -187,6 +198,10 @@ QString http_get_binary_file(const QString& url)
 
 QString http_get_text(const QString& url)
 {
+    //if (in_gui_thread()) {
+    //    qCritical() << "Cannot call http_get_text from within the GUI thread!";
+    //    exit(-1);
+    //}
     QTime timer;
     timer.start();
     QString fname = get_temp_fname();
