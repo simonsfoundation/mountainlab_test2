@@ -152,6 +152,8 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
+    double mleft = d->m_margins[0];
+    double mright = d->m_margins[1];
     double mtop = d->m_margins[2];
     double mbottom = d->m_margins[3];
 
@@ -174,24 +176,10 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     d->paint_cursor(&painter, W0, H0);
 
-    long num_t = d->m_view_t2 - d->m_view_t1;
-    long panel_size = 100;
-    while (num_t / panel_size > 2) {
-        panel_size *= 10;
-    }
-    long panel_index_1 = d->m_view_t1 / panel_size;
-    long panel_index_2 = d->m_view_t2 / panel_size;
-    for (long panel_index = panel_index_1; panel_index <= panel_index_2; panel_index++) {
-        double t1 = panel_index * panel_size;
-        double t2 = t1 + panel_size;
-        QPointF pix1 = d->coord2pix(mvtsv_coord::from_t(t1));
-        QPointF pix2 = d->coord2pix(mvtsv_coord::from_t(t2));
-        double xx = pix1.x();
-        double WW = pix2.x() - pix1.x();
-        double HH = H0 - mtop - mbottom;
-        QImage img = d->m_render_manager.getImage(t1, t2, d->m_amplitude_factor, WW, HH);
-        painter.drawImage(xx, mtop, img);
-    }
+    double WW=W0-mleft-mright;
+    double HH=H0-mtop-mbottom;
+    QImage img = d->m_render_manager.getImage(d->m_view_t1,d->m_view_t2,d->m_amplitude_factor,WW,HH);
+    painter.drawImage(mleft, mtop, img);
 }
 
 void MVTimeSeriesView::mousePressEvent(QMouseEvent* evt)
@@ -333,7 +321,7 @@ void MVTimeSeriesView::unit_test()
     W->setData(X0);
     W->setMLProxyUrl(proxy_url);
     //W->setTimeRange(MVRange(0, X0.N2()-1));
-    W->setTimeRange(MVRange(0, 1e7));
+    W->setTimeRange(MVRange(0, 1000));
     W->show();
 }
 

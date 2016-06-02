@@ -11,9 +11,14 @@
 #include <QThread>
 #include <QTimer>
 
-struct ImageRecord {
-    double t1, t2, amp_factor;
-    double W, H;
+#define PANEL_WIDTH 1200
+#define PANEL_HEIGHT 1200
+#define PANEL_NUM_POINTS 300
+
+struct ImagePanel {
+    long ds_factor;
+    long index;
+    double amp_factor;
     QImage image;
     QString make_code();
 };
@@ -24,14 +29,13 @@ class MVTimeSeriesRenderManagerPrivate {
 public:
     MVTimeSeriesRenderManager* q;
     MultiScaleTimeSeries* m_ts;
-    QMap<QString, ImageRecord> m_image_records;
-    QSet<QString> m_running_record_codes;
+    QMap<QString, ImagePanel> m_image_panels;
+    QSet<QString> m_running_panel_codes;
     ThreadManager m_thread_manager;
 
-    long get_preferred_data_ds_factor(double t1, double t2, double amp_factor, double W, double H);
-    ImageRecord find_closest_record_matching_t1t2amp(double t1, double t2, double amp_factor, double W, double H);
-    ImageRecord find_closest_record_containing_t1t2amp(double t1, double t2, double amp_factor, double W, double H);
-    void start_compute_image(ImageRecord rec);
+    QImage render_panel(ImagePanel p);
+    void start_compute_panel(double amp_factor, long ds_factor, long t_index);
+    ImagePanel* closest_ancestor_panel(ImagePanel p);
 };
 
 MVTimeSeriesRenderManager::MVTimeSeriesRenderManager()
@@ -56,36 +60,33 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
 {
     if (!d->m_ts)
         return QImage();
-    ImageRecord rec;
-    rec.t1 = t1;
-    rec.t2 = t2;
-    rec.amp_factor = amp_factor;
-    rec.W = W;
-    rec.H = H;
-    QString code = rec.make_code();
-    if (d->m_image_records.contains(code)) {
-        return d->m_image_records[code].image;
-    } else {
-        ImageRecord rec0 = d->find_closest_record_matching_t1t2amp(t1, t2, amp_factor, W, H);
-        if (rec0.W) {
-            d->start_compute_image(rec);
-            return rec0.image.scaled(W, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-        } else {
-            rec0 = d->find_closest_record_containing_t1t2amp(t1, t2, amp_factor, W, H);
-            if (rec0.W) {
-                QImage img = rec0.image;
-                double a1 = (t1 - rec0.t1) / (rec0.t2 - rec0.t1) * rec0.W;
-                double a2 = (t2 - rec0.t1) / (rec0.t2 - rec0.t1) * rec0.W;
-                img = img.copy(a1, 0, a2 - a1, rec0.H);
-                d->start_compute_image(rec);
-                return img.scaled(W, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-            } else {
-                ImageRecord rec1 = rec;
-                d->start_compute_image(rec);
-                return QImage();
-            }
+
+    QImage ret(W, H, QImage::Format_ARGB32);
+    QColor transparent(0, 0, 0, 0);
+    ret.fill(transparent);
+    QPainter painter(&ret);
+
+    long ds_factor = 1;
+    //we want no more than 3 panels
+    while ((t2 - t1) / ds_factor / PANEL_NUM_POINTS > 3)
+        ds_factor *= 3;
+
+    long ind1 = (long)(t1 / (ds_factor * PANEL_NUM_POINTS));
+    long ind2 = (long)(t2 / (ds_factor * PANEL_NUM_POINTS));
+    for (long iii = ind1; iii <= ind2; iii++) {
+        ImagePanel p;
+        p.amp_factor = amp_factor;
+        p.ds_factor = ds_factor;
+        p.index = iii;
+        QImage img = d->render_panel(p);
+        if (img.width()) {
+            double a1 = (iii * PANEL_NUM_POINTS * ds_factor - t1) * 1.0 / (t2 - t1) * W;
+            double a2 = ((iii + 1) * PANEL_NUM_POINTS * ds_factor - t1) * 1.0 / (t2 - t1) * W;
+            painter.drawImage(a1, 0, img.scaled(a2 - a1, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
         }
     }
+
+    return ret;
 }
 
 void MVTimeSeriesRenderManager::slot_thread_finished()
@@ -93,118 +94,73 @@ void MVTimeSeriesRenderManager::slot_thread_finished()
     MVTimeSeriesRenderManagerThread* thread = qobject_cast<MVTimeSeriesRenderManagerThread*>(sender());
     if (!thread)
         return;
-    ImageRecord rec;
-    rec.t1 = thread->t1;
-    rec.t2 = thread->t2;
-    rec.amp_factor = thread->amp_factor;
-    rec.W = thread->W;
-    rec.H = thread->H;
-    QString code = rec.make_code();
-    d->m_image_records[code] = rec;
-    d->m_image_records[code].image = thread->image;
-    d->m_running_record_codes.remove(code);
+    ImagePanel p;
+    p.amp_factor = thread->amp_factor;
+    p.ds_factor = thread->ds_factor;
+    p.index = thread->index;
+    QString code = p.make_code();
+    d->m_image_panels[code] = p;
+    d->m_image_panels[code].image = thread->image;
+    d->m_running_panel_codes.remove(code);
     thread->deleteLater();
     emit updated();
 }
 
-QString ImageRecord::make_code()
+QString ImagePanel::make_code()
 {
-    return QString("t1=%1.t2=%2.amp=%3.W=%4.H=%5").arg(this->t1).arg(this->t2).arg(this->amp_factor).arg(this->W).arg(this->H);
+    return QString("amp=%1.ds=%2.ind=%3").arg(this->amp_factor).arg(this->ds_factor).arg(this->index);
 }
 
-long MVTimeSeriesRenderManagerPrivate::get_preferred_data_ds_factor(double t1, double t2, double amp_factor, double W, double H)
+void MVTimeSeriesRenderManagerPrivate::start_compute_panel(double amp_factor, long ds_factor, long index)
 {
-    Q_UNUSED(H)
-    Q_UNUSED(amp_factor)
-    //we want one timepoint per pixel
-    double timepoints_per_pixel = (t2 - t1) / W;
-    if (!timepoints_per_pixel)
-        return 1;
-    return MultiScaleTimeSeries::smallest_power_of_3_larger_than(timepoints_per_pixel / 3); //err on the side of less downsampling
-}
-
-ImageRecord MVTimeSeriesRenderManagerPrivate::find_closest_record_matching_t1t2amp(double t1, double t2, double amp_factor, double W, double H)
-{
-    QList<ImageRecord*> candidates;
-    QStringList keys = m_image_records.keys();
-    foreach(QString key, keys)
-    {
-        ImageRecord* R = &m_image_records[key];
-        if ((R->t1 == t1) && (R->t2 == t2) && (R->amp_factor == amp_factor)) {
-            candidates << R;
-        }
-    }
-    if (candidates.isEmpty()) {
-        ImageRecord ret;
-        ret.t1 = ret.t2 = ret.amp_factor = ret.W = ret.H = 0;
-        return ret;
-    } else {
-        double best_dist = 0;
-        ImageRecord* best;
-        foreach(ImageRecord * C, candidates)
-        {
-            double dist = qMax(qAbs(C->W - W), qAbs(C->H - H));
-            if ((!best_dist) || (dist < best_dist)) {
-                best = C;
-                best_dist = dist;
-            }
-        }
-        return *best;
-    }
-}
-
-ImageRecord MVTimeSeriesRenderManagerPrivate::find_closest_record_containing_t1t2amp(double t1, double t2, double amp_factor, double W, double H)
-{
-    QList<ImageRecord*> candidates;
-    QStringList keys = m_image_records.keys();
-    foreach(QString key, keys)
-    {
-        ImageRecord* R = &m_image_records[key];
-        if ((R->t1 <= t1) && (R->t2 >= t2) && (R->amp_factor == amp_factor)) {
-            candidates << R;
-        }
-    }
-    if (candidates.isEmpty()) {
-        ImageRecord ret;
-        ret.t1 = ret.t2 = ret.amp_factor = ret.W = ret.H = 0;
-        return ret;
-    } else {
-        double best_dist = 0;
-        ImageRecord* best;
-        foreach(ImageRecord * C, candidates)
-        {
-            double a1 = (t1 - C->t1) / (C->t2 - C->t1) * C->W;
-            double a2 = (t2 - C->t1) / (C->t2 - C->t1) * C->W;
-            double dist = qMax(qAbs((a2 - a1) - W), qAbs(C->H - H));
-            if ((!best_dist) || (dist < best_dist)) {
-                best = C;
-                best_dist = dist;
-            }
-        }
-        return *best;
-    }
-}
-
-void MVTimeSeriesRenderManagerPrivate::start_compute_image(ImageRecord rec)
-{
-    if (m_running_record_codes.contains(rec.make_code()))
+    ImagePanel p;
+    p.amp_factor = amp_factor;
+    p.ds_factor = ds_factor;
+    p.index = index;
+    if (m_running_panel_codes.contains(p.make_code()))
         return;
     MVTimeSeriesRenderManagerThread* thread = new MVTimeSeriesRenderManagerThread;
     QObject::connect(thread, SIGNAL(finished()), q, SLOT(slot_thread_finished()));
-    thread->t1 = rec.t1;
-    thread->t2 = rec.t2;
-    thread->amp_factor = rec.amp_factor;
-    thread->W = rec.W;
-    thread->H = rec.H;
-    thread->data_ds_factor = get_preferred_data_ds_factor(rec.t1, rec.t2, rec.amp_factor, rec.W, rec.H);
+    thread->amp_factor = p.amp_factor;
+    thread->ds_factor = p.ds_factor;
+    thread->index = p.index;
     thread->ts = m_ts;
-    m_running_record_codes.insert(rec.make_code());
+    m_running_panel_codes.insert(p.make_code());
     m_thread_manager.start(thread);
+}
+
+ImagePanel* MVTimeSeriesRenderManagerPrivate::closest_ancestor_panel(ImagePanel p)
+{
+    QList<ImagePanel*> candidates;
+    QStringList keys = m_image_panels.keys();
+    foreach (QString key, keys) {
+        ImagePanel* pp = &m_image_panels[key];
+        if (pp->amp_factor == p.amp_factor) {
+            double t1 = p.index * p.ds_factor * PANEL_NUM_POINTS;
+            double t2 = (p.index + 1) * p.ds_factor * PANEL_NUM_POINTS;
+            double s1 = pp->index * pp->ds_factor * PANEL_NUM_POINTS;
+            double s2 = (pp->index+1) * pp->ds_factor * PANEL_NUM_POINTS;
+            if ((s1 <= t1) && (t2 <= s2)) {
+                candidates << pp;
+            }
+        }
+    }
+    if (candidates.isEmpty())
+        return 0;
+    ImagePanel* ret = candidates[0];
+    long best_ds_factor = ret->ds_factor;
+    for (int i = 0; i < candidates.count(); i++) {
+        if (candidates[i]->ds_factor < best_ds_factor) {
+            ret = candidates[i];
+            best_ds_factor = ret->ds_factor;
+        }
+    }
+    return ret;
 }
 
 void MVTimeSeriesRenderManagerThread::run()
 {
-    image = QImage(W, H, QImage::Format_ARGB32);
+    image = QImage(PANEL_WIDTH, PANEL_HEIGHT, QImage::Format_ARGB32);
     QColor transparent(0, 0, 0, 0);
     image.fill(transparent);
 
@@ -217,27 +173,29 @@ void MVTimeSeriesRenderManagerThread::run()
     QPainter painter(&image);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    long t1i = (long)(t1 / data_ds_factor);
-    long t2i = (long)(t2 / data_ds_factor);
+    long t1 = index * PANEL_NUM_POINTS;
+    long t2 = (index + 1) * PANEL_NUM_POINTS;
 
     Mda Xmin, Xmax;
-    ts->getData(Xmin, Xmax, t1i, t2i, data_ds_factor);
+    qDebug() << "getData:::::::::::::::::::::::::::" << t1 << t2 << ds_factor;
+    ts->getData(Xmin, Xmax, t1, t2, ds_factor);
+    qDebug() << Xmin.N1() << Xmin.N2();
 
     double space = 0;
-    double channel_height = (H - (M - 1) * space) / M;
+    double channel_height = (PANEL_HEIGHT - (M - 1) * space) / M;
     long y0 = 0;
     for (int m = 0; m < M; m++) {
-        QRectF geom(0, y0, W, channel_height);
+        QRectF geom(0, y0, PANEL_WIDTH, channel_height);
         QPainterPath path;
-        for (long ii = t1i; ii <= t2i; ii++) {
-            double val_min = Xmin.value(m, ii - t1i);
-            double val_max = Xmax.value(m, ii - t1i);
-            double pctx = (ii * data_ds_factor - t1) / (t2 - t1);
+        for (long ii = t1; ii <= t2; ii++) {
+            double val_min = Xmin.value(m, ii - t1);
+            double val_max = Xmax.value(m, ii - t1);
+            double pctx = (ii - t1) * 1.0 / (t2 - t1);
             double pcty_min = 1 - (val_min * amp_factor + 1) / 2;
             double pcty_max = 1 - (val_max * amp_factor + 1) / 2;
             QPointF pt_min = QPointF(geom.x() + pctx * geom.width(), geom.y() + pcty_min * geom.height());
             QPointF pt_max = QPointF(geom.x() + pctx * geom.width(), geom.y() + pcty_max * geom.height());
-            if (ii == t1i)
+            if (ii == t1)
                 path.moveTo(pt_min);
             else
                 path.lineTo(pt_min);
@@ -277,4 +235,33 @@ void ThreadManager::slot_thread_finished()
     if (!thread)
         return;
     m_running_threads.remove(thread);
+}
+
+QImage MVTimeSeriesRenderManagerPrivate::render_panel(ImagePanel p)
+{
+    QString code = p.make_code();
+    if (m_image_panels.contains(code)) {
+        return m_image_panels[code].image;
+    }
+    else {
+        start_compute_panel(p.amp_factor, p.ds_factor, p.index);
+        QImage ret;
+        ImagePanel* p2 = closest_ancestor_panel(p);
+        if (p2) {
+            qDebug() << "Found ancestor panel:" << p.make_code() << p2->make_code();
+            double s1 = p2->ds_factor * p2->index * PANEL_NUM_POINTS;
+            double s2 = p2->ds_factor * (p2->index + 1) * PANEL_NUM_POINTS;
+            double t1 = p.ds_factor * p.index * PANEL_NUM_POINTS;
+            double t2 = p.ds_factor * (p.index + 1) * PANEL_NUM_POINTS;
+            double a1 = (t1 - s1) / (s2 - s1) * p2->image.width();
+            double a2 = (t2 - s1) / (s2 - s1) * p2->image.width();
+            qDebug() << a1 << a2;
+            qDebug() << s1 << t1 << t2 << s2;
+            ret = p2->image.copy(a1, 0, a2 - a1, p2->image.height());
+        }
+        else {
+            qDebug() << "Did not find ancestor panel" << p.make_code();
+        }
+        return ret;
+    }
 }

@@ -40,9 +40,9 @@ class MVTimeSeriesRenderManagerThread : public QThread {
     Q_OBJECT
 public:
     //input
-    double t1, t2, amp_factor;
-    double W, H;
-    long data_ds_factor;
+    double amp_factor;
+    long ds_factor;
+    long index;
     MultiScaleTimeSeries* ts;
 
     //output
