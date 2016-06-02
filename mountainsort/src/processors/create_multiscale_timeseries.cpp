@@ -161,11 +161,16 @@ bool write_concatenation(QStringList input_fnames, QString output_fname)
     foreach(QString fname, input_fnames)
     {
         DiskReadMda X(fname);
-        /// TODO do this in chunks so we don't use RAM
-        Mda tmp;
-        X.readChunk(tmp, 0, 0, M, X.N2());
-        Y.writeChunk(tmp, 0, offset);
-        offset += X.N2();
+
+        /// TODO choose chunk_size sensibly
+        long chunk_size = 10000;
+        for (long ii=0; ii<X.N2(); ii+=chunk_size) {
+            long size0 = qMin(chunk_size, X.N2() - ii);
+            Mda tmp;
+            X.readChunk(tmp, 0, ii, M, size0);
+            Y.writeChunk(tmp, 0, offset);
+            offset += X.N2();
+        }
     }
     Y.close();
 

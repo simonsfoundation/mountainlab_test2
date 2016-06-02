@@ -63,6 +63,7 @@ public:
 
     void zoom_out(mvtsv_coord about_coord, double frac = 0.8);
     void zoom_in(mvtsv_coord about_coord, double frac = 0.8);
+    void scroll_to_current_timepoint();
 };
 
 MVTimeSeriesView::MVTimeSeriesView()
@@ -259,6 +260,22 @@ void MVTimeSeriesView::keyPressEvent(QKeyEvent* evt)
     } else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
+    } else if (evt->key() == Qt::Key_Left) {
+        MVRange trange=this->timeRange();
+        double range=trange.max-trange.min;
+        this->setCurrentTimepoint(this->currentTimepoint()-range/10);
+        d->scroll_to_current_timepoint();
+    } else if (evt->key() == Qt::Key_Right) {
+        MVRange trange=this->timeRange();
+        double range=trange.max-trange.min;
+        this->setCurrentTimepoint(this->currentTimepoint()+range/10);
+        d->scroll_to_current_timepoint();
+    } else if (evt->key() == Qt::Key_Home) {
+        this->setCurrentTimepoint(0);
+        d->scroll_to_current_timepoint();
+    } else if (evt->key() == Qt::Key_End) {
+        this->setCurrentTimepoint(d->m_data.N2()-1);
+        d->scroll_to_current_timepoint();
     } else if (evt->key() == Qt::Key_Equal) {
         d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
     } else if (evt->key() == Qt::Key_Minus) {
@@ -448,6 +465,20 @@ void MVTimeSeriesViewPrivate::zoom_out(mvtsv_coord about_coord, double frac)
 void MVTimeSeriesViewPrivate::zoom_in(mvtsv_coord about_coord, double frac)
 {
     zoom_out(about_coord, 1 / frac);
+}
+
+void MVTimeSeriesViewPrivate::scroll_to_current_timepoint()
+{
+    double t=q->currentTimepoint();
+    MVRange trange=q->timeRange();
+    if ((trange.min<t)&&(t<trange.max)) return;
+    double range=trange.max-trange.min;
+    if (t<trange.min) {
+        q->setTimeRange(trange+(t-trange.min-range/10));
+    }
+    else {
+        q->setTimeRange(trange+(t-trange.max+range/10));
+    }
 }
 
 bool MVRange::operator==(const MVRange& other)
