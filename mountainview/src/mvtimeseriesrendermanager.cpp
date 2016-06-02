@@ -18,6 +18,8 @@ struct ImageRecord {
     QString make_code();
 };
 
+/// TODO stop threads when no longer needed
+
 class MVTimeSeriesRenderManagerPrivate {
 public:
     MVTimeSeriesRenderManager* q;

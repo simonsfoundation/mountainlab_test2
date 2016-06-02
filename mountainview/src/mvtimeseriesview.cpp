@@ -88,9 +88,12 @@ MVTimeSeriesView::~MVTimeSeriesView()
     delete d;
 }
 
+/// TODO make sure all threads end on destruct
+
 void MVTimeSeriesView::setData(const DiskReadMda& X)
 {
     d->m_data = X;
+    /// TODO address: the following is a hack so that the array info is not downloaded during the paintEvent which seems to cause a crash
     d->m_data.N1();
     d->m_ts.setData(X);
     d->m_layout_needed = true;
