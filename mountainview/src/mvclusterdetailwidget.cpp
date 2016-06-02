@@ -22,6 +22,7 @@
 #include "mountainprocessrunner.h"
 #include "toolbuttonmenu.h"
 #include <math.h>
+#include "mlutils.h"
 
 struct ClusterData {
     ClusterData()
@@ -238,21 +239,21 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
     connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
 
     this->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ToolButtonMenu *MM=new ToolButtonMenu(this);
+    ToolButtonMenu* MM = new ToolButtonMenu(this);
     MM->setOffset(QSize(4, 4));
-    QToolButton *tb=MM->activateOn(this);
-    tb->setIconSize(QSize(24,24));
+    QToolButton* tb = MM->activateOn(this);
+    tb->setIconSize(QSize(24, 24));
     QIcon icon(":images/gear.png");
     tb->setIcon(icon);
     {
-        QAction *a=new QAction("Export image",this);
+        QAction* a = new QAction("Export image", this);
         this->addAction(a);
-        connect(a,SIGNAL(triggered(bool)),this,SLOT(slot_export_image()));
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_export_image()));
     }
     {
-        QAction *a=new QAction("Toggle std. dev. shading",this);
+        QAction* a = new QAction("Toggle std. dev. shading", this);
         this->addAction(a);
-        connect(a,SIGNAL(triggered(bool)),this,SLOT(slot_toggle_stdev_shading()));
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_toggle_stdev_shading()));
     }
 }
 
@@ -923,8 +924,8 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
 {
     painter.fillRect(0, 0, W, H, m_colors["background"]);
 
-    int right_margin=10; //make some room for the icon
-    W=W-right_margin;
+    int right_margin = 10; //make some room for the icon
+    W = W - right_margin;
 
     if (m_calculator.isComputing()) {
         QFont font = painter.font();
@@ -981,7 +982,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
         ClusterView* V = m_views[i];
         QRectF rect(x0_before_scaling * m_space_ratio - m_scroll_x, 0, V->spaceNeeded() * m_space_ratio, H);
         V->setChannelSpacingInfo(csi);
-        if ((rect.x()+rect.width()>=0)&&(rect.x()<=W)) {
+        if ((rect.x() + rect.width() >= 0) && (rect.x() <= W)) {
             V->paint(&painter, rect);
         }
         V->x_position_before_scaling = x0_before_scaling;
@@ -1106,7 +1107,7 @@ QColor ClusterView::get_cluster_assessment_text_color(QString aa)
     return Qt::black;
 }
 
-DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size, HaltAgent* halt_agent)
+DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
 {
     TaskProgress task(TaskProgress::Calculate, "mp_compute_templates");
     task.log("mlproxy_url: " + mlproxy_url);
@@ -1124,13 +1125,13 @@ DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& time
     QString templates_fname = X.makeOutputFilePath("templates");
 
     task.log("X.compute()");
-    X.runProcess(halt_agent);
+    X.runProcess();
     task.log("Returning DiskReadMda: " + templates_fname);
     DiskReadMda ret(templates_fname);
     return ret;
 }
 
-void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs_out, const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size, HaltAgent* halt_agent)
+void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs_out, const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
 {
     TaskProgress task(TaskProgress::Calculate, "mp_compute_templates_stdevs");
     task.log("mlproxy_url: " + mlproxy_url);
@@ -1149,7 +1150,7 @@ void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs
     QString stdevs_fname = X.makeOutputFilePath("stdevs");
 
     task.log("X.compute()");
-    X.runProcess(halt_agent);
+    X.runProcess();
     task.log("Returning DiskReadMda: " + templates_fname + " " + stdevs_fname);
     templates_out.setPath(templates_fname);
     stdevs_out.setPath(stdevs_fname);
@@ -1181,7 +1182,7 @@ void MVClusterDetailWidgetCalculator::compute()
         peaks << firings.value(3, i);
     }
 
-    if (this->stopRequested()) {
+    if (thread_interrupt_requested()) {
         task.error("Halted *");
         return;
     }
@@ -1204,10 +1205,10 @@ void MVClusterDetailWidgetCalculator::compute()
 
     task.log("mp_compute_templates_stdevs: " + mlproxy_url + " timeseries_path=" + timeseries_path + " firings_path=" + firings_path);
     task.setProgress(0.6);
-    //DiskReadMda templates0 = mp_compute_templates(mlproxy_url, timeseries_path, firings_path, T, this);
+    //DiskReadMda templates0 = mp_compute_templates(mlproxy_url, timeseries_path, firings_path, T);
     DiskReadMda templates0, stdevs0;
-    mp_compute_templates_stdevs(templates0, stdevs0, mlproxy_url, timeseries_path, firings_path, T, this);
-    if (this->stopRequested()) {
+    mp_compute_templates_stdevs(templates0, stdevs0, mlproxy_url, timeseries_path, firings_path, T);
+    if (thread_interrupt_requested()) {
         task.error("Halted **");
         return;
     }
@@ -1215,7 +1216,7 @@ void MVClusterDetailWidgetCalculator::compute()
     task.setLabel("Setting cluster data");
     task.setProgress(0.75);
     for (int k = 1; k <= K; k++) {
-        if (this->stopRequested()) {
+        if (thread_interrupt_requested()) {
             task.error("Halted ***");
             return;
         }
@@ -1230,12 +1231,14 @@ void MVClusterDetailWidgetCalculator::compute()
                 CD.peaks << peaks[i];
             }
         }
-        if (this->stopRequested()) {
+        if (thread_interrupt_requested()) {
             task.error("Halted ****");
             return;
         }
         templates0.readChunk(CD.template0, 0, 0, k - 1, M, T, 1);
         stdevs0.readChunk(CD.stdev0, 0, 0, k - 1, M, T, 1);
-        cluster_data << CD;
+        if (!thread_interrupt_requested()) {
+            cluster_data << CD;
+        }
     }
 }

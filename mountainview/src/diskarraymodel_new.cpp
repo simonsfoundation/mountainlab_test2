@@ -69,6 +69,7 @@ long round_up_to_power_of_two(long N)
     return ret;
 }
 
+/// TODO this will be obsolete!
 Mda DiskArrayModel_New::loadData(long scale, long t1, long t2)
 {
     d->create_multiscale_array_if_needed();
@@ -79,19 +80,16 @@ Mda DiskArrayModel_New::loadData(long scale, long t1, long t2)
         Mda chunk;
         if (scale == 1) {
             d->m_memory_array.getChunk(chunk, 0, pos + t1, N1(), (t2 - t1 + 1));
-        }
-        else {
+        } else {
             d->m_multiscale_memory_array.getChunk(chunk, 0, pos + t1 * 2, N1(), (t2 - t1 + 1) * 2);
         }
         return chunk;
-    }
-    else {
+    } else {
 
         Mda chunk;
         if (scale == 1) {
             d->m_X.readChunk(chunk, 0, pos + t1, N1(), (t2 - t1 + 1));
-        }
-        else {
+        } else {
             DiskReadMda A(d->m_multiscale_file_name);
             A.readChunk(chunk, 0, pos + t1 * 2, N1(), (t2 - t1 + 1) * 2);
         }
@@ -218,8 +216,7 @@ QString DiskArrayModel_NewPrivate::get_file_timestamp(const QString& path)
     if (path.startsWith("http://")) {
         RemoteReadMda X(path);
         dt = X.fileLastModified();
-    }
-    else {
+    } else {
         dt = QFileInfo(path).lastModified();
     }
     return QString("%1").arg(dt.toMSecsSinceEpoch());

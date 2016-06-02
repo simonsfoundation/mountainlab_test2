@@ -29,7 +29,6 @@ public:
     QString m_path;
     RemoteReadMdaInfo m_info;
     bool m_info_downloaded;
-    HaltAgent* m_halt_agent;
     QString m_remote_datatype;
 
     void download_info_if_needed();
@@ -40,7 +39,6 @@ RemoteReadMda::RemoteReadMda(const QString& path)
 {
     d = new RemoteReadMdaPrivate;
     d->q = this;
-    d->m_halt_agent = 0;
     d->m_remote_datatype = "float64";
     this->setPath(path);
 }
@@ -49,7 +47,6 @@ RemoteReadMda::RemoteReadMda(const RemoteReadMda& other)
 {
     d = new RemoteReadMdaPrivate;
     d->q = this;
-    d->m_halt_agent = 0;
     this->setPath(other.d->m_path);
 }
 
@@ -79,11 +76,6 @@ void RemoteReadMda::setPath(const QString& path)
 QString RemoteReadMda::path() const
 {
     return d->m_path;
-}
-
-void RemoteReadMda::setHaltAgent(HaltAgent* halt_agent)
-{
-    d->m_halt_agent = halt_agent;
 }
 
 long RemoteReadMda::N1()
@@ -139,7 +131,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     } else {
         for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
             //task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
-            if ((d->m_halt_agent) && (d->m_halt_agent->stopRequested())) {
+            if (thread_interrupt_requested()) {
                 //X = Mda(); //maybe it's better to return the right size.
                 //task.error("Halted");
                 return false;

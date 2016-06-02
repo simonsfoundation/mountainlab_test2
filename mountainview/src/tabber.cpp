@@ -155,8 +155,7 @@ void TabberPrivate::put_widget_in_container(QString container_name, QWidget* W)
         if (index >= 0) {
             m_tab_widgets[container_name]->setCurrentIndex(index);
         }
-    }
-    else {
+    } else {
         if (!X->current_container_name.isEmpty()) {
             //fix this.... we need to put the widget into a new floating container!
             int index = find_widget_index_in_container(X->current_container_name, X->widget);
@@ -214,7 +213,8 @@ bool TabberPrivate::contains_widget(QWidget* W)
 QString TabberPrivate::find_other_container_name(QString name)
 {
     QStringList keys = m_tab_widgets.keys();
-    foreach (QString str, keys) {
+    foreach(QString str, keys)
+    {
         if (str != name)
             return str;
     }

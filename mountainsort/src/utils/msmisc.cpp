@@ -116,8 +116,7 @@ double compute_stdev(const QList<double>& X)
     int ct = X.count();
     if (ct >= 2) {
         return sqrt((sumsqr - sum * sum / ct) / (ct - 1));
-    }
-    else
+    } else
         return 0;
 }
 Mda grab_clips_subset(Mda& clips, const QList<int>& inds)
@@ -184,6 +183,10 @@ QString http_get_binary_file(const QString& url)
     long num_bytes = 0;
     temp.open(QIODevice::WriteOnly);
     QObject::connect(reply, &QNetworkReply::readyRead, [&]() {
+        if (thread_interrupt_requested()) {
+            task.error("Download halted");
+            reply->abort();
+        }
         QByteArray X=reply->readAll();
         temp.write(X);
         num_bytes+=X.count();
@@ -193,6 +196,9 @@ QString http_get_binary_file(const QString& url)
     task.setLabel(QString("Downloaded %1 MB in %2 sec").arg(num_bytes * 1.0 / 1e6).arg(timer.elapsed() * 1.0 / 1000));
     printf("RECEIVED BINARY (%d ms, %ld bytes) from %s\n", timer.elapsed(), num_bytes, url.toLatin1().data());
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_downloaded", num_bytes);
+    if (thread_interrupt_requested()) {
+        return "";
+    }
     return fname;
 }
 

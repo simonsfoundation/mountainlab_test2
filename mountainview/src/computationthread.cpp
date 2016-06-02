@@ -11,13 +11,13 @@
 #include <QDebug>
 #include <QTime>
 #include <QCoreApplication>
+#include "mlutils.h"
 
 class ComputationThreadPrivate {
 public:
     ComputationThread* q;
     bool m_delete_on_complete;
     bool m_is_computing;
-    bool m_stop_requested;
     bool m_is_finished;
     QString m_error_message;
     QMutex m_mutex;
@@ -33,7 +33,6 @@ ComputationThread::ComputationThread()
     d = new ComputationThreadPrivate;
     d->q = this;
     d->m_is_computing = false;
-    d->m_stop_requested = false;
     d->m_is_finished = false;
     d->m_start_scheduled = false;
     d->m_delete_on_complete = false;
@@ -56,7 +55,6 @@ void ComputationThread::startComputation()
     {
         QMutexLocker locker(&d->m_mutex);
         d->m_is_computing = true;
-        d->m_stop_requested = false;
         d->m_is_finished = false;
         d->m_error_message = "";
     }
@@ -69,7 +67,7 @@ bool ComputationThread::stopComputation(int timeout)
         QMutexLocker locker(&d->m_mutex);
         if (!d->m_is_computing)
             return true;
-        d->m_stop_requested = true; //attempt to end gracefully
+        this->requestInterruption();
     }
     QTime timer;
     timer.start();
@@ -103,12 +101,6 @@ QString ComputationThread::errorMessage()
     return d->m_error_message;
 }
 
-bool ComputationThread::stopRequested()
-{
-    QMutexLocker locker(&d->m_mutex);
-    return d->m_stop_requested;
-}
-
 void ComputationThread::setErrorMessage(const QString& error)
 {
     QMutexLocker locker(&d->m_mutex);
@@ -121,7 +113,7 @@ void ComputationThread::run()
         qsrand(d->m_randomization_seed);
         compute();
     }
-    if (!stopRequested()) {
+    if (!thread_interrupt_requested()) {
         QMutexLocker locker(&d->m_mutex);
         d->m_is_finished = true;
         d->m_is_computing = false;
@@ -137,8 +129,9 @@ void ComputationThread::slot_start()
     d->m_randomization_seed = qrand();
     {
         QMutexLocker locker(&d->m_mutex);
-        if (d->m_stop_requested)
+        if (thread_interrupt_requested()) {
             return;
+        }
         d->m_start_scheduled = false;
     }
     this->start();
@@ -149,7 +142,6 @@ void ComputationThreadPrivate::schedule_start()
     QMutexLocker locker(&m_mutex);
     if (m_start_scheduled)
         return;
-    m_stop_requested = false;
     QTimer::singleShot(100, q, SLOT(slot_start()));
     m_start_scheduled = true;
 }

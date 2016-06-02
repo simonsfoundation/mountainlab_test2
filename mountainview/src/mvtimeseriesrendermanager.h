@@ -8,6 +8,7 @@
 #define MVTIMESERIESRENDERMANAGER_H
 
 #include "multiscaletimeseries.h"
+#include "mlutils.h"
 
 #include <QImage>
 #include <QRunnable>
@@ -55,15 +56,16 @@ class ThreadManager : public QObject {
     Q_OBJECT
 public:
     ThreadManager();
-    void start(QThread* thread);
+    void start(QString id, QThread* thread);
+    void stop(QString id);
 private
 slots:
     void slot_timer();
     void slot_thread_finished();
 
 private:
-    QList<QThread*> m_queued_threads;
-    QSet<QThread*> m_running_threads;
+    QMap<QString, QThread*> m_queued_threads;
+    QMap<QString, QThread*> m_running_threads;
 };
 
 #endif // MVTIMESERIESRENDERMANAGER_H

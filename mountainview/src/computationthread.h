@@ -11,10 +11,8 @@
 #include <QString>
 #include <QMutex>
 
-#include "haltagent.h"
-
 class ComputationThreadPrivate;
-class ComputationThread : public QThread, public HaltAgent {
+class ComputationThread : public QThread {
     Q_OBJECT
 public:
     friend class ComputationThreadPrivate;
@@ -30,8 +28,6 @@ public:
     bool isFinished();
     bool hasError();
     QString errorMessage();
-
-    bool stopRequested();
 
 signals:
     void computationFinished();

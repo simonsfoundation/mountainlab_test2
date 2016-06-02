@@ -7,7 +7,6 @@
 #define DISKREADMDA_H
 
 #include "mda.h"
-#include "haltagent.h"
 
 class DiskReadMdaPrivate;
 /**
@@ -37,8 +36,6 @@ public:
     ///Set the path (file name) of the .mda file to read.
     void setPath(const char* file_path);
     void setRemoteDataType(const QString& dtype);
-
-    void setHaltAgent(HaltAgent* halt_agent);
 
     QString path();
     QString makePath();

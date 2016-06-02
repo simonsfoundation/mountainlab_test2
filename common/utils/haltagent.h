@@ -10,10 +10,9 @@
 #include <QObject>
 
 class HaltAgentPrivate;
-class HaltAgent
-{
+class HaltAgent {
 public:
-    virtual bool stopRequested()=0;
+    virtual bool stopRequested() = 0;
 };
 
 #endif // HALTAGENT_H

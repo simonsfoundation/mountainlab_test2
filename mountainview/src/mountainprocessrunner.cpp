@@ -87,7 +87,7 @@ QVariantMap json_obj_to_variantmap(QJsonObject obj)
     return ret;
 }
 
-QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
+QJsonObject http_post(QString url, QJsonObject req)
 {
     QTime timer;
     timer.start();
@@ -106,7 +106,7 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
     loop.exec();
     */
     while (!reply->isFinished()) {
-        if ((halt_agent) && (halt_agent->stopRequested())) {
+        if (thread_interrupt_requested()) {
             qWarning() << "Halting in http_post: " + url;
             reply->abort();
             loop.quit();
@@ -114,7 +114,7 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
         loop.processEvents();
     }
 
-    if ((halt_agent) && (halt_agent->stopRequested())) {
+    if (thread_interrupt_requested()) {
         QJsonObject obj;
         obj["success"] = false;
         obj["error"] = "Halting in http_post: " + url;
@@ -130,11 +130,11 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
     }
 }
 
-void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
+void MountainProcessRunner::runProcess()
 {
 
     if (in_gui_thread()) {
-        qCritical() << "Cannot run mountain process in gui thread: "+d->m_processor_name;
+        qCritical() << "Cannot run mountain process in gui thread: " + d->m_processor_name;
         exit(-1);
     }
 
@@ -203,15 +203,15 @@ void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
         QString url = d->m_mlproxy_url + "/mpserver";
         task.log("POSTING: " + url);
         task.log(QJsonDocument(req).toJson());
-        if ((halt_agent) && (halt_agent->stopRequested())) {
+        if (thread_interrupt_requested()) {
             task.error("Halted before post.");
             return;
         }
         QTime post_timer;
         post_timer.start();
-        QJsonObject resp = http_post(url, req, halt_agent);
+        QJsonObject resp = http_post(url, req);
         TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("remote_processing_time", post_timer.elapsed());
-        if ((halt_agent) && (halt_agent->stopRequested())) {
+        if (thread_interrupt_requested()) {
             task.error("Halted during post: " + url);
             return;
         }
