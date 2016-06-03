@@ -137,18 +137,18 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
     }
 
     //if (path.startsWith("http:")) {
-        MountainProcessRunner MPR;
-        MPR.setProcessorName("create_multiscale_timeseries");
-        QVariantMap params;
-        params["timeseries"] = path;
-        MPR.setInputParameters(params);
-        MPR.setMLProxyUrl(m_ml_proxy_url);
-        QString path_out = MPR.makeOutputFilePath("timeseries_out");
-        MPR.setDetach(true);
-        MPR.runProcess();
-        return path_out;
+    MountainProcessRunner MPR;
+    MPR.setProcessorName("create_multiscale_timeseries");
+    QVariantMap params;
+    params["timeseries"] = path;
+    MPR.setInputParameters(params);
+    MPR.setMLProxyUrl(m_ml_proxy_url);
+    QString path_out = MPR.makeOutputFilePath("timeseries_out");
+    MPR.setDetach(true);
+    MPR.runProcess();
+    return path_out;
     //} else {
-        /*
+    /*
         QString code = compute_hash(compute_file_code(path));
         QString ret = CacheManager::globalInstance()->makeLocalFile(code + ".multiscale.mda", CacheManager::ShortTerm);
         if (!QFile::exists(ret)) {
@@ -251,16 +251,13 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         if (!get_data(min0, max0, s1, s2, ds_factor)) {
             return false;
         }
-        /*
-        if (t1>=0) {
-            min.setChunk(min0,0,0);
-            max.setChunk(max0,0,0);
+        if (t1 >= 0) {
+            min.setChunk(min0, 0, 0);
+            max.setChunk(max0, 0, 0);
+        } else {
+            min.setChunk(min0, 0, -t1);
+            max.setChunk(max0, 0, -t1);
         }
-        else {
-            min.setChunk(min0,0,-t1);
-            max.setChunk(max0,0,-t1);
-        }
-        */
         return true;
     }
 
@@ -286,7 +283,6 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         }
         m_multiscale_data.setPath(multiscale_fname);
         m_multiscale_data.setRemoteDataType("float32"); //to save download time!
-
     }
 
     long t_offset_min = 0;
@@ -296,8 +292,6 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         ds_factor_0 *= 3;
     }
     long t_offset_max = t_offset_min + N / ds_factor;
-
-    /// TODO what if t1 and t2 are out of bounds? I think we want to put zeros in ... otherwise contaminated by other downsampling factors
 
     m_multiscale_data.readChunk(min, 0, t1 + t_offset_min, M, t2 - t1 + 1);
     m_multiscale_data.readChunk(max, 0, t1 + t_offset_max, M, t2 - t1 + 1);

@@ -40,8 +40,8 @@ struct mvtsv_prefs {
         num_label_levels = 3;
         label_font_height = 12;
         mtop = 40;
-        mbottom = 20;
-        mleft = 80;
+        mbottom = 60;
+        mleft = 40;
         mright = 20;
         marker_color = QColor(200, 0, 0, 120);
     }
@@ -50,6 +50,25 @@ struct mvtsv_prefs {
     int label_font_height;
     QColor marker_color;
     int mleft, mright, mtop, mbottom;
+
+    QList<QColor> channel_colors;
+};
+
+struct TickStruct {
+    TickStruct(QString str0, long min_pixel_spacing_between_ticks0, double tick_height0, double timepoint_interval0)
+    {
+        str = str0;
+        min_pixel_spacing_between_ticks = min_pixel_spacing_between_ticks0;
+        tick_height = tick_height0;
+        timepoint_interval = timepoint_interval0;
+        show_scale = false;
+    }
+
+    QString str;
+    long min_pixel_spacing_between_ticks;
+    double tick_height;
+    double timepoint_interval;
+    bool show_scale;
 };
 
 class MVTimeSeriesViewPrivate {
@@ -83,6 +102,10 @@ public:
     void paint_cursor(QPainter* painter, double W, double H);
     void paint_markers(QPainter* painter, const QVector<double>& t0, const QVector<int>& labels, double W, double H);
     void paint_message_at_top(QPainter* painter, QString msg, double W, double H);
+    void paint_time_axis(QPainter* painter, double W, double H);
+    void paint_time_axis_unit(QPainter* painter, double W, double H, TickStruct TS);
+    void paint_channel_labels(QPainter* painter, double W, double H);
+    void paint_status_string(QPainter* painter,double W,double H,QString str);
 
     QPointF coord2pix(mvtsv_coord C);
     mvtsv_coord pix2coord(long channel, QPointF pix);
@@ -90,6 +113,8 @@ public:
     void zoom_out(mvtsv_coord about_coord, double frac = 0.8);
     void zoom_in(mvtsv_coord about_coord, double frac = 0.8);
     void scroll_to_current_timepoint();
+
+    static QString format_time(double tp);
 };
 
 MVTimeSeriesView::MVTimeSeriesView()
@@ -139,9 +164,21 @@ void MVTimeSeriesView::setTimesLabels(const QVector<double>& times, const QList<
     update();
 }
 
+void MVTimeSeriesView::setChannelColors(const QList<QColor> &colors)
+{
+    d->m_prefs.channel_colors=colors;
+    d->m_render_manager.setChannelColors(colors);
+    update();
+}
+
 MVRange MVTimeSeriesView::timeRange() const
 {
     return MVRange(d->m_view_t1, d->m_view_t2);
+}
+
+DiskReadMda MVTimeSeriesView::data()
+{
+    return d->m_data;
 }
 
 void MVTimeSeriesView::resizeEvent(QResizeEvent* evt)
@@ -152,6 +189,17 @@ void MVTimeSeriesView::resizeEvent(QResizeEvent* evt)
 
 void MVTimeSeriesView::setTimeRange(MVRange range)
 {
+    if (range.min < 0) {
+        range = range + (0 - range.min);
+    }
+    if (range.max >= d->m_data.N2()) {
+        range = range + (d->m_data.N2() - range.max);
+    }
+    if ((range.min < 0) || (range.max >= d->m_data.N2())) {
+        range = MVRange(0, d->m_data.N2() - 1);
+    }
+    if ((d->m_view_t1 == range.min) && (d->m_view_t2 == range.max))
+        return;
     d->m_view_t1 = range.min;
     d->m_view_t2 = range.max;
     update();
@@ -197,6 +245,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     if (!M)
         return;
 
+    // Geometry of channels
     if (d->m_layout_needed) {
         d->m_layout_needed = false;
         d->m_channels = d->make_channel_layout(W0, H0, M);
@@ -207,8 +256,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         }
     }
 
-    d->paint_cursor(&painter, W0, H0);
-
+    // Event markers
     QVector<double> times0;
     QVector<int> labels0;
     for (long i = 0; i < d->m_times.count(); i++) {
@@ -219,17 +267,35 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
             labels0 << l0;
         }
     }
-    if (times0.count() < 500) {
+
+    /// TODO add this to prefs
+    double min_avg_pixels_per_marker=10;
+    if ((times0.count())&&(W0/times0.count() >= min_avg_pixels_per_marker)) {
         d->paint_markers(&painter, times0, labels0, W0, H0);
-    }
-    else {
+    } else {
         d->paint_message_at_top(&painter, "Zoom in to view markers", W0, H0);
     }
+
+    // Cursor
+    d->paint_cursor(&painter, W0, H0);
 
     double WW = W0 - mleft - mright;
     double HH = H0 - mtop - mbottom;
     QImage img = d->m_render_manager.getImage(d->m_view_t1, d->m_view_t2, d->m_amplitude_factor, WW, HH);
     painter.drawImage(mleft, mtop, img);
+
+    // Time axis
+    d->paint_time_axis(&painter, W0, H0);
+
+    // Channel labels
+    d->paint_channel_labels(&painter, W0, H0);
+
+    // Status
+    {
+        QString str=QString("%1 (tp: %2)").arg(d->format_time(d->m_current_t)).arg((long)d->m_current_t);
+        d->paint_status_string(&painter, W0, H0, str);
+        qDebug() << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << str;
+    }
 }
 
 void MVTimeSeriesView::mousePressEvent(QMouseEvent* evt)
@@ -284,12 +350,10 @@ void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
             d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-        }
-        else if (delta > 0) {
+        } else if (delta > 0) {
             d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
         }
-    }
-    else {
+    } else {
         //This used to allow zooming at hover position -- probably not needed
         /*
         float frac = 1;
@@ -308,38 +372,30 @@ void MVTimeSeriesView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    }
-    else if (evt->key() == Qt::Key_Left) {
+    } else if (evt->key() == Qt::Key_Left) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
         this->setCurrentTimepoint(this->currentTimepoint() - range / 10);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_Right) {
+    } else if (evt->key() == Qt::Key_Right) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
         this->setCurrentTimepoint(this->currentTimepoint() + range / 10);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_Home) {
+    } else if (evt->key() == Qt::Key_Home) {
         this->setCurrentTimepoint(0);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_End) {
+    } else if (evt->key() == Qt::Key_End) {
         this->setCurrentTimepoint(d->m_data.N2() - 1);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_Equal) {
+    } else if (evt->key() == Qt::Key_Equal) {
         d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
-    }
-    else if (evt->key() == Qt::Key_Minus) {
+    } else if (evt->key() == Qt::Key_Minus) {
         d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-    }
-    else {
+    } else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -415,6 +471,7 @@ QList<mvtsv_channel> MVTimeSeriesViewPrivate::make_channel_layout(double W, doub
     }
     return channels;
 }
+
 
 void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H)
 {
@@ -559,6 +616,113 @@ void MVTimeSeriesViewPrivate::paint_message_at_top(QPainter* painter, QString ms
     painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, msg);
 }
 
+void MVTimeSeriesViewPrivate::paint_time_axis(QPainter* painter, double W, double H)
+{
+    /// TODO samplerate needs to be member variable
+    double samplerate = 30000;
+    long min_pixel_spacing_between_ticks = 30;
+
+    QPen pen = painter->pen();
+    pen.setColor(Qt::black);
+    painter->setPen(pen);
+
+    QPointF pt1(m_prefs.mleft, H - m_prefs.mbottom);
+    QPointF pt2(W-m_prefs.mright, H - m_prefs.mbottom);
+    painter->drawLine(pt1, pt2);
+
+    QList<TickStruct> structs;
+
+    structs << TickStruct("1 ms", min_pixel_spacing_between_ticks, 4, 1e-3 * samplerate);
+    structs << TickStruct("10 ms", min_pixel_spacing_between_ticks, 6, 10 * 1e-3 * samplerate);
+    structs << TickStruct("100 ms", min_pixel_spacing_between_ticks, 8, 100 * 1e-3 * samplerate);
+    structs << TickStruct("1 s", min_pixel_spacing_between_ticks, 10, 1 * samplerate);
+    structs << TickStruct("10 s", min_pixel_spacing_between_ticks, 12, 10 * samplerate);
+    structs << TickStruct("1 m", min_pixel_spacing_between_ticks, 14, 60 * samplerate);
+    structs << TickStruct("10 m", min_pixel_spacing_between_ticks, 16, 10 * 60 * samplerate);
+    structs << TickStruct("1 h", min_pixel_spacing_between_ticks, 18, 60 * 60 * samplerate);
+    structs << TickStruct("1 day", min_pixel_spacing_between_ticks, 20, 24 * 60 * 60 * samplerate);
+
+    for (int i = 0; i < structs.count(); i++) {
+        double scale_pixel_width = W / (m_view_t2 - m_view_t1) * structs[i].timepoint_interval;
+        if ((scale_pixel_width >= 60) && (!structs[i].str.isEmpty())) {
+            structs[i].show_scale = true;
+            break;
+        }
+    }
+
+    for (int i = 0; i < structs.count(); i++) {
+        paint_time_axis_unit(painter, W, H, structs[i]);
+    }
+}
+
+/// TODO, change W,H to size throughout
+void MVTimeSeriesViewPrivate::paint_time_axis_unit(QPainter* painter, double W, double H, TickStruct TS)
+{
+    Q_UNUSED(W)
+
+    double pixel_interval = W / (m_view_t2 - m_view_t1) * TS.timepoint_interval;
+
+    if (pixel_interval >= TS.min_pixel_spacing_between_ticks) {
+        long i1 = (long)ceil(m_view_t1 / TS.timepoint_interval);
+        long i2 = (long)floor(m_view_t2 / TS.timepoint_interval);
+        for (long i = i1; i <= i2; i++) {
+            QPointF p1 = coord2pix(mvtsv_coord(0, i * TS.timepoint_interval, 0));
+            p1.setY(H - m_prefs.mbottom);
+            QPointF p2 = p1;
+            p2.setY(H - m_prefs.mbottom + TS.tick_height);
+            painter->drawLine(p1, p2);
+        }
+    }
+    if (TS.show_scale) {
+        int label_height = 10;
+        long j1 = m_view_t1 + 1;
+        if (j1 < 1)
+            j1 = 1;
+        long j2 = j1 + TS.timepoint_interval;
+        QPointF p1 = coord2pix(mvtsv_coord(0, j1, 0));
+        QPointF p2 = coord2pix(mvtsv_coord(0, j2, 0));
+        p1.setY(H - m_prefs.mbottom + TS.tick_height);
+        p2.setY(H - m_prefs.mbottom + TS.tick_height);
+
+        painter->drawLine(p1, p2);
+
+        QRectF rect(p1.x(), p1.y() + 5, p2.x() - p1.x(), label_height);
+        QFont font = painter->font();
+        font.setPixelSize(label_height);
+        painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, TS.str);
+    }
+}
+
+void MVTimeSeriesViewPrivate::paint_channel_labels(QPainter *painter, double W, double H)
+{
+    QPen pen=painter->pen();
+    pen.setColor(Qt::black);
+    painter->setPen(pen);
+
+    QFont font=painter->font();
+    font.setPixelSize(13);
+    painter->setFont(font);
+
+    long M=m_data.N1();
+    for (int m=0; m<M; m++) {
+        QPointF pt=coord2pix(mvtsv_coord(m,0,0));
+        QRectF rect(0,pt.y()-30,m_prefs.mleft-5,60);
+        QString str=QString("%1").arg(m+1);
+        painter->drawText(rect,Qt::AlignRight|Qt::AlignVCenter,str);
+    }
+}
+
+void MVTimeSeriesViewPrivate::paint_status_string(QPainter *painter, double W, double H, QString str)
+{
+    QPen pen=painter->pen();
+    pen.setColor(Qt::black);
+    painter->setPen(pen);
+    double status_height=12;
+    double voffset=4;
+    QRectF rect(m_prefs.mleft,H-voffset-status_height,W-m_prefs.mleft-m_prefs.mright,status_height);
+    painter->drawText(rect,Qt::AlignLeft|Qt::AlignVCenter,str);
+}
+
 QPointF MVTimeSeriesViewPrivate::coord2pix(mvtsv_coord C)
 {
     if (C.channel >= m_channels.count())
@@ -614,10 +778,32 @@ void MVTimeSeriesViewPrivate::scroll_to_current_timepoint()
     double range = trange.max - trange.min;
     if (t < trange.min) {
         q->setTimeRange(trange + (t - trange.min - range / 10));
-    }
-    else {
+    } else {
         q->setTimeRange(trange + (t - trange.max + range / 10));
     }
+}
+
+QString MVTimeSeriesViewPrivate::format_time(double tp)
+{
+    /// TODO make samplerate a member
+    double samplerate=30000;
+    double sec=tp/samplerate;
+    long day=(long)floor(sec/(24*60*60));
+    sec-=day*24*60*60;
+    long hour=(long)floor(sec/(60*60));
+    sec-=hour*60*60;
+    long minute=(long)floor(sec/(60));
+    sec-=minute*60;
+
+    QString str;
+    if (day) str+=QString("%1 days ").arg(day);
+    QString tmp_sec=QString("%1").arg(sec);
+    if (sec<10) {
+        tmp_sec=QString("0%1").arg(sec);
+    }
+    str+=QString("%1:%2:%3").arg(hour).arg(minute,2,10,QChar('0')).arg(tmp_sec);
+
+    return str;
 }
 
 bool MVRange::operator==(const MVRange& other)

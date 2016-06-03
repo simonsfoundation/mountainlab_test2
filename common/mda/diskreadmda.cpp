@@ -170,6 +170,7 @@ QString DiskReadMda::makePath()
     return "";
 }
 
+/// TODO do not read the file every time we need the header!
 long DiskReadMda::N1() const
 {
     if (d->m_use_memory_mda) {
@@ -486,7 +487,13 @@ void DiskReadMdaPrivate::copy_from(const DiskReadMda& other)
         this->m_memory_mda = other.d->m_memory_mda;
         return;
     }
+    m_header = other.d->m_header;
     q->setPath(other.d->m_path);
+#ifdef USE_REMOTE_MDA
+    if (other.d->m_use_remote_mda) {
+        m_remote_mda = other.d->m_remote_mda; //so we don't need to download the header again!
+    }
+#endif
 }
 
 long DiskReadMdaPrivate::total_size()

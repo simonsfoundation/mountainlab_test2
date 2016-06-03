@@ -34,6 +34,7 @@ public:
     void setData(const DiskReadMda& X);
     void setMLProxyUrl(const QString& url);
     void setTimesLabels(const QVector<double>& times, const QList<int>& labels);
+    void setChannelColors(const QList<QColor>& colors);
 
     void setTimeRange(MVRange);
     void setCurrentTimepoint(double t);
@@ -41,6 +42,7 @@ public:
 
     double currentTimepoint() const;
     MVRange timeRange() const;
+    DiskReadMda data();
 
     void resizeEvent(QResizeEvent* evt);
     void paintEvent(QPaintEvent* evt);

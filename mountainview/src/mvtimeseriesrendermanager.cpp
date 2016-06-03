@@ -16,7 +16,7 @@
 #define PANEL_HEIGHT_PER_CHANNEL 30
 #define MIN_PANEL_HEIGHT 600
 #define MAX_PANEL_HEIGHT 1800
-#define PANEL_HEIGHT(M) (long) qMin(MAX_PANEL_HEIGHT * 1.0, qMax(MIN_PANEL_HEIGHT * 1.0, PANEL_HEIGHT_PER_CHANNEL * M * 1.0))
+#define PANEL_HEIGHT(M) (long) qMin(MAX_PANEL_HEIGHT * 1.0, qMax(MIN_PANEL_HEIGHT * 1.0, PANEL_HEIGHT_PER_CHANNEL* M * 1.0))
 
 #define MAX_NUM_IMAGE_PIXELS 50 * 1e6
 
@@ -38,6 +38,7 @@ public:
     QSet<QString> m_running_panel_codes;
     ThreadManager m_thread_manager;
     double m_total_num_image_pixels;
+    QList<QColor> m_channel_colors;
 
     QImage render_panel(ImagePanel p);
     void start_compute_panel(ImagePanel p);
@@ -65,13 +66,18 @@ void MVTimeSeriesRenderManager::setMultiScaleTimeSeries(MultiScaleTimeSeries* ts
     /// TODO clear all the records and stop all the running threads
 }
 
+void MVTimeSeriesRenderManager::setChannelColors(const QList<QColor>& colors)
+{
+    d->m_channel_colors = colors;
+}
+
 QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_factor, double W, double H)
 {
     if (!d->m_ts)
         return QImage();
 
     QImage ret(W, H, QImage::Format_ARGB32);
-    QColor transparent(0, 0, 0, 0);
+    QColor transparent(0, 0, 0, 6);
     ret.fill(transparent);
     QPainter painter(&ret);
 
@@ -106,7 +112,8 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
     }
 
     //stop the threads that aren't needed
-    foreach (QString code, d->m_running_panel_codes) {
+    foreach(QString code, d->m_running_panel_codes)
+    {
         if (!panel_codes_needed.contains(code)) {
             d->stop_compute_panel(code);
         }
@@ -140,11 +147,8 @@ void MVTimeSeriesRenderManager::slot_thread_finished()
         d->m_image_panels[code].image = thread->image;
         d->m_total_num_image_pixels += thread->image.width() * thread->image.height();
         emit updated();
+    } else {
     }
-    else {
-    }
-
-    qDebug() << QString("total_num_image_pixels = %1 million").arg(d->m_total_num_image_pixels / 1e6);
 
     thread->deleteLater();
 }
@@ -164,6 +168,7 @@ void MVTimeSeriesRenderManagerPrivate::start_compute_panel(ImagePanel p)
     thread->ds_factor = p.ds_factor;
     thread->index = p.index;
     thread->ts = m_ts;
+    thread->channel_colors = m_channel_colors;
     m_running_panel_codes.insert(p.make_code());
     m_thread_manager.start(p.make_code(), thread);
 }
@@ -178,7 +183,8 @@ ImagePanel* MVTimeSeriesRenderManagerPrivate::closest_ancestor_panel(ImagePanel 
 {
     QList<ImagePanel*> candidates;
     QStringList keys = m_image_panels.keys();
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         ImagePanel* pp = &m_image_panels[key];
         if (pp->amp_factor == p.amp_factor) {
             double t1 = p.index * p.ds_factor * PANEL_NUM_POINTS;
@@ -206,7 +212,8 @@ ImagePanel* MVTimeSeriesRenderManagerPrivate::closest_ancestor_panel(ImagePanel 
 void MVTimeSeriesRenderManagerPrivate::cleanup_images(double t1, double t2, double amp_factor)
 {
     QStringList keys = m_image_panels.keys();
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         ImagePanel* P = &m_image_panels[key];
         double s1 = P->index * P->ds_factor * PANEL_NUM_POINTS;
         double s2 = (P->index + 1) * P->ds_factor * PANEL_NUM_POINTS;
@@ -216,6 +223,13 @@ void MVTimeSeriesRenderManagerPrivate::cleanup_images(double t1, double t2, doub
             m_image_panels.remove(key);
         }
     }
+}
+
+QColor MVTimeSeriesRenderManagerThread::get_channel_color(long m)
+{
+    if (channel_colors.isEmpty())
+        return Qt::black;
+    return channel_colors[m % channel_colors.count()];
 }
 
 void MVTimeSeriesRenderManagerThread::run()
@@ -255,9 +269,12 @@ void MVTimeSeriesRenderManagerThread::run()
     double space = 0;
     double channel_height = (PANEL_HEIGHT(M) - (M - 1) * space) / M;
     long y0 = 0;
+    QPen pen = painter.pen();
     for (int m = 0; m < M; m++) {
         if (thread_interrupt_requested())
             return;
+        pen.setColor(get_channel_color(m));
+        painter.setPen(pen);
         QRectF geom(0, y0, PANEL_WIDTH, channel_height);
         /*
         QPainterPath path;
@@ -287,8 +304,7 @@ void MVTimeSeriesRenderManagerThread::run()
             if (ii == t1) {
                 first = pt_min;
                 path.moveTo(pt_min);
-            }
-            else
+            } else
                 path.lineTo(pt_min);
         }
         for (long ii = t2; ii >= t1; ii--) {
@@ -362,8 +378,7 @@ QImage MVTimeSeriesRenderManagerPrivate::render_panel(ImagePanel p)
     QString code = p.make_code();
     if (m_image_panels.contains(code)) {
         return m_image_panels[code].image;
-    }
-    else {
+    } else {
         QImage ret;
         ImagePanel* p2 = closest_ancestor_panel(p);
         if (p2) {
@@ -375,10 +390,9 @@ QImage MVTimeSeriesRenderManagerPrivate::render_panel(ImagePanel p)
             double a2 = (t2 - s1) / (s2 - s1) * p2->image.width();
             ret = p2->image.copy(a1, 0, a2 - a1, p2->image.height());
             QPainter painter(&ret);
-            QColor col(255, 0, 0, 10);
+            QColor col(255, 0, 0, 6);
             painter.fillRect(0, 0, ret.width(), ret.height(), col);
-        }
-        else {
+        } else {
             ret = QImage(100, 100, QImage::Format_ARGB32);
             QColor col(0, 0, 0, 10);
             ret.fill(col);

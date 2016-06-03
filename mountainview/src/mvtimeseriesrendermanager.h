@@ -10,6 +10,7 @@
 #include "multiscaletimeseries.h"
 #include "mlutils.h"
 
+#include <QColor>
 #include <QImage>
 #include <QRunnable>
 #include <QThread>
@@ -23,13 +24,15 @@ public:
     virtual ~MVTimeSeriesRenderManager();
 
     void setMultiScaleTimeSeries(MultiScaleTimeSeries* ts);
+    void setChannelColors(const QList<QColor>& colors);
 
     QImage getImage(double t1, double t2, double amp_factor, double W, double H);
 
 signals:
     void updated();
 
-private slots:
+private
+slots:
     void slot_thread_finished();
 
 private:
@@ -43,7 +46,9 @@ public:
     double amp_factor;
     long ds_factor;
     long index;
+    QList<QColor> channel_colors;
     MultiScaleTimeSeries* ts;
+    QColor get_channel_color(long m);
 
     //output
     QImage image;
@@ -57,7 +62,8 @@ public:
     ThreadManager();
     void start(QString id, QThread* thread);
     void stop(QString id);
-private slots:
+private
+slots:
     void slot_timer();
     void slot_thread_finished();
 

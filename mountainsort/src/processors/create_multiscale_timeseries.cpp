@@ -164,7 +164,7 @@ bool write_concatenation(QStringList input_fnames, QString output_fname)
 
         /// TODO choose chunk_size sensibly
         long chunk_size = 10000;
-        for (long ii=0; ii<X.N2(); ii+=chunk_size) {
+        for (long ii = 0; ii < X.N2(); ii += chunk_size) {
             long size0 = qMin(chunk_size, X.N2() - ii);
             Mda tmp;
             X.readChunk(tmp, 0, ii, M, size0);

@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
         {
             W->setWindowTitle(window_title);
             W->show();
-            W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
+            //W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
 
             int W0 = 1400, H0 = 1000;
             QRect geom = QApplication::desktop()->geometry();
@@ -159,6 +159,8 @@ int main(int argc, char* argv[])
             } else {
                 W->resize(W0, H0);
             }
+
+            W->move(QApplication::desktop()->screen()->rect().bottomRight() - QPoint(W0, H0));
 
             qApp->processEvents();
         }

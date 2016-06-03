@@ -48,12 +48,17 @@ RemoteReadMda::RemoteReadMda(const RemoteReadMda& other)
     d = new RemoteReadMdaPrivate;
     d->q = this;
     this->setPath(other.d->m_path);
+    d->m_info = other.d->m_info;
+    d->m_info_downloaded = other.d->m_info_downloaded;
+    d->m_remote_datatype = other.d->m_remote_datatype;
 }
 
 void RemoteReadMda::operator=(const RemoteReadMda& other)
 {
-    /// TODO should I copy the halt_agent?
     this->setPath(other.d->m_path);
+    d->m_info = other.d->m_info;
+    d->m_info_downloaded = other.d->m_info_downloaded;
+    d->m_remote_datatype = other.d->m_remote_datatype;
 }
 
 RemoteReadMda::~RemoteReadMda()
