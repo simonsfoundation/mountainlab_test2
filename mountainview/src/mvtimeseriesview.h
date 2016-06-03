@@ -33,6 +33,8 @@ public:
 
     void setData(const DiskReadMda& X);
     void setMLProxyUrl(const QString& url);
+    void setTimesLabels(const QVector<double>& times, const QList<int>& labels);
+
     void setTimeRange(MVRange);
     void setCurrentTimepoint(double t);
     void setSelectedTimeRange(MVRange range);

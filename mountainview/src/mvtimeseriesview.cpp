@@ -34,18 +34,41 @@ struct mvtsv_channel {
     QRectF geometry;
 };
 
+struct mvtsv_prefs {
+    mvtsv_prefs()
+    {
+        num_label_levels = 3;
+        label_font_height = 12;
+        mtop = 40;
+        mbottom = 20;
+        mleft = 80;
+        mright = 20;
+        marker_color = QColor(200, 0, 0, 120);
+    }
+
+    int num_label_levels;
+    int label_font_height;
+    QColor marker_color;
+    int mleft, mright, mtop, mbottom;
+};
+
 class MVTimeSeriesViewPrivate {
 public:
     MVTimeSeriesView* q;
     MultiScaleTimeSeries m_ts;
+
     DiskReadMda m_data;
+    QVector<double> m_times;
+    QList<int> m_labels;
+
+    mvtsv_prefs m_prefs;
+
     double m_view_t1, m_view_t2;
     double m_amplitude_factor;
     QList<mvtsv_channel> m_channels;
     double m_current_t;
     MVRange m_selected_t_range;
     bool m_activated;
-    double m_margins[4];
 
     bool m_layout_needed;
 
@@ -58,6 +81,9 @@ public:
 
     QList<mvtsv_channel> make_channel_layout(double W, double H, long M);
     void paint_cursor(QPainter* painter, double W, double H);
+    void paint_markers(QPainter* painter, const QVector<double>& t0, const QVector<int>& labels, double W, double H);
+    void paint_message_at_top(QPainter* painter, QString msg, double W, double H);
+
     QPointF coord2pix(mvtsv_coord C);
     mvtsv_coord pix2coord(long channel, QPointF pix);
 
@@ -79,7 +105,6 @@ MVTimeSeriesView::MVTimeSeriesView()
     d->m_layout_needed = true;
     this->setMouseTracking(true);
     d->m_render_manager.setMultiScaleTimeSeries(&d->m_ts);
-    d->m_margins[0] = d->m_margins[1] = d->m_margins[2] = d->m_margins[3] = 30;
 
     QObject::connect(&d->m_render_manager, SIGNAL(updated()), this, SLOT(update()));
 }
@@ -104,6 +129,13 @@ void MVTimeSeriesView::setData(const DiskReadMda& X)
 void MVTimeSeriesView::setMLProxyUrl(const QString& url)
 {
     d->m_ts.setMLProxyUrl(url);
+    update();
+}
+
+void MVTimeSeriesView::setTimesLabels(const QVector<double>& times, const QList<int>& labels)
+{
+    d->m_times = times;
+    d->m_labels = labels;
     update();
 }
 
@@ -153,10 +185,10 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    double mleft = d->m_margins[0];
-    double mright = d->m_margins[1];
-    double mtop = d->m_margins[2];
-    double mbottom = d->m_margins[3];
+    double mleft = d->m_prefs.mleft;
+    double mright = d->m_prefs.mright;
+    double mtop = d->m_prefs.mtop;
+    double mbottom = d->m_prefs.mbottom;
 
     double W0 = this->width();
     double H0 = this->height();
@@ -176,6 +208,23 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     }
 
     d->paint_cursor(&painter, W0, H0);
+
+    QVector<double> times0;
+    QVector<int> labels0;
+    for (long i = 0; i < d->m_times.count(); i++) {
+        double t0 = d->m_times[i];
+        int l0 = d->m_labels[i];
+        if ((d->m_view_t1 <= t0) && (t0 <= d->m_view_t2)) {
+            times0 << t0;
+            labels0 << l0;
+        }
+    }
+    if (times0.count() < 500) {
+        d->paint_markers(&painter, times0, labels0, W0, H0);
+    }
+    else {
+        d->paint_message_at_top(&painter, "Zoom in to view markers", W0, H0);
+    }
 
     double WW = W0 - mleft - mright;
     double HH = H0 - mtop - mbottom;
@@ -235,10 +284,12 @@ void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
             d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-        } else if (delta > 0) {
+        }
+        else if (delta > 0) {
             d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
         }
-    } else {
+    }
+    else {
         //This used to allow zooming at hover position -- probably not needed
         /*
         float frac = 1;
@@ -257,30 +308,38 @@ void MVTimeSeriesView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    } else if (evt->key() == Qt::Key_Left) {
-        MVRange trange=this->timeRange();
-        double range=trange.max-trange.min;
-        this->setCurrentTimepoint(this->currentTimepoint()-range/10);
+    }
+    else if (evt->key() == Qt::Key_Left) {
+        MVRange trange = this->timeRange();
+        double range = trange.max - trange.min;
+        this->setCurrentTimepoint(this->currentTimepoint() - range / 10);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_Right) {
-        MVRange trange=this->timeRange();
-        double range=trange.max-trange.min;
-        this->setCurrentTimepoint(this->currentTimepoint()+range/10);
+    }
+    else if (evt->key() == Qt::Key_Right) {
+        MVRange trange = this->timeRange();
+        double range = trange.max - trange.min;
+        this->setCurrentTimepoint(this->currentTimepoint() + range / 10);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_Home) {
+    }
+    else if (evt->key() == Qt::Key_Home) {
         this->setCurrentTimepoint(0);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_End) {
-        this->setCurrentTimepoint(d->m_data.N2()-1);
+    }
+    else if (evt->key() == Qt::Key_End) {
+        this->setCurrentTimepoint(d->m_data.N2() - 1);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_Equal) {
+    }
+    else if (evt->key() == Qt::Key_Equal) {
         d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
-    } else if (evt->key() == Qt::Key_Minus) {
+    }
+    else if (evt->key() == Qt::Key_Minus) {
         d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-    } else {
+    }
+    else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -341,10 +400,10 @@ QList<mvtsv_channel> MVTimeSeriesViewPrivate::make_channel_layout(double W, doub
     QList<mvtsv_channel> channels;
     if (!M)
         return channels;
-    double mleft = m_margins[0];
-    double mright = m_margins[1];
-    double mtop = m_margins[2];
-    double mbottom = m_margins[3];
+    double mleft = m_prefs.mleft;
+    double mright = m_prefs.mright;
+    double mtop = m_prefs.mtop;
+    double mbottom = m_prefs.mbottom;
     double space = 0;
     double channel_height = (H - mbottom - mtop - (M - 1) * space) / M;
     double y0 = mtop;
@@ -362,8 +421,8 @@ void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H
     Q_UNUSED(W)
     Q_UNUSED(H)
 
-    double mtop = m_margins[2];
-    double mbottom = m_margins[3];
+    double mtop = m_prefs.mtop;
+    double mbottom = m_prefs.mbottom;
 
     if (m_selected_t_range.min < 0) {
         QPointF p0 = coord2pix(mvtsv_coord(0, m_current_t, 0));
@@ -421,6 +480,85 @@ void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H
     }
 }
 
+struct MarkerRecord {
+    double xpix;
+    int label;
+    int level;
+};
+
+struct MarkerRecord_comparer {
+    bool operator()(const MarkerRecord& a, const MarkerRecord& b) const
+    {
+        if (a.xpix < b.xpix)
+            return true;
+        else if (a.xpix == b.xpix)
+            return (a.level < b.level);
+        else
+            return false;
+    }
+};
+
+void sort_by_xpix(QList<MarkerRecord>& records)
+{
+    qSort(records.begin(), records.end(), MarkerRecord_comparer());
+}
+
+void MVTimeSeriesViewPrivate::paint_markers(QPainter* painter, const QVector<double>& times, const QVector<int>& labels, double W, double H)
+{
+    Q_UNUSED(W)
+    double mtop = m_prefs.mtop;
+    double mbottom = m_prefs.mbottom;
+
+    QList<MarkerRecord> marker_recs;
+
+    int min_dist = 20;
+
+    for (long i = 0; i < times.count(); i++) {
+        double t0 = times[i];
+        int l0 = labels[i];
+        QPointF p0 = coord2pix(mvtsv_coord(0, t0, 0));
+        MarkerRecord MR;
+        MR.xpix = p0.x();
+        MR.label = l0;
+        MR.level = 0;
+        marker_recs << MR;
+    }
+    sort_by_xpix(marker_recs);
+    for (long i = 1; i < marker_recs.count(); i++) {
+        if (marker_recs[i - 1].xpix + min_dist >= marker_recs[i].xpix) {
+            marker_recs[i].level = (marker_recs[i - 1].level + 1) % m_prefs.num_label_levels;
+        }
+    }
+    QPen pen = painter->pen();
+    pen.setColor(m_prefs.marker_color);
+    painter->setPen(pen);
+    QFont font = painter->font();
+    font.setPixelSize(m_prefs.label_font_height);
+    painter->setFont(font);
+    for (long i = 0; i < marker_recs.count(); i++) {
+        MarkerRecord MR = marker_recs[i];
+        QPointF p0(MR.xpix, mtop);
+        QPointF p1(MR.xpix, H - mbottom);
+        painter->drawLine(p0, p1);
+        QRectF rect(MR.xpix - 30, mtop - 3 - m_prefs.label_font_height * (MR.level + 1), 60, m_prefs.label_font_height);
+        painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, QString("%1").arg(MR.label));
+    }
+}
+
+void MVTimeSeriesViewPrivate::paint_message_at_top(QPainter* painter, QString msg, double W, double H)
+{
+    Q_UNUSED(H)
+    QPen pen = painter->pen();
+    pen.setColor(m_prefs.marker_color);
+    painter->setPen(pen);
+    QFont font = painter->font();
+    font.setPixelSize(m_prefs.label_font_height);
+    painter->setFont(font);
+
+    QRectF rect(0, 0, W, m_prefs.mtop);
+    painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, msg);
+}
+
 QPointF MVTimeSeriesViewPrivate::coord2pix(mvtsv_coord C)
 {
     if (C.channel >= m_channels.count())
@@ -469,15 +607,16 @@ void MVTimeSeriesViewPrivate::zoom_in(mvtsv_coord about_coord, double frac)
 
 void MVTimeSeriesViewPrivate::scroll_to_current_timepoint()
 {
-    double t=q->currentTimepoint();
-    MVRange trange=q->timeRange();
-    if ((trange.min<t)&&(t<trange.max)) return;
-    double range=trange.max-trange.min;
-    if (t<trange.min) {
-        q->setTimeRange(trange+(t-trange.min-range/10));
+    double t = q->currentTimepoint();
+    MVRange trange = q->timeRange();
+    if ((trange.min < t) && (t < trange.max))
+        return;
+    double range = trange.max - trange.min;
+    if (t < trange.min) {
+        q->setTimeRange(trange + (t - trange.min - range / 10));
     }
     else {
-        q->setTimeRange(trange+(t-trange.max+range/10));
+        q->setTimeRange(trange + (t - trange.max + range / 10));
     }
 }
 

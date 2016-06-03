@@ -29,8 +29,7 @@ public:
 signals:
     void updated();
 
-private
-slots:
+private slots:
     void slot_thread_finished();
 
 private:
@@ -58,8 +57,7 @@ public:
     ThreadManager();
     void start(QString id, QThread* thread);
     void stop(QString id);
-private
-slots:
+private slots:
     void slot_timer();
     void slot_thread_finished();
 
