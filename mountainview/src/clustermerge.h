@@ -30,6 +30,8 @@ public:
     QList<int> getMergeGroup(int label) const;
     QString toJson() const;
 
+    QString clusterLabelText(int label);
+
     static ClusterMerge fromJson(const QString& json);
 
 private:

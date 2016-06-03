@@ -156,7 +156,7 @@ public:
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     double m_samplerate;
-    QList<int> m_group_numbers;
+    QList<int> m_group_numbers; //for shell splitting
 
     int m_clip_size;
     QList<ClusterData> m_cluster_data;
@@ -713,13 +713,14 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
 QString MVClusterDetailWidgetPrivate::group_label_for_k(int k)
 {
     if (m_group_numbers.isEmpty())
-        return QString("%1").arg(k);
+        return QString("%1").arg(m_view_agent->clusterMerge().clusterLabelText(k));
     int g = m_group_numbers.value(k);
     for (int i = 1; i < k; i++) {
-        if (m_group_numbers[i] == g)
+        if (m_group_numbers[i] == g) { //somebody for me has the same group number
             return "";
+        }
     }
-    return QString("%1").arg(g);
+    return QString("%1").arg(m_view_agent->clusterMerge().clusterLabelText(g));
 }
 
 bool MVClusterDetailWidgetPrivate::has_nontrivial_group_numbers()
@@ -753,6 +754,17 @@ QColor lighten(QColor col, float val)
     if (b > 255)
         b = 255;
     return QColor(r, g, b);
+}
+
+QString truncate_based_on_font_and_width(QString txt,QFont font, double width) {
+    QFontMetrics fm(font);
+    if (fm.width(txt)>width) {
+        while ((txt.count()>3)&&(fm.width(txt+"...")>width)) {
+            txt=txt.mid(0,txt.count()-1);
+        }
+        return txt+"...";
+    }
+    return txt;
 }
 
 void ClusterView::paint(QPainter* painter, QRectF rect)
@@ -862,9 +874,13 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     }
     {
         txt = QString("%1").arg(group_label);
-        font.setPixelSize(16);
-        if (compressed_info)
-            font.setPixelSize(12);
+        //font.setPixelSize(16);
+        //if (compressed_info)
+        //font.setPixelSize(12);
+        font.setPixelSize(12);
+
+        txt=truncate_based_on_font_and_width(txt,font,m_top_rect.width());
+
         QPen pen;
         pen.setWidth(1);
         pen.setColor(Qt::darkBlue);
