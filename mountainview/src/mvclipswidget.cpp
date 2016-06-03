@@ -13,6 +13,8 @@
 #include "msmisc.h"
 #include "mlutils.h"
 
+/// TODO in the views, we should not rely on m_view_agent being non-NULL
+
 class MVClipsWidgetComputer : public ComputationThread {
 public:
     //input
@@ -26,6 +28,7 @@ public:
     //output
     Mda clips;
     QList<double> times;
+    QList<int> labels;
 
     void compute();
 };
@@ -41,6 +44,7 @@ public:
     int m_clip_size;
     MVClipsView* m_view;
     MVClipsWidgetComputer m_computer;
+    MVViewAgent* m_view_agent;
 
     void start_computation();
 };
@@ -50,6 +54,7 @@ MVClipsWidget::MVClipsWidget()
     d = new MVClipsWidgetPrivate;
     d->q = this;
 
+    d->m_view_agent = 0;
     d->m_view = MVClipsView::newInstance();
 
     QHBoxLayout* hlayout = new QHBoxLayout;
@@ -57,7 +62,6 @@ MVClipsWidget::MVClipsWidget()
     this->setLayout(hlayout);
 
     connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
-    connect(d->m_view, SIGNAL(currentEventChanged()), this, SIGNAL(currentEventChanged()));
 }
 
 MVClipsWidget::~MVClipsWidget()
@@ -102,19 +106,15 @@ void MVClipsWidget::setClipSize(int clip_size)
     d->start_computation();
 }
 
+void MVClipsWidget::setViewAgent(MVViewAgent* agent)
+{
+    d->m_view_agent = agent;
+    d->m_view->setViewAgent(agent);
+}
+
 int MVClipsWidget::currentClipIndex()
 {
     return d->m_view->currentClipIndex();
-}
-
-MVEvent MVClipsWidget::currentEvent()
-{
-    return d->m_view->currentEvent();
-}
-
-void MVClipsWidget::setCurrentEvent(MVEvent evt)
-{
-    d->m_view->setCurrentEvent(evt);
 }
 
 void MVClipsWidget::slot_computation_finished()
@@ -122,6 +122,7 @@ void MVClipsWidget::slot_computation_finished()
     d->m_computer.stopComputation(); //because I'm paranoid
     d->m_view->setClips(d->m_computer.clips);
     d->m_view->setTimes(d->m_computer.times);
+    d->m_view->setLabels(d->m_computer.labels);
 }
 
 void MVClipsWidgetComputer::compute()
@@ -185,6 +186,7 @@ void MVClipsWidgetComputer::compute()
     times.clear();
     for (long j = 0; j < firings_out.N2(); j++) {
         times << firings_out.value(1, j);
+        labels << firings_out.value(2, j);
     }
     task.log("Reading: " + clips_path);
     DiskReadMda CC(clips_path);

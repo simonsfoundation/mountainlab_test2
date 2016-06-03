@@ -49,18 +49,6 @@ public:
     ///To make the color scheme uniform.
     void setColors(const QMap<QString, QColor>& colors);
 
-    ///The current label number (selected by user)
-    int currentK();
-
-    ///The selected label numbers (selected by user)
-    QList<int> selectedKs();
-
-    ///Set current label number (affects highlighting)
-    void setCurrentK(int k);
-
-    ///Set selected label numbers (affects highlighting)
-    void setSelectedKs(const QList<int>& ks);
-
     void setViewAgent(MVViewAgent* agent);
 
     void zoomAllTheWayOut();
@@ -79,10 +67,6 @@ protected:
 signals:
     ///A cluster has been double-clicked (or enter pressed?)
     void signalTemplateActivated();
-    ///The current label number has changed
-    void signalCurrentKChanged();
-    ///The selected label numbers have changed
-    void signalSelectedKsChanged();
 private
 slots:
     //void slot_context_menu(const QPoint& pos);

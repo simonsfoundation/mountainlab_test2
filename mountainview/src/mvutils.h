@@ -14,6 +14,16 @@
 
 ///A firing event defined by a time and a label
 struct MVEvent {
+    MVEvent()
+    {
+        time = -1;
+        label = -1;
+    }
+    bool operator==(const MVEvent& other) const
+    {
+        return ((time == other.time) && (label == other.label));
+    }
+
     double time;
     int label;
 };

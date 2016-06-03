@@ -12,12 +12,16 @@ public:
     MVViewAgent* q;
     ClusterMerge m_cluster_merge;
     QMap<int, QJsonObject> m_cluster_attributes;
+    MVEvent m_current_event;
+    int m_current_cluster;
+    QList<int> m_selected_clusters;
 };
 
 MVViewAgent::MVViewAgent()
 {
     d = new MVViewAgentPrivate;
     d->q = this;
+    d->m_current_cluster = 0;
 }
 
 MVViewAgent::~MVViewAgent()
@@ -28,6 +32,21 @@ MVViewAgent::~MVViewAgent()
 QMap<int, QJsonObject> MVViewAgent::clusterAttributes() const
 {
     return d->m_cluster_attributes;
+}
+
+MVEvent MVViewAgent::currentEvent() const
+{
+    return d->m_current_event;
+}
+
+int MVViewAgent::currentCluster() const
+{
+    return d->m_current_cluster;
+}
+
+QList<int> MVViewAgent::selectedClusters() const
+{
+    return d->m_selected_clusters;
 }
 
 ClusterMerge MVViewAgent::clusterMerge() const
@@ -49,4 +68,63 @@ void MVViewAgent::setClusterAttributes(const QMap<int, QJsonObject>& A)
         return;
     d->m_cluster_attributes = A;
     emit this->clusterAttributesChanged();
+}
+
+void MVViewAgent::setCurrentEvent(const MVEvent& evt)
+{
+    if (evt == d->m_current_event)
+        return;
+    d->m_current_event = evt;
+    emit currentEventChanged();
+}
+
+void MVViewAgent::setCurrentCluster(int k)
+{
+    if (k == d->m_current_cluster)
+        return;
+    d->m_current_cluster = k;
+
+    QList<int> tmp = selectedClusters();
+    if (!tmp.contains(k)) {
+        tmp << k;
+        this->setSelectedClusters(tmp); //think about this
+    }
+    emit currentClusterChanged();
+}
+
+void MVViewAgent::setSelectedClusters(const QList<int>& ks)
+{
+    QList<int> ks2 = QList<int>::fromSet(ks.toSet()); //remove duplicates and -1
+    ks2.removeAll(-1);
+    qSort(ks2);
+    if (d->m_selected_clusters == ks2)
+        return;
+    d->m_selected_clusters = ks2;
+    if (!d->m_selected_clusters.contains(d->m_current_cluster)) {
+        this->setCurrentCluster(-1);
+    }
+    emit selectedClustersChanged();
+}
+
+void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
+{
+    /// TODO handle shift modifier
+    if (modifiers & Qt::ControlModifier) {
+        if (k < 0)
+            return;
+        if (d->m_selected_clusters.contains(k)) {
+            QList<int> tmp = d->m_selected_clusters;
+            tmp.removeAll(k);
+            this->setSelectedClusters(tmp);
+        } else {
+            if (k >= 0) {
+                QList<int> tmp = d->m_selected_clusters;
+                tmp << k;
+                this->setSelectedClusters(tmp);
+            }
+        }
+    } else {
+        this->setSelectedClusters(QList<int>());
+        this->setCurrentCluster(k);
+    }
 }

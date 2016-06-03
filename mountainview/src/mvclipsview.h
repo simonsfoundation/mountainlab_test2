@@ -8,6 +8,7 @@
 
 #include "sstimeseriesview.h"
 #include "mvutils.h"
+#include "mvviewagent.h"
 
 /** \class MVClipsView
  *  \brief View a set of clips. Usually each clip contains a single spike.
@@ -34,11 +35,7 @@ public:
     ///The index of the currently selected clip
     virtual int currentClipIndex() = 0;
 
-    ///The currently selected event -- this has the time/label
-    virtual MVEvent currentEvent() = 0;
-
-    ///Set the current event, which searches times/labels to move the cursor to the corresponding clip
-    virtual void setCurrentEvent(MVEvent evt) = 0;
+    virtual void setViewAgent(MVViewAgent* agent) = 0;
 
 signals:
 

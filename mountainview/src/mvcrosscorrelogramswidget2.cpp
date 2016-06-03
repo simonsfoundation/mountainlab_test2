@@ -42,8 +42,6 @@ public:
     QList<FloatList> m_data;
     double m_samplerate;
     int m_max_dt;
-    int m_current_index;
-    QSet<int> m_selected_indices;
     MVViewAgent* m_view_agent;
 
     QGridLayout* m_grid_layout;
@@ -63,9 +61,7 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2()
     d = new MVCrossCorrelogramsWidget2Private;
     d->q = this;
     d->m_samplerate = 20000;
-    d->m_current_index = -1;
     d->m_num_columns = -1;
-    d->m_current_index = -1;
     d->m_max_dt = 0;
     d->m_view_agent = 0;
 
@@ -100,6 +96,8 @@ void MVCrossCorrelogramsWidget2::setViewAgent(MVViewAgent* agent)
     d->m_view_agent = agent;
     QObject::connect(agent, SIGNAL(clusterAttributesChanged()), this, SLOT(slot_cluster_attributes_changed()));
     QObject::connect(agent, SIGNAL(clusterMergeChanged()), this, SLOT(slot_cluster_merge_changed()));
+    QObject::connect(agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting()));
+    QObject::connect(agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
 }
 
 void MVCrossCorrelogramsWidget2::setLabelPairs(const QList<int>& labels1, const QList<int>& labels2, const QList<QString>& text_labels)
@@ -119,106 +117,6 @@ void MVCrossCorrelogramsWidget2::setColors(const QMap<QString, QColor>& colors)
     }
 }
 
-void MVCrossCorrelogramsWidget2::setCurrentIndex(int index)
-{
-    if (d->m_current_index == index)
-        return;
-    if (index >= d->m_histogram_views.count())
-        return;
-
-    d->m_current_index = index;
-    d->do_highlighting();
-    emit currentIndexChanged();
-}
-
-int MVCrossCorrelogramsWidget2::currentIndex()
-{
-    return d->m_current_index;
-}
-
-int MVCrossCorrelogramsWidget2::currentLabel1()
-{
-    return d->m_labels1.value(currentIndex());
-}
-
-int MVCrossCorrelogramsWidget2::currentLabel2()
-{
-    return d->m_labels2.value(currentIndex());
-}
-
-void MVCrossCorrelogramsWidget2::setCurrentLabel1(int k)
-{
-    for (int i = 0; i < d->m_labels1.count(); i++) {
-        if (d->m_labels1[i] == k) {
-            setCurrentIndex(i);
-            return;
-        }
-    }
-}
-
-void MVCrossCorrelogramsWidget2::setCurrentLabel2(int k)
-{
-    for (int i = 0; i < d->m_labels1.count(); i++) {
-        if (d->m_labels2[i] == k) {
-            setCurrentIndex(i);
-            return;
-        }
-    }
-}
-
-QList<int> MVCrossCorrelogramsWidget2::selectedLabels1()
-{
-    QList<int> tmp = d->m_selected_indices.toList();
-    qSort(tmp);
-    QList<int> ret;
-    foreach(int ind, tmp)
-    {
-        ret << d->m_labels1.value(ind);
-    }
-    return ret;
-}
-
-QList<int> MVCrossCorrelogramsWidget2::selectedLabels2()
-{
-    QList<int> tmp = d->m_selected_indices.toList();
-    qSort(tmp);
-    QList<int> ret;
-    foreach(int ind, tmp)
-    {
-        ret << d->m_labels2.value(ind);
-    }
-    return ret;
-}
-
-void MVCrossCorrelogramsWidget2::setSelectedLabels1(const QList<int>& L)
-{
-    QList<int> inds;
-    for (int i = 0; i < d->m_labels1.count(); i++) {
-        if (L.contains(d->m_labels1[i])) {
-            inds << i;
-        }
-    }
-    setSelectedIndices(inds);
-}
-
-void MVCrossCorrelogramsWidget2::setSelectedLabels2(const QList<int>& L)
-{
-    QList<int> inds;
-    for (int i = 0; i < d->m_labels1.count(); i++) {
-        if (L.contains(d->m_labels2[i])) {
-            inds << i;
-        }
-    }
-    setSelectedIndices(inds);
-}
-
-QList<int> MVCrossCorrelogramsWidget2::selectedIndices()
-{
-    QList<int> tmp = d->m_selected_indices.toList();
-    qSort(tmp);
-    return tmp;
-}
-
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
     foreach(int a, S1)
@@ -228,15 +126,6 @@ bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
     if (!S1.contains(a))
         return false;
     return true;
-}
-
-void MVCrossCorrelogramsWidget2::setSelectedIndices(const QList<int>& X)
-{
-    if (sets_match2(d->m_selected_indices, X.toSet()))
-        return;
-    d->m_selected_indices = X.toSet();
-    d->do_highlighting();
-    emit selectedIndicesChanged();
 }
 
 QImage MVCrossCorrelogramsWidget2::renderImage(int W, int H)
@@ -418,7 +307,11 @@ void MVCrossCorrelogramsWidget2::slot_computation_finished()
 void MVCrossCorrelogramsWidget2::slot_histogram_view_control_clicked()
 {
     int index = sender()->property("index").toInt();
-    //int k1 = d->m_labels1.value(index);
+    int k1 = d->m_labels2.value(index);
+
+    d->m_view_agent->clickCluster(k1, Qt::ControlModifier);
+
+    /*
     //int k2 = d->m_labels2.value(index);
     if (d->m_current_index == index) {
         setCurrentIndex(-1);
@@ -433,10 +326,18 @@ void MVCrossCorrelogramsWidget2::slot_histogram_view_control_clicked()
         d->do_highlighting();
     }
     emit selectedIndicesChanged();
+    */
 }
 
 void MVCrossCorrelogramsWidget2::slot_histogram_view_clicked()
 {
+
+    int index = sender()->property("index").toInt();
+    int k1 = d->m_labels2.value(index);
+
+    d->m_view_agent->clickCluster(k1, Qt::NoModifier);
+
+    /*
     int index = sender()->property("index").toInt();
     d->m_selected_indices.clear();
     if (d->m_current_index == index) {
@@ -449,11 +350,12 @@ void MVCrossCorrelogramsWidget2::slot_histogram_view_clicked()
         update();
     }
     emit selectedIndicesChanged();
+    */
 }
 
 void MVCrossCorrelogramsWidget2::slot_histogram_view_activated()
 {
-    emit indexActivated(currentIndex());
+    emit histogramActivated();
 }
 
 void MVCrossCorrelogramsWidget2::slot_export_image()
@@ -470,6 +372,11 @@ void MVCrossCorrelogramsWidget2::slot_cluster_attributes_changed()
 void MVCrossCorrelogramsWidget2::slot_cluster_merge_changed()
 {
     d->start_computation();
+}
+
+void MVCrossCorrelogramsWidget2::slot_update_highlighting()
+{
+    d->do_highlighting();
 }
 
 QList<float> compute_cc_data(const QList<double>& times1_in, const QList<double>& times2_in, int max_dt, bool exclude_matches)
@@ -543,15 +450,16 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
 void MVCrossCorrelogramsWidget2Private::do_highlighting()
 {
+    QList<int> selected_clusters = m_view_agent->selectedClusters();
     for (int i = 0; i < m_histogram_views.count(); i++) {
         HistogramView* HV = m_histogram_views[i];
         int index = HV->property("index").toInt();
-        if (index == m_current_index) {
+        if (m_labels2.value(index) == m_view_agent->currentCluster()) {
             HV->setCurrent(true);
         } else {
             HV->setCurrent(false);
         }
-        if (m_selected_indices.contains(index)) {
+        if (selected_clusters.contains(m_labels2.value(index))) {
             HV->setSelected(true);
         } else {
             HV->setSelected(false);

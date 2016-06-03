@@ -56,16 +56,9 @@ slots:
 private
 slots:
     void slot_control_panel_user_action(QString str);
-    void slot_auto_correlogram_activated(int k);
+    void slot_auto_correlogram_activated();
     //void slot_templates_clicked();
-    void slot_details_current_k_changed();
-    void slot_details_selected_ks_changed();
     void slot_details_template_activated();
-    void slot_cross_correlogram_current_index_changed();
-    void slot_cross_correlogram_selected_indices_changed();
-    void slot_clips_view_current_event_changed();
-    void slot_clips_widget_current_event_changed();
-    void slot_cluster_view_current_event_changed();
     //void slot_cross_correlogram_computer_finished();
     void slot_update_buttons();
     void slot_calculator_finished();

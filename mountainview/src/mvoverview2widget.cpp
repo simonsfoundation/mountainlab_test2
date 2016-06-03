@@ -79,10 +79,7 @@ public:
     QList<Epoch> m_epochs;
     QList<int> m_original_cluster_numbers;
     QList<int> m_original_cluster_offsets;
-    int m_current_k;
-    QSet<int> m_selected_ks;
     float m_samplerate;
-    MVEvent m_current_event;
     //QString m_mscmdserver_url;
     QString m_mlproxy_url;
     QString m_mv_fname;
@@ -138,11 +135,6 @@ public:
     void move_to_timepoint(double tp);
     void update_widget(QWidget* W);
 
-    void set_cross_correlograms_current_index(int index);
-    void set_cross_correlograms_selected_indices(const QList<int>& indices);
-    void set_templates_current_number(int kk);
-    void set_templates_selected_numbers(const QList<int>& kks);
-
     void set_times_labels_for_mvtimeseriesview(MVTimeSeriesView* WW);
     void set_times_labels_for_timeseries_widget(SSTimeSeriesWidget* WW);
 
@@ -156,7 +148,6 @@ public:
     void compute_geometric_median(int M, int N, double* output, double* input, int num_iterations);
 
     void set_progress(QString title, QString text, float frac);
-    void set_current_event(MVEvent evt);
 
     long cc_max_dt_timepoints();
 
@@ -201,12 +192,9 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     d = new MVOverview2WidgetPrivate;
     d->q = this;
 
-    d->m_current_k = 0;
     d->m_samplerate = 20000;
 
     d->m_progress_dialog = 0;
-    d->m_current_event.time = -1;
-    d->m_current_event.label = -1;
 
     connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
 
@@ -275,6 +263,9 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     slot_update_buttons();
 
     //connect(&d->m_cross_correlogram_computer,SIGNAL(computationFinished()),this,SLOT(slot_cross_correlogram_computer_finished()));
+
+    connect(&d->m_view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_buttons()));
+    connect(&d->m_view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_buttons()));
 }
 
 MVOverview2Widget::~MVOverview2Widget()
@@ -650,38 +641,17 @@ void MVOverview2Widget::slot_control_panel_user_action(QString str)
     }
 }
 
-void MVOverview2Widget::slot_auto_correlogram_activated(int index)
+void MVOverview2Widget::slot_auto_correlogram_activated()
 {
     TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
     d->m_tabber->setCurrentContainer(TW);
     d->m_tabber->switchCurrentContainer();
-    d->open_cross_correlograms(index + 1);
-}
-
-void MVOverview2Widget::slot_details_current_k_changed()
-{
-    MVClusterDetailWidget* X = (MVClusterDetailWidget*)sender();
-    int index = X->currentK() - 1;
-    d->m_current_k = X->currentK();
-    d->set_cross_correlograms_current_index(index);
-}
-
-void MVOverview2Widget::slot_details_selected_ks_changed()
-{
-    MVClusterDetailWidget* X = (MVClusterDetailWidget*)sender();
-    QList<int> ks = X->selectedKs();
-    QList<int> indices;
-    foreach(int k, ks)
-    indices << k - 1;
-    d->m_selected_ks = ks.toSet();
-    d->set_cross_correlograms_selected_indices(indices);
-    slot_update_buttons();
+    d->open_cross_correlograms(d->m_view_agent.currentCluster());
 }
 
 void MVOverview2Widget::slot_details_template_activated()
 {
-    MVClusterDetailWidget* X = (MVClusterDetailWidget*)sender();
-    int k = X->currentK();
+    int k = d->m_view_agent.currentCluster();
     if (k < 0)
         return;
     TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
@@ -690,47 +660,10 @@ void MVOverview2Widget::slot_details_template_activated()
     d->open_clips();
 }
 
-void MVOverview2Widget::slot_cross_correlogram_current_index_changed()
-{
-    MVCrossCorrelogramsWidget2* X = (MVCrossCorrelogramsWidget2*)sender();
-    d->m_current_k = X->currentLabel1();
-    d->set_cross_correlograms_current_index(X->currentIndex());
-    d->set_templates_current_number(X->currentLabel2());
-}
-
-void MVOverview2Widget::slot_cross_correlogram_selected_indices_changed()
-{
-    MVCrossCorrelogramsWidget2* X = (MVCrossCorrelogramsWidget2*)sender();
-    d->m_selected_ks = X->selectedLabels1().toSet();
-    d->set_cross_correlograms_selected_indices(X->selectedIndices());
-    d->set_templates_selected_numbers(X->selectedLabels2());
-}
-
-void MVOverview2Widget::slot_clips_view_current_event_changed()
-{
-    MVClipsView* V = (MVClipsView*)sender();
-    MVEvent evt = V->currentEvent();
-    d->set_current_event(evt);
-}
-
-void MVOverview2Widget::slot_clips_widget_current_event_changed()
-{
-    MVClipsWidget* W = (MVClipsWidget*)sender();
-    MVEvent evt = W->currentEvent();
-    d->set_current_event(evt);
-}
-
-void MVOverview2Widget::slot_cluster_view_current_event_changed()
-{
-    MVClusterWidget* W = (MVClusterWidget*)sender();
-    MVEvent evt = W->currentEvent();
-    d->set_current_event(evt);
-}
-
 void MVOverview2Widget::slot_update_buttons()
 {
     bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
-    bool something_selected = (!d->m_selected_ks.isEmpty());
+    bool something_selected = (!d->m_view_agent.selectedClusters().isEmpty());
 
     d->set_button_enabled("open-cluster-details", true);
     d->set_button_enabled("open-auto-correlograms", true);
@@ -739,10 +672,10 @@ void MVOverview2Widget::slot_update_buttons()
     d->set_button_enabled("open-clips", something_selected);
     d->set_button_enabled("open-clusters", something_selected);
     d->set_button_enabled("open-firing-events", (something_selected) && (has_peaks));
-    d->set_button_enabled("find-nearby-events", d->m_selected_ks.count() >= 2);
+    d->set_button_enabled("find-nearby-events", d->m_view_agent.selectedClusters().count() >= 2);
 
     d->set_button_enabled("annotate_selected", something_selected);
-    d->set_button_enabled("merge_selected", d->m_selected_ks.count() >= 2);
+    d->set_button_enabled("merge_selected", d->m_view_agent.selectedClusters().count() >= 2);
     d->set_button_enabled("unmerge_selected", something_selected);
     d->set_button_enabled("export_mountainview_document", true);
     d->set_button_enabled("export_original_firings", true);
@@ -767,8 +700,7 @@ void MVOverview2Widget::slot_calculator_finished()
     d->m_original_cluster_numbers = d->m_calculator.m_original_cluster_numbers;
     d->m_original_cluster_offsets = d->m_original_cluster_offsets;
     d->update_all_widgets();
-    d->set_templates_current_number(-1);
-    d->set_templates_selected_numbers(QList<int>());
+    d->m_view_agent.setSelectedClusters(QList<int>());
     slot_update_buttons();
 }
 
@@ -906,9 +838,7 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_auto_correlograms()
     X->setViewAgent(&m_view_agent);
     X->setProperty("widget_type", "auto_correlograms");
     add_tab(X, "Auto-Correlograms");
-    QObject::connect(X, SIGNAL(indexActivated(int)), q, SLOT(slot_auto_correlogram_activated(int)));
-    QObject::connect(X, SIGNAL(currentIndexChanged()), q, SLOT(slot_cross_correlogram_current_index_changed()));
-    QObject::connect(X, SIGNAL(selectedIndicesChanged()), q, SLOT(slot_cross_correlogram_selected_indices_changed()));
+    QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_auto_correlogram_activated()));
     update_widget(X);
     return X;
 }
@@ -919,9 +849,10 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_cross_correlograms(in
     X->setViewAgent(&m_view_agent);
     X->setProperty("widget_type", "cross_correlograms");
     X->setProperty("kk", k);
-    add_tab(X, QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k)));
-    QObject::connect(X, SIGNAL(currentIndexChanged()), q, SLOT(slot_cross_correlogram_current_index_changed()));
-    QObject::connect(X, SIGNAL(selectedIndicesChanged()), q, SLOT(slot_cross_correlogram_selected_indices_changed()));
+    QString str = QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k));
+    if (!m_control_panel_new->eventFilter().use_shell_split)
+        str = QString("CC for %1").arg(m_original_cluster_numbers.value(k));
+    add_tab(X, str);
     update_widget(X);
     return X;
 }
@@ -947,7 +878,7 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_matrix_of_cross_corre
     MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2;
     X->setViewAgent(&m_view_agent);
     X->setProperty("widget_type", "matrix_of_cross_correlograms");
-    QList<int> ks = m_selected_ks.toList();
+    QList<int> ks = m_view_agent.selectedClusters();
     qSort(ks);
     if (ks.isEmpty())
         return X;
@@ -979,8 +910,6 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
     X->setSampleRate(m_samplerate);
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
-    QObject::connect(X, SIGNAL(signalCurrentKChanged()), q, SLOT(slot_details_current_k_changed()));
-    QObject::connect(X, SIGNAL(signalSelectedKsChanged()), q, SLOT(slot_details_selected_ks_changed()));
     X->setProperty("widget_type", "cluster_details");
     add_tab(X, QString("Details"));
     update_widget(X);
@@ -1009,7 +938,7 @@ void MVOverview2WidgetPrivate::open_timeseries()
 
 void MVOverview2WidgetPrivate::open_clips()
 {
-    QList<int> ks = m_selected_ks.toList();
+    QList<int> ks = m_view_agent.selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(q, "Unable to open clips", "You must select at least one cluster.");
@@ -1017,15 +946,21 @@ void MVOverview2WidgetPrivate::open_clips()
     }
 
     MVClipsWidget* X = new MVClipsWidget;
+    X->setViewAgent(&m_view_agent);
     //X->setMscmdServerUrl(m_mscmdserver_url);
     X->setMLProxyUrl(m_mlproxy_url);
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
-    q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_widget_current_event_changed()));
+    /// TODO more descriptive tab title in case of more than one
     QString tab_title = "Clips";
     if (ks.count() == 1) {
         int kk = ks[0];
+        /// TODO create a method that makes labels depending on shell split and not
         tab_title = QString("Clips %1(%2)").arg(m_original_cluster_numbers.value(kk)).arg(m_original_cluster_offsets.value(kk));
+        bool use_shell_split = m_control_panel_new->eventFilter().use_shell_split;
+        if (!use_shell_split) {
+            tab_title = QString("Clips %1").arg(m_original_cluster_numbers.value(kk));
+        }
     }
 
     add_tab(X, tab_title);
@@ -1035,7 +970,6 @@ void MVOverview2WidgetPrivate::open_clips()
     MVClipsView* X = MVClipsView::newInstance();
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
-    q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_view_current_event_changed()));
     QString tab_title = "Clips";
     if (ks.count() == 1) {
         int kk = ks[0];
@@ -1049,7 +983,7 @@ void MVOverview2WidgetPrivate::open_clips()
 
 void MVOverview2WidgetPrivate::open_clusters()
 {
-    QList<int> ks = m_selected_ks.toList();
+    QList<int> ks = m_view_agent.selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(q, "Unable to open clusters", "You must select at least one cluster.");
@@ -1060,14 +994,13 @@ void MVOverview2WidgetPrivate::open_clusters()
     X->setMLProxyUrl(m_mlproxy_url);
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
-    q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_cluster_view_current_event_changed()));
     add_tab(X, QString("Clusters"));
     update_widget(X);
 }
 
 void MVOverview2WidgetPrivate::open_firing_events()
 {
-    QList<int> ks = m_selected_ks.toList();
+    QList<int> ks = m_view_agent.selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(q, "Unable to open firing events", "You must select at least one cluster.");
@@ -1076,14 +1009,13 @@ void MVOverview2WidgetPrivate::open_firing_events()
     MVFiringEventView* X = new MVFiringEventView;
     X->setProperty("widget_type", "firing_events");
     X->setProperty("ks", int_list_to_string_list(ks));
-    //q->connect(X,SIGNAL(currentEventChanged()),q,SLOT(slot_firing_events_view_current_event_changed()));
     add_tab(X, QString("Firing Events"));
     update_widget(X);
 }
 
 void MVOverview2WidgetPrivate::find_nearby_events()
 {
-    QList<int> ks = m_selected_ks.toList();
+    QList<int> ks = m_view_agent.selectedClusters();
     qSort(ks);
     if (ks.count() < 2) {
         QMessageBox::information(q, "Problem finding nearby events", "You must select at least two clusters.");
@@ -1093,7 +1025,6 @@ void MVOverview2WidgetPrivate::find_nearby_events()
     MVClipsView* X = MVClipsView::newInstance();
     X->setProperty("widget_type", "find_nearby_events");
     X->setProperty("ks", int_list_to_string_list(ks));
-    q->connect(X, SIGNAL(currentEventChanged()), q, SLOT(slot_clips_view_current_event_changed()));
     QString tab_title = "Nearby Clips";
     if (ks.count() == 2) {
         int kk1 = ks[0];
@@ -1111,9 +1042,9 @@ void MVOverview2WidgetPrivate::find_nearby_events()
 
 void MVOverview2WidgetPrivate::annotate_selected()
 {
-    if (m_selected_ks.isEmpty())
+    if (m_view_agent.selectedClusters().isEmpty())
         return;
-    QList<int> ks = m_selected_ks.toList();
+    QList<int> ks = m_view_agent.selectedClusters();
     QString common_assessment;
     for (int i = 0; i < ks.count(); i++) {
         QString aa = get_cluster_attribute(ks[i], "assessment").toString();
@@ -1136,14 +1067,14 @@ void MVOverview2WidgetPrivate::annotate_selected()
 void MVOverview2WidgetPrivate::merge_selected()
 {
     ClusterMerge CM = m_view_agent.clusterMerge();
-    CM.merge(m_selected_ks);
+    CM.merge(m_view_agent.selectedClusters());
     m_view_agent.setClusterMerge(CM);
 }
 
 void MVOverview2WidgetPrivate::unmerge_selected()
 {
     ClusterMerge CM = m_view_agent.clusterMerge();
-    CM.unmerge(m_selected_ks);
+    CM.unmerge(m_view_agent.selectedClusters());
     m_view_agent.setClusterMerge(CM);
 }
 
@@ -1240,6 +1171,8 @@ void normalize_features(Mda& F, bool individual_channels)
 
 void MVOverview2WidgetPrivate::update_widget(QWidget* W)
 {
+    bool use_shell_split = m_control_panel_new->eventFilter().use_shell_split;
+
     QString widget_type = W->property("widget_type").toString();
     if (widget_type == "auto_correlograms") {
         TaskProgress task("update auto correlograms");
@@ -1278,7 +1211,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
             labels1 << k;
             labels2 << i;
             if ((i == 1) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
-                text_labels << QString("Cross %1(%2)/%3").arg(m_original_cluster_numbers[k + 1]).arg(m_original_cluster_offsets.value(k + 1)).arg(m_original_cluster_numbers[i]);
+                text_labels << QString("Cross %1/%3").arg(m_original_cluster_numbers[k]).arg(m_original_cluster_numbers[i]);
             } else
                 text_labels << "";
         }
@@ -1299,8 +1232,12 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         //text_labels << "";
         for (int a1 = 0; a1 < ks.count(); a1++) {
             QString str1 = QString("%1(%2)").arg(m_original_cluster_numbers[ks[a1]]).arg(m_original_cluster_offsets[ks[a1]]);
+            if (!use_shell_split)
+                str1 = QString("%1").arg(m_original_cluster_numbers[ks[a1]]);
             for (int a2 = 0; a2 < ks.count(); a2++) {
                 QString str2 = QString("%1(%2)").arg(m_original_cluster_numbers[ks[a2]]).arg(m_original_cluster_offsets[ks[a2]]);
+                if (!use_shell_split)
+                    str2 = QString("%1").arg(m_original_cluster_numbers[ks[a2]]);
                 text_labels << QString("%1/%2").arg(str1).arg(str2);
                 labels1 << ks.value(a1);
                 labels2 << ks.value(a2);
@@ -1484,65 +1421,13 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
     }
 }
 
-void MVOverview2WidgetPrivate::set_cross_correlograms_current_index(int index)
-{
-    QList<QWidget*> widgets = get_all_widgets();
-    foreach(QWidget * W, widgets)
-    {
-        QString widget_type = W->property("widget_type").toString();
-        if ((widget_type == "auto_correlograms") || (widget_type == "cross_correlograms")) {
-            MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
-            WW->setCurrentIndex(index);
-        }
-    }
-}
-
-void MVOverview2WidgetPrivate::set_cross_correlograms_selected_indices(const QList<int>& indices)
-{
-    QList<QWidget*> widgets = get_all_widgets();
-    foreach(QWidget * W, widgets)
-    {
-        QString widget_type = W->property("widget_type").toString();
-        if ((widget_type == "auto_correlograms") || (widget_type == "cross_correlograms")) {
-            MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
-            WW->setSelectedIndices(indices);
-        }
-    }
-}
-
-void MVOverview2WidgetPrivate::set_templates_current_number(int kk)
-{
-    QList<QWidget*> widgets = get_all_widgets();
-    foreach(QWidget * W, widgets)
-    {
-        QString widget_type = W->property("widget_type").toString();
-        if (widget_type == "cluster_details") {
-            MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
-            WW->setCurrentK(kk);
-        }
-    }
-}
-
-void MVOverview2WidgetPrivate::set_templates_selected_numbers(const QList<int>& kks)
-{
-    QList<QWidget*> widgets = get_all_widgets();
-    foreach(QWidget * W, widgets)
-    {
-        QString widget_type = W->property("widget_type").toString();
-        if (widget_type == "cluster_details") {
-            MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
-            WW->setSelectedKs(kks);
-        }
-    }
-}
-
 void MVOverview2WidgetPrivate::set_times_labels_for_mvtimeseriesview(MVTimeSeriesView* WW)
 {
     QVector<double> times;
     QList<int> labels;
     for (int n = 0; n < m_firings_original.N2(); n++) {
         long label0 = (long)m_firings_original.value(2, n);
-        if ((m_selected_ks.isEmpty()) || (m_selected_ks.contains(label0))) {
+        if ((m_view_agent.selectedClusters().isEmpty()) || (m_view_agent.selectedClusters().contains(label0))) {
             times << (long)m_firings_original.value(1, n);
             labels << label0;
         }
@@ -1555,7 +1440,7 @@ void MVOverview2WidgetPrivate::set_times_labels_for_timeseries_widget(SSTimeSeri
     QList<long> times, labels;
     for (int n = 0; n < m_firings_original.N2(); n++) {
         long label0 = (long)m_firings_original.value(2, n);
-        if ((m_selected_ks.isEmpty()) || (m_selected_ks.contains(label0))) {
+        if ((m_view_agent.selectedClusters().isEmpty()) || (m_view_agent.selectedClusters().contains(label0))) {
             times << (long)m_firings_original.value(1, n);
             labels << label0;
         }
@@ -1794,43 +1679,6 @@ void MVOverview2WidgetPrivate::set_progress(QString title, QString text, float f
     if (frac >= 1) {
         delete m_progress_dialog;
         m_progress_dialog = 0;
-    }
-}
-
-void MVOverview2WidgetPrivate::set_current_event(MVEvent evt)
-{
-    if ((m_current_event.time == evt.time) && (m_current_event.label == evt.label)) {
-        return;
-    }
-    m_current_event = evt;
-    QList<QWidget*> widgets = get_all_widgets();
-    foreach(QWidget * W, widgets)
-    {
-        QString widget_type = W->property("widget_type").toString();
-        if (widget_type == "clips") {
-            MVClipsWidget* WW = (MVClipsWidget*)W;
-            WW->setCurrentEvent(evt);
-        } else if (widget_type == "find_nearby_events") {
-            MVClipsView* WW = (MVClipsView*)W;
-            WW->setCurrentEvent(evt);
-        } else if (widget_type == "clusters") {
-            MVClusterWidget* WW = (MVClusterWidget*)W;
-            WW->setCurrentEvent(evt);
-        } else if (widget_type == "firing_events") {
-            MVFiringEventView* WW = (MVFiringEventView*)W;
-            WW->setCurrentEvent(evt);
-        } else if (widget_type == "cluster_details") {
-            MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
-            if (evt.label > 0) {
-                WW->setCurrentK(evt.label);
-            }
-        } else if (widget_type == "timeseries") {
-            SSTimeSeriesWidget* WW = (SSTimeSeriesWidget*)W;
-            SSTimeSeriesView* VV = (SSTimeSeriesView*)WW->view(0);
-            if (evt.time >= 0) {
-                VV->setCurrentX(evt.time);
-            }
-        }
     }
 }
 

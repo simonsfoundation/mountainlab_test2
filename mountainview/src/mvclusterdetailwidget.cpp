@@ -169,8 +169,6 @@ public:
     QMap<QString, QColor> m_colors;
     QList<QColor> m_channel_colors;
     double m_total_time_sec;
-    int m_current_k;
-    QSet<int> m_selected_ks;
     int m_hovered_k;
     double m_anchor_x;
     double m_anchor_scroll_x;
@@ -183,7 +181,6 @@ public:
     QList<ClusterView*> m_views;
 
     void compute_total_time();
-    void set_current_k(int k);
     void set_hovered_k(int k);
     int find_view_index_at(QPoint pos);
     ClusterView* find_view_for_k(int k);
@@ -211,7 +208,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
     d->m_vscale_factor = 2;
     d->m_total_time_sec = 1;
     d->m_samplerate = 0;
-    d->m_current_k = -1;
     d->m_hovered_k = -1;
     d->m_space_ratio = 50;
     d->m_scroll_x = 0;
@@ -321,21 +317,6 @@ void MVClusterDetailWidget::setColors(const QMap<QString, QColor>& colors)
     d->m_colors = colors;
 }
 
-int MVClusterDetailWidget::currentK()
-{
-    return d->m_current_k;
-}
-
-QList<int> MVClusterDetailWidget::selectedKs()
-{
-    return QList<int>::fromSet(d->m_selected_ks);
-}
-
-void MVClusterDetailWidget::setCurrentK(int k)
-{
-    d->set_current_k(k);
-}
-
 bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
 {
     foreach(int val, S1)
@@ -351,22 +332,13 @@ bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
     return true;
 }
 
-void MVClusterDetailWidget::setSelectedKs(const QList<int>& ks_in)
-{
-    QList<int> ks = ks_in;
-    ks.removeAll(0);
-    if (sets_are_equal(d->m_selected_ks, ks.toSet()))
-        return;
-    d->m_selected_ks = ks.toSet();
-    emit this->signalSelectedKsChanged();
-    update();
-}
-
 void MVClusterDetailWidget::setViewAgent(MVViewAgent* agent)
 {
     d->m_view_agent = agent;
     if (agent) {
         QObject::connect(agent, SIGNAL(clusterMergeChanged()), this, SLOT(update()));
+        QObject::connect(agent, SIGNAL(currentClusterChanged()), this, SLOT(update()));
+        QObject::connect(agent, SIGNAL(selectedClustersChanged()), this, SLOT(update()));
     }
 }
 
@@ -385,13 +357,13 @@ QImage MVClusterDetailWidget::renderImage(int W, int H)
     QImage ret = QImage(W, H, QImage::Format_RGB32);
     QPainter painter(&ret);
 
-    int current_k = d->m_current_k;
-    QSet<int> selected_ks = d->m_selected_ks;
-    d->m_current_k = -1;
-    d->m_selected_ks.clear();
+    int current_k = d->m_view_agent->currentCluster();
+    QList<int> selected_ks = d->m_view_agent->selectedClusters();
+    d->m_view_agent->setCurrentCluster(-1);
+    d->m_view_agent->setSelectedClusters(QList<int>());
     d->do_paint(painter, W, H);
-    d->m_current_k = current_k;
-    d->m_selected_ks = selected_ks;
+    d->m_view_agent->setCurrentCluster(current_k);
+    d->m_view_agent->setSelectedClusters(selected_ks);
     this->update(); //make sure we update, because some internal stuff has changed!
 
     return ret;
@@ -454,18 +426,18 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
         for (int i = 0; i < d->m_views.count(); i++) {
             ks << d->m_views[i]->k();
         }
-        this->setSelectedKs(ks);
+        d->m_view_agent->setSelectedClusters(ks);
     } else if (evt->key() == Qt::Key_Left) {
         int view_index = d->get_current_view_index();
         if (view_index > 0) {
             int k = d->m_views[view_index - 1]->k();
             QList<int> ks;
             if (evt->modifiers() & Qt::ShiftModifier) {
-                ks = this->selectedKs();
+                ks = d->m_view_agent->selectedClusters();
                 ks << k;
             }
-            this->setSelectedKs(ks);
-            this->setCurrentK(k);
+            d->m_view_agent->setSelectedClusters(ks);
+            d->m_view_agent->setCurrentCluster(k);
         }
     } else if (evt->key() == Qt::Key_Right) {
         int view_index = d->get_current_view_index();
@@ -473,11 +445,11 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             int k = d->m_views[view_index + 1]->k();
             QList<int> ks;
             if (evt->modifiers() & Qt::ShiftModifier) {
-                ks = this->selectedKs();
+                ks = d->m_view_agent->selectedClusters();
                 ks << k;
             }
-            this->setSelectedKs(ks);
-            this->setCurrentK(k);
+            d->m_view_agent->setSelectedClusters(ks);
+            d->m_view_agent->setCurrentCluster(k);
         }
     } else
         evt->ignore();
@@ -493,21 +465,33 @@ void MVClusterDetailWidget::mousePressEvent(QMouseEvent* evt)
 void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
 {
     QPoint pt = evt->pos();
+    int view_index = d->find_view_index_at(pt);
+    if (view_index >= 0) {
+        int k = d->m_views[view_index]->k();
+        d->m_view_agent->clickCluster(k, evt->modifiers());
+    }
 
+    /*
     if ((d->m_anchor_x >= 0) && (qAbs(pt.x() - d->m_anchor_x) > 5)) {
         d->m_scroll_x = d->m_anchor_scroll_x - (pt.x() - d->m_anchor_x);
         d->m_anchor_x = -1;
         update();
         return;
     }
-    d->m_anchor_x = -1;
+    */
+
+    //d->m_anchor_x = -1;
+
+    /*
 
     if (evt->modifiers() & Qt::ControlModifier) {
+
         int view_index = d->find_view_index_at(pt);
         d->m_anchor_view_index = -1;
         if (view_index >= 0) {
             int k = d->m_views[view_index]->k();
-            if (d->m_current_k == k) {
+
+            if (d->m_view_agent->currentCluster() == k) {
                 d->set_current_k(-1);
             }
             if (d->m_selected_ks.contains(k)) {
@@ -521,10 +505,12 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 emit signalSelectedKsChanged();
                 update();
             }
+
         }
     } else if (evt->modifiers() & Qt::ShiftModifier) {
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
+
             if (d->m_anchor_view_index >= 0) {
                 int min_index = qMin(d->m_anchor_view_index, view_index);
                 int max_index = qMax(d->m_anchor_view_index, view_index);
@@ -538,14 +524,16 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 emit signalSelectedKsChanged();
                 update();
             }
+
         }
     } else {
         d->m_anchor_view_index = -1;
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
+
             d->m_anchor_view_index = view_index;
             int k = d->m_views[view_index]->k();
-            if (d->m_current_k == k) {
+            if (d->m_view_agent->currentCluster() == k) {
             } else {
                 d->set_current_k(k);
                 d->m_selected_ks.clear();
@@ -554,13 +542,18 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 emit signalSelectedKsChanged();
                 update();
             }
+
         } else {
+
             d->set_current_k(-1);
             d->m_selected_ks.clear();
             emit signalSelectedKsChanged();
             update();
+
         }
     }
+
+    */
 }
 
 void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
@@ -634,20 +627,6 @@ void MVClusterDetailWidgetPrivate::compute_total_time()
     m_total_time_sec = m_timeseries.N2() / m_samplerate;
 }
 
-void MVClusterDetailWidgetPrivate::set_current_k(int k)
-{
-    if (k == m_current_k)
-        return;
-    m_current_k = k;
-    if (k)
-        m_selected_ks.insert(k);
-    ClusterView* V = find_view_for_k(k);
-    if (V)
-        ensure_view_visible(V);
-    q->update();
-    emit q->signalCurrentKChanged();
-}
-
 void MVClusterDetailWidgetPrivate::set_hovered_k(int k)
 {
     if (k == m_hovered_k)
@@ -697,8 +676,9 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
 
 void MVClusterDetailWidgetPrivate::zoom(double factor)
 {
-    if ((m_current_k >= 0) && (find_view_for_k(m_current_k))) {
-        ClusterView* view = find_view_for_k(m_current_k);
+    int current_k = m_view_agent->currentCluster();
+    if ((current_k >= 0) && (find_view_for_k(current_k))) {
+        ClusterView* view = find_view_for_k(current_k);
         double current_screen_x = view->x_position_before_scaling * m_space_ratio - m_scroll_x;
         m_space_ratio *= factor;
         m_scroll_x = view->x_position_before_scaling * m_space_ratio - current_screen_x;
@@ -736,7 +716,7 @@ bool MVClusterDetailWidgetPrivate::has_nontrivial_group_numbers()
 
 int MVClusterDetailWidgetPrivate::get_current_view_index()
 {
-    int k = m_current_k;
+    int k = m_view_agent->currentCluster();
     if (k < 0)
         return -1;
     return find_view_index_for_k(k);
@@ -963,12 +943,13 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
 
     qDeleteAll(m_views);
     m_views.clear();
+    QList<int> selected_clusters = m_view_agent->selectedClusters();
     for (int i = 0; i < cluster_data_merged.count(); i++) {
         ClusterData CD = cluster_data_merged[i];
         ClusterView* V = new ClusterView(q, this);
         V->setStdevShading(m_stdev_shading);
-        V->setHighlighted(CD.k == m_current_k);
-        V->setSelected(m_selected_ks.contains(CD.k));
+        V->setHighlighted(CD.k == m_view_agent->currentCluster());
+        V->setSelected(selected_clusters.contains(CD.k));
         V->setHovered(CD.k == m_hovered_k);
         V->setClusterData(CD);
         V->setAttributes(cluster_attributes[CD.k]);

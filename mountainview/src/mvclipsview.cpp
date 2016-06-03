@@ -1,6 +1,8 @@
 #include "mvclipsview.h"
 #include <QDebug>
 
+/// TODO labels above the clips in the clips view -- but rewrite the whole thing anyway
+
 class MVClipsViewImpl : public MVClipsView {
     Q_OBJECT
 public:
@@ -12,8 +14,7 @@ public:
     void setLabels(const QList<int>& labels);
     int currentClipIndex();
     //double currentClipTimepoint();
-    MVEvent currentEvent();
-    void setCurrentEvent(MVEvent evt);
+    void setViewAgent(MVViewAgent* agent);
 public
 slots:
     void slot_current_x_changed();
@@ -23,6 +24,7 @@ private:
     QList<double> m_times;
     QList<int> m_labels;
     int m_current_clip_index;
+    MVViewAgent* m_view_agent;
     void set_current_clip_index(int index);
 };
 #include "mvclipsview.moc"
@@ -34,6 +36,7 @@ MVClipsView* MVClipsView::newInstance()
 MVClipsViewImpl::MVClipsViewImpl()
 {
     m_current_clip_index = -1;
+    m_view_agent = 0;
     this->initialize();
     this->plot()->setControlPanelVisible(false);
     //connect(this,SIGNAL(currentXChanged()),this,SIGNAL(currentClipTimepointChanged()));
@@ -67,29 +70,9 @@ int MVClipsViewImpl::currentClipIndex()
     return m_current_clip_index;
 }
 
-MVEvent MVClipsViewImpl::currentEvent()
+void MVClipsViewImpl::setViewAgent(MVViewAgent* agent)
 {
-    MVEvent evt;
-    if (m_current_clip_index < 0) {
-        evt.time = -1;
-        evt.label = -1;
-        return evt;
-    }
-    evt.time = m_times.value(m_current_clip_index);
-    evt.label = m_labels.value(m_current_clip_index);
-    return evt;
-}
-
-void MVClipsViewImpl::setCurrentEvent(MVEvent evt)
-{
-    if ((m_times.isEmpty()) || (m_labels.isEmpty()))
-        return;
-    for (int i = 0; i < m_times.count(); i++) {
-        if ((evt.time == m_times[i]) && (evt.label == m_labels.value(i))) {
-            set_current_clip_index(i);
-            return;
-        }
-    }
+    m_view_agent = agent;
 }
 
 void MVClipsViewImpl::slot_current_x_changed()
@@ -113,5 +96,11 @@ void MVClipsViewImpl::set_current_clip_index(int index)
     if (m_current_clip_index >= 0) {
         setCurrentX(index * T + Tmid);
     }
-    emit currentEventChanged();
+    if (m_view_agent) {
+        MVEvent evt;
+        evt.time = m_times.value(index);
+        evt.label = m_labels.value(index);
+        m_view_agent->setCurrentEvent(evt);
+        m_view_agent->clickCluster(evt.label, Qt::NoModifier);
+    }
 }

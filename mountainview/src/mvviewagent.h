@@ -12,6 +12,7 @@
 #include <QJsonObject>
 #include <QMap>
 #include <QObject>
+#include "mvutils.h"
 
 class MVViewAgentPrivate;
 class MVViewAgent : public QObject {
@@ -23,13 +24,24 @@ public:
 
     ClusterMerge clusterMerge() const;
     QMap<int, QJsonObject> clusterAttributes() const;
+    MVEvent currentEvent() const;
+    int currentCluster() const;
+    QList<int> selectedClusters() const;
 
     void setClusterMerge(const ClusterMerge& CM);
     void setClusterAttributes(const QMap<int, QJsonObject>& A);
+    void setCurrentEvent(const MVEvent& evt);
+    void setCurrentCluster(int k);
+    void setSelectedClusters(const QList<int>& ks);
+
+    void clickCluster(int k, Qt::KeyboardModifiers modifiers);
 
 signals:
     void clusterMergeChanged();
     void clusterAttributesChanged();
+    void currentEventChanged();
+    void currentClusterChanged();
+    void selectedClustersChanged();
 
 private:
     MVViewAgentPrivate* d;

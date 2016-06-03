@@ -10,6 +10,8 @@
 #include <QWidget>
 #include <diskreadmda.h>
 
+/// TODO on first load, multiscale file is created on server, the process is detached. Provide feedback to the user somehow
+
 /// Witold is there a Qt struct that captures this?
 struct MVRange {
     MVRange(double min0 = 0, double max0 = 1)
