@@ -12,20 +12,29 @@
 #include <diskwritemda.h>
 #include <taskprogress.h>
 #include <sys/stat.h>
+#include <QMutex>
 #include <math.h>
+#include "mountainprocessrunner.h"
+#include "mlutils.h"
 
 class MultiScaleTimeSeriesPrivate {
 public:
     MultiScaleTimeSeries* q;
 
     DiskReadMda m_data;
+    DiskReadMda m_multiscale_data;
+    QString m_ml_proxy_url;
 
     QString get_multiscale_fname();
     bool create_multiscale_file(const QString& mspath);
+    bool get_data(Mda& min, Mda& max, long t1, long t2, long ds_factor);
+
     static bool downsample_min(const DiskReadMda& X, QString out_fname, long N);
     static bool downsample_max(const DiskReadMda& X, QString out_fname, long N);
     static bool write_concatenation(QStringList input_fnames, QString output_fname);
     static bool is_power_of_3(long N);
+
+    QMutex m_mutex;
 };
 
 MultiScaleTimeSeries::MultiScaleTimeSeries()
@@ -41,48 +50,31 @@ MultiScaleTimeSeries::~MultiScaleTimeSeries()
 
 void MultiScaleTimeSeries::setData(const DiskReadMda& X)
 {
+    QMutexLocker locker(&d->m_mutex);
     d->m_data = X;
+}
+
+void MultiScaleTimeSeries::setMLProxyUrl(const QString& url)
+{
+    d->m_ml_proxy_url = url;
+}
+
+long MultiScaleTimeSeries::N1()
+{
+    QMutexLocker locker(&d->m_mutex);
+    return d->m_data.N1();
+}
+
+long MultiScaleTimeSeries::N2()
+{
+    QMutexLocker locker(&d->m_mutex);
+    return d->m_data.N2();
 }
 
 bool MultiScaleTimeSeries::getData(Mda& min, Mda& max, long t1, long t2, long ds_factor)
 {
-    long M = d->m_data.N1();
-    long N = MultiScaleTimeSeries::smallest_power_of_3_larger_than(d->m_data.N2());
-
-    if (ds_factor == 1) {
-        d->m_data.readChunk(min, 0, t1, M, t2 - t1 + 1);
-        max = min;
-        return true;
-    }
-
-    if (!d->is_power_of_3(ds_factor)) {
-        qWarning() << "Invalid ds_factor: " + ds_factor;
-        return false;
-    }
-
-    QString multiscale_fname = d->get_multiscale_fname();
-    /// TODO also check whether multiscale file has the correct size (and/or dimensions). If not, then recreate it
-    //if (!QFile(multiscale_fname).exists()) {
-    if (!d->create_multiscale_file(multiscale_fname)) {
-        qWarning() << "Unable to create multiscale file";
-        return false;
-    }
-    //}
-
-    DiskReadMda Y(multiscale_fname);
-    long t_offset_min = 0;
-    long ds_factor_0 = 3;
-    while (ds_factor_0 < ds_factor) {
-        t_offset_min += 2 * (N / ds_factor_0);
-        ds_factor_0 *= 3;
-    }
-    long t_offset_max = t_offset_min + N / ds_factor;
-
-    /// TODO what if t1 and t2 are out of bounds? I think we want to put zeros in ... otherwise contaminated by other downsampling factors
-    Y.readChunk(min, 0, t1 + t_offset_min, M, t2 - t1 + 1);
-    Y.readChunk(max, 0, t1 + t_offset_max, M, t2 - t1 + 1);
-
-    return true;
+    QMutexLocker locker(&d->m_mutex);
+    return d->get_data(min, max, t1, t2, ds_factor);
 }
 
 bool MultiScaleTimeSeries::unit_test(long M, long N)
@@ -143,8 +135,32 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
         qWarning() << "Unable to get_multiscale_fname.... path is empty.";
         return "";
     }
-    QString code = compute_hash(compute_file_code(path));
-    return CacheManager::globalInstance()->makeLocalFile(code + ".multiscale.mda", CacheManager::ShortTerm);
+
+    //if (path.startsWith("http:")) {
+    MountainProcessRunner MPR;
+    MPR.setProcessorName("create_multiscale_timeseries");
+    QVariantMap params;
+    params["timeseries"] = path;
+    MPR.setInputParameters(params);
+    MPR.setMLProxyUrl(m_ml_proxy_url);
+    QString path_out = MPR.makeOutputFilePath("timeseries_out");
+    MPR.setDetach(true);
+    MPR.runProcess();
+    return path_out;
+    //} else {
+    /*
+        QString code = compute_hash(compute_file_code(path));
+        QString ret = CacheManager::globalInstance()->makeLocalFile(code + ".multiscale.mda", CacheManager::ShortTerm);
+        if (!QFile::exists(ret)) {
+            if (!create_multiscale_file(ret))
+                return "";
+        }
+        if (QFile::exists(ret))
+            return ret;
+        else
+            return "";
+            */
+    //}
 }
 
 bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
@@ -180,8 +196,7 @@ bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
                 task.error("Problem in downsample_max");
                 return false;
             }
-        }
-        else {
+        } else {
             if (!downsample_min(DiskReadMda(prev_min_fname), min_fname, (N * 3) / ds_factor)) {
                 task.error("Problem in downsample_min");
                 return false;
@@ -203,8 +218,86 @@ bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
         return false;
     }
     task.log("Removing temporary files");
-    foreach (QString fname, file_names) {
+    foreach(QString fname, file_names)
+    {
         QFile::remove(fname);
+    }
+
+    return true;
+}
+
+bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2, long ds_factor)
+{
+    long M = m_data.N1();
+    long N = MultiScaleTimeSeries::smallest_power_of_3_larger_than(m_data.N2());
+
+    if ((t2 < 0) || (t1 >= m_data.N2() / ds_factor)) {
+        //we are completely out of range, so we return all zeros
+        min.allocate(M, (t2 - t1 + 1));
+        max.allocate(M, (t2 - t1 + 1));
+        return true;
+    }
+
+    if ((t1 < 0) || (t2 >= m_data.N2() / ds_factor)) {
+        //we are somewhat out of range.
+        min.allocate(M, t2 - t1 + 1);
+        max.allocate(M, t2 - t1 + 1);
+        Mda min0, max0;
+        long s1 = t1, s2 = t2;
+        if (s1 < 0)
+            s1 = 0;
+        if (s2 >= m_data.N2() / ds_factor)
+            s2 = m_data.N2() / ds_factor - 1;
+        if (!get_data(min0, max0, s1, s2, ds_factor)) {
+            return false;
+        }
+        if (t1 >= 0) {
+            min.setChunk(min0, 0, 0);
+            max.setChunk(max0, 0, 0);
+        } else {
+            min.setChunk(min0, 0, -t1);
+            max.setChunk(max0, 0, -t1);
+        }
+        return true;
+    }
+
+    if (ds_factor == 1) {
+        m_data.readChunk(min, 0, t1, M, t2 - t1 + 1);
+        max = min;
+        return true;
+    }
+
+    if (!is_power_of_3(ds_factor)) {
+        qWarning() << "Invalid ds_factor: " + ds_factor;
+        return false;
+    }
+
+    if (m_multiscale_data.path().isEmpty()) {
+        //m_multiscale_data.setPath(m_data.makePath() + ".multiscale");
+        //m_multiscale_data.setRemoteDataType("float32"); //to save download time!
+
+        QString multiscale_fname = get_multiscale_fname();
+        if (multiscale_fname.isEmpty()) {
+            qWarning() << "Unable to create multiscale file";
+            return false;
+        }
+        m_multiscale_data.setPath(multiscale_fname);
+        m_multiscale_data.setRemoteDataType("float32"); //to save download time!
+    }
+
+    long t_offset_min = 0;
+    long ds_factor_0 = 3;
+    while (ds_factor_0 < ds_factor) {
+        t_offset_min += 2 * (N / ds_factor_0);
+        ds_factor_0 *= 3;
+    }
+    long t_offset_max = t_offset_min + N / ds_factor;
+
+    m_multiscale_data.readChunk(min, 0, t1 + t_offset_min, M, t2 - t1 + 1);
+    m_multiscale_data.readChunk(max, 0, t1 + t_offset_max, M, t2 - t1 + 1);
+
+    if (thread_interrupt_requested()) {
+        return false;
     }
 
     return true;
@@ -263,7 +356,8 @@ bool MultiScaleTimeSeriesPrivate::downsample_max(const DiskReadMda& X, QString o
 bool MultiScaleTimeSeriesPrivate::write_concatenation(QStringList input_fnames, QString output_fname)
 {
     long M = 1, N = 0;
-    foreach (QString fname, input_fnames) {
+    foreach(QString fname, input_fnames)
+    {
         DiskReadMda X(fname);
         M = X.N1();
         N += X.N2();
@@ -274,7 +368,8 @@ bool MultiScaleTimeSeriesPrivate::write_concatenation(QStringList input_fnames, 
         return false;
     }
     long offset = 0;
-    foreach (QString fname, input_fnames) {
+    foreach(QString fname, input_fnames)
+    {
         DiskReadMda X(fname);
         /// TODO do this in chunks so we don't use RAM
         Mda tmp;

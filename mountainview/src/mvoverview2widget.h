@@ -68,6 +68,7 @@ slots:
     void slot_cluster_view_current_event_changed();
     //void slot_cross_correlogram_computer_finished();
     void slot_update_buttons();
+    void slot_calculator_finished();
 
 private:
     MVOverview2WidgetPrivate* d;

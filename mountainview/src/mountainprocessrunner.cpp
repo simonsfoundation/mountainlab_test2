@@ -27,6 +27,7 @@ public:
     QMap<QString, QVariant> m_parameters;
     //QString m_mscmdserver_url;
     QString m_mlproxy_url;
+    bool m_detach;
 
     QString create_temporary_output_file_name(const QString& remote_url, const QString& processor_name, const QMap<QString, QVariant>& params, const QString& parameter_name);
 };
@@ -35,6 +36,7 @@ MountainProcessRunner::MountainProcessRunner()
 {
     d = new MountainProcessRunnerPrivate;
     d->q = this;
+    d->m_detach = false;
 }
 
 MountainProcessRunner::~MountainProcessRunner()
@@ -52,6 +54,11 @@ QString MountainProcessRunner::makeOutputFilePath(const QString& pname)
     QString ret = d->create_temporary_output_file_name(d->m_mlproxy_url, d->m_processor_name, d->m_parameters, pname);
     d->m_parameters[pname] = ret;
     return ret;
+}
+
+void MountainProcessRunner::setDetach(bool val)
+{
+    d->m_detach = val;
 }
 
 void MountainProcessRunner::setInputParameters(const QMap<QString, QVariant>& parameters)
@@ -87,7 +94,7 @@ QVariantMap json_obj_to_variantmap(QJsonObject obj)
     return ret;
 }
 
-QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
+QJsonObject http_post(QString url, QJsonObject req)
 {
     QTime timer;
     timer.start();
@@ -106,7 +113,7 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
     loop.exec();
     */
     while (!reply->isFinished()) {
-        if ((halt_agent) && (halt_agent->stopRequested())) {
+        if (thread_interrupt_requested()) {
             qWarning() << "Halting in http_post: " + url;
             reply->abort();
             loop.quit();
@@ -114,7 +121,7 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
         loop.processEvents();
     }
 
-    if ((halt_agent) && (halt_agent->stopRequested())) {
+    if (thread_interrupt_requested()) {
         QJsonObject obj;
         obj["success"] = false;
         obj["error"] = "Halting in http_post: " + url;
@@ -130,8 +137,13 @@ QJsonObject http_post(QString url, QJsonObject req, HaltAgent* halt_agent)
     }
 }
 
-void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
+void MountainProcessRunner::runProcess()
 {
+
+    if (in_gui_thread()) {
+        qCritical() << "Cannot run mountain process in gui thread: " + d->m_processor_name;
+        exit(-1);
+    }
 
     TaskProgress task(TaskProgress::Calculate, "MS: " + d->m_processor_name);
 
@@ -145,13 +157,16 @@ void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
         {
             args << QString("--%1=%2").arg(key).arg(d->m_parameters.value(key).toString());
         }
+        if (d->m_detach) {
+            args << QString("--~detach=1");
+        }
         task.log(QString("Executing locally: %1").arg(mountainsort_exe));
         foreach(QString key, keys)
         {
             QString val = d->m_parameters[key].toString();
             task.log(QString("%1 = %2").arg(key).arg(val));
             if (val.startsWith("http")) {
-                task.error("Executing locally, but parameter starts with http. Probably mpserver url has not been set.");
+                task.error("Executing locally, but parameter starts with http. Probably mmlproxy url has not been set.");
                 return;
             }
         }
@@ -195,18 +210,21 @@ void MountainProcessRunner::runProcess(HaltAgent* halt_agent)
         QJsonObject req;
         req["action"] = "queueScript";
         req["script"] = script;
+        if (d->m_detach) {
+            req["detach"] = 1;
+        }
         QString url = d->m_mlproxy_url + "/mpserver";
         task.log("POSTING: " + url);
         task.log(QJsonDocument(req).toJson());
-        if ((halt_agent) && (halt_agent->stopRequested())) {
+        if (thread_interrupt_requested()) {
             task.error("Halted before post.");
             return;
         }
         QTime post_timer;
         post_timer.start();
-        QJsonObject resp = http_post(url, req, halt_agent);
+        QJsonObject resp = http_post(url, req);
         TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("remote_processing_time", post_timer.elapsed());
-        if ((halt_agent) && (halt_agent->stopRequested())) {
+        if (thread_interrupt_requested()) {
             task.error("Halted during post: " + url);
             return;
         }

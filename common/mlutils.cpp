@@ -10,6 +10,7 @@
 #include <QFileInfo>
 #include <QCoreApplication>
 #include <QDir>
+#include <QThread>
 
 QString cfp(const QString& path)
 {
@@ -90,4 +91,14 @@ QString resolve_path(QString basepath, QString path)
         return basepath + "/" + path;
     } else
         return path;
+}
+
+bool in_gui_thread()
+{
+    return (QThread::currentThread() == QCoreApplication::instance()->thread());
+}
+
+bool thread_interrupt_requested()
+{
+    return QThread::currentThread()->isInterruptionRequested();
 }

@@ -5,6 +5,7 @@
 #include <QCryptographicHash>
 #include <QThread>
 #include "cachemanager.h"
+#include "mlutils.h"
 
 //I have to temporarily put this code in to get code completion to work in QtCreator
 //even though DEFINES+=USE_NETWORK is in the .pro file.
@@ -17,6 +18,8 @@
 #include <QTemporaryFile>
 #include "taskprogress.h"
 #endif
+
+#include <QCoreApplication>
 
 #include "textfile.h"
 
@@ -164,6 +167,12 @@ QString abbreviate(const QString& str, int len1, int len2)
 #ifdef USE_NETWORK
 QString http_get_binary_file(const QString& url)
 {
+    //if (in_gui_thread()) {
+    //    qCritical() << "Cannot call http_get_binary_file from within the GUI thread!";
+    //    exit(-1);
+    //}
+    TaskProgress task("Downloading binary file");
+    task.log(url);
     QTime timer;
     timer.start();
     QString fname = get_temp_fname();
@@ -174,19 +183,31 @@ QString http_get_binary_file(const QString& url)
     long num_bytes = 0;
     temp.open(QIODevice::WriteOnly);
     QObject::connect(reply, &QNetworkReply::readyRead, [&]() {
+        if (thread_interrupt_requested()) {
+            task.error("Download halted");
+            reply->abort();
+        }
         QByteArray X=reply->readAll();
         temp.write(X);
         num_bytes+=X.count();
     });
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
+    task.setLabel(QString("Downloaded %1 MB in %2 sec").arg(num_bytes * 1.0 / 1e6).arg(timer.elapsed() * 1.0 / 1000));
     printf("RECEIVED BINARY (%d ms, %ld bytes) from %s\n", timer.elapsed(), num_bytes, url.toLatin1().data());
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_downloaded", num_bytes);
+    if (thread_interrupt_requested()) {
+        return "";
+    }
     return fname;
 }
 
 QString http_get_text(const QString& url)
 {
+    //if (in_gui_thread()) {
+    //    qCritical() << "Cannot call http_get_text from within the GUI thread!";
+    //    exit(-1);
+    //}
     QTime timer;
     timer.start();
     QString fname = get_temp_fname();

@@ -9,7 +9,6 @@
 
 #include <QString>
 #include "mda.h"
-#include "haltagent.h"
 
 class RemoteReadMdaPrivate;
 /**
@@ -23,9 +22,10 @@ public:
     void operator=(const RemoteReadMda& other);
     virtual ~RemoteReadMda();
 
+    void setRemoteDataType(QString dtype);
+
     void setPath(const QString& path);
     QString path() const;
-    void setHaltAgent(HaltAgent* halt_agent);
 
     long N1();
     long N2();

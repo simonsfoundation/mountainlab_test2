@@ -417,7 +417,7 @@ public:
           [this](TaskProgressAgent *agent) {
             addLog(agent);
         });
-        m_data.append(agent);
+        m_data.prepend(agent);
         emit added(agent);
     }
 

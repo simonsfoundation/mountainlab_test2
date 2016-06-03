@@ -57,7 +57,8 @@ HEADERS += \
     mvviewagent.h \
     mvstatusbar.h \
     mvtimeseriesview.h \
-    multiscaletimeseries.h
+    multiscaletimeseries.h \
+    mvtimeseriesrendermanager.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -97,7 +98,8 @@ SOURCES += mountainviewmain.cpp \
     mvviewagent.cpp \
     mvstatusbar.cpp \
     mvtimeseriesview.cpp \
-    multiscaletimeseries.cpp
+    multiscaletimeseries.cpp \
+    mvtimeseriesrendermanager.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

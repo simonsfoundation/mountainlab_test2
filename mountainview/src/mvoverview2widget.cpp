@@ -25,6 +25,8 @@
 #include "clustermerge.h"
 #include "mvviewagent.h"
 #include "mvstatusbar.h"
+#include "mvtimeseriesview.h"
+#include "mlutils.h"
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -49,6 +51,21 @@
 
 /// TODO put styles in central place?
 #define MV_STATUS_BAR_HEIGHT 30
+
+class shell_split_and_event_filter_calculator : public ComputationThread {
+public:
+    //input
+    MVEventFilter m_evt_filter;
+    DiskReadMda m_firings_original;
+    QString m_mlproxy_url;
+
+    //output
+    DiskReadMda m_firings;
+    QList<int> m_original_cluster_numbers;
+    QList<int> m_original_cluster_offsets;
+
+    void compute();
+};
 
 class MVOverview2WidgetPrivate {
 public:
@@ -86,6 +103,8 @@ public:
     QList<QColor> m_channel_colors;
     QMap<QString, QColor> m_colors;
 
+    shell_split_and_event_filter_calculator m_calculator;
+
     void create_cross_correlograms_data();
     //void create_templates_data();
 
@@ -96,7 +115,7 @@ public:
     void update_clips();
     void update_cluster_views();
     void update_firing_event_views();
-    void do_shell_split_and_event_filter();
+    void start_shell_split_and_event_filter();
     void add_tab(QWidget* W, QString label);
 
     MVCrossCorrelogramsWidget2* open_auto_correlograms();
@@ -124,6 +143,7 @@ public:
     void set_templates_current_number(int kk);
     void set_templates_selected_numbers(const QList<int>& kks);
 
+    void set_times_labels_for_mvtimeseriesview(MVTimeSeriesView* WW);
     void set_times_labels_for_timeseries_widget(SSTimeSeriesWidget* WW);
 
     QList<QWidget*> get_all_widgets();
@@ -187,6 +207,8 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     d->m_progress_dialog = 0;
     d->m_current_event.time = -1;
     d->m_current_event.label = -1;
+
+    connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
 
     d->m_control_panel_new = new MVControlPanel;
     connect(d->m_control_panel_new, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
@@ -289,12 +311,7 @@ void MVOverview2Widget::setCurrentTimeseriesName(const QString& name)
 void MVOverview2Widget::setFiringsPath(const QString& firings)
 {
     d->m_firings_original.setPath(d->make_absolute_path(firings));
-    d->do_shell_split_and_event_filter();
-    d->update_cross_correlograms();
-    d->update_cluster_details();
-    d->update_timeseries_views();
-    //d->start_cross_correlograms_computer();
-    slot_update_buttons();
+    d->start_shell_split_and_event_filter();
 }
 
 void MVOverview2Widget::setSampleRate(float freq)
@@ -455,7 +472,7 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
         }
     }
 
-    d->do_shell_split_and_event_filter();
+    d->start_shell_split_and_event_filter();
 }
 
 void MVOverview2Widget::saveMVFile(const QString& mv_fname)
@@ -596,8 +613,7 @@ void MVOverview2Widget::slot_control_panel_button_clicked(QString str)
 void MVOverview2Widget::slot_control_panel_user_action(QString str)
 {
     if ((str == "apply_shell_splitting") || (str == "apply_filter")) {
-        d->do_shell_split_and_event_filter();
-        d->update_all_widgets();
+        d->start_shell_split_and_event_filter();
     } else if (str == "update_all_open_views") {
         d->update_all_widgets();
     } else if (str == "open-cluster-details") {
@@ -733,6 +749,29 @@ void MVOverview2Widget::slot_update_buttons()
     d->set_button_enabled("export_filtered_firings", true);
 }
 
+void MVOverview2WidgetPrivate::start_shell_split_and_event_filter()
+{
+    m_calculator.stopComputation();
+    m_calculator.m_evt_filter = m_control_panel_new->eventFilter();
+    m_calculator.m_firings_original = m_firings_original;
+    m_calculator.m_mlproxy_url = m_mlproxy_url;
+    m_calculator.startComputation();
+}
+
+void MVOverview2Widget::slot_calculator_finished()
+{
+    //d->update_cross_correlograms();
+    //d->update_cluster_details();
+    //d->update_timeseries_views();
+    d->m_firings = d->m_calculator.m_firings;
+    d->m_original_cluster_numbers = d->m_calculator.m_original_cluster_numbers;
+    d->m_original_cluster_offsets = d->m_original_cluster_offsets;
+    d->update_all_widgets();
+    d->set_templates_current_number(-1);
+    d->set_templates_selected_numbers(QList<int>());
+    slot_update_buttons();
+}
+
 void MVOverview2WidgetPrivate::update_sizes()
 {
     float W0 = q->width();
@@ -852,67 +891,6 @@ double get_min(QList<double>& list)
     return ret;
 }
 
-void MVOverview2WidgetPrivate::do_shell_split_and_event_filter()
-{
-    TaskProgress task("do_shell_split_and_event_filter()");
-
-    MountainProcessRunner MT;
-    QString processor_name = "mv_firings_filter";
-
-    MT.setProcessorName(processor_name);
-
-    QMap<QString, QVariant> params;
-
-    MVEventFilter evt_filter = m_control_panel_new->eventFilter();
-
-    params["use_shell_split"] = evt_filter.use_shell_split;
-    params["shell_width"] = evt_filter.shell_increment;
-    params["min_per_shell"] = evt_filter.min_per_shell;
-    params["use_event_filter"] = evt_filter.use_event_filter;
-    //if (evt_filter.min_detectability_score) {
-    params["min_detectability_score"] = evt_filter.min_detectability_score;
-    //}
-    //if (evt_filter.max_outlier_score) {
-    params["max_outlier_score"] = evt_filter.max_outlier_score;
-    //}
-    params["min_amplitude"] = 0;
-
-    params["firings"] = m_firings_original.makePath();
-
-    QStringList debug_keys = params.keys();
-    foreach(QString key, debug_keys)
-    {
-        task.log(QString("%1 = %2").arg(key).arg(params[key].toString()));
-    }
-
-    MT.setInputParameters(params);
-    //MT.setMscmdServerUrl(m_mscmdserver_url);
-    MT.setMLProxyUrl(m_mlproxy_url);
-
-    QString firings_out = MT.makeOutputFilePath("firings_out");
-    QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
-    /// TODO this should be called in a separate thread MT.runProcess
-    MT.runProcess(0);
-    m_firings.setPath(firings_out);
-    task.log("m_firings path = " + firings_out);
-    task.log(QString("m_firings.N1()=%1 m_firings.N2()=%2").arg(m_firings.N1()).arg(m_firings.N2()));
-    m_original_cluster_numbers.clear();
-    m_original_cluster_offsets.clear();
-    DiskReadMda AA(original_cluster_numbers_out);
-    int offset = 0;
-    for (int i = 0; i < AA.totalSize(); i++) {
-        if (AA.value(i) != AA.value(i - 1)) {
-            offset = 0;
-        }
-        offset++;
-        m_original_cluster_numbers << AA.value(i);
-        m_original_cluster_offsets << offset;
-    }
-
-    this->set_templates_current_number(-1);
-    this->set_templates_selected_numbers(QList<int>());
-}
-
 void MVOverview2WidgetPrivate::add_tab(QWidget* W, QString label)
 {
     W->setFocusPolicy(Qt::StrongFocus);
@@ -1011,6 +989,13 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 
 void MVOverview2WidgetPrivate::open_timeseries()
 {
+    MVTimeSeriesView* X = new MVTimeSeriesView;
+    X->setChannelColors(m_channel_colors);
+    X->setProperty("widget_type", "mvtimeseries");
+    X->setMLProxyUrl(m_mlproxy_url);
+    add_tab(X, QString("Timeseries"));
+    update_widget(X);
+    /*
     SSTimeSeriesWidget* X = new SSTimeSeriesWidget;
     SSTimeSeriesView* V = new SSTimeSeriesView;
     V->initialize();
@@ -1019,6 +1004,7 @@ void MVOverview2WidgetPrivate::open_timeseries()
     X->setProperty("widget_type", "timeseries");
     add_tab(X, QString("Timeseries"));
     update_widget(X);
+    */
 }
 
 void MVOverview2WidgetPrivate::open_clips()
@@ -1120,7 +1106,7 @@ void MVOverview2WidgetPrivate::find_nearby_events()
     }
     add_tab(X, tab_title);
     update_widget(X);
-    X->setXRange(vec2(0, 5000));
+    X->setXRange(vec2(0, m_timeseries.N1() - 1));
 }
 
 void MVOverview2WidgetPrivate::annotate_selected()
@@ -1179,7 +1165,7 @@ void MVOverview2WidgetPrivate::update_timeseries_views()
     foreach(QWidget * W, widgets)
     {
         QString widget_type = W->property("widget_type").toString();
-        if (widget_type == "timeseries") {
+        if ((widget_type == "timeseries") || (widget_type == "mvtimeseries")) {
             update_widget(W);
         }
     }
@@ -1483,6 +1469,11 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         X->setPath(current_timeseries_path());
         ((SSTimeSeriesView*)(WW->view()))->setData(X, true);
         set_times_labels_for_timeseries_widget(WW);
+    } else if (widget_type == "mvtimeseries") {
+        MVTimeSeriesView* WW = (MVTimeSeriesView*)W;
+        WW->setData(DiskReadMda(current_timeseries_path()));
+        WW->setTimeRange(MVRange(0, WW->data().N2() - 1));
+        set_times_labels_for_mvtimeseriesview(WW);
     }
 }
 
@@ -1536,6 +1527,20 @@ void MVOverview2WidgetPrivate::set_templates_selected_numbers(const QList<int>& 
             WW->setSelectedKs(kks);
         }
     }
+}
+
+void MVOverview2WidgetPrivate::set_times_labels_for_mvtimeseriesview(MVTimeSeriesView* WW)
+{
+    QVector<double> times;
+    QList<int> labels;
+    for (int n = 0; n < m_firings_original.N2(); n++) {
+        long label0 = (long)m_firings_original.value(2, n);
+        if ((m_selected_ks.isEmpty()) || (m_selected_ks.contains(label0))) {
+            times << (long)m_firings_original.value(1, n);
+            labels << label0;
+        }
+    }
+    WW->setTimesLabels(times, labels);
 }
 
 void MVOverview2WidgetPrivate::set_times_labels_for_timeseries_widget(SSTimeSeriesWidget* WW)
@@ -1842,12 +1847,11 @@ void DownloadComputer::compute()
     TaskProgress task("Downlading");
     task.setDescription(QString("Downloading %1 to %2").arg(source_path).arg(dest_path));
     DiskReadMda X(source_path);
-    X.setHaltAgent(this);
     Mda Y;
     task.setProgress(0.2);
     task.log(QString("Reading/Downloading %1x%2x%3").arg(X.N1()).arg(X.N2()).arg(X.N3()));
     if (!X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3())) {
-        if (this->stopRequested()) {
+        if (thread_interrupt_requested()) {
             task.error("Halted download: " + source_path);
         } else {
             task.error("Failed to readChunk from: " + source_path);
@@ -1939,4 +1943,60 @@ void MVOverview2WidgetPrivate::set_button_enabled(QString name, bool val)
     QAbstractButton* B = m_control_panel_new->findButton(name);
     if (B)
         B->setEnabled(val);
+}
+
+void shell_split_and_event_filter_calculator::compute()
+{
+    TaskProgress task("shell_split_and_event_filter()");
+
+    MountainProcessRunner MT;
+    QString processor_name = "mv_firings_filter";
+
+    MT.setProcessorName(processor_name);
+
+    QMap<QString, QVariant> params;
+
+    params["use_shell_split"] = m_evt_filter.use_shell_split;
+    params["shell_width"] = m_evt_filter.shell_increment;
+    params["min_per_shell"] = m_evt_filter.min_per_shell;
+    params["use_event_filter"] = m_evt_filter.use_event_filter;
+    //if (m_evt_filter.min_detectability_score) {
+    params["min_detectability_score"] = m_evt_filter.min_detectability_score;
+    //}
+    //if (evt_filter.max_outlier_score) {
+    params["max_outlier_score"] = m_evt_filter.max_outlier_score;
+    //}
+    params["min_amplitude"] = 0;
+
+    params["firings"] = m_firings_original.makePath();
+
+    QStringList debug_keys = params.keys();
+    foreach(QString key, debug_keys)
+    {
+        task.log(QString("%1 = %2").arg(key).arg(params[key].toString()));
+    }
+
+    MT.setInputParameters(params);
+    //MT.setMscmdServerUrl(m_mscmdserver_url);
+    MT.setMLProxyUrl(m_mlproxy_url);
+
+    QString firings_out = MT.makeOutputFilePath("firings_out");
+    QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
+    /// TODO this should be called in a separate thread MT.runProcess
+    MT.runProcess();
+    m_firings.setPath(firings_out);
+    task.log("m_firings path = " + firings_out);
+    task.log(QString("m_firings.N1()=%1 m_firings.N2()=%2").arg(m_firings.N1()).arg(m_firings.N2()));
+    m_original_cluster_numbers.clear();
+    m_original_cluster_offsets.clear();
+    DiskReadMda AA(original_cluster_numbers_out);
+    int offset = 0;
+    for (int i = 0; i < AA.totalSize(); i++) {
+        if (AA.value(i) != AA.value(i - 1)) {
+            offset = 0;
+        }
+        offset++;
+        m_original_cluster_numbers << AA.value(i);
+        m_original_cluster_offsets << offset;
+    }
 }

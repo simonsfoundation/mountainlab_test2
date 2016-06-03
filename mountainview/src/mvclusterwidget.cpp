@@ -432,7 +432,7 @@ void MVClusterWidgetComputer::compute()
 
         firings_out_path = MT.makeOutputFilePath("firings_out");
 
-        MT.runProcess(this);
+        MT.runProcess();
     }
 
     QString features_path;
@@ -452,12 +452,10 @@ void MVClusterWidgetComputer::compute()
 
         features_path = MT.makeOutputFilePath("features");
 
-        MT.runProcess(this);
+        MT.runProcess();
     }
     firings_subset = DiskReadMda(firings_out_path);
-    firings_subset.setHaltAgent(this);
 
     DiskReadMda features(features_path);
-    features.setHaltAgent(this);
     features.readChunk(data, 0, 0, features.N1(), features.N2());
 }

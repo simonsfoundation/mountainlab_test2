@@ -41,8 +41,7 @@ public:
 
     SSTimeSeriesPlot* plot();
 
-private
-slots:
+private slots:
     void slot_request_move_to_timepoint(int t0);
     void slot_context_menu(const QPoint& pos);
 
@@ -58,8 +57,7 @@ private:
 
 signals:
 
-private
-slots:
+private slots:
 };
 
 #endif // SSTIMESERIESVIEW_H

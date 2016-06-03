@@ -39,19 +39,19 @@ CLParams commandlineparams(const QStringList &args) {
 
 bool clp_is_int(const QString &str) {
 	bool ok;
-	str.toInt(&ok);
+    str.toLongLong(&ok);
 	return ok;
 }
 
 bool clp_is_float(const QString &str) {
 	bool ok;
-	str.toFloat(&ok);
+    str.toDouble(&ok);
 	return ok;
 }
 
 QVariant clp_string_to_variant(const QString &str) {
-	if (clp_is_int(str)) return str.toInt();
-	if (clp_is_float(str)) return str.toFloat();
+    if (clp_is_int(str)) return str.toLongLong();
+    if (clp_is_float(str)) return str.toDouble();
 	return str;
 }
 

@@ -11,6 +11,7 @@
 #include "computationthread.h"
 #include "mountainprocessrunner.h"
 #include "msmisc.h"
+#include "mlutils.h"
 
 class MVClipsWidgetComputer : public ComputationThread {
 public:
@@ -149,8 +150,8 @@ void MVClipsWidgetComputer::compute()
 
         firings_out_path = MT.makeOutputFilePath("firings_out");
 
-        MT.runProcess(this);
-        if (this->stopRequested()) {
+        MT.runProcess();
+        if (thread_interrupt_requested()) {
             task.error(QString("Halted while running process: " + processor_name));
             return;
         }
@@ -172,8 +173,8 @@ void MVClipsWidgetComputer::compute()
 
         clips_path = MT.makeOutputFilePath("clips");
 
-        MT.runProcess(this);
-        if (this->stopRequested()) {
+        MT.runProcess();
+        if (thread_interrupt_requested()) {
             task.error(QString("Halted while running process: " + processor_name));
             return;
         }
@@ -188,9 +189,8 @@ void MVClipsWidgetComputer::compute()
     task.log("Reading: " + clips_path);
     DiskReadMda CC(clips_path);
     task.log(QString("CC: %1 x %2 x %3").arg(CC.N1()).arg(CC.N2()).arg(CC.N3()));
-    CC.setHaltAgent(this);
     CC.readChunk(clips, 0, 0, 0, CC.N1(), CC.N2(), CC.N3());
-    if (this->stopRequested()) {
+    if (thread_interrupt_requested()) {
         task.error(QString("Halted while reading chunk from: " + clips_path));
         return;
     }
