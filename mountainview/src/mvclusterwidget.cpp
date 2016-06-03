@@ -43,6 +43,7 @@ public:
     int m_clip_size;
     QList<double> m_outlier_scores;
     MVClusterWidgetComputer m_computer;
+    FilterInfo m_filter_info;
 
     void connect_view(MVClusterView* V);
     void update_clips_view();
@@ -154,6 +155,7 @@ MVClusterWidget::MVClusterWidget()
     {
         V->setSizePolicy(view_size_policy);
         hlayout->addWidget(V);
+        V->setEventFilter(d->m_filter_info);
     }
 
     foreach(MVClusterView * V, d->m_views)
@@ -229,9 +231,12 @@ void MVClusterWidget::setAmplitudes(const QList<double>& amps)
     }
 }
 
-void MVClusterWidget::setOutlierScores(const QList<double>& outlier_scores)
+void MVClusterWidget::setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores)
 {
-    d->m_outlier_scores = outlier_scores;
+    foreach(MVClusterView * V, d->m_views)
+    {
+        V->setScores(detectability_scores, outlier_scores);
+    }
 }
 
 void MVClusterWidget::setCurrentEvent(const MVEvent& evt)
@@ -281,6 +286,15 @@ MVEvent MVClusterWidget::currentEvent()
     return d->m_views[0]->currentEvent();
 }
 
+void MVClusterWidget::setEventFilter(FilterInfo info)
+{
+    d->m_filter_info = info;
+    foreach(MVClusterView * V, d->m_views)
+    {
+        V->setEventFilter(info);
+    }
+}
+
 void MVClusterWidget::slot_view_current_event_changed()
 {
     MVClusterView* V0 = (MVClusterView*)sender();
@@ -321,12 +335,14 @@ void MVClusterWidget::slot_computation_finished()
     QList<double> times;
     QList<int> labels;
     QList<double> amplitudes;
+    QList<double> detectability_scores;
     QList<double> outlier_scores;
     for (long j = 0; j < F.N2(); j++) {
         times << F.value(1, j);
         labels << (int)F.value(2, j);
         amplitudes << F.value(3, j);
         outlier_scores << F.value(4, j);
+        detectability_scores << F.value(5, j);
     }
 
     int K = compute_max(labels);
@@ -348,7 +364,7 @@ void MVClusterWidget::slot_computation_finished()
     this->setTimes(times);
     this->setLabels(labels);
     this->setAmplitudes(amplitudes);
-    this->setOutlierScores(outlier_scores);
+    this->setScores(detectability_scores, outlier_scores);
 
     this->setData(d->m_computer.data);
 }

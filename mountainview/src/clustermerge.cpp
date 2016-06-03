@@ -182,9 +182,11 @@ QString ClusterMerge::toJson() const
 
 QString ClusterMerge::clusterLabelText(int label)
 {
-    QList<int> grp=this->getMergeGroup(label);
-    if (grp.isEmpty()) return QString("%1").arg(label);
-    if (label!=grp.value(0)) return "";
+    QList<int> grp = this->getMergeGroup(label);
+    if (grp.isEmpty())
+        return QString("%1").arg(label);
+    if (label != grp.value(0))
+        return "";
     QString str;
     for (int j = 0; j < grp.count(); j++) {
         if (!str.isEmpty())

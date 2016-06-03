@@ -362,8 +362,7 @@ void MVFiringEventViewPrivate::do_paint(QPainter& painter, int W, int H)
         RR.adjust(0, m_vmargin, 0, 0);
         if (fabs(m_max_amplitude) > fabs(m_min_amplitude)) {
             painter.drawText(RR, Qt::AlignTop | Qt::AlignHCenter, epoch.name);
-        }
-        else {
+        } else {
             painter.drawText(RR, Qt::AlignBottom | Qt::AlignHCenter, epoch.name);
         }
     }

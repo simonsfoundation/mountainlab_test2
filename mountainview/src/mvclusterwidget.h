@@ -9,6 +9,7 @@
 #include <QWidget>
 #include "mvutils.h"
 #include "affinetransformation.h"
+#include "mvclusterview.h" //for FilterInfo
 
 /** \class MVClusterWidget
  *  \brief Presents one or more cluster views and a synchronized clip view
@@ -39,6 +40,8 @@ public:
     ///Just as in MVClusterView::currentEvent()
     MVEvent currentEvent();
 
+    void setEventFilter(FilterInfo info);
+
 private:
     ///Just as in MVClusterView::setData()
     void setData(const Mda& X);
@@ -48,8 +51,7 @@ private:
     void setLabels(const QList<int>& labels);
     ///Just as in MVClusterView::setAmplitudes()
     void setAmplitudes(const QList<double>& amps);
-    ///For purpose of info display
-    void setOutlierScores(const QList<double>& outlier_scores);
+    void setScores(const QList<double>& detectability_scores,const QList<double>& outlier_scores);
 
 signals:
     ///Just as in MVClusterView::currentEventChanged()

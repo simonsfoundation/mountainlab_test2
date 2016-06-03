@@ -1436,8 +1436,15 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
-        WW->setFirings(m_firings);
+        //WW->setFirings(m_firings);
+        /// TODO there should be an option to use m_firings instead, because we don't always want to make the long calculation
+        WW->setFirings(m_firings_original); //now that we are doing the event filter, we should show everyone
         WW->setLabelsToUse(ks);
+        FilterInfo FF;
+        FF.use_filter = m_control_panel_new->eventFilter().use_event_filter;
+        FF.min_detectability_score = m_control_panel_new->eventFilter().min_detectability_score;
+        FF.max_outlier_score = m_control_panel_new->eventFilter().max_outlier_score;
+        WW->setEventFilter(FF);
     } else if (widget_type == "firing_events") {
         MVFiringEventView* WW = (MVFiringEventView*)W;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());

@@ -22,6 +22,20 @@
  *  Several modes are available
  */
 
+/// TODO, maybe put this where it belongs
+struct FilterInfo {
+    FilterInfo()
+    {
+        use_filter = false;
+        min_detectability_score = 0;
+        max_outlier_score = 0;
+    }
+
+    bool use_filter;
+    double min_detectability_score;
+    double max_outlier_score;
+};
+
 class MVClusterViewPrivate;
 class MVClusterView : public QWidget {
     Q_OBJECT
@@ -39,6 +53,9 @@ public:
     void setLabels(const QList<int>& labels);
     ///Set L amplitudes corresponding to datapoints for purpose of currentEvent()
     void setAmplitudes(const QList<double>& amps);
+
+    void setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores);
+
     ///Set the display mode (several options, not yet documented)
     void setMode(int mode);
     ///Select the data point corresponding to the given evt time and label
@@ -51,6 +68,8 @@ public:
     AffineTransformation transformation();
     ////Set the current rotation (affine transformation) for purpose of synchronizing multiple cluster views
     void setTransformation(const AffineTransformation& T);
+
+    void setEventFilter(FilterInfo F);
 
     QImage renderImage(int W, int H);
 signals:

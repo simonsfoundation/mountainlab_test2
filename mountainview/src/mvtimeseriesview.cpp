@@ -105,7 +105,7 @@ public:
     void paint_time_axis(QPainter* painter, double W, double H);
     void paint_time_axis_unit(QPainter* painter, double W, double H, TickStruct TS);
     void paint_channel_labels(QPainter* painter, double W, double H);
-    void paint_status_string(QPainter* painter,double W,double H,QString str);
+    void paint_status_string(QPainter* painter, double W, double H, QString str);
 
     QPointF coord2pix(mvtsv_coord C);
     mvtsv_coord pix2coord(long channel, QPointF pix);
@@ -164,9 +164,9 @@ void MVTimeSeriesView::setTimesLabels(const QVector<double>& times, const QList<
     update();
 }
 
-void MVTimeSeriesView::setChannelColors(const QList<QColor> &colors)
+void MVTimeSeriesView::setChannelColors(const QList<QColor>& colors)
 {
-    d->m_prefs.channel_colors=colors;
+    d->m_prefs.channel_colors = colors;
     d->m_render_manager.setChannelColors(colors);
     update();
 }
@@ -269,8 +269,8 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     }
 
     /// TODO add this to prefs
-    double min_avg_pixels_per_marker=10;
-    if ((times0.count())&&(W0/times0.count() >= min_avg_pixels_per_marker)) {
+    double min_avg_pixels_per_marker = 10;
+    if ((times0.count()) && (W0 / times0.count() >= min_avg_pixels_per_marker)) {
         d->paint_markers(&painter, times0, labels0, W0, H0);
     } else {
         d->paint_message_at_top(&painter, "Zoom in to view markers", W0, H0);
@@ -292,9 +292,8 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     // Status
     {
-        QString str=QString("%1 (tp: %2)").arg(d->format_time(d->m_current_t)).arg((long)d->m_current_t);
+        QString str = QString("%1 (tp: %2)").arg(d->format_time(d->m_current_t)).arg((long)d->m_current_t);
         d->paint_status_string(&painter, W0, H0, str);
-        qDebug() << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << str;
     }
 }
 
@@ -472,7 +471,6 @@ QList<mvtsv_channel> MVTimeSeriesViewPrivate::make_channel_layout(double W, doub
     return channels;
 }
 
-
 void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H)
 {
     Q_UNUSED(W)
@@ -627,7 +625,7 @@ void MVTimeSeriesViewPrivate::paint_time_axis(QPainter* painter, double W, doubl
     painter->setPen(pen);
 
     QPointF pt1(m_prefs.mleft, H - m_prefs.mbottom);
-    QPointF pt2(W-m_prefs.mright, H - m_prefs.mbottom);
+    QPointF pt2(W - m_prefs.mright, H - m_prefs.mbottom);
     painter->drawLine(pt1, pt2);
 
     QList<TickStruct> structs;
@@ -693,34 +691,34 @@ void MVTimeSeriesViewPrivate::paint_time_axis_unit(QPainter* painter, double W, 
     }
 }
 
-void MVTimeSeriesViewPrivate::paint_channel_labels(QPainter *painter, double W, double H)
+void MVTimeSeriesViewPrivate::paint_channel_labels(QPainter* painter, double W, double H)
 {
-    QPen pen=painter->pen();
+    QPen pen = painter->pen();
     pen.setColor(Qt::black);
     painter->setPen(pen);
 
-    QFont font=painter->font();
+    QFont font = painter->font();
     font.setPixelSize(13);
     painter->setFont(font);
 
-    long M=m_data.N1();
-    for (int m=0; m<M; m++) {
-        QPointF pt=coord2pix(mvtsv_coord(m,0,0));
-        QRectF rect(0,pt.y()-30,m_prefs.mleft-5,60);
-        QString str=QString("%1").arg(m+1);
-        painter->drawText(rect,Qt::AlignRight|Qt::AlignVCenter,str);
+    long M = m_data.N1();
+    for (int m = 0; m < M; m++) {
+        QPointF pt = coord2pix(mvtsv_coord(m, 0, 0));
+        QRectF rect(0, pt.y() - 30, m_prefs.mleft - 5, 60);
+        QString str = QString("%1").arg(m + 1);
+        painter->drawText(rect, Qt::AlignRight | Qt::AlignVCenter, str);
     }
 }
 
-void MVTimeSeriesViewPrivate::paint_status_string(QPainter *painter, double W, double H, QString str)
+void MVTimeSeriesViewPrivate::paint_status_string(QPainter* painter, double W, double H, QString str)
 {
-    QPen pen=painter->pen();
+    QPen pen = painter->pen();
     pen.setColor(Qt::black);
     painter->setPen(pen);
-    double status_height=12;
-    double voffset=4;
-    QRectF rect(m_prefs.mleft,H-voffset-status_height,W-m_prefs.mleft-m_prefs.mright,status_height);
-    painter->drawText(rect,Qt::AlignLeft|Qt::AlignVCenter,str);
+    double status_height = 12;
+    double voffset = 4;
+    QRectF rect(m_prefs.mleft, H - voffset - status_height, W - m_prefs.mleft - m_prefs.mright, status_height);
+    painter->drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, str);
 }
 
 QPointF MVTimeSeriesViewPrivate::coord2pix(mvtsv_coord C)
@@ -786,22 +784,23 @@ void MVTimeSeriesViewPrivate::scroll_to_current_timepoint()
 QString MVTimeSeriesViewPrivate::format_time(double tp)
 {
     /// TODO make samplerate a member
-    double samplerate=30000;
-    double sec=tp/samplerate;
-    long day=(long)floor(sec/(24*60*60));
-    sec-=day*24*60*60;
-    long hour=(long)floor(sec/(60*60));
-    sec-=hour*60*60;
-    long minute=(long)floor(sec/(60));
-    sec-=minute*60;
+    double samplerate = 30000;
+    double sec = tp / samplerate;
+    long day = (long)floor(sec / (24 * 60 * 60));
+    sec -= day * 24 * 60 * 60;
+    long hour = (long)floor(sec / (60 * 60));
+    sec -= hour * 60 * 60;
+    long minute = (long)floor(sec / (60));
+    sec -= minute * 60;
 
     QString str;
-    if (day) str+=QString("%1 days ").arg(day);
-    QString tmp_sec=QString("%1").arg(sec);
-    if (sec<10) {
-        tmp_sec=QString("0%1").arg(sec);
+    if (day)
+        str += QString("%1 days ").arg(day);
+    QString tmp_sec = QString("%1").arg(sec);
+    if (sec < 10) {
+        tmp_sec = QString("0%1").arg(sec);
     }
-    str+=QString("%1:%2:%3").arg(hour).arg(minute,2,10,QChar('0')).arg(tmp_sec);
+    str += QString("%1:%2:%3").arg(hour).arg(minute, 2, 10, QChar('0')).arg(tmp_sec);
 
     return str;
 }

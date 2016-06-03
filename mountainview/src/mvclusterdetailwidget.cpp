@@ -756,13 +756,14 @@ QColor lighten(QColor col, float val)
     return QColor(r, g, b);
 }
 
-QString truncate_based_on_font_and_width(QString txt,QFont font, double width) {
+QString truncate_based_on_font_and_width(QString txt, QFont font, double width)
+{
     QFontMetrics fm(font);
-    if (fm.width(txt)>width) {
-        while ((txt.count()>3)&&(fm.width(txt+"...")>width)) {
-            txt=txt.mid(0,txt.count()-1);
+    if (fm.width(txt) > width) {
+        while ((txt.count() > 3) && (fm.width(txt + "...") > width)) {
+            txt = txt.mid(0, txt.count() - 1);
         }
-        return txt+"...";
+        return txt + "...";
     }
     return txt;
 }
@@ -879,7 +880,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         //font.setPixelSize(12);
         font.setPixelSize(12);
 
-        txt=truncate_based_on_font_and_width(txt,font,m_top_rect.width());
+        txt = truncate_based_on_font_and_width(txt, font, m_top_rect.width());
 
         QPen pen;
         pen.setWidth(1);

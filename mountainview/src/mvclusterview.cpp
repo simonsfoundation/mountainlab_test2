@@ -24,6 +24,7 @@ public:
     bool m_data_trans_needed;
     int m_current_event_index;
     int m_mode;
+    FilterInfo m_filter_info;
 
     QImage m_grid_image;
     QRectF m_image_target;
@@ -40,6 +41,7 @@ public:
     QList<double> m_times;
     double m_max_time;
     QList<double> m_amplitudes; //absolute amplitudes, actually
+    QList<double> m_detectability_scores, m_outlier_scores;
     double m_max_amplitude;
     QList<int> m_labels;
     QSet<int> m_closest_inds_to_exclude;
@@ -62,6 +64,7 @@ public:
     void schedule_emit_transformation_changed();
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
+    bool exclude_based_on_filter(long ind);
 public
 slots:
     void slot_emit_transformation_changed();
@@ -172,6 +175,12 @@ void MVClusterView::setAmplitudes(const QList<double>& amps)
     d->m_max_amplitude = compute_max(tmp);
 }
 
+void MVClusterView::setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores)
+{
+    d->m_detectability_scores = detectability_scores;
+    d->m_outlier_scores = outlier_scores;
+}
+
 void MVClusterView::setMode(int mode)
 {
     d->m_mode = mode;
@@ -223,6 +232,13 @@ void MVClusterView::setTransformation(const AffineTransformation& T)
     d->m_grid_update_needed = true;
     update();
     //do not emit to avoid excessive signals
+}
+
+void MVClusterView::setEventFilter(FilterInfo F)
+{
+    d->m_filter_info = F;
+    d->m_grid_update_needed = true;
+    update();
 }
 
 QImage MVClusterView::renderImage(int W, int H)
@@ -535,7 +551,15 @@ void MVClusterViewPrivate::update_grid()
             int iiii = ii1 + N1 * ii2;
             if (m_mode != MVCV_MODE_HEAT_DENSITY) {
                 if ((m_point_grid_ptr[iiii] == -1) || (z_grid_ptr[iiii] > z0)) {
-                    m_point_grid_ptr[iiii] = label0;
+                    if (m_filter_info.use_filter) {
+                        if (exclude_based_on_filter(i)) {
+                            m_point_grid_ptr[iiii] = -3; //means we are excluding due to filter
+                        } else {
+                            m_point_grid_ptr[iiii] = label0;
+                        }
+                    } else {
+                        m_point_grid_ptr[iiii] = label0;
+                    }
                     if (m_mode == MVCV_MODE_TIME_COLORS) {
                         m_time_grid_ptr[iiii] = time0;
                     }
@@ -546,12 +570,14 @@ void MVClusterViewPrivate::update_grid()
                 }
             } else {
                 m_point_grid_ptr[iiii] = 1;
+                /*
                 if (m_mode == MVCV_MODE_TIME_COLORS) {
                     m_time_grid_ptr[iiii] = time0;
                 }
                 if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
                     m_amplitude_grid_ptr[iiii] = amp0;
                 }
+                */
             }
 
             if (m_mode == MVCV_MODE_HEAT_DENSITY) {
@@ -570,10 +596,10 @@ void MVClusterViewPrivate::update_grid()
 
     m_grid_image = QImage(N1, N2, QImage::Format_ARGB32);
 
-    QColor dark(50, 50, 50);
-    QColor axes_color(150, 150, 150);
+    QColor background(100, 100, 100);
+    QColor axes_color(200, 200, 200);
 
-    m_grid_image.fill(dark);
+    m_grid_image.fill(background);
 
     if (m_mode == MVCV_MODE_HEAT_DENSITY) {
         //3 Axes
@@ -626,6 +652,9 @@ void MVClusterViewPrivate::update_grid()
                         }
                     } else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
+                    } else if (val == -3) { //filtered out by event filter
+                        QColor CC = Qt::black;
+                        m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
                 } else if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
                     if (val >= 0) {
@@ -636,6 +665,9 @@ void MVClusterViewPrivate::update_grid()
                         }
                     } else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
+                    } else if (val == -3) { //filtered out by event filter
+                        QColor CC = Qt::black;
+                        m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
                 } else if (m_mode == MVCV_MODE_LABEL_COLORS) {
                     if (val > 0) {
@@ -646,6 +678,9 @@ void MVClusterViewPrivate::update_grid()
                         m_grid_image.setPixel(i1, i2, CC.rgb());
                     } else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
+                    } else if (val == -3) { //filtered out by event filter
+                        QColor CC = Qt::black;
+                        m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
                 }
             }
@@ -756,7 +791,7 @@ void MVClusterViewPrivate::do_paint(QPainter& painter, int W, int H)
         m_grid_update_needed = false;
     }
 
-    painter.fillRect(0, 0, W, H, QColor(40, 40, 40));
+    painter.fillRect(0, 0, W, H, QColor(60, 60, 60));
     QRectF target = compute_centered_square(QRectF(0, 0, W, H));
     painter.drawImage(target, m_grid_image.scaled(W, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     m_image_target = target;
@@ -777,6 +812,23 @@ void MVClusterViewPrivate::export_image()
 {
     QImage img = q->renderImage(1000, 800);
     user_save_image(img);
+}
+
+bool MVClusterViewPrivate::exclude_based_on_filter(long ind)
+{
+    if (m_filter_info.use_filter) {
+        double dscore = m_detectability_scores.value(ind);
+        double oscore = m_outlier_scores.value(ind);
+        if ((m_filter_info.min_detectability_score) && (dscore)) {
+            if (dscore < m_filter_info.min_detectability_score)
+                return true;
+        }
+        if ((m_filter_info.max_outlier_score) && (oscore)) {
+            if (oscore > m_filter_info.max_outlier_score)
+                return true;
+        }
+    }
+    return false;
 }
 
 // generate_colors() is adapted from code by...

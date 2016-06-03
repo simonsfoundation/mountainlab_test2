@@ -11,7 +11,7 @@ class MVViewAgentPrivate {
 public:
     MVViewAgent* q;
     ClusterMerge m_cluster_merge;
-    QMap<int,QJsonObject> m_cluster_attributes;
+    QMap<int, QJsonObject> m_cluster_attributes;
 };
 
 MVViewAgent::MVViewAgent()
@@ -35,17 +35,18 @@ ClusterMerge MVViewAgent::clusterMerge() const
     return d->m_cluster_merge;
 }
 
-void MVViewAgent::setClusterMerge(const ClusterMerge &CM)
+void MVViewAgent::setClusterMerge(const ClusterMerge& CM)
 {
-    if (d->m_cluster_merge==CM) return;
-    d->m_cluster_merge=CM;
+    if (d->m_cluster_merge == CM)
+        return;
+    d->m_cluster_merge = CM;
     emit this->clusterMergeChanged();
 }
 
-void MVViewAgent::setClusterAttributes(const QMap<int, QJsonObject> &A)
+void MVViewAgent::setClusterAttributes(const QMap<int, QJsonObject>& A)
 {
-    if (d->m_cluster_attributes==A) return;
-    d->m_cluster_attributes=A;
+    if (d->m_cluster_attributes == A)
+        return;
+    d->m_cluster_attributes = A;
     emit this->clusterAttributesChanged();
 }
-
