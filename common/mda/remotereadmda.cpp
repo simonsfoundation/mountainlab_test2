@@ -124,8 +124,6 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
         //don't make excessive calls... once we fail, that's it.
         return false;
     }
-    /// TODO handle both size=8 and 4 bytes
-    int datatype_size = 8;
     //double size_mb = size * datatype_size * 1.0 / 1e6;
     //TaskProgress task(TaskProgress::Download, "Downloading array chunk");
     //if (size_mb > 0.5) {
@@ -314,7 +312,7 @@ void unit_test_remote_read_mda()
     Mda chunk;
     X.readChunk(chunk, 0, 100);
     for (int j = 0; j < 10; j++) {
-        qDebug() << j << chunk.value(j);
+        qDebug() << j << chunk.value(j); // unit_test
     }
 }
 

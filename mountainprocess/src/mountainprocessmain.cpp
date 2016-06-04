@@ -364,9 +364,9 @@ void display_error(QJSValue result)
 {
     /// Witold there must be a better way to print the QJSValue error message out to the console.
     /// Witold In general is it possible to not display quotes around strings for qDebug?
-    qDebug() << result.property("name").toString();
-    qDebug() << result.property("message").toString();
-    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt());
+    qDebug() << result.property("name").toString(); //okay
+    qDebug() << result.property("message").toString(); //okay
+    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
 }
 
 bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message)

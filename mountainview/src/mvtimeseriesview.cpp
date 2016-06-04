@@ -405,8 +405,6 @@ void MVTimeSeriesView::unit_test()
     /*
     DiskReadMda X1("/home/magland/sorting_results/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
     DiskReadMda X2("http://datalaboratory.org:8020/mdaserver/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
-    qDebug() << X1.N1() << X1.N2();
-    qDebug() << X2.N1() << X2.N2();
 
     Mda A1,A2;
     long index=8e7+1;
