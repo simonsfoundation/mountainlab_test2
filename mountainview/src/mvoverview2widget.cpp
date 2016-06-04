@@ -1861,7 +1861,6 @@ void shell_split_and_event_filter_calculator::compute()
 
     QString firings_out = MT.makeOutputFilePath("firings_out");
     QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
-    /// TODO this should be called in a separate thread MT.runProcess
     MT.runProcess();
     m_firings.setPath(firings_out);
     task.log("m_firings path = " + firings_out);

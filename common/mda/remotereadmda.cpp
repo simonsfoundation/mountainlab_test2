@@ -31,6 +31,7 @@ public:
     bool m_info_downloaded;
     QString m_remote_datatype;
     long m_download_chunk_size;
+    bool m_download_failed; //don't make excessive calls. Once we failed, that's it.
 
     void download_info_if_needed();
     QString download_chunk_at_index(long ii);
@@ -42,6 +43,7 @@ RemoteReadMda::RemoteReadMda(const QString& path)
     d->q = this;
     d->m_remote_datatype = "float64";
     d->m_download_chunk_size = REMOTE_READ_MDA_CHUNK_SIZE;
+    d->m_download_failed = false;
     this->setPath(path);
 }
 
@@ -118,6 +120,10 @@ QDateTime RemoteReadMda::fileLastModified()
 
 bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
 {
+    if (d->m_download_failed) {
+        //don't make excessive calls... once we fail, that's it.
+        return false;
+    }
     /// TODO handle both size=8 and 4 bytes
     int datatype_size = 8;
     //double size_mb = size * datatype_size * 1.0 / 1e6;
@@ -137,6 +143,11 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
         QString fname = d->download_chunk_at_index(jj1); //download the single chunk
         if (fname.isEmpty()) {
             //task.error("fname is empty");
+            TaskProgress errtask("Download chunk at index");
+            errtask.log(QString("m_remote_data_type = %1, download chunk size = %2").arg(d->m_remote_datatype).arg(d->m_download_chunk_size));
+            errtask.log(d->m_path);
+            errtask.error(QString("Failed to download chunk at index %1").arg(jj1));
+            d->m_download_failed = true;
             return false;
         }
         DiskReadMda A(fname);

@@ -60,6 +60,7 @@ class ThreadManager : public QObject {
     Q_OBJECT
 public:
     ThreadManager();
+    virtual ~ThreadManager();
     void start(QString id, QThread* thread);
     void stop(QString id);
 private

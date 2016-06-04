@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QThread>
 #include <QTimer>
+#include <QCoreApplication>
 
 #define PANEL_NUM_POINTS 1200
 #define PANEL_WIDTH PANEL_NUM_POINTS * 2
@@ -27,8 +28,6 @@ struct ImagePanel {
     QImage image;
     QString make_code();
 };
-
-/// TODO stop threads when no longer needed
 
 class MVTimeSeriesRenderManagerPrivate {
 public:
@@ -333,6 +332,18 @@ void MVTimeSeriesRenderManagerThread::run()
 ThreadManager::ThreadManager()
 {
     QTimer::singleShot(100, this, SLOT(slot_timer()));
+}
+
+ThreadManager::~ThreadManager()
+{
+    m_queued_threads.clear();
+    QStringList keys=m_running_threads.keys();
+    foreach (QString key,keys) {
+        this->stop(key);
+    }
+    while (!m_running_threads.isEmpty()) {
+        qApp->processEvents();
+    }
 }
 
 void ThreadManager::start(QString id, QThread* thread)

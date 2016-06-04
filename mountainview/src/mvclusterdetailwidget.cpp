@@ -1165,6 +1165,10 @@ void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs
     task.log("Returning DiskReadMda: " + templates_fname + " " + stdevs_fname);
     templates_out.setPath(templates_fname);
     stdevs_out.setPath(stdevs_fname);
+
+    /// TODO make this configurable
+    templates_out.setRemoteDataType("float32_q8");
+    stdevs_out.setRemoteDataType("float32_q8");
 }
 
 void MVClusterDetailWidgetCalculator::compute()
