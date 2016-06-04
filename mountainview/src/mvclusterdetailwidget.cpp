@@ -470,22 +470,22 @@ void MVClusterDetailWidget::mousePressEvent(QMouseEvent* evt)
 void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
 {
     QPoint pt = evt->pos();
-    int view_index = d->find_view_index_at(pt);
-    if (view_index >= 0) {
-        int k = d->m_views[view_index]->k();
-        d->m_view_agent->clickCluster(k, evt->modifiers());
-    }
 
-    /*
     if ((d->m_anchor_x >= 0) && (qAbs(pt.x() - d->m_anchor_x) > 5)) {
         d->m_scroll_x = d->m_anchor_scroll_x - (pt.x() - d->m_anchor_x);
         d->m_anchor_x = -1;
         update();
         return;
     }
-    */
 
-    //d->m_anchor_x = -1;
+    d->m_anchor_x = -1;
+
+
+    int view_index = d->find_view_index_at(pt);
+    if (view_index >= 0) {
+        int k = d->m_views[view_index]->k();
+        d->m_view_agent->clickCluster(k, evt->modifiers());
+    }
 
     /*
 
