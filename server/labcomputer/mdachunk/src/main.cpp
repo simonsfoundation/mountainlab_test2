@@ -13,10 +13,13 @@
 #include <QStringList>
 #include "textfile.h"
 #include "cachemanager.h"
+#include "msmisc.h"
 
 void usage();
 QString get_chunk_code(const QString& fname, const QString& datatype, long index, long size);
 QString get_sha1_code(const QString& fname);
+
+Mda quantize8(Mda& X); //returns array of size 1x2 containing the min/max dynamic range
 
 int main(int argc, char* argv[])
 {
@@ -41,7 +44,8 @@ int main(int argc, char* argv[])
         DiskReadMda X(arg1);
         printf("%ld,%ld,%ld,%ld,%ld,%ld\n", X.N1(), X.N2(), X.N3(), X.N4(), X.N5(), X.N6());
         return 0;
-    } else if (arg0 == "info") {
+    }
+    else if (arg0 == "info") {
         if (arg1.isEmpty()) {
             printf("Problem with second argument\n");
             return -1;
@@ -56,7 +60,8 @@ int main(int argc, char* argv[])
         printf("%s\n", sha1_code.toLatin1().data());
         printf("%ld\n", (long)QFileInfo(arg1).lastModified().toMSecsSinceEpoch());
         return 0;
-    } else if (arg0 == "readChunk") {
+    }
+    else if (arg0 == "readChunk") {
         if (arg1.isEmpty()) {
             printf("Problem with second argument\n");
             return -1;
@@ -99,12 +104,25 @@ int main(int argc, char* argv[])
                     printf("Error writing file: %s.tmp\n", fname.toLatin1().data());
                     return -1;
                 }
-            } else if (datatype == "float64") {
+            }
+            else if (datatype == "float64") {
                 if (!chunk.write64(fname + ".tmp")) {
                     printf("Error writing file: %s.tmp\n", fname.toLatin1().data());
                     return -1;
                 }
-            } else {
+            }
+            else if (datatype == "float32_q8") {
+                Mda dynamic_range = quantize8(chunk);
+                if (!chunk.write8(fname + ".tmp")) {
+                    printf("Error writing file: %s.tmp\n", fname.toLatin1().data());
+                    return -1;
+                }
+                if (!dynamic_range.write32(fname + ".q8")) {
+                    printf("Error writing file: %s.q8\n", fname.toLatin1().data());
+                    return -1;
+                }
+            }
+            else {
                 printf("Unsupported data type: %s\n", datatype.toLatin1().data());
                 return -1;
             }
@@ -118,19 +136,30 @@ int main(int argc, char* argv[])
                 printf("Error renaming file to %s\n", fname.toLatin1().data());
                 return -1;
             }
-        } else {
+        }
+        else {
             DiskReadMda check(fname);
             if (check.totalSize() != size) {
                 printf("Unexpected dimensions of existing output file: %ld<>%ld\n", check.totalSize(), size);
                 QFile::remove(fname);
                 return -1;
             }
+            if (datatype == "float32_q8") {
+                DiskReadMda check_q8(fname + ".q8");
+                if (check_q8.totalSize() != 2L) {
+                    printf("Unexpected dimensions of existing output.q8 file: %ld<>%ld\n", check_q8.totalSize(), 2L);
+                    QFile::remove(fname);
+                    QFile::remove(fname + ".q8");
+                    return -1;
+                }
+            }
         }
 
         printf("%s\n", relative_fname.toLatin1().data());
         //printf("%s.mda\n", code.toLatin1().data());
         return 0;
-    } else {
+    }
+    else {
         printf("unexpected command\n");
         return -1;
     }
@@ -139,7 +168,7 @@ int main(int argc, char* argv[])
 void usage()
 {
     printf("mdachunk size fname.mda\n");
-    printf("mdachunk readChunk fname.mda --index=0 --size=5000 --outpath=/output/path --datatype=float32|float64\n");
+    printf("mdachunk readChunk fname.mda --index=0 --size=5000 --outpath=/output/path --datatype=float32|float64|float32_q8\n");
 }
 
 QString get_file_info(const QString& fname)
@@ -190,4 +219,19 @@ QString get_chunk_code(const QString& fname, const QString& datatype, long index
 {
     QString sha1 = get_sha1_code(fname);
     return QString("%1.%2.%3.%4").arg(sha1).arg(datatype).arg(index).arg(size);
+}
+
+Mda quantize8(Mda& X)
+{
+    double minval = compute_min(X.totalSize(), X.dataPtr());
+    double maxval = compute_max(X.totalSize(), X.dataPtr());
+    Mda dynamic_range(1, 2);
+    dynamic_range.setValue(minval, 0);
+    dynamic_range.setValue(maxval, 1);
+    long N = X.totalSize();
+    double* Xptr = X.dataPtr();
+    for (long i = 0; i < N; i++) {
+        Xptr[i] = (int)((Xptr[i] - minval) / (maxval - minval) * 255);
+    }
+    return dynamic_range;
 }

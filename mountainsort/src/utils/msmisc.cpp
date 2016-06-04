@@ -150,6 +150,18 @@ double compute_max(long N, double* X)
     return ret;
 }
 
+double compute_min(long N, double* X)
+{
+    if (N == 0)
+        return 0;
+    double ret = X[0];
+    for (long i = 0; i < N; i++) {
+        if (X[i] < ret)
+            ret = X[i];
+    }
+    return ret;
+}
+
 QString get_temp_fname()
 {
     return CacheManager::globalInstance()->makeLocalFile();

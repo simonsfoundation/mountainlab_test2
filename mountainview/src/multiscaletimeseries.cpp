@@ -196,7 +196,8 @@ bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
                 task.error("Problem in downsample_max");
                 return false;
             }
-        } else {
+        }
+        else {
             if (!downsample_min(DiskReadMda(prev_min_fname), min_fname, (N * 3) / ds_factor)) {
                 task.error("Problem in downsample_min");
                 return false;
@@ -218,8 +219,7 @@ bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
         return false;
     }
     task.log("Removing temporary files");
-    foreach(QString fname, file_names)
-    {
+    foreach (QString fname, file_names) {
         QFile::remove(fname);
     }
 
@@ -254,7 +254,8 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         if (t1 >= 0) {
             min.setChunk(min0, 0, 0);
             max.setChunk(max0, 0, 0);
-        } else {
+        }
+        else {
             min.setChunk(min0, 0, -t1);
             max.setChunk(max0, 0, -t1);
         }
@@ -283,6 +284,7 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         }
         m_multiscale_data.setPath(multiscale_fname);
         m_multiscale_data.setRemoteDataType("float32"); //to save download time!
+        //m_multiscale_data.setRemoteDataType("float32_q8"); //to save download time!
     }
 
     long t_offset_min = 0;
@@ -356,8 +358,7 @@ bool MultiScaleTimeSeriesPrivate::downsample_max(const DiskReadMda& X, QString o
 bool MultiScaleTimeSeriesPrivate::write_concatenation(QStringList input_fnames, QString output_fname)
 {
     long M = 1, N = 0;
-    foreach(QString fname, input_fnames)
-    {
+    foreach (QString fname, input_fnames) {
         DiskReadMda X(fname);
         M = X.N1();
         N += X.N2();
@@ -368,8 +369,7 @@ bool MultiScaleTimeSeriesPrivate::write_concatenation(QStringList input_fnames, 
         return false;
     }
     long offset = 0;
-    foreach(QString fname, input_fnames)
-    {
+    foreach (QString fname, input_fnames) {
         DiskReadMda X(fname);
         /// TODO do this in chunks so we don't use RAM
         Mda tmp;

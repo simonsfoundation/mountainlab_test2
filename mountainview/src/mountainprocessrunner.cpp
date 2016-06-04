@@ -76,8 +76,7 @@ QJsonObject variantmap_to_json_obj(QVariantMap map)
     QJsonObject ret;
     QStringList keys = map.keys();
     // Use fromVariantMap
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ret[key] = QJsonValue::fromVariant(map[key]);
     }
     return ret;
@@ -87,8 +86,7 @@ QVariantMap json_obj_to_variantmap(QJsonObject obj)
 {
     QVariantMap ret;
     QStringList keys = obj.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ret[key] = obj[key].toVariant();
     }
     return ret;
@@ -126,7 +124,8 @@ QJsonObject http_post(QString url, QJsonObject req)
         obj["success"] = false;
         obj["error"] = "Halting in http_post: " + url;
         return obj;
-    } else {
+    }
+    else {
         printf("RECEIVED TEXT (%d ms, %d bytes) from POST %s\n", timer.elapsed(), ret.count(), url.toLatin1().data());
         QString str = ret.mid(0, 5000) + "...";
         str.replace("\\n", "\n");
@@ -153,16 +152,14 @@ void MountainProcessRunner::runProcess()
         QStringList args;
         args << d->m_processor_name;
         QStringList keys = d->m_parameters.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             args << QString("--%1=%2").arg(key).arg(d->m_parameters.value(key).toString());
         }
         if (d->m_detach) {
             args << QString("--~detach=1");
         }
         task.log(QString("Executing locally: %1").arg(mountainsort_exe));
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             QString val = d->m_parameters[key].toString();
             task.log(QString("%1 = %2").arg(key).arg(val));
             if (val.startsWith("http")) {
@@ -176,7 +173,8 @@ void MountainProcessRunner::runProcess()
             qWarning() << "Problem running mountainsort" << mountainsort_exe << args;
             task.error("Problem running mountainsort");
         }
-    } else {
+    }
+    else {
         /*
         QString url = d->m_mscmdserver_url + "/?";
         url += "processor=" + d->m_processor_name + "&";
@@ -230,6 +228,9 @@ void MountainProcessRunner::runProcess()
         }
         task.log("GOT RESPONSE: ");
         task.log(QJsonDocument(resp).toJson());
+        if (!resp["error"].toString().isEmpty()) {
+            task.error(resp["error"].toString());
+        }
     }
 }
 
@@ -238,8 +239,7 @@ QString MountainProcessRunnerPrivate::create_temporary_output_file_name(const QS
     QString str = processor_name + ":";
     QStringList keys = params.keys();
     qSort(keys);
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         str += key + "=" + params.value(key).toString() + "&";
     }
 

@@ -12,6 +12,7 @@
 
 double compute_min(const QList<double>& X);
 double compute_max(const QList<double>& X);
+double compute_min(long N, double* X);
 double compute_max(long N, double* X);
 int compute_max(const QList<int>& X);
 long compute_max(const QList<long>& X);

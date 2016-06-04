@@ -15,8 +15,7 @@ public:
     int currentClipIndex();
     //double currentClipTimepoint();
     void setViewAgent(MVViewAgent* agent);
-public
-slots:
+public slots:
     void slot_current_x_changed();
 
 private:

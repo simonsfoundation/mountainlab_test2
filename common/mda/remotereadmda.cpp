@@ -30,6 +30,7 @@ public:
     RemoteReadMdaInfo m_info;
     bool m_info_downloaded;
     QString m_remote_datatype;
+    long m_download_chunk_size;
 
     void download_info_if_needed();
     QString download_chunk_at_index(long ii);
@@ -40,6 +41,7 @@ RemoteReadMda::RemoteReadMda(const QString& path)
     d = new RemoteReadMdaPrivate;
     d->q = this;
     d->m_remote_datatype = "float64";
+    d->m_download_chunk_size = REMOTE_READ_MDA_CHUNK_SIZE;
     this->setPath(path);
 }
 
@@ -51,6 +53,7 @@ RemoteReadMda::RemoteReadMda(const RemoteReadMda& other)
     d->m_info = other.d->m_info;
     d->m_info_downloaded = other.d->m_info_downloaded;
     d->m_remote_datatype = other.d->m_remote_datatype;
+    d->m_download_chunk_size = other.d->m_download_chunk_size;
 }
 
 void RemoteReadMda::operator=(const RemoteReadMda& other)
@@ -59,6 +62,7 @@ void RemoteReadMda::operator=(const RemoteReadMda& other)
     d->m_info = other.d->m_info;
     d->m_info_downloaded = other.d->m_info_downloaded;
     d->m_remote_datatype = other.d->m_remote_datatype;
+    d->m_download_chunk_size = other.d->m_download_chunk_size;
 }
 
 RemoteReadMda::~RemoteReadMda()
@@ -69,6 +73,11 @@ RemoteReadMda::~RemoteReadMda()
 void RemoteReadMda::setRemoteDataType(QString dtype)
 {
     d->m_remote_datatype = dtype;
+}
+
+void RemoteReadMda::setDownloadChunkSize(long size)
+{
+    d->m_download_chunk_size = size;
 }
 
 void RemoteReadMda::setPath(const QString& path)
@@ -121,8 +130,8 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     double* Xptr = X.dataPtr(); //pointer to the output data
     long ii1 = i; //start index of the remote array
     long ii2 = i + size - 1; //end index of the remote array
-    long jj1 = ii1 / REMOTE_READ_MDA_CHUNK_SIZE; //start chunk index of the remote array
-    long jj2 = ii2 / REMOTE_READ_MDA_CHUNK_SIZE; //end chunk index of the remote array
+    long jj1 = ii1 / d->m_download_chunk_size; //start chunk index of the remote array
+    long jj2 = ii2 / d->m_download_chunk_size; //end chunk index of the remote array
     if (jj1 == jj2) { //in this case there is only one chunk we need to worry about
         //task.setProgress(0.5);
         QString fname = d->download_chunk_at_index(jj1); //download the single chunk
@@ -131,9 +140,10 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
             return false;
         }
         DiskReadMda A(fname);
-        A.readChunk(X, ii1 - jj1 * REMOTE_READ_MDA_CHUNK_SIZE, size); //starting reading at the offset of ii1 relative to the start index of the chunk
+        A.readChunk(X, ii1 - jj1 * d->m_download_chunk_size, size); //starting reading at the offset of ii1 relative to the start index of the chunk
         return true;
-    } else {
+    }
+    else {
         for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
             //task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
             if (thread_interrupt_requested()) {
@@ -149,17 +159,18 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
             DiskReadMda A(fname);
             if (jj == jj1) { //case 1/3, this is the first chunk
                 Mda tmp;
-                long size0 = (jj1 + 1) * REMOTE_READ_MDA_CHUNK_SIZE - ii1; //the size is going to be the difference between ii1 and the start index of the next chunk
-                A.readChunk(tmp, ii1 - jj1 * REMOTE_READ_MDA_CHUNK_SIZE, size0); //again we start reading at the offset of ii1 relative to the start index of the chunk
+                long size0 = (jj1 + 1) * d->m_download_chunk_size - ii1; //the size is going to be the difference between ii1 and the start index of the next chunk
+                A.readChunk(tmp, ii1 - jj1 * d->m_download_chunk_size, size0); //again we start reading at the offset of ii1 relative to the start index of the chunk
                 double* tmp_ptr = tmp.dataPtr(); //copy the data directly from tmp_ptr to Xptr
                 long b = 0;
                 for (long a = 0; a < size0; a++) {
                     Xptr[b] = tmp_ptr[a];
                     b++;
                 }
-            } else if (jj == jj2) { //case 2/3, this is the last chunk
+            }
+            else if (jj == jj2) { //case 2/3, this is the last chunk
                 Mda tmp;
-                long size0 = ii2 + 1 - jj2 * REMOTE_READ_MDA_CHUNK_SIZE; //the size is going to be the difference between the start index of the last chunk and ii2+1
+                long size0 = ii2 + 1 - jj2 * d->m_download_chunk_size; //the size is going to be the difference between the start index of the last chunk and ii2+1
                 A.readChunk(tmp, 0, size0); //we start reading at position zero
                 double* tmp_ptr = tmp.dataPtr();
                 //copy the data to the last part of X
@@ -174,10 +185,10 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
              ///this was the old code, which was wrong!!!!!!!!! -- fixed on 5/16/2016
             else if (jj == jj2) {
                 Mda tmp;
-                long size0 = ii2 + 1 - jj2 * REMOTE_READ_MDA_CHUNK_SIZE;
-                A.readChunk(tmp, REMOTE_READ_MDA_CHUNK_SIZE - size0, size0);
+                long size0 = ii2 + 1 - jj2 * d->m_download_chunk_size;
+                A.readChunk(tmp, d->m_download_chunk_size - size0, size0);
                 double* tmp_ptr = tmp.dataPtr();
-                long b = jj2 * REMOTE_READ_MDA_CHUNK_SIZE - ii1;
+                long b = jj2 * d->m_download_chunk_size - ii1;
                 for (long a = 0; a < size0; a++) {
                     Xptr[b] = tmp_ptr[a];
                     b++;
@@ -186,10 +197,10 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
             */
             else { //case 3/3, this is a middle chunk
                 Mda tmp;
-                A.readChunk(tmp, 0, REMOTE_READ_MDA_CHUNK_SIZE); //read the entire chunk, because we'll use it all
+                A.readChunk(tmp, 0, d->m_download_chunk_size); //read the entire chunk, because we'll use it all
                 double* tmp_ptr = tmp.dataPtr();
-                long b = jj * REMOTE_READ_MDA_CHUNK_SIZE - ii1; //we start writing at the offset between the start index of the chunk and the start index
-                for (long a = 0; a < REMOTE_READ_MDA_CHUNK_SIZE; a++) {
+                long b = jj * d->m_download_chunk_size - ii1; //we start writing at the offset between the start index of the chunk and the start index
+                for (long a = 0; a < d->m_download_chunk_size; a++) {
                     Xptr[b] = tmp_ptr[a];
                     b++;
                 }
@@ -223,24 +234,25 @@ void RemoteReadMdaPrivate::download_info_if_needed()
 }
 #endif
 
+void unquantize8(Mda& X, double minval, double maxval);
 QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
 {
     download_info_if_needed();
     long Ntot = m_info.N1 * m_info.N2 * m_info.N3;
-    long size = REMOTE_READ_MDA_CHUNK_SIZE;
-    if (ii * REMOTE_READ_MDA_CHUNK_SIZE + size > Ntot) {
-        size = Ntot - ii * REMOTE_READ_MDA_CHUNK_SIZE;
+    long size = m_download_chunk_size;
+    if (ii * m_download_chunk_size + size > Ntot) {
+        size = Ntot - ii * m_download_chunk_size;
     }
     if (size <= 0)
         return "";
     if (m_info.checksum.isEmpty())
         return "";
-    QString file_name = m_info.checksum + "-" + QString("%1-%2").arg(REMOTE_READ_MDA_CHUNK_SIZE).arg(ii);
+    QString file_name = m_info.checksum + "-" + QString("%1-%2").arg(m_download_chunk_size).arg(ii);
     QString fname = CacheManager::globalInstance()->makeLocalFile(file_name, CacheManager::ShortTerm);
     if (QFile::exists(fname))
         return fname;
     QString url = m_path;
-    QString url0 = url + QString("?a=readChunk&output=text&index=%1&size=%2&datatype=%3").arg((long)(ii * REMOTE_READ_MDA_CHUNK_SIZE)).arg(size).arg(m_remote_datatype);
+    QString url0 = url + QString("?a=readChunk&output=text&index=%1&size=%2&datatype=%3").arg((long)(ii * m_download_chunk_size)).arg(size).arg(m_remote_datatype);
     QString binary_url = http_get_text(url0).trimmed();
     if (binary_url.isEmpty())
         return "";
@@ -260,7 +272,27 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         QFile::remove(mda_fname);
         return "";
     }
-    QFile::rename(mda_fname, fname);
+    if (m_remote_datatype == "float32_q8") {
+        QString dynamic_range_fname = http_get_binary_file(binary_url + ".q8");
+        if (dynamic_range_fname.isEmpty()) {
+            qWarning() << "problem downloading .q8 file: " + binary_url + ".q8";
+            return "";
+        }
+        Mda dynamic_range(dynamic_range_fname);
+        if (dynamic_range.totalSize() != 2) {
+            qWarning() << QString("Problem in .q8 file. Unexpected size %1: ").arg(dynamic_range.totalSize()) + binary_url + ".q8";
+            return "";
+        }
+        Mda chunk(mda_fname);
+        unquantize8(chunk, dynamic_range.value(0), dynamic_range.value(1));
+        if (!chunk.write32(fname)) {
+            qWarning() << "Unable to write file: " + fname;
+            return "";
+        }
+    }
+    else {
+        QFile::rename(mda_fname, fname);
+    }
     return fname;
 }
 
@@ -288,5 +320,14 @@ void unit_test_remote_read_mda_2(const QString& path)
             printf("%g, ", X.value(i, j));
         }
         printf("\n");
+    }
+}
+
+void unquantize8(Mda& X, double minval, double maxval)
+{
+    long N = X.totalSize();
+    double* Xptr = X.dataPtr();
+    for (long i = 0; i < N; i++) {
+        Xptr[i] = minval + (Xptr[i] / 255) * (maxval - minval);
     }
 }

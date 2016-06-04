@@ -23,6 +23,7 @@ public:
     virtual ~RemoteReadMda();
 
     void setRemoteDataType(QString dtype);
+    void setDownloadChunkSize(long size);
 
     void setPath(const QString& path);
     QString path() const;

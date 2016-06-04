@@ -38,6 +38,8 @@ public:
 	#ifdef QT_CORE_LIB
 	///Create an array with content read from the .mda file specified by path
 	bool read(const QString &path);
+    ///Write the array to the .mda file specified by path, with file format 8-bit integer (numbers should be integers between 0 and 255)
+    bool write8(const QString &path) const;
 	///Write the array to the .mda file specified by path, with file format 32-bit float
 	bool write32(const QString &path) const;
 	///Write the array to the .mda file specified by path, with file format 64-bit float
@@ -45,6 +47,8 @@ public:
 	#endif
 	///Create an array with content read from the .mda file specified by path
 	bool read(const char *path);
+    ///Write the array to the .mda file specified by path, with file format 8-bit integer (numbers should be integers between 0 and 255)
+    bool write8(const char *path) const;
 	///Write the array to the .mda file specified by path, with file format 32-bit float
 	bool write32(const char *path) const;
 	///Write the array to the .mda file specified by path, with file format 64-bit float

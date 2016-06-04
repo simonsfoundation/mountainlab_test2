@@ -131,8 +131,7 @@ void MVClipsWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -190,6 +189,7 @@ void MVClipsWidgetComputer::compute()
     }
     task.log("Reading: " + clips_path);
     DiskReadMda CC(clips_path);
+    CC.setRemoteDataType("float32_q8"); //to save download time
     task.log(QString("CC: %1 x %2 x %3").arg(CC.N1()).arg(CC.N2()).arg(CC.N3()));
     CC.readChunk(clips, 0, 0, 0, CC.N1(), CC.N2(), CC.N3());
     if (thread_interrupt_requested()) {
