@@ -405,10 +405,14 @@ QString resolve_file_name(QStringList server_urls, QString server_base_path, QSt
         if (fname.startsWith(str + "/mdaserver"))
             fname = server_base_path + "/" + fname.mid((str + "/mdaserver").count());
     }
+    /*
+    Taking this out to resolve Jason's problem.
+    /// TODO Not sure why I had this in ... raw data does not have to be in this path... I think it was for security. Think about it.
     if (!fname.startsWith(server_base_path)) {
         qWarning() << "Path does not start with " + server_base_path + ": " + fname;
         fname = "";
     }
+    */
     if (fname.mid(server_base_path.count()).contains("..")) {
         qWarning() << "Illegal .. in file path: " + fname;
         fname = "";
