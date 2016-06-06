@@ -27,7 +27,6 @@ public:
     QString m_ml_proxy_url;
 
     QString get_multiscale_fname();
-    bool create_multiscale_file(const QString& mspath);
     bool get_data(Mda& min, Mda& max, long t1, long t2, long ds_factor);
 
     static bool downsample_min(const DiskReadMda& X, QString out_fname, long N);
@@ -144,7 +143,6 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
         return "";
     }
 
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
     //if (path.startsWith("http:")) {
     MountainProcessRunner MPR;
     MPR.setProcessorName("create_multiscale_timeseries");
@@ -154,7 +152,6 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
     MPR.setMLProxyUrl(m_ml_proxy_url);
     QString path_out = MPR.makeOutputFilePath("timeseries_out");
     MPR.setDetach(true);
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
     MPR.runProcess();
     return path_out;
     //} else {
@@ -171,69 +168,6 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
             return "";
             */
     //}
-}
-
-bool MultiScaleTimeSeriesPrivate::create_multiscale_file(const QString& mspath)
-{
-    TaskProgress task("Create multiscale file");
-    task.log(mspath);
-    if (QFile::exists(mspath)) {
-        if (!QFile::remove(mspath)) {
-            task.error("Unable to remove file: " + mspath);
-            qWarning() << "Unable to remove file: " + mspath;
-            return false;
-        }
-    }
-
-    long N = MultiScaleTimeSeries::smallest_power_of_3_larger_than(m_data.N2());
-
-    QStringList file_names;
-    QString prev_min_fname;
-    QString prev_max_fname;
-    double progress_numer = 0;
-    double progress_denom = N * 3 / 2; //3+9+27+...+N; //approximately
-    for (long ds_factor = 3; ds_factor <= N; ds_factor *= 3) {
-        task.setProgress(progress_numer / progress_denom);
-        task.log(QString("ds_factor = %1").arg(ds_factor));
-        QString min_fname = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
-        QString max_fname = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
-        if (ds_factor == 3) {
-            if (!downsample_min(m_data, min_fname, N)) {
-                task.error("Problem in downsample_min");
-                return false;
-            }
-            if (!downsample_max(m_data, max_fname, N)) {
-                task.error("Problem in downsample_max");
-                return false;
-            }
-        }
-        else {
-            if (!downsample_min(DiskReadMda(prev_min_fname), min_fname, (N * 3) / ds_factor)) {
-                task.error("Problem in downsample_min");
-                return false;
-            }
-            if (!downsample_max(DiskReadMda(prev_max_fname), max_fname, (N * 3) / ds_factor)) {
-                task.error("Problem in downsample_max");
-                return false;
-            }
-        }
-        file_names << min_fname;
-        file_names << max_fname;
-        prev_min_fname = min_fname;
-        prev_max_fname = max_fname;
-        progress_numer += N / ds_factor;
-    }
-
-    if (!write_concatenation(file_names, mspath)) {
-        task.error("Problem in write_concatenation");
-        return false;
-    }
-    task.log("Removing temporary files");
-    foreach (QString fname, file_names) {
-        QFile::remove(fname);
-    }
-
-    return true;
 }
 
 bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2, long ds_factor)

@@ -148,8 +148,10 @@ void MountainProcessRunner::runProcess()
 
     //if (d->m_mscmdserver_url.isEmpty()) {
     if (d->m_mlproxy_url.isEmpty()) {
-        QString mountainsort_exe = mountainlabBasePath() + "/mountainsort/bin/mountainsort";
+        //QString mountainsort_exe = mountainlabBasePath() + "/mountainsort/bin/mountainsort";
+        QString mountainprocess_exe = mountainlabBasePath() + "/mountainprocess/bin/mountainprocess";
         QStringList args;
+        args << "run-process";
         args << d->m_processor_name;
         QStringList keys = d->m_parameters.keys();
         foreach (QString key, keys) {
@@ -159,7 +161,7 @@ void MountainProcessRunner::runProcess()
         //if (d->m_detach) {
         //    args << QString("--~detach=1");
         //}
-        task.log(QString("Executing locally: %1").arg(mountainsort_exe));
+        task.log(QString("Executing locally: %1").arg(mountainprocess_exe));
         foreach (QString key, keys) {
             QString val = d->m_parameters[key].toString();
             task.log(QString("%1 = %2").arg(key).arg(val));
@@ -170,11 +172,37 @@ void MountainProcessRunner::runProcess()
         }
 
         /// TODO implement this as spawn? with respect for this->stopRequested
-        task.log(mountainsort_exe + " " + args.join(" "));
-        if (QProcess::execute(mountainsort_exe, args) != 0) {
-            qWarning() << "Problem running mountainsort" << mountainsort_exe << args;
-            task.error("Problem running mountainsort");
+        task.log(mountainprocess_exe + " " + args.join(" "));
+        QProcess process0;
+        process0.setProcessChannelMode(QProcess::MergedChannels);
+        process0.start(mountainprocess_exe, args);
+        if (!process0.waitForStarted()) {
+            task.error("Error starting process.");
+            return;
         }
+        QString stdout;
+        QEventLoop loop;
+        while (process0.state() == QProcess::Running) {
+            loop.processEvents();
+            QString out=process0.readAll();
+            if (!out.isEmpty()) {
+                printf("%s",out.toLatin1().data());
+                task.log("STDOUT: "+out);
+                stdout += out;
+            }
+            if (thread_interrupt_requested()) {
+                task.error("Terminating due to interrupt request");
+                process0.terminate();
+                return;
+            }
+        }
+
+        /*
+        if (QProcess::execute(mountainprocess_exe, args) != 0) {
+            qWarning() << "Problem running mountainprocess" << mountainprocess_exe << args;
+            task.error("Problem running mountainprocess");
+        }
+        */
     }
     else {
         /*

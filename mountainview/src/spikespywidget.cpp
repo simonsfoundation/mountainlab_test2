@@ -6,6 +6,7 @@
 
 #include "mvtimeseriesview.h"
 #include "spikespywidget.h"
+#include "taskprogressview.h"
 #include <QHBoxLayout>
 #include <QSplitter>
 
@@ -16,6 +17,7 @@ public:
     QList<MVTimeSeriesView*> m_views;
 
     QSplitter* m_splitter;
+    TaskProgressView* m_task_progress_view;
 };
 
 SpikeSpyWidget::SpikeSpyWidget()
@@ -25,6 +27,7 @@ SpikeSpyWidget::SpikeSpyWidget()
     d->m_samplerate = 0;
 
     d->m_splitter = new QSplitter;
+    d->m_task_progress_view->setMaximumWidth(300);
 
     QHBoxLayout* layout = new QHBoxLayout;
     layout->addWidget(d->m_splitter);

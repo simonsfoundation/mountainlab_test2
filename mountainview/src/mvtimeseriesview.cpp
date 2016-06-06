@@ -12,7 +12,6 @@
 #include <QImageWriter>
 #include <QMouseEvent>
 #include <QPainter>
-#include <taskprogress.h>
 
 struct mvtsv_coord {
     mvtsv_coord(long channel0 = 0, double t0 = 0, double y0 = 0)
@@ -244,7 +243,6 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt)
 
-    TaskProgress task("MVTimeSeriesView::paintEvent");
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -297,9 +295,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     double WW = W0 - mleft - mright;
     double HH = H0 - mtop - mbottom;
-    task.log("getImage start");
     QImage img = d->m_render_manager.getImage(d->m_view_t1, d->m_view_t2, d->m_amplitude_factor, WW, HH);
-    task.log("getImage finish");
     painter.drawImage(mleft, mtop, img);
 
     // Time axis
