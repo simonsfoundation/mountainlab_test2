@@ -4,8 +4,8 @@ QT -= gui
 #CONFIG -= debug
 CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
-#CONFIG += c++11
-QMAKE_CXXFLAGS = -std=c++11
+CONFIG += c++11
+#QMAKE_CXXFLAGS = -std=c++11
 
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
