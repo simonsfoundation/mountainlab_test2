@@ -5,7 +5,6 @@ QT -= gui
 CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
 CONFIG += c++11
-#QMAKE_CXXFLAGS = -std=c++11
 
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
@@ -124,7 +123,7 @@ SOURCES += \
     processors/mv_compute_templates.cpp \
     processors/create_multiscale_timeseries_processor.cpp \
     processors/create_multiscale_timeseries.cpp
-SOURCES_NOCXX11 += \
+SOURCES_NOCXX11 += \ #see below
     isosplit/isosplit2.cpp \
     isosplit/isocut.cpp \
     isosplit/jisotonic.cpp \
@@ -153,7 +152,7 @@ SOURCES += utils/get_sort_indices.cpp \
     utils/get_pca_features.cpp \
     utils/compute_templates_0.cpp \
     utils/msmisc.cpp
-SOURCES_NOCXX11 += utils/eigenvalue_decomposition.cpp
+SOURCES_NOCXX11 += utils/eigenvalue_decomposition.cpp #see below
 
 DEFINES += USE_REMOTE_MDA
 DEFINES += USE_SSE2
@@ -175,10 +174,11 @@ SOURCES += mlutils.cpp
 DISTFILES += \
     ../version.txt
 
-CXXFLAGS_NOCXX11 = -c -fopenmp -O2 -Wall -W -D_REENTRANT -fPIC -DUSE_REMOTE_MDA -DUSE_SSE2 -DUSE_LAPACK -DQT_NO_DEBUG -DQT_CORE_LIB
+#some sources need to be compiled without -std=c++11 flag.
+#It would be nice to use something like CXXFLAGS_NOCXX11=$(CXXFLAGS), but doesn't seem to work
+CXXFLAGS_NOCXX11 = -c -fopenmp -O2 -Wall -W -D_REENTRANT -fPIC -DUSE_LAPACK -DQT_NO_DEBUG -DQT_CORE_LIB
 nocxx11.name = nocxx11
 nocxx11.input = SOURCES_NOCXX11
-#cxx11.dependency_type = TYPE_C
 nocxx11.variable_out = OBJECTS
 nocxx11.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
 nocxx11.commands = $${QMAKE_CXX} $${CXXFLAGS_NOCXX11}  $(INCPATH) ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} # Note the -O0
