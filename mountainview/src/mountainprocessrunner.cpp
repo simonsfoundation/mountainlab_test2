@@ -155,9 +155,10 @@ void MountainProcessRunner::runProcess()
         foreach (QString key, keys) {
             args << QString("--%1=%2").arg(key).arg(d->m_parameters.value(key).toString());
         }
-        if (d->m_detach) {
-            args << QString("--~detach=1");
-        }
+        //right now we can't detach while running locally
+        //if (d->m_detach) {
+        //    args << QString("--~detach=1");
+        //}
         task.log(QString("Executing locally: %1").arg(mountainsort_exe));
         foreach (QString key, keys) {
             QString val = d->m_parameters[key].toString();
@@ -169,6 +170,7 @@ void MountainProcessRunner::runProcess()
         }
 
         /// TODO implement this as spawn? with respect for this->stopRequested
+        task.log(mountainsort_exe+" "+args.join(" "));
         if (QProcess::execute(mountainsort_exe, args) != 0) {
             qWarning() << "Problem running mountainsort" << mountainsort_exe << args;
             task.error("Problem running mountainsort");

@@ -47,8 +47,6 @@ void SpikeSpyWidget::setSampleRate(double samplerate)
 void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
 {
     MVTimeSeriesView* W = new MVTimeSeriesView;
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
-    qDebug() << "@@@@@@@@@@@@@@@@@@@" << data.timeseries.N1() << data.timeseries.N2() << data.firings.N1() << data.firings.N2();
     W->setData(data.timeseries);
     QVector<double> times;
     QVector<int> labels;

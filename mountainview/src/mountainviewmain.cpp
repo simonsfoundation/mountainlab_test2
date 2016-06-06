@@ -85,6 +85,7 @@ void test_taskprogressview()
 
 #include "multiscaletimeseries.h"
 #include "spikespywidget.h"
+#include "taskprogressview.h"
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -110,11 +111,13 @@ int main(int argc, char* argv[])
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
             return 0;
-        } else if (arg2 == "remotereadmda2") {
+        }
+        else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
             return 0;
-        } else if (arg2 == "taskprogressview") {
+        }
+        else if (arg2 == "taskprogressview") {
             MVOverview2Widget* W = new MVOverview2Widget;
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
@@ -123,16 +126,19 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            } else {
+            }
+            else {
                 W->resize(W0, H0);
             }
             test_taskprogressview();
             qWarning() << "No such unit test: " + arg2;
             return 0;
-        } else if (arg2 == "multiscaletimeseries") {
+        }
+        else if (arg2 == "multiscaletimeseries") {
             MultiScaleTimeSeries::unit_test(3, 10);
             return 0;
-        } else if (arg2 == "mvtimeseriesview") {
+        }
+        else if (arg2 == "mvtimeseriesview") {
             MVTimeSeriesView::unit_test();
         }
     }
@@ -159,7 +165,8 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            } else {
+            }
+            else {
                 W->resize(W0, H0);
             }
 
@@ -200,21 +207,24 @@ int main(int argc, char* argv[])
         }
 
         W->setDefaultInitialization();
-    } else if (mode == "spikespy") {
+    }
+    else if (mode == "spikespy") {
         printf("spikespy...\n");
         QString timeseries_path = CLP.named_parameters["timeseries"].toString();
         QString firings_path = CLP.named_parameters["firings"].toString();
         double samplerate = CLP.named_parameters["samplerate"].toDouble();
 
-        SpikeSpyWidget *W=new SpikeSpyWidget;
+        SpikeSpyWidget* W = new SpikeSpyWidget;
         SpikeSpyViewData view;
-        view.timeseries=DiskReadMda(timeseries_path);
-        view.firings=DiskReadMda(firings_path);
+        view.timeseries = DiskReadMda(timeseries_path);
+        view.firings = DiskReadMda(firings_path);
         W->addView(view);
         W->setSampleRate(samplerate);
         W->show();
         W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
         W->resize(1800, 1200);
+        TaskProgressView* TPV = new TaskProgressView;
+        TPV->show();
 
         /*
         SSTimeSeriesWidget* W = new SSTimeSeriesWidget;

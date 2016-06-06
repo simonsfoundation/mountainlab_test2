@@ -144,6 +144,7 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
         return "";
     }
 
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
     //if (path.startsWith("http:")) {
     MountainProcessRunner MPR;
     MPR.setProcessorName("create_multiscale_timeseries");
@@ -153,6 +154,7 @@ QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
     MPR.setMLProxyUrl(m_ml_proxy_url);
     QString path_out = MPR.makeOutputFilePath("timeseries_out");
     MPR.setDetach(true);
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
     MPR.runProcess();
     return path_out;
     //} else {

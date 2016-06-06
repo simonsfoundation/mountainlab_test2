@@ -1441,7 +1441,6 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
     else if (widget_type == "mvtimeseries") {
         MVTimeSeriesView* WW = (MVTimeSeriesView*)W;
         WW->setData(DiskReadMda(current_timeseries_path()));
-        WW->setTimeRange(MVRange(0, WW->data().N2() - 1));
         set_times_labels_for_mvtimeseriesview(WW);
     }
 }

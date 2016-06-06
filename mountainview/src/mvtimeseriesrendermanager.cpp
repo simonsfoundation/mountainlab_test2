@@ -11,6 +11,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QCoreApplication>
+#include <QImageWriter>
 
 #define PANEL_NUM_POINTS 1200
 #define PANEL_WIDTH PANEL_NUM_POINTS * 2
@@ -72,8 +73,16 @@ void MVTimeSeriesRenderManager::setChannelColors(const QList<QColor>& colors)
 
 QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_factor, double W, double H)
 {
-    if (!d->m_ts)
+    if (!d->m_ts) {
+        qWarning() << "m_ts is null in MVTimeSeriesRenderManager";
         return QImage();
+    }
+    if (t1>=t2) {
+        qWarning() << "t1>=t2 in MVTimeSeriesRenderManager::getImage" << t1 << t2;
+        QImage tmp(W,H,QImage::Format_ARGB32);
+        tmp.fill(QColor(200,255,200));
+        return tmp;
+    }
 
     QImage ret(W, H, QImage::Format_ARGB32);
     QColor transparent(0, 0, 0, 6);
@@ -107,6 +116,18 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
             double a1 = (iii * PANEL_NUM_POINTS * ds_factor - t1) * 1.0 / (t2 - t1) * W;
             double a2 = ((iii + 1) * PANEL_NUM_POINTS * ds_factor - t1) * 1.0 / (t2 - t1) * W;
             painter.drawImage(a1, 0, img.scaled(a2 - a1, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+            {
+                QImageWriter debug("/tmp/test3.png");
+                debug.write(img);
+            }
+            {
+                QImageWriter debug("/tmp/test4.png");
+                debug.write(img.scaled(a2 - a1, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+            }
+            {
+                QImageWriter debug("/tmp/test5.png");
+                debug.write(ret);
+            }
         }
     }
 
@@ -141,6 +162,8 @@ void MVTimeSeriesRenderManager::slot_thread_finished()
     QString code = p.make_code();
     d->m_running_panel_codes.remove(code);
 
+    QImageWriter debug("/tmp/test.png");
+    debug.write(thread->image);
     if (thread->image.width()) {
         d->m_image_panels[code] = p;
         d->m_image_panels[code].image = thread->image;

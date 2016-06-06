@@ -9,8 +9,10 @@
 #include "mvtimeseriesrendermanager.h"
 #include <math.h>
 
+#include <QImageWriter>
 #include <QMouseEvent>
 #include <QPainter>
+#include <taskprogress.h>
 
 struct mvtsv_coord {
     mvtsv_coord(long channel0 = 0, double t0 = 0, double y0 = 0)
@@ -125,13 +127,16 @@ MVTimeSeriesView::MVTimeSeriesView()
     d->m_current_t = 0;
     d->m_selected_t_range = MVRange(-1, -1);
     d->m_activated = true; /// TODO set activated only when window is active (like in sstimeseriesview, I think)
+    /// TODO auto set the amplitude factor
     d->m_amplitude_factor = 1.0 / 40;
     d->m_left_click_anchor_pix = QPointF(-1, -1);
     d->m_left_click_dragging = false;
     d->m_layout_needed = true;
     this->setMouseTracking(true);
     d->m_render_manager.setMultiScaleTimeSeries(&d->m_ts);
-    d->m_samplerate=1;
+    d->m_samplerate = 1;
+
+    this->setFocusPolicy(Qt::StrongFocus);
 
     QObject::connect(&d->m_render_manager, SIGNAL(updated()), this, SLOT(update()));
 }
@@ -143,7 +148,7 @@ MVTimeSeriesView::~MVTimeSeriesView()
 
 void MVTimeSeriesView::setSampleRate(double samplerate)
 {
-    d->m_samplerate=samplerate;
+    d->m_samplerate = samplerate;
     update();
 }
 
@@ -156,6 +161,7 @@ void MVTimeSeriesView::setData(const DiskReadMda& X)
     d->m_data.N1();
     d->m_ts.setData(X);
     d->m_layout_needed = true;
+    this->setTimeRange(MVRange(0, d->m_data.N2() - 1));
     update();
 }
 
@@ -238,6 +244,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt)
 
+    TaskProgress task("MVTimeSeriesView::paintEvent");
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -280,7 +287,8 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     double min_avg_pixels_per_marker = 10;
     if ((times0.count()) && (W0 / times0.count() >= min_avg_pixels_per_marker)) {
         d->paint_markers(&painter, times0, labels0, W0, H0);
-    } else {
+    }
+    else {
         d->paint_message_at_top(&painter, "Zoom in to view markers", W0, H0);
     }
 
@@ -289,7 +297,11 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     double WW = W0 - mleft - mright;
     double HH = H0 - mtop - mbottom;
+    task.log("getImage start");
     QImage img = d->m_render_manager.getImage(d->m_view_t1, d->m_view_t2, d->m_amplitude_factor, WW, HH);
+    task.log("getImage finish");
+    QImageWriter debug("/tmp/test2.png");
+    debug.write(img);
     painter.drawImage(mleft, mtop, img);
 
     // Time axis
@@ -357,10 +369,12 @@ void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
             d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-        } else if (delta > 0) {
+        }
+        else if (delta > 0) {
             d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
         }
-    } else {
+    }
+    else {
         //This used to allow zooming at hover position -- probably not needed
         /*
         float frac = 1;
@@ -379,30 +393,38 @@ void MVTimeSeriesView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    } else if (evt->key() == Qt::Key_Left) {
+    }
+    else if (evt->key() == Qt::Key_Left) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
         this->setCurrentTimepoint(this->currentTimepoint() - range / 10);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_Right) {
+    }
+    else if (evt->key() == Qt::Key_Right) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
         this->setCurrentTimepoint(this->currentTimepoint() + range / 10);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_Home) {
+    }
+    else if (evt->key() == Qt::Key_Home) {
         this->setCurrentTimepoint(0);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_End) {
+    }
+    else if (evt->key() == Qt::Key_End) {
         this->setCurrentTimepoint(d->m_data.N2() - 1);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_Equal) {
+    }
+    else if (evt->key() == Qt::Key_Equal) {
         d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
-    } else if (evt->key() == Qt::Key_Minus) {
+    }
+    else if (evt->key() == Qt::Key_Minus) {
         d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-    } else {
+    }
+    else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -782,7 +804,8 @@ void MVTimeSeriesViewPrivate::scroll_to_current_timepoint()
     double range = trange.max - trange.min;
     if (t < trange.min) {
         q->setTimeRange(trange + (t - trange.min - range / 10));
-    } else {
+    }
+    else {
         q->setTimeRange(trange + (t - trange.max + range / 10));
     }
 }
