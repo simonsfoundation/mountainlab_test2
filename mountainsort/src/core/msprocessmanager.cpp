@@ -122,12 +122,19 @@ QString compute_process_code(const QString& processor_name, const QVariantMap& p
 
 QString compute_file_code(const QString& path)
 {
+    //didn't compile on mac so using the following which only depends on size and modification date
+
+    QFileInfo info(path);
+    return QString("%1:%2").arg(info.size()).arg(info.lastModified().toMSecsSinceEpoch());
+
+    /*
     //the code comprises the device,inode,size, and modification time (in seconds)
     //note that it is not dependent on the file name
     struct stat SS;
     stat(path.toLatin1().data(), &SS);
     QString id_string = QString("%1:%2:%3:%4").arg(SS.st_dev).arg(SS.st_ino).arg(SS.st_size).arg(SS.st_mtim.tv_sec);
     return id_string;
+    */
 }
 
 QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& processor_name, const QVariantMap& parameters)
