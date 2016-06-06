@@ -28,10 +28,10 @@ public:
     void setPath(const QString& path);
     QString path() const;
 
-    long N1();
-    long N2();
-    long N3();
-    QDateTime fileLastModified();
+    long N1() const;
+    long N2() const;
+    long N3() const;
+    QDateTime fileLastModified() const;
 
     ///Retrieve a chunk of the vectorized data of size 1xN starting at position i
     bool readChunk(Mda& X, long i, long size) const;

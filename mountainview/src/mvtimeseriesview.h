@@ -33,9 +33,10 @@ public:
     MVTimeSeriesView();
     virtual ~MVTimeSeriesView();
 
+    void setSampleRate(double samplerate);
     void setData(const DiskReadMda& X);
     void setMLProxyUrl(const QString& url);
-    void setTimesLabels(const QVector<double>& times, const QList<int>& labels);
+    void setTimesLabels(const QVector<double>& times, const QVector<int>& labels);
     void setChannelColors(const QList<QColor>& colors);
 
     void setTimeRange(MVRange);

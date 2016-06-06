@@ -94,25 +94,25 @@ QString RemoteReadMda::path() const
     return d->m_path;
 }
 
-long RemoteReadMda::N1()
+long RemoteReadMda::N1() const
 {
     d->download_info_if_needed();
     return d->m_info.N1;
 }
 
-long RemoteReadMda::N2()
+long RemoteReadMda::N2() const
 {
     d->download_info_if_needed();
     return d->m_info.N2;
 }
 
-long RemoteReadMda::N3()
+long RemoteReadMda::N3() const
 {
     d->download_info_if_needed();
     return d->m_info.N3;
 }
 
-QDateTime RemoteReadMda::fileLastModified()
+QDateTime RemoteReadMda::fileLastModified() const
 {
     d->download_info_if_needed();
     return d->m_info.file_last_modified;
@@ -130,6 +130,10 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     //    task.setLabel(QString("Downloading array chunk: %1 MB").arg(size_mb));
     //}
     //read a chunk of the remote array considered as a 1D array
+
+    TaskProgress task(TaskProgress::Download,QString("Downloading %4 (%1x%2x%3)").arg(N1()).arg(N2()).arg(N3()).arg(d->m_remote_datatype));
+    task.log(this->path());
+
     X.allocate(size, 1); //allocate the output array
     double* Xptr = X.dataPtr(); //pointer to the output data
     long ii1 = i; //start index of the remote array
@@ -137,15 +141,17 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     long jj1 = ii1 / d->m_download_chunk_size; //start chunk index of the remote array
     long jj2 = ii2 / d->m_download_chunk_size; //end chunk index of the remote array
     if (jj1 == jj2) { //in this case there is only one chunk we need to worry about
-        //task.setProgress(0.5);
+        task.setProgress(0.2);
         QString fname = d->download_chunk_at_index(jj1); //download the single chunk
         if (fname.isEmpty()) {
             //task.error("fname is empty");
-            TaskProgress errtask("Download chunk at index");
-            errtask.log(QString("m_remote_data_type = %1, download chunk size = %2").arg(d->m_remote_datatype).arg(d->m_download_chunk_size));
-            errtask.log(d->m_path);
-            errtask.error(QString("Failed to download chunk at index %1").arg(jj1));
-            d->m_download_failed = true;
+            if (!thread_interrupt_requested()) {
+                TaskProgress errtask("Download chunk at index");
+                errtask.log(QString("m_remote_data_type = %1, download chunk size = %2").arg(d->m_remote_datatype).arg(d->m_download_chunk_size));
+                errtask.log(d->m_path);
+                errtask.error(QString("Failed to download chunk at index %1").arg(jj1));
+                d->m_download_failed = true;
+            }
             return false;
         }
         DiskReadMda A(fname);
@@ -154,7 +160,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     }
     else {
         for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
-            //task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
+            task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
             if (thread_interrupt_requested()) {
                 //X = Mda(); //maybe it's better to return the right size.
                 //task.error("Halted");

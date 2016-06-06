@@ -76,9 +76,10 @@ public:
     MVTimeSeriesView* q;
     MultiScaleTimeSeries m_ts;
 
+    double m_samplerate;
     DiskReadMda m_data;
     QVector<double> m_times;
-    QList<int> m_labels;
+    QVector<int> m_labels;
 
     mvtsv_prefs m_prefs;
 
@@ -114,7 +115,7 @@ public:
     void zoom_in(mvtsv_coord about_coord, double frac = 0.8);
     void scroll_to_current_timepoint();
 
-    static QString format_time(double tp);
+    QString format_time(double tp);
 };
 
 MVTimeSeriesView::MVTimeSeriesView()
@@ -130,6 +131,7 @@ MVTimeSeriesView::MVTimeSeriesView()
     d->m_layout_needed = true;
     this->setMouseTracking(true);
     d->m_render_manager.setMultiScaleTimeSeries(&d->m_ts);
+    d->m_samplerate=1;
 
     QObject::connect(&d->m_render_manager, SIGNAL(updated()), this, SLOT(update()));
 }
@@ -137,6 +139,12 @@ MVTimeSeriesView::MVTimeSeriesView()
 MVTimeSeriesView::~MVTimeSeriesView()
 {
     delete d;
+}
+
+void MVTimeSeriesView::setSampleRate(double samplerate)
+{
+    d->m_samplerate=samplerate;
+    update();
 }
 
 /// TODO make sure all threads end on destruct
@@ -157,7 +165,7 @@ void MVTimeSeriesView::setMLProxyUrl(const QString& url)
     update();
 }
 
-void MVTimeSeriesView::setTimesLabels(const QVector<double>& times, const QList<int>& labels)
+void MVTimeSeriesView::setTimesLabels(const QVector<double>& times, const QVector<int>& labels)
 {
     d->m_times = times;
     d->m_labels = labels;
@@ -615,7 +623,7 @@ void MVTimeSeriesViewPrivate::paint_message_at_top(QPainter* painter, QString ms
 void MVTimeSeriesViewPrivate::paint_time_axis(QPainter* painter, double W, double H)
 {
     /// TODO samplerate needs to be member variable
-    double samplerate = 30000;
+    double samplerate = m_samplerate;
     long min_pixel_spacing_between_ticks = 30;
 
     QPen pen = painter->pen();
@@ -782,7 +790,7 @@ void MVTimeSeriesViewPrivate::scroll_to_current_timepoint()
 QString MVTimeSeriesViewPrivate::format_time(double tp)
 {
     /// TODO make samplerate a member
-    double samplerate = 30000;
+    double samplerate = m_samplerate;
     double sec = tp / samplerate;
     long day = (long)floor(sec / (24 * 60 * 60));
     sec -= day * 24 * 60 * 60;

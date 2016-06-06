@@ -183,8 +183,9 @@ QString http_get_binary_file(const QString& url)
     //    qCritical() << "Cannot call http_get_binary_file from within the GUI thread!";
     //    exit(-1);
     //}
-    TaskProgress task("Downloading binary file");
-    task.log(url);
+
+    //TaskProgress task("Downloading binary file");
+    //task.log(url);
     QTime timer;
     timer.start();
     QString fname = get_temp_fname();
@@ -196,7 +197,9 @@ QString http_get_binary_file(const QString& url)
     temp.open(QIODevice::WriteOnly);
     QObject::connect(reply, &QNetworkReply::readyRead, [&]() {
         if (thread_interrupt_requested()) {
-            task.error("Download halted");
+            TaskProgress errtask("Download halted");
+            errtask.error("Thread interrupt requested");
+            errtask.log(url);
             reply->abort();
         }
         QByteArray X=reply->readAll();
@@ -205,7 +208,7 @@ QString http_get_binary_file(const QString& url)
     });
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
-    task.setLabel(QString("Downloaded %1 MB in %2 sec").arg(num_bytes * 1.0 / 1e6).arg(timer.elapsed() * 1.0 / 1000));
+    //task.setLabel(QString("Downloaded %1 MB in %2 sec").arg(num_bytes * 1.0 / 1e6).arg(timer.elapsed() * 1.0 / 1000));
     printf("RECEIVED BINARY (%d ms, %ld bytes) from %s\n", timer.elapsed(), num_bytes, url.toLatin1().data());
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_downloaded", num_bytes);
     if (thread_interrupt_requested()) {

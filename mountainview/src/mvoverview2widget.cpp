@@ -934,6 +934,7 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 void MVOverview2WidgetPrivate::open_timeseries()
 {
     MVTimeSeriesView* X = new MVTimeSeriesView;
+    X->setSampleRate(m_samplerate);
     X->setChannelColors(m_channel_colors);
     X->setProperty("widget_type", "mvtimeseries");
     X->setMLProxyUrl(m_mlproxy_url);
@@ -1448,7 +1449,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
 void MVOverview2WidgetPrivate::set_times_labels_for_mvtimeseriesview(MVTimeSeriesView* WW)
 {
     QVector<double> times;
-    QList<int> labels;
+    QVector<int> labels;
     for (int n = 0; n < m_firings_original.N2(); n++) {
         long label0 = (long)m_firings_original.value(2, n);
         if ((m_view_agent.selectedClusters().isEmpty()) || (m_view_agent.selectedClusters().contains(label0))) {

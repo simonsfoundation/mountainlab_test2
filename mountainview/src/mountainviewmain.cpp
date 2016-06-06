@@ -30,6 +30,8 @@
 #include <QThreadPool>
 #include <QtConcurrentRun>
 
+/// TODO option to turn on/off 8-bit quantization per view
+
 class TaskProgressViewThread : public QRunnable {
 public:
     TaskProgressViewThread(int idx)
@@ -82,6 +84,7 @@ void test_taskprogressview()
 /// TODO 0.9.1 -- make sure to handle merging with other views, such as clips etc. Make elegant way
 
 #include "multiscaletimeseries.h"
+#include "spikespywidget.h"
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -202,6 +205,18 @@ int main(int argc, char* argv[])
         QString timeseries_path = CLP.named_parameters["timeseries"].toString();
         QString firings_path = CLP.named_parameters["firings"].toString();
         double samplerate = CLP.named_parameters["samplerate"].toDouble();
+
+        SpikeSpyWidget *W=new SpikeSpyWidget;
+        SpikeSpyViewData view;
+        view.timeseries=DiskReadMda(timeseries_path);
+        view.firings=DiskReadMda(firings_path);
+        W->addView(view);
+        W->setSampleRate(samplerate);
+        W->show();
+        W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
+        W->resize(1800, 1200);
+
+        /*
         SSTimeSeriesWidget* W = new SSTimeSeriesWidget;
         SSTimeSeriesView* V = new SSTimeSeriesView;
         V->setSampleRate(samplerate);
@@ -220,6 +235,7 @@ int main(int argc, char* argv[])
         W->show();
         W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
         W->resize(1800, 1200);
+        */
     }
 
     int ret = a.exec();
