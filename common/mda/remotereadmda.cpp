@@ -131,7 +131,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     //}
     //read a chunk of the remote array considered as a 1D array
 
-    TaskProgress task(TaskProgress::Download,QString("Downloading %4 (%1x%2x%3)").arg(N1()).arg(N2()).arg(N3()).arg(d->m_remote_datatype));
+    TaskProgress task(TaskProgress::Download, QString("Downloading %4 (%1x%2x%3)").arg(N1()).arg(N2()).arg(N3()).arg(d->m_remote_datatype));
     task.log(this->path());
 
     X.allocate(size, 1); //allocate the output array

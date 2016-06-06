@@ -116,7 +116,8 @@ double compute_stdev(const QList<double>& X)
     int ct = X.count();
     if (ct >= 2) {
         return sqrt((sumsqr - sum * sum / ct) / (ct - 1));
-    } else
+    }
+    else
         return 0;
 }
 Mda grab_clips_subset(Mda& clips, const QList<int>& inds)

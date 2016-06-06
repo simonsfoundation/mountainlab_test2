@@ -48,10 +48,12 @@ public:
         if (tags.contains("calculate")) {
             QPixmap px(":/images/calculator.png");
             icon.addPixmap(px);
-        } else if (tags.contains("download")) {
+        }
+        else if (tags.contains("download")) {
             QPixmap px(":/images/down.png");
             icon.addPixmap(px);
-        } else if (tags.contains("process")) {
+        }
+        else if (tags.contains("process")) {
             QPixmap px(":/images/process.png");
             icon.addPixmap(px);
         }
@@ -271,7 +273,8 @@ protected:
     }
     QString singleLog(const TaskProgressLogMessage& msg, const QString& prefix = QString()) const
     {
-        return QString("%1%2: %3").arg(prefix).arg(msg.time.toString(Qt::ISODate)).arg(msg.message);
+        //return QString("%1%2: %3").arg(prefix).arg(msg.time.toString(Qt::ISODate)).arg(msg.message);
+        return QString("%1%2: %3").arg(prefix).arg(msg.time.toString("yyyy-MM-dd hh:mm:ss.zzz")).arg(msg.message);
     }
 
 private:
@@ -292,7 +295,7 @@ TaskProgressView::TaskProgressView()
     d->q = this;
     setSelectionMode(ContiguousSelection);
     setItemDelegate(new TaskProgressViewDelegate(this));
-    TaskManager::TaskProgressModel *model = new TaskManager::TaskProgressModel(this);
+    TaskManager::TaskProgressModel* model = new TaskManager::TaskProgressModel(this);
     setModel(model);
     header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     header()->hide();
@@ -305,20 +308,20 @@ TaskProgressView::TaskProgressView()
             this->setFirstColumnSpanned(i, QModelIndex(), true);
     });
 
-    connect(model, &QAbstractItemModel::rowsInserted, [this, model](const QModelIndex &parent, int from, int to) {
+    connect(model, &QAbstractItemModel::rowsInserted, [this, model](const QModelIndex& parent, int from, int to) {
         if (parent.isValid()) return;
         for(int i = from; i <=to; ++i)
             this->setFirstColumnSpanned(i, QModelIndex(), true);
     });
-    for(int i = 0; i < model->rowCount(); ++i)
+    for (int i = 0; i < model->rowCount(); ++i)
         setFirstColumnSpanned(i, QModelIndex(), true);
-    connect(model, &QAbstractItemModel::dataChanged, [this, model](const QModelIndex &from, const QModelIndex &to) {
+    connect(model, &QAbstractItemModel::dataChanged, [this, model](const QModelIndex& from, const QModelIndex& to) {
         if (from.parent().isValid()) return;
         for (int i = from.row(); i<=to.row(); ++i) {
             setFirstColumnSpanned(i, QModelIndex(), true);
         }
     });
-    QTimer * timer = new QTimer(this);
+    QTimer* timer = new QTimer(this);
     timer->start(1000);
     connect(timer, SIGNAL(timeout()), viewport(), SLOT(update()));
 }

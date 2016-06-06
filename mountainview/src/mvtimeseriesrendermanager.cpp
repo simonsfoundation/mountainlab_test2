@@ -12,13 +12,14 @@
 #include <QTimer>
 #include <QCoreApplication>
 #include <QImageWriter>
+#include "taskprogress.h"
 
 #define PANEL_NUM_POINTS 1200
 #define PANEL_WIDTH PANEL_NUM_POINTS * 2
 #define PANEL_HEIGHT_PER_CHANNEL 30
 #define MIN_PANEL_HEIGHT 600
 #define MAX_PANEL_HEIGHT 1800
-#define PANEL_HEIGHT(M) (long) qMin(MAX_PANEL_HEIGHT * 1.0, qMax(MIN_PANEL_HEIGHT * 1.0, PANEL_HEIGHT_PER_CHANNEL* M * 1.0))
+#define PANEL_HEIGHT(M) (long) qMin(MAX_PANEL_HEIGHT * 1.0, qMax(MIN_PANEL_HEIGHT * 1.0, PANEL_HEIGHT_PER_CHANNEL * M * 1.0))
 
 #define MAX_NUM_IMAGE_PIXELS 50 * 1e6
 
@@ -77,10 +78,10 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
         qWarning() << "m_ts is null in MVTimeSeriesRenderManager";
         return QImage();
     }
-    if (t1>=t2) {
+    if (t1 >= t2) {
         qWarning() << "t1>=t2 in MVTimeSeriesRenderManager::getImage" << t1 << t2;
-        QImage tmp(W,H,QImage::Format_ARGB32);
-        tmp.fill(QColor(200,255,200));
+        QImage tmp(W, H, QImage::Format_ARGB32);
+        tmp.fill(QColor(200, 255, 200));
         return tmp;
     }
 
@@ -116,24 +117,11 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
             double a1 = (iii * PANEL_NUM_POINTS * ds_factor - t1) * 1.0 / (t2 - t1) * W;
             double a2 = ((iii + 1) * PANEL_NUM_POINTS * ds_factor - t1) * 1.0 / (t2 - t1) * W;
             painter.drawImage(a1, 0, img.scaled(a2 - a1, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-            {
-                QImageWriter debug("/tmp/test3.png");
-                debug.write(img);
-            }
-            {
-                QImageWriter debug("/tmp/test4.png");
-                debug.write(img.scaled(a2 - a1, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-            }
-            {
-                QImageWriter debug("/tmp/test5.png");
-                debug.write(ret);
-            }
         }
     }
 
     //stop the threads that aren't needed
-    foreach(QString code, d->m_running_panel_codes)
-    {
+    foreach (QString code, d->m_running_panel_codes) {
         if (!panel_codes_needed.contains(code)) {
             d->stop_compute_panel(code);
         }
@@ -162,14 +150,13 @@ void MVTimeSeriesRenderManager::slot_thread_finished()
     QString code = p.make_code();
     d->m_running_panel_codes.remove(code);
 
-    QImageWriter debug("/tmp/test.png");
-    debug.write(thread->image);
     if (thread->image.width()) {
         d->m_image_panels[code] = p;
         d->m_image_panels[code].image = thread->image;
         d->m_total_num_image_pixels += thread->image.width() * thread->image.height();
         emit updated();
-    } else {
+    }
+    else {
     }
 
     thread->deleteLater();
@@ -205,8 +192,7 @@ ImagePanel* MVTimeSeriesRenderManagerPrivate::closest_ancestor_panel(ImagePanel 
 {
     QList<ImagePanel*> candidates;
     QStringList keys = m_image_panels.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ImagePanel* pp = &m_image_panels[key];
         if (pp->amp_factor == p.amp_factor) {
             double t1 = p.index * p.ds_factor * PANEL_NUM_POINTS;
@@ -234,8 +220,7 @@ ImagePanel* MVTimeSeriesRenderManagerPrivate::closest_ancestor_panel(ImagePanel 
 void MVTimeSeriesRenderManagerPrivate::cleanup_images(double t1, double t2, double amp_factor)
 {
     QStringList keys = m_image_panels.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ImagePanel* P = &m_image_panels[key];
         double s1 = P->index * P->ds_factor * PANEL_NUM_POINTS;
         double s2 = (P->index + 1) * P->ds_factor * PANEL_NUM_POINTS;
@@ -326,7 +311,8 @@ void MVTimeSeriesRenderManagerThread::run()
             if (ii == t1) {
                 first = pt_min;
                 path.moveTo(pt_min);
-            } else
+            }
+            else
                 path.lineTo(pt_min);
         }
         for (long ii = t2; ii >= t1; ii--) {
@@ -360,8 +346,8 @@ ThreadManager::ThreadManager()
 ThreadManager::~ThreadManager()
 {
     m_queued_threads.clear();
-    QStringList keys=m_running_threads.keys();
-    foreach (QString key,keys) {
+    QStringList keys = m_running_threads.keys();
+    foreach (QString key, keys) {
         this->stop(key);
     }
     while (!m_running_threads.isEmpty()) {
@@ -412,7 +398,8 @@ QImage MVTimeSeriesRenderManagerPrivate::render_panel(ImagePanel p)
     QString code = p.make_code();
     if (m_image_panels.contains(code)) {
         return m_image_panels[code].image;
-    } else {
+    }
+    else {
         QImage ret;
         ImagePanel* p2 = closest_ancestor_panel(p);
         if (p2) {
@@ -426,7 +413,8 @@ QImage MVTimeSeriesRenderManagerPrivate::render_panel(ImagePanel p)
             QPainter painter(&ret);
             QColor col(255, 0, 0, 6);
             painter.fillRect(0, 0, ret.width(), ret.height(), col);
-        } else {
+        }
+        else {
             ret = QImage(100, 100, QImage::Format_ARGB32);
             QColor col(0, 0, 0, 10);
             ret.fill(col);

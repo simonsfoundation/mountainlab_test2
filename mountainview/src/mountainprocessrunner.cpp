@@ -170,7 +170,7 @@ void MountainProcessRunner::runProcess()
         }
 
         /// TODO implement this as spawn? with respect for this->stopRequested
-        task.log(mountainsort_exe+" "+args.join(" "));
+        task.log(mountainsort_exe + " " + args.join(" "));
         if (QProcess::execute(mountainsort_exe, args) != 0) {
             qWarning() << "Problem running mountainsort" << mountainsort_exe << args;
             task.error("Problem running mountainsort");

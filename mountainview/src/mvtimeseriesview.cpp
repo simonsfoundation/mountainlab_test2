@@ -300,8 +300,6 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     task.log("getImage start");
     QImage img = d->m_render_manager.getImage(d->m_view_t1, d->m_view_t2, d->m_amplitude_factor, WW, HH);
     task.log("getImage finish");
-    QImageWriter debug("/tmp/test2.png");
-    debug.write(img);
     painter.drawImage(mleft, mtop, img);
 
     // Time axis

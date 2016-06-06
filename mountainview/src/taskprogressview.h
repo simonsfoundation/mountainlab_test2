@@ -18,7 +18,8 @@ public:
     virtual ~TaskProgressView();
 public slots:
     void copySelectedToClipboard();
-    void showLogMessages(const QModelIndex &index);
+    void showLogMessages(const QModelIndex& index);
+
 private:
     TaskProgressViewPrivate* d;
 };

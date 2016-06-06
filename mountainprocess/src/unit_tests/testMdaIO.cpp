@@ -12,7 +12,8 @@ public:
     {
         if (this->file.open()) {
             this->handle = fdopen(this->file.handle(), "r+b");
-        } else {
+        }
+        else {
             this->handle = 0;
         }
     }

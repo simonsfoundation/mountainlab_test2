@@ -480,7 +480,6 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
 
     d->m_anchor_x = -1;
 
-
     int view_index = d->find_view_index_at(pt);
     if (view_index >= 0) {
         int k = d->m_views[view_index]->k();
