@@ -4,7 +4,8 @@ QT -= gui
 #CONFIG -= debug
 CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
-CONFIG += c++11
+#CONFIG += c++11
+QMAKE_CXXFLAGS = -std=c++11
 
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
@@ -29,16 +30,12 @@ HEADERS += \
     processors/detect.h \
     processors/whiten_processor.h \
     processors/whiten.h \
-    utils/get_sort_indices.h \
-    utils/eigenvalue_decomposition.h \
-    utils/matrix_mda.h \
     processors/branch_cluster_v2_processor.h \
     processors/branch_cluster_v2.h \
     isosplit/isosplit2.h \
     isosplit/isocut.h \
     isosplit/jisotonic.h \
     processors/extract_clips.h \
-    utils/msmisc.h \
     processors/remove_duplicate_clusters_processor.h \
     processors/remove_duplicate_clusters.h \
     processors/compute_outlier_scores_processor.h \
@@ -47,12 +44,10 @@ HEADERS += \
     processors/mda2txt_processor.h \
     processors/mask_out_artifacts_processor.h \
     processors/mask_out_artifacts.h \
-    utils/get_pca_features.h \
     processors/adjust_times_processor.h \
     processors/adjust_times.h \
     processors/fit_stage_processor.h \
     processors/fit_stage.h \
-    utils/compute_templates_0.h \
     processors/compute_templates.h \
     processors/compute_templates_processor.h \
     processors/mv_firings_filter_processor.h \
@@ -89,16 +84,12 @@ SOURCES += \
     processors/detect.cpp \
     processors/whiten_processor.cpp \
     processors/whiten.cpp \
-    utils/get_sort_indices.cpp \
-    utils/eigenvalue_decomposition.cpp \
-    utils/matrix_mda.cpp \
     processors/branch_cluster_v2_processor.cpp \
     processors/branch_cluster_v2.cpp \
     isosplit/isosplit2.cpp \
     isosplit/isocut.cpp \
     isosplit/jisotonic.cpp \
     processors/extract_clips.cpp \
-    utils/msmisc.cpp \
     processors/remove_duplicate_clusters_processor.cpp \
     processors/remove_duplicate_clusters.cpp \
     processors/compute_outlier_scores_processor.cpp \
@@ -107,12 +98,10 @@ SOURCES += \
     processors/mda2txt_processor.cpp \
     processors/mask_out_artifacts_processor.cpp \
     processors/mask_out_artifacts.cpp \
-    utils/get_pca_features.cpp \
     processors/adjust_times_processor.cpp \
     processors/adjust_times.cpp \
     processors/fit_stage_processor.cpp \
     processors/fit_stage.cpp \
-    utils/compute_templates_0.cpp \
     processors/compute_templates.cpp \
     processors/compute_templates_processor.cpp \
     processors/mv_firings_filter_processor.cpp \
@@ -149,6 +138,20 @@ VPATH += ../../common/utils
 HEADERS += textfile.h taskprogress.h
 SOURCES += textfile.cpp taskprogress.cpp
 
+HEADERS += utils/get_sort_indices.h \
+    utils/matrix_mda.h \
+    utils/msmisc.h \
+    utils/get_pca_features.h \
+    utils/compute_templates_0.h \
+    utils/eigenvalue_decomposition.h
+
+SOURCES += utils/get_sort_indices.cpp \
+    utils/matrix_mda.cpp \
+    utils/get_pca_features.cpp \
+    utils/compute_templates_0.cpp \
+    utils/msmisc.cpp
+SOURCES_NOCXX11 += utils/eigenvalue_decomposition.cpp
+
 DEFINES += USE_REMOTE_MDA
 DEFINES += USE_SSE2
 INCLUDEPATH += ../../common/mda
@@ -169,6 +172,14 @@ SOURCES += mlutils.cpp
 DISTFILES += \
     ../version.txt
 
+CXXFLAGS_NOCXX11 = -c -fopenmp -O2 -Wall -W -D_REENTRANT -fPIC -DUSE_REMOTE_MDA -DUSE_SSE2 -DUSE_LAPACK -DQT_NO_DEBUG -DQT_CORE_LIB
+nocxx11.name = nocxx11
+nocxx11.input = SOURCES_NOCXX11
+#cxx11.dependency_type = TYPE_C
+nocxx11.variable_out = OBJECTS
+nocxx11.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
+nocxx11.commands = $${QMAKE_CXX} $${CXXFLAGS_NOCXX11}  $(INCPATH) ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} # Note the -O0
+QMAKE_EXTRA_COMPILERS += nocxx11
 
 #LAPACK
 #On Ubuntu: sudo apt-get install liblapacke-dev
