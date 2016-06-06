@@ -86,9 +86,6 @@ SOURCES += \
     processors/whiten.cpp \
     processors/branch_cluster_v2_processor.cpp \
     processors/branch_cluster_v2.cpp \
-    isosplit/isosplit2.cpp \
-    isosplit/isocut.cpp \
-    isosplit/jisotonic.cpp \
     processors/extract_clips.cpp \
     processors/remove_duplicate_clusters_processor.cpp \
     processors/remove_duplicate_clusters.cpp \
@@ -127,6 +124,12 @@ SOURCES += \
     processors/mv_compute_templates.cpp \
     processors/create_multiscale_timeseries_processor.cpp \
     processors/create_multiscale_timeseries.cpp
+SOURCES_NOCXX11 += \
+    isosplit/isosplit2.cpp \
+    isosplit/isocut.cpp \
+    isosplit/jisotonic.cpp \
+
+
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams
