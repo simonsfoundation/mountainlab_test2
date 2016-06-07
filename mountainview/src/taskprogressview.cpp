@@ -367,26 +367,30 @@ void TaskProgressView::showLogMessages(const QModelIndex& index)
 {
     if (index.parent().isValid())
         return;
-    QDialog dlg(this);
-    dlg.setWindowTitle(tr("Log messages for %1").arg(index.data().toString()));
+    QWidget *dlg = new QWidget(this);
+    // forcing the widget to be a window despite having a parent so that the window
+    // is destroyed with the main window
+    dlg->setWindowFlags(Qt::Window);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setWindowTitle(tr("Log messages for %1").arg(index.data().toString()));
     QPlainTextEdit* te = new QPlainTextEdit;
     QFont f;
     f.setPointSize(f.pointSize() - 2);
     te->setFont(f);
     te->setReadOnly(true);
     QDialogButtonBox* bb = new QDialogButtonBox;
-    QObject::connect(bb, SIGNAL(accepted()), &dlg, SLOT(accept()));
-    QObject::connect(bb, SIGNAL(rejected()), &dlg, SLOT(reject()));
+    QObject::connect(bb, SIGNAL(accepted()), dlg, SLOT(close()));
+    QObject::connect(bb, SIGNAL(rejected()), dlg, SLOT(close()));
     bb->setStandardButtons(QDialogButtonBox::Close);
-    QVBoxLayout* l = new QVBoxLayout(&dlg);
+    QVBoxLayout* l = new QVBoxLayout(dlg);
     l->addWidget(te);
     l->addWidget(bb);
     te->setPlainText(index.data(TaskManager::TaskProgressModel::LogRole).toString());
-    QRect r = QApplication::desktop()->screenGeometry(&dlg);
+    QRect r = QApplication::desktop()->screenGeometry(dlg);
     r.setWidth(r.width() / 2);
     r.setHeight(r.height() / 2);
-    dlg.resize(r.size());
-    dlg.exec();
+    dlg->resize(r.size());
+    dlg->show();
 }
 
 QString TaskProgressViewPrivate::shortened(QString txt, int maxlen)
