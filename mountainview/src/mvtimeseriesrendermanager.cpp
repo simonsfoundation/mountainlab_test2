@@ -115,8 +115,10 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
     }
     double points_per_pixel = ((t2 - t1) / ds_factor) / W;
     if (points_per_pixel < 1.0 / 3) {
-        //panel_width *= 3;
         panel_num_points /= 3;
+    }
+    if ((t2-t1<panel_num_points)) {
+        panel_num_points/=3;
     }
 
     QSet<QString> panel_codes_needed;
