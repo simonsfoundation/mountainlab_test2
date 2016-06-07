@@ -16,6 +16,8 @@ QMAKE_POST_LINK += cp $$PWD/../bin/mountainsort $$PWD/../../mountainprocess/proc
 
 INCLUDEPATH += utils core processors mda unit_tests 3rdparty isosplit ../../common/cachemanager
 
+LIBS += ../build/libmountainsortlib.a
+
 HEADERS += \
     core/msprocessmanager.h \
     core/mountainsort_version.h \
@@ -123,11 +125,6 @@ SOURCES += \
     processors/mv_compute_templates.cpp \
     processors/create_multiscale_timeseries_processor.cpp \
     processors/create_multiscale_timeseries.cpp
-SOURCES_NOCXX11 += \ #see below
-    isosplit/isosplit2.cpp \
-    isosplit/isocut.cpp \
-    isosplit/jisotonic.cpp \
-
 
 
 INCLUDEPATH += ../../common/commandlineparams
@@ -152,7 +149,6 @@ SOURCES += utils/get_sort_indices.cpp \
     utils/get_pca_features.cpp \
     utils/compute_templates_0.cpp \
     utils/msmisc.cpp
-SOURCES_NOCXX11 += utils/eigenvalue_decomposition.cpp #see below
 
 DEFINES += USE_REMOTE_MDA
 DEFINES += USE_SSE2
@@ -174,15 +170,6 @@ SOURCES += mlutils.cpp
 DISTFILES += \
     ../version.txt
 
-#some sources need to be compiled without -std=c++11 flag.
-#It would be nice to use something like CXXFLAGS_NOCXX11=$(CXXFLAGS), but doesn't seem to work
-CXXFLAGS_NOCXX11 = -c -fopenmp -O2 -Wall -W -D_REENTRANT -fPIC -DUSE_LAPACK -DQT_NO_DEBUG -DQT_CORE_LIB
-nocxx11.name = nocxx11
-nocxx11.input = SOURCES_NOCXX11
-nocxx11.variable_out = OBJECTS
-nocxx11.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
-nocxx11.commands = $${QMAKE_CXX} $${CXXFLAGS_NOCXX11}  $(INCPATH) ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT} # Note the -O0
-QMAKE_EXTRA_COMPILERS += nocxx11
 
 #LAPACK
 #On Ubuntu: sudo apt-get install liblapacke-dev
