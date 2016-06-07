@@ -83,6 +83,7 @@ public:
     //QString m_mscmdserver_url;
     QString m_mlproxy_url;
     QString m_mv_fname;
+    MVViewAgent* m_view_agent;
 
     MVControlPanel* m_control_panel_new;
     TaskProgressView* m_task_progress_view;
@@ -94,8 +95,6 @@ public:
 
     Mda m_cross_correlograms_data;
     //Mda m_templates_data;
-
-    MVViewAgent m_view_agent;
 
     QList<QColor> m_channel_colors;
     QMap<QString, QColor> m_colors;
@@ -166,33 +165,14 @@ public:
     //void start_cross_correlograms_computer();
 };
 
-QColor brighten(QColor col, int amount)
-{
-    int r = col.red() + amount;
-    int g = col.green() + amount;
-    int b = col.blue() + amount;
-    if (r > 255)
-        r = 255;
-    if (r < 0)
-        r = 0;
-    if (g > 255)
-        g = 255;
-    if (g < 0)
-        g = 0;
-    if (b > 255)
-        b = 255;
-    if (b < 0)
-        b = 0;
-    return QColor(r, g, b, col.alpha());
-}
-
-MVOverview2Widget::MVOverview2Widget(QWidget* parent)
+MVOverview2Widget::MVOverview2Widget(MVViewAgent* view_agent, QWidget* parent)
     : QWidget(parent)
 {
     d = new MVOverview2WidgetPrivate;
     d->q = this;
 
-    d->m_samplerate = 20000;
+    d->m_samplerate = 0;
+    d->m_view_agent = view_agent;
 
     d->m_progress_dialog = 0;
 
@@ -240,15 +220,6 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
     vlayout->addWidget(status_bar);
     this->setLayout(vlayout);
 
-    QStringList color_strings;
-    color_strings
-        << "#282828"
-        << "#402020"
-        << "#204020"
-        << "#202070";
-    for (int i = 0; i < color_strings.count(); i++)
-        d->m_channel_colors << QColor(brighten(color_strings[i], 80));
-
     d->m_colors["background"] = QColor(240, 240, 240);
     d->m_colors["frame1"] = QColor(245, 245, 245);
     d->m_colors["info_text"] = QColor(80, 80, 80);
@@ -262,10 +233,14 @@ MVOverview2Widget::MVOverview2Widget(QWidget* parent)
 
     slot_update_buttons();
 
-    //connect(&d->m_cross_correlogram_computer,SIGNAL(computationFinished()),this,SLOT(slot_cross_correlogram_computer_finished()));
+    connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_buttons()));
+    connect(view_agent, SIGNAL(clusterAttributesChanged()), this, SLOT(slot_update_buttons()));
+    connect(view_agent, SIGNAL(clusterMergeChanged()), this, SLOT(slot_update_buttons()));
+    connect(view_agent, SIGNAL(currentEventChanged()), this, SLOT(slot_update_buttons()));
+    connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(slot_update_buttons()));
+    connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_buttons()));
 
-    connect(&d->m_view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_buttons()));
-    connect(&d->m_view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_buttons()));
+    //connect(&d->m_cross_correlogram_computer,SIGNAL(computationFinished()),this,SLOT(slot_cross_correlogram_computer_finished()));
 }
 
 MVOverview2Widget::~MVOverview2Widget()
@@ -366,7 +341,12 @@ void MVOverview2Widget::setMLProxyUrl(const QString& url)
 
 void MVOverview2Widget::setClusterMerge(ClusterMerge CM)
 {
-    d->m_view_agent.setClusterMerge(CM);
+    d->m_view_agent->setClusterMerge(CM);
+}
+
+void MVOverview2Widget::setChannelColors(const QList<QColor>& colors)
+{
+    d->m_channel_colors = colors;
 }
 
 /*
@@ -450,17 +430,17 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
                     CA[num] = obj2[key].toObject();
                 }
             }
-            d->m_view_agent.setClusterAttributes(CA);
+            d->m_view_agent->setClusterAttributes(CA);
         }
         else
-            d->m_view_agent.setClusterAttributes(QMap<int, QJsonObject>());
+            d->m_view_agent->setClusterAttributes(QMap<int, QJsonObject>());
         if (obj["annotations"].toObject().contains("cluster_merge")) {
             QJsonArray CM = obj["annotations"].toObject()["cluster_merge"].toArray();
             QString json = QJsonDocument(CM).toJson(QJsonDocument::Compact);
-            d->m_view_agent.setClusterMerge(ClusterMerge::fromJson(json));
+            d->m_view_agent->setClusterMerge(ClusterMerge::fromJson(json));
         }
         else {
-            d->m_view_agent.setClusterMerge(ClusterMerge());
+            d->m_view_agent->setClusterMerge(ClusterMerge());
         }
     }
 
@@ -496,7 +476,7 @@ void MVOverview2Widget::saveMVFile(const QString& mv_fname)
     obj["mlproxy_url"] = d->m_mlproxy_url;
 
     QJsonObject cluster_attributes;
-    QMap<int, QJsonObject> CA = d->m_view_agent.clusterAttributes();
+    QMap<int, QJsonObject> CA = d->m_view_agent->clusterAttributes();
     {
         QList<int> keys = CA.keys();
         foreach (int key, keys) {
@@ -507,7 +487,7 @@ void MVOverview2Widget::saveMVFile(const QString& mv_fname)
 
     QJsonObject annotations;
     annotations["cluster_attributes"] = cluster_attributes;
-    annotations["cluster_merge"] = QJsonDocument::fromJson(d->m_view_agent.clusterMerge().toJson().toLatin1()).array();
+    annotations["cluster_merge"] = QJsonDocument::fromJson(d->m_view_agent->clusterMerge().toJson().toLatin1()).array();
     obj["annotations"] = annotations;
 
     if (!write_text_file(mv_fname, QJsonDocument(obj).toJson())) {
@@ -665,12 +645,12 @@ void MVOverview2Widget::slot_auto_correlogram_activated()
     TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
     d->m_tabber->setCurrentContainer(TW);
     d->m_tabber->switchCurrentContainer();
-    d->open_cross_correlograms(d->m_view_agent.currentCluster());
+    d->open_cross_correlograms(d->m_view_agent->currentCluster());
 }
 
 void MVOverview2Widget::slot_details_template_activated()
 {
-    int k = d->m_view_agent.currentCluster();
+    int k = d->m_view_agent->currentCluster();
     if (k < 0)
         return;
     TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
@@ -682,7 +662,7 @@ void MVOverview2Widget::slot_details_template_activated()
 void MVOverview2Widget::slot_update_buttons()
 {
     bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
-    bool something_selected = (!d->m_view_agent.selectedClusters().isEmpty());
+    bool something_selected = (!d->m_view_agent->selectedClusters().isEmpty());
 
     d->set_button_enabled("open-cluster-details", true);
     d->set_button_enabled("open-auto-correlograms", true);
@@ -691,10 +671,10 @@ void MVOverview2Widget::slot_update_buttons()
     d->set_button_enabled("open-clips", something_selected);
     d->set_button_enabled("open-clusters", something_selected);
     d->set_button_enabled("open-firing-events", (something_selected) && (has_peaks));
-    d->set_button_enabled("find-nearby-events", d->m_view_agent.selectedClusters().count() >= 2);
+    d->set_button_enabled("find-nearby-events", d->m_view_agent->selectedClusters().count() >= 2);
 
     d->set_button_enabled("annotate_selected", something_selected);
-    d->set_button_enabled("merge_selected", d->m_view_agent.selectedClusters().count() >= 2);
+    d->set_button_enabled("merge_selected", d->m_view_agent->selectedClusters().count() >= 2);
     d->set_button_enabled("unmerge_selected", something_selected);
     d->set_button_enabled("export_mountainview_document", true);
     d->set_button_enabled("export_original_firings", true);
@@ -719,7 +699,7 @@ void MVOverview2Widget::slot_calculator_finished()
     d->m_original_cluster_numbers = d->m_calculator.m_original_cluster_numbers;
     d->m_original_cluster_offsets = d->m_original_cluster_offsets;
     d->update_all_widgets();
-    d->m_view_agent.setSelectedClusters(QList<int>());
+    d->m_view_agent->setSelectedClusters(QList<int>());
     slot_update_buttons();
 }
 
@@ -849,8 +829,7 @@ void MVOverview2WidgetPrivate::add_tab(QWidget* W, QString label)
 
 MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_auto_correlograms()
 {
-    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2;
-    X->setViewAgent(&m_view_agent);
+    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
     X->setProperty("widget_type", "auto_correlograms");
     add_tab(X, "Auto-Correlograms");
     QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_auto_correlogram_activated()));
@@ -860,8 +839,7 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_auto_correlograms()
 
 MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_cross_correlograms(int k)
 {
-    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2;
-    X->setViewAgent(&m_view_agent);
+    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
     X->setProperty("widget_type", "cross_correlograms");
     X->setProperty("kk", k);
     QString str = QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k));
@@ -890,10 +868,9 @@ QList<int> string_list_to_int_list(const QList<QString>& list)
 
 MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_matrix_of_cross_correlograms()
 {
-    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2;
-    X->setViewAgent(&m_view_agent);
+    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
     X->setProperty("widget_type", "matrix_of_cross_correlograms");
-    QList<int> ks = m_view_agent.selectedClusters();
+    QList<int> ks = m_view_agent->selectedClusters();
     qSort(ks);
     if (ks.isEmpty())
         return X;
@@ -915,9 +892,8 @@ MVCrossCorrelogramsWidget2* MVOverview2WidgetPrivate::open_matrix_of_cross_corre
 
 MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 {
-    MVClusterDetailWidget* X = new MVClusterDetailWidget;
+    MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
     //X->setMscmdServerUrl(m_mscmdserver_url);
-    X->setViewAgent(&m_view_agent);
     X->setMLProxyUrl(m_mlproxy_url);
     X->setChannelColors(m_channel_colors);
     DiskReadMda TT(current_timeseries_path());
@@ -933,7 +909,7 @@ MVClusterDetailWidget* MVOverview2WidgetPrivate::open_cluster_details()
 
 void MVOverview2WidgetPrivate::open_timeseries()
 {
-    MVTimeSeriesView* X = new MVTimeSeriesView;
+    MVTimeSeriesView* X = new MVTimeSeriesView(m_view_agent);
     X->setSampleRate(m_samplerate);
     X->setChannelColors(m_channel_colors);
     X->setProperty("widget_type", "mvtimeseries");
@@ -954,15 +930,14 @@ void MVOverview2WidgetPrivate::open_timeseries()
 
 void MVOverview2WidgetPrivate::open_clips()
 {
-    QList<int> ks = m_view_agent.selectedClusters();
+    QList<int> ks = m_view_agent->selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(q, "Unable to open clips", "You must select at least one cluster.");
         return;
     }
 
-    MVClipsWidget* X = new MVClipsWidget;
-    X->setViewAgent(&m_view_agent);
+    MVClipsWidget* X = new MVClipsWidget(m_view_agent);
     //X->setMscmdServerUrl(m_mscmdserver_url);
     X->setMLProxyUrl(m_mlproxy_url);
     X->setProperty("widget_type", "clips");
@@ -999,13 +974,13 @@ void MVOverview2WidgetPrivate::open_clips()
 
 void MVOverview2WidgetPrivate::open_clusters()
 {
-    QList<int> ks = m_view_agent.selectedClusters();
+    QList<int> ks = m_view_agent->selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(q, "Unable to open clusters", "You must select at least one cluster.");
         return;
     }
-    MVClusterWidget* X = new MVClusterWidget;
+    MVClusterWidget* X = new MVClusterWidget(m_view_agent);
     //X->setMscmdServerUrl(m_mscmdserver_url);
     X->setMLProxyUrl(m_mlproxy_url);
     X->setProperty("widget_type", "clusters");
@@ -1016,7 +991,7 @@ void MVOverview2WidgetPrivate::open_clusters()
 
 void MVOverview2WidgetPrivate::open_firing_events()
 {
-    QList<int> ks = m_view_agent.selectedClusters();
+    QList<int> ks = m_view_agent->selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(q, "Unable to open firing events", "You must select at least one cluster.");
@@ -1031,14 +1006,14 @@ void MVOverview2WidgetPrivate::open_firing_events()
 
 void MVOverview2WidgetPrivate::find_nearby_events()
 {
-    QList<int> ks = m_view_agent.selectedClusters();
+    QList<int> ks = m_view_agent->selectedClusters();
     qSort(ks);
     if (ks.count() < 2) {
         QMessageBox::information(q, "Problem finding nearby events", "You must select at least two clusters.");
         return;
     }
 
-    MVClipsView* X = MVClipsView::newInstance();
+    MVClipsView* X = new MVClipsView(m_view_agent);
     X->setProperty("widget_type", "find_nearby_events");
     X->setProperty("ks", int_list_to_string_list(ks));
     QString tab_title = "Nearby Clips";
@@ -1058,9 +1033,9 @@ void MVOverview2WidgetPrivate::find_nearby_events()
 
 void MVOverview2WidgetPrivate::annotate_selected()
 {
-    if (m_view_agent.selectedClusters().isEmpty())
+    if (m_view_agent->selectedClusters().isEmpty())
         return;
-    QList<int> ks = m_view_agent.selectedClusters();
+    QList<int> ks = m_view_agent->selectedClusters();
     QString common_assessment;
     for (int i = 0; i < ks.count(); i++) {
         QString aa = get_cluster_attribute(ks[i], "assessment").toString();
@@ -1082,16 +1057,16 @@ void MVOverview2WidgetPrivate::annotate_selected()
 
 void MVOverview2WidgetPrivate::merge_selected()
 {
-    ClusterMerge CM = m_view_agent.clusterMerge();
-    CM.merge(m_view_agent.selectedClusters());
-    m_view_agent.setClusterMerge(CM);
+    ClusterMerge CM = m_view_agent->clusterMerge();
+    CM.merge(m_view_agent->selectedClusters());
+    m_view_agent->setClusterMerge(CM);
 }
 
 void MVOverview2WidgetPrivate::unmerge_selected()
 {
-    ClusterMerge CM = m_view_agent.clusterMerge();
-    CM.unmerge(m_view_agent.selectedClusters());
-    m_view_agent.setClusterMerge(CM);
+    ClusterMerge CM = m_view_agent->clusterMerge();
+    CM.unmerge(m_view_agent->selectedClusters());
+    m_view_agent->setClusterMerge(CM);
 }
 
 void MVOverview2WidgetPrivate::update_cross_correlograms()
@@ -1440,7 +1415,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
     }
     else if (widget_type == "mvtimeseries") {
         MVTimeSeriesView* WW = (MVTimeSeriesView*)W;
-        WW->setData(DiskReadMda(current_timeseries_path()));
+        WW->setTimeseries(DiskReadMda(current_timeseries_path()));
         set_times_labels_for_mvtimeseriesview(WW);
     }
 }
@@ -1451,7 +1426,7 @@ void MVOverview2WidgetPrivate::set_times_labels_for_mvtimeseriesview(MVTimeSerie
     QVector<int> labels;
     for (int n = 0; n < m_firings_original.N2(); n++) {
         long label0 = (long)m_firings_original.value(2, n);
-        if ((m_view_agent.selectedClusters().isEmpty()) || (m_view_agent.selectedClusters().contains(label0))) {
+        if ((m_view_agent->selectedClusters().isEmpty()) || (m_view_agent->selectedClusters().contains(label0))) {
             times << (long)m_firings_original.value(1, n);
             labels << label0;
         }
@@ -1464,7 +1439,7 @@ void MVOverview2WidgetPrivate::set_times_labels_for_timeseries_widget(SSTimeSeri
     QList<long> times, labels;
     for (int n = 0; n < m_firings_original.N2(); n++) {
         long label0 = (long)m_firings_original.value(2, n);
-        if ((m_view_agent.selectedClusters().isEmpty()) || (m_view_agent.selectedClusters().contains(label0))) {
+        if ((m_view_agent->selectedClusters().isEmpty()) || (m_view_agent->selectedClusters().contains(label0))) {
             times << (long)m_firings_original.value(1, n);
             labels << label0;
         }
@@ -1808,14 +1783,14 @@ QString MVOverview2WidgetPrivate::current_timeseries_path()
 
 QVariant MVOverview2WidgetPrivate::get_cluster_attribute(int k, QString attr)
 {
-    return m_view_agent.clusterAttributes().value(k).value(attr).toVariant();
+    return m_view_agent->clusterAttributes().value(k).value(attr).toVariant();
 }
 
 void MVOverview2WidgetPrivate::set_cluster_attribute(int k, QString attr, QVariant val)
 {
-    QMap<int, QJsonObject> CA = m_view_agent.clusterAttributes();
+    QMap<int, QJsonObject> CA = m_view_agent->clusterAttributes();
     CA[k][attr] = QJsonValue::fromVariant(val);
-    m_view_agent.setClusterAttributes(CA);
+    m_view_agent->setClusterAttributes(CA);
 }
 
 void MVOverview2WidgetPrivate::set_button_enabled(QString name, bool val)

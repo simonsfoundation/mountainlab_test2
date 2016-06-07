@@ -25,14 +25,15 @@ public:
 
     void setMultiScaleTimeSeries(MultiScaleTimeSeries* ts);
     void setChannelColors(const QList<QColor>& colors);
+    double visibleMinimum() const;
+    double visibleMaximum() const;
 
     QImage getImage(double t1, double t2, double amp_factor, double W, double H);
 
 signals:
     void updated();
 
-private
-slots:
+private slots:
     void slot_thread_finished();
 
 private:
@@ -45,6 +46,8 @@ public:
     //input
     double amp_factor;
     long ds_factor;
+    long panel_width;
+    long panel_num_points;
     long index;
     QList<QColor> channel_colors;
     MultiScaleTimeSeries* ts;
@@ -52,6 +55,8 @@ public:
 
     //output
     QImage image;
+    Mda min_data;
+    Mda max_data;
 
     void run();
 };
@@ -63,8 +68,7 @@ public:
     virtual ~ThreadManager();
     void start(QString id, QThread* thread);
     void stop(QString id);
-private
-slots:
+private slots:
     void slot_timer();
     void slot_thread_finished();
 

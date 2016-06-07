@@ -184,10 +184,10 @@ void MountainProcessRunner::runProcess()
         QEventLoop loop;
         while (process0.state() == QProcess::Running) {
             loop.processEvents();
-            QString out=process0.readAll();
+            QString out = process0.readAll();
             if (!out.isEmpty()) {
-                printf("%s",out.toLatin1().data());
-                task.log("STDOUT: "+out);
+                printf("%s", out.toLatin1().data());
+                task.log("STDOUT: " + out);
                 stdout += out;
             }
             if (thread_interrupt_requested()) {

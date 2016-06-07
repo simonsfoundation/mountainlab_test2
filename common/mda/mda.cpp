@@ -117,7 +117,7 @@ bool Mda::read(const QString& path)
     return read(path.toLatin1().data());
 }
 
-bool Mda::write8(const QString &path) const
+bool Mda::write8(const QString& path) const
 {
     return write8(path.toLatin1().data());
 }
@@ -151,7 +151,7 @@ bool Mda::read(const char* path)
     return true;
 }
 
-bool Mda::write8(const char *path) const
+bool Mda::write8(const char* path) const
 {
     if ((QString(path).endsWith(".txt")) || (QString(path).endsWith(".csv"))) {
         return d->write_to_text_file(path);
@@ -641,6 +641,36 @@ void Mda::setChunk(Mda& X, long i1, long i2, long i3)
             }
         }
     }
+}
+
+double Mda::minimum()
+{
+    long NN = this->totalSize();
+    double* ptr = this->dataPtr();
+    if ((!NN) || (!ptr)) {
+        return 0;
+    }
+    double ret = ptr[0];
+    for (long i = 0; i < NN; i++) {
+        if (ptr[i] < ret)
+            ret = ptr[i];
+    }
+    return ret;
+}
+
+double Mda::maximum()
+{
+    long NN = this->totalSize();
+    double* ptr = this->dataPtr();
+    if ((!NN) || (!ptr)) {
+        return 0;
+    }
+    double ret = ptr[0];
+    for (long i = 0; i < NN; i++) {
+        if (ptr[i] > ret)
+            ret = ptr[i];
+    }
+    return ret;
 }
 
 void Mda::reshape(int N1b, int N2b, int N3b, int N4b, int N5b, int N6b)

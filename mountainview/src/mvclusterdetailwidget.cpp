@@ -198,7 +198,7 @@ public:
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
 
-MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
+MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* parent)
     : QWidget(parent)
 {
     d = new MVClusterDetailWidgetPrivate;
@@ -225,7 +225,10 @@ MVClusterDetailWidget::MVClusterDetailWidget(QWidget* parent)
     d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
     d->m_channel_colors << Qt::black;
 
-    d->m_view_agent = 0;
+    d->m_view_agent = view_agent;
+    QObject::connect(view_agent, SIGNAL(clusterMergeChanged()), this, SLOT(update()));
+    QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(update()));
+    QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(update()));
 
     this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
@@ -328,16 +331,6 @@ bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
             return false;
     }
     return true;
-}
-
-void MVClusterDetailWidget::setViewAgent(MVViewAgent* agent)
-{
-    d->m_view_agent = agent;
-    if (agent) {
-        QObject::connect(agent, SIGNAL(clusterMergeChanged()), this, SLOT(update()));
-        QObject::connect(agent, SIGNAL(currentClusterChanged()), this, SLOT(update()));
-        QObject::connect(agent, SIGNAL(selectedClustersChanged()), this, SLOT(update()));
-    }
 }
 
 void MVClusterDetailWidget::zoomAllTheWayOut()
@@ -805,7 +798,9 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     }
 
     for (int m = 0; m < M; m++) {
-        QColor col = d->m_channel_colors.value(m % d->m_channel_colors.count());
+        QColor col = Qt::black;
+        if (!d->m_channel_colors.isEmpty())
+            col = d->m_channel_colors.value(m % d->m_channel_colors.count());
         QPen pen;
         pen.setWidth(1);
         pen.setColor(col);
@@ -1111,6 +1106,8 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
 
 QColor ClusterView::get_cluster_assessment_text_color(QString aa)
 {
+    /// TODO implement get_cluster_assessment_text_color
+    Q_UNUSED(aa)
     return Qt::black;
 }
 

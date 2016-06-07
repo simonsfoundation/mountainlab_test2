@@ -17,20 +17,18 @@ class MVClipsWidget : public QWidget {
     Q_OBJECT
 public:
     friend class MVClipsWidgetPrivate;
-    MVClipsWidget();
+    MVClipsWidget(MVViewAgent* view_agent);
     virtual ~MVClipsWidget();
     void setMLProxyUrl(const QString& url);
     void setTimeseries(DiskReadMda& X);
     void setFirings(DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
     void setClipSize(int clip_size);
-    void setViewAgent(MVViewAgent* agent);
 
     int currentClipIndex();
 signals:
     void currentEventChanged();
-private
-slots:
+private slots:
     void slot_computation_finished();
 
 private:

@@ -49,13 +49,13 @@ public:
     void start_computation();
 };
 
-MVClipsWidget::MVClipsWidget()
+MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
 {
     d = new MVClipsWidgetPrivate;
     d->q = this;
 
-    d->m_view_agent = 0;
-    d->m_view = MVClipsView::newInstance();
+    d->m_view_agent = view_agent;
+    d->m_view = new MVClipsView(view_agent);
 
     QHBoxLayout* hlayout = new QHBoxLayout;
     hlayout->addWidget(d->m_view);
@@ -104,12 +104,6 @@ void MVClipsWidget::setClipSize(int clip_size)
 {
     d->m_clip_size = clip_size;
     d->start_computation();
-}
-
-void MVClipsWidget::setViewAgent(MVViewAgent* agent)
-{
-    d->m_view_agent = agent;
-    d->m_view->setViewAgent(agent);
 }
 
 int MVClipsWidget::currentClipIndex()

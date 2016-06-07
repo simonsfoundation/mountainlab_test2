@@ -8,6 +8,7 @@
 #define SPIKESPYWIDGET_H
 
 #include "diskreadmda.h"
+#include "mvviewagent.h"
 
 #include <QWidget>
 
@@ -21,10 +22,15 @@ class SpikeSpyWidget : public QWidget {
     Q_OBJECT
 public:
     friend class SpikeSpyWidgetPrivate;
-    SpikeSpyWidget();
+    SpikeSpyWidget(MVViewAgent* view_agent);
     virtual ~SpikeSpyWidget();
     void setSampleRate(double samplerate);
+    void setChannelColors(const QList<QColor>& colors);
     void addView(const SpikeSpyViewData& data);
+
+private slots:
+    void slot_show_tasks();
+    void slot_open_mountainview();
 
 private:
     SpikeSpyWidgetPrivate* d;

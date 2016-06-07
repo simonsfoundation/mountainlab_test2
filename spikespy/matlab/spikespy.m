@@ -25,7 +25,7 @@ function H=spikespy(varargin)
 %
 % Other m-files required: spikespy01, requires compilation of spikespy
 %
-% See also: ms_mountainview
+% See also: mountainview
 
 % Author: Jeremy Magland
 % Jan 2015; Last revision: 15-Feb-2106

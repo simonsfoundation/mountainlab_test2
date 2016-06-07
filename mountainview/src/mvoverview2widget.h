@@ -11,6 +11,7 @@
 #include <QTabWidget>
 #include "clustermerge.h"
 #include "mvutils.h"
+#include "mvviewagent.h"
 
 /** \class MVOverview2Widget
  *  \brief The main window (for now) showing an overview of the results of sorting by providing a number of interactive and synchronized views.
@@ -23,7 +24,7 @@ class MVOverview2Widget : public QWidget {
     Q_OBJECT
 public:
     friend class MVOverview2WidgetPrivate;
-    MVOverview2Widget(QWidget* parent = 0);
+    MVOverview2Widget(MVViewAgent* view_agent, QWidget* parent = 0);
     virtual ~MVOverview2Widget();
     ///The path to the timeseries that was sorted. For example, raw, filtered, or pre-processed. Usually all three of these are set, so user can choose between them in dropdown selection box
     void addTimeseriesPath(const QString& name, const QString& path);
@@ -40,6 +41,7 @@ public:
     int getMaxLabel();
     void setMLProxyUrl(const QString& url);
     void setClusterMerge(ClusterMerge CM);
+    void setChannelColors(const QList<QColor>& colors);
 
     void loadMVFile(const QString& mv_fname);
     void saveMVFile(const QString& mv_fname);
@@ -50,11 +52,9 @@ protected:
 
 signals:
 
-public
-slots:
+public slots:
 
-private
-slots:
+private slots:
     void slot_control_panel_user_action(QString str);
     void slot_auto_correlogram_activated();
     //void slot_templates_clicked();

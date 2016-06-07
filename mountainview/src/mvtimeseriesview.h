@@ -9,6 +9,7 @@
 
 #include <QWidget>
 #include <diskreadmda.h>
+#include "mvviewagent.h"
 
 /// TODO on first load, multiscale file is created on server, the process is detached. Provide feedback to the user somehow
 
@@ -30,11 +31,11 @@ class MVTimeSeriesView : public QWidget {
     Q_OBJECT
 public:
     friend class MVTimeSeriesViewPrivate;
-    MVTimeSeriesView();
+    MVTimeSeriesView(MVViewAgent* view_agent);
     virtual ~MVTimeSeriesView();
 
     void setSampleRate(double samplerate);
-    void setData(const DiskReadMda& X);
+    void setTimeseries(const DiskReadMda& X);
     void setMLProxyUrl(const QString& url);
     void setTimesLabels(const QVector<double>& times, const QVector<int>& labels);
     void setChannelColors(const QList<QColor>& colors);
@@ -42,10 +43,14 @@ public:
     void setTimeRange(MVRange);
     void setCurrentTimepoint(double t);
     void setSelectedTimeRange(MVRange range);
+    void setAmplitudeFactor(double factor); // display range will be between -1/factor and 1/factor, but not clipped (thus channel plots may overlap)
+    void autoSetAmplitudeFactor();
+    void autoSetAmplitudeFactorWithinTimeRange();
 
     double currentTimepoint() const;
     MVRange timeRange() const;
-    DiskReadMda data();
+    double amplitudeFactor() const;
+    DiskReadMda timeseries();
 
     void resizeEvent(QResizeEvent* evt);
     void paintEvent(QPaintEvent* evt);

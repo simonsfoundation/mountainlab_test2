@@ -77,6 +77,22 @@ bool MultiScaleTimeSeries::getData(Mda& min, Mda& max, long t1, long t2, long ds
     return d->get_data(min, max, t1, t2, ds_factor);
 }
 
+double MultiScaleTimeSeries::minimum()
+{
+    long ds_factor = MultiScaleTimeSeries::smallest_power_of_3_larger_than(this->N2() / 3);
+    Mda min, max;
+    this->getData(min, max, 0, 0, ds_factor);
+    return min.minimum();
+}
+
+double MultiScaleTimeSeries::maximum()
+{
+    long ds_factor = MultiScaleTimeSeries::smallest_power_of_3_larger_than(this->N2() / 3);
+    Mda min, max;
+    this->getData(min, max, 0, 0, ds_factor);
+    return max.maximum();
+}
+
 bool MultiScaleTimeSeries::unit_test(long M, long N)
 {
     QString fname1 = "tmp1.mda";

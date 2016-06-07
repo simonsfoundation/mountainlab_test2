@@ -17,10 +17,9 @@ class MVCrossCorrelogramsWidget2 : public QWidget {
     Q_OBJECT
 public:
     friend class MVCrossCorrelogramsWidget2Private;
-    MVCrossCorrelogramsWidget2();
+    MVCrossCorrelogramsWidget2(MVViewAgent* view_agent);
     virtual ~MVCrossCorrelogramsWidget2();
 
-    void setViewAgent(MVViewAgent* agent);
     void setLabelPairs(const QList<int>& labels1, const QList<int>& labels2, const QList<QString>& text_labels);
     void setFirings(const DiskReadMda& F);
     void setSampleRate(double rate);
@@ -37,8 +36,7 @@ public:
     QImage renderImage(int W = 0, int H = 0);
 signals:
     void histogramActivated();
-private
-slots:
+private slots:
     void slot_computation_finished();
     void slot_histogram_view_control_clicked();
     void slot_histogram_view_clicked();

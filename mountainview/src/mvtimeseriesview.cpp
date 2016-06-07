@@ -75,10 +75,10 @@ struct TickStruct {
 class MVTimeSeriesViewPrivate {
 public:
     MVTimeSeriesView* q;
-    MultiScaleTimeSeries m_ts;
+    MultiScaleTimeSeries m_msts;
 
     double m_samplerate;
-    DiskReadMda m_data;
+    DiskReadMda m_timeseries;
     QVector<double> m_times;
     QVector<int> m_labels;
 
@@ -87,9 +87,9 @@ public:
     double m_view_t1, m_view_t2;
     double m_amplitude_factor;
     QList<mvtsv_channel> m_channels;
-    double m_current_t;
     MVRange m_selected_t_range;
     bool m_activated;
+    MVViewAgent* m_view_agent;
 
     bool m_layout_needed;
 
@@ -119,21 +119,23 @@ public:
     QString format_time(double tp);
 };
 
-MVTimeSeriesView::MVTimeSeriesView()
+MVTimeSeriesView::MVTimeSeriesView(MVViewAgent* view_agent)
 {
     d = new MVTimeSeriesViewPrivate;
     d->q = this;
-    d->m_current_t = 0;
     d->m_selected_t_range = MVRange(-1, -1);
     d->m_activated = true; /// TODO set activated only when window is active (like in sstimeseriesview, I think)
     /// TODO auto set the amplitude factor
-    d->m_amplitude_factor = 1.0 / 40;
+    d->m_amplitude_factor = 1.0;
     d->m_left_click_anchor_pix = QPointF(-1, -1);
     d->m_left_click_dragging = false;
     d->m_layout_needed = true;
     this->setMouseTracking(true);
-    d->m_render_manager.setMultiScaleTimeSeries(&d->m_ts);
-    d->m_samplerate = 1;
+    d->m_render_manager.setMultiScaleTimeSeries(&d->m_msts);
+    d->m_samplerate = 0;
+
+    d->m_view_agent = view_agent;
+    QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
 
     this->setFocusPolicy(Qt::StrongFocus);
 
@@ -151,22 +153,23 @@ void MVTimeSeriesView::setSampleRate(double samplerate)
     update();
 }
 
-/// TODO make sure all threads end on destruct
-
-void MVTimeSeriesView::setData(const DiskReadMda& X)
+void MVTimeSeriesView::setTimeseries(const DiskReadMda& X)
 {
-    d->m_data = X;
+    d->m_timeseries = X;
     /// TODO address: the following is a hack so that the array info is not downloaded during the paintEvent which seems to cause a crash
-    d->m_data.N1();
-    d->m_ts.setData(X);
+    d->m_timeseries.N1();
+    d->m_msts.setData(X);
     d->m_layout_needed = true;
-    this->setTimeRange(MVRange(0, d->m_data.N2() - 1));
+    this->setTimeRange(MVRange(0, d->m_timeseries.N2() - 1)); //above hack not strictly needed because we now call N2() here.
+    this->autoSetAmplitudeFactor();
     update();
 }
 
+/// TODO make sure all threads end on destruct
+
 void MVTimeSeriesView::setMLProxyUrl(const QString& url)
 {
-    d->m_ts.setMLProxyUrl(url);
+    d->m_msts.setMLProxyUrl(url);
     update();
 }
 
@@ -189,9 +192,14 @@ MVRange MVTimeSeriesView::timeRange() const
     return MVRange(d->m_view_t1, d->m_view_t2);
 }
 
-DiskReadMda MVTimeSeriesView::data()
+double MVTimeSeriesView::amplitudeFactor() const
 {
-    return d->m_data;
+    return d->m_amplitude_factor;
+}
+
+DiskReadMda MVTimeSeriesView::timeseries()
+{
+    return d->m_timeseries;
 }
 
 void MVTimeSeriesView::resizeEvent(QResizeEvent* evt)
@@ -205,11 +213,11 @@ void MVTimeSeriesView::setTimeRange(MVRange range)
     if (range.min < 0) {
         range = range + (0 - range.min);
     }
-    if (range.max >= d->m_data.N2()) {
-        range = range + (d->m_data.N2() - range.max);
+    if (range.max >= d->m_timeseries.N2()) {
+        range = range + (d->m_timeseries.N2() - range.max);
     }
-    if ((range.min < 0) || (range.max >= d->m_data.N2())) {
-        range = MVRange(0, d->m_data.N2() - 1);
+    if ((range.min < 0) || (range.max >= d->m_timeseries.N2())) {
+        range = MVRange(0, d->m_timeseries.N2() - 1);
     }
     if ((d->m_view_t1 == range.min) && (d->m_view_t2 == range.max))
         return;
@@ -220,9 +228,7 @@ void MVTimeSeriesView::setTimeRange(MVRange range)
 
 void MVTimeSeriesView::setCurrentTimepoint(double t)
 {
-    if (t == d->m_current_t)
-        return;
-    d->m_current_t = t;
+    d->m_view_agent->setCurrentTimepoint(t);
     update();
 }
 
@@ -234,9 +240,61 @@ void MVTimeSeriesView::setSelectedTimeRange(MVRange range)
     update();
 }
 
+void MVTimeSeriesView::setAmplitudeFactor(double factor)
+{
+    d->m_amplitude_factor = factor;
+    update();
+}
+
+class AutoSetAmplitudeFactorThread : public QThread {
+public:
+    //input
+    MultiScaleTimeSeries* msts;
+
+    //output
+    double min, max;
+    void run()
+    {
+        min = msts->minimum();
+        max = msts->maximum();
+    }
+};
+
+void MVTimeSeriesView::autoSetAmplitudeFactor()
+{
+    if (!in_gui_thread()) {
+        qWarning() << "Can only call autoSetAmplitudeFactor in gui thread";
+        return;
+    }
+    //we can't actually do this in the gui thread, which is where it will be called
+
+    /// Witold we should be sure this thread is stopped in the rare case that the object is deleted while it is still running
+    AutoSetAmplitudeFactorThread* thread = new AutoSetAmplitudeFactorThread;
+    thread->msts = &d->m_msts;
+    QObject::connect(thread, &AutoSetAmplitudeFactorThread::finished, [this, thread]() {
+        double max_range = qMax(qAbs(d->m_msts.minimum()), qAbs(d->m_msts.maximum()));
+        if (max_range) {
+            this->setAmplitudeFactor(1.5 / max_range);
+        }
+        else {
+            qWarning() << "Problem in autoSetAmplitudeFactor: range is null";
+        }
+    });
+    thread->start();
+}
+
+void MVTimeSeriesView::autoSetAmplitudeFactorWithinTimeRange()
+{
+    double min0 = d->m_render_manager.visibleMinimum();
+    double max0 = d->m_render_manager.visibleMaximum();
+    double factor = qMax(qAbs(min0), qAbs(max0));
+    if (factor)
+        this->setAmplitudeFactor(1.5 / factor);
+}
+
 double MVTimeSeriesView::currentTimepoint() const
 {
-    return d->m_current_t;
+    return d->m_view_agent->currentTimepoint();
 }
 
 void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
@@ -254,7 +312,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     double W0 = this->width();
     double H0 = this->height();
 
-    long M = d->m_data.N1();
+    long M = d->m_timeseries.N1();
     if (!M)
         return;
 
@@ -287,7 +345,9 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         d->paint_markers(&painter, times0, labels0, W0, H0);
     }
     else {
-        d->paint_message_at_top(&painter, "Zoom in to view markers", W0, H0);
+        if (times0.count()) {
+            d->paint_message_at_top(&painter, "Zoom in to view markers", W0, H0);
+        }
     }
 
     // Cursor
@@ -306,7 +366,13 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     // Status
     {
-        QString str = QString("%1 (tp: %2)").arg(d->format_time(d->m_current_t)).arg((long)d->m_current_t);
+        QString str;
+        if (d->m_samplerate) {
+            str = QString("%1 (tp: %2)").arg(d->format_time(d->m_view_agent->currentTimepoint())).arg((long)d->m_view_agent->currentTimepoint());
+        }
+        else {
+            str = QString("Sample rate is null (tp: %2)").arg((long)d->m_view_agent->currentTimepoint());
+        }
         d->paint_status_string(&painter, W0, H0, str);
     }
 }
@@ -392,6 +458,9 @@ void MVTimeSeriesView::keyPressEvent(QKeyEvent* evt)
         d->m_amplitude_factor /= 1.2;
         update();
     }
+    else if (evt->key() == Qt::Key_A) {
+        autoSetAmplitudeFactorWithinTimeRange();
+    }
     else if (evt->key() == Qt::Key_Left) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
@@ -409,7 +478,7 @@ void MVTimeSeriesView::keyPressEvent(QKeyEvent* evt)
         d->scroll_to_current_timepoint();
     }
     else if (evt->key() == Qt::Key_End) {
-        this->setCurrentTimepoint(d->m_data.N2() - 1);
+        this->setCurrentTimepoint(d->m_timeseries.N2() - 1);
         d->scroll_to_current_timepoint();
     }
     else if (evt->key() == Qt::Key_Equal) {
@@ -464,8 +533,8 @@ void MVTimeSeriesView::unit_test()
     DiskReadMda X0("http://datalaboratory.org:8020/mdaserver/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
     //DiskReadMda X0("/home/magland/sorting_results/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
 
-    MVTimeSeriesView* W = new MVTimeSeriesView;
-    W->setData(X0);
+    MVTimeSeriesView* W = new MVTimeSeriesView(new MVViewAgent); //note that the view agent does not get deleted. :(
+    W->setTimeseries(X0);
     W->setMLProxyUrl(proxy_url);
     //W->setTimeRange(MVRange(0, X0.N2()-1));
     W->setTimeRange(MVRange(0, 1000));
@@ -502,8 +571,8 @@ void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H
     double mbottom = m_prefs.mbottom;
 
     if (m_selected_t_range.min < 0) {
-        QPointF p0 = coord2pix(mvtsv_coord(0, m_current_t, 0));
-        QPointF p1 = coord2pix(mvtsv_coord(0, m_current_t, 0));
+        QPointF p0 = coord2pix(mvtsv_coord(0, m_view_agent->currentTimepoint(), 0));
+        QPointF p1 = coord2pix(mvtsv_coord(0, m_view_agent->currentTimepoint(), 0));
         p0.setY(mtop);
         p1.setY(H - mbottom);
 
@@ -715,6 +784,8 @@ void MVTimeSeriesViewPrivate::paint_time_axis_unit(QPainter* painter, double W, 
 
 void MVTimeSeriesViewPrivate::paint_channel_labels(QPainter* painter, double W, double H)
 {
+    Q_UNUSED(W)
+    Q_UNUSED(H)
     QPen pen = painter->pen();
     pen.setColor(Qt::black);
     painter->setPen(pen);
@@ -723,7 +794,7 @@ void MVTimeSeriesViewPrivate::paint_channel_labels(QPainter* painter, double W, 
     font.setPixelSize(13);
     painter->setFont(font);
 
-    long M = m_data.N1();
+    long M = m_timeseries.N1();
     for (int m = 0; m < M; m++) {
         QPointF pt = coord2pix(mvtsv_coord(m, 0, 0));
         QRectF rect(0, pt.y() - 30, m_prefs.mleft - 5, 60);
@@ -746,6 +817,9 @@ void MVTimeSeriesViewPrivate::paint_status_string(QPainter* painter, double W, d
 QPointF MVTimeSeriesViewPrivate::coord2pix(mvtsv_coord C)
 {
     if (C.channel >= m_channels.count())
+        return QPointF(0, 0);
+
+    if (m_view_t2 <= m_view_t1)
         return QPointF(0, 0);
 
     mvtsv_channel* CH = &m_channels[C.channel];
@@ -806,7 +880,6 @@ void MVTimeSeriesViewPrivate::scroll_to_current_timepoint()
 
 QString MVTimeSeriesViewPrivate::format_time(double tp)
 {
-    /// TODO make samplerate a member
     double samplerate = m_samplerate;
     double sec = tp / samplerate;
     long day = (long)floor(sec / (24 * 60 * 60));

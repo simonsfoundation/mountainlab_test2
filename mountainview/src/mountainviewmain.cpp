@@ -83,6 +83,8 @@ void test_taskprogressview()
 /// TODO figure out what to do when #channels and/or #clusters is huge
 /// TODO 0.9.1 -- make sure to handle merging with other views, such as clips etc. Make elegant way
 
+QColor brighten(QColor col, int amount);
+
 #include "multiscaletimeseries.h"
 #include "spikespywidget.h"
 #include "taskprogressview.h"
@@ -106,6 +108,16 @@ int main(int argc, char* argv[])
         mv_fname = CLP.unnamed_parameters.value(0);
     }
 
+    QList<QColor> channel_colors;
+    QStringList color_strings;
+    color_strings
+        << "#282828"
+        << "#402020"
+        << "#204020"
+        << "#202070";
+    for (int i = 0; i < color_strings.count(); i++)
+        channel_colors << QColor(brighten(color_strings[i], 80));
+
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
         if (arg2 == "remotereadmda") {
@@ -118,7 +130,7 @@ int main(int argc, char* argv[])
             return 0;
         }
         else if (arg2 == "taskprogressview") {
-            MVOverview2Widget* W = new MVOverview2Widget;
+            MVOverview2Widget* W = new MVOverview2Widget(new MVViewAgent); //not that the view agent does not get deleted. :(
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
             int W0 = 1400, H0 = 1000;
@@ -153,7 +165,8 @@ int main(int argc, char* argv[])
         double samplerate = CLP.named_parameters.value("samplerate", 20000).toDouble();
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
-        MVOverview2Widget* W = new MVOverview2Widget;
+        MVOverview2Widget* W = new MVOverview2Widget(new MVViewAgent); //not that the view agent does not get deleted. :(
+        W->setChannelColors(channel_colors);
         W->setMLProxyUrl(CLP.named_parameters.value("mlproxy_url", "").toString());
         {
             W->setWindowTitle(window_title);
@@ -210,21 +223,28 @@ int main(int argc, char* argv[])
     }
     else if (mode == "spikespy") {
         printf("spikespy...\n");
-        QString timeseries_path = CLP.named_parameters["timeseries"].toString();
-        QString firings_path = CLP.named_parameters["firings"].toString();
+        QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
+        QStringList firings_paths = CLP.named_parameters["firings"].toString().split(",");
         double samplerate = CLP.named_parameters["samplerate"].toDouble();
 
-        SpikeSpyWidget* W = new SpikeSpyWidget;
-        SpikeSpyViewData view;
-        view.timeseries = DiskReadMda(timeseries_path);
-        view.firings = DiskReadMda(firings_path);
-        W->addView(view);
+        SpikeSpyWidget* W = new SpikeSpyWidget(new MVViewAgent); //not that the view agent will not get deleted. :(
+        W->setChannelColors(channel_colors);
         W->setSampleRate(samplerate);
+        for (int i = 0; i < timeseries_paths.count(); i++) {
+            QString tsp = timeseries_paths.value(i);
+            if (tsp.isEmpty())
+                tsp = timeseries_paths.value(0);
+            QString fp = firings_paths.value(i);
+            if (fp.isEmpty())
+                fp = firings_paths.value(0);
+            SpikeSpyViewData view;
+            view.timeseries = DiskReadMda(tsp);
+            view.firings = DiskReadMda(fp);
+            W->addView(view);
+        }
         W->show();
         W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
         W->resize(1800, 1200);
-        TaskProgressView* TPV = new TaskProgressView;
-        TPV->show();
 
         /*
         SSTimeSeriesWidget* W = new SSTimeSeriesWidget;
@@ -253,4 +273,24 @@ int main(int argc, char* argv[])
     printf("Number of files open: %d, number of unfreed mallocs: %d, number of unfreed megabytes: %g\n", jnumfilesopen(), jmalloccount(), (int)jbytesallocated() * 1.0 / 1000000);
 
     return ret;
+}
+
+QColor brighten(QColor col, int amount)
+{
+    int r = col.red() + amount;
+    int g = col.green() + amount;
+    int b = col.blue() + amount;
+    if (r > 255)
+        r = 255;
+    if (r < 0)
+        r = 0;
+    if (g > 255)
+        g = 255;
+    if (g < 0)
+        g = 0;
+    if (b > 255)
+        b = 255;
+    if (b < 0)
+        b = 0;
+    return QColor(r, g, b, col.alpha());
 }

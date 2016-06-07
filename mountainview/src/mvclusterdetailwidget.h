@@ -22,7 +22,7 @@ class MVClusterDetailWidget : public QWidget {
     Q_OBJECT
 public:
     friend class MVClusterDetailWidgetPrivate;
-    MVClusterDetailWidget(QWidget* parent = 0);
+    MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* parent = 0);
     virtual ~MVClusterDetailWidget();
 
     //void setMscmdServerUrl(const QString& url);
@@ -49,8 +49,6 @@ public:
     ///To make the color scheme uniform.
     void setColors(const QMap<QString, QColor>& colors);
 
-    void setViewAgent(MVViewAgent* agent);
-
     void zoomAllTheWayOut();
 
     ///Create an image of the current view
@@ -67,8 +65,7 @@ protected:
 signals:
     ///A cluster has been double-clicked (or enter pressed?)
     void signalTemplateActivated();
-private
-slots:
+private slots:
     //void slot_context_menu(const QPoint& pos);
     void slot_calculator_finished();
     void slot_export_image();

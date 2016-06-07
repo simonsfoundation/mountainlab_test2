@@ -16,6 +16,7 @@
 
 Mda compute_mean_waveform(DiskArrayModel_New* C)
 {
+    Q_UNUSED(C)
     Mda ret;
     return ret; //disabled for now.
     /*
@@ -58,6 +59,7 @@ Mda compute_mean_waveform(DiskArrayModel_New* C)
 
 Mda compute_mean_stdev_waveform(DiskArrayModel_New* C)
 {
+    Q_UNUSED(C)
     Mda ret;
     return ret; //disabled for now
     /*
@@ -115,6 +117,7 @@ Mda compute_mean_stdev_waveform(DiskArrayModel_New* C)
 
 Mda compute_features(DiskArrayModel_New* C)
 {
+    Q_UNUSED(C)
     Mda ret;
     return ret; //disabled for now
     /*
@@ -134,6 +137,7 @@ Mda compute_features(DiskArrayModel_New* C)
 
 Mda compute_features(const QList<DiskArrayModel_New*>& C)
 {
+    Q_UNUSED(C)
     Mda ret;
     return ret; //disabled for now
     /*

@@ -14,33 +14,33 @@
  *  \brief View a set of clips. Usually each clip contains a single spike.
  */
 
+class MVClipsViewPrivate;
 class MVClipsView : public SSTimeSeriesView {
     Q_OBJECT
 public:
-    ///Create a new instance
-    static MVClipsView* newInstance();
-    virtual ~MVClipsView()
-    {
-    }
+    friend class MVClipsViewPrivate;
+    MVClipsView(MVViewAgent* view_agent);
+    virtual ~MVClipsView();
 
     ///Set MxTxL array of clips to view
-    virtual void setClips(const Mda& clips) = 0;
+    void setClips(const Mda& clips);
 
     ///Set the associated times, for purpose of currentEvent()
-    virtual void setTimes(const QList<double>& times) = 0;
+    void setTimes(const QList<double>& times);
 
     ///Set the associated labels, for purpose of currentEvent()
-    virtual void setLabels(const QList<int>& labels) = 0;
+    void setLabels(const QList<int>& labels);
 
     ///The index of the currently selected clip
-    virtual int currentClipIndex() = 0;
-
-    virtual void setViewAgent(MVViewAgent* agent) = 0;
-
+    int currentClipIndex();
 signals:
-
     ///The user has selected a new current clip, which affects the outputs of currentClipIndex() and currentEvent()
     void currentEventChanged();
+private slots:
+    void slot_current_x_changed();
+
+private:
+    MVClipsViewPrivate* d;
 };
 
 #endif // MVCLIPSVIEW_H

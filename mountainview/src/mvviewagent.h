@@ -27,12 +27,14 @@ public:
     MVEvent currentEvent() const;
     int currentCluster() const;
     QList<int> selectedClusters() const;
+    double currentTimepoint() const;
 
     void setClusterMerge(const ClusterMerge& CM);
     void setClusterAttributes(const QMap<int, QJsonObject>& A);
     void setCurrentEvent(const MVEvent& evt);
     void setCurrentCluster(int k);
     void setSelectedClusters(const QList<int>& ks);
+    void setCurrentTimepoint(double tp);
 
     void clickCluster(int k, Qt::KeyboardModifiers modifiers);
 
@@ -42,6 +44,7 @@ signals:
     void currentEventChanged();
     void currentClusterChanged();
     void selectedClustersChanged();
+    void currentTimepointChanged();
 
 private:
     MVViewAgentPrivate* d;

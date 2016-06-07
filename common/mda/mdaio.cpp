@@ -141,7 +141,8 @@ long mdaReadData_impl(TargetType* data, const long size, FILE* inputFile)
 {
     if (is_same<TargetType, SourceType>::value) {
         return jfread(data, sizeof(SourceType), size, inputFile);
-    } else {
+    }
+    else {
         std::vector<SourceType> tmp(size);
         const long ret = jfread(&tmp[0], sizeof(SourceType), size, inputFile);
         std::copy(tmp.begin(), tmp.end(), data);
@@ -154,17 +155,23 @@ long mdaReadData(Type* data, const struct MDAIO_HEADER* header, const long size,
 {
     if (header->data_type == MDAIO_TYPE_BYTE) {
         return mdaReadData_impl<unsigned char>(data, size, inputFile);
-    } else if (header->data_type == MDAIO_TYPE_FLOAT32) {
+    }
+    else if (header->data_type == MDAIO_TYPE_FLOAT32) {
         return mdaReadData_impl<float>(data, size, inputFile);
-    } else if (header->data_type == MDAIO_TYPE_INT16) {
+    }
+    else if (header->data_type == MDAIO_TYPE_INT16) {
         return mdaReadData_impl<int16_t>(data, size, inputFile);
-    } else if (header->data_type == MDAIO_TYPE_INT32) {
+    }
+    else if (header->data_type == MDAIO_TYPE_INT32) {
         return mdaReadData_impl<int32_t>(data, size, inputFile);
-    } else if (header->data_type == MDAIO_TYPE_UINT16) {
+    }
+    else if (header->data_type == MDAIO_TYPE_UINT16) {
         return mdaReadData_impl<uint16_t>(data, size, inputFile);
-    } else if (header->data_type == MDAIO_TYPE_FLOAT64) {
+    }
+    else if (header->data_type == MDAIO_TYPE_FLOAT64) {
         return mdaReadData_impl<double>(data, size, inputFile);
-    } else
+    }
+    else
         return 0;
 }
 
@@ -173,7 +180,8 @@ long mdaWriteData_impl(DataType* data, const long size, FILE* outputFile)
 {
     if (is_same<DataType, TargetType>::value) {
         return fwrite(data, sizeof(DataType), size, outputFile);
-    } else {
+    }
+    else {
         std::vector<TargetType> tmp(size);
         std::copy(data, data + size, tmp.begin());
         return fwrite(&tmp[0], sizeof(TargetType), size, outputFile);
@@ -185,17 +193,23 @@ long mdaWriteData(DataType* data, const long size, const struct MDAIO_HEADER* he
 {
     if (header->data_type == MDAIO_TYPE_BYTE) {
         return mdaWriteData_impl<unsigned char>(data, size, outputFile);
-    } else if (header->data_type == MDAIO_TYPE_FLOAT32) {
+    }
+    else if (header->data_type == MDAIO_TYPE_FLOAT32) {
         return mdaWriteData_impl<float>(data, size, outputFile);
-    } else if (header->data_type == MDAIO_TYPE_INT16) {
+    }
+    else if (header->data_type == MDAIO_TYPE_INT16) {
         return mdaWriteData_impl<int16_t>(data, size, outputFile);
-    } else if (header->data_type == MDAIO_TYPE_INT32) {
+    }
+    else if (header->data_type == MDAIO_TYPE_INT32) {
         return mdaWriteData_impl<int32_t>(data, size, outputFile);
-    } else if (header->data_type == MDAIO_TYPE_UINT16) {
+    }
+    else if (header->data_type == MDAIO_TYPE_UINT16) {
         return mdaWriteData_impl<uint16_t>(data, size, outputFile);
-    } else if (header->data_type == MDAIO_TYPE_FLOAT64) {
+    }
+    else if (header->data_type == MDAIO_TYPE_FLOAT64) {
         return mdaWriteData_impl<double>(data, size, outputFile);
-    } else
+    }
+    else
         return 0;
 }
 
