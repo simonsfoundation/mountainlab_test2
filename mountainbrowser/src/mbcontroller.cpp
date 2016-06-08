@@ -46,7 +46,7 @@ void MBController::setMLProxyUrl(const QString& url)
     d->m_mlproxy_url = url;
 }
 
-QString MBController::mlProxyUrl()
+QString MBController::mlProxyUrl() const
 {
     return d->m_mlproxy_url;
 }

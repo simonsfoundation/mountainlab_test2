@@ -19,13 +19,14 @@ struct MBExperiment {
 class MBControllerPrivate;
 class MBController : public QObject {
     Q_OBJECT
+    Q_PROPERTY(QString mlProxyUrl READ mlProxyUrl CONSTANT)
 public:
     friend class MBControllerPrivate;
     MBController();
     virtual ~MBController();
 
     void setMLProxyUrl(const QString& url);
-    Q_INVOKABLE QString mlProxyUrl();
+    QString mlProxyUrl() const;
 
     Q_INVOKABLE QString getJson(QString url_or_path);
     Q_INVOKABLE QString getText(QString url_or_path);

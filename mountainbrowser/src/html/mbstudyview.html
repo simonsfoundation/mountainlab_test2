@@ -5,12 +5,15 @@
 <link rel="stylesheet" type="text/css" href="mountainbrowser.css" />
 
 <script src="jquery-2.2.3.min.js"></script>
+<script type="text/javascript" src="./qwebchannel.js"></script>
 
 <script src="mbexperimentlist.js"></script>
-
 <script>
+
 $(document).ready(function() {
-    var mlproxy_url=MB.mlProxyUrl();
+    new QWebChannel(qt.webChannelTransport, function (channel) {
+    window.MB = channel.objects.MB;
+    var mlproxy_url=MB.mlProxyUrl;
     console.log('url='+mlproxy_url);
     load_json(mlproxy_url+"/mbserver/index.mb.json?a=readJson",function(obj0) {
         console.log('testing 2...');
@@ -42,12 +45,11 @@ $(document).ready(function() {
     }
 
     function load_text(url_or_path,callback) {
-        var text=MB.getText(url_or_path);
-        callback(text);
+        MB.getText(url_or_path, function(text) { callback(text); });
     }
 
     function load_json(url_or_path,callback) {
-        var json=MB.getJson(url_or_path);
+        MB.getJson(url_or_path, function(json) {
         try {
             callback(JSON.parse(json));
         }
@@ -59,8 +61,9 @@ $(document).ready(function() {
             console.log(err);
             //do we do a callback here?
         }
+         });
     }
-
+});
 });
 </script>
 

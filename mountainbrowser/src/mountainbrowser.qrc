@@ -4,5 +4,6 @@
         <file>html/jquery-2.2.3.min.js</file>
         <file>html/mbexperimentlist.js</file>
         <file>html/mbstudyview.html</file>
+        <file>html/qwebchannel.js</file>
     </qresource>
 </RCC>

@@ -1,5 +1,14 @@
 QT += core gui
-QT += webkitwidgets
+
+greaterThan(QT_MAJOR_VERSION, 4) {
+    greaterThan(QT_MINOR_VERSION, 5) {
+        QT += webenginewidgets
+        QT += webchannel # required for c++ <-> js communication
+    } else {
+        QT += webkitwidgets
+    }
+}
+
 QT -= gui
 CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
