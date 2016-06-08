@@ -21,7 +21,7 @@
 
 \begin{tabular}{|p{3cm}|p{5cm}|p{3cm}|p{4cm}|}
     \hline
-    Component & Description & Where it runs & Dependency \\ \hline
+    \textbf{Component} & \textbf{Description} & \textbf{Where it runs} & \textbf{Dependency} \\ \hline
     Matlab & Processing and Visualization within matlab environment & Workstation & Linux or OS X. Matlab, MountainSort, MountainView. \\ \hline
     Matlab wrappers & Matlab wrappers to MountainSort and MountainView. Can be mixed with the pure matlab component. & Workstation, Linux or OS X	& Matlab, MountainSort, MountainView \\ \hline
     MountainSort & Spike-sorting specific processing routines (Filter, whiten, cluster, etc.) & Workstation or Server, Linux or OS X & C++/Qt5, LAPACK \\ \hline
@@ -68,7 +68,7 @@ The output of sorting is stored in a \textbf{"firings"} matrix of dimension $R\t
 
 \textbf{Electrode geometry} (geom.csv or geom.mda) is stored in a $2\times M$ or $3\times N$ array of 2D or 3D coordinates.
 
-\subsection{Matlab and matlab wrappers}
+\subsection{Matlab and wrappers}
 
 There are four types of matlab functions for performing spike sorting and visualization.
 
@@ -108,13 +108,15 @@ MountainSort is a command-line program for performing low-level spike sorting ro
 ...
 \end{lstlisting}
 
-In general processes are defined based on the following data:
+All processes are defined based on the following data:
 \begin{itemize}
 \item{\textbf{processor\_name} -- The name or ID of the processor (e.g., bandpass\_filter)}
 \item{\textbf{inputs} -- a collection of named input file paths}
 \item{\textbf{outputs} -- a collection of named output file paths}
 \item{\textbf{parameters} -- a collection of named input parameters (numbers or strings)}
 \end{itemize}
+
+For the most part all inputs and outputs will be multi-dimensional arrays stored in the .mda file format. Information about this format with links to tools for converting raw data into this format are found below.
 
 \subsection{MountainProcess}
 
@@ -270,10 +272,44 @@ C++ classes for dealing with .mda files, multi-dimensional arrays in memory, and
 
 \subsection{File I/O and processing files in chunks}
 
-Whenever possible, .mda files should be processed in chunks to avoid loading unnecessary data into memory. This can prevent crashes and allows multiple processes to run simultaneously. For C++ there are a few 
+Whenever possible, .mda files should be processed in chunks to avoid loading unnecessary data into memory. This can prevent crashes and allows multiple processes to run simultaneously. For C++ there are a few classes to facilitate this.
+
+\begin{itemize}
+\item{\textbf{Mda} -- in-memory read/write array}
+\item{\textbf{DiskReadMda} -- on-disk readonly array, or readonly access to remote .mda file. Read data in chunks.}
+\item{\textbf{DiskWriteMda} -- on-disk writeonly array. Write data in chunks.}
+\end{itemize}
+
+Here is an example C++ function that extracts clips from a readonly .mda file and returns an in-memory array of clips:
+\begin{lstlisting}[language=C++]
+Mda extract_clips(DiskReadMda &X, const QList<double> &times, int clip_size)
+{
+    long M=X.N1(), N=X.N2();
+    int T=clip_size;
+    long L=times.count();
+    int Tmid=(int)((T+1)/2)-1;
+    Mda clips(M,T,L);
+    for (long i=0; i<L; i++) {
+        long t1=(int)times[i]-Tmid;
+        long t2=t1+T-1;
+        if ((t1>=0)&&(t2<N)) {
+            Mda tmp;
+            X.readChunk(tmp,0,t1,M,T);
+            for (int t=0; t<T; t++) {
+                for (int m=0; m<M; m++) {
+                    clips.set(tmp.get(m,t),m,t,i);
+                }
+            }
+        }
+    }
+    return clips;
+}
+\end{lstlisting}
 
 \subsection{Executing processing scripts remotely}
 
+There are two situations where it would be desirable to launch processing scripts from a remote computer. The first would be to perform a batch of processing from the convenience of a web browser. The second is for the viewer (e.g., MountainView) to pull down results derived from datasets on the server. For example, the viewer needs to retrieve the average waveforms for each cluster in order to render in the cluster detail widget. Since the user is free to select various options including the clip size, these data should be generated on demand. It is not practical for the computation to be done on the client end since this would require the entire timeseries to be downloaded. Instead the process should be executed on the server. The desired processing script is therefore sent as a http request to mpserver which forwards the script to the mpdaemon for queuing. The server only responds once the script has run and the output files have been created. The GUI may then read the result in chunks for client-side rendering.
 
+If the computation is taking too long, the user may cancel the request. When the http connection is aborted, a chain of events occurs that terminate the script and any associated processes.
 
 \end{document}

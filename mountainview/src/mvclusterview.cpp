@@ -806,6 +806,32 @@ void MVClusterViewPrivate::do_paint(QPainter& painter, int W, int H)
         painter.setBrush(QBrush(Qt::darkGreen));
         painter.drawEllipse(pix, 6, 6);
     }
+
+    //legend
+    double text_height = 14;
+    double spacing = 4;
+    double margin=10;
+    double legend_width = 40;
+    QSet<int> labels_used;
+    for (long i = 0; i < m_labels.count(); i++) {
+        labels_used.insert(m_labels[i]);
+    }
+    QList<int> list = labels_used.toList();
+    qSort(list);
+    double y0 = margin;
+    double x0 = W - legend_width-margin;
+    QFont font = painter.font();
+    font.setPixelSize(text_height - 1);
+    painter.setFont(font);
+    for (int i = 0; i < list.count(); i++) {
+        QRectF rect(x0, y0, legend_width, text_height);
+        QString str = QString("%1").arg(list[i]);
+        QPen pen = painter.pen();
+        pen.setColor(get_label_color(list[i]));
+        painter.setPen(pen);
+        painter.drawText(rect, Qt::AlignRight, str);
+        y0 += text_height + spacing;
+    }
 }
 
 void MVClusterViewPrivate::export_image()
