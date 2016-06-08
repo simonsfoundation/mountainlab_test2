@@ -1,0 +1,28 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{MountainLab overview for SCDA - June 2016}
+\author{jmagland }
+\date{June 2016}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+
+\begin{tabular}{|p{3cm}|p{5cm}|p{3cm}|p{4cm}|}
+    \hline
+    Component & Description & Where it runs & Dependency \\ \hline
+    Matlab & Processing and Visualization within matlab environment & Workstation & Linux or OS X. Matlab, MountainSort, MountainView. \\ \hline
+    Matlab wrappers & Matlab wrappers to MountainSort and MountainView. Can be mixed with the pure matlab component. & Workstation, Linux or OS X	& Matlab, MountainSort, MountainView \\ \hline
+    MountainSort & Spike-sorting specific processing routines (Filter, whiten, cluster, etc.) & Workstation or Server, Linux or OS X & C++/Qt5, LAPACK \\ \hline
+    MountainView & GUI for visualizing raw data and spike sorting results. Either locally or remotely. & Workstation, Linux or OS X & C++/Qt5 \\ \hline
+    MountainProcess & Processing engine (spike-sorting independent). Queue and run scripts and processes. Batch processing. & Usually Server, Linux & C++/Qt5 \\ \hline
+\end{tabular}
+
+
+\end{document}
