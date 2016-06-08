@@ -198,7 +198,42 @@ The API for scripting is minimalistic and involves the following low-level inter
 
 \end{itemize}
 
-\subsection{}
+\subsection{Plug-in processor libraries}
+
+In MountainProcess, all data analysis is performed via plugin-processors library which are simply executables obeying a set of rules. First, the executable should have a .mp extension and should be placed in the mountainlab/mountainprocess/processors directory (although it is possible to configure mountainprocess to look in other directories as well). For spike sorting the processor library is mountainsort.mp. When this executable is run as
+\begin{lstlisting}[language=bash]
+mountainsort spec
+\end{lstlisting}
+it should output JSON text that provides a list of available processors together with their specifications. For example, the following is a reduced version of the mountainsort.mp output:
+\begin{lstlisting}[language=bash]
+{
+    "processors": [
+        {"description": "","exe_command": "mountainsort.mp bandpass_filter $(arguments)",
+            "inputs": [{"name": "timeseries"}],
+            "name": "bandpass_filter",
+            "outputs": [{"name": "timeseries_out"}],
+            "parameters": [
+                    {"name": "samplerate","optional": false},
+                    {"name": "freq_min","optional": false},
+                    {"name": "freq_max","optional": false},
+                {"name": "processing_chunk_size","optional": true},
+                {"name": "chunk_overlap_size","optional": true}
+            ],
+            "version": "0.1"
+        },
+        {"description": "","exe_command": "mountainsort.mp whiten $(arguments)",
+            "inputs": [
+                {"name": "timeseries"}
+            ],
+            "name": "whiten",
+            "outputs": [{"name": "timeseries_out"}],
+            "parameters": [],
+            "version": "0.1"
+        }
+    ]
+}
+\end{lstlisting}
+
 
 
 \end{document}
