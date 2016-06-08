@@ -7,6 +7,8 @@
 \usepackage{listings}
 \lstset{basicstyle=\ttfamily,showstringspaces=false,commentstyle=\color{green},keywordstyle=\color{blue}}
 
+\usepackage[hidelinks]{hyperref}
+
 \title{MountainLab overview for SCDA - June 2016}
 \author{jmagland }
 \date{June 2016}
@@ -85,7 +87,6 @@ These four types can be used together in driver scripts via the following functi
 \subsection{MountainSort}
 
 MountainSort is a command-line program for performing low-level spike sorting routines. These functions operate on files in chunks, and therefore use very little RAM. Here are some examples:
-
 \begin{lstlisting}[language=bash]
 mountainsort bandpass_filter --timeseries=raw.mda &&
 --timeseries_out=filtered.mda --samplerate=30000 &&
@@ -107,73 +108,97 @@ mountainsort branch_cluster_v2 --timeseries=whitened.mda
 --num_features=10 --detect_interval=10
 
 ...
-
 \end{lstlisting}
+
+In general processes are defined based on the following data:
+\begin{itemize}
+\item{\textbf{processor\_name} -- The name or ID of the processor (e.g., bandpass\_filter)}
+\item{\textbf{inputs} -- a collection of named input file paths}
+\item{\textbf{outputs} -- a collection of named output file paths}
+\item{\textbf{parameters} -- a collection of named input parameters (numbers or strings)}
+\end{itemize}
 
 \subsection{MountainProcess}
 
 MountainProcess is the core, spike-sorting independent, component of MountainLab. It provides the following capabilities
-
-* Plug-in processors -- executables in any language
-* Batch and parallel processing -- intelligent queueing system for scripts and processes
-* Provenance tracking and non-redundant process execution
-* Secure scripting using JavaScript with clean handling of intermediate files
+\begin{itemize}
+\item{\textbf{Plug-in processors} -- executables in any language}
+\item{\textbf{Batch and parallel processing} -- intelligent queueing system for scripts and processes}
+\item{\textbf{Provenance tracking and non-redundant process execution}}
+\item{\textbf{Secure scripting using JavaScript}}
+\end{itemize}
 
 To take advantage of provenance tracking and queuing (batch) functionality all of the above mountainsort procedures may also be performed using mountainprocess from the command line. For example, bandpass filtering may be accomplished using
-
 \begin{lstlisting}[language=bash]
-mountainprocess run-process &&
-bandpass_filter --timeseries=raw.mda &&
+mountainprocess run-process bandpass_filter --timeseries=raw.mda &&
 --timeseries_out=filtered.mda --samplerate=30000 &&
 --freq_min=300 --freq_max=2000
 \end{lstlisting}
-
 or
-
 \begin{lstlisting}[language=bash]
-mountainprocess queue-process &&
-bandpass_filter --timeseries=raw.mda &&
+mountainprocess queue-process bandpass_filter --timeseries=raw.mda &&
 --timeseries_out=filtered.mda --samplerate=30000 &&
 --freq_min=300 --freq_max=2000
 \end{lstlisting}
 
 The latter (queuing) command is useful for batch and parallel processing and requires the mountainprocess daemon to be running in the background. This daemon may be launched via
-
 \begin{lstlisting}[language=bash]
 mountainprocess daemon-start
 \end{lstlisting}
-
 The recommend way to run the daemon in the background is using a tmux session:
-
 \begin{lstlisting}[language=bash]
 tmux new -s mpdaemon
 mountainprocess daemon-start
 \end{lstlisting}
-
-Use [Ctrl b+d] to exit tmux, or simply close the terminal. Later you can attach via:
-
+Use [Ctrl b+d] to exit the tmux session, or simply close the terminal. Later you can attach via:
 \begin{lstlisting}[language=bash]
 tmux attach -t mpdaemon
 \end{lstlisting}
-
 If you are also running the web servers, the start\_labcomputer.sh will also run the daemon (see below).
-
-The recommended alternative to writing bash scripts is to assemble the processing pipeline using JavaScript. The primary,,,,,,,, writing convenience function wrappers to the commands and providing a flexible syntax for passing parameters between processing steps, and writing
 
 \subsection{MountainView}
 
-MountainView is the desktop user interface for interactive visualization. Results may eiter reside on the local machine or on a remote server -- the functionality is the same. Detailed information on its usage can be found on the MountainLab forum under Articles: https://mountainlab.vbulletin.net.
-
-\subsection{MountainBrowser}
-
-MountainBrowser is a desktop user interface for browsing spike sorting results on a server. MountainView will be launched when a result link is clicked. This compoonent will be replaced by a website / HTML5 solution.
+MountainView is the desktop user interface for interactive visualization. Results may either reside on the local machine or on a remote server -- the functionality is the same. Detailed information on its usage can be found on the MountainLab forum in this article: \url{https://mountainlab.vbulletin.net/articles/23-introduction-to-mountainview}.
 
 \subsection{Web servers: mpserver, mdaserver, mbserver}
 
 To enable remote access to spike sorting results from client workstations, three servers must be running. 
 
-The mountainprocess
+The mountainprocess server (mpserver) enables
 
+\section{Processing framework (MountainProcess)}
+
+As mentioned above, MountainProcess is the core of MountainLab and provides a framework for processing data on a client workstation or server. It is completely independent of spike sorting. Plug-in processors may be created in any language as they are simply executables obeying a set of rules (specified below). It automatically handles batch and parallel processing using an intelligent system for queueing and running scripts and processes as resources become available. A crucial feature is provenance tracking and the ability to determine whether a particular process has already been performed. Processing may be performed either using a command-line/bash procedures or JavaScript-specified pipelines.
+
+\subsection{Scripting processing pipelines}
+
+The recommended alternative to writing bash scripts is to assemble the processing pipeline using JavaScript. MountainProcess can be used to queue or run these scripts. There are a number of advantages in terms of syntax, flexibility and security. First, convenience functions may easily be used to wrap commands. For example one way to perform pre-processing could be:
+\begin{lstlisting}[language=bash]
+X = bandpass_filter(X, opts);
+X = mask_out_artifacts(X, opts);
+X = whiten(X);
+\end{lstlisting}
+
+Another way, which is more intuitive in terms of intermediate files and multiple output parameters, is
+\begin{lstlisting}[language=bash]
+bandpass_filter(raw, '@pre1', opts);
+mask_out_artifacts('@pre1', '@pre1b', opts);
+whiten('@pre1b', '@pre2');
+\end{lstlisting}
+In this case the strings beginning with "@" are placeholders for intermediate files. The framework will automatically replace these strings with temporary file names that depend uniquely on the checksums of the input parameters. More details about unique file naming will be described later.
+
+It is important to note that the structure of JavaScript function wrappers (including the above "@" intermediate file strategy) is completely independent of mountainprocess. There is a great deal of flexibility in how pipeline generation is performed.
+
+The API for scripting is minimalistic and involves the following low-level interface methods:
+\begin{itemize}
+\item{\textbf{MP.fileChecksum(fname)} -- returns the SHA-1 hash of a local file (needed for purposes described below)}
+\item{\textbf{MP.createTemporaryFileName(code)} -- returns the path of a temporary file, in a location managed by mountainprocess, which is uniquely determined by the input string.}
+\item{\textbf{MP.runPipeline(json)} -- queues a pipeline of processes encoded by JSON text. This is simply a list of processes to execute, each with a processor name, input/output file names, and input parameters. The syntax is detailed below.}
+\item{\textbf{MP.log(message)} -- writes a log message string to the console, for purposes of monitoring and debugging.}
+
+\end{itemize}
+
+\subsection{}
 
 
 \end{document}

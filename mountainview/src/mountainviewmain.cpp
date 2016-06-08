@@ -31,7 +31,9 @@
 #include <QtConcurrentRun>
 
 /// TODO option to turn on/off 8-bit quantization per view
-/// TODO update doc/*
+/// TODO update doc
+/// TODO ctrl+a to select all clusters
+/// TODO event filter to be computed on client
 
 class TaskProgressViewThread : public QRunnable {
 public:
