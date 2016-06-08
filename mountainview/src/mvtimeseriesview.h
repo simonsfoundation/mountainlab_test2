@@ -13,19 +13,6 @@
 
 /// TODO on first load, multiscale file is created on server, the process is detached. Provide feedback to the user somehow
 
-/// Witold is there a Qt struct that captures this?
-struct MVRange {
-    MVRange(double min0 = 0, double max0 = 1)
-    {
-        min = min0;
-        max = max0;
-    }
-    bool operator==(const MVRange& other);
-    MVRange operator+(double offset);
-    MVRange operator*(double scale);
-    double min, max;
-};
-
 class MVTimeSeriesViewPrivate;
 class MVTimeSeriesView : public QWidget {
     Q_OBJECT

@@ -84,7 +84,6 @@ public:
 
     mvtsv_prefs m_prefs;
 
-    double m_view_t1, m_view_t2;
     double m_amplitude_factor;
     QList<mvtsv_channel> m_channels;
     MVRange m_selected_t_range;
@@ -136,6 +135,7 @@ MVTimeSeriesView::MVTimeSeriesView(MVViewAgent* view_agent)
 
     d->m_view_agent = view_agent;
     QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
+    QObject::connect(view_agent, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
 
     this->setFocusPolicy(Qt::StrongFocus);
 
@@ -189,7 +189,7 @@ void MVTimeSeriesView::setChannelColors(const QList<QColor>& colors)
 
 MVRange MVTimeSeriesView::timeRange() const
 {
-    return MVRange(d->m_view_t1, d->m_view_t2);
+    return d->m_view_agent->currentTimeRange();
 }
 
 double MVTimeSeriesView::amplitudeFactor() const
@@ -219,11 +219,7 @@ void MVTimeSeriesView::setTimeRange(MVRange range)
     if ((range.min < 0) || (range.max >= d->m_timeseries.N2())) {
         range = MVRange(0, d->m_timeseries.N2() - 1);
     }
-    if ((d->m_view_t1 == range.min) && (d->m_view_t2 == range.max))
-        return;
-    d->m_view_t1 = range.min;
-    d->m_view_t2 = range.max;
-    update();
+    d->m_view_agent->setCurrentTimeRange(range);
 }
 
 void MVTimeSeriesView::setCurrentTimepoint(double t)
@@ -327,13 +323,16 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         }
     }
 
+    double view_t1=d->m_view_agent->currentTimeRange().min;
+    double view_t2=d->m_view_agent->currentTimeRange().max;
+
     // Event markers
     QVector<double> times0;
     QVector<int> labels0;
     for (long i = 0; i < d->m_times.count(); i++) {
         double t0 = d->m_times[i];
         int l0 = d->m_labels[i];
-        if ((d->m_view_t1 <= t0) && (t0 <= d->m_view_t2)) {
+        if ((view_t1 <= t0) && (t0 <= view_t2)) {
             times0 << t0;
             labels0 << l0;
         }
@@ -355,7 +354,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     double WW = W0 - mleft - mright;
     double HH = H0 - mtop - mbottom;
-    QImage img = d->m_render_manager.getImage(d->m_view_t1, d->m_view_t2, d->m_amplitude_factor, WW, HH);
+    QImage img = d->m_render_manager.getImage(view_t1, view_t2, d->m_amplitude_factor, WW, HH);
     painter.drawImage(mleft, mtop, img);
 
     // Time axis
@@ -707,9 +706,11 @@ void MVTimeSeriesViewPrivate::paint_message_at_top(QPainter* painter, QString ms
 
 void MVTimeSeriesViewPrivate::paint_time_axis(QPainter* painter, double W, double H)
 {
-    /// TODO samplerate needs to be member variable
     double samplerate = m_samplerate;
     long min_pixel_spacing_between_ticks = 30;
+
+    double view_t1=m_view_agent->currentTimeRange().min;
+    double view_t2=m_view_agent->currentTimeRange().max;
 
     QPen pen = painter->pen();
     pen.setColor(Qt::black);
@@ -732,7 +733,7 @@ void MVTimeSeriesViewPrivate::paint_time_axis(QPainter* painter, double W, doubl
     structs << TickStruct("1 day", min_pixel_spacing_between_ticks, 20, 24 * 60 * 60 * samplerate);
 
     for (int i = 0; i < structs.count(); i++) {
-        double scale_pixel_width = W / (m_view_t2 - m_view_t1) * structs[i].timepoint_interval;
+        double scale_pixel_width = W / (view_t2 - view_t1) * structs[i].timepoint_interval;
         if ((scale_pixel_width >= 60) && (!structs[i].str.isEmpty())) {
             structs[i].show_scale = true;
             break;
@@ -749,11 +750,14 @@ void MVTimeSeriesViewPrivate::paint_time_axis_unit(QPainter* painter, double W, 
 {
     Q_UNUSED(W)
 
-    double pixel_interval = W / (m_view_t2 - m_view_t1) * TS.timepoint_interval;
+    double view_t1=m_view_agent->currentTimeRange().min;
+    double view_t2=m_view_agent->currentTimeRange().max;
+
+    double pixel_interval = W / (view_t2 - view_t1) * TS.timepoint_interval;
 
     if (pixel_interval >= TS.min_pixel_spacing_between_ticks) {
-        long i1 = (long)ceil(m_view_t1 / TS.timepoint_interval);
-        long i2 = (long)floor(m_view_t2 / TS.timepoint_interval);
+        long i1 = (long)ceil(view_t1 / TS.timepoint_interval);
+        long i2 = (long)floor(view_t2 / TS.timepoint_interval);
         for (long i = i1; i <= i2; i++) {
             QPointF p1 = coord2pix(mvtsv_coord(0, i * TS.timepoint_interval, 0));
             p1.setY(H - m_prefs.mbottom);
@@ -764,7 +768,7 @@ void MVTimeSeriesViewPrivate::paint_time_axis_unit(QPainter* painter, double W, 
     }
     if (TS.show_scale) {
         int label_height = 10;
-        long j1 = m_view_t1 + 1;
+        long j1 = view_t1 + 1;
         if (j1 < 1)
             j1 = 1;
         long j2 = j1 + TS.timepoint_interval;
@@ -819,12 +823,15 @@ QPointF MVTimeSeriesViewPrivate::coord2pix(mvtsv_coord C)
     if (C.channel >= m_channels.count())
         return QPointF(0, 0);
 
-    if (m_view_t2 <= m_view_t1)
+    double view_t1=m_view_agent->currentTimeRange().min;
+    double view_t2=m_view_agent->currentTimeRange().max;
+
+    if (view_t2 <= view_t1)
         return QPointF(0, 0);
 
     mvtsv_channel* CH = &m_channels[C.channel];
 
-    double xpct = (C.t - m_view_t1) / (m_view_t2 - m_view_t1);
+    double xpct = (C.t - view_t1) / (view_t2 - view_t1);
     double px = CH->geometry.x() + xpct * CH->geometry.width();
     double py = CH->geometry.y() + CH->geometry.height() / 2 + CH->geometry.height() / 2 * (C.y * m_amplitude_factor);
     return QPointF(px, py);
@@ -835,6 +842,9 @@ mvtsv_coord MVTimeSeriesViewPrivate::pix2coord(long channel, QPointF pix)
     if (channel >= m_channels.count())
         return mvtsv_coord(0, 0, 0);
 
+    double view_t1=m_view_agent->currentTimeRange().min;
+    double view_t2=m_view_agent->currentTimeRange().max;
+
     mvtsv_channel* CH = &m_channels[channel];
 
     mvtsv_coord C;
@@ -842,7 +852,7 @@ mvtsv_coord MVTimeSeriesViewPrivate::pix2coord(long channel, QPointF pix)
     if (CH->geometry.width()) {
         xpct = (pix.x() - CH->geometry.x()) / (CH->geometry.width());
     }
-    C.t = m_view_t1 + xpct * (m_view_t2 - m_view_t1);
+    C.t = view_t1 + xpct * (view_t2 - view_t1);
     if (m_amplitude_factor) {
         C.y = (pix.y() - (CH->geometry.y() + CH->geometry.height() / 2)) / m_amplitude_factor / (CH->geometry.height() / 2);
     }

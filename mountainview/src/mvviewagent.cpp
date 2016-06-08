@@ -16,6 +16,7 @@ public:
     int m_current_cluster;
     QList<int> m_selected_clusters;
     double m_current_timepoint;
+    MVRange m_current_time_range;
 };
 
 MVViewAgent::MVViewAgent()
@@ -54,6 +55,11 @@ QList<int> MVViewAgent::selectedClusters() const
 double MVViewAgent::currentTimepoint() const
 {
     return d->m_current_timepoint;
+}
+
+MVRange MVViewAgent::currentTimeRange() const
+{
+    return d->m_current_time_range;
 }
 
 ClusterMerge MVViewAgent::clusterMerge() const
@@ -119,6 +125,13 @@ void MVViewAgent::setCurrentTimepoint(double tp)
         return;
     d->m_current_timepoint = tp;
     emit currentTimepointChanged();
+}
+
+void MVViewAgent::setCurrentTimeRange(const MVRange &range)
+{
+    if (d->m_current_time_range==range) return;
+    d->m_current_time_range=range;
+    emit currentTimeRangeChanged();
 }
 
 void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
