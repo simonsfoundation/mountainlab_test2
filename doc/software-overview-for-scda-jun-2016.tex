@@ -10,7 +10,7 @@
 \usepackage[hidelinks]{hyperref}
 
 \title{MountainLab overview for SCDA - June 2016}
-\author{jmagland }
+\author{Jeremy Magland}
 \date{June 2016}
 
 \begin{document}
@@ -33,8 +33,6 @@
     mbserver & Serve .json files & Server, Linux & nodejs \\ \hline
     mlproxy & Proxy server for mpserver, mdaserver, mbserver & Server, Linux & nodejs \\ \hline
 \end{tabular}
-
-\subsection{Multi-dimensional array file format (.mda)}
 
 \subsection{Conventions for spike sorting data}
 
@@ -88,21 +86,21 @@ These four types can be used together in driver scripts via the following functi
 
 MountainSort is a command-line program for performing low-level spike sorting routines. These functions operate on files in chunks, and therefore use very little RAM. Here are some examples:
 \begin{lstlisting}[language=bash]
-mountainsort bandpass_filter --timeseries=raw.mda &&
+> mountainsort bandpass_filter --timeseries=raw.mda &&
 --timeseries_out=filtered.mda --samplerate=30000 &&
 --freq_min=300 --freq_max=2000
 
-mountainsort mask_out_artifacts --timeseries=filtered.mda &&
+> mountainsort mask_out_artifacts --timeseries=filtered.mda &&
 --timeseries_out=filtered2.mda --threshold=3 --interval_size=200
 
-mountainsort whiten --timeseries=filtered2.mda &&
+> mountainsort whiten --timeseries=filtered2.mda &&
 --timeseries_out=whitened.mda
 
-mountainsort detect --timeseries=whitened.mda
+> mountainsort detect --timeseries=whitened.mda
 --detect_out=detect.mda --clip_size=100 --detect_interval=10
 --detect_threshold=3.5 --sign=-1 --individual_channels=1
 
-mountainsort branch_cluster_v2 --timeseries=whitened.mda
+> mountainsort branch_cluster_v2 --timeseries=whitened.mda
 --adjacency_matrix=AM.mda --firings_out=firings.mda
 --clip_size=100 --min_shell_size=150 --shell_increment=3
 --num_features=10 --detect_interval=10
@@ -130,29 +128,29 @@ MountainProcess is the core, spike-sorting independent, component of MountainLab
 
 To take advantage of provenance tracking and queuing (batch) functionality all of the above mountainsort procedures may also be performed using mountainprocess from the command line. For example, bandpass filtering may be accomplished using
 \begin{lstlisting}[language=bash]
-mountainprocess run-process bandpass_filter --timeseries=raw.mda &&
+> mountainprocess run-process bandpass_filter --timeseries=raw.mda &&
 --timeseries_out=filtered.mda --samplerate=30000 &&
 --freq_min=300 --freq_max=2000
 \end{lstlisting}
 or
 \begin{lstlisting}[language=bash]
-mountainprocess queue-process bandpass_filter --timeseries=raw.mda &&
+> mountainprocess queue-process bandpass_filter --timeseries=raw.mda &&
 --timeseries_out=filtered.mda --samplerate=30000 &&
 --freq_min=300 --freq_max=2000
 \end{lstlisting}
 
 The latter (queuing) command is useful for batch and parallel processing and requires the mountainprocess daemon to be running in the background. This daemon may be launched via
 \begin{lstlisting}[language=bash]
-mountainprocess daemon-start
+> mountainprocess daemon-start
 \end{lstlisting}
 The recommend way to run the daemon in the background is using a tmux session:
 \begin{lstlisting}[language=bash]
-tmux new -s mpdaemon
-mountainprocess daemon-start
+> tmux new -s mpdaemon
+> mountainprocess daemon-start
 \end{lstlisting}
 Use [Ctrl b+d] to exit the tmux session, or simply close the terminal. Later you can attach via:
 \begin{lstlisting}[language=bash]
-tmux attach -t mpdaemon
+> tmux attach -t mpdaemon
 \end{lstlisting}
 If you are also running the web servers, the start\_labcomputer.sh will also run the daemon (see below).
 
@@ -173,14 +171,14 @@ As mentioned above, MountainProcess is the core of MountainLab and provides a fr
 \subsection{Scripting processing pipelines}
 
 The recommended alternative to writing bash scripts is to assemble the processing pipeline using JavaScript. MountainProcess can be used to queue or run these scripts. There are a number of advantages in terms of syntax, flexibility and security. First, convenience functions may easily be used to wrap commands. For example one way to perform pre-processing could be:
-\begin{lstlisting}[language=bash]
+\begin{lstlisting}[language=C++]
 X = bandpass_filter(X, opts);
 X = mask_out_artifacts(X, opts);
 X = whiten(X);
 \end{lstlisting}
 
 Another way, which is more intuitive in terms of intermediate files and multiple output parameters, is
-\begin{lstlisting}[language=bash]
+\begin{lstlisting}[language=C++]
 bandpass_filter(raw, '@pre1', opts);
 mask_out_artifacts('@pre1', '@pre1b', opts);
 whiten('@pre1b', '@pre2');
@@ -202,9 +200,9 @@ The API for scripting is minimalistic and involves the following low-level inter
 
 In MountainProcess, all data analysis is performed via plugin-processors library which are simply executables obeying a set of rules. First, the executable should have a .mp extension and should be placed in the mountainlab/mountainprocess/processors directory (although it is possible to configure mountainprocess to look in other directories as well). For spike sorting the processor library is mountainsort.mp. When this executable is run as
 \begin{lstlisting}[language=bash]
-mountainsort spec
+> mountainsort spec
 \end{lstlisting}
-it should output JSON text that provides a list of available processors together with their specifications. For example, the following is a reduced version of the mountainsort.mp output:
+it should output JSON text that provides a list of available processors together with their specifications. For example, the following is a reduced version of the mountainsort.mp spec output:
 \begin{lstlisting}[language=bash]
 {
     "processors": [
@@ -233,6 +231,14 @@ it should output JSON text that provides a list of available processors together
     ]
 }
 \end{lstlisting}
+
+As outlined above, each processor has a name, and set of named input and output files, and a set of named input parameters (some optional). When running a process the arguments are passed in (by mountainprocess) according to the syntax from the section above (for mountainprocess). Note again the processing libraries are simply executable files and can therefore be created using any language.
+
+\subsection{Multi-dimensional array file format (.mda)}
+
+\subsection{File I/O and processing files in chunks}
+
+\subsection{Executing processing scripts remotely}
 
 
 
