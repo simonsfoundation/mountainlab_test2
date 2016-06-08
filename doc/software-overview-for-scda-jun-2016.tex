@@ -236,7 +236,41 @@ As outlined above, each processor has a name, and set of named input and output 
 
 \subsection{Multi-dimensional array file format (.mda)}
 
+The .mda file format was created by Jeremy, while at Felix Wehrli's NMR lab Penn, as a simple method for storing multi-dimensional arrays of numbers. Of course the simplest way would be to store the array as a raw binary file, but the problem with this is that fundamental information required to read the data is missing – i.e., the number and sizes of the dimensions as well as the data type (e.g., float32, int16, byte, complex float, etc).
+
+One way to handle this is to distribute a text file along with the binary raw file that contains this information – but that's inconvenient. Another possibility is to encode this information in the file name – but that's a bad idea.
+
+A better solution is to provide this information in a header (beginning portion of the data) immediately preceding the raw portion. This is the approach of the Nifti (.nii) file format. However, the pressing questions are (a) in what format should the information be stored? and (b) how much extra information should be provided?
+
+The problem (in my opinion) with the .nii format is that the header is just complex enough to require libraries for reading/writing – one library for each programming language (C/C++, MATLAB, Python, Java, etc). This is the same problem with MATLAB's .mat format (although a lot more difficult to read/write outside of MATLAB itself). This is true for many other formats as well (.hdf5 and DICOM).
+
+There is another problem with all of these formats – they all support various collections of meta information. Each software therefore produces files with different extra information that may or may not be essential for other software reading the files. In other words, there is no guarantee on which information is provided within a particular .nii, .mat or .hdf5 file. In many cases, more than one multi-dimensional array may be included, creating ambiguity as to which should be used.
+
+Motivated by the above issues, the .mda format conforms to the following principles:
+\begin{itemize}
+\item{Each .mda file contains one and only one multi-dimensional array of byte, integer, real, or complex numbers.}
+\item{The .mda file contains a small well-defined header containing only the minimal information required to read the array, namely the number and size of the dimensions as well as the data format of the entries.}
+\item{Immediately following the header, the data of the multi-dimensional array is stored in raw binary format.}
+\end{itemize}
+
+The .mda file format has evolved slightly over time (for example the first version only supported complex numbers), so please forgive the few arbitrary choices.
+
+\begin{itemize}
+\item{The first four bytes contains a 32-bit signed integer containing a negative number representing the data format (-1 is complex float32, -2 is byte, -3 is float32, -4 is int16, -5 is int32, and -6 is uint16).}
+\item{The next four bytes contains a 32-bit signed integer representing the number of bytes in each entry (okay a bit redundant, I know).}
+\item{The next four bytes contains a 32-bit signed integer representing the number of dimensions (num\_dims should be between 1 and 50).}
+\item{The next 4*num\_dims bytes contains a list of signed 32-bit integers representing the size of each of the dimensions.}
+\item{That's it! Next comes the raw data.}
+\end{itemize}
+
+Matlab functions for reading and writing this format are here:
+\url{https://github.com/magland/mountainlab/tree/master/matlab/msutils}
+
+C++ classes for dealing with .mda files, multi-dimensional arrays in memory, and remote access to .mda files are here: \url{https://github.com/magland/mountainlab/tree/master/common/mda}
+
 \subsection{File I/O and processing files in chunks}
+
+Whenever possible, .mda files should be processed in chunks to avoid loading unnecessary data into memory. This can prevent crashes and allows multiple processes to run simultaneously. For C++ there are a few 
 
 \subsection{Executing processing scripts remotely}
 

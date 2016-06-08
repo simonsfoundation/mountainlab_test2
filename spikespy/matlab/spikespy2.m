@@ -67,7 +67,7 @@ for jj=1:length(views)
         timeseries_paths{end+1}=VV.timeseries;
     end;
     if (isfield(VV,'firings'))
-        firings_paths{end+1}=firings;
+        firings_paths{end+1}=VV.firings;
     elseif (isfield(VV,'times'))
         times0=arrayify(VV.times);
         labels0=arrayify(VV.labels);
