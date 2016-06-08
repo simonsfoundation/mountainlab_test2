@@ -3,6 +3,10 @@
 \usepackage{geometry}
 \geometry{margin=1in}
 
+\usepackage{xcolor}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily,showstringspaces=false,commentstyle=\color{green},keywordstyle=\color{blue}}
+
 \title{MountainLab overview for SCDA - June 2016}
 \author{jmagland }
 \date{June 2016}
@@ -11,8 +15,7 @@
 
 \maketitle
 
-\section{Introduction}
-
+\section{Introduction to MountainLab Components}
 
 \begin{tabular}{|p{3cm}|p{5cm}|p{3cm}|p{4cm}|}
     \hline
@@ -20,9 +23,157 @@
     Matlab & Processing and Visualization within matlab environment & Workstation & Linux or OS X. Matlab, MountainSort, MountainView. \\ \hline
     Matlab wrappers & Matlab wrappers to MountainSort and MountainView. Can be mixed with the pure matlab component. & Workstation, Linux or OS X	& Matlab, MountainSort, MountainView \\ \hline
     MountainSort & Spike-sorting specific processing routines (Filter, whiten, cluster, etc.) & Workstation or Server, Linux or OS X & C++/Qt5, LAPACK \\ \hline
+    MountainProcess & Processing engine (spike-sorting independent). Queue and run scripts and processes. Batch processing. & Usually Server, Linux & C++/Qt5 \\  \hline
     MountainView & GUI for visualizing raw data and spike sorting results. Either locally or remotely. & Workstation, Linux or OS X & C++/Qt5 \\ \hline
-    MountainProcess & Processing engine (spike-sorting independent). Queue and run scripts and processes. Batch processing. & Usually Server, Linux & C++/Qt5 \\ \hline
+    MountainBrowser & Desktop GUI for browsing spike sorting result. This component will be replaced by a true website / HTML5 solution & Workstation, Linux or OS X & C++/Qt5 \\ \hline
+    mpserver & Queue processing scripts on server & Server, Linux & nodejs \\ \hline
+    mdaserver & Serve chunks of .mda files & Server, Linux & nodejs \\ \hline
+    mbserver & Serve .json files & Server, Linux & nodejs \\ \hline
+    mlproxy & Proxy server for mpserver, mdaserver, mbserver & Server, Linux & nodejs \\ \hline
 \end{tabular}
+
+\subsection{Multi-dimensional array file format (.mda)}
+
+\subsection{Conventions for spike sorting data}
+
+The \textbf{raw dataset} (aka timeseries) is assumed to be a $M\times N$ array of voltage measurements, where $M$ is the number of channels (electrodes) and $N$ is the number of timepoints. Unless otherwise specified, event times are in index units.
+
+The \textbf{sample rate} is the rate at which the original data was acquired. The samplerate variable is always in units of Hz. So samplerate=30000 means that timepoint 30,000 occurs at acquisition time 1 second.
+
+Generally speaking, we use the following conventions:
+
+\begin{itemize}
+\item{\textbf{M} -- number of channels or electrodes}
+\item{\textbf{N} -- number of timepoints in the timeseries}
+\item{\textbf{K} -- number of clusters / spike types}
+\item{\textbf{L} -- number of events / spikes}
+\item{\textbf{T} -- length of a clip (in timepoints) / time window around a spike (typically 100 timepoints)}
+\end{itemize}
+
+One-based indexing is used for timepoints, channels, and cluster labels. Thus the first channel is channel $1$, the first timepoint is timepoint $1$, and the first cluster is $1$. A label of $0$ represents an unclassified spike event.
+
+The \textbf{center of a clip} of size $T$ is always at the integer part of $(T+1)/2$ using one-based indexing.
+
+The output of sorting is stored in a \textbf{"firings"} matrix of dimension $R\times L$ where $R\geq 3$ and $L$ is the number of events (double precision). Thus each column corresponds to a detected firing event. Information in the rows of the firings matrix are defined as follows:
+
+\begin{itemize}
+\item{\textbf{First row (optional)} -- Primary channel number of the spike type, e.g., the channel where the average spike shape has the largest peak. If this information is not provided (by the sorter) this row may be filled with zeros.}
+\item{\textbf{Second row (mandatory)} -- Event times, or timepoints where the events were detected. These may have a fractional component.}
+\item{\textbf{Third row (mandatory)} -- Integer labels assigning membership to a cluster or spike type. A value of zero indicates an unclassified (e.g., noise or outlier) event.}
+\item{\textbf{Fourth row (optional)} -- Peak amplitudes, determined by the sorting algorithm.}
+\item{\textbf{Fifth row (optional)} -- Outlier scores as determined by the sorting algorithm. The larger the score, the more outlier-ish.}
+\item{\textbf{Sixth row (optional)} -- Detectability scores as determined by the sorting algorithm. Spike events that are close to noise are given a low score. Roughly speaking, a score of $6$ would correspond to an event that is $6$ standard deviations above the noise.}
+\item{\textbf{Seventh row and up (optional))} -- Unused for now.}
+\end{itemize}
+
+\textbf{Electrode geometry} (geom.csv or geom.mda) is stored in a $2\times M$ or $3\times N$ array of 2D or 3D coordinates.
+
+\subsection{Matlab and matlab wrappers}
+
+There are four types of matlab functions for performing spike sorting and visualization.
+
+\begin{itemize}
+\item{\textbf{In-memory processing} - conventional Matlab processing functions}
+\item{\textbf{In-memory visualization} - launches Matlab figures}
+\item{\textbf{Wrappers to MountainProcess/MountainSort} - processing routines 
+operating on files. Uses system calls to mountainprocess.}
+\item{\textbf{Wrappers to MountainView} - visualization of raw data and results, operating on files. Uses (detached) system calls to mountainview.}
+\end{itemize}
+
+These four types can be used together in driver scripts via the following functions which convert between in-memory arrays and .mda files: arrayify.m, pathify8.m, pathify16.m, pathify32.m, pathify64.m. These are convenient wrappers to readmda.m and writemda*.m that return the inputs when a conversion is not needed. For example if X is an array, then arrayify(X) will simply return X.
+
+\subsection{MountainSort}
+
+MountainSort is a command-line program for performing low-level spike sorting routines. These functions operate on files in chunks, and therefore use very little RAM. Here are some examples:
+
+\begin{lstlisting}[language=bash]
+mountainsort bandpass_filter --timeseries=raw.mda &&
+--timeseries_out=filtered.mda --samplerate=30000 &&
+--freq_min=300 --freq_max=2000
+
+mountainsort mask_out_artifacts --timeseries=filtered.mda &&
+--timeseries_out=filtered2.mda --threshold=3 --interval_size=200
+
+mountainsort whiten --timeseries=filtered2.mda &&
+--timeseries_out=whitened.mda
+
+mountainsort detect --timeseries=whitened.mda
+--detect_out=detect.mda --clip_size=100 --detect_interval=10
+--detect_threshold=3.5 --sign=-1 --individual_channels=1
+
+mountainsort branch_cluster_v2 --timeseries=whitened.mda
+--adjacency_matrix=AM.mda --firings_out=firings.mda
+--clip_size=100 --min_shell_size=150 --shell_increment=3
+--num_features=10 --detect_interval=10
+
+...
+
+\end{lstlisting}
+
+\subsection{MountainProcess}
+
+MountainProcess is the core, spike-sorting independent, component of MountainLab. It provides the following capabilities
+
+* Plug-in processors -- executables in any language
+* Batch and parallel processing -- intelligent queueing system for scripts and processes
+* Provenance tracking and non-redundant process execution
+* Secure scripting using JavaScript with clean handling of intermediate files
+
+To take advantage of provenance tracking and queuing (batch) functionality all of the above mountainsort procedures may also be performed using mountainprocess from the command line. For example, bandpass filtering may be accomplished using
+
+\begin{lstlisting}[language=bash]
+mountainprocess run-process &&
+bandpass_filter --timeseries=raw.mda &&
+--timeseries_out=filtered.mda --samplerate=30000 &&
+--freq_min=300 --freq_max=2000
+\end{lstlisting}
+
+or
+
+\begin{lstlisting}[language=bash]
+mountainprocess queue-process &&
+bandpass_filter --timeseries=raw.mda &&
+--timeseries_out=filtered.mda --samplerate=30000 &&
+--freq_min=300 --freq_max=2000
+\end{lstlisting}
+
+The latter (queuing) command is useful for batch and parallel processing and requires the mountainprocess daemon to be running in the background. This daemon may be launched via
+
+\begin{lstlisting}[language=bash]
+mountainprocess daemon-start
+\end{lstlisting}
+
+The recommend way to run the daemon in the background is using a tmux session:
+
+\begin{lstlisting}[language=bash]
+tmux new -s mpdaemon
+mountainprocess daemon-start
+\end{lstlisting}
+
+Use [Ctrl b+d] to exit tmux, or simply close the terminal. Later you can attach via:
+
+\begin{lstlisting}[language=bash]
+tmux attach -t mpdaemon
+\end{lstlisting}
+
+If you are also running the web servers, the start\_labcomputer.sh will also run the daemon (see below).
+
+The recommended alternative to writing bash scripts is to assemble the processing pipeline using JavaScript. The primary,,,,,,,, writing convenience function wrappers to the commands and providing a flexible syntax for passing parameters between processing steps, and writing
+
+\subsection{MountainView}
+
+MountainView is the desktop user interface for interactive visualization. Results may eiter reside on the local machine or on a remote server -- the functionality is the same. Detailed information on its usage can be found on the MountainLab forum under Articles: https://mountainlab.vbulletin.net.
+
+\subsection{MountainBrowser}
+
+MountainBrowser is a desktop user interface for browsing spike sorting results on a server. MountainView will be launched when a result link is clicked. This compoonent will be replaced by a website / HTML5 solution.
+
+\subsection{Web servers: mpserver, mdaserver, mbserver}
+
+To enable remote access to spike sorting results from client workstations, three servers must be running. 
+
+The mountainprocess
+
 
 
 \end{document}

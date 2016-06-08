@@ -31,6 +31,7 @@
 #include <QtConcurrentRun>
 
 /// TODO option to turn on/off 8-bit quantization per view
+/// TODO update doc/*
 
 class TaskProgressViewThread : public QRunnable {
 public:
