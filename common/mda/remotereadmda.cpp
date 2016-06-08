@@ -82,6 +82,11 @@ void RemoteReadMda::setDownloadChunkSize(long size)
     d->m_download_chunk_size = size;
 }
 
+long RemoteReadMda::downloadChunkSize()
+{
+    return d->m_download_chunk_size;
+}
+
 void RemoteReadMda::setPath(const QString& path)
 {
     d->m_info.N1 = d->m_info.N2 = d->m_info.N3 = 0;
@@ -157,8 +162,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
         DiskReadMda A(fname);
         A.readChunk(X, ii1 - jj1 * d->m_download_chunk_size, size); //starting reading at the offset of ii1 relative to the start index of the chunk
         return true;
-    }
-    else {
+    } else {
         for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
             task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
             if (thread_interrupt_requested()) {
@@ -182,8 +186,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
                     Xptr[b] = tmp_ptr[a];
                     b++;
                 }
-            }
-            else if (jj == jj2) { //case 2/3, this is the last chunk
+            } else if (jj == jj2) { //case 2/3, this is the last chunk
                 Mda tmp;
                 long size0 = ii2 + 1 - jj2 * d->m_download_chunk_size; //the size is going to be the difference between the start index of the last chunk and ii2+1
                 A.readChunk(tmp, 0, size0); //we start reading at position zero
@@ -304,8 +307,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
             qWarning() << "Unable to write file: " + fname;
             return "";
         }
-    }
-    else {
+    } else {
         QFile::rename(mda_fname, fname);
     }
     return fname;

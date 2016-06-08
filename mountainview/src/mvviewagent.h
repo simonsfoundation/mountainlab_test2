@@ -27,7 +27,6 @@ struct MVRange {
     double min, max;
 };
 
-
 class MVViewAgentPrivate;
 class MVViewAgent : public QObject {
     Q_OBJECT
@@ -50,7 +49,7 @@ public:
     void setCurrentCluster(int k);
     void setSelectedClusters(const QList<int>& ks);
     void setCurrentTimepoint(double tp);
-    void setCurrentTimeRange(const MVRange &range);
+    void setCurrentTimeRange(const MVRange& range);
 
     void clickCluster(int k, Qt::KeyboardModifiers modifiers);
 

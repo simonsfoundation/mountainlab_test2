@@ -116,15 +116,13 @@ void SSTimeSeriesView::keyPressEvent(QKeyEvent* evt)
                 d->advance_to_clip(true);
                 return;
             }
-        }
-        else if (evt->key() == Qt::Key_Right) {
+        } else if (evt->key() == Qt::Key_Right) {
             if (d->m_clip_mode) {
                 d->advance_to_clip(false);
                 return;
             }
         }
-    }
-    else if (evt->key() == Qt::Key_V) {
+    } else if (evt->key() == Qt::Key_V) {
         d->m_plot->setUniformVerticalChannelSpacing(!d->m_plot->uniformVerticalChannelSpacing());
         return;
     }
@@ -217,8 +215,7 @@ double SSTimeSeriesView::currentValue()
         //disabledfor now
         //return d->m_data->value(ch0,(int)currentX());
         return 0;
-    }
-    else
+    } else
         return 0;
 }
 

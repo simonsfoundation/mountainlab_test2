@@ -24,6 +24,7 @@ public:
 
     void setRemoteDataType(QString dtype);
     void setDownloadChunkSize(long size);
+    long downloadChunkSize();
 
     void setPath(const QString& path);
     QString path() const;

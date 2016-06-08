@@ -36,6 +36,8 @@ public:
     ///Set the path (file name) of the .mda file to read.
     void setPath(const char* file_path);
     void setRemoteDataType(const QString& dtype);
+    void setDownloadChunkSize(long size);
+    long downloadChunkSize();
 
     QString path();
     QString makePath();

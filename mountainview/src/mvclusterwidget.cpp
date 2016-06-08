@@ -153,13 +153,15 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     QSizePolicy view_size_policy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     view_size_policy.setHorizontalStretch(1);
 
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setSizePolicy(view_size_policy);
         hlayout->addWidget(V);
         V->setEventFilter(d->m_filter_info);
     }
 
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         d->connect_view(V);
     }
 
@@ -187,7 +189,8 @@ void MVClusterWidget::setMLProxyUrl(const QString& url)
 void MVClusterWidget::setData(const Mda& X)
 {
     d->m_data = X;
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setData(Mda());
     }
     double max_abs_val = 0;
@@ -208,35 +211,40 @@ void MVClusterWidget::setData(const Mda& X)
 
 void MVClusterWidget::setTimes(const QList<double>& times)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setTimes(times);
     }
 }
 
 void MVClusterWidget::setLabels(const QList<int>& labels)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setLabels(labels);
     }
 }
 
 void MVClusterWidget::setAmplitudes(const QList<double>& amps)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setAmplitudes(amps);
     }
 }
 
 void MVClusterWidget::setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setScores(detectability_scores, outlier_scores);
     }
 }
 
 void MVClusterWidget::setCurrentEvent(const MVEvent& evt)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setCurrentEvent(evt);
     }
     d->update_clips_view();
@@ -269,7 +277,8 @@ void MVClusterWidget::setLabelsToUse(const QList<int>& labels)
 
 void MVClusterWidget::setTransformation(const AffineTransformation& T)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setTransformation(T);
     }
 }
@@ -282,7 +291,8 @@ MVEvent MVClusterWidget::currentEvent()
 void MVClusterWidget::setEventFilter(FilterInfo info)
 {
     d->m_filter_info = info;
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setEventFilter(info);
     }
 }
@@ -298,7 +308,8 @@ void MVClusterWidget::slot_view_transformation_changed()
 {
     MVClusterView* V0 = (MVClusterView*)sender();
     AffineTransformation T = V0->transformation();
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setTransformation(T);
     }
 }
@@ -376,14 +387,16 @@ void MVClusterWidgetPrivate::update_clips_view()
     if (evt.time >= 0) {
         QList<double> times;
         times << evt.time;
+        long hold_size = m_timeseries.downloadChunkSize();
+        m_timeseries.setDownloadChunkSize(m_clip_size * m_timeseries.N1() * 5); //don't create chunks that are too big -- no need to download too much since we only want one clip
         Mda clip0 = extract_clips(m_timeseries, times, m_clip_size);
+        m_timeseries.setDownloadChunkSize(hold_size); //now put it back
         double ppp = m_outlier_scores.value(current_event_index());
         if (ppp) {
             info_txt = QString("Outlier score: %1").arg(ppp);
         }
         m_clips_view->setClips(clip0);
-    }
-    else {
+    } else {
         m_clips_view->setClips(Mda());
     }
     m_info_bar->setText(info_txt);
@@ -396,7 +409,8 @@ int MVClusterWidgetPrivate::current_event_index()
 
 void MVClusterWidgetPrivate::set_data_on_visible_views_that_need_it()
 {
-    foreach (MVClusterView* V, m_views) {
+    foreach(MVClusterView * V, m_views)
+    {
         if (V->isVisible()) {
             if (!V->hasData()) {
                 V->setData(m_data);
@@ -422,7 +436,8 @@ void MVClusterWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach (int x, labels_to_use) {
+        foreach(int x, labels_to_use)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);

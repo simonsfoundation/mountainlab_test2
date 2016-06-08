@@ -258,6 +258,7 @@ void MVFiringEventView::paintEvent(QPaintEvent* evt)
 
 void MVFiringEventView::mouseReleaseEvent(QMouseEvent* evt)
 {
+    Q_UNUSED(evt)
     //QPointF pt = evt->pos();
     //long index = d->find_closest_event_index(pt);
     /// TODO implement clicking response in MVFiringEventView
