@@ -791,7 +791,7 @@ void MVClusterViewPrivate::do_paint(QPainter& painter, int W, int H)
         m_grid_update_needed = false;
     }
 
-    painter.fillRect(0, 0, W, H, QColor(60, 60, 60));
+    painter.fillRect(0, 0, W, H, QColor(100, 100, 100));
     QRectF target = compute_centered_square(QRectF(0, 0, W, H));
     painter.drawImage(target, m_grid_image.scaled(W, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     m_image_target = target;
@@ -808,29 +808,29 @@ void MVClusterViewPrivate::do_paint(QPainter& painter, int W, int H)
     }
 
     //legend
-    double text_height = 14;
-    double spacing = 4;
-    double margin=10;
-    double legend_width = 40;
-    QSet<int> labels_used;
-    for (long i = 0; i < m_labels.count(); i++) {
-        labels_used.insert(m_labels[i]);
-    }
-    QList<int> list = labels_used.toList();
-    qSort(list);
-    double y0 = margin;
-    double x0 = W - legend_width-margin;
-    QFont font = painter.font();
-    font.setPixelSize(text_height - 1);
-    painter.setFont(font);
-    for (int i = 0; i < list.count(); i++) {
-        QRectF rect(x0, y0, legend_width, text_height);
-        QString str = QString("%1").arg(list[i]);
-        QPen pen = painter.pen();
-        pen.setColor(get_label_color(list[i]));
-        painter.setPen(pen);
-        painter.drawText(rect, Qt::AlignRight, str);
-        y0 += text_height + spacing;
+    if (this->m_mode == MVCV_MODE_LABEL_COLORS) {
+        double spacing = 6;
+        double margin = 10;
+        QSet<int> labels_used;
+        for (long i = 0; i < m_labels.count(); i++) {
+            labels_used.insert(m_labels[i]);
+        }
+        QList<int> list = labels_used.toList();
+        double text_height = qMax(12.0, qMin(25.0, W * 1.0 / 10));
+        qSort(list);
+        double y0 = margin;
+        QFont font = painter.font();
+        font.setPixelSize(text_height - 1);
+        painter.setFont(font);
+        for (int i = 0; i < list.count(); i++) {
+            QRectF rect(0, y0, W - margin, text_height);
+            QString str = QString("%1").arg(list[i]);
+            QPen pen = painter.pen();
+            pen.setColor(get_label_color(list[i]));
+            painter.setPen(pen);
+            painter.drawText(rect, Qt::AlignRight, str);
+            y0 += text_height + spacing;
+        }
     }
 }
 

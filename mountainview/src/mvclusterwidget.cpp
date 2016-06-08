@@ -336,6 +336,7 @@ void MVClusterWidget::slot_computation_finished()
         detectability_scores << F.value(5, j);
     }
 
+    /*
     int K = compute_max(labels);
     QList<int> labels_map;
     labels_map << 0;
@@ -352,6 +353,7 @@ void MVClusterWidget::slot_computation_finished()
     for (long j = 0; j < labels.count(); j++) {
         labels[j] = labels_map[labels[j]];
     }
+    */
 
     this->setTimes(times);
     this->setLabels(labels);
