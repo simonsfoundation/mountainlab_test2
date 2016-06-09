@@ -1251,6 +1251,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         //WW->updateWidget();
     }
     else if (widget_type == "matrix_of_cross_correlograms") {
+        qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         WW->setColors(m_colors);
@@ -1262,6 +1263,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         QStringList text_labels;
         QList<int> labels1, labels2;
         //text_labels << "";
+        qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
         for (int a1 = 0; a1 < ks.count(); a1++) {
             QString str1 = QString("%1(%2)").arg(m_original_cluster_numbers.value(ks[a1])).arg(m_original_cluster_offsets.value(ks[a1]));
             if (!use_shell_split)
@@ -1275,9 +1277,11 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
                 labels2 << ks.value(a2);
             }
         }
+        qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
         //WW->setTextLabels(labels);
         WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
+        qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     }
     /*else if (widget_type=="templates") {
         printf("Setting templates data...\n");
