@@ -1104,9 +1104,16 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
 
 QColor ClusterView::get_cluster_assessment_text_color(QString aa)
 {
-    /// TODO implement get_cluster_assessment_text_color
     Q_UNUSED(aa)
-    return Qt::black;
+    if (aa.toLower() == "noise") {
+        return Qt::darkGray;
+    } else if (aa.toLower() == "good") {
+        return Qt::darkGreen;
+    } else if (aa.toLower() == "mua") {
+        return Qt::darkBlue;
+    } else {
+        return Qt::black;
+    }
 }
 
 DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
@@ -1131,7 +1138,6 @@ DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& time
     task.log("Returning DiskReadMda: " + templates_fname);
     DiskReadMda ret(templates_fname);
     //ret.setRemoteDataType("float32");
-    /// TODO make this datatype a configurable option
     ret.setRemoteDataType("float32_q8"); //to save download time!
     return ret;
 }
@@ -1160,7 +1166,6 @@ void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs
     templates_out.setPath(templates_fname);
     stdevs_out.setPath(stdevs_fname);
 
-    /// TODO make this configurable
     templates_out.setRemoteDataType("float32_q8");
     stdevs_out.setRemoteDataType("float32_q8");
 }

@@ -26,6 +26,7 @@ public:
     virtual ~SpikeSpyWidget();
     void setSampleRate(double samplerate);
     void setChannelColors(const QList<QColor>& colors);
+    void setLabelColors(const QList<QColor>& colors);
     void addView(const SpikeSpyViewData& data);
 
 private

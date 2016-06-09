@@ -362,7 +362,7 @@ void MVCrossCorrelogramsWidget2::slot_export_image()
 
 void MVCrossCorrelogramsWidget2::slot_cluster_attributes_changed()
 {
-    /// TODO implement slot_cluster_attributes_changed
+    // not implemented for now
 }
 
 void MVCrossCorrelogramsWidget2::slot_cluster_merge_changed()

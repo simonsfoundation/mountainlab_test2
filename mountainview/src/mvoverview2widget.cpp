@@ -170,9 +170,6 @@ public:
     //void start_cross_correlograms_computer();
 };
 
-/// TODO: put this in main and pass via new method: setLabelColors() -- just like setChannelColors()
-QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors);
-
 MVOverview2Widget::MVOverview2Widget(MVViewAgent* view_agent, QWidget* parent)
     : QWidget(parent)
 {
@@ -240,13 +237,6 @@ MVOverview2Widget::MVOverview2Widget(MVViewAgent* view_agent, QWidget* parent)
     d->m_colors["divider_line"] = QColor(255, 100, 150);
 
     slot_update_buttons();
-
-    int num1 = 3;
-    int num2 = 10;
-    QList<QColor> colors = generate_colors(Qt::gray, Qt::white, num2);
-    for (int j = 0; j < colors.count(); j++) {
-        d->m_label_colors << colors.value((j * num1) % num2);
-    }
 
     connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_buttons()));
     connect(view_agent, SIGNAL(clusterAttributesChanged()), this, SLOT(slot_update_buttons()));
@@ -362,6 +352,11 @@ void MVOverview2Widget::setClusterMerge(ClusterMerge CM)
 void MVOverview2Widget::setChannelColors(const QList<QColor>& colors)
 {
     d->m_channel_colors = colors;
+}
+
+void MVOverview2Widget::setLabelColors(const QList<QColor>& colors)
+{
+    d->m_label_colors = colors;
 }
 
 /*
@@ -950,7 +945,7 @@ void MVOverview2WidgetPrivate::open_clips()
     X->setMLProxyUrl(m_mlproxy_url);
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
-    /// TODO more descriptive tab title in case of more than one
+    /// TODO (LOW) more descriptive tab title in case of more than one
     QString tab_title = "Clips";
     if (ks.count() == 1) {
         int kk = ks[0];
@@ -1433,7 +1428,6 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         //WW->setFirings(m_firings);
-        /// TODO there should be an option to use m_firings instead, because we don't always want to make the long calculation
         WW->setFirings(m_firings_original); //now that we are doing the event filter, we should show everyone
         WW->setLabelsToUse(ks);
         FilterInfo FF;
@@ -1920,56 +1914,4 @@ void shell_split_and_event_filter_calculator::compute()
         m_original_cluster_numbers << AA.value(i);
         m_original_cluster_offsets << offset;
     }
-}
-
-// generate_colors() is adapted from code by...
-/*
- * Copyright (c) 2008 Helder Correia
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use,
- * copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following
- * conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors)
-{
-    QList<QColor> colors;
-    const int HUE_BASE = (bg.hue() == -1) ? 90 : bg.hue();
-    int h, s, v;
-
-    for (int i = 0; i < noColors; i++) {
-        h = int(HUE_BASE + (360.0 / noColors * i)) % 360;
-        s = 240;
-        v = int(qMax(bg.value(), fg.value()) * 0.85);
-
-        // take care of corner cases
-        const int M = 35;
-        if ((h < bg.hue() + M && h > bg.hue() - M)
-            || (h < fg.hue() + M && h > fg.hue() - M)) {
-            h = ((bg.hue() + fg.hue()) / (i + 1)) % 360;
-            s = ((bg.saturation() + fg.saturation() + 2 * i) / 2) % 256;
-            v = ((bg.value() + fg.value() + 2 * i) / 2) % 256;
-        }
-
-        colors.append(QColor::fromHsv(h, s, v));
-    }
-
-    return colors;
 }

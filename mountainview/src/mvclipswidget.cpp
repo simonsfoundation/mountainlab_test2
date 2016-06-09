@@ -13,8 +13,6 @@
 #include "msmisc.h"
 #include "mlutils.h"
 
-/// TODO in the views, we should not rely on m_view_agent being non-NULL
-
 class MVClipsWidgetComputer : public ComputationThread {
 public:
     //input

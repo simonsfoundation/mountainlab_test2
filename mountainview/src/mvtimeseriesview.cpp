@@ -116,6 +116,7 @@ public:
     void scroll_to_current_timepoint();
 
     QString format_time(double tp);
+    void update_cursor();
 };
 
 MVTimeSeriesView::MVTimeSeriesView(MVViewAgent* view_agent)
@@ -123,8 +124,7 @@ MVTimeSeriesView::MVTimeSeriesView(MVViewAgent* view_agent)
     d = new MVTimeSeriesViewPrivate;
     d->q = this;
     d->m_selected_t_range = MVRange(-1, -1);
-    d->m_activated = true; /// TODO set activated only when window is active (like in sstimeseriesview, I think)
-    /// TODO auto set the amplitude factor
+    d->m_activated = true;
     d->m_amplitude_factor = 1.0;
     d->m_left_click_anchor_pix = QPointF(-1, -1);
     d->m_left_click_dragging = false;
@@ -165,8 +165,6 @@ void MVTimeSeriesView::setTimeseries(const DiskReadMda& X)
     this->autoSetAmplitudeFactor();
     update();
 }
-
-/// TODO make sure all threads end on destruct
 
 void MVTimeSeriesView::setMLProxyUrl(const QString& url)
 {
@@ -289,6 +287,14 @@ void MVTimeSeriesView::autoSetAmplitudeFactorWithinTimeRange()
         this->setAmplitudeFactor(1.5 / factor);
 }
 
+void MVTimeSeriesView::setActivated(bool val)
+{
+    if (d->m_activated == val)
+        return;
+    d->m_activated = val;
+    update();
+}
+
 double MVTimeSeriesView::currentTimepoint() const
 {
     return d->m_view_agent->currentTimepoint();
@@ -300,6 +306,11 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
+
+    QColor back_col = QColor(240, 240, 240);
+    if (d->m_activated)
+        back_col = Qt::white;
+    painter.fillRect(0, 0, width(), height(), back_col);
 
     double mleft = d->m_prefs.mleft;
     double mright = d->m_prefs.mright;
@@ -384,7 +395,7 @@ void MVTimeSeriesView::mousePressEvent(QMouseEvent* evt)
         d->m_left_click_dragging = false;
         emit clicked();
     }
-    //update_cursor();
+    d->update_cursor();
 }
 
 void MVTimeSeriesView::mouseReleaseEvent(QMouseEvent* evt)
@@ -397,7 +408,7 @@ void MVTimeSeriesView::mouseReleaseEvent(QMouseEvent* evt)
         }
         d->m_left_click_dragging = false;
     }
-    //update_cursor();
+    d->update_cursor();
 }
 
 void MVTimeSeriesView::mouseMoveEvent(QMouseEvent* evt)
@@ -418,8 +429,7 @@ void MVTimeSeriesView::mouseMoveEvent(QMouseEvent* evt)
         this->setTimeRange(this->timeRange() + (-dt));
     }
 
-    /// TODO set the mouse pointer cursor
-    //set_cursor();
+    d->update_cursor();
 }
 
 void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
@@ -581,11 +591,7 @@ void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H
             path.lineTo(pp.x() - 8, pp.y() - 2 * sign);
             path.lineTo(pp.x() + 8, pp.y() - 2 * sign);
             path.lineTo(pp.x(), pp.y() - 10 * sign);
-            QColor col = QColor(60, 80, 60);
-            if (m_activated) {
-                //col=Qt::gray;
-                col = QColor(50, 50, 220);
-            }
+            QColor col = QColor(50, 50, 220);
             painter->fillPath(path, QBrush(col));
         }
 
@@ -902,6 +908,15 @@ QString MVTimeSeriesViewPrivate::format_time(double tp)
     str += QString("%1:%2:%3").arg(hour).arg(minute, 2, 10, QChar('0')).arg(tmp_sec);
 
     return str;
+}
+
+void MVTimeSeriesViewPrivate::update_cursor()
+{
+    if (m_left_click_dragging) {
+        q->setCursor(Qt::OpenHandCursor);
+    } else {
+        q->setCursor(Qt::ArrowCursor);
+    }
 }
 
 bool MVRange::operator==(const MVRange& other)

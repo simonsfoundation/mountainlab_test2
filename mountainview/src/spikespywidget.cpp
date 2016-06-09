@@ -18,6 +18,7 @@ public:
     SpikeSpyWidget* q;
     double m_samplerate;
     QList<QColor> m_channel_colors;
+    QList<QColor> m_label_colors;
     QList<SpikeSpyViewData> m_datas;
     QList<MVTimeSeriesView*> m_views;
     MVViewAgent* m_view_agent;
@@ -27,6 +28,8 @@ public:
     TaskProgressView* m_task_progress_view;
 
     QMenuBar* m_menu_bar;
+
+    void update_activated();
 };
 
 SpikeSpyWidget::SpikeSpyWidget(MVViewAgent* view_agent)
@@ -37,7 +40,6 @@ SpikeSpyWidget::SpikeSpyWidget(MVViewAgent* view_agent)
     d->m_view_agent = view_agent;
     d->m_current_view_index = 0;
 
-    /// TODO low priority option for horizonal split
     d->m_splitter = new QSplitter(Qt::Vertical);
     d->m_task_progress_view = new TaskProgressView;
     d->m_task_progress_view->setWindowFlags(Qt::Tool);
@@ -94,6 +96,11 @@ void SpikeSpyWidget::setChannelColors(const QList<QColor>& colors)
     }
 }
 
+void SpikeSpyWidget::setLabelColors(const QList<QColor>& colors)
+{
+    d->m_label_colors = colors;
+}
+
 void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
 {
     MVTimeSeriesView* W = new MVTimeSeriesView(d->m_view_agent);
@@ -112,6 +119,8 @@ void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
     d->m_datas << data;
 
     connect(W, SIGNAL(clicked()), this, SLOT(slot_view_clicked()));
+
+    d->update_activated();
 }
 
 void SpikeSpyWidget::slot_show_tasks()
@@ -129,6 +138,7 @@ void SpikeSpyWidget::slot_open_mountainview()
 
     MVOverview2Widget* W = new MVOverview2Widget(d->m_view_agent);
     W->setChannelColors(d->m_channel_colors);
+    W->setLabelColors(d->m_label_colors);
     W->addTimeseriesPath("Timeseries", data.timeseries.path());
     W->setFiringsPath(data.firings.path());
     W->setSampleRate(d->m_samplerate);
@@ -144,5 +154,13 @@ void SpikeSpyWidget::slot_view_clicked()
         if (d->m_views[i] == sender()) {
             d->m_current_view_index = i;
         }
+    }
+    d->update_activated();
+}
+
+void SpikeSpyWidgetPrivate::update_activated()
+{
+    for (int i = 0; i < m_views.count(); i++) {
+        m_views[i]->setActivated(i == m_current_view_index);
     }
 }

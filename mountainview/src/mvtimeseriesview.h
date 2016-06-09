@@ -33,6 +33,7 @@ public:
     void setAmplitudeFactor(double factor); // display range will be between -1/factor and 1/factor, but not clipped (thus channel plots may overlap)
     void autoSetAmplitudeFactor();
     void autoSetAmplitudeFactorWithinTimeRange();
+    void setActivated(bool val);
 
     double currentTimepoint() const;
     MVRange timeRange() const;
@@ -52,10 +53,9 @@ public:
 signals:
     void clicked();
 
-private slots:
+private
+slots:
     void slot_scroll_to_current_timepoint();
-
-
 
 private:
     MVTimeSeriesViewPrivate* d;

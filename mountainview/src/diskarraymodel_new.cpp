@@ -214,10 +214,10 @@ QString DiskArrayModel_NewPrivate::get_file_timestamp(const QString& path)
 {
     QDateTime dt;
     //if (path.startsWith("http://")) {
-        //RemoteReadMda X(path);
-        //dt = X.fileLastModified();
+    //RemoteReadMda X(path);
+    //dt = X.fileLastModified();
     //} else {
-        dt = QFileInfo(path).lastModified();
+    dt = QFileInfo(path).lastModified();
     //}
     return QString("%1").arg(dt.toMSecsSinceEpoch());
 }

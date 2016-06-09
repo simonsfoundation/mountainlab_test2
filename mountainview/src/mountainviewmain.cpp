@@ -86,12 +86,13 @@ void test_taskprogressview()
 
 //void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions);
 
-/// TODO provide mountainview usage information
-/// TODO auto correlograms for selected clusters
-/// TODO figure out what to do when #channels and/or #clusters is huge
-/// TODO 0.9.1 -- make sure to handle merging with other views, such as clips etc. Make elegant way
+/// TODO (LOW) provide mountainview usage information
+/// TODO (LOW) auto correlograms for selected clusters
+/// TODO (LOW) figure out what to do when #channels and/or #clusters is huge
+/// TODO (0.9.1) make sure to handle merging with other views, such as clips etc. Make elegant way
 
 QColor brighten(QColor col, int amount);
+QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors);
 
 #include "multiscaletimeseries.h"
 #include "spikespywidget.h"
@@ -125,6 +126,14 @@ int main(int argc, char* argv[])
         << "#202070";
     for (int i = 0; i < color_strings.count(); i++)
         channel_colors << QColor(brighten(color_strings[i], 80));
+
+    int num1 = 1;
+    int num2 = 32;
+    QList<QColor> colors00 = generate_colors(Qt::gray, Qt::white, num2);
+    QList<QColor> label_colors;
+    for (int j = 0; j < colors00.count(); j++) {
+        label_colors << colors00.value((j * num1) % num2);
+    }
 
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
@@ -170,6 +179,7 @@ int main(int argc, char* argv[])
         QString window_title = CLP.named_parameters["window_title"].toString();
         MVOverview2Widget* W = new MVOverview2Widget(new MVViewAgent); //not that the view agent does not get deleted. :(
         W->setChannelColors(channel_colors);
+        W->setLabelColors(label_colors);
         W->setMLProxyUrl(CLP.named_parameters.value("mlproxy_url", "").toString());
         {
             W->setWindowTitle(window_title);
@@ -230,6 +240,7 @@ int main(int argc, char* argv[])
 
         SpikeSpyWidget* W = new SpikeSpyWidget(new MVViewAgent); //not that the view agent will not get deleted. :(
         W->setChannelColors(channel_colors);
+        W->setLabelColors(label_colors);
         W->setSampleRate(samplerate);
         for (int i = 0; i < timeseries_paths.count(); i++) {
             QString tsp = timeseries_paths.value(i);
@@ -294,4 +305,106 @@ QColor brighten(QColor col, int amount)
     if (b < 0)
         b = 0;
     return QColor(r, g, b, col.alpha());
+}
+
+QList<QColor> generate_colors_ahb(int n_in)
+{
+    int n = n_in;
+    float c[n][3], t, x;
+    float grey = 0.6, sat = 0.65, bri = 0.7; // adj params
+    float dummy;
+
+    c[n - 1][0] = grey;
+    c[n - 1][1] = grey;
+    c[n - 1][2] = grey;
+    c[n - 2][0] = 1.0;
+    c[n - 2][1] = 1.0;
+    c[n - 2][2] = 1.0;
+
+    n -= 2;
+    for (int i = 0; i < n; ++i) {
+        t = 6.0 * i / n;
+        t = t + 0.2 * sinf(2.0 * M_PI / 3.0 * (t - 2.5));
+        for (int j = 0; j < 3; ++j) {
+            t = 6.0 * modff(t / 6.0, &dummy); // does mod by 6
+            x = 2.0 - fabsf(t - 3.0);
+            if (x < 0)
+                x = 0;
+            if (x > 1)
+                x = 1;
+            c[i][j] = x;
+            t = t - 2.0;
+        }
+        if (i % 2)
+            for (int j = 0; j < 3; ++j)
+                c[i][j] = sat * c[i][j] + (1.0 - sat);
+        if (i % 4 == 1)
+            for (int j = 0; j < 3; ++j)
+                c[i][j] *= bri;
+    }
+
+    QList<QColor> ret;
+    for (int i = 0; i < n_in; i++) {
+        ret << QColor(c[i][0] * 255, c[i][1] * 255, c[i][2] * 255);
+    }
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+    qDebug() << ret;
+    return ret;
+}
+
+QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors)
+{
+    return generate_colors_ahb(noColors);
+}
+
+// generate_colors() is adapted from code by...
+/*
+ * Copyright (c) 2008 Helder Correia
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColors)
+{
+    QList<QColor> colors;
+    const int HUE_BASE = (bg.hue() == -1) ? 90 : bg.hue();
+    int h, s, v;
+
+    for (int i = 0; i < noColors; i++) {
+        h = int(HUE_BASE + (360.0 / noColors * i)) % 360;
+        s = 240;
+        v = int(qMax(bg.value(), fg.value()) * 0.85);
+
+        // take care of corner cases
+        const int M = 35;
+        if ((h < bg.hue() + M && h > bg.hue() - M)
+            || (h < fg.hue() + M && h > fg.hue() - M)) {
+            h = ((bg.hue() + fg.hue()) / (i + 1)) % 360;
+            s = ((bg.saturation() + fg.saturation() + 2 * i) / 2) % 256;
+            v = ((bg.value() + fg.value() + 2 * i) / 2) % 256;
+        }
+
+        colors.append(QColor::fromHsv(h, s, v));
+    }
+
+    return colors;
 }
