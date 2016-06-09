@@ -218,6 +218,7 @@ MVOverview2WidgetControlPanel::MVOverview2WidgetControlPanel(QWidget* parent)
         QPushButton* clips_button = d->add_button(G, "open_clips", "Clips");
         clips_button->setToolTip("Open clips for currently selected cluster.");
         d->add_button(G, "open_clusters", "Cluster(s)")->setToolTip("Open a view of cluster events in feature space.");
+        d->add_button(G, "open_spike_spray", "Spike Spray")->setToolTip("Open a spray of spikes for the selected clusters.");
         d->add_button(G, "open_firing_rates", "Firing Events")->setToolTip("Open a view of firing rate as a function of time for the selected clusters.");
         d->add_button(G, "find_nearby_events", "Find Nearby Events")->setToolTip("Find multiples of events firing at a similar time.");
         d->add_horizontal_divider(layout);

@@ -68,6 +68,7 @@ public:
     AffineTransformation transformation();
     ////Set the current rotation (affine transformation) for purpose of synchronizing multiple cluster views
     void setTransformation(const AffineTransformation& T);
+    void setLabelColors(const QList<QColor>& colors);
 
     void setEventFilter(FilterInfo F);
 
@@ -78,8 +79,7 @@ signals:
     ///The current rotation (affine transformation) has changed - useful for synchronizing multiple cluster views
     void transformationChanged();
 
-private
-slots:
+private slots:
     void slot_context_menu(const QPoint& pos);
 
 protected:

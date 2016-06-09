@@ -13,6 +13,7 @@
 #include "mvclusterdetailwidget.h"
 #include "mvclipsview.h"
 #include "mvclusterwidget.h"
+#include "mvspikesprayview.h"
 #include "mvfiringeventview.h"
 #include "extract_clips.h"
 #include "tabber.h"
@@ -97,6 +98,7 @@ public:
     //Mda m_templates_data;
 
     QList<QColor> m_channel_colors;
+    QList<QColor> m_label_colors;
     QMap<QString, QColor> m_colors;
 
     shell_split_and_event_filter_calculator m_calculator;
@@ -122,6 +124,7 @@ public:
     void open_timeseries();
     void open_clips();
     void open_clusters();
+    void open_spike_spray();
     void open_firing_events();
     void find_nearby_events();
 
@@ -164,6 +167,9 @@ public:
 
     //void start_cross_correlograms_computer();
 };
+
+/// TODO: put this in main and pass via new method: setLabelColors() -- just like setChannelColors()
+QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors);
 
 MVOverview2Widget::MVOverview2Widget(MVViewAgent* view_agent, QWidget* parent)
     : QWidget(parent)
@@ -232,6 +238,13 @@ MVOverview2Widget::MVOverview2Widget(MVViewAgent* view_agent, QWidget* parent)
     d->m_colors["divider_line"] = QColor(255, 100, 150);
 
     slot_update_buttons();
+
+    int num1 = 3;
+    int num2 = 10;
+    QList<QColor> colors = generate_colors(Qt::gray, Qt::white, num2);
+    for (int j = 0; j < colors.count(); j++) {
+        d->m_label_colors << colors.value((j * num1) % num2);
+    }
 
     connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_buttons()));
     connect(view_agent, SIGNAL(clusterAttributesChanged()), this, SLOT(slot_update_buttons()));
@@ -610,6 +623,9 @@ void MVOverview2Widget::slot_control_panel_user_action(QString str)
     else if (str == "open-clusters") {
         d->open_clusters();
     }
+    else if (str == "open-spike-spray") {
+        d->open_spike_spray();
+    }
     else if (str == "open-firing-events") {
         d->open_firing_events();
     }
@@ -670,6 +686,7 @@ void MVOverview2Widget::slot_update_buttons()
     d->set_button_enabled("open-timeseries-data", !d->m_timeseries.path().startsWith("http"));
     d->set_button_enabled("open-clips", something_selected);
     d->set_button_enabled("open-clusters", something_selected);
+    d->set_button_enabled("open-spike-spray", something_selected);
     d->set_button_enabled("open-firing-events", (something_selected) && (has_peaks));
     d->set_button_enabled("find-nearby-events", d->m_view_agent->selectedClusters().count() >= 2);
 
@@ -783,6 +800,9 @@ void MVOverview2WidgetPrivate::update_cluster_views()
     QList<QWidget*> list = get_all_widgets();
     foreach (QWidget* W, list) {
         if (W->property("widget_type") == "clusters") {
+            update_widget(W);
+        }
+        if (W->property("widget_type") == "spike_spray") {
             update_widget(W);
         }
     }
@@ -981,11 +1001,28 @@ void MVOverview2WidgetPrivate::open_clusters()
         return;
     }
     MVClusterWidget* X = new MVClusterWidget(m_view_agent);
-    //X->setMscmdServerUrl(m_mscmdserver_url);
+    X->setLabelColors(m_label_colors);
     X->setMLProxyUrl(m_mlproxy_url);
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
     add_tab(X, QString("Clusters"));
+    update_widget(X);
+}
+
+void MVOverview2WidgetPrivate::open_spike_spray()
+{
+    QList<int> ks = m_view_agent->selectedClusters();
+    qSort(ks);
+    if (ks.count() == 0) {
+        QMessageBox::information(q, "Unable to open spike spray", "You must select at least one cluster.");
+        return;
+    }
+    MVSpikeSprayView* X = new MVSpikeSprayView;
+    X->setLabelColors(m_label_colors);
+    X->setMLProxyUrl(m_mlproxy_url);
+    X->setProperty("widget_type", "spike_spray");
+    X->setProperty("ks", int_list_to_string_list(ks));
+    add_tab(X, QString("Spike Spray"));
     update_widget(X);
 }
 
@@ -1379,6 +1416,16 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         FF.min_detectability_score = m_control_panel_new->eventFilter().min_detectability_score;
         FF.max_outlier_score = m_control_panel_new->eventFilter().max_outlier_score;
         WW->setEventFilter(FF);
+    }
+    else if (widget_type == "spike_spray") {
+        MVSpikeSprayView* WW = (MVSpikeSprayView*)W;
+        int clip_size = m_control_panel_new->viewOptions().clip_size;
+        QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
+        DiskReadMda TT(current_timeseries_path());
+        WW->setTimeseries(TT);
+        WW->setClipSize(clip_size);
+        WW->setFirings(m_firings);
+        WW->setLabelsToUse(ks);
     }
     else if (widget_type == "firing_events") {
         MVFiringEventView* WW = (MVFiringEventView*)W;
@@ -1852,4 +1899,56 @@ void shell_split_and_event_filter_calculator::compute()
         m_original_cluster_numbers << AA.value(i);
         m_original_cluster_offsets << offset;
     }
+}
+
+// generate_colors() is adapted from code by...
+/*
+ * Copyright (c) 2008 Helder Correia
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors)
+{
+    QList<QColor> colors;
+    const int HUE_BASE = (bg.hue() == -1) ? 90 : bg.hue();
+    int h, s, v;
+
+    for (int i = 0; i < noColors; i++) {
+        h = int(HUE_BASE + (360.0 / noColors * i)) % 360;
+        s = 240;
+        v = int(qMax(bg.value(), fg.value()) * 0.85);
+
+        // take care of corner cases
+        const int M = 35;
+        if ((h < bg.hue() + M && h > bg.hue() - M)
+            || (h < fg.hue() + M && h > fg.hue() - M)) {
+            h = ((bg.hue() + fg.hue()) / (i + 1)) % 360;
+            s = ((bg.saturation() + fg.saturation() + 2 * i) / 2) % 256;
+            v = ((bg.value() + fg.value() + 2 * i) / 2) % 256;
+        }
+
+        colors.append(QColor::fromHsv(h, s, v));
+    }
+
+    return colors;
 }

@@ -91,6 +91,7 @@ MVControlPanel::MVControlPanel()
         BB << abi("open-timeseries-data", "Timeseries Data");
         BB << abi("open-clips", "Clips");
         BB << abi("open-clusters", "Cluster(s)");
+        BB << abi("open-spike-spray", "Spike Spray");
         BB << abi("open-firing-events", "Firing Events");
         BB << abi("find-nearby-events", "Find Nearby Events");
         for (int i = 0; i < BB.count(); i++) {

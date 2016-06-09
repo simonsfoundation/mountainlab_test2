@@ -33,6 +33,7 @@ public:
     ///Just as in MVClusterView::setTransformation()
     void setFirings(const DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
+    void setLabelColors(const QList<QColor>& colors);
 
     ///Just as in MVClusterView::setCurrentEvent()
     void setCurrentEvent(const MVEvent& evt);

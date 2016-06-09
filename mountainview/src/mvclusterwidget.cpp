@@ -40,6 +40,7 @@ public:
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     QList<int> m_labels_to_use;
+    QList<QColor> m_label_colors;
     int m_clip_size;
     QList<double> m_outlier_scores;
     MVClusterWidgetComputer m_computer;
@@ -273,6 +274,15 @@ void MVClusterWidget::setLabelsToUse(const QList<int>& labels)
 {
     d->m_labels_to_use = labels;
     d->start_computation();
+}
+
+void MVClusterWidget::setLabelColors(const QList<QColor> &colors)
+{
+    d->m_label_colors=colors;
+    foreach(MVClusterView * V, d->m_views)
+    {
+        V->setLabelColors(colors);
+    }
 }
 
 void MVClusterWidget::setTransformation(const AffineTransformation& T)

@@ -11,8 +11,6 @@
 #include "msmisc.h"
 #include <QMenu>
 
-QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors);
-
 class MVClusterViewPrivate : public QObject {
     Q_OBJECT
 public:
@@ -65,8 +63,7 @@ public:
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
     bool exclude_based_on_filter(long ind);
-public
-slots:
+public slots:
     void slot_emit_transformation_changed();
 };
 #include "mvclusterview.moc"
@@ -90,40 +87,6 @@ MVClusterView::MVClusterView(QWidget* parent)
     d->m_max_time = 1;
     d->m_max_amplitude = 1;
     this->setMouseTracking(true);
-
-    //QList<QString> color_strings;
-    //color_strings << "black" << "blue" << "red" << "green" << "white" << "magenta";
-    /*
-    color_strings << "#F7977A"
-                  << "#FDC68A"
-                  << "#C4DF9B"
-                  << "#82CA9D"
-                  << "#6ECFF6"
-                  << "#8493CA"
-                  << "#A187BE"
-                  << "#F49AC2"
-                  << "#F9AD81"
-                  << "#FFF79A"
-                  << "#A2D39C"
-                  << "#7BCDC8"
-                  << "#7EA7D8"
-                  << "#8882BE"
-                  << "#BC8DBF"
-                  << "#F6989D";
-                  */
-    //for (int i = 0; i < color_strings.size(); i++) {
-    //    d->m_label_colors << QColor(color_strings[i]);
-    //}
-
-    //these should be relatively prime
-    //int num1=5;
-    //int num2=22;
-    int num1 = 3;
-    int num2 = 10;
-    QList<QColor> colors = generate_colors(Qt::gray, Qt::white, num2);
-    for (int j = 0; j < colors.count(); j++) {
-        d->m_label_colors << colors.value((j * num1) % num2);
-    }
 
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
@@ -234,6 +197,11 @@ void MVClusterView::setTransformation(const AffineTransformation& T)
     //do not emit to avoid excessive signals
 }
 
+void MVClusterView::setLabelColors(const QList<QColor>& colors)
+{
+    d->m_label_colors = colors;
+}
+
 void MVClusterView::setEventFilter(FilterInfo F)
 {
     d->m_filter_info = F;
@@ -273,7 +241,8 @@ QRectF compute_centered_square(QRectF R)
     int H0 = R.height() - margin * 2;
     if (W0 > H0) {
         return QRectF(margin + (W0 - H0) / 2, margin, H0, H0);
-    } else {
+    }
+    else {
         return QRectF(margin, margin + (H0 - W0) / 2, W0, W0);
     }
 }
@@ -341,7 +310,8 @@ void MVClusterView::wheelEvent(QWheelEvent* evt)
     double factor = 1;
     if (delta > 0) {
         factor = 1.1;
-    } else if (delta < 0) {
+    }
+    else if (delta < 0) {
         factor = 1 / 1.1;
     }
     if (delta != 1) {
@@ -554,10 +524,12 @@ void MVClusterViewPrivate::update_grid()
                     if (m_filter_info.use_filter) {
                         if (exclude_based_on_filter(i)) {
                             m_point_grid_ptr[iiii] = -3; //means we are excluding due to filter
-                        } else {
+                        }
+                        else {
                             m_point_grid_ptr[iiii] = label0;
                         }
-                    } else {
+                    }
+                    else {
                         m_point_grid_ptr[iiii] = label0;
                     }
                     if (m_mode == MVCV_MODE_TIME_COLORS) {
@@ -568,7 +540,8 @@ void MVClusterViewPrivate::update_grid()
                     }
                     z_grid_ptr[iiii] = z0;
                 }
-            } else {
+            }
+            else {
                 m_point_grid_ptr[iiii] = 1;
                 /*
                 if (m_mode == MVCV_MODE_TIME_COLORS) {
@@ -639,7 +612,8 @@ void MVClusterViewPrivate::update_grid()
                 }
             }
         }
-    } else {
+    }
+    else {
         for (int i2 = 0; i2 < N2; i2++) {
             for (int i1 = 0; i1 < N1; i1++) {
                 double val = m_point_grid.value(i1, i2);
@@ -650,35 +624,44 @@ void MVClusterViewPrivate::update_grid()
                             QColor CC = get_time_color(time0 / m_max_time);
                             m_grid_image.setPixel(i1, i2, CC.rgb());
                         }
-                    } else if (val == -2) {
+                    }
+                    else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    } else if (val == -3) { //filtered out by event filter
+                    }
+                    else if (val == -3) { //filtered out by event filter
                         QColor CC = Qt::black;
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
-                } else if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
+                }
+                else if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
                     if (val >= 0) {
                         double amp0 = m_amplitude_grid.value(i1, i2);
                         if (m_max_amplitude) {
                             QColor CC = get_time_color(amp0 / m_max_amplitude);
                             m_grid_image.setPixel(i1, i2, CC.rgb());
                         }
-                    } else if (val == -2) {
+                    }
+                    else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    } else if (val == -3) { //filtered out by event filter
+                    }
+                    else if (val == -3) { //filtered out by event filter
                         QColor CC = Qt::black;
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
-                } else if (m_mode == MVCV_MODE_LABEL_COLORS) {
+                }
+                else if (m_mode == MVCV_MODE_LABEL_COLORS) {
                     if (val > 0) {
                         QColor CC = get_label_color((int)val);
                         m_grid_image.setPixel(i1, i2, CC.rgb());
-                    } else if (val == 0) {
+                    }
+                    else if (val == 0) {
                         QColor CC = Qt::white;
                         m_grid_image.setPixel(i1, i2, CC.rgb());
-                    } else if (val == -2) {
+                    }
+                    else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    } else if (val == -3) { //filtered out by event filter
+                    }
+                    else if (val == -3) { //filtered out by event filter
                         QColor CC = Qt::black;
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
@@ -734,6 +717,8 @@ QPointF MVClusterViewPrivate::coord2pixel(QPointF coord)
 
 QColor MVClusterViewPrivate::get_label_color(int label)
 {
+    if (!m_label_colors.size())
+        return Qt::black;
     return m_label_colors[label % m_label_colors.size()];
 }
 
@@ -857,54 +842,3 @@ bool MVClusterViewPrivate::exclude_based_on_filter(long ind)
     return false;
 }
 
-// generate_colors() is adapted from code by...
-/*
- * Copyright (c) 2008 Helder Correia
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use,
- * copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following
- * conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors)
-{
-    QList<QColor> colors;
-    const int HUE_BASE = (bg.hue() == -1) ? 90 : bg.hue();
-    int h, s, v;
-
-    for (int i = 0; i < noColors; i++) {
-        h = int(HUE_BASE + (360.0 / noColors * i)) % 360;
-        s = 240;
-        v = int(qMax(bg.value(), fg.value()) * 0.85);
-
-        // take care of corner cases
-        const int M = 35;
-        if ((h < bg.hue() + M && h > bg.hue() - M)
-            || (h < fg.hue() + M && h > fg.hue() - M)) {
-            h = ((bg.hue() + fg.hue()) / (i + 1)) % 360;
-            s = ((bg.saturation() + fg.saturation() + 2 * i) / 2) % 256;
-            v = ((bg.value() + fg.value() + 2 * i) / 2) % 256;
-        }
-
-        colors.append(QColor::fromHsv(h, s, v));
-    }
-
-    return colors;
-}
