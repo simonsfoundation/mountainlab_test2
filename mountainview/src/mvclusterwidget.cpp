@@ -260,13 +260,14 @@ void MVClusterWidget::setClipSize(int clip_size)
 void MVClusterWidget::setTimeseries(const DiskReadMda& X)
 {
     d->m_timeseries = X;
+    d->m_timeseries.N1();
     d->start_computation();
 }
 
 void MVClusterWidget::setFirings(const DiskReadMda& F)
 {
     d->m_firings = F;
-
+    d->m_firings.N1();
     d->start_computation();
 }
 
@@ -392,6 +393,7 @@ void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 
 void MVClusterWidgetPrivate::update_clips_view()
 {
+    /// TODO -- to avoid crash the extract clips should be done in worker thread?
     MVEvent evt = q->currentEvent();
     QString info_txt;
     if (evt.time >= 0) {

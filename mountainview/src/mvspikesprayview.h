@@ -32,6 +32,7 @@ private slots:
 
 protected:
     void paintEvent(QPaintEvent* evt);
+    void keyPressEvent(QKeyEvent *evt);
 
 private:
     MVSpikeSprayViewPrivate* d;

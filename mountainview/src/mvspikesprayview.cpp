@@ -58,9 +58,11 @@ MVSpikeSprayView::MVSpikeSprayView()
     d->q = this;
     d->m_clip_size = 100;
     d->m_compute_needed = false;
-    d->m_amplitude_factor = 1.0 / 5;
+    d->m_amplitude_factor = 0;
 
     QObject::connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
+
+    this->setFocusPolicy(Qt::StrongFocus);
 }
 
 MVSpikeSprayView::~MVSpikeSprayView()
@@ -123,6 +125,9 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
+    /// TODO this should be a configured color to match the cluster view
+    painter.fillRect(0, 0, width(), height(), QBrush(QColor(60, 60, 60)));
+
     if (d->m_compute_needed) {
         d->m_labels_to_render.clear();
         d->m_computer.stopComputation();
@@ -141,37 +146,82 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
     if (d->m_clips_to_render.N3() != d->m_labels_to_render.count())
         return;
 
-    double maxval = qMax(qAbs(d->m_clips_to_render.minimum()), qAbs(d->m_clips_to_render.maximum()));
-    if (maxval)
-        d->m_amplitude_factor = 1. / maxval;
-
-    int K=compute_max(d->m_labels_to_render);
-    if (!K) return;
-    int counts[K+1];
-    for (int k=0; k<K+1; k++) counts[k]=0;
-    for (long i = 0; i < d->m_labels_to_render.count(); i++) {
-        int label0=d->m_labels_to_render[i];
-        if (label0>=0) counts[label0]++;
+    if (!d->m_amplitude_factor) {
+        double maxval = qMax(qAbs(d->m_clips_to_render.minimum()), qAbs(d->m_clips_to_render.maximum()));
+        if (maxval)
+            d->m_amplitude_factor = 1.5 / maxval;
     }
-    int alphas[K+1];
-    for (int k=0; k<=K; k++) {
+
+    int K = compute_max(d->m_labels_to_render);
+    if (!K)
+        return;
+    int counts[K + 1];
+    for (int k = 0; k < K + 1; k++)
+        counts[k] = 0;
+    for (long i = 0; i < d->m_labels_to_render.count(); i++) {
+        int label0 = d->m_labels_to_render[i];
+        if (label0 >= 0)
+            counts[label0]++;
+    }
+    int alphas[K + 1];
+    for (int k = 0; k <= K; k++) {
         if (counts[k]) {
-            alphas[k]=255/counts[k];
-            alphas[k]=qMin(255,qMax(5,alphas[k]));
+            alphas[k] = 255 / counts[k];
+            alphas[k] = qMin(255, qMax(5, alphas[k]));
         }
-        else alphas[k]=255;
+        else
+            alphas[k] = 255;
     }
 
     long M = d->m_clips_to_render.N1();
     long T = d->m_clips_to_render.N2();
     double* ptr = d->m_clips_to_render.dataPtr();
     for (long i = 0; i < d->m_labels_to_render.count(); i++) {
-        int label0=d->m_labels_to_render[i];
+        int label0 = d->m_labels_to_render[i];
         QColor col = d->get_label_color(label0);
-        if (label0>=0) {
+        if (label0 >= 0) {
             col.setAlpha(alphas[label0]);
         }
         d->render_clip(&painter, M, T, &ptr[M * T * i], col);
+    }
+
+    //legend
+    {
+        double W = width();
+        double spacing = 6;
+        double margin = 10;
+        QSet<int> labels_used = QSet<int>::fromList(d->m_labels_to_use);
+        QList<int> list = labels_used.toList();
+        double text_height = qMax(12.0, qMin(25.0, W * 1.0 / 10));
+        qSort(list);
+        double y0 = margin;
+        QFont font = painter.font();
+        font.setPixelSize(text_height - 1);
+        painter.setFont(font);
+        for (int i = 0; i < list.count(); i++) {
+            QRectF rect(0, y0, W - margin, text_height);
+            QString str = QString("%1").arg(list[i]);
+            QPen pen = painter.pen();
+            pen.setColor(d->get_label_color(list[i]));
+            painter.setPen(pen);
+            painter.drawText(rect, Qt::AlignRight, str);
+            y0 += text_height + spacing;
+        }
+    }
+}
+
+void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
+{
+    if (evt->key() == Qt::Key_Up) {
+        d->m_amplitude_factor *= 1.2;
+        update();
+    }
+    else if (evt->key() == Qt::Key_Down) {
+        d->m_amplitude_factor /= 1.2;
+        update();
+    }
+    else {
+        QWidget::keyPressEvent(evt);
     }
 }
 
@@ -213,8 +263,14 @@ QColor MVSpikeSprayViewPrivate::get_label_color(int label)
 QPointF MVSpikeSprayViewPrivate::coord2pix(int m, double t, double val)
 {
     long M = m_timeseries.N1();
-    double margin_left = 100, margin_right = 100;
-    double margin_top = 100, margin_bottom = 100;
+    double margin_left = 20, margin_right = 20;
+    double margin_top = 20, margin_bottom = 20;
+    double max_width = 300;
+    if (q->width() - margin_left - margin_right > max_width) {
+        double diff = (q->width() - margin_left - margin_right) - max_width;
+        margin_left += diff / 2;
+        margin_right += diff / 2;
+    }
     QRectF rect(margin_left, margin_top, q->width() - margin_left - margin_right, q->height() - margin_top - margin_bottom);
     double pctx = (t + 0.5) / m_clip_size;
     double pcty = (m + 0.5) / M - val / M * m_amplitude_factor;
@@ -240,7 +296,7 @@ void MVSpikeSprayComputer::compute()
         QMap<QString, QVariant> params;
         params["firings"] = firings.path();
         params["labels"] = labels_str;
-        params["max_per_label"] = 256;
+        params["max_per_label"] = 512;
         MT.setInputParameters(params);
         MT.setMLProxyUrl(mlproxy_url);
 

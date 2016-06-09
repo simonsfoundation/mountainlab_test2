@@ -115,7 +115,7 @@ MVControlPanel::MVControlPanel()
 
         d->m_controls.add_combo_box(G, "timeseries", "Use timeseries:")->setToolTip("Set the timeseries used for display");
         d->m_controls.add_float_box(G, "cc_max_dt_msec", "Max. dt (ms)", 100, 1, 1e6)->setToolTip("Maximum dt for display of cross-correlograms");
-        d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", 150, 1, 1e5)->setToolTip("Set clips size used for display");
+        d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", 80, 1, 1e5)->setToolTip("Set clips size used for display");
         QPushButton* BB = new QPushButton("Update all open views");
         BB->setProperty("action_name", "update_all_open_views");
         QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
