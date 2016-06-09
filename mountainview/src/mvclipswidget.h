@@ -28,7 +28,8 @@ public:
     int currentClipIndex();
 signals:
     void currentEventChanged();
-private slots:
+private
+slots:
     void slot_computation_finished();
 
 private:

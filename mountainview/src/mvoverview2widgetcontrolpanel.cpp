@@ -217,7 +217,8 @@ MVOverview2WidgetControlPanel::MVOverview2WidgetControlPanel(QWidget* parent)
         d->add_button(G, "open_timeseries", "Timeseries Data")->setToolTip("Open a window of raw/Preprocessed data");
         QPushButton* clips_button = d->add_button(G, "open_clips", "Clips");
         clips_button->setToolTip("Open clips for currently selected cluster.");
-        d->add_button(G, "open_clusters", "Cluster(s)")->setToolTip("Open a view of cluster events in feature space.");
+        d->add_button(G, "open_pca_features", "PCA Features")->setToolTip("Open a view of cluster events in PCA feature space.");
+        d->add_button(G, "open_channel_features", "Channel Features")->setToolTip("Open a view of cluster events in channel feature space.");
         d->add_button(G, "open_spike_spray", "Spike Spray")->setToolTip("Open a spray of spikes for the selected clusters.");
         d->add_button(G, "open_firing_rates", "Firing Events")->setToolTip("Open a view of firing rate as a function of time for the selected clusters.");
         d->add_button(G, "find_nearby_events", "Find Nearby Events")->setToolTip("Find multiples of events firing at a similar time.");

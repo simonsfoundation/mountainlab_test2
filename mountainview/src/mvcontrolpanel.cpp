@@ -90,7 +90,8 @@ MVControlPanel::MVControlPanel()
         BB << abi("open-matrix-of-cross-correlograms", "Matrix of Cross-Correlograms");
         BB << abi("open-timeseries-data", "Timeseries Data");
         BB << abi("open-clips", "Clips");
-        BB << abi("open-clusters", "Cluster(s)");
+        BB << abi("open-pca-features", "PCA Features");
+        BB << abi("open-channel-features", "Channel Features");
         BB << abi("open-spike-spray", "Spike Spray");
         BB << abi("open-firing-events", "Firing Events");
         BB << abi("find-nearby-events", "Find Nearby Events");

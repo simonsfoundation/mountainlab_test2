@@ -34,6 +34,7 @@
 #include "merge_across_channels_processor.h"
 #include "geom2adj_processor.h"
 #include "create_multiscale_timeseries_processor.h"
+#include "extract_channel_values_processor.h"
 #include "mlutils.h"
 
 #include "textfile.h"
@@ -98,6 +99,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new merge_across_channels_Processor);
     loadProcessor(new geom2adj_Processor);
     loadProcessor(new create_multiscale_timeseries_Processor);
+    loadProcessor(new extract_channel_values_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString& processor_name) const

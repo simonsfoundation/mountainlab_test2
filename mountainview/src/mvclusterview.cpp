@@ -63,7 +63,8 @@ public:
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
     bool exclude_based_on_filter(long ind);
-public slots:
+public
+slots:
     void slot_emit_transformation_changed();
 };
 #include "mvclusterview.moc"
@@ -241,8 +242,7 @@ QRectF compute_centered_square(QRectF R)
     int H0 = R.height() - margin * 2;
     if (W0 > H0) {
         return QRectF(margin + (W0 - H0) / 2, margin, H0, H0);
-    }
-    else {
+    } else {
         return QRectF(margin, margin + (H0 - W0) / 2, W0, W0);
     }
 }
@@ -310,8 +310,7 @@ void MVClusterView::wheelEvent(QWheelEvent* evt)
     double factor = 1;
     if (delta > 0) {
         factor = 1.1;
-    }
-    else if (delta < 0) {
+    } else if (delta < 0) {
         factor = 1 / 1.1;
     }
     if (delta != 1) {
@@ -524,12 +523,10 @@ void MVClusterViewPrivate::update_grid()
                     if (m_filter_info.use_filter) {
                         if (exclude_based_on_filter(i)) {
                             m_point_grid_ptr[iiii] = -3; //means we are excluding due to filter
-                        }
-                        else {
+                        } else {
                             m_point_grid_ptr[iiii] = label0;
                         }
-                    }
-                    else {
+                    } else {
                         m_point_grid_ptr[iiii] = label0;
                     }
                     if (m_mode == MVCV_MODE_TIME_COLORS) {
@@ -540,8 +537,7 @@ void MVClusterViewPrivate::update_grid()
                     }
                     z_grid_ptr[iiii] = z0;
                 }
-            }
-            else {
+            } else {
                 m_point_grid_ptr[iiii] = 1;
                 /*
                 if (m_mode == MVCV_MODE_TIME_COLORS) {
@@ -612,8 +608,7 @@ void MVClusterViewPrivate::update_grid()
                 }
             }
         }
-    }
-    else {
+    } else {
         for (int i2 = 0; i2 < N2; i2++) {
             for (int i1 = 0; i1 < N1; i1++) {
                 double val = m_point_grid.value(i1, i2);
@@ -624,44 +619,35 @@ void MVClusterViewPrivate::update_grid()
                             QColor CC = get_time_color(time0 / m_max_time);
                             m_grid_image.setPixel(i1, i2, CC.rgb());
                         }
-                    }
-                    else if (val == -2) {
+                    } else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    }
-                    else if (val == -3) { //filtered out by event filter
+                    } else if (val == -3) { //filtered out by event filter
                         QColor CC = Qt::black;
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
-                }
-                else if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
+                } else if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
                     if (val >= 0) {
                         double amp0 = m_amplitude_grid.value(i1, i2);
                         if (m_max_amplitude) {
                             QColor CC = get_time_color(amp0 / m_max_amplitude);
                             m_grid_image.setPixel(i1, i2, CC.rgb());
                         }
-                    }
-                    else if (val == -2) {
+                    } else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    }
-                    else if (val == -3) { //filtered out by event filter
+                    } else if (val == -3) { //filtered out by event filter
                         QColor CC = Qt::black;
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
-                }
-                else if (m_mode == MVCV_MODE_LABEL_COLORS) {
+                } else if (m_mode == MVCV_MODE_LABEL_COLORS) {
                     if (val > 0) {
                         QColor CC = get_label_color((int)val);
                         m_grid_image.setPixel(i1, i2, CC.rgb());
-                    }
-                    else if (val == 0) {
+                    } else if (val == 0) {
                         QColor CC = Qt::white;
                         m_grid_image.setPixel(i1, i2, CC.rgb());
-                    }
-                    else if (val == -2) {
+                    } else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    }
-                    else if (val == -3) { //filtered out by event filter
+                    } else if (val == -3) { //filtered out by event filter
                         QColor CC = Qt::black;
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
@@ -694,7 +680,7 @@ QPointF MVClusterViewPrivate::pixel2coord(QPointF pt)
     double pctx = (pt.x() - m_image_target.x()) / (m_image_target.width());
     double pcty = (pt.y() - m_image_target.y()) / (m_image_target.height());
     double xx = (-N1mid + pctx * N1) * delta1;
-    double yy = (-N2mid + pcty * N2) * delta2;
+    double yy = (-N2mid + (1 - pcty) * N2) * delta2;
     return QPointF(xx, yy);
 }
 
@@ -709,7 +695,7 @@ QPointF MVClusterViewPrivate::coord2pixel(QPointF coord)
     double xx = coord.x();
     double yy = coord.y();
     double pctx = (xx / delta1 + N1mid) / N1;
-    double pcty = (yy / delta2 + N2mid) / N2;
+    double pcty = 1 - ((yy / delta2 + N2mid) / N2);
     double pt_x = pctx * m_image_target.width() + m_image_target.x();
     double pt_y = pcty * m_image_target.height() + m_image_target.y();
     return QPointF(pt_x, pt_y);
@@ -841,4 +827,3 @@ bool MVClusterViewPrivate::exclude_based_on_filter(long ind)
     }
     return false;
 }
-

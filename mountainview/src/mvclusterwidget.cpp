@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QList>
 #include <QMessageBox>
+#include <taskprogress.h>
 #include "mvclipsview.h"
 #include "msmisc.h"
 #include <math.h>
@@ -21,6 +22,8 @@ public:
     DiskReadMda firings;
     int clip_size;
     QList<int> labels_to_use;
+    QString features_mode; //"pca" or "channels"
+    QList<int> channels; //in case of feature_mode=="channels"
 
     //output
     Mda data;
@@ -51,6 +54,8 @@ public:
     MVClusterWidgetComputer m_computer;
     FilterInfo m_filter_info;
     MVViewAgent* m_view_agent;
+    QString m_feature_mode;
+    QList<int> m_channels;
 
     void connect_view(MVClusterView* V);
     void update_clips_view();
@@ -282,13 +287,23 @@ void MVClusterWidget::setLabelsToUse(const QList<int>& labels)
     d->start_computation();
 }
 
-void MVClusterWidget::setLabelColors(const QList<QColor> &colors)
+void MVClusterWidget::setLabelColors(const QList<QColor>& colors)
 {
-    d->m_label_colors=colors;
+    d->m_label_colors = colors;
     foreach(MVClusterView * V, d->m_views)
     {
         V->setLabelColors(colors);
     }
+}
+
+void MVClusterWidget::setFeatureMode(QString mode)
+{
+    d->m_feature_mode = mode;
+}
+
+void MVClusterWidget::setChannels(QList<int> channels)
+{
+    d->m_channels = channels;
 }
 
 void MVClusterWidget::setTransformation(const AffineTransformation& T)
@@ -384,7 +399,7 @@ void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 void MVClusterWidgetPrivate::update_clips_view()
 {
     /// TODO -- to avoid crash the extract clips should be done in worker thread?
-    QMessageBox::information(q,"Feature disabled","This feature has been temporarily disabled. Normally you would see the current clip on the left.");
+    QMessageBox::information(q, "Feature disabled", "This feature has been temporarily disabled. Normally you would see the current clip on the left.");
     /*
     MVEvent evt = q->currentEvent();
     QString info_txt;
@@ -433,6 +448,8 @@ void MVClusterWidgetPrivate::start_computation()
     m_computer.firings = m_firings;
     m_computer.clip_size = m_clip_size;
     m_computer.labels_to_use = m_labels_to_use;
+    m_computer.features_mode = m_feature_mode;
+    m_computer.channels = m_channels;
     m_computer.startComputation();
 }
 
@@ -465,7 +482,7 @@ void MVClusterWidgetComputer::compute()
     }
 
     QString features_path;
-    {
+    if (features_mode == "pca") {
         MountainProcessRunner MT;
         QString processor_name = "extract_clips_features";
         MT.setProcessorName(processor_name);
@@ -482,6 +499,31 @@ void MVClusterWidgetComputer::compute()
         features_path = MT.makeOutputFilePath("features");
 
         MT.runProcess();
+    } else if (features_mode == "channels") {
+        MountainProcessRunner MT;
+        QString processor_name = "extract_channel_values";
+        MT.setProcessorName(processor_name);
+
+        QStringList channels_strlist;
+        foreach(int ch, channels)
+        {
+            channels_strlist << QString("%1").arg(ch);
+        }
+
+        QMap<QString, QVariant> params;
+        params["timeseries"] = timeseries.path();
+        params["firings"] = firings_out_path;
+        params["channels"] = channels_strlist.join(",");
+        MT.setInputParameters(params);
+        MT.setMLProxyUrl(mlproxy_url);
+
+        features_path = MT.makeOutputFilePath("values");
+
+        MT.runProcess();
+    } else {
+        TaskProgress err("Computing features");
+        err.error("Unrecognized features mode: " + features_mode);
+        return;
     }
     DiskReadMda F(firings_out_path);
 

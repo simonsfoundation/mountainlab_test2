@@ -10,18 +10,17 @@
 #include "msprocessor.h"
 
 class adjust_times_ProcessorPrivate;
-class adjust_times_Processor : public MSProcessor
-{
+class adjust_times_Processor : public MSProcessor {
 public:
     friend class adjust_times_ProcessorPrivate;
     adjust_times_Processor();
     virtual ~adjust_times_Processor();
 
-    bool check(const QMap<QString,QVariant> &params);
-    bool run(const QMap<QString,QVariant> &params);
+    bool check(const QMap<QString, QVariant>& params);
+    bool run(const QMap<QString, QVariant>& params);
+
 private:
-    adjust_times_ProcessorPrivate *d;
+    adjust_times_ProcessorPrivate* d;
 };
 
 #endif // ADJUST_TIMES_PROCESSOR_H
-
