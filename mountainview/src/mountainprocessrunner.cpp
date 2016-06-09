@@ -94,6 +94,11 @@ QVariantMap json_obj_to_variantmap(QJsonObject obj)
 
 QJsonObject http_post(QString url, QJsonObject req)
 {
+    if (in_gui_thread()) {
+        qCritical() << "Cannot do an http_post within a gui thread: "+url;
+        qCritical() << "Exiting.";
+        exit(-1);
+    }
     QTime timer;
     timer.start();
     QNetworkAccessManager manager;

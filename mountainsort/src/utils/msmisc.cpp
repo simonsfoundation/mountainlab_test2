@@ -20,6 +20,7 @@
 #endif
 
 #include <QCoreApplication>
+#include <QMessageBox>
 
 #include "textfile.h"
 
@@ -177,13 +178,53 @@ QString abbreviate(const QString& str, int len1, int len2)
     return str.mid(0, len1) + "...\n...\n..." + str.mid(str.count() - len2);
 }
 
-#ifdef USE_NETWORK
+QString http_get_binary_file_curl(const QString& url)
+{
+    QString tmp_fname = get_temp_fname();
+    QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
+    int exit_code = system(cmd.toLatin1().data());
+    if (exit_code != 0) {
+        qWarning() << "Problem with system call: " + cmd;
+        QFile::remove(tmp_fname);
+        return "";
+    }
+    return tmp_fname;
+}
+
+/// TODO handle this in a better way
+static QMap<QString, QString> s_http_get_text_curl_cache;
+
+QString http_get_text_curl(const QString& url)
+{
+    if (in_gui_thread()) {
+        if (s_http_get_text_curl_cache.contains(url)) {
+            qDebug() << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+            return s_http_get_text_curl_cache[url];
+        }
+    }
+    QString tmp_fname = get_temp_fname();
+    QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
+    int exit_code = system(cmd.toLatin1().data());
+    if (exit_code != 0) {
+        qWarning() << "Problem with system call: " + cmd;
+        QFile::remove(tmp_fname);
+        return "";
+    }
+    QString ret = read_text_file(tmp_fname);
+    QFile::remove(tmp_fname);
+    if (in_gui_thread()) {
+        s_http_get_text_curl_cache[url] = ret;
+    }
+    return ret;
+}
+
+//#ifdef USE_NETWORK
 QString http_get_binary_file(const QString& url)
 {
-    //if (in_gui_thread()) {
-    //    qCritical() << "Cannot call http_get_binary_file from within the GUI thread!";
-    //    exit(-1);
-    //}
+    if (in_gui_thread()) {
+        qCritical() << "Cannot call http_get_binary_file from within the GUI thread: " + url;
+        exit(-1);
+    }
 
     //TaskProgress task("Downloading binary file");
     //task.log(url);
@@ -220,10 +261,9 @@ QString http_get_binary_file(const QString& url)
 
 QString http_get_text(const QString& url)
 {
-    //if (in_gui_thread()) {
-    //    qCritical() << "Cannot call http_get_text from within the GUI thread!";
-    //    exit(-1);
-    //}
+    if (in_gui_thread()) {
+        return http_get_text_curl(url);
+    }
     QTime timer;
     timer.start();
     QString fname = get_temp_fname();
@@ -243,34 +283,8 @@ QString http_get_text(const QString& url)
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_downloaded", ret.count());
     return ret;
 }
-#else
-QString http_get_binary_file(const QString& url)
-{
-    QString tmp_fname = get_temp_fname();
-    QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
-    int exit_code = system(cmd.toLatin1().data());
-    if (exit_code != 0) {
-        qWarning() << "Problem with system call: " + cmd;
-        QFile::remove(tmp_fname);
-        return "";
-    }
-    return tmp_fname;
-}
-QString http_get_text(const QString& url)
-{
-    QString tmp_fname = get_temp_fname();
-    QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
-    int exit_code = system(cmd.toLatin1().data());
-    if (exit_code != 0) {
-        qWarning() << "Problem with system call: " + cmd;
-        QFile::remove(tmp_fname);
-        return "";
-    }
-    QString ret = read_text_file(tmp_fname);
-    QFile::remove(tmp_fname);
-    return ret;
-}
-#endif
+//#else
+//#endif
 
 QString compute_hash(const QString& str)
 {

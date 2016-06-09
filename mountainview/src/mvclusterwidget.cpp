@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QList>
+#include <QMessageBox>
 #include "mvclipsview.h"
 #include "msmisc.h"
 #include <math.h>
@@ -23,7 +24,11 @@ public:
 
     //output
     Mda data;
-    DiskReadMda firings_subset;
+    QList<double> times;
+    QList<int> labels;
+    QList<double> amplitudes;
+    QList<double> detectability_scores;
+    QList<double> outlier_scores;
 
     void compute();
 };
@@ -343,21 +348,6 @@ void MVClusterWidget::slot_computation_finished()
 {
     d->m_computer.stopComputation(); //because I'm paranoid
 
-    DiskReadMda F = d->m_computer.firings_subset;
-
-    QList<double> times;
-    QList<int> labels;
-    QList<double> amplitudes;
-    QList<double> detectability_scores;
-    QList<double> outlier_scores;
-    for (long j = 0; j < F.N2(); j++) {
-        times << F.value(1, j);
-        labels << (int)F.value(2, j);
-        amplitudes << F.value(3, j);
-        outlier_scores << F.value(4, j);
-        detectability_scores << F.value(5, j);
-    }
-
     /*
     int K = compute_max(labels);
     QList<int> labels_map;
@@ -377,10 +367,10 @@ void MVClusterWidget::slot_computation_finished()
     }
     */
 
-    this->setTimes(times);
-    this->setLabels(labels);
-    this->setAmplitudes(amplitudes);
-    this->setScores(detectability_scores, outlier_scores);
+    this->setTimes(d->m_computer.times);
+    this->setLabels(d->m_computer.labels);
+    this->setAmplitudes(d->m_computer.amplitudes);
+    this->setScores(d->m_computer.detectability_scores, d->m_computer.outlier_scores);
 
     this->setData(d->m_computer.data);
 }
@@ -394,6 +384,8 @@ void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 void MVClusterWidgetPrivate::update_clips_view()
 {
     /// TODO -- to avoid crash the extract clips should be done in worker thread?
+    QMessageBox::information(q,"Feature disabled","This feature has been temporarily disabled. Normally you would see the current clip on the left.");
+    /*
     MVEvent evt = q->currentEvent();
     QString info_txt;
     if (evt.time >= 0) {
@@ -412,6 +404,7 @@ void MVClusterWidgetPrivate::update_clips_view()
         m_clips_view->setClips(Mda());
     }
     m_info_bar->setText(info_txt);
+    */
 }
 
 int MVClusterWidgetPrivate::current_event_index()
@@ -490,8 +483,17 @@ void MVClusterWidgetComputer::compute()
 
         MT.runProcess();
     }
-    firings_subset = DiskReadMda(firings_out_path);
+    DiskReadMda F(firings_out_path);
+
+    for (long j = 0; j < F.N2(); j++) {
+        times << F.value(1, j);
+        labels << (int)F.value(2, j);
+        amplitudes << F.value(3, j);
+        outlier_scores << F.value(4, j);
+        detectability_scores << F.value(5, j);
+    }
 
     DiskReadMda features(features_path);
+    features.setRemoteDataType("float32");
     features.readChunk(data, 0, 0, features.N1(), features.N2());
 }
