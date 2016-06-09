@@ -327,9 +327,11 @@ The above techniques require the development of low-level tools. File checksums 
 
 \subsection{Web servers: mpserver, mdaserver, mbserver}
 
-To enable remote access to spike sorting results from client workstations, three servers must be running. 
+To enable remote access to spike sorting results from client workstations, three servers must be running. These can be conveniently accessed through a single port by using the mlproxy server. The servers are all programmed in nodejs.
 
-The mountainprocess server (mpserver) allows processing scripts to be submitted from a remote client. For example, 
+The mountainprocess server (mpserver) allows processing scripts to be submitted from a remote client. For example, the GUI may need to extract a collection of clips from a very large timeseries dataset. The API is minimal and consists of only one operation: queueScript. The client passes the text of the script to the server, which is then queued for processing. After the script executes, and all of the associated processes have finished, the http response is returned with information about whether the processing succeeded. Note that the results of the processing are not actually returned. Instead, the script will typically create temporary files, with names known to the client, so that the output data may be retrieved using subsequent calls to mdaserver.
+
+The multi-dimensional array server (mdaserver) is used to ........
 
 
 \end{document}
