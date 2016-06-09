@@ -30,10 +30,15 @@
 #include <QThreadPool>
 #include <QtConcurrentRun>
 
-/// TODO option to turn on/off 8-bit quantization per view
-/// TODO update doc
-/// TODO ctrl+a to select all clusters
-/// TODO event filter to be computed on client
+/// TODO (LOW) option to turn on/off 8-bit quantization per view
+/// TODO (MED) update docs
+/// TODO (MED) event filter to be computed on client
+/// TODO (MED) blobs for populations
+/// TODO (LOW) Resort by populations, ampl, etc
+/// TODO (LOW) time scale bar for clip view
+/// TODO (LOW) electrode view... (firetrack)
+/// TODO (LOW) 3D feature plot scale density -- log scale?
+/// TODO (0.9.1) Go to timepoint
 
 class TaskProgressViewThread : public QRunnable {
 public:

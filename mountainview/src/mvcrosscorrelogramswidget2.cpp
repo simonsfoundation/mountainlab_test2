@@ -107,19 +107,20 @@ void MVCrossCorrelogramsWidget2::setLabelPairs(const QList<int>& labels1, const 
 void MVCrossCorrelogramsWidget2::setColors(const QMap<QString, QColor>& colors)
 {
     d->m_colors = colors;
-    foreach (HistogramView* V, d->m_histogram_views) {
+    foreach(HistogramView * V, d->m_histogram_views)
+    {
         V->setColors(d->m_colors);
     }
 }
 
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach (int a, S1)
-        if (!S2.contains(a))
-            return false;
-    foreach (int a, S2)
-        if (!S1.contains(a))
-            return false;
+    foreach(int a, S1)
+    if (!S2.contains(a))
+        return false;
+    foreach(int a, S2)
+    if (!S1.contains(a))
+        return false;
     return true;
 }
 
@@ -207,9 +208,9 @@ void TimeScaleWidget2::paintEvent(QPaintEvent* evt)
     int H1 = 8;
     int margin1 = 6;
     int len1 = 6;
-    QPointF pt1(0 + margin1, H1);
+    QPointF pt1(W0 / 2, H1);
     QPointF pt2(W0 - margin1, H1);
-    QPointF pt3(0 + margin1, H1 - len1);
+    QPointF pt3(W0 / 2, H1 - len1);
     QPointF pt4(W0 - margin1, H1 - len1);
     painter.drawLine(pt1, pt2);
     painter.drawLine(pt1, pt3);
@@ -218,8 +219,8 @@ void TimeScaleWidget2::paintEvent(QPaintEvent* evt)
     QFont font = painter.font();
     font.setPixelSize(12);
     painter.setFont(font);
-    QRect text_box(0, H1 + 3, W0, H1 + 3);
-    QString txt = QString("%1 ms").arg((int)(m_time_width + 0.5));
+    QRect text_box(W0 / 2, H1 + 3, W0 / 2, H1 + 3);
+    QString txt = QString("%1 ms").arg((int)(m_time_width / 2 + 0.5));
     painter.drawText(text_box, txt, Qt::AlignCenter | Qt::AlignTop);
 }
 
@@ -451,14 +452,12 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
         int index = HV->property("index").toInt();
         if (m_labels2.value(index) == m_view_agent->currentCluster()) {
             HV->setCurrent(true);
-        }
-        else {
+        } else {
             HV->setCurrent(false);
         }
         if (selected_clusters.contains(m_labels2.value(index))) {
             HV->setSelected(true);
-        }
-        else {
+        } else {
             HV->setSelected(false);
         }
     }
@@ -473,8 +472,7 @@ void MVCrossCorrelogramsWidget2Private::start_computation()
     m_computer.max_dt = m_max_dt;
     if (m_view_agent) {
         m_computer.cluster_merge = m_view_agent->clusterMerge();
-    }
-    else {
+    } else {
         m_computer.cluster_merge.clear();
     }
     m_computer.startComputation();

@@ -49,6 +49,14 @@ public:
 
     static void unit_test();
 
+signals:
+    void clicked();
+
+private slots:
+    void slot_scroll_to_current_timepoint();
+
+
+
 private:
     MVTimeSeriesViewPrivate* d;
 };

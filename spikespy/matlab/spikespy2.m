@@ -7,13 +7,13 @@ function spikespy2(varargin)
 % raw/preprocessed dataset with a collection of times/labels.
 %
 % Syntax:  
-% H=spikespy(X) -- X is the raw timeseries data (2D raw, #channels x #timepoints)
-% H=spikespy(X1,X2,...) -- Same, except with vertically arranged synchronized views
-% H=spikespy({X,T,L}) -- X is the raw timeseries data, T are the spike
+% H=spikespy2(X) -- X is the raw timeseries data (2D raw, #channels x #timepoints)
+% H=spikespy2(X1,X2,...) -- Same, except with vertically arranged synchronized views
+% H=spikespy2({X,T,L}) -- X is the raw timeseries data, T are the spike
 %         timepoints, and L are the corresponding labels. (tj and lj are vectors of length #labels)
-% H=spikespy({X1,T1,L1},{X2,T2,L2},...) -- ya know
+% H=spikespy2({X1,T1,L1},{X2,T2,L2},...) -- ya know
 %
-% H=spikespy(...,opts) -- options structure can be added at the end
+% H=spikespy2(...,opts) -- options structure can be added at the end
 %      opts.samplerate - the sampling rate in Hz, eg 20000
 %
 % Other m-files required: requires compilation of mountainview

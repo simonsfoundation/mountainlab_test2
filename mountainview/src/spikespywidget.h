@@ -28,9 +28,11 @@ public:
     void setChannelColors(const QList<QColor>& colors);
     void addView(const SpikeSpyViewData& data);
 
-private slots:
+private
+slots:
     void slot_show_tasks();
     void slot_open_mountainview();
+    void slot_view_clicked();
 
 private:
     SpikeSpyWidgetPrivate* d;

@@ -89,6 +89,7 @@ void MVViewAgent::setCurrentEvent(const MVEvent& evt)
         return;
     d->m_current_event = evt;
     emit currentEventChanged();
+    this->setCurrentTimepoint(evt.time);
 }
 
 void MVViewAgent::setCurrentCluster(int k)

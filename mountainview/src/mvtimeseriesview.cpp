@@ -136,6 +136,7 @@ MVTimeSeriesView::MVTimeSeriesView(MVViewAgent* view_agent)
     d->m_view_agent = view_agent;
     QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
+    QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
 
     this->setFocusPolicy(Qt::StrongFocus);
 
@@ -381,6 +382,7 @@ void MVTimeSeriesView::mousePressEvent(QMouseEvent* evt)
         d->m_left_click_anchor_t_range = this->timeRange();
         d->m_left_click_anchor_coord = d->pix2coord(0, evt->pos());
         d->m_left_click_dragging = false;
+        emit clicked();
     }
     //update_cursor();
 }
@@ -525,6 +527,11 @@ void MVTimeSeriesView::unit_test()
     //W->setTimeRange(MVRange(0, X0.N2()-1));
     W->setTimeRange(MVRange(0, 1000));
     W->show();
+}
+
+void MVTimeSeriesView::slot_scroll_to_current_timepoint()
+{
+    d->scroll_to_current_timepoint();
 }
 
 QList<mvtsv_channel> MVTimeSeriesViewPrivate::make_channel_layout(double W, double H, long M)

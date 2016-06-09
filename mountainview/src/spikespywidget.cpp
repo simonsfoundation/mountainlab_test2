@@ -21,6 +21,7 @@ public:
     QList<SpikeSpyViewData> m_datas;
     QList<MVTimeSeriesView*> m_views;
     MVViewAgent* m_view_agent;
+    int m_current_view_index;
 
     QSplitter* m_splitter;
     TaskProgressView* m_task_progress_view;
@@ -34,6 +35,7 @@ SpikeSpyWidget::SpikeSpyWidget(MVViewAgent* view_agent)
     d->q = this;
     d->m_samplerate = 0;
     d->m_view_agent = view_agent;
+    d->m_current_view_index = 0;
 
     /// TODO low priority option for horizonal split
     d->m_splitter = new QSplitter(Qt::Vertical);
@@ -77,7 +79,8 @@ SpikeSpyWidget::~SpikeSpyWidget()
 void SpikeSpyWidget::setSampleRate(double samplerate)
 {
     d->m_samplerate = samplerate;
-    foreach (MVTimeSeriesView* V, d->m_views) {
+    foreach(MVTimeSeriesView * V, d->m_views)
+    {
         V->setSampleRate(samplerate);
     }
 }
@@ -85,7 +88,8 @@ void SpikeSpyWidget::setSampleRate(double samplerate)
 void SpikeSpyWidget::setChannelColors(const QList<QColor>& colors)
 {
     d->m_channel_colors = colors;
-    foreach (MVTimeSeriesView* V, d->m_views) {
+    foreach(MVTimeSeriesView * V, d->m_views)
+    {
         V->setChannelColors(colors);
     }
 }
@@ -106,6 +110,8 @@ void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
     d->m_splitter->addWidget(W);
     d->m_views << W;
     d->m_datas << data;
+
+    connect(W, SIGNAL(clicked()), this, SLOT(slot_view_clicked()));
 }
 
 void SpikeSpyWidget::slot_show_tasks()
@@ -116,8 +122,7 @@ void SpikeSpyWidget::slot_show_tasks()
 
 void SpikeSpyWidget::slot_open_mountainview()
 {
-    /// TODO: use the real current view index
-    int current_view_index = 0;
+    int current_view_index = d->m_current_view_index;
     if (current_view_index >= d->m_datas.count())
         return;
     SpikeSpyViewData data = d->m_datas[current_view_index];
@@ -130,4 +135,14 @@ void SpikeSpyWidget::slot_open_mountainview()
     W->setDefaultInitialization();
     W->show();
     W->setGeometry(this->geometry().adjusted(50, 50, 50, 50));
+}
+
+void SpikeSpyWidget::slot_view_clicked()
+{
+    /// TODO highlight the current view differently
+    for (int i = 0; i < d->m_views.count(); i++) {
+        if (d->m_views[i] == sender()) {
+            d->m_current_view_index = i;
+        }
+    }
 }
