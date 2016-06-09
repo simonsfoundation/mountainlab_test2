@@ -1142,6 +1142,8 @@ void MVOverview2WidgetPrivate::move_to_timepoint(double tp)
 
 void subtract_features_mean(Mda& F)
 {
+    if (F.N1() == 0)
+        return;
     if (F.N2() == 0)
         return;
     double mean[F.N1()];
@@ -1214,8 +1216,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         for (int i = 1; i < m_original_cluster_numbers.count(); i++) {
             labels1 << i;
             labels2 << i;
-            if ((i == 1) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
-                text_labels << QString("Auto %1").arg(m_original_cluster_numbers[i]);
+            if ((i == 1) || (m_original_cluster_numbers.value(i) != m_original_cluster_numbers.value(i - 1))) {
+                text_labels << QString("Auto %1").arg(m_original_cluster_numbers.value(i));
             }
             else
                 text_labels << "";
@@ -1238,8 +1240,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         for (int i = 1; i < m_original_cluster_numbers.count(); i++) {
             labels1 << k;
             labels2 << i;
-            if ((i == 1) || (m_original_cluster_numbers[i] != m_original_cluster_numbers[i - 1])) {
-                text_labels << QString("Cross %1/%3").arg(m_original_cluster_numbers[k]).arg(m_original_cluster_numbers[i]);
+            if ((i == 1) || (m_original_cluster_numbers.value(i) != m_original_cluster_numbers.value(i - 1))) {
+                text_labels << QString("Cross %1/%3").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_numbers.value(i));
             }
             else
                 text_labels << "";
@@ -1261,13 +1263,13 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         QList<int> labels1, labels2;
         //text_labels << "";
         for (int a1 = 0; a1 < ks.count(); a1++) {
-            QString str1 = QString("%1(%2)").arg(m_original_cluster_numbers[ks[a1]]).arg(m_original_cluster_offsets[ks[a1]]);
+            QString str1 = QString("%1(%2)").arg(m_original_cluster_numbers.value(ks[a1])).arg(m_original_cluster_offsets.value(ks[a1]));
             if (!use_shell_split)
-                str1 = QString("%1").arg(m_original_cluster_numbers[ks[a1]]);
+                str1 = QString("%1").arg(m_original_cluster_numbers.value(ks[a1]));
             for (int a2 = 0; a2 < ks.count(); a2++) {
-                QString str2 = QString("%1(%2)").arg(m_original_cluster_numbers[ks[a2]]).arg(m_original_cluster_offsets[ks[a2]]);
+                QString str2 = QString("%1(%2)").arg(m_original_cluster_numbers.value(ks[a2])).arg(m_original_cluster_offsets.value(ks[a2]));
                 if (!use_shell_split)
-                    str2 = QString("%1").arg(m_original_cluster_numbers[ks[a2]]);
+                    str2 = QString("%1").arg(m_original_cluster_numbers.value(ks[a2]));
                 text_labels << QString("%1/%2").arg(str1).arg(str2);
                 labels1 << ks.value(a1);
                 labels2 << ks.value(a2);
@@ -1385,8 +1387,8 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         QList<int> labels_kk;
         for (long i = 0; i < inds.count(); i++) {
             long n = inds[i];
-            times_kk << times[n];
-            labels_kk << labels[n];
+            times_kk << times.value(n);
+            labels_kk << labels.value(n);
         }
 
         DiskReadMda TT(current_timeseries_path());
