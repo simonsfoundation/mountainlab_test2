@@ -83,12 +83,12 @@ SOURCES += affinetransformation.cpp
 HEADERS += compute_templates_0.h
 SOURCES += compute_templates_0.cpp
 
-DEFINES += USE_REMOTE_MDA
+#DEFINES += USE_REMOTE_MDA
 INCLUDEPATH += ../../common/mda
 DEPENDPATH += ../../common/mda
 VPATH += ../../common/mda
-HEADERS += remotereadmda.h diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
-SOURCES += remotereadmda.cpp diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
+HEADERS += diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
+SOURCES += diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
 
 INCLUDEPATH += ../../common/cachemanager
 DEPENDPATH += ../../common/cachemanager

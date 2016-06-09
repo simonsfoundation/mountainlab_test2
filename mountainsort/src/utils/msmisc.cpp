@@ -20,7 +20,9 @@
 #endif
 
 #include <QCoreApplication>
+#ifdef QT_GUI_LIB
 #include <QMessageBox>
+#endif
 
 #include "textfile.h"
 
@@ -191,6 +193,12 @@ QString http_get_binary_file_curl(const QString& url)
     return tmp_fname;
 }
 
+bool curl_is_installed()
+{
+    int exit_code = system("curl --version");
+    return (exit_code == 0);
+}
+
 /// TODO handle this in a better way
 static QMap<QString, QString> s_http_get_text_curl_cache;
 
@@ -202,12 +210,25 @@ QString http_get_text_curl(const QString& url)
             return s_http_get_text_curl_cache[url];
         }
     }
+    if (!curl_is_installed()) {
+        #ifdef QT_GUI_LIB
+        QMessageBox::critical(0, "Problem in http request", "Problem in http request. It appears that curl is not installed.");
+        #else
+        qWarning() << "There is no reason we should be calling http_get_text_curl in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
+        #endif
+        return "";
+    }
     QString tmp_fname = get_temp_fname();
     QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
     int exit_code = system(cmd.toLatin1().data());
     if (exit_code != 0) {
         qWarning() << "Problem with system call: " + cmd;
         QFile::remove(tmp_fname);
+        #ifdef QT_GUI_LIB
+        QMessageBox::critical(0, "Problem downloading text file", "Problem in http request. Are you connected to the internet?");
+        #else
+        qWarning() << "There is no reason we should be calling http_get_text_curl * in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
+        #endif
         return "";
     }
     QString ret = read_text_file(tmp_fname);
@@ -218,7 +239,7 @@ QString http_get_text_curl(const QString& url)
     return ret;
 }
 
-//#ifdef USE_NETWORK
+#ifdef QT_GUI_LIB
 QString http_get_binary_file(const QString& url)
 {
     if (in_gui_thread()) {
@@ -283,8 +304,7 @@ QString http_get_text(const QString& url)
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_downloaded", ret.count());
     return ret;
 }
-//#else
-//#endif
+#endif
 
 QString compute_hash(const QString& str)
 {

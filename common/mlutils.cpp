@@ -89,13 +89,19 @@ QString resolve_path(QString basepath, QString path)
 {
     if (QFileInfo(path).isRelative()) {
         return basepath + "/" + path;
-    } else
+    }
+    else
         return path;
 }
 
 bool in_gui_thread()
 {
+    #ifdef QT_GUI_LIB
     return (QThread::currentThread() == QCoreApplication::instance()->thread());
+    #else
+    //not even a gui app
+    return false;
+    #endif
 }
 
 bool thread_interrupt_requested()

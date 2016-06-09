@@ -154,13 +154,13 @@ SOURCES += utils/get_sort_indices.cpp \
     utils/msmisc.cpp
 SOURCES_NOCXX11 += utils/eigenvalue_decomposition.cpp #see below
 
-DEFINES += USE_REMOTE_MDA
+#DEFINES += USE_REMOTE_MDA
 DEFINES += USE_SSE2
 INCLUDEPATH += ../../common/mda
 DEPENDPATH += ../../common/mda
 VPATH += ../../common/mda
-HEADERS += remotereadmda.h diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
-SOURCES += remotereadmda.cpp diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
+HEADERS += diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
+SOURCES += diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
 
 HEADERS += utils/get_principal_components.h
 SOURCES += utils/get_principal_components.cpp

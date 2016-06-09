@@ -3,7 +3,7 @@
 #include <QDateTime>
 #include <QFileInfo>
 #include <diskwritemda.h>
-#include <remotereadmda.h>
+//#include <remotereadmda.h>
 #include "diskreadmda.h"
 
 class DiskArrayModel_NewPrivate {
@@ -213,11 +213,11 @@ void DiskArrayModel_NewPrivate::create_multiscale_array_if_needed()
 QString DiskArrayModel_NewPrivate::get_file_timestamp(const QString& path)
 {
     QDateTime dt;
-    if (path.startsWith("http://")) {
-        RemoteReadMda X(path);
-        dt = X.fileLastModified();
-    } else {
+    //if (path.startsWith("http://")) {
+        //RemoteReadMda X(path);
+        //dt = X.fileLastModified();
+    //} else {
         dt = QFileInfo(path).lastModified();
-    }
+    //}
     return QString("%1").arg(dt.toMSecsSinceEpoch());
 }
