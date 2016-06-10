@@ -122,8 +122,9 @@ X=readmda(path);
 end
 
 function ret=make_temp_mda_path(X,str)
-mfilepath=fileparts(mfilename('fullpath'));
-path0=[mfilepath,'/../../tmp/tmp_short_term'];
+%mfilepath=fileparts(mfilename('fullpath'));  % bad to use NFS for tmp; local /tmp/ is better
+%path0=[mfilepath,'/../../tmp/tmp_short_term'];
+path0 = '/tmp/mountainlab/tmp_short_term';         % for unix systems only!
 if (~exist(path0,'dir'))
     mkdir(path0);
 end;
