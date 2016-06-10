@@ -159,7 +159,6 @@ public:
     void export_filtered_firings();
     void export_file(QString source_path, QString dest_path, bool use_float64);
 
-    QString resolve_path(QString path);
     QString current_timeseries_path();
 
     QVariant get_cluster_attribute(int k, QString attr);
@@ -375,7 +374,8 @@ void MVMainWindow::setMVFile(MVFile ff)
         }
     }
 
-    d->m_firings_original=DiskReadMda(ff.firingsPath());
+    d->m_firings_original.setPath(ff.firingsPathResolved());
+    qDebug() << "======================================" << ff.firingsPathResolved() << d->m_firings_original.N1() << d->m_firings_original.N2();
     d->start_shell_split_and_event_filter();
 }
 
@@ -800,11 +800,10 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlogra
 MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
-    //X->setMscmdServerUrl(m_mscmdserver_url);
     qDebug() << "###############################" << m_mv_file.mlproxyUrl();
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setChannelColors(m_channel_colors);
-    DiskReadMda TT(resolve_path(current_timeseries_path()));
+    DiskReadMda TT(current_timeseries_path());
     X->setTimeseries(TT);
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
     X->setSampleRate(m_mv_file.sampleRate());
@@ -1230,7 +1229,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         TaskProgress task("Update cluster details");
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         WW->setColors(m_colors);
-        DiskReadMda TT(resolve_path(current_timeseries_path()));
+        DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         WW->setFirings(m_firings);
@@ -1240,7 +1239,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         MVClipsWidget* WW = (MVClipsWidget*)W;
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
-        DiskReadMda TT(resolve_path(current_timeseries_path()));
+        DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         WW->setFirings(m_firings);
@@ -1310,7 +1309,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
             labels_kk << labels.value(n);
         }
 
-        DiskReadMda TT(resolve_path(current_timeseries_path()));
+        DiskReadMda TT(current_timeseries_path());
         Mda clips = extract_clips(TT, times_kk, clip_size);
         printf("Setting data...\n");
         //DiskArrayModel_New *DAM=new DiskArrayModel_New;
@@ -1324,7 +1323,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         MVClusterWidget* WW = (MVClusterWidget*)W;
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
-        DiskReadMda TT(resolve_path(current_timeseries_path()));
+        DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         //WW->setFirings(m_firings);
@@ -1339,7 +1338,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         MVSpikeSprayView* WW = (MVSpikeSprayView*)W;
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
-        DiskReadMda TT(resolve_path(current_timeseries_path()));
+        DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         WW->setFirings(m_firings);
@@ -1372,12 +1371,12 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
     } else if (widget_type == "timeseries") {
         SSTimeSeriesWidget* WW = (SSTimeSeriesWidget*)W;
         DiskArrayModel_New* X = new DiskArrayModel_New;
-        X->setPath(resolve_path(current_timeseries_path()));
+        X->setPath(current_timeseries_path());
         ((SSTimeSeriesView*)(WW->view()))->setData(X, true);
         set_times_labels_for_timeseries_widget(WW);
     } else if (widget_type == "mvtimeseries") {
         MVTimeSeriesView* WW = (MVTimeSeriesView*)W;
-        WW->setTimeseries(DiskReadMda(resolve_path(current_timeseries_path())));
+        WW->setTimeseries(DiskReadMda(current_timeseries_path()));
         set_times_labels_for_mvtimeseriesview(WW);
     }
 }
@@ -1725,26 +1724,9 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
     C->startComputation();
 }
 
-QString MVMainWindowPrivate::resolve_path(QString path)
-{
-    if (path.startsWith("http"))
-        return path;
-    if (QFileInfo(path).isAbsolute())
-        return path;
-    if (!m_mv_file.basePath().isEmpty())
-        path = m_mv_file.basePath() + "/" + path;
-    if (!m_mv_file.mlproxyUrl().isEmpty()) {
-        return m_mv_file.mlproxyUrl() + "/mdaserver/" + path;
-    }
-    if (!m_mv_file.path().isEmpty()) {
-        return m_mv_file.path() + "/" + path;
-    }
-    return path;
-}
-
 QString MVMainWindowPrivate::current_timeseries_path()
 {
-    return m_mv_file.timeseriesPath(m_control_panel_new->viewOptions().timeseries);
+    return m_mv_file.timeseriesPathResolved(m_control_panel_new->viewOptions().timeseries);
 }
 
 QVariant MVMainWindowPrivate::get_cluster_attribute(int k, QString attr)

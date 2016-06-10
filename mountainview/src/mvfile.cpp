@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QDebug>
+#include <QFileInfo>
 #include "textfile.h"
 #include "mlutils.h"
 
@@ -14,6 +15,8 @@ public:
 
     QJsonObject m_obj;
     QString m_path;
+
+    QString resolve_path(QString path);
 };
 
 MVFile::MVFile()
@@ -23,12 +26,13 @@ MVFile::MVFile()
     d->m_obj["mvfile_version"] = "0.1";
 }
 
-MVFile::MVFile(const MVFile &other) : QObject()
+MVFile::MVFile(const MVFile& other)
+    : QObject()
 {
     d = new MVFilePrivate;
     d->q = this;
-    d->m_obj=other.d->m_obj;
-    d->m_path=other.d->m_path;
+    d->m_obj = other.d->m_obj;
+    d->m_path = other.d->m_path;
 }
 
 MVFile::~MVFile()
@@ -36,10 +40,10 @@ MVFile::~MVFile()
     delete d;
 }
 
-void MVFile::operator=(const MVFile &other)
+void MVFile::operator=(const MVFile& other)
 {
-    d->m_obj=other.d->m_obj;
-    d->m_path=other.d->m_path;
+    d->m_obj = other.d->m_obj;
+    d->m_path = other.d->m_path;
 }
 
 bool MVFile::read(const QString& path)
@@ -105,9 +109,9 @@ QString MVFile::basePath() const
     return d->m_obj["basepath"].toString();
 }
 
-QString MVFile::firingsPath() const
+QString MVFile::firingsPathResolved() const
 {
-    return d->m_obj["firings"].toString();
+    return d->resolve_path(d->m_obj["firings"].toString());
 }
 
 QStringList MVFile::timeseriesNames() const
@@ -122,7 +126,7 @@ QStringList MVFile::timeseriesNames() const
     return ret;
 }
 
-QString MVFile::timeseriesPath(const QString& name) const
+QString MVFile::timeseriesPathResolved(const QString& name) const
 {
     QJsonArray ts = d->m_obj["timeseries"].toArray();
     for (int i = 0; i < ts.count(); i++) {
@@ -130,7 +134,7 @@ QString MVFile::timeseriesPath(const QString& name) const
         QString name0 = tsobj["name"].toString();
         if (name0 == name) {
             QString path = tsobj["path"].toString();
-            return path;
+            return d->resolve_path(path);
         }
     }
     return "";
@@ -149,6 +153,11 @@ QJsonObject MVFile::eventFilter() const
 QJsonObject MVFile::annotations() const
 {
     return d->m_obj["annotations"].toObject();
+}
+
+QJsonObject MVFile::currentState() const
+{
+    return d->m_obj["current_state"].toObject();
 }
 
 void MVFile::setFiringsPath(QString path)
@@ -191,7 +200,29 @@ void MVFile::setAnnotations(QJsonObject obj)
     d->m_obj["annotations"] = obj;
 }
 
+void MVFile::setCurrentState(QJsonObject obj)
+{
+    d->m_obj["current_state"] = obj;
+}
+
 QString MVFile::mvfile_version() const
 {
     return d->m_obj["mvfile_version"].toString();
+}
+
+QString MVFilePrivate::resolve_path(QString path)
+{
+    if (path.startsWith("http"))
+        return path;
+    if (QFileInfo(path).isAbsolute())
+        return path;
+    if (!q->basePath().isEmpty())
+        path = q->basePath() + "/" + path;
+    if (!q->mlproxyUrl().isEmpty()) {
+        return q->mlproxyUrl() + "/mdaserver/" + path;
+    }
+    if (!m_path.isEmpty()) {
+        return m_path + "/" + path;
+    }
+    return path;
 }

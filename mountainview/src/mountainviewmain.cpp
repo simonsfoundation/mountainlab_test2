@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
         double samplerate = CLP.named_parameters.value("samplerate", 20000).toDouble();
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
-        QString mlproxy_url=CLP.named_parameters.value("mlproxy_url", "").toString();
+        QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
         MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
         W->setChannelColors(channel_colors);
         W->setLabelColors(label_colors);
@@ -223,10 +223,10 @@ int main(int argc, char* argv[])
         W->setMinimumSize(1000, 800);
         W->show();
 
-        W->setDefaultInitialization();
         a.processEvents();
-
         W->setMVFile(mv_file);
+
+        W->setDefaultInitialization();
     } else if (mode == "spikespy") {
         printf("spikespy...\n");
         QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
@@ -574,7 +574,7 @@ QList<QColor> generate_colors_ahb()
     }
     //now we shift/cycle it over by one
     ret.insert(0, ret[ret.count() - 1]);
-    ret = ret.mid(0,ret.count() - 1);
+    ret = ret.mid(0, ret.count() - 1);
     return ret;
 }
 
