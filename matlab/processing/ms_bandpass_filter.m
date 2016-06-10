@@ -9,8 +9,12 @@ function Y=ms_bandpass_filter(X,opts)
 %    X - MxN array of raw data
 %    opts.samplefreq - the sampling frequency corresponding to X, e.g.
 %                      30000
-%    opts.freq_min - the lower end of the bandpass filter
-%    opts.freq_max - the upper end of the bandpass filter
+%    The following are optional:
+%    opts.freq_min - the lower end of the bandpass filter (Hz)
+%                    (use zero or omit this option for pure low-pass)
+%    opts.freq_max - the upper end of the bandpass filter (Hz)
+%                    (use zero or omit this option for pure high-pass)
+%    opts.width_max - width for upper end roll-off (Hz), default 1000
 %
 % Outputs:
 %    Y - MxN array of filtered data
@@ -25,15 +29,18 @@ function Y=ms_bandpass_filter(X,opts)
 % Author: Jeremy Magland and Alex Barnett
 % Oct 2015; Last revision: 13-Feb-2016
 % name changed to ms_bandpass_filter on 3/18/16 - jfm
+% ahb 6/10/16 improved low-pass via erf, killing zero freq, upper wid opt,
+% better opts handling, self-test.
 
-% todo: test routine.
-% todo: make fdwilo = flo/4 or something so always kills DC to 1e-4.
-% todo: use erf as filter func
+if nargin==0, test_bandpass_filter; return; end
 
-Y=freqfilter(X,opts.samplerate,opts.freq_min,opts.freq_max);
+if ~isfield(opts,'freq_max'), opts.freq_max = []; end
+if ~isfield(opts,'freq_min'), opts.freq_min = []; end
+if ~isfield(opts,'width_max'), opts.width_max = 1e3; end
+Y=freqfilter(X,opts.samplerate,opts.freq_min,opts.freq_max,opts.width_max);
 end
 
-function X = freqfilter(X,fs,flo,fhi)
+function X = freqfilter(X,fs,flo,fhi,fwid)
 % A snapshot of ahb's freqfilter on 5/22/2015
 % SS_FREQFILTER - filter rows of X using smooth roll-offs in Fourier space
 %
@@ -54,11 +61,15 @@ function X = freqfilter(X,fs,flo,fhi)
 
 if nargin<3, flo = []; end
 if nargin<4, fhi = []; end
+if nargin<5, fwid = 1e3; end
 if ~isempty(fhi) & ~isempty(flo) & fhi<=flo, warning('fhi<=flo: are you sure you want this??'); end
+if flo<=0, warning('flo should be positive'); end
+if fhi<=0, warning('fhi should be positive'); end
 
 [M N] = size(X);
 
-Nbig = inf; %2^22;  % do it in blocks (power of 2 = efficient for FFT)
+% -------- do it in blocks (power of 2 = efficient for FFT)
+Nbig = inf; %2^22;      % inf: never uses blocking
 if N>2*Nbig
   pad = 1e3;   % only good if filters localized in time (smooth in k space)
   B = Nbig-2*pad;  % block size
@@ -77,17 +88,64 @@ if N>2*Nbig
   return              % !
 end                   % todo: figure out why this was slower than unblocked
                       % even for Nbig = 2^22
+% ---------
 
 T = N/fs;  % total time
-df = 1/T; % freq grid...
+df = 1/T;  % freq grid including negative ones...
 if mod(N,2)==0, f=df*[0:N/2 -N/2+1:-1];else, f=df*[0:(N-1)/2 -(N-1)/2:-1]; end
 
 a = ones(size(f));
-fwidlo = 100;       % roll-off width (Hz). Sets ringing timescale << 10 ms
-if ~isempty(flo), a = a .* (1+tanh((abs(f)-flo)/fwidlo))/2; end
-fwidhi = 1000;       % roll-off width (Hz). Sets ringing timescale << 1 ms
-if ~isempty(fhi), a = a .* (1-tanh((abs(f)-fhi)/fwidhi))/2; end
-X = ifft(bsxfun(@times, fft(X'), a'))'; % filter: FFT fast along fast
-% storage direction, transposing at input & output
+filt = 1+0*f;          % act on a unit filter amplitude array
+if ~isempty(flo)
+  relwid = 3.0;                % kills low freqs by 1e-5
+  filt = filt .* (1+erf(relwid*(abs(f)-flo)/flo))/2;
+  filt(1) = 0;    % kill DC exactly
+end
+if ~isempty(fhi)
+  filt = filt .* (1-erf((abs(f)-fhi)/fwid))/2;
+end
 
+% filter: FFT fast along fast
+% storage direction, transposing at input & output
+filt = sqrt(filt);         % so 0.5 in the filter func becomes -3dB
+X = ifft(bsxfun(@times, fft(X'), filt'))'; 
+
+end
+
+%%%%%%%%%%%%%%%
+
+function test_bandpass_filter   % AHB 6/10/16
+o.samplerate = 2e4;      % in Hz
+X = randn(5,1e6);
+% check the power spectra...
+wid = 100;               % PS smoothing in Hz
+figure; subplot(2,1,1);
+showpowerspectrum(X,o.samplerate,wid); hold on;
+o.freq_min = 300;        % high-pass only
+Y = ms_bandpass_filter(X,o);
+showpowerspectrum(Y,o.samplerate,wid,'r-');
+o.freq_max = 6000;       % band-pass
+Y = ms_bandpass_filter(X,o);
+showpowerspectrum(Y,o.samplerate,wid,'k-');
+vline([o.freq_min,o.freq_max]);                      % check the -3dB pts
+o.freq_min = [];         % low-pass only
+Y = ms_bandpass_filter(X,o);
+showpowerspectrum(Y,o.samplerate,wid,'g-');
+set(gca,'yscale','linear');
+
+subplot(2,1,2); % check the impulse responses...
+X = zeros(1,1e4); X(100) = 1.0;
+j = 1:1e3;
+t = j/o.samplerate;
+plot(t,X(j),'.-'); xlabel('time (s)');
+hold on;
+o.freq_max = []; o.freq_min = 300;        % high-pass only
+Y = ms_bandpass_filter(X,o);
+plot(t,Y(j),'r.-');
+o.freq_max = 6000;       % band pass
+Y = ms_bandpass_filter(X,o);
+plot(t,Y(j),'k.-');
+o.freq_min = [];        % low-pass only
+Y = ms_bandpass_filter(X,o);
+plot(t,Y(j),'g.-');
 end
