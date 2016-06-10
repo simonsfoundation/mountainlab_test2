@@ -338,7 +338,6 @@ void MVMainWindow::setMscmdServerUrl(const QString& url)
 
 void MVMainWindow::setMVFile(MVFile ff)
 {
-    //important to do this first
     d->m_mv_file=ff;
 
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
@@ -348,9 +347,8 @@ void MVMainWindow::setMVFile(MVFile ff)
         d->m_current_timeseries_name=timeseries_names[0];
     }
 
-    d->m_control_panel_new->setViewOptions(d->m_mv_file.viewOptions());
-    d->m_control_panel_new->setEventFilter(d->m_mv_file.eventFilter());
-
+    d->m_control_panel_new->setViewOptions(MVViewOptions::fromJsonObject(d->m_mv_file.viewOptions()));
+    d->m_control_panel_new->setEventFilter(MVEventFilter::fromJsonObject(d->m_mv_file.eventFilter()));
     {
         QJsonObject ann0 = d->m_mv_file.annotations();
         if (ann0.contains("cluster_attributes")) {
