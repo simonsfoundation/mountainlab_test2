@@ -328,17 +328,6 @@ QImage MVOverview2Widget::generateImage(const QMap<QString, QVariant>& params)
 }
 */
 
-int MVOverview2Widget::getMaxLabel()
-{
-    int ret = 0;
-    for (long i = 0; i < d->m_firings.N2(); i++) {
-        int label = (int)d->m_firings.value(i);
-        if (label > ret)
-            ret = label;
-    }
-    return ret;
-}
-
 void MVOverview2Widget::setMLProxyUrl(const QString& url)
 {
     d->m_mlproxy_url = url;
@@ -453,7 +442,7 @@ void MVOverview2Widget::loadMVFile(const QString& mv_fname)
         }
     }
 
-    d->start_shell_split_and_event_filter();
+    //d->start_shell_split_and_event_filter();
 }
 
 void MVOverview2Widget::saveMVFile(const QString& mv_fname)
@@ -656,7 +645,9 @@ void MVOverview2Widget::slot_details_template_activated()
 
 void MVOverview2Widget::slot_update_buttons()
 {
-    bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
+    //bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
+    /// TODO restore this has_peaks without accessing m_firings in gui thread
+    bool has_peaks = true;
     bool something_selected = (!d->m_view_agent->selectedClusters().isEmpty());
 
     d->set_button_enabled("open-cluster-details", true);
@@ -1252,7 +1243,7 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setColors(m_colors);
         WW->setSampleRate(m_samplerate);
         WW->setMaxDtTimepoints(cc_max_dt_timepoints());
-        WW->setFirings(DiskReadMda(m_firings));
+        WW->setFirings(m_firings);
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setBaseLabel(k);
         QStringList text_labels;
@@ -1269,19 +1260,17 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
     } else if (widget_type == "matrix_of_cross_correlograms") {
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         WW->setColors(m_colors);
         WW->setSampleRate(m_samplerate);
         WW->setMaxDtTimepoints(cc_max_dt_timepoints());
-        WW->setFirings(DiskReadMda(m_firings));
+        WW->setFirings(m_firings);
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setLabelNumbers(ks);
         QStringList text_labels;
         QList<int> labels1, labels2;
         //text_labels << "";
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         for (int a1 = 0; a1 < ks.count(); a1++) {
             QString str1 = QString("%1(%2)").arg(m_original_cluster_numbers.value(ks[a1])).arg(m_original_cluster_offsets.value(ks[a1]));
             if (!use_shell_split)
@@ -1295,11 +1284,9 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
                 labels2 << ks.value(a2);
             }
         }
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         //WW->setTextLabels(labels);
         WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     }
     /*else if (widget_type=="templates") {
         printf("Setting templates data...\n");
@@ -1332,10 +1319,9 @@ void MVOverview2WidgetPrivate::update_widget(QWidget* W)
         DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
-        WW->setFirings(DiskReadMda(m_firings));
+        WW->setFirings(m_firings);
         WW->setGroupNumbers(m_original_cluster_numbers);
         WW->zoomAllTheWayOut();
-        task.log(QString("clip_size=%1, m_firings.N1()=%2, m_firings.N2()=%3").arg(clip_size).arg(m_firings.N1()).arg(m_firings.N2()));
     } else if (widget_type == "clips") {
         MVClipsWidget* WW = (MVClipsWidget*)W;
         int clip_size = m_control_panel_new->viewOptions().clip_size;
@@ -1893,17 +1879,18 @@ void shell_split_and_event_filter_calculator::compute()
     }
 
     MT.setInputParameters(params);
-    //MT.setMscmdServerUrl(m_mscmdserver_url);
     MT.setMLProxyUrl(m_mlproxy_url);
 
     QString firings_out = MT.makeOutputFilePath("firings_out");
     QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
     MT.runProcess();
+
     m_firings.setPath(firings_out);
     task.log("m_firings path = " + firings_out);
     task.log(QString("m_firings.N1()=%1 m_firings.N2()=%2").arg(m_firings.N1()).arg(m_firings.N2()));
     m_original_cluster_numbers.clear();
     m_original_cluster_offsets.clear();
+
     DiskReadMda AA(original_cluster_numbers_out);
     int offset = 0;
     for (int i = 0; i < AA.totalSize(); i++) {

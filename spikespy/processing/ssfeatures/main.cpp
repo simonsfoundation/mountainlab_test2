@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    qDebug() << "ssfeatures" << inpath << outpath << runparams["nfeatures"].toInt() << runparams["niterations"].toInt();
+    qDebug() << "ssfeatures" << inpath << outpath << runparams["nfeatures"].toInt() << runparams["niterations"].toInt(); //okay
     if (!ssfeatures(inf, outf, runparams)) {
         qCritical() << "Problem in ssfeatures.";
     }

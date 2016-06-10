@@ -281,6 +281,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         binary_url = m_path.mid(0, ind) + "/mdaserver/" + binary_url;
     }
 
+    /// TODO I think this should be http_get_text_file
     QString mda_fname = http_get_binary_file(binary_url);
     if (mda_fname.isEmpty())
         return "";

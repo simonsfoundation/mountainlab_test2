@@ -67,8 +67,8 @@ void mkdir_if_doesnt_exist(const QString& path)
 
 QString mlTmpPath()
 {
-    QString ret = mountainlabBasePath() + "/tmp";
-    //QString ret = QDir::tempPath() + "/mountainlab";
+    //QString ret = mountainlabBasePath() + "/tmp";
+    QString ret = QDir::tempPath() + "/mountainlab";
     mkdir_if_doesnt_exist(ret);
     return ret;
 }

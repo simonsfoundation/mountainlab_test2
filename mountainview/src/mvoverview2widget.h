@@ -38,7 +38,6 @@ public:
     void setDefaultInitialization();
     ///Corresponds to MVFiringRateView::setEpochs()
     void setEpochs(const QList<Epoch>& epochs);
-    int getMaxLabel();
     void setMLProxyUrl(const QString& url);
     void setClusterMerge(ClusterMerge CM);
     void setChannelColors(const QList<QColor>& colors);

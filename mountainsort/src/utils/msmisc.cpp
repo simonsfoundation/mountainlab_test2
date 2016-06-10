@@ -206,7 +206,6 @@ QString http_get_text_curl(const QString& url)
 {
     if (in_gui_thread()) {
         if (s_http_get_text_curl_cache.contains(url)) {
-            qDebug() << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
             return s_http_get_text_curl_cache[url];
         }
     }

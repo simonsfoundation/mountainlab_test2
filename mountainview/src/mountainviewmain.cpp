@@ -218,6 +218,7 @@ int main(int argc, char* argv[])
             W->addTimeseriesPath("Raw Data", raw_path);
         }
 
+
         if (!epochs_path.isEmpty()) {
             QList<Epoch> epochs = read_epochs(epochs_path);
             W->setEpochs(epochs);
@@ -228,14 +229,18 @@ int main(int argc, char* argv[])
             window_title = filt_path;
         if (window_title.isEmpty())
             window_title = raw_path;
+
+
         if (!firings_path.isEmpty()) {
             W->setFiringsPath(firings_path);
         }
+
         if (samplerate) {
             W->setSampleRate(samplerate);
         }
 
         W->setDefaultInitialization();
+
     } else if (mode == "spikespy") {
         printf("spikespy...\n");
         QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
