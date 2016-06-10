@@ -375,7 +375,8 @@ void MVMainWindow::setMVFile(MVFile ff)
         }
     }
 
-    //d->start_shell_split_and_event_filter();
+    d->m_firings_original=DiskReadMda(ff.firingsPath());
+    d->start_shell_split_and_event_filter();
 }
 
 void MVMainWindow::writeMVFile(const QString& mv_fname)
