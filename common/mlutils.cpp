@@ -115,8 +115,6 @@ bool thread_interrupt_requested()
     return QThread::currentThread()->isInterruptionRequested();
 }
 
-
-
 bool curl_is_installed()
 {
     int exit_code = system("curl --version");
@@ -135,24 +133,24 @@ QString http_get_text_curl(const QString& url)
         }
     }
     if (!curl_is_installed()) {
-        #ifdef QT_GUI_LIB
+#ifdef QT_GUI_LIB
         QMessageBox::critical(0, "Problem in http request", "Problem in http request. It appears that curl is not installed.");
-        #else
+#else
         qWarning() << "There is no reason we should be calling http_get_text_curl in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
-        #endif
+#endif
         return "";
     }
-    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile("",CacheManager::ShortTerm);
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
     QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
     int exit_code = system(cmd.toLatin1().data());
     if (exit_code != 0) {
         qWarning() << "Problem with system call: " + cmd;
         QFile::remove(tmp_fname);
-        #ifdef QT_GUI_LIB
+#ifdef QT_GUI_LIB
         QMessageBox::critical(0, "Problem downloading text file", "Problem in http request. Are you connected to the internet?");
-        #else
+#else
         qWarning() << "There is no reason we should be calling http_get_text_curl * in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
-        #endif
+#endif
         return "";
     }
     QString ret = read_text_file(tmp_fname);
@@ -162,4 +160,3 @@ QString http_get_text_curl(const QString& url)
     }
     return ret;
 }
-

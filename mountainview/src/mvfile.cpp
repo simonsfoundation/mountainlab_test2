@@ -155,9 +155,9 @@ QJsonObject MVFile::annotations() const
     return d->m_obj["annotations"].toObject();
 }
 
-QJsonObject MVFile::currentState() const
+QString MVFile::currentTimeseriesName() const
 {
-    return d->m_obj["current_state"].toObject();
+    return d->m_obj["current_state"].toObject()["current_timeseries_name"].toString();
 }
 
 void MVFile::setFiringsPath(QString path)
@@ -200,9 +200,11 @@ void MVFile::setAnnotations(QJsonObject obj)
     d->m_obj["annotations"] = obj;
 }
 
-void MVFile::setCurrentState(QJsonObject obj)
+void MVFile::setCurrentTimeseriesName(QString name)
 {
-    d->m_obj["current_state"] = obj;
+    QJsonObject ss = d->m_obj["current_state"].toObject();
+    ss["current_timeseries_name"] = name;
+    d->m_obj["current_state"] = ss;
 }
 
 QString MVFile::mvfile_version() const

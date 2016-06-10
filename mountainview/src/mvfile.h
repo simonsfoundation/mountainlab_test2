@@ -32,7 +32,7 @@ public:
     QJsonObject viewOptions() const;
     QJsonObject eventFilter() const;
     QJsonObject annotations() const;
-    QJsonObject currentState() const;
+    QString currentTimeseriesName() const;
 
     void setFiringsPath(QString path);
     void setSampleRate(double rate);
@@ -41,7 +41,7 @@ public:
     void setViewOptions(QJsonObject obj);
     void setEventFilter(QJsonObject obj);
     void setAnnotations(QJsonObject obj);
-    void setCurrentState(QJsonObject obj);
+    void setCurrentTimeseriesName(QString name);
 
     QString mvfile_version() const;
 

@@ -108,11 +108,14 @@ void DiskReadMda::setPath(const char* file_path)
     if (QString(file_path).startsWith("http://")) {
 #ifdef USE_REMOTE_MDA
         d->m_use_remote_mda = true;
+        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         d->m_remote_mda.setPath(file_path);
+        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 #else
         qWarning() << "USE_REMOTE_MDA not defined. Unable to set path:" << QString(file_path);
 #endif
     }
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 void DiskReadMda::setRemoteDataType(const QString& dtype)

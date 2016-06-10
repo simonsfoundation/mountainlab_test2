@@ -453,6 +453,9 @@ void ControlManager::set_parameter_choices(QString name, QStringList choices)
         {
             CB->addItem(choice);
         }
+        if (txt.isEmpty()) {
+            txt = choices.value(0);
+        }
         CB->setCurrentText(txt);
     }
 }

@@ -73,7 +73,6 @@ public:
 class MVMainWindowPrivate {
 public:
     MVMainWindow* q;
-    QString m_current_timeseries_name;
     DiskReadMda m_timeseries;
     QString m_firings_original_path;
     DiskReadMda m_firings_original;
@@ -337,17 +336,26 @@ void MVMainWindow::setMscmdServerUrl(const QString& url)
 
 void MVMainWindow::setMVFile(MVFile ff)
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_mv_file = ff;
 
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_control_panel_new->setTimeseriesChoices(timeseries_names);
-    if (!timeseries_names.isEmpty()) {
-        d->m_current_timeseries_name = timeseries_names[0];
-    }
+    //if (!timeseries_names.isEmpty()) {
+    //    d->m_view_agent->setCurrentTimeseriesName(timeseries_names[0]);
+    //}
 
     d->m_control_panel_new->setViewOptions(MVViewOptions::fromJsonObject(d->m_mv_file.viewOptions()));
     d->m_control_panel_new->setEventFilter(MVEventFilter::fromJsonObject(d->m_mv_file.eventFilter()));
+    if (!d->m_mv_file.currentTimeseriesName().isEmpty()) {
+        MVViewOptions opts = d->m_control_panel_new->viewOptions();
+        opts.timeseries = d->m_mv_file.currentTimeseriesName();
+        d->m_control_panel_new->setViewOptions(opts);
+    }
+
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     {
         QJsonObject ann0 = d->m_mv_file.annotations();
         if (ann0.contains("cluster_attributes")) {
@@ -374,9 +382,11 @@ void MVMainWindow::setMVFile(MVFile ff)
         }
     }
 
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_firings_original.setPath(ff.firingsPathResolved());
-    qDebug() << "======================================" << ff.firingsPathResolved() << d->m_firings_original.N1() << d->m_firings_original.N2();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->start_shell_split_and_event_filter();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 void MVMainWindow::writeMVFile(const QString& mv_fname)
@@ -385,6 +395,7 @@ void MVMainWindow::writeMVFile(const QString& mv_fname)
 
     d->m_mv_file.setViewOptions(d->m_control_panel_new->viewOptions().toJsonObject());
     d->m_mv_file.setEventFilter(d->m_control_panel_new->eventFilter().toJsonObject());
+    d->m_mv_file.setCurrentTimeseriesName(d->m_control_panel_new->viewOptions().timeseries);
 
     QJsonObject cluster_attributes;
     QMap<int, QJsonObject> CA = d->m_view_agent->clusterAttributes();

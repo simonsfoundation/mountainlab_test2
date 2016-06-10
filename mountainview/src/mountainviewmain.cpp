@@ -91,6 +91,10 @@ void test_taskprogressview()
 /// TODO (LOW) auto correlograms for selected clusters
 /// TODO (LOW) figure out what to do when #channels and/or #clusters is huge
 /// TODO (0.9.1) make sure to handle merging with other views, such as clips etc. Make elegant way
+/// TODO (0.9.1) firing events view, show two clusters with different colors
+/// TODO (0.9.1) 1D histograms showing cutoffs (for identifying noise clusters at a glance)
+/// TODO (HIGH) annotate axes as microvolts whenever relevant
+/// TODO (HIGH) option to use pre-processed data for PCA
 
 QColor brighten(QColor col, int amount);
 QList<QColor> generate_colors_ahb();
@@ -224,9 +228,10 @@ int main(int argc, char* argv[])
         W->show();
 
         a.processEvents();
+        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         W->setMVFile(mv_file);
-
-        W->setDefaultInitialization();
+        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+        //W->setDefaultInitialization();
     } else if (mode == "spikespy") {
         printf("spikespy...\n");
         QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
@@ -276,6 +281,7 @@ int main(int argc, char* argv[])
         */
     }
 
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     int ret = a.exec();
 
     printf("Number of files open: %d, number of unfreed mallocs: %d, number of unfreed megabytes: %g\n", jnumfilesopen(), jmalloccount(), (int)jbytesallocated() * 1.0 / 1000000);
