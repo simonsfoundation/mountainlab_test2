@@ -60,7 +60,7 @@ public:
     //input
     MVEventFilter m_evt_filter;
     DiskReadMda m_firings_original;
-    QString m_mlproxy_url;
+    QString m_mv_file;
 
     //output
     DiskReadMda m_firings;
@@ -266,12 +266,6 @@ void MVMainWindow::setCurrentTimeseriesName(const QString& name)
     d->update_firing_event_views();
 }
 
-void MVMainWindow::setSampleRate(float freq)
-{
-    d->m_samplerate = freq;
-    //d->start_cross_correlograms_computer();
-}
-
 void MVMainWindow::setDefaultInitialization()
 {
     //d->open_templates();
@@ -335,11 +329,6 @@ void MVMainWindow::setLabelColors(const QList<QColor>& colors)
     d->m_label_colors = colors;
 }
 
-void MVMainWindow::setMVFile(MVFile mv_file)
-{
-
-}
-
 /*
 void MVMainWindow::setMscmdServerUrl(const QString& url)
 {
@@ -350,16 +339,8 @@ void MVMainWindow::setMscmdServerUrl(const QString& url)
 void MVMainWindow::setMVFile(MVFile ff)
 {
     //important to do this first
-    this->setMLProxyUrl(d->m_mv_file.mlproxyUrl());
-    d->m_base_path = d->m_mv_file.basePath();
+    d->m_mv_file=ff;
 
-    task.log("MV version: " + d->m_mv_file.mvfile_version());
-
-    QString firings_path = d->m_mv_file.firingsPath();
-    if (!firings_path.isEmpty()) {
-        task.log("Setting firings path: " + firings_path);
-        d->m_firings_original.setPath(d->resolve_path(firings));
-    }
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
     d->m_control_panel_new->setTimeseriesChoices(timeseries_names);
@@ -367,26 +348,8 @@ void MVMainWindow::setMVFile(MVFile ff)
         d->m_current_timeseries_name=timeseries_names[0];
     }
 
-    {
-        double rate = d->m_mv_file.sampleRate();
-        task.log(QString("samplerate = %1").arg(rate));
-    }
-
-    {
-        QJsonObject obj0 = d->m_mv_file.viewOptions();
-        task.log("VIEW OPTIONS:");
-        task.log(QJsonDocument(obj0).toJson(QJsonDocument::Compact));
-        MVViewOptions opts = MVViewOptions::fromJsonObject(obj0);
-        d->m_control_panel_new->setViewOptions(opts);
-    }
-
-    {
-        QJsonObject obj0 = d->m_mv_file.eventFilter();
-        task.log("EVENT FILTER:");
-        task.log(QJsonDocument(obj0).toJson(QJsonDocument::Compact));
-        MVEventFilter filter = MVEventFilter::fromJsonObject(obj0);
-        d->m_control_panel_new->setEventFilter(filter);
-    }
+    d->m_control_panel_new->setViewOptions(d->m_mv_file.viewOptions());
+    d->m_control_panel_new->setEventFilter(d->m_mv_file.eventFilter());
 
     {
         QJsonObject ann0 = d->m_mv_file.annotations();
@@ -624,7 +587,7 @@ void MVMainWindowPrivate::start_shell_split_and_event_filter()
     m_calculator.stopComputation();
     m_calculator.m_evt_filter = m_control_panel_new->eventFilter();
     m_calculator.m_firings_original = m_firings_original;
-    m_calculator.m_mlproxy_url = m_mlproxy_url;
+    m_calculator.m_mv_file.mlproxyUrl() = m_mv_file.mlproxyUrl();
     m_calculator.startComputation();
 }
 
@@ -839,12 +802,12 @@ MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
     //X->setMscmdServerUrl(m_mscmdserver_url);
-    X->setMLProxyUrl(m_mlproxy_url);
+    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setChannelColors(m_channel_colors);
     DiskReadMda TT(resolve_path(current_timeseries_path()));
     X->setTimeseries(TT);
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
-    X->setSampleRate(m_samplerate);
+    X->setSampleRate(m_mv_file.sampleRate());
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
     X->setProperty("widget_type", "cluster_details");
     add_tab(X, QString("Details"));
@@ -858,7 +821,7 @@ void MVMainWindowPrivate::open_timeseries()
     X->setSampleRate(m_samplerate);
     X->setChannelColors(m_channel_colors);
     X->setProperty("widget_type", "mvtimeseries");
-    X->setMLProxyUrl(m_mlproxy_url);
+    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     add_tab(X, QString("Timeseries"));
     update_widget(X);
     /*
@@ -884,7 +847,7 @@ void MVMainWindowPrivate::open_clips()
 
     MVClipsWidget* X = new MVClipsWidget(m_view_agent);
     //X->setMscmdServerUrl(m_mscmdserver_url);
-    X->setMLProxyUrl(m_mlproxy_url);
+    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "clips");
     X->setProperty("ks", int_list_to_string_list(ks));
     /// TODO (LOW) more descriptive tab title in case of more than one
@@ -928,7 +891,7 @@ void MVMainWindowPrivate::open_pca_features()
     MVClusterWidget* X = new MVClusterWidget(m_view_agent);
     X->setFeatureMode("pca");
     X->setLabelColors(m_label_colors);
-    X->setMLProxyUrl(m_mlproxy_url);
+    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
     add_tab(X, QString("PCA features"));
@@ -963,7 +926,7 @@ void MVMainWindowPrivate::open_channel_features()
     MVClusterWidget* X = new MVClusterWidget(m_view_agent);
     X->setFeatureMode("channels");
     X->setLabelColors(m_label_colors);
-    X->setMLProxyUrl(m_mlproxy_url);
+    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
     X->setChannels(channels);
@@ -981,7 +944,7 @@ void MVMainWindowPrivate::open_spike_spray()
     }
     MVSpikeSprayView* X = new MVSpikeSprayView;
     X->setLabelColors(m_label_colors);
-    X->setMLProxyUrl(m_mlproxy_url);
+    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "spike_spray");
     X->setProperty("ks", int_list_to_string_list(ks));
     add_tab(X, QString("Spike Spray"));
@@ -1768,10 +1731,10 @@ QString MVMainWindowPrivate::resolve_path(QString path)
         return path;
     if (QFileInfo(path).isAbsolute())
         return path;
-    if (!m_base_path.isEmpty())
-        path = m_base_path + "/" + path;
-    if (!m_mlproxy_url.isEmpty()) {
-        return m_mlproxy_url + "/mdaserver/" + path;
+    if (!m_mv_file.basePath.isEmpty())
+        path = m_mv_file.basePath + "/" + path;
+    if (!m_mv_file.mlproxyUrl().isEmpty()) {
+        return m_mv_file.mlproxyUrl() + "/mdaserver/" + path;
     }
     if (!m_mv_file.path().isEmpty()) {
         return m_mv_file.path() + "/" + path;
@@ -1835,7 +1798,8 @@ void shell_split_and_event_filter_calculator::compute()
     }
 
     MT.setInputParameters(params);
-    MT.setMLProxyUrl(m_mlproxy_url);
+    //MT.setMscmdServerUrl(m_mscmdserver_url);
+    MT.setMLProxyUrl(m_mv_file.mlproxyUrl());
 
     QString firings_out = MT.makeOutputFilePath("firings_out");
     QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");
