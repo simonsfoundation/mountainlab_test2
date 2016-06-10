@@ -138,15 +138,6 @@ int main(int argc, char* argv[])
     //    //label_colors << brighten(colors00.value((j * num1) % num2),2);
     //    label_colors << colors00.value((j * num1) % num2);
     //}
-    printf("-------------------------------\n");
-    for (int j = 0; j < label_colors.count(); j++) {
-        QColor col = label_colors[j];
-        double r = col.red() * 1.0 / 255;
-        double g = col.green() * 1.0 / 255;
-        double b = col.blue() * 1.0 / 255;
-        printf("%.3f %.3f %.3f\n", r, g, b);
-    }
-    printf("-------------------------------\n");
 
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
