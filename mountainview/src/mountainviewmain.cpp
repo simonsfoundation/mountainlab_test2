@@ -93,6 +93,7 @@ void test_taskprogressview()
 
 QColor brighten(QColor col, int amount);
 QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors);
+QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColors);
 
 #include "multiscaletimeseries.h"
 #include "spikespywidget.h"
@@ -127,11 +128,12 @@ int main(int argc, char* argv[])
     for (int i = 0; i < color_strings.count(); i++)
         channel_colors << QColor(brighten(color_strings[i], 80));
 
-    int num1 = 1;
+    int num1 = 7;
     int num2 = 32;
-    QList<QColor> colors00 = generate_colors(Qt::gray, Qt::white, num2);
+    QList<QColor> colors00 = generate_colors_old(Qt::gray, Qt::white, num2);
     QList<QColor> label_colors;
     for (int j = 0; j < colors00.count(); j++) {
+        //label_colors << brighten(colors00.value((j * num1) % num2),2);
         label_colors << colors00.value((j * num1) % num2);
     }
 
@@ -347,13 +349,13 @@ QList<QColor> generate_colors_ahb(int n_in)
     for (int i = 0; i < n_in; i++) {
         ret << QColor(c[i][0] * 255, c[i][1] * 255, c[i][2] * 255);
     }
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
-    qDebug() << ret;
     return ret;
 }
 
 QList<QColor> generate_colors(const QColor& bg, const QColor& fg, int noColors)
 {
+    Q_UNUSED(bg)
+    Q_UNUSED(fg)
     return generate_colors_ahb(noColors);
 }
 
