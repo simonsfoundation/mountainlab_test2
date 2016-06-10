@@ -3,48 +3,39 @@
 ** Author(s): Jeremy Magland
 *******************************************************/
 
-#ifndef MVOVERVIEW2WIDGET_H
-#define MVOVERVIEW2WIDGET_H
+#ifndef MVMAINWINDOW_H
+#define MVMAINWINDOW_H
 
 #include <QWidget>
 #include "mda.h"
 #include <QTabWidget>
 #include "clustermerge.h"
+#include "mvfile.h"
 #include "mvutils.h"
 #include "mvviewagent.h"
 
-/** \class MVOverview2Widget
+/** \class MVMainWindow
  *  \brief The main window (for now) showing an overview of the results of sorting by providing a number of interactive and synchronized views.
  *
  *  Presents user with a rich set of views. Cross-correlograms, raw data, cluster details, rotatable 3D views, firing rate vs. time view, etc.
  */
 
-class MVOverview2WidgetPrivate;
-class MVOverview2Widget : public QWidget {
+class MVMainWindowPrivate;
+class MVMainWindow : public QWidget {
     Q_OBJECT
 public:
-    friend class MVOverview2WidgetPrivate;
-    MVOverview2Widget(MVViewAgent* view_agent, QWidget* parent = 0);
-    virtual ~MVOverview2Widget();
-    ///The path to the timeseries that was sorted. For example, raw, filtered, or pre-processed. Usually all three of these are set, so user can choose between them in dropdown selection box
-    void addTimeseriesPath(const QString& name, const QString& path);
-    ///The name of the timeseries being viewed... corresponds to name in addTimeseriesPath()
+    friend class MVMainWindowPrivate;
+    MVMainWindow(MVViewAgent* view_agent, QWidget* parent = 0);
+    virtual ~MVMainWindow();
     void setCurrentTimeseriesName(const QString& name);
-    ///Set the path to the results of sorting.
-    void setFiringsPath(const QString& firings);
-    ///The sample rate for the dataset
-    void setSampleRate(float freq);
-    ///Open the initial views
     void setDefaultInitialization();
-    ///Corresponds to MVFiringRateView::setEpochs()
     void setEpochs(const QList<Epoch>& epochs);
     void setMLProxyUrl(const QString& url);
     void setClusterMerge(ClusterMerge CM);
     void setChannelColors(const QList<QColor>& colors);
     void setLabelColors(const QList<QColor>& colors);
 
-    void loadMVFile(const QString& mv_fname);
-    void saveMVFile(const QString& mv_fname);
+    void setMVFile(MVFile mv_file);
 
 protected:
     void resizeEvent(QResizeEvent* evt);
@@ -66,15 +57,15 @@ slots:
     void slot_calculator_finished();
 
 private:
-    MVOverview2WidgetPrivate* d;
+    MVMainWindowPrivate* d;
 };
 
 /*
 class CustomTabWidget : public QTabWidget {
 	Q_OBJECT
 public:
-	MVOverview2Widget *q;
-	CustomTabWidget(MVOverview2Widget *q);
+    MVMainWindow *q;
+    CustomTabWidget(MVMainWindow *q);
 protected:
 	void mousePressEvent(QMouseEvent *evt);
 private slots:
@@ -85,4 +76,4 @@ private slots:
 };
 */
 
-#endif // MVOVERVIEW2WIDGET_H
+#endif // MVMAINWINDOW_H

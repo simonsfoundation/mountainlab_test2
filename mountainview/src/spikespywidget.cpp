@@ -4,7 +4,7 @@
 ** Created: 6/6/2016
 *******************************************************/
 
-#include "mvoverview2widget.h"
+#include "mvmainwindow.h"
 #include "mvtimeseriesview.h"
 #include "spikespywidget.h"
 #include "taskprogressview.h"
@@ -136,7 +136,7 @@ void SpikeSpyWidget::slot_open_mountainview()
         return;
     SpikeSpyViewData data = d->m_datas[current_view_index];
 
-    MVOverview2Widget* W = new MVOverview2Widget(d->m_view_agent);
+    MVMainWindow* W = new MVMainWindow(d->m_view_agent);
     W->setChannelColors(d->m_channel_colors);
     W->setLabelColors(d->m_label_colors);
     W->addTimeseriesPath("Timeseries", data.timeseries.path());

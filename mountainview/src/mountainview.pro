@@ -24,9 +24,8 @@ HEADERS += \
     mvcdfview.h \
     static_neuron_colors.h \
     mvutils.h \
-    mvoverview2widget.h \
+    mvmainwindow.h \
     correlationmatrixview.h \
-    mvoverview2widgetcontrolpanel.h \
     mvclusterdetailwidget.h \
     mvclipsview.h \
     mvclusterview.h \
@@ -60,7 +59,8 @@ HEADERS += \
     multiscaletimeseries.h \
     mvtimeseriesrendermanager.h \
     spikespywidget.h \
-    mvspikesprayview.h
+    mvspikesprayview.h \
+    mvfile.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -68,9 +68,8 @@ SOURCES += mountainviewmain.cpp \
     mvcdfview.cpp \
     static_neuron_colors.cpp \
     mvutils.cpp \
-    mvoverview2widget.cpp \
+    mvmainwindow.cpp \
     correlationmatrixview.cpp \
-    mvoverview2widgetcontrolpanel.cpp \
     mvclusterdetailwidget.cpp \
     mvclipsview.cpp \
     mvclusterview.cpp \
@@ -103,7 +102,8 @@ SOURCES += mountainviewmain.cpp \
     multiscaletimeseries.cpp \
     mvtimeseriesrendermanager.cpp \
     spikespywidget.cpp \
-    mvspikesprayview.cpp
+    mvspikesprayview.cpp \
+    mvfile.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

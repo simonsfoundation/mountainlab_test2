@@ -1,0 +1,24 @@
+#include <QApplication>
+#include <QDebug>
+#include <QWidget>
+#include "commandlineparams.h"
+#include "momainwindow.h"
+#include <QDesktopWidget>
+
+int main(int argc, char* argv[])
+{
+    QApplication a(argc, argv);
+
+    CLParams CLP = commandlineparams(argc, argv);
+
+    MOMainWindow W;
+    W.read("/tmp/example.mo");
+    W.setMinimumSize(800, 600);
+    W.show();
+    //QRect G=a.desktop()->geometry();
+    //W.setGeometry(G.right()-900,G.bottom()-700,800,500);
+
+    int ret = a.exec();
+
+    return ret;
+}

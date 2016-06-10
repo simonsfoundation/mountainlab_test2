@@ -9,11 +9,12 @@
 class FadingButton : public QToolButton {
 
 public:
-
     const int interval = 2000;
 
-    FadingButton(QWidget *parent = 0)
-        : QToolButton(parent), m_state(Hidden) {
+    FadingButton(QWidget* parent = 0)
+        : QToolButton(parent)
+        , m_state(Hidden)
+    {
         m_timer.setInterval(interval);
         m_timer.setSingleShot(true);
         QGraphicsOpacityEffect* eff = new QGraphicsOpacityEffect(this);
@@ -27,7 +28,7 @@ public:
         setAttribute(Qt::WA_Hover);
         m_anim = new QPropertyAnimation(eff, "opacity");
         m_anim->setDuration(250);
-        connect(m_anim, &QAbstractAnimation::finished, [this](){
+        connect(m_anim, &QAbstractAnimation::finished, [this]() {
             if (m_state == FadingIn) {
                 m_state = Shown;
             } else if (m_state == FadingOut) {
@@ -36,7 +37,8 @@ public:
         });
         installEventFilter(this);
     }
-    void fadeIn() {
+    void fadeIn()
+    {
         if (m_state == Hidden || m_state == FadingOut) {
             m_anim->setStartValue(0);
             m_anim->setEndValue(1);
@@ -45,7 +47,8 @@ public:
         }
         start();
     }
-    void fadeOut() {
+    void fadeOut()
+    {
         if (m_state == Shown || m_state == FadingIn) {
             m_anim->setStartValue(1);
             m_anim->setEndValue(0);
@@ -54,27 +57,38 @@ public:
         }
         stop();
     }
-    void forceStart() {
+    void forceStart()
+    {
         m_hovering = false;
         start();
     }
 
-    void start() {
+    void start()
+    {
         m_timer.start();
-
     }
-    void stop() {
+    void stop()
+    {
         m_timer.stop();
     }
-    bool isRunning() const { return m_timer.isActive(); }
-    bool isHovering() const { return m_hovering; }
+    bool isRunning() const
+    {
+        return m_timer.isActive();
+    }
+    bool isHovering() const
+    {
+        return m_hovering;
+    }
+
 protected:
-    bool eventFilter(QObject *o, QEvent *e) {
-        if (o != this) return QToolButton::eventFilter(o, e);
+    bool eventFilter(QObject* o, QEvent* e)
+    {
+        if (o != this)
+            return QToolButton::eventFilter(o, e);
 
         if (e->type() == QEvent::HoverEnter || e->type() == QEvent::HoverMove) {
             m_hovering = true;
-//            stop();
+            //            stop();
         } else if (e->type() == QEvent::HoverLeave) {
             m_hovering = false;
             start();
@@ -84,10 +98,14 @@ protected:
 
 private:
     QTimer m_timer;
-    QPropertyAnimation *m_anim;
+    QPropertyAnimation* m_anim;
     bool m_hovering = false;
-    enum { Hidden, FadingIn, Shown, FadingOut } m_state;
-
+    enum {
+        Hidden,
+        FadingIn,
+        Shown,
+        FadingOut
+    } m_state;
 };
 
 ToolButtonMenu::ToolButtonMenu(QObject* parent)
@@ -127,16 +145,13 @@ bool ToolButtonMenu::eventFilter(QObject* o, QEvent* e)
             FadingButton* tb = toolButton(w);
             tb->fadeIn();
             tb->start();
-        }
-        else if (e->type() == QEvent::HoverEnter || e->type() == QEvent::HoverMove) {
+        } else if (e->type() == QEvent::HoverEnter || e->type() == QEvent::HoverMove) {
             FadingButton* tb = toolButton(w);
             tb->fadeIn();
-        }
-        else if (e->type() == QEvent::HoverLeave) {
+        } else if (e->type() == QEvent::HoverLeave) {
             FadingButton* tb = toolButton(w);
             tb->fadeOut();
-        }
-        else if (e->type() == QEvent::Resize) {
+        } else if (e->type() == QEvent::Resize) {
             updateButtonPosition(w);
         }
     }
@@ -154,13 +169,12 @@ void ToolButtonMenu::updateButtonPosition(QWidget* w, QToolButton* tb)
                     sh.width(), sh.height());
 }
 
-FadingButton *ToolButtonMenu::toolButton(QWidget *w) const
+FadingButton* ToolButtonMenu::toolButton(QWidget* w) const
 {
     return m_widgets.value(w, Q_NULLPTR);
 }
 
-
-QWidget *ToolButtonMenu::widget(FadingButton *tb) const
+QWidget* ToolButtonMenu::widget(FadingButton* tb) const
 {
     return m_widgets.key(tb, Q_NULLPTR);
 }

@@ -11,7 +11,12 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QThread>
-#include <QTemporaryFile>
+
+#include <cachemanager.h>
+#include "textfile.h"
+#ifdef QT_GUI_LIB
+#include <QMessageBox>
+#endif
 
 QString cfp(const QString& path)
 {
@@ -109,3 +114,52 @@ bool thread_interrupt_requested()
 {
     return QThread::currentThread()->isInterruptionRequested();
 }
+
+
+
+bool curl_is_installed()
+{
+    int exit_code = system("curl --version");
+    return (exit_code == 0);
+}
+
+/// TODO handle this in a better way
+static QMap<QString, QString> s_http_get_text_curl_cache;
+
+QString http_get_text_curl(const QString& url)
+{
+    if (in_gui_thread()) {
+        if (s_http_get_text_curl_cache.contains(url)) {
+            qDebug() << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+            return s_http_get_text_curl_cache[url];
+        }
+    }
+    if (!curl_is_installed()) {
+        #ifdef QT_GUI_LIB
+        QMessageBox::critical(0, "Problem in http request", "Problem in http request. It appears that curl is not installed.");
+        #else
+        qWarning() << "There is no reason we should be calling http_get_text_curl in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
+        #endif
+        return "";
+    }
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile("",CacheManager::ShortTerm);
+    QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
+    int exit_code = system(cmd.toLatin1().data());
+    if (exit_code != 0) {
+        qWarning() << "Problem with system call: " + cmd;
+        QFile::remove(tmp_fname);
+        #ifdef QT_GUI_LIB
+        QMessageBox::critical(0, "Problem downloading text file", "Problem in http request. Are you connected to the internet?");
+        #else
+        qWarning() << "There is no reason we should be calling http_get_text_curl * in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
+        #endif
+        return "";
+    }
+    QString ret = read_text_file(tmp_fname);
+    QFile::remove(tmp_fname);
+    if (in_gui_thread()) {
+        s_http_get_text_curl_cache[url] = ret;
+    }
+    return ret;
+}
+

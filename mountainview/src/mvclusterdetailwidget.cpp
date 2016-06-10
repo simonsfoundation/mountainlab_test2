@@ -241,7 +241,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
     ToolButtonMenu* MM = new ToolButtonMenu(this);
     MM->setOffset(QSize(4, 4));
     QToolButton* tb = MM->activateOn(this);
-    tb->setIconSize(QSize(24, 24));
+    tb->setIconSize(QSize(48, 48));
     QIcon icon(":images/gear.png");
     tb->setIcon(icon);
     {

@@ -17,7 +17,7 @@
 #include "diskarraymodel_new.h"
 #include "histogramview.h"
 #include "mvlabelcomparewidget.h"
-#include "mvoverview2widget.h"
+#include "mvmainwindow.h"
 #include "sstimeserieswidget.h"
 #include "sstimeseriesview.h"
 #include "mvclusterwidget.h"
@@ -85,7 +85,7 @@ void test_taskprogressview()
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-//void run_export_instructions(MVOverview2Widget* W, const QStringList& instructions);
+//void run_export_instructions(MVMainWindow* W, const QStringList& instructions);
 
 /// TODO (LOW) provide mountainview usage information
 /// TODO (LOW) auto correlograms for selected clusters
@@ -97,6 +97,7 @@ QList<QColor> generate_colors_ahb();
 QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColors);
 
 #include "multiscaletimeseries.h"
+#include "mvfile.h"
 #include "spikespywidget.h"
 #include "taskprogressview.h"
 int main(int argc, char* argv[])
@@ -149,7 +150,7 @@ int main(int argc, char* argv[])
             unit_test_remote_read_mda_2(arg3);
             return 0;
         } else if (arg2 == "taskprogressview") {
-            MVOverview2Widget* W = new MVOverview2Widget(new MVViewAgent); //not that the view agent does not get deleted. :(
+            MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
             int W0 = 1400, H0 = 1000;
@@ -173,6 +174,12 @@ int main(int argc, char* argv[])
 
     QString mode = CLP.named_parameters.value("mode", "overview2").toString();
     if (mode == "overview2") {
+
+        MVFile mv_file;
+        if (!mv_fname.isEmpty()) {
+            mv_file.read(mv_fname);
+        }
+
         printf("overview2...\n");
         QString raw_path = CLP.named_parameters["raw"].toString();
         QString pre_path = CLP.named_parameters["pre"].toString();
@@ -181,66 +188,46 @@ int main(int argc, char* argv[])
         double samplerate = CLP.named_parameters.value("samplerate", 20000).toDouble();
         QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
-        MVOverview2Widget* W = new MVOverview2Widget(new MVViewAgent); //not that the view agent does not get deleted. :(
+        QString mlproxy_url=CLP.named_parameters.value("mlproxy_url", "").toString();
+        MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
         W->setChannelColors(channel_colors);
         W->setLabelColors(label_colors);
-        W->setMLProxyUrl(CLP.named_parameters.value("mlproxy_url", "").toString());
-        {
-            W->setWindowTitle(window_title);
-            W->show();
-            //W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
 
-            int W0 = 1400, H0 = 1000;
-            QRect geom = QApplication::desktop()->geometry();
-            if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
-                //W->showMaximized();
-                W->resize(geom.width() - 100, geom.height() - 100);
-            } else {
-                W->resize(W0, H0);
-            }
-
-            W->move(QApplication::desktop()->screen()->rect().bottomRight() - QPoint(W0, H0));
-
-            qApp->processEvents();
+        if (!firings_path.isEmpty()) {
+            mv_file.setFiringsPath(firings_path);
         }
-
-        if (!mv_fname.isEmpty()) {
-            W->loadMVFile(mv_fname);
+        if (samplerate) {
+            mv_file.setSampleRate(samplerate);
         }
 
         if (!pre_path.isEmpty()) {
-            W->addTimeseriesPath("Preprocessed Data", pre_path);
+            mv_file.addTimeseriesPath("Preprocessed Data", pre_path);
         }
         if (!filt_path.isEmpty()) {
-            W->addTimeseriesPath("Filtered Data", filt_path);
+            mv_file.addTimeseriesPath("Filtered Data", filt_path);
         }
         if (!raw_path.isEmpty()) {
-            W->addTimeseriesPath("Raw Data", raw_path);
+            mv_file.addTimeseriesPath("Raw Data", raw_path);
         }
 
-
-        if (!epochs_path.isEmpty()) {
-            QList<Epoch> epochs = read_epochs(epochs_path);
-            W->setEpochs(epochs);
+        if (!mlproxy_url.isEmpty()) {
+            mv_file.setMlproxyUrl(mlproxy_url);
         }
+
         if (window_title.isEmpty())
             window_title = pre_path;
         if (window_title.isEmpty())
             window_title = filt_path;
         if (window_title.isEmpty())
             window_title = raw_path;
-
-
-        if (!firings_path.isEmpty()) {
-            W->setFiringsPath(firings_path);
-        }
-
-        if (samplerate) {
-            W->setSampleRate(samplerate);
-        }
+        W->setWindowTitle(window_title);
+        W->setMinimumSize(1000, 800);
+        W->show();
 
         W->setDefaultInitialization();
+        a.processEvents();
 
+        W->setMVFile(mv_file);
     } else if (mode == "spikespy") {
         printf("spikespy...\n");
         QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
@@ -264,8 +251,9 @@ int main(int argc, char* argv[])
             W->addView(view);
         }
         W->show();
+        W->setMinimumSize(1000, 800);
         W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
-        W->resize(1800, 1200);
+        //W->resize(1800, 1200);
 
         /*
         SSTimeSeriesWidget* W = new SSTimeSeriesWidget;
