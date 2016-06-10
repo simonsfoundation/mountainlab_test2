@@ -39,8 +39,10 @@ function X=ms_whiten_XXt(X)
 % the right way to do it if only care about 8 digit acc.
 [M,N]=size(X);
 [V,D] = eig(X*X');  % ahb, since symm
-D = diag(D);
-X=(sqrt(N-1)*V*diag(sqrt(1./D))*V')*X;   % ahb rearranged for speed
+D = diag(D); j = D>1e-8;    % ahb regularization
+D(j)=1./sqrt(D(j));             % regularized Lambda^{-1/2}
+%D = D*(M/sum(j));           % scale so unit variance when killed eigvals
+X=(sqrt(N-1)*V*diag(D)*V')*X;   % ahb rearranged for speed
 end
 
 function X=ms_whiten_mscmd(X)

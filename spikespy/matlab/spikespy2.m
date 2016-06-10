@@ -130,19 +130,30 @@ end;
 ret=[path0,'/',efficient_hash(X),'-',str,'.mda'];
 end
 
-function ret=efficient_hash(X)
+function h=local_hash(str)
+% return hex string encoding a matlab variable, plain method 3rd-party code.
+h = DataHash(str,struct('Method','MD5'));
+end
 
-%we don't want to run out of memory
-interval=ceil(length(X(:))/10000000);
-
-tic;
-str='';
-for j=1:interval
-	tmp=DataHash(X(j:interval:end),struct('Method','MD5'));
-	str=[str,tmp];
-end;
-
-ret=DataHash(str,struct('Method','MD5'));
+function h=efficient_hash(X)
+% hex string encoding a huge array in RAM, using hack speedups.
+% idea is it's very unlikely X could change without changing the output h.
+% AHB 6/10/16
+tic
+s = '';
+s = [s, local_hash(sum(X,2))];   % channel sums
+s = [s, local_hash(X(:,1e3))];   % start of data
+s = [s, local_hash(X(:,end-1e3:end))];   % end of data
+[M N] = size(X);
+y = X(1:(10*M+1):end);      % stride so hits each channel every 10M t-pts
+off = 0;           % index offset
+big = 1e7;         % max size to send to local_hash (uses RAM)
+for i=1:ceil(numel(y)/big)        % hash y in contiguous chunks if needed
+  inds = off+1:min(numel(y),off+big);
+  s = [s, local_hash(y(inds))];
+  off = off+big;
+end
+h = DataHash(s,struct('Method','MD5'));
 elapsed=toc;
 if (elapsed>0.5)
 	fprintf('Time to compute the md5 sum: %.2f seconds\n',elapsed);
