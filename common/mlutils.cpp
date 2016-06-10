@@ -11,6 +11,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QThread>
+#include <QTemporaryFile>
 
 QString cfp(const QString& path)
 {
@@ -66,7 +67,8 @@ void mkdir_if_doesnt_exist(const QString& path)
 
 QString mlTmpPath()
 {
-    QString ret = mountainlabBasePath() + "/tmp";
+    //QString ret = mountainlabBasePath() + "/tmp";
+    QString ret = QDir::tempPath() + "/mountainlab";
     mkdir_if_doesnt_exist(ret);
     return ret;
 }
@@ -89,19 +91,18 @@ QString resolve_path(QString basepath, QString path)
 {
     if (QFileInfo(path).isRelative()) {
         return basepath + "/" + path;
-    }
-    else
+    } else
         return path;
 }
 
 bool in_gui_thread()
 {
-    #ifdef QT_GUI_LIB
+#ifdef QT_GUI_LIB
     return (QThread::currentThread() == QCoreApplication::instance()->thread());
-    #else
+#else
     //not even a gui app
     return false;
-    #endif
+#endif
 }
 
 bool thread_interrupt_requested()
