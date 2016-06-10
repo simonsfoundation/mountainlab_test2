@@ -36,6 +36,7 @@ public:
     void setLabelColors(const QList<QColor>& colors);
 
     void setMVFile(MVFile mv_file);
+    void writeMVFile(const QString& mv_fname);
 
 protected:
     void resizeEvent(QResizeEvent* evt);

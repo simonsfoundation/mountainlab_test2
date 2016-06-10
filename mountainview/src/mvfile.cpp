@@ -21,14 +21,14 @@ MVFile::MVFile()
     d = new MVFilePrivate;
     d->q = this;
     d->m_obj["mvfile_version"] = "0.1";
-    d->m_obj=other.d->m_obj;
-    d->m_path=other.d->m_path;
 }
 
-MVFile::MVFile(const MVFile &other)
+MVFile::MVFile(const MVFile &other) : QObject()
 {
     d = new MVFilePrivate;
     d->q = this;
+    d->m_obj=other.d->m_obj;
+    d->m_path=other.d->m_path;
 }
 
 MVFile::~MVFile()
@@ -95,6 +95,8 @@ double MVFile::sampleRate() const
 
 QString MVFile::mlproxyUrl() const
 {
+    qDebug() << QJsonDocument(d->m_obj).toJson();
+    qDebug() << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << d->m_obj["mlproxy_url"].toString();
     return d->m_obj["mlproxy_url"].toString();
 }
 

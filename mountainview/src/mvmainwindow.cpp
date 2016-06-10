@@ -60,7 +60,7 @@ public:
     //input
     MVEventFilter m_evt_filter;
     DiskReadMda m_firings_original;
-    QString m_mv_file;
+    QString m_mlproxy_url;
 
     //output
     DiskReadMda m_firings;
@@ -338,13 +338,13 @@ void MVMainWindow::setMscmdServerUrl(const QString& url)
 
 void MVMainWindow::setMVFile(MVFile ff)
 {
-    d->m_mv_file=ff;
+    d->m_mv_file = ff;
 
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
     d->m_control_panel_new->setTimeseriesChoices(timeseries_names);
     if (!timeseries_names.isEmpty()) {
-        d->m_current_timeseries_name=timeseries_names[0];
+        d->m_current_timeseries_name = timeseries_names[0];
     }
 
     d->m_control_panel_new->setViewOptions(MVViewOptions::fromJsonObject(d->m_mv_file.viewOptions()));
@@ -585,7 +585,7 @@ void MVMainWindowPrivate::start_shell_split_and_event_filter()
     m_calculator.stopComputation();
     m_calculator.m_evt_filter = m_control_panel_new->eventFilter();
     m_calculator.m_firings_original = m_firings_original;
-    m_calculator.m_mv_file.mlproxyUrl() = m_mv_file.mlproxyUrl();
+    m_calculator.m_mlproxy_url = m_mv_file.mlproxyUrl();
     m_calculator.startComputation();
 }
 
@@ -800,6 +800,7 @@ MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
     //X->setMscmdServerUrl(m_mscmdserver_url);
+    qDebug() << "###############################" << m_mv_file.mlproxyUrl();
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setChannelColors(m_channel_colors);
     DiskReadMda TT(resolve_path(current_timeseries_path()));
@@ -816,7 +817,7 @@ MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 void MVMainWindowPrivate::open_timeseries()
 {
     MVTimeSeriesView* X = new MVTimeSeriesView(m_view_agent);
-    X->setSampleRate(m_samplerate);
+    X->setSampleRate(m_mv_file.sampleRate());
     X->setChannelColors(m_channel_colors);
     X->setProperty("widget_type", "mvtimeseries");
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
@@ -1130,11 +1131,11 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
     if (widget_type == "auto_correlograms") {
         TaskProgress task("update auto correlograms");
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
-        WW->setSampleRate(m_samplerate);
+        WW->setSampleRate(m_mv_file.sampleRate());
         WW->setMaxDtTimepoints(cc_max_dt_timepoints());
         WW->setColors(m_colors);
         WW->setFirings(m_firings);
-        task.log(QString("m_samplerate = %1").arg(m_samplerate));
+        task.log(QString("m_samplerate = %1").arg(m_mv_file.sampleRate()));
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         QStringList text_labels;
         QList<int> labels1, labels2;
@@ -1153,7 +1154,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         int k = W->property("kk").toInt();
         WW->setColors(m_colors);
-        WW->setSampleRate(m_samplerate);
+        WW->setSampleRate(m_mv_file.sampleRate());
         WW->setMaxDtTimepoints(cc_max_dt_timepoints());
         WW->setFirings(m_firings);
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
@@ -1175,7 +1176,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         WW->setColors(m_colors);
-        WW->setSampleRate(m_samplerate);
+        WW->setSampleRate(m_mv_file.sampleRate());
         WW->setMaxDtTimepoints(cc_max_dt_timepoints());
         WW->setFirings(m_firings);
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
@@ -1365,7 +1366,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
             firings2.setValue(amplitudes[i], 3, i);
         }
         WW->setFirings(firings2);
-        WW->setSampleRate(m_samplerate);
+        WW->setSampleRate(m_mv_file.sampleRate());
         WW->setEpochs(m_epochs);
     } else if (widget_type == "timeseries") {
         SSTimeSeriesWidget* WW = (SSTimeSeriesWidget*)W;
@@ -1644,7 +1645,7 @@ void MVMainWindowPrivate::set_progress(QString title, QString text, float frac)
 long MVMainWindowPrivate::cc_max_dt_timepoints()
 {
     //return (int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
-    return m_control_panel_new->viewOptions().cc_max_dt_msec * m_samplerate / 1000;
+    return m_control_panel_new->viewOptions().cc_max_dt_msec * m_mv_file.sampleRate() / 1000;
 }
 
 class DownloadComputer : public ComputationThread {
@@ -1729,8 +1730,8 @@ QString MVMainWindowPrivate::resolve_path(QString path)
         return path;
     if (QFileInfo(path).isAbsolute())
         return path;
-    if (!m_mv_file.basePath.isEmpty())
-        path = m_mv_file.basePath + "/" + path;
+    if (!m_mv_file.basePath().isEmpty())
+        path = m_mv_file.basePath() + "/" + path;
     if (!m_mv_file.mlproxyUrl().isEmpty()) {
         return m_mv_file.mlproxyUrl() + "/mdaserver/" + path;
     }
@@ -1742,7 +1743,7 @@ QString MVMainWindowPrivate::resolve_path(QString path)
 
 QString MVMainWindowPrivate::current_timeseries_path()
 {
-    return m_timeseries_paths.value(m_control_panel_new->viewOptions().timeseries);
+    return m_mv_file.timeseriesPath(m_control_panel_new->viewOptions().timeseries);
 }
 
 QVariant MVMainWindowPrivate::get_cluster_attribute(int k, QString attr)
@@ -1797,7 +1798,7 @@ void shell_split_and_event_filter_calculator::compute()
 
     MT.setInputParameters(params);
     //MT.setMscmdServerUrl(m_mscmdserver_url);
-    MT.setMLProxyUrl(m_mv_file.mlproxyUrl());
+    MT.setMLProxyUrl(m_mlproxy_url);
 
     QString firings_out = MT.makeOutputFilePath("firings_out");
     QString original_cluster_numbers_out = MT.makeOutputFilePath("original_cluster_numbers");

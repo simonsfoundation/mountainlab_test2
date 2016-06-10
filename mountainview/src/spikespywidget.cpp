@@ -139,9 +139,11 @@ void SpikeSpyWidget::slot_open_mountainview()
     MVMainWindow* W = new MVMainWindow(d->m_view_agent);
     W->setChannelColors(d->m_channel_colors);
     W->setLabelColors(d->m_label_colors);
-    W->addTimeseriesPath("Timeseries", data.timeseries.path());
-    W->setFiringsPath(data.firings.path());
-    W->setSampleRate(d->m_samplerate);
+    MVFile ff;
+    ff.addTimeseriesPath("Timeseries", data.timeseries.path());
+    ff.setFiringsPath(data.firings.path());
+    ff.setSampleRate(d->m_samplerate);
+    W->setMVFile(ff);
     W->setDefaultInitialization();
     W->show();
     W->setGeometry(this->geometry().adjusted(50, 50, 50, 50));

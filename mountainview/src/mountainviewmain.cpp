@@ -209,7 +209,6 @@ int main(int argc, char* argv[])
         if (!raw_path.isEmpty()) {
             mv_file.addTimeseriesPath("Raw Data", raw_path);
         }
-
         if (!mlproxy_url.isEmpty()) {
             mv_file.setMlproxyUrl(mlproxy_url);
         }
