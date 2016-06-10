@@ -130,12 +130,21 @@ int main(int argc, char* argv[])
 
     int num1 = 7;
     int num2 = 32;
-    QList<QColor> colors00 = generate_colors_old(Qt::gray, Qt::white, num2);
+    QList<QColor> colors00 = generate_colors(Qt::gray, Qt::white, num2);
     QList<QColor> label_colors;
     for (int j = 0; j < colors00.count(); j++) {
         //label_colors << brighten(colors00.value((j * num1) % num2),2);
         label_colors << colors00.value((j * num1) % num2);
     }
+    printf("-------------------------------\n");
+    for (int j=0; j<label_colors.count(); j++) {
+        QColor col=label_colors[j];
+        double r=col.red()*1.0/255;
+        double g=col.green()*1.0/255;
+        double b=col.blue()*1.0/255;
+        printf("%.3f %.3f %.3f\n",r,g,b);
+    }
+    printf("-------------------------------\n");
 
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
@@ -314,7 +323,7 @@ QList<QColor> generate_colors_ahb(int n_in)
     int n = n_in;
     float c[n][3], t, x;
     float grey = 0.6, sat = 0.65, bri = 0.7; // adj params
-    float dummy;
+    //float dummy;
 
     c[n - 1][0] = grey;
     c[n - 1][1] = grey;
@@ -328,7 +337,9 @@ QList<QColor> generate_colors_ahb(int n_in)
         t = 6.0 * i / n;
         t = t + 0.2 * sinf(2.0 * M_PI / 3.0 * (t - 2.5));
         for (int j = 0; j < 3; ++j) {
-            t = 6.0 * modff(t / 6.0, &dummy); // does mod by 6
+            while (t<0) t+=6.0;
+            while (t>6.0) t-=6.0;
+            //t = 6.0 * modff(t / 6.0, &dummy); // does mod by 6
             x = 2.0 - fabsf(t - 3.0);
             if (x < 0)
                 x = 0;
