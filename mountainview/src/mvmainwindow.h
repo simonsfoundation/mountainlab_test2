@@ -44,11 +44,9 @@ protected:
 
 signals:
 
-public
-slots:
+public slots:
 
-private
-slots:
+private slots:
     void slot_control_panel_user_action(QString str);
     void slot_auto_correlogram_activated();
     //void slot_templates_clicked();
@@ -56,6 +54,8 @@ slots:
     //void slot_cross_correlogram_computer_finished();
     void slot_update_buttons();
     void slot_calculator_finished();
+    void slot_action_move_to_other_tab_widget();
+    void slot_pop_out_widget();
 
 private:
     MVMainWindowPrivate* d;

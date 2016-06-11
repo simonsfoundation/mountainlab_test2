@@ -114,20 +114,19 @@ void MVCrossCorrelogramsWidget2::setLabelPairs(const QList<int>& labels1, const 
 void MVCrossCorrelogramsWidget2::setColors(const QMap<QString, QColor>& colors)
 {
     d->m_colors = colors;
-    foreach(HistogramView * V, d->m_histogram_views)
-    {
+    foreach (HistogramView* V, d->m_histogram_views) {
         V->setColors(d->m_colors);
     }
 }
 
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach(int a, S1)
-    if (!S2.contains(a))
-        return false;
-    foreach(int a, S2)
-    if (!S1.contains(a))
-        return false;
+    foreach (int a, S1)
+        if (!S2.contains(a))
+            return false;
+    foreach (int a, S2)
+        if (!S1.contains(a))
+            return false;
     return true;
 }
 
@@ -459,12 +458,14 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
         int index = HV->property("index").toInt();
         if (m_labels2.value(index) == m_view_agent->currentCluster()) {
             HV->setCurrent(true);
-        } else {
+        }
+        else {
             HV->setCurrent(false);
         }
         if (selected_clusters.contains(m_labels2.value(index))) {
             HV->setSelected(true);
-        } else {
+        }
+        else {
             HV->setSelected(false);
         }
     }
@@ -479,7 +480,8 @@ void MVCrossCorrelogramsWidget2Private::start_computation()
     m_computer.max_dt = m_max_dt;
     if (m_view_agent) {
         m_computer.cluster_merge = m_view_agent->clusterMerge();
-    } else {
+    }
+    else {
         m_computer.cluster_merge.clear();
     }
     m_computer.startComputation();
