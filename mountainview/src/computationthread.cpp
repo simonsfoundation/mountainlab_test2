@@ -118,7 +118,8 @@ void ComputationThread::run()
         d->m_is_finished = true;
         d->m_is_computing = false;
         emit computationFinished();
-    } else {
+    }
+    else {
     }
     if (d->m_delete_on_complete)
         this->deleteLater();

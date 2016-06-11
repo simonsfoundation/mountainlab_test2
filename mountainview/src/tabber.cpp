@@ -14,7 +14,7 @@ public:
     Tabber* q;
     QMap<QString, TabberTabWidget*> m_tab_widgets; //the tab widgets we are handling
     QList<TabberWidget> m_widgets; //the TabberWidget structs of widgets within the tab widgets
-    QString m_current_container_name; //the name of the last selected container
+    QString m_current_container_name; //the name of the last selected container -- empty means floating
 
     ///Put the widget in the specified tab widget (removing from existing tab widget if necessary)
     void put_widget_in_container(QString container_name, QWidget* W);
@@ -49,7 +49,9 @@ TabberTabWidget* Tabber::createTabWidget(const QString& container_name)
     connect(TW, SIGNAL(tabCloseRequested(int)), this, SLOT(slot_tab_close_requested(int)));
     connect(TW, SIGNAL(tabBarClicked(int)), this, SLOT(slot_tab_bar_clicked(int)));
     connect(TW, SIGNAL(tabBarDoubleClicked(int)), this, SLOT(slot_tab_bar_double_clicked(int)));
-    d->m_current_container_name = container_name;
+    if (!container_name.isEmpty()) {
+        d->m_current_container_name = container_name;
+    }
     return TW;
 }
 
@@ -102,6 +104,24 @@ QList<QWidget*> Tabber::allWidgets()
     return ret;
 }
 
+void Tabber::moveWidgetToOtherContainer(QWidget* W)
+{
+    TabberWidget* X = d->find_tabber_widget(W);
+    if (!X)
+        return;
+    QString cname = X->current_container_name;
+    QString cname2 = d->find_other_container_name(cname);
+    d->put_widget_in_container(cname2, W);
+}
+
+void Tabber::popOutWidget(QWidget* W)
+{
+    TabberWidget* X = d->find_tabber_widget(W);
+    if (!X)
+        return;
+    d->put_widget_in_container("", W);
+}
+
 void Tabber::slot_tab_close_requested(int index)
 {
     Q_UNUSED(index)
@@ -130,12 +150,7 @@ void Tabber::slot_tab_bar_double_clicked(int index)
     QWidget* W = TW->widget(index);
     if (!W)
         return;
-    TabberWidget* X = d->find_tabber_widget(W);
-    if (!X)
-        return;
-    QString cname = X->current_container_name;
-    QString cname2 = d->find_other_container_name(cname);
-    d->put_widget_in_container(cname2, W);
+    moveWidgetToOtherContainer(W);
 }
 
 void Tabber::slot_widget_destroyed(QObject* obj)
@@ -155,17 +170,25 @@ void TabberPrivate::put_widget_in_container(QString container_name, QWidget* W)
         if (index >= 0) {
             m_tab_widgets[container_name]->setCurrentIndex(index);
         }
-    } else {
+    }
+    else {
         if (!X->current_container_name.isEmpty()) {
-            //fix this.... we need to put the widget into a new floating container!
+            /// TODO we need to put the widget into a new floating container!
+            QPoint position = W->mapToGlobal(W->pos());
             int index = find_widget_index_in_container(X->current_container_name, X->widget);
             if (index < 0)
                 return;
             m_tab_widgets[X->current_container_name]->removeTab(index);
+
+            W->setParent(0);
+            W->show();
+            W->move(position);
         }
     }
     X->current_container_name = container_name;
-    m_current_container_name = container_name;
+    if (!container_name.isEmpty()) {
+        m_current_container_name = container_name;
+    }
 }
 
 TabberWidget* TabberPrivate::find_tabber_widget(QWidget* W)
@@ -213,8 +236,9 @@ bool TabberPrivate::contains_widget(QWidget* W)
 QString TabberPrivate::find_other_container_name(QString name)
 {
     QStringList keys = m_tab_widgets.keys();
-    foreach(QString str, keys)
-    {
+    if (name.isEmpty())
+        return keys.value(0);
+    foreach (QString str, keys) {
         if (str != name)
             return str;
     }
