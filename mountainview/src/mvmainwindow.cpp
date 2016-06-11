@@ -50,6 +50,7 @@
 #include <QAbstractButton>
 #include <QSettings>
 #include <QScrollArea>
+#include <toolbuttonmenu.h>
 #include "textfile.h"
 
 /// TODO put styles in central place?
@@ -114,6 +115,7 @@ public:
     void update_firing_event_views();
     void start_shell_split_and_event_filter();
     void add_tab(QWidget* W, QString label);
+    void set_tool_button_menu(QWidget *X);
 
     MVCrossCorrelogramsWidget2* open_auto_correlograms();
     MVCrossCorrelogramsWidget2* open_cross_correlograms(int k);
@@ -728,6 +730,17 @@ void MVMainWindowPrivate::add_tab(QWidget* W, QString label)
     W->setProperty("tab_label", label); //won't be needed in future, once Tabber is fully implemented
 }
 
+void MVMainWindowPrivate::set_tool_button_menu(QWidget *X)
+{
+    X->setContextMenuPolicy(Qt::ActionsContextMenu);
+    ToolButtonMenu* MM = new ToolButtonMenu(X);
+    MM->setOffset(QSize(4, 4));
+    QToolButton* tb = MM->activateOn(X);
+    tb->setIconSize(QSize(48, 48));
+    QIcon icon(":images/gear.png");
+    tb->setIcon(icon);
+}
+
 MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_auto_correlograms()
 {
     MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
@@ -794,6 +807,7 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlogra
 MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
+    set_tool_button_menu(X);
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setChannelColors(m_channel_colors);
     DiskReadMda TT(current_timeseries_path());
@@ -1124,6 +1138,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
     if (widget_type == "auto_correlograms") {
         TaskProgress task("update auto correlograms");
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
+        set_tool_button_menu(WW);
         WW->setSampleRate(m_mv_file.sampleRate());
         WW->setMaxDtTimepoints(cc_max_dt_timepoints());
         WW->setColors(m_colors);
@@ -1145,6 +1160,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         //WW->updateWidget();
     } else if (widget_type == "cross_correlograms") {
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
+        set_tool_button_menu(WW);
         int k = W->property("kk").toInt();
         WW->setColors(m_colors);
         WW->setSampleRate(m_mv_file.sampleRate());
@@ -1167,6 +1183,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         //WW->updateWidget();
     } else if (widget_type == "matrix_of_cross_correlograms") {
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
+        set_tool_button_menu(WW);
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         WW->setColors(m_colors);
         WW->setSampleRate(m_mv_file.sampleRate());

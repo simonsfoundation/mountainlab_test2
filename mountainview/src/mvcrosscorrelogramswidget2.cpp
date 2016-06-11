@@ -11,6 +11,7 @@
 #include "mvutils.h"
 #include "taskprogress.h"
 
+#include <QAction>
 #include <QGridLayout>
 #include <QList>
 #include <QPainter>
@@ -86,6 +87,12 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
     d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
 
     this->setFocusPolicy(Qt::StrongFocus);
+
+    {
+        QAction* a = new QAction("Export image", this);
+        this->addAction(a);
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_export_image()));
+    }
 
     connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
 }

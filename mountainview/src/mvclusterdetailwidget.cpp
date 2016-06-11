@@ -237,13 +237,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
 
     connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
 
-    this->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ToolButtonMenu* MM = new ToolButtonMenu(this);
-    MM->setOffset(QSize(4, 4));
-    QToolButton* tb = MM->activateOn(this);
-    tb->setIconSize(QSize(48, 48));
-    QIcon icon(":images/gear.png");
-    tb->setIcon(icon);
     {
         QAction* a = new QAction("Export image", this);
         this->addAction(a);
