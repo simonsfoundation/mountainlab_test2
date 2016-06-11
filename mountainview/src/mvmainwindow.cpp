@@ -578,7 +578,7 @@ void MVMainWindow::slot_details_template_activated()
 void MVMainWindow::slot_update_buttons()
 {
     //bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
-    /// TODO restore this has_peaks without accessing m_firings in gui thread
+    /// TODO (0.9.1) restore this has_peaks without accessing m_firings in gui thread
     bool has_peaks = true;
     bool something_selected = (!d->m_view_agent->selectedClusters().isEmpty());
 
@@ -781,13 +781,16 @@ void MVMainWindowPrivate::set_tool_button_menu(QWidget* X)
     QIcon icon(":images/gear.png");
     tb->setIcon(icon);
 
+    /// TODO (LOW) add separator action
     {
+        /// TODO (LOW) change text to "Pop in" after popped out (slot will be same)
         QAction* a = new QAction("Move to other tab widget", X);
         QObject::connect(a, SIGNAL(triggered(bool)), q, SLOT(slot_action_move_to_other_tab_widget()));
         /// Witold, I'd really like to insert this at index zero, but the qt api makes that a bit annoying because i need to find the first QAction*, which may not exist. Pls help.
         X->addAction(a);
     }
     {
+        /// TODO (LOW) disable action when popped out
         QAction* a = new QAction("Pop out", X);
         QObject::connect(a, SIGNAL(triggered(bool)), q, SLOT(slot_pop_out_widget()));
         X->addAction(a);

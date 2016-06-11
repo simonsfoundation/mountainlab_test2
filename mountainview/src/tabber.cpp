@@ -173,7 +173,6 @@ void TabberPrivate::put_widget_in_container(QString container_name, QWidget* W)
     }
     else {
         if (!X->current_container_name.isEmpty()) {
-            /// TODO we need to put the widget into a new floating container!
             QPoint position = W->mapToGlobal(W->pos());
             int index = find_widget_index_in_container(X->current_container_name, X->widget);
             if (index < 0)
