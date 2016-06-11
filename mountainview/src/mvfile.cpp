@@ -99,8 +99,6 @@ double MVFile::sampleRate() const
 
 QString MVFile::mlproxyUrl() const
 {
-    qDebug() << QJsonDocument(d->m_obj).toJson();
-    qDebug() << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << d->m_obj["mlproxy_url"].toString();
     return d->m_obj["mlproxy_url"].toString();
 }
 

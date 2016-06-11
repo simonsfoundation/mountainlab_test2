@@ -1,5 +1,7 @@
 console.log('Running mbserver...');
 
+/// TODO RENAME mbserver to moserver
+
 //// requires
 var	url=require('url');
 var http=require('http');
@@ -39,7 +41,7 @@ http.createServer(function (REQ, RESP) {
 		var query=url_parts.query;
 		var method=query.a||'';
 		if (method=="readJson") {
-			/// TODO this needs to be made secure
+			/// TODO this needs to be made secure -- only allow extension = .mo?
 			var obj=safe_read_json_file(mbserver_base_path+'/'+path); 
 			send_json_response(obj);
 		}

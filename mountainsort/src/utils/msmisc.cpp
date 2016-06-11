@@ -193,6 +193,7 @@ QString http_get_binary_file_curl(const QString& url)
     return tmp_fname;
 }
 
+/*
 bool curl_is_installed()
 {
     int exit_code = system("curl --version");
@@ -237,6 +238,7 @@ QString http_get_text_curl(const QString& url)
     }
     return ret;
 }
+*/
 
 #ifdef QT_GUI_LIB
 QString http_get_binary_file(const QString& url)

@@ -10,6 +10,7 @@ var mlproxy_port=cfg.mlproxy_listen_port;
 var mdaserver_port=cfg.mdaserver_listen_port;
 var mscmdserver_port=cfg.mscmdserver_listen_port;
 var mbserver_port=cfg.mbserver_listen_port;
+var moserver_port=cfg.moserver_listen_port;
 var mpserver_port=cfg.mpserver_listen_port;
 
 var proxy = httpProxy.createProxyServer({});

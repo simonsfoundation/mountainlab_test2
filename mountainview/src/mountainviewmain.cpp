@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
         QString filt_path = CLP.named_parameters["filt"].toString();
         QString firings_path = CLP.named_parameters["firings"].toString();
         double samplerate = CLP.named_parameters.value("samplerate", 20000).toDouble();
-        QString epochs_path = CLP.named_parameters["epochs"].toString();
+        //QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
         MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
@@ -228,10 +228,8 @@ int main(int argc, char* argv[])
         W->show();
 
         a.processEvents();
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         W->setMVFile(mv_file);
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
-        //W->setDefaultInitialization();
+        W->setDefaultInitialization();
     } else if (mode == "spikespy") {
         printf("spikespy...\n");
         QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
@@ -281,7 +279,6 @@ int main(int argc, char* argv[])
         */
     }
 
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     int ret = a.exec();
 
     printf("Number of files open: %d, number of unfreed mallocs: %d, number of unfreed megabytes: %g\n", jnumfilesopen(), jmalloccount(), (int)jbytesallocated() * 1.0 / 1000000);

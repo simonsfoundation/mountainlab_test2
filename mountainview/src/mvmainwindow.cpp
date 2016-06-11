@@ -301,17 +301,6 @@ QImage MVMainWindow::generateImage(const QMap<QString, QVariant>& params)
 }
 */
 
-int MVMainWindow::getMaxLabel()
-{
-    int ret = 0;
-    for (long i = 0; i < d->m_firings.N2(); i++) {
-        int label = (int)d->m_firings.value(i);
-        if (label > ret)
-            ret = label;
-    }
-    return ret;
-}
-
 void MVMainWindow::setClusterMerge(ClusterMerge CM)
 {
     d->m_view_agent->setClusterMerge(CM);
@@ -336,12 +325,10 @@ void MVMainWindow::setMscmdServerUrl(const QString& url)
 
 void MVMainWindow::setMVFile(MVFile ff)
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_mv_file = ff;
 
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_control_panel_new->setTimeseriesChoices(timeseries_names);
     //if (!timeseries_names.isEmpty()) {
     //    d->m_view_agent->setCurrentTimeseriesName(timeseries_names[0]);
@@ -355,7 +342,6 @@ void MVMainWindow::setMVFile(MVFile ff)
         d->m_control_panel_new->setViewOptions(opts);
     }
 
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     {
         QJsonObject ann0 = d->m_mv_file.annotations();
         if (ann0.contains("cluster_attributes")) {
@@ -382,11 +368,8 @@ void MVMainWindow::setMVFile(MVFile ff)
         }
     }
 
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_firings_original.setPath(ff.firingsPathResolved());
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->start_shell_split_and_event_filter();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 void MVMainWindow::writeMVFile(const QString& mv_fname)
@@ -811,7 +794,6 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlogra
 MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
-    qDebug() << "###############################" << m_mv_file.mlproxyUrl();
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setChannelColors(m_channel_colors);
     DiskReadMda TT(current_timeseries_path());

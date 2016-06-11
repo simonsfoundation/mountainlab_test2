@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
     CLParams CLP = commandlineparams(argc, argv);
 
     MOMainWindow W;
-    W.read("/tmp/example.mo");
+    W.read(CLP.unnamed_parameters.value(0,"/tmp/example.mo"));
     W.setMinimumSize(800, 600);
     W.show();
     //QRect G=a.desktop()->geometry();

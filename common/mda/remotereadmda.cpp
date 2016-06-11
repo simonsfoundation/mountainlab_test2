@@ -89,11 +89,9 @@ long RemoteReadMda::downloadChunkSize()
 
 void RemoteReadMda::setPath(const QString& path)
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_info.N1 = d->m_info.N2 = d->m_info.N3 = 0;
     d->m_info_downloaded = false;
     d->m_path = path;
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 QString RemoteReadMda::path() const
