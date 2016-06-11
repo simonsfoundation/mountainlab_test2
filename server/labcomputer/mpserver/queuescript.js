@@ -43,7 +43,16 @@ function queueScript(config,req,callback) {
 	
 	var spawn=require('child_process').spawn;
 	var exe=config.mountainprocess_exe;
-	var process=spawn(exe,args);
+	var process;
+	try {
+		process=spawn(exe,args);
+	}
+	catch(err) {
+		var str='Error in spawn: '+exe+' :::: '+err.message);
+		console.error(str);
+		callback({success:false,error:str});
+		return;
+	}
 	var stdout='';
 	var stderr='';
 	process.on('error',function(err) {
