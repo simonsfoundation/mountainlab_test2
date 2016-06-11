@@ -48,7 +48,7 @@ function queueScript(config,req,callback) {
 		process=spawn(exe,args);
 	}
 	catch(err) {
-		var str='Error in spawn: '+exe+' :::: '+err.message);
+		var str='Error in spawn: '+exe+' :::: '+err.message;
 		console.error(str);
 		callback({success:false,error:str});
 		return;
