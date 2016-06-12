@@ -782,13 +782,16 @@ void MVClusterViewPrivate::do_paint(QPainter& painter, int W, int H)
     if (this->m_mode == MVCV_MODE_LABEL_COLORS) {
         double spacing = 6;
         double margin = 10;
-        QSet<int> labels_used;
+        // it would still be better if m_labels.was presorted right from the start
+        QList<int> list;
         for (long i = 0; i < m_labels.count(); i++) {
-            labels_used.insert(m_labels[i]);
+            const int value = m_labels.at(i);
+            QList<int>::iterator iter = qLowerBound(list.begin(), list.end(), value);
+            if (iter == list.end() || *iter != value) {
+                list.insert(iter, value);
+            }
         }
-        QList<int> list = labels_used.toList();
-        double text_height = qMax(12.0, qMin(25.0, W * 1.0 / 10));
-        qSort(list);
+        double text_height = qBound(12.0, W * 1.0 / 10, 25.0);
         double y0 = margin;
         QFont font = painter.font();
         font.setPixelSize(text_height - 1);
