@@ -445,8 +445,9 @@ void MVClusterViewPrivate::update_grid()
     double max_abs_val = 0;
     int NN = m_data.totalSize();
     for (int i = 0; i < NN; i++) {
-        if (fabs(m_data.get(i)) > max_abs_val)
-            max_abs_val = fabs(m_data.get(i));
+        const double cur_abs_val = fabs(m_data.get(i));
+        if (cur_abs_val > max_abs_val)
+            max_abs_val = cur_abs_val;
     }
 
     QList<double> x0s, y0s, z0s;
