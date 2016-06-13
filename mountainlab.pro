@@ -4,6 +4,8 @@ TEMPLATE = subdirs
 # qmake
 # qmake "COMPONENTS = mountainview mountainbrowser"
 
+COMPONENTS = mdachunk mdaconvert mountainoverlook mountainprocess mountainview mountainbrowser
+
 isEmpty(COMPONENTS) {
     COMPONENTS = mdachunk mdaconvert mountainoverlook mountainprocess mountainsort mountainview
     #we intentionally exclude mountainbrowser -- use: qmake "COMPONENTS = mountainbrowser"

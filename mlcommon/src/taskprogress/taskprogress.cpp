@@ -11,292 +11,277 @@
 #include <QDebug>
 #include <QMutex>
 #include <QThread>
-#ifdef QT_WIDGETS_LIB
-#include <QColor>
-#endif
+#include <QSortFilterProxyModel>
 
-TaskProgress::TaskProgress()
-    : QObject()
-{
-    m_agent = new TaskManager::TaskProgressAgent(this);
-    TaskManager::TaskProgressMonitor::addTask(m_agent);
-}
+#include <QAtomicInt>
 
-TaskProgress::TaskProgress(const QString& label)
-    : QObject()
-{
-    m_agent = new TaskManager::TaskProgressAgent(this);
-    m_agent->setLabel(label);
-    TaskManager::TaskProgressMonitor::addTask(m_agent);
-}
-
-TaskProgress::TaskProgress(StandardCategories tags, const QString& label)
-    : QObject()
-{
-    m_agent = new TaskManager::TaskProgressAgent(this);
-    m_agent->setLabel(label);
-    m_agent->addTags(catsToString(tags));
-    TaskManager::TaskProgressMonitor::addTask(m_agent);
-}
-
-TaskProgress::~TaskProgress()
-{
-    m_agent->finish();
-    // the following reparents the agent to the monitor
-    TaskManager::TaskProgressMonitor::removeTask(m_agent);
-}
-
-QString TaskProgress::label() const
-{
-    return agent()->label();
-}
-
-QString TaskProgress::description() const
-{
-    return agent()->description();
-}
-
-QSet<QString> TaskProgress::tags() const
-{
-    return agent()->tags();
-}
-
-void TaskProgress::setLabel(const QString& label)
-{
-    agent()->setLabel(label);
-}
-
-void TaskProgress::setDescription(const QString& description)
-{
-    agent()->setDescription(description);
-}
-
-void TaskProgress::addTag(TaskProgress::StandardCategory cat)
-{
-    QString catName = catToString(cat);
-    if (catName.isEmpty())
-        return;
-    agent()->addTag(catName);
-}
-
-void TaskProgress::addTag(const QString& tag)
-{
-    agent()->addTag(tag);
-}
-
-void TaskProgress::removeTag(TaskProgress::StandardCategory cat)
-{
-    QString catName = catToString(cat);
-    if (catName.isEmpty())
-        return;
-    agent()->removeTag(catName);
-}
-
-void TaskProgress::removeTag(const QString& tag)
-{
-    agent()->removeTag(tag);
-}
-
-bool TaskProgress::hasTag(TaskProgress::StandardCategory cat) const
-{
-    QString catName = catToString(cat);
-    if (catName.isEmpty())
-        return false;
-    return agent()->hasTag(catName);
-}
-
-bool TaskProgress::hasTag(const QString& tag) const
-{
-    return agent()->hasTag(tag);
-}
-
-double TaskProgress::progress() const
-{
-    return agent()->progress();
-}
-
-void TaskProgress::log(const QString& log_message)
-{
-    agent()->log(log_message);
-}
-
-void TaskProgress::error(const QString& error_message)
-{
-    agent()->error(error_message);
-}
-
-void TaskProgress::setProgress(double pct)
-{
-    agent()->setProgress(pct);
-}
-
-QStringList TaskProgress::catsToString(StandardCategories cats) const
-{
-    QStringList result;
-    if (cats.testFlag(Download))
-        result << "download";
-    if (cats.testFlag(Calculate))
-        result << "calculate";
-    if (cats.testFlag(Process))
-        result << "process";
-    return result;
-}
-
-QString TaskProgress::catToString(TaskProgress::StandardCategory cat) const
-{
-    switch (cat) {
-    case Download:
-        return "download";
-    case Calculate:
-        return "calculate";
-    case Process:
-        return "process";
-    case None:
-    default:
-        return QString();
-    }
-}
-
+Q_DECLARE_METATYPE(QSet<QString>)
 namespace TaskManager {
 
-/*!
- * \section4 Lock Ordering
- *
- * To avoid deadlocks the order of grabbing locks has to be maintained.
- * The rule is as follows:
- * \list
- *   \li Grab a lock on private instance of TaskProgressMonitor
- *   \li Now you can grab a lock on individual items
- * \endlist
- *
- * You can release the locks in arbitrary order.
- *
- * After you release lock on TaskProgressMonitor, you cannot lock it back again
- * without prior releasing all locks on individual items.
- *
- * In case you already have a pointer to an individual item, you can lock it directly
- * without grabbing the lock on the master object.
- *
- */
+class TaskProgressAgentPrivate : public TaskProgressAgent {
+public:
+    TaskProgressAgentPrivate(int id, const TaskInfo &info) : TaskProgressAgent(), m_id(id), m_info(info) {
+
+    }
+    const TaskInfo &taskInfo() const override {
+        return m_info;
+    }
+    void emitChanged() { emit changed(); }
+
+    int m_id;
+    TaskInfo m_info;
+};
+
+class TaskProgressModelPrivate : public TaskProgressModel {
+public:
+    using TaskProgressModel::index;
+
+    TaskProgressModelPrivate(QObject *parent = 0) : TaskProgressModel(parent) {}
+
+    void addTask(int id, TaskInfo info) {
+        int from = m_activeCount;
+        beginInsertRows(QModelIndex(), from, from);
+        info.start_time = QDateTime::currentDateTime();
+        TaskProgressAgentPrivate *nInfo = new TaskProgressAgentPrivate(id, info);
+        m_map.insert(id, nInfo);
+        m_data.insert(from, nInfo);
+        endInsertRows();
+        m_activeCount++;
+    }
+
+    void modifyTask(const QModelIndex &task, const QVariant &value, int role = Qt::EditRole) {
+        if (!isTask(task)) return;
+        int row = task.row();
+        TaskProgressAgentPrivate *info = m_data.at(task.row());
+        switch(role) {
+            case TaskProgressModel::ProgressRole:
+            info->m_info.progress = value.toDouble();
+        }
+        info->emitChanged();
+        emit dataChanged(index(row, 0), index(row, columnCount()-1));
+    }
+
+    void setLabel(const QModelIndex &idx, const QString &label) {
+        TaskProgressAgentPrivate *task = info(idx);
+        if (!task) return;
+        if (task->m_info.label == label) return;
+        task->m_info.label = label;
+        task->emitChanged();
+        emit dataChanged(index(idx.row(), 0), index(idx.row(), columnCount()-1));
+    }
+
+    void setDescription(const QModelIndex &idx, const QString &description) {
+        TaskProgressAgentPrivate *task = info(idx);
+        if (!task) return;
+        if (task->m_info.description == description) return;
+        task->m_info.description = description;
+        task->emitChanged();
+        emit dataChanged(index(idx.row(), 0), index(idx.row(), columnCount()-1));
+    }
+
+    void log(const QModelIndex &idx, const QString &message) {
+        TaskProgressAgentPrivate *task = info(idx);
+        if (!task) return;
+        beginInsertRows(idx, 0, 0);
+        task->m_info.log_messages.append(message);
+        endInsertRows();
+        task->emitChanged();
+    }
+
+    void error(const QModelIndex &idx, const QString &message) {
+        TaskProgressAgentPrivate *task = info(idx);
+        if (!task) return;
+        beginInsertRows(idx, 0, 0);
+        task->m_info.log_messages.append(tr("Error: %1").arg(message));
+        task->m_info.error = message;
+        endInsertRows();
+        task->emitChanged();
+    }
+
+    void addTag(const QModelIndex &idx, const QString &tag) {
+        TaskProgressAgentPrivate *task = info(idx);
+        if (!task) return;
+        task->m_info.tags << tag;
+        task->emitChanged();
+        emit dataChanged(index(idx.row(), 0), index(idx.row(), columnCount()-1));
+    }
+
+    void removeTag(const QModelIndex &idx, const QString &tag) {
+        TaskProgressAgentPrivate *task = info(idx);
+        if (!task) return;
+        task->m_info.tags.remove(tag);
+        task->emitChanged();
+        emit dataChanged(index(idx.row(), 0), index(idx.row(), columnCount()-1));
+    }
+
+    void completeTask(const QModelIndex &index) {
+        TaskProgressAgentPrivate *task = info(index);
+        if (!task) return;
+        int row = index.row();
+        int newRow = rowCount();
+        task->m_info.progress = 1.0;
+        task->m_info.end_time = QDateTime::currentDateTime();
+        if (row == newRow-1) return;
+        beginMoveRows(QModelIndex(), row, row, QModelIndex(), newRow);
+        m_data.move(row, newRow-1);
+        m_activeCount--;
+        endMoveRows();
+        task->emitChanged();
+    }
+
+    TaskProgressAgentPrivate* info(const QModelIndex &index) const {
+        if (isTask(index))
+            return m_data.at(index.row());
+        return 0;
+    }
+    QModelIndex index(TaskProgressAgent *agent) const {
+        int idx = m_data.indexOf(static_cast<TaskProgressAgentPrivate*>(agent));
+        if (idx < 0) return QModelIndex();
+        return index(idx, 0);
+    }
+
+    TaskProgressAgentPrivate* infoById(int id) const {
+        return m_map.value(id, 0);
+    }
+
+    QModelIndex indexById(int id) const {
+        TaskProgressAgentPrivate *agent = infoById(id);
+        return index(agent);
+    }
+
+    void cancelTask(const QModelIndex &index) {
+        completeTask(index);
+    }
+
+    QHash<int, TaskProgressAgentPrivate*> m_map;
+};
+
+class TaskProgressEvent : public QEvent {
+public:
+    enum Command {
+        Create,
+        SetLabel,
+        SetDescription,
+        AddTag,
+        RemoveTag,
+        AppendLog,
+        AppendError,
+        SetProgress,
+        Finish
+    };
+    static QEvent::Type type() {
+        static QEvent::Type typeVal = static_cast<QEvent::Type>(registerEventType());
+        return typeVal;
+    }
+
+    TaskProgressEvent(int id, Command cmd, const QVariant &value = QVariant())
+        : QEvent(TaskProgressEvent::type()){
+        m_id = id;
+        m_cmd = cmd;
+        m_value = value;
+    }
+    Command command() const { return m_cmd; }
+    const QVariant &value() const { return m_value; }
+    int id() const { return m_id; }
+private:
+    int m_id;
+    Command m_cmd;
+    QVariant m_value;
+};
 
 class TaskProgressMonitorPrivate : public TaskProgressMonitor {
 public:
     TaskProgressMonitorPrivate()
-        : lock(QMutex::Recursive)
     {
+        m_model = new TaskProgressModelPrivate(this);
         qRegisterMetaType<TaskInfo>();
     }
+
     ~TaskProgressMonitorPrivate()
     {
-        // tasks we own will get destroyed
-        // tasks we don't own will get ignored
-    }
-    void add(TaskProgressAgent* agent)
-    {
-        // lock is already taken
-        connect(agent,
-            static_cast<void (TaskProgressAgent::*)(TaskProgressAgent*)>(&TaskProgressAgent::changed),
-            [this](TaskProgressAgent* agent) {
-            update(agent);
-            });
-        connect(agent,
-            static_cast<void (TaskProgressAgent::*)(TaskProgressAgent*)>(&TaskProgressAgent::logAdded),
-            [this](TaskProgressAgent* agent) {
-            addLog(agent);
-            });
-        m_data.prepend(agent);
-        emit added(agent);
+        delete m_model;
     }
 
-    void update(TaskProgressAgent* agent)
-    {
-        // if progress reaches 1.0, we should "complete" the task
-        // by moving it in the list
-
-        if (agent->progress() >= 1.0)
-            complete(agent);
-        emit changed(agent);
-    }
-    void addLog(TaskProgressAgent* agent)
-    {
-        emit logAdded(agent);
+    void post(TaskProgressEvent *e) {
+        QCoreApplication::postEvent(this, e);
     }
 
     int count() const override
     {
-        QMutexLocker locker(&lock);
-        return m_completedData.count()+m_data.count();
+        return m_model->rowCount();
     }
+
     TaskProgressAgent* at(int index) const override
     {
-        QMutexLocker locker(&lock);
-        const int adc = m_data.count();
-        if (index < adc)
-            return m_data.at(index);
-        return m_completedData.at(index-adc);
+        return m_model->info(m_model->index(index, 0));
     }
 
     int indexOf(TaskProgressAgent* agent) const override
     {
-        QMutexLocker locker(&lock);
-        int idx = m_data.indexOf(agent);
-        if (idx >=0) return idx;
-        const int adc = m_data.count();
-        return m_completedData.indexOf(agent)+adc;
-    }
-    void move(TaskProgressAgent* agent, int to)
-    {
-        QMutexLocker locker(&lock);
-        move(indexOf(agent), to);
-    }
-
-    void move(int from, int to)
-    {
-        QMutexLocker locker(&lock);
-        TaskProgressAgent* agent = at(from);
-        m_data.move(from, to); /// FIXME
-        emit moved(agent, from, to);
+        QModelIndex idx = m_model->index(agent);
+        if (idx.isValid())
+            return idx.row();
+        return -1;
     }
 
     void incrementQuantity(QString name, double val) override
     {
-        QMutexLocker locker(&lock);
         m_quantities.insert(name, m_quantities.value(name, 0) + val);
         emit quantitiesChanged();
     }
     double getQuantity(QString name) const override
     {
-        QMutexLocker locker(&lock);
         return m_quantities.value(name, 0);
     }
-    void complete(TaskProgressAgent *agent) {
-        QMutexLocker locker(&lock);
-        const int idx = m_data.indexOf(agent);
-        if (idx < 0) return; // doesn't exist or already complete
-        const int adc = m_data.count();
-        m_completedData.prepend(agent);
-        m_data.removeAt(idx);
-        if (idx == adc-1) return; // didn't really move
-        emit moved(agent, idx, adc);
-    }
-    void complete(int idx) {
-        QMutexLocker locker(&lock);
-        const int adc = m_data.count();
-        if (idx >= adc) return; // already complete
-        TaskProgressAgent *agent = m_data.at(idx);
-        m_completedData.prepend(agent);
-        m_data.removeAt(idx);
-        if (idx == adc-1) return; // didn't really move
-        emit moved(agent, idx, adc);
+
+    TaskProgressModel *model() const override {
+        return m_model;
     }
 
-    mutable QMutex lock;
+    void complete(int idx) {
+        m_model->completeTask(m_model->index(idx, 0));
+    }
 
     static TaskProgressMonitorPrivate* privateInstance();
 
+protected:
+    void customEvent(QEvent *event) {
+        if (event->type() != TaskProgressEvent::type()) {
+            event->ignore();
+            return;
+        }
+        TaskProgressEvent *tpEvent = static_cast<TaskProgressEvent*>(event);
+        if (tpEvent->command() == TaskProgressEvent::Create) {
+            TaskInfo info = tpEvent->value().value<TaskInfo>();
+            m_model->addTask(tpEvent->id(), info);
+        }
+        QModelIndex index = m_model->indexById(tpEvent->id());
+        const QVariant &value = tpEvent->value();
+        switch(tpEvent->command()) {
+        case TaskProgressEvent::SetLabel:
+            m_model->setLabel(index, value.toString()); break;
+        case TaskProgressEvent::SetDescription:
+            m_model->setDescription(index, value.toString()); break;
+        case TaskProgressEvent::AddTag: m_model->addTag(index, value.toString()); break;
+        case TaskProgressEvent::RemoveTag: m_model->removeTag(index, value.toString()); break;
+        case TaskProgressEvent::AppendLog:
+            m_model->log(index, value.toString()); break;
+        case TaskProgressEvent::AppendError:
+            m_model->error(index, value.toString()); break;
+        case TaskProgressEvent::SetProgress:
+            m_model->modifyTask(index, value, TaskProgressModel::ProgressRole); break;
+        case TaskProgressEvent::Finish:
+            m_model->completeTask(index);
+            break;
+        case TaskProgressEvent::Create: break; // handled earlier
+        default:
+            qWarning("Custom event not handled");
+            break;
+        }
+    }
+
 private:
-    QList<TaskProgressAgent*> m_completedData;
-    QList<TaskProgressAgent*> m_data;
+    TaskProgressModelPrivate *m_model;
     QMap<QString, double> m_quantities;
 
 };
@@ -308,343 +293,146 @@ TaskProgressMonitor* TaskProgressMonitor::globalInstance()
     return _q_tpm_instance;
 }
 
-void TaskProgressMonitor::addTask(TaskProgressAgent* agent)
-{
-    TaskProgressMonitorPrivate* instance = TaskProgressMonitorPrivate::privateInstance();
-    QMutexLocker locker(&instance->lock);
-    instance->add(agent);
-}
-
-void TaskProgressMonitor::removeTask(TaskProgressAgent* agent)
-{
-    // this doesn't actually remove the agent but rather marks it as complete
-    // this means the TaskProgress object has released its ownership and we can take it
-    TaskProgressMonitorPrivate* instance = TaskProgressMonitorPrivate::privateInstance();
-    QMutexLocker locker(&instance->lock);
-    // This is going to work only if removeTask() is called from the thread owning the agent
-    Q_ASSERT(QThread::currentThread() == agent->thread());
-    TaskProgressAgent::ReadLocker readLocker = agent->readLocker();
-    agent->setParent(0);
-    agent->moveToThread(instance->thread());
-    agent->setParent(instance);
-
-    /// TODO: now the manager can reposition the agent on its list
-    instance->complete(agent);
-}
-
 TaskProgressMonitorPrivate* TaskProgressMonitorPrivate::privateInstance()
 {
     return _q_tpm_instance;
 }
 
-TaskProgressAgent::TaskProgressAgent(QObject* parent)
-    : QObject(parent)
-{
-    m_info.start_time = QDateTime::currentDateTime();
-    m_info.progress = 0;
-}
+class TagsFilterProxyModel : public QSortFilterProxyModel {
+public:
+    TagsFilterProxyModel(QObject *parent = 0) : QSortFilterProxyModel(parent) {}
+    void addTag(const QString &t) {
+        m_tags << t;
+        invalidateFilter();
+    }
+    void setTags(const QSet<QString> &tags) {
+        m_tags = tags;
+        invalidateFilter();
+    }
 
-TaskProgressAgent::TaskProgressAgent(const QString& tag, QObject* parent)
-    : QObject(parent)
-{
-    m_info.start_time = QDateTime::currentDateTime();
-    m_info.progress = 0;
-    m_info.tags.insert(tag);
-}
-
-void TaskProgressAgent::addTag(const QString& t)
-{
-    lockForWrite();
-    m_info.tags << t;
-    unlock();
-    emit changed();
-    emit changed(this);
-}
-
-void TaskProgressAgent::addTags(const std::initializer_list<QString>& l)
-{
-    lockForWrite();
-    foreach (const QString& t, l)
-        m_info.tags << t;
-    unlock();
-    emit changed();
-    emit changed(this);
-}
-
-void TaskProgressAgent::removeTag(const QString& t)
-{
-    lockForWrite();
-    m_info.tags.remove(t);
-    unlock();
-    emit changed();
-    emit changed(this);
-}
-
-#ifdef Q_COMPILER_INITIALIZER_LISTS
-void TaskProgressAgent::addTags(const QStringList& l)
-{
-    lockForWrite();
-    foreach (const QString& t, l)
-        m_info.tags << t;
-    unlock();
-    emit changed();
-    emit changed(this);
-}
+protected:
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const {
+        if (m_tags.isEmpty()) return true;
+        if (source_parent.isValid()) return true;
+        TaskProgressAgent *a = TaskProgressMonitor::globalInstance()->at(source_row);
+#if QT_VERSION >= 0x050600
+        return m_tags.intersects(a->taskInfo().tags);
+#else
+        return !QSet<QString>(m_tags).intersect(a->taskInfo().tags).isEmpty();
 #endif
-
-bool TaskProgressAgent::hasTag(const QString& t) const
-{
-    QReadLocker l(&m_lock);
-    return m_info.tags.contains(t);
-}
-
-QSet<QString> TaskProgressAgent::tags() const
-{
-    QReadLocker l(&m_lock);
-    return m_info.tags;
-}
-
-void TaskProgressAgent::setLabel(const QString& l)
-{
-    lockForWrite();
-    m_info.label = l;
-    unlock();
-    emit changed();
-    emit changed(this);
-}
-
-void TaskProgressAgent::setDescription(const QString& d)
-{
-    lockForWrite();
-    m_info.description = d;
-    unlock();
-    emit changed();
-    emit changed(this);
-}
-
-void TaskProgressAgent::setProgress(double p)
-{
-    lockForWrite();
-    m_info.progress = p;
-    if (m_info.progress >= 1.0) {
-        m_info.end_time = QDateTime::currentDateTime();
     }
-    unlock();
-    emit changed();
-    emit changed(this);
-}
-
-void TaskProgressAgent::log(const QString& log_message)
-{
-    lockForWrite();
-    m_info.log_messages.append(log_message);
-    unlock();
-    emit logAdded();
-    emit logAdded(this);
-}
-
-void TaskProgressAgent::error(const QString& error_message)
-{
-    lockForWrite();
-    m_info.log_messages.append(tr("Error: %1").arg(error_message));
-    m_info.error = error_message;
-    unlock();
-    emit changed();
-    emit changed(this);
-    emit logAdded();
-    emit logAdded(this);
-}
-
-void TaskProgressAgent::finish()
-{
-    lockForWrite();
-    if (m_info.progress < 1.0) {
-        m_info.end_time = QDateTime::currentDateTime();
-        m_info.progress = 1;
-    }
-    unlock();
-}
-
-const QString& TaskProgressAgent::label() const
-{
-    QReadLocker l(&m_lock);
-    return m_info.label;
-}
-
-const QString& TaskProgressAgent::description() const
-{
-    QReadLocker l(&m_lock);
-    return m_info.description;
-}
-
-double TaskProgressAgent::progress() const
-{
-    QReadLocker l(&m_lock);
-    return m_info.progress;
-}
-
-TaskInfo TaskProgressAgent::taskInfo() const
-{
-    QReadLocker l(&m_lock);
-    return m_info;
-}
+private:
+    QSet<QString> m_tags;
+};
 
 TaskProgressMonitorFilter::TaskProgressMonitorFilter(QObject* parent)
     : QObject(parent)
 {
-    TaskProgressMonitor* monitor = TaskProgressMonitor::globalInstance();
-    connect(monitor, SIGNAL(added(TaskProgressAgent*)), SLOT(_q_added(TaskProgressAgent*)));
-    connect(monitor, SIGNAL(changed(TaskProgressAgent*)), SLOT(_q_changed(TaskProgressAgent*)));
+    m_proxy = new TagsFilterProxyModel(this);
+    m_base = TaskProgressMonitor::globalInstance()->model();
+    m_proxy->setSourceModel(m_base);
 }
 
 TaskProgressMonitorFilter::TaskProgressMonitorFilter(const QString& tag, QObject* parent)
     : QObject(parent)
 {
-    m_tags.insert(tag);
-    TaskProgressMonitor* monitor = TaskProgressMonitor::globalInstance();
-    connect(monitor, SIGNAL(added(TaskProgressAgent*)), SLOT(_q_added(TaskProgressAgent*)));
-    connect(monitor, SIGNAL(changed(TaskProgressAgent*)), SLOT(_q_changed(TaskProgressAgent*)));
-    initialize();
+    m_proxy = new TagsFilterProxyModel(this);
+    m_proxy->addTag(tag);
+    m_base = TaskProgressMonitor::globalInstance()->model();
+    m_proxy->setSourceModel(m_base);
 }
 
 TaskProgressMonitorFilter::TaskProgressMonitorFilter(const QStringList& tags, QObject* parent)
     : QObject(parent)
 {
-    m_tags = tags.toSet();
-    TaskProgressMonitor* monitor = TaskProgressMonitor::globalInstance();
-    connect(monitor, SIGNAL(added(TaskProgressAgent*)), SLOT(_q_added(TaskProgressAgent*)));
-    connect(monitor, SIGNAL(changed(TaskProgressAgent*)), SLOT(_q_changed(TaskProgressAgent*)));
-    initialize();
+    m_proxy = new TagsFilterProxyModel(this);
+    m_proxy->setTags(tags.toSet());
+    m_base = TaskProgressMonitor::globalInstance()->model();
+    m_proxy->setSourceModel(m_base);
 }
 
 void TaskProgressMonitorFilter::addTag(const QString& tag)
 {
-    m_tags.insert(tag);
-    m_agents.clear();
-    initialize();
+    m_proxy->addTag(tag);
 }
 
 int TaskProgressMonitorFilter::count() const
 {
-    return m_agents.size();
+    return model()->rowCount();
 }
 
 TaskProgressAgent* TaskProgressMonitorFilter::at(int index) const
 {
-    return m_agents.at(index);
+    QModelIndex idx = model()->index(index, 0);
+    QModelIndex srcIdx = m_proxy->mapToSource(idx);
+    if (!srcIdx.isValid()) return 0;
+    return TaskProgressMonitor::globalInstance()->at(srcIdx.row());
 }
 
 int TaskProgressMonitorFilter::indexOf(TaskProgressAgent* a) const
 {
-    return m_agents.indexOf(a);
+    int srcRow = TaskProgressMonitor::globalInstance()->indexOf(a);
+    if (srcRow < 0) return -1;
+    QModelIndex srcIdx = m_proxy->mapFromSource(m_base->index(srcRow, 0));
+    if (srcIdx.isValid()) return srcIdx.row();
+    return -1;
 }
 
-void TaskProgressMonitorFilter::_q_added(TaskProgressAgent* a)
+QAbstractItemModel *TaskProgressMonitorFilter::model() const
 {
-    if (matches(a)) {
-        m_agents.append(a);
-        emit added(a);
-    }
-}
-
-void TaskProgressMonitorFilter::_q_changed(TaskProgressAgent* a)
-{
-    bool didMatch = m_agents.contains(a);
-    bool nowMatch = matches(a);
-    // four cases:
-    // 1. doesn't and didn't matches(a)
-    if (!didMatch && !nowMatch)
-        return;
-    // 2. did matches(a) and still does
-    if (didMatch && nowMatch) {
-        emit changed(a);
-        return;
-    }
-    // 3. used to matches(a)
-    if (didMatch && !nowMatch) {
-        m_agents.removeOne(a);
-        emit changed(a);
-        return;
-    }
-    // 4. didn't use to matches(a)
-    if (!didMatch && nowMatch) {
-        m_agents.append(a);
-        emit changed(a);
-    }
-}
-
-void TaskProgressMonitorFilter::initialize()
-{
-    TaskProgressMonitorPrivate* monitor = TaskProgressMonitorPrivate::privateInstance();
-    QMutexLocker locker(&monitor->lock);
-    for (int i = 0; i < monitor->count(); ++i) {
-        TaskProgressAgent* a = monitor->at(i);
-        TaskProgressAgent::ReadLocker itemLocker = a->readLocker();
-        if (!matches(a))
-            continue;
-        m_agents.append(a);
-    }
-    locker.unlock();
-    emit reset();
-}
-
-bool TaskProgressMonitorFilter::matches(TaskProgressAgent* a) const
-{
-
-#if QT_VERSION >= 0x050600
-    return m_tags.intersects(a->tags());
-#else
-    return !QSet<QString>(m_tags).intersect(a->tags()).isEmpty();
-#endif
+    return m_proxy;
 }
 
 TaskProgressModel::TaskProgressModel(QObject* parent)
     : QAbstractItemModel(parent)
 {
-    m_monitor = TaskProgressMonitor::globalInstance();
-    connect(m_monitor, SIGNAL(added(TaskProgressAgent*)),
-        this, SLOT(_q_added(TaskProgressAgent*)));
-    connect(m_monitor, SIGNAL(changed(TaskProgressAgent*)),
-        this, SLOT(_q_changed(TaskProgressAgent*)));
-    connect(m_monitor, SIGNAL(logAdded(TaskProgressAgent*)),
-        this, SLOT(_q_logAdded(TaskProgressAgent*)));
+}
+
+TaskProgressModel::~TaskProgressModel()
+{
+    qDeleteAll(m_data);
 }
 
 QModelIndex TaskProgressModel::index(int row, int column, const QModelIndex& parent) const
 {
-    if (parent.isValid() && parent.internalId() != InvalidId)
-        return QModelIndex();
-    if (parent.isValid()) {
-        return createIndex(row, column, parent.row());
+    if (!parent.isValid()) {
+        // task
+        if (row < 0 || row >= m_data.count())
+            return QModelIndex();
+        return createIndex(row, column, nullptr);
     }
-    return createIndex(row, column, InvalidId);
+    if (parent.internalPointer() == 0) {
+        TaskProgressAgentPrivate *info = m_data.at(parent.row());
+        if (row >= info->taskInfo().log_messages.count() || row < 0) return QModelIndex();
+        // log entry
+        return createIndex(row, column, info);
+    }
+    qFatal("Should never reach this line");
+    return QModelIndex();
 }
 
 QModelIndex TaskProgressModel::parent(const QModelIndex& child) const
 {
-    if (child.internalId() == InvalidId)
+    if (!child.isValid()) return QModelIndex();
+    if (child.internalPointer() == 0)
         return QModelIndex();
-    return createIndex(child.internalId(), 0, InvalidId);
+    TaskProgressAgentPrivate *info = static_cast<TaskProgressAgentPrivate*>(child.internalPointer());
+    return createIndex(m_data.indexOf(info), 0, nullptr);
 }
 
 int TaskProgressModel::rowCount(const QModelIndex& parent) const
 {
-    if (parent.isValid() && parent.internalId() != InvalidId)
-        return 0;
-    if (parent.isValid()) {
-        if (parent.row() < 0)
-            return 0;
-        TaskProgressAgent* agent = m_monitor->at(parent.row());
-        TaskInfo task = agent->taskInfo();
-        return task.log_messages.size();
+    if (!parent.isValid())
+        return m_data.size();
+    if (!parent.internalPointer()) {
+        TaskProgressAgentPrivate *info = m_data.at(parent.row());
+        return info->taskInfo().log_messages.size();
     }
-    return m_monitor->count();
+    return 0;
 }
 
-int TaskProgressModel::columnCount(const QModelIndex& parent) const
+int TaskProgressModel::columnCount(const QModelIndex&) const
 {
-    if (parent.isValid())
-        return 2;
     return 2;
 }
 
@@ -652,24 +440,22 @@ QVariant TaskProgressModel::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid())
         return QVariant();
-    if (index.parent().isValid()) {
-        return logData(index, role);
-    }
-    return taskData(index, role);
+    if (isTask(index))
+        return taskData(index, role);
+    return logData(index, role);
 }
 
 QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
 {
     if (index.column() != 0)
         return QVariant();
-    TaskProgressAgent* agent = m_monitor->at(index.row());
-    TaskInfo task = agent->taskInfo();
+    const TaskInfo &task = m_data.at(index.row())->taskInfo();
     switch (role) {
     case Qt::EditRole:
     case Qt::DisplayRole:
         // modified by jfm -- 5/17/2016
         if (!task.error.isEmpty()) {
-            return task.label + ": " + task.error;
+            return QString("%1: %2").arg(task.label).arg(task.error);
         }
         else {
             return task.label;
@@ -680,19 +466,19 @@ QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
             return task.description;
         else
             return taskData(index, Qt::DisplayRole);
-#ifdef QT_WIDGETS_LIB
-    case Qt::ForegroundRole: {
-        // modified by jfm -- 5/17/2016
-        if (!task.error.isEmpty()) {
-            return QColor(Qt::red);
-        }
-        else {
-            if (task.progress < 1)
-                return QColor(Qt::blue);
-        }
-        return QVariant();
-    }
-#endif
+////#ifdef QT_WIDGETS_LIB
+//    case Qt::ForegroundRole: {
+//        // modified by jfm -- 5/17/2016
+//        if (!task.error.isEmpty()) {
+//            return QColor(Qt::red);
+//        }
+//        else {
+//            if (task.progress < 1)
+//                return QColor(Qt::blue);
+//        }
+//        return QVariant();
+//    }
+////#endif // mlcommon doesn't link QtGui anyway
     case ProgressRole:
         return task.progress;
     case StartTimeRole:
@@ -701,6 +487,8 @@ QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
         return task.end_time;
     case TagsRole:
         return QStringList(task.tags.toList());
+    case TagsSetRole:
+        return qVariantFromValue(task.tags);
     case LogRole:
         return assembleLog(task);
     case IndentedLogRole:
@@ -717,10 +505,12 @@ QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
 
 QVariant TaskProgressModel::logData(const QModelIndex& index, int role) const
 {
-    TaskProgressAgent* agent = m_monitor->at(index.internalId());
-    TaskInfo task = agent->taskInfo();
-    const auto& logMessages = task.log_messages;
-    auto logMessage = logMessages.at(logMessages.count() - 1 - index.row()); // newest first
+
+    TaskProgressAgentPrivate *agent = static_cast<TaskProgressAgentPrivate*>(index.internalPointer());
+    const auto& logMessages = agent->taskInfo().log_messages;
+    int idx = logMessages.count() - 1 - index.row();
+
+    auto logMessage = logMessages.at(idx); // newest first
     switch (role) {
     case Qt::EditRole:
     case Qt::DisplayRole:
@@ -757,7 +547,7 @@ bool TaskProgressModel::isCompletedWithin(const QModelIndex &task, int time) con
 
 bool TaskProgressModel::isTask(const QModelIndex &idx) const
 {
-    return !idx.parent().isValid();
+    return (idx.isValid() && idx.internalPointer() == nullptr);
 }
 
 QString TaskProgressModel::assembleLog(const TaskInfo& task, const QString& prefix) const
@@ -771,53 +561,187 @@ QString TaskProgressModel::assembleLog(const TaskInfo& task, const QString& pref
 
 QString TaskProgressModel::singleLog(const TaskProgressLogMessage& msg, const QString& prefix) const
 {
-    //return QString("%1%2: %3").arg(prefix).arg(msg.time.toString(Qt::ISODate)).arg(msg.message);
     return QString("%1%2: %3").arg(prefix).arg(msg.time.toString("yyyy-MM-dd hh:mm:ss.zzz")).arg(msg.message);
 }
 
-void TaskProgressModel::_q_added(TaskProgressAgent* a)
-{
-    Q_UNUSED(a)
-    beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    endInsertRows();
+
 }
 
-void TaskProgressModel::_q_changed(TaskProgressAgent* a)
+static QAtomicInt TaskProgressValue = 0;
+
+TaskProgress::TaskProgress()
+    : QObject(), m_id(TaskProgressValue.fetchAndAddOrdered(1))
 {
-    int idx = m_monitor->indexOf(a);
-    if (idx >= 0) {
-        QModelIndex modelIdxFirst = createIndex(idx, 0, InvalidId);
-        QModelIndex modelIdxLast = createIndex(idx, columnCount(), InvalidId);
-        emit dataChanged(modelIdxFirst, modelIdxLast);
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::Create);
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+TaskProgress::TaskProgress(const QString& label)
+    : QObject(), m_id(TaskProgressValue.fetchAndAddOrdered(1))
+{
+    m_info.label = label;
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::Create, qVariantFromValue(m_info));
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+TaskProgress::TaskProgress(StandardCategories tags, const QString& label)
+    : QObject(), m_id(TaskProgressValue.fetchAndAddOrdered(1))
+{
+    m_info.label = label;
+    QStringList tagNames = catsToString(tags);
+    m_info.tags = tagNames.toSet();
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::Create, qVariantFromValue(m_info));
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+TaskProgress::~TaskProgress()
+{
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::Finish);
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+QString TaskProgress::label() const
+{
+    return m_info.label;
+}
+
+QString TaskProgress::description() const
+{
+    return m_info.description;
+}
+
+QSet<QString> TaskProgress::tags() const
+{
+    return m_info.tags;
+}
+
+void TaskProgress::setLabel(const QString& label)
+{
+    if (m_info.label == label) return;
+    m_info.label = label;
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::SetLabel,
+                                                    label);
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+void TaskProgress::setDescription(const QString& description)
+{
+    if (m_info.description == description) return;
+    m_info.description = description;
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::SetDescription,
+                                                    description);
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+void TaskProgress::addTag(TaskProgress::StandardCategory cat)
+{
+    QString catName = catToString(cat);
+    if (catName.isEmpty())
+        return;
+    m_info.tags << catName;
+
+}
+
+void TaskProgress::addTag(const QString& tag)
+{
+    m_info.tags << tag;
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::AddTag,
+                                                    tag);
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+void TaskProgress::removeTag(TaskProgress::StandardCategory cat)
+{
+    QString catName = catToString(cat);
+    if (catName.isEmpty())
+        return;
+    removeTag(catName);
+}
+
+void TaskProgress::removeTag(const QString& tag)
+{
+    m_info.tags.remove(tag);
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::RemoveTag,
+                                                    tag);
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+bool TaskProgress::hasTag(TaskProgress::StandardCategory cat) const
+{
+    QString catName = catToString(cat);
+    if (catName.isEmpty())
+        return false;
+    return hasTag(catName);
+}
+
+bool TaskProgress::hasTag(const QString& tag) const
+{
+    return m_info.tags.contains(tag);
+}
+
+double TaskProgress::progress() const
+{
+    return m_info.progress;
+}
+
+void TaskProgress::log(const QString& log_message)
+{
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::AppendLog,
+                                                    log_message);
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+void TaskProgress::error(const QString& error_message)
+{
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::AppendError,
+                                                    error_message);
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+void TaskProgress::setProgress(double pct)
+{
+    if (m_info.progress == pct) return;
+    m_info.progress = pct;
+    TaskManager::TaskProgressEvent *event = new TaskManager::TaskProgressEvent(m_id,
+                                                    TaskManager::TaskProgressEvent::SetProgress,
+                                                    pct);
+    TaskManager::TaskProgressMonitorPrivate::privateInstance()->post(event);
+}
+
+QStringList TaskProgress::catsToString(StandardCategories cats) const
+{
+    QStringList result;
+    if (cats.testFlag(Download))
+        result << "download";
+    if (cats.testFlag(Calculate))
+        result << "calculate";
+    if (cats.testFlag(Process))
+        result << "process";
+    return result;
+}
+
+QString TaskProgress::catToString(TaskProgress::StandardCategory cat) const
+{
+    switch (cat) {
+    case Download:
+        return "download";
+    case Calculate:
+        return "calculate";
+    case Process:
+        return "process";
+    case None:
+    default:
+        return QString();
     }
 }
 
-void TaskProgressModel::_q_logAdded(TaskProgressAgent* a)
-{
-    int idx = m_monitor->indexOf(a);
-    if (idx < 0)
-        return;
-    QModelIndex parentIndex = createIndex(idx, 0, InvalidId);
-    TaskInfo taskInfo = a->taskInfo();
-    beginInsertRows(parentIndex, taskInfo.log_messages.size(), taskInfo.log_messages.size());
-    endInsertRows();
-}
-
-TaskProgressAgent::ReadLocker::~ReadLocker()
-{
-    if (m_agent)
-        m_agent->unlock();
-}
-
-TaskProgressAgent::ReadLocker::ReadLocker(TaskProgressAgent::ReadLocker&& other)
-{
-    m_agent = other.m_agent;
-    other.m_agent = 0;
-}
-
-TaskProgressAgent::ReadLocker::ReadLocker(const TaskProgressAgent* agent)
-    : m_agent(const_cast<TaskProgressAgent*>(agent))
-{
-    m_agent->lockForRead();
-}
-}

@@ -1,6 +1,4 @@
-QT += core
-QT -= gui
-QT -= widgets
+QT = core network
 
 DEFINES += USE_REMOTE_READ_MDA
 

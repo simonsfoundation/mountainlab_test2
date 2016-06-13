@@ -17,9 +17,7 @@
 struct TaskProgressLogMessage {
     QString message;
     QDateTime time;
-    TaskProgressLogMessage()
-    {
-    }
+    TaskProgressLogMessage() {}
     TaskProgressLogMessage(const QString& msg)
         : message(msg)
         , time(QDateTime::currentDateTime())
@@ -45,10 +43,6 @@ struct TaskInfo {
 
 Q_DECLARE_METATYPE(TaskInfo)
 
-
-namespace TaskManager {
-class TaskProgressAgent;
-}
 
 class TaskProgress : public QObject {
     Q_OBJECT
@@ -87,13 +81,10 @@ public slots:
 protected:
     QStringList catsToString(StandardCategories) const;
     QString catToString(StandardCategory) const;
-    TaskManager::TaskProgressAgent* agent() const
-    {
-        return m_agent;
-    }
 
 private:
-    TaskManager::TaskProgressAgent* m_agent;
+    TaskInfo m_info;
+    int m_id;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(TaskProgress::StandardCategories);
@@ -101,75 +92,21 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(TaskProgress::StandardCategories);
 
 namespace TaskManager {
 
+class TagsFilterProxyModel;
+
 class TaskProgressAgent : public QObject {
     Q_OBJECT
 public:
-    TaskProgressAgent(QObject* parent = 0);
-    TaskProgressAgent(const QString& tag, QObject* parent = 0);
-    void addTag(const QString&);
-    void addTags(const QStringList& l);
-#ifdef Q_COMPILER_INITIALIZER_LISTS
-    void addTags(const std::initializer_list<QString>& l);
-#endif
-    void removeTag(const QString& t);
-    bool hasTag(const QString& t) const;
-    QSet<QString> tags() const;
-    void setLabel(const QString&);
-    void setDescription(const QString&);
-    void setProgress(double);
-    void log(const QString& log_message);
-    void error(const QString& error_message);
-    void finish();
-
-    const QString& label() const;
-    const QString& description() const;
-    double progress() const;
-    void lockForRead()
-    {
-        m_lock.lockForRead();
-    }
-    void lockForWrite()
-    {
-        m_lock.lockForWrite();
-    }
-    void unlock()
-    {
-        m_lock.unlock();
-    }
-    TaskInfo taskInfo() const;
-
-    class ReadLocker {
-    public:
-        ~ReadLocker();
-        ReadLocker(ReadLocker&& other);
-
-    private:
-        ReadLocker(const TaskProgressAgent* agent);
-        friend class TaskProgressAgent;
-        TaskProgressAgent* m_agent;
-    };
-
-    ReadLocker readLocker() const
-    {
-        return ReadLocker(this);
-    }
-
+    virtual const TaskInfo &taskInfo() const = 0;
 signals:
     void changed();
-    void changed(TaskProgressAgent*);
-    void logAdded();
-    void logAdded(TaskProgressAgent*);
-
-private:
-    mutable QReadWriteLock m_lock;
-    TaskInfo m_info;
 };
+
+class TaskProgressModel;
 
 class TaskProgressMonitor : public QObject {
     Q_OBJECT
 public:
-    static void addTask(TaskProgressAgent* agent);
-    static void removeTask(TaskProgressAgent* agent);
 
     virtual int count() const = 0;
     virtual TaskProgressAgent* at(int index) const = 0;
@@ -178,13 +115,13 @@ public:
 
     virtual void incrementQuantity(QString name, double val) = 0;
     virtual double getQuantity(QString name) const = 0;
+
+    virtual TaskProgressModel* model() const = 0;
 signals:
-    void added(TaskProgressAgent*);
-    void changed(TaskProgressAgent*);
-    void logAdded(TaskProgressAgent*);
-    void moved(TaskProgressAgent*, int from, int to);
     void quantitiesChanged();
 };
+
+class TaskProgressAgentPrivate;
 
 class TaskProgressModel : public QAbstractItemModel {
     Q_OBJECT
@@ -194,13 +131,12 @@ public:
         StartTimeRole,
         EndTimeRole,
         TagsRole,
+        TagsSetRole,
         LogRole,
         IndentedLogRole,
         StatusRole,
     };
-    enum {
-        InvalidId = 0xDEADBEEF
-    };
+
     enum Status {
         Active,
         Canceled,
@@ -208,7 +144,8 @@ public:
     };
 
     TaskProgressModel(QObject* parent = 0);
-    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
+    ~TaskProgressModel();
+    QModelIndex index(int row, int column = 0, const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
     QModelIndex parent(const QModelIndex& child) const Q_DECL_OVERRIDE;
     int rowCount(const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
     int columnCount(const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
@@ -218,21 +155,16 @@ public:
 
     bool isActive(const QModelIndex &task) const;
     bool isCompletedWithin(const QModelIndex &task, int time) const;
-protected:
     bool isTask(const QModelIndex &idx) const;
-    QString assembleLog(const TaskInfo& task, const QString& prefix = QString()) const;
+protected:
+    QString assembleLog(const TaskInfo &task, const QString& prefix = QString()) const;
     QString singleLog(const TaskProgressLogMessage& msg, const QString& prefix = QString()) const;
-private slots:
-    void _q_added(TaskProgressAgent*);
-    void _q_changed(TaskProgressAgent*);
-    void _q_logAdded(TaskProgressAgent*);
 
-private:
-    TaskProgressMonitor* m_monitor;
+    QList<TaskProgressAgentPrivate*> m_data; // active first, completed later
+    size_t m_activeCount = 0;
 };
 
 class TaskProgressMonitorFilter : public QObject {
-    Q_OBJECT
 public:
     TaskProgressMonitorFilter(QObject* parent = 0);
     TaskProgressMonitorFilter(const QString& tag, QObject* parent = 0);
@@ -241,21 +173,12 @@ public:
     int count() const;
     TaskProgressAgent* at(int index) const;
     int indexOf(TaskProgressAgent* a) const;
-signals:
-    void added(TaskProgressAgent*);
-    void changed(TaskProgressAgent*);
-    void reset();
-private slots:
-    void _q_added(TaskProgressAgent* a);
-    void _q_changed(TaskProgressAgent* a);
 
-protected:
-    void initialize();
-    bool matches(TaskProgressAgent* a) const;
-
+    QAbstractItemModel* model() const;
 private:
-    QSet<QString> m_tags;
-    QList<TaskProgressAgent*> m_agents;
+    TagsFilterProxyModel *m_proxy;
+    TaskProgressModel *m_base;
 };
+
 }
 #endif // TASKPROGRESS_H
