@@ -56,6 +56,7 @@ HEADERS += \
     mvviewagent.h \
     mvstatusbar.h \
     mvtimeseriesview.h \
+    mvtimeseriesview2.h \
     multiscaletimeseries.h \
     mvtimeseriesrendermanager.h \
     spikespywidget.h \
@@ -100,6 +101,7 @@ SOURCES += mountainviewmain.cpp \
     mvviewagent.cpp \
     mvstatusbar.cpp \
     mvtimeseriesview.cpp \
+    mvtimeseriesview2.cpp \
     multiscaletimeseries.cpp \
     mvtimeseriesrendermanager.cpp \
     spikespywidget.cpp \
