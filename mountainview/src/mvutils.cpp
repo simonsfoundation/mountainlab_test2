@@ -238,6 +238,14 @@ void user_save_image(const QImage& img)
 
 void draw_axis(QPainter* painter, draw_axis_opts opts)
 {
+    if (opts.orientation == Qt::Vertical) {
+        //ensure that pt2.y>=pt1.y
+        if (opts.pt2.y() < opts.pt1.y()) {
+            QPointF tmp = opts.pt2;
+            opts.pt2 = opts.pt1;
+            opts.pt1 = tmp;
+        }
+    }
     painter->drawLine(opts.pt1, opts.pt2);
     double range = opts.maxval - opts.minval;
     if (opts.maxval <= opts.minval)
@@ -296,7 +304,7 @@ void draw_axis(QPainter* painter, draw_axis_opts opts)
         else {
             painter->save();
             painter->rotate(-90);
-            QRectF rect(opts.pt1.x() - 50, opts.pt1.y(), 50 - 3, opts.pt2.y() - opts.pt1.y());
+            QRectF rect(opts.pt1.x() - 50, opts.pt1.y() - 50, 50 - 3, opts.pt2.y() - opts.pt1.y() + 100);
             QTransform transform;
             transform.rotate(90);
             rect = transform.mapRect(rect);

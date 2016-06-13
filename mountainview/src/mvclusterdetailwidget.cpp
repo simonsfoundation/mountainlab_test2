@@ -42,6 +42,7 @@ struct ClusterData {
 
 struct ChannelSpacingInfo {
     QList<double> channel_locations;
+    double channel_location_spacing;
     double vert_scaling_factor;
 };
 
@@ -373,10 +374,11 @@ ChannelSpacingInfo compute_channel_spacing_info(QList<ClusterData>& cdata, doubl
             }
         }
     }
-    double y0 = 0.5 / M;
+    info.channel_location_spacing=1.0/M;
+    double y0 = 0.5 *info.channel_location_spacing;
     for (int m = 0; m < M; m++) {
         info.channel_locations << y0;
-        y0 += 1.0 / M;
+        y0 += info.channel_location_spacing;
     }
     double maxabsval = qMax(maxval, -minval);
     info.vert_scaling_factor = 0.5 / M / maxabsval * vscale_factor;
@@ -1005,19 +1007,20 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
         ClusterView* V = first_view;
         int M = cluster_data_merged[0].template0.N1();
         for (int m = 0; m < M; m++) {
-            QPointF pt1 = V->template_coord2pix(m, 0, -1.0 / csi.vert_scaling_factor / 2);
-            QPointF pt2 = V->template_coord2pix(m, 0, 1.0 / csi.vert_scaling_factor / 2);
-            pt1.setX(left_margin + 20);
-            pt2.setX(left_margin + 20);
-            pt1.setY(pt1.y() + 4);
-            pt2.setY(pt2.y() - 4);
+            QPointF pt1 = V->template_coord2pix(m, 0, -1.0 / csi.vert_scaling_factor / 2*0.8);
+            QPointF pt2 = V->template_coord2pix(m, 0, 1.0 / csi.vert_scaling_factor / 2*0.8);
+            pt1.setX(left_margin);
+            pt2.setX(left_margin);
+            pt1.setY(pt1.y());
+            pt2.setY(pt2.y());
             draw_axis_opts opts;
             opts.pt1 = pt1;
             opts.pt2 = pt2;
             opts.draw_tick_labels = false;
+            opts.tick_length = 0;
             opts.draw_range = true;
-            opts.minval = -1.0 / csi.vert_scaling_factor / 2;
-            opts.maxval = 1.0 / csi.vert_scaling_factor / 2;
+            opts.minval = -1.0 / csi.vert_scaling_factor / 2 *0.8;
+            opts.maxval = 1.0 / csi.vert_scaling_factor / 2 *0.8;
             opts.orientation = Qt::Vertical;
             draw_axis(&painter, opts);
         }
@@ -1115,7 +1118,7 @@ QList<ClusterData> MVClusterDetailWidgetPrivate::merge_cluster_data(const Cluste
 
 QPointF ClusterView::template_coord2pix(int m, double t, double val)
 {
-    double pcty = m_csi.channel_locations.value(m) - val * m_csi.vert_scaling_factor; //negative because (0,0) is top-left, not bottom-right
+    double pcty = m_csi.channel_locations.value(m) - m_csi.channel_location_spacing * val * m_csi.vert_scaling_factor; //negative because (0,0) is top-left, not bottom-right
     double pctx = 0;
     if (m_T)
         pctx = (t + 0.5) / m_T;
