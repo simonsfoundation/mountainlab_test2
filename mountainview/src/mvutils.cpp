@@ -18,7 +18,7 @@ Mda compute_mean_waveform(DiskArrayModel_New* C)
 {
     Q_UNUSED(C)
     Mda ret;
-    return ret; //disabled for now.
+    return ret; //disabled for now. Anyway, DiskArrayModel_New is going away once we remove old spikespy
     /*
 	if (!C->dim3()) return ret;
 	int M=C->size(0);
@@ -236,6 +236,22 @@ void user_save_image(const QImage& img)
     ImageSaveDialog::presentImage(img);
 }
 
+double round_down_to_2_significant_figures(double val)
+{
+    if (!val)
+        return 0;
+    if (val < 0)
+        return -round_down_to_2_significant_figures(-val);
+    double factor = 1;
+    while (val * factor >= 100) {
+        factor /= 10;
+    }
+    while (val * factor < 10) {
+        factor *= 10;
+    }
+    return ((int)(val * factor)) * 1.0 / factor;
+}
+
 void draw_axis(QPainter* painter, draw_axis_opts opts)
 {
     if (opts.orientation == Qt::Vertical) {
@@ -246,8 +262,24 @@ void draw_axis(QPainter* painter, draw_axis_opts opts)
             opts.pt1 = tmp;
         }
     }
-    painter->drawLine(opts.pt1, opts.pt2);
+
     double range = opts.maxval - opts.minval;
+
+    if (opts.draw_range) {
+        //adjust so that range has 2 significant figures
+        double range2 = round_down_to_2_significant_figures(range);
+        double frac = range2 / range; //this is the fraction by which we are reducing the range
+        QPointF pt_avg = (opts.pt1 + opts.pt2) / 2;
+        opts.pt1 = pt_avg + frac * (opts.pt1 - pt_avg);
+        opts.pt2 = pt_avg + frac * (opts.pt2 - pt_avg);
+        double avg_val = (opts.minval + opts.maxval) / 2;
+        opts.minval = avg_val + frac * (opts.minval - avg_val);
+        opts.maxval = avg_val + frac * (opts.maxval - avg_val);
+        range = opts.maxval - opts.minval; //recompute the range
+    }
+
+    painter->drawLine(opts.pt1, opts.pt2);
+
     if (opts.maxval <= opts.minval)
         return;
     QList<double> possible_tick_intervals;
@@ -299,7 +331,10 @@ void draw_axis(QPainter* painter, draw_axis_opts opts)
     }
     if (opts.draw_range) {
         if (opts.orientation == Qt::Horizontal) {
-            /// TODO handle horizontal case
+            /// TODO (LOW) handle horizontal case of drawing axis range
+            //draw little segments pointing up
+            painter->drawLine(opts.pt1.x(), opts.pt1.y(), opts.pt1.x(), opts.pt1.y() - 4);
+            painter->drawLine(opts.pt2.x(), opts.pt2.y(), opts.pt2.x(), opts.pt2.y() - 4);
         }
         else {
             painter->save();
@@ -312,6 +347,9 @@ void draw_axis(QPainter* painter, draw_axis_opts opts)
             int align = Qt::AlignBottom | Qt::AlignCenter;
             painter->drawText(rect, align, text);
             painter->restore();
+            //draw little segments pointing right
+            painter->drawLine(opts.pt1.x(), opts.pt1.y(), opts.pt1.x() + 4, opts.pt1.y());
+            painter->drawLine(opts.pt2.x(), opts.pt2.y(), opts.pt2.x() + 4, opts.pt2.y());
         }
     }
 }

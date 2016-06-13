@@ -374,14 +374,15 @@ ChannelSpacingInfo compute_channel_spacing_info(QList<ClusterData>& cdata, doubl
             }
         }
     }
-    info.channel_location_spacing=1.0/M;
-    double y0 = 0.5 *info.channel_location_spacing;
+    info.channel_location_spacing = 1.0 / M;
+    double y0 = 0.5 * info.channel_location_spacing;
     for (int m = 0; m < M; m++) {
         info.channel_locations << y0;
         y0 += info.channel_location_spacing;
     }
     double maxabsval = qMax(maxval, -minval);
-    info.vert_scaling_factor = 0.5 / M / maxabsval * vscale_factor;
+    //info.vert_scaling_factor = 0.5 / M / maxabsval * vscale_factor;
+    info.vert_scaling_factor = 1.0 / maxabsval * vscale_factor;
     return info;
 }
 
@@ -1004,11 +1005,14 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
 
     painter.setClipRect(0, 0, W_in, H_in);
     if (first_view) {
+        double fac0 = 0.95; //to leave a bit of a gap
         ClusterView* V = first_view;
         int M = cluster_data_merged[0].template0.N1();
-        for (int m = 0; m < M; m++) {
-            QPointF pt1 = V->template_coord2pix(m, 0, -1.0 / csi.vert_scaling_factor / 2*0.8);
-            QPointF pt2 = V->template_coord2pix(m, 0, 1.0 / csi.vert_scaling_factor / 2*0.8);
+        Q_UNUSED(M)
+        //for (int m = 0; m < M; m++) {
+        for (int m = 0; m <= 0; m++) {
+            QPointF pt1 = V->template_coord2pix(m, 0, -0.5 / csi.vert_scaling_factor * fac0);
+            QPointF pt2 = V->template_coord2pix(m, 0, 0.5 / csi.vert_scaling_factor * fac0);
             pt1.setX(left_margin);
             pt2.setX(left_margin);
             pt1.setY(pt1.y());
@@ -1019,8 +1023,8 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
             opts.draw_tick_labels = false;
             opts.tick_length = 0;
             opts.draw_range = true;
-            opts.minval = -1.0 / csi.vert_scaling_factor / 2 *0.8;
-            opts.maxval = 1.0 / csi.vert_scaling_factor / 2 *0.8;
+            opts.minval = -0.5 / csi.vert_scaling_factor * fac0;
+            opts.maxval = 0.5 / csi.vert_scaling_factor * fac0;
             opts.orientation = Qt::Vertical;
             draw_axis(&painter, opts);
         }
