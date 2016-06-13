@@ -18,7 +18,7 @@ Mda compute_mean_waveform(DiskArrayModel_New* C)
 {
     Q_UNUSED(C)
     Mda ret;
-    return ret; //disabled for now.
+    return ret; //disabled for now. Anyway, DiskArrayModel_New is going away once we remove old spikespy
     /*
 	if (!C->dim3()) return ret;
 	int M=C->size(0);
@@ -234,4 +234,122 @@ QList<Epoch> read_epochs(const QString& path)
 void user_save_image(const QImage& img)
 {
     ImageSaveDialog::presentImage(img);
+}
+
+double round_down_to_2_significant_figures(double val)
+{
+    if (!val)
+        return 0;
+    if (val < 0)
+        return -round_down_to_2_significant_figures(-val);
+    double factor = 1;
+    while (val * factor >= 100) {
+        factor /= 10;
+    }
+    while (val * factor < 10) {
+        factor *= 10;
+    }
+    return ((int)(val * factor)) * 1.0 / factor;
+}
+
+void draw_axis(QPainter* painter, draw_axis_opts opts)
+{
+    if (opts.orientation == Qt::Vertical) {
+        //ensure that pt2.y>=pt1.y
+        if (opts.pt2.y() < opts.pt1.y()) {
+            QPointF tmp = opts.pt2;
+            opts.pt2 = opts.pt1;
+            opts.pt1 = tmp;
+        }
+    }
+
+    double range = opts.maxval - opts.minval;
+
+    if (opts.draw_range) {
+        //adjust so that range has 2 significant figures
+        double range2 = round_down_to_2_significant_figures(range);
+        double frac = range2 / range; //this is the fraction by which we are reducing the range
+        QPointF pt_avg = (opts.pt1 + opts.pt2) / 2;
+        opts.pt1 = pt_avg + frac * (opts.pt1 - pt_avg);
+        opts.pt2 = pt_avg + frac * (opts.pt2 - pt_avg);
+        double avg_val = (opts.minval + opts.maxval) / 2;
+        opts.minval = avg_val + frac * (opts.minval - avg_val);
+        opts.maxval = avg_val + frac * (opts.maxval - avg_val);
+        range = opts.maxval - opts.minval; //recompute the range
+    }
+
+    painter->drawLine(opts.pt1, opts.pt2);
+
+    if (opts.maxval <= opts.minval)
+        return;
+    QList<double> possible_tick_intervals;
+    for (double x = 0.00001; x <= 10000; x *= 10) {
+        possible_tick_intervals << x << x * 2 << x * 5;
+    }
+
+    long best_count = 0;
+    double best_interval = 0;
+    for (int i = 0; i < possible_tick_intervals.count(); i++) {
+        long count = (long)range / possible_tick_intervals[i];
+        if (count >= 4) {
+            if ((best_interval == 0) || (count < best_count)) {
+                best_count = count;
+                best_interval = possible_tick_intervals[i];
+            }
+        }
+    }
+    double tick_length = opts.tick_length;
+    if (best_interval) {
+        long ind1 = (long)(opts.minval / best_interval) - 1;
+        long ind2 = (long)(opts.maxval / best_interval) + 1;
+        for (long ind = ind1; ind <= ind2; ind++) {
+            if ((opts.minval <= ind * best_interval) && (ind * best_interval <= opts.maxval)) {
+                double pct = (ind * best_interval - opts.minval) / (opts.maxval - opts.minval);
+                if (opts.orientation == Qt::Vertical)
+                    pct = 1 - pct;
+                QPointF ptA = opts.pt1 + pct * (opts.pt2 - opts.pt1);
+                QPointF ptB;
+                QRectF text_rect;
+                int align;
+                if (opts.orientation == Qt::Horizontal) {
+                    ptB = ptA + QPointF(0, tick_length);
+                    text_rect = QRectF(ptB + QPointF(20, 0), QSize(40, 50 - 3));
+                    align = Qt::AlignTop | Qt::AlignCenter;
+                }
+                else { //vertical
+                    ptB = ptA + QPointF(-tick_length, 0);
+                    text_rect = QRectF(ptB + QPointF(-50, -20), QSize(50 - 3, 40));
+                    align = Qt::AlignRight | Qt::AlignVCenter;
+                }
+                painter->drawLine(ptA, ptB);
+                QString text = QString("%1").arg(ind * best_interval);
+                if (opts.draw_tick_labels) {
+                    painter->drawText(text_rect, align, text);
+                }
+            }
+        }
+    }
+    if (opts.draw_range) {
+        if (opts.orientation == Qt::Horizontal) {
+            /// TODO (LOW) handle horizontal case of drawing axis range
+            //draw little segments pointing up
+            painter->drawLine(opts.pt1.x(), opts.pt1.y(), opts.pt1.x(), opts.pt1.y() - 4);
+            painter->drawLine(opts.pt2.x(), opts.pt2.y(), opts.pt2.x(), opts.pt2.y() - 4);
+        }
+        else {
+            painter->save();
+            painter->rotate(-90);
+            QRectF rect(opts.pt1.x() - 50, opts.pt1.y() - 50, 50 - 3, opts.pt2.y() - opts.pt1.y() + 100);
+            QTransform transform;
+            transform.rotate(90);
+            rect = transform.mapRect(rect);
+            QString text = QString("%1").arg(range);
+            int align = Qt::AlignBottom | Qt::AlignCenter;
+            painter->drawText(rect, align, text);
+            painter->restore();
+            //draw little segments pointing right
+            painter->drawLine(opts.pt1.x(), opts.pt1.y(), opts.pt1.x() + 4, opts.pt1.y());
+            painter->drawLine(opts.pt2.x(), opts.pt2.y(), opts.pt2.x() + 4, opts.pt2.y());
+        }
+    }
 }

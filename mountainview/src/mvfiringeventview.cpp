@@ -32,7 +32,7 @@ public:
     int m_current_event_index;
 
     //settings
-    double m_hmargin, m_vmargin;
+    double m_lmargin, m_rmargin, m_tmargin, m_bmargin;
 
     QPointF coord2imagepix(const QPointF& p, int W, int H);
     QPointF windowpix2coord(const QPointF& p);
@@ -56,8 +56,10 @@ MVFiringEventView::MVFiringEventView()
     d->m_update_scheduled = false;
     d->m_current_event_index = -1;
 
-    d->m_hmargin = 25;
-    d->m_vmargin = 25;
+    d->m_lmargin = 50;
+    d->m_rmargin = 25;
+    d->m_tmargin = 25;
+    d->m_bmargin = 25;
 
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
@@ -80,8 +82,8 @@ void MVFiringEventView::setFirings(const Mda& firings)
     }
 
     d->m_max_timepoint = compute_max(d->m_times);
-    d->m_min_amplitude = compute_min(d->m_amplitudes);
-    d->m_max_amplitude = compute_max(d->m_amplitudes);
+    d->m_min_amplitude = qMin(0.0,compute_min(d->m_amplitudes));
+    d->m_max_amplitude = qMax(0.0,compute_max(d->m_amplitudes));
 
     d->schedule_update();
 }
@@ -344,7 +346,7 @@ void MVFiringEventViewPrivate::do_paint(QPainter& painter, int W, int H)
 {
     painter.fillRect(0, 0, W, H, QColor(160, 160, 160));
 
-    QRectF target = QRectF(m_hmargin, m_vmargin, W - 2 * m_hmargin, H - 2 * m_vmargin);
+    QRectF target = QRectF(m_lmargin, m_tmargin, W - m_lmargin - m_rmargin, H - m_tmargin - m_bmargin);
     m_target_rect = target;
 
     QFont font = painter.font();
@@ -359,13 +361,28 @@ void MVFiringEventViewPrivate::do_paint(QPainter& painter, int W, int H)
         QPointF pt2 = coord2imagepix(QPointF(epoch.t_end, m_min_amplitude - margin), target.width(), target.height());
         QRect RR(target.x() + pt1.x(), target.y() + pt1.y(), pt2.x() - pt1.x(), pt2.y() - pt1.y());
         painter.fillRect(RR, epoch_color);
-        RR.adjust(0, m_vmargin, 0, 0);
+        RR.adjust(0, m_tmargin, 0, 0); //might not be right
         if (fabs(m_max_amplitude) > fabs(m_min_amplitude)) {
             painter.drawText(RR, Qt::AlignTop | Qt::AlignHCenter, epoch.name);
-        } else {
+        }
+        else {
             painter.drawText(RR, Qt::AlignBottom | Qt::AlignHCenter, epoch.name);
         }
     }
+
+    draw_axis_opts opts;
+    opts.pt1 = QPointF(m_target_rect.topLeft());
+    opts.pt2 = QPointF(m_target_rect.bottomLeft());
+    opts.minval = m_min_amplitude;
+    opts.maxval = m_max_amplitude;
+    opts.orientation = Qt::Vertical;
+    opts.tick_length = 5;
+    opts.draw_tick_labels = true;
+    opts.draw_range = false;
+    font = painter.font();
+    font.setPixelSize(12);
+    painter.setFont(font);
+    draw_axis(&painter, opts);
 
     painter.drawImage(target, m_image.scaled(target.width(), target.height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
 }

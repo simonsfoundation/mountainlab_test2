@@ -42,6 +42,7 @@ struct ClusterData {
 
 struct ChannelSpacingInfo {
     QList<double> channel_locations;
+    double channel_location_spacing;
     double vert_scaling_factor;
 };
 
@@ -123,6 +124,7 @@ public:
     {
         return m_rect;
     }
+    QPointF template_coord2pix(int m, double t, double val);
 
     MVClusterDetailWidget* q;
     MVClusterDetailWidgetPrivate* d;
@@ -142,7 +144,6 @@ private:
     QJsonObject m_attributes;
     bool m_stdev_shading;
 
-    QPointF template_coord2pix(int m, double t, double val);
     QColor get_firing_rate_text_color(double rate);
     QColor get_cluster_assessment_text_color(QString aa);
 };
@@ -315,13 +316,11 @@ void MVClusterDetailWidget::setColors(const QMap<QString, QColor>& colors)
 
 bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach(int val, S1)
-    {
+    foreach (int val, S1) {
         if (!S2.contains(val))
             return false;
     }
-    foreach(int val, S2)
-    {
+    foreach (int val, S2) {
         if (!S1.contains(val))
             return false;
     }
@@ -375,13 +374,15 @@ ChannelSpacingInfo compute_channel_spacing_info(QList<ClusterData>& cdata, doubl
             }
         }
     }
-    double y0 = 0.5 / M;
+    info.channel_location_spacing = 1.0 / M;
+    double y0 = 0.5 * info.channel_location_spacing;
     for (int m = 0; m < M; m++) {
         info.channel_locations << y0;
-        y0 += 1.0 / M;
+        y0 += info.channel_location_spacing;
     }
     double maxabsval = qMax(maxval, -minval);
-    info.vert_scaling_factor = 0.5 / M / maxabsval * vscale_factor;
+    //info.vert_scaling_factor = 0.5 / M / maxabsval * vscale_factor;
+    info.vert_scaling_factor = 1.0 / maxabsval * vscale_factor;
     return info;
 }
 
@@ -400,20 +401,25 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_vscale_factor *= factor;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_vscale_factor /= factor;
         update();
-    } else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
+    }
+    else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
         d->zoom(1.1);
-    } else if (evt->key() == Qt::Key_Minus) {
+    }
+    else if (evt->key() == Qt::Key_Minus) {
         d->zoom(1 / 1.1);
-    } else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
+    }
+    else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
         QList<int> ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             ks << d->m_views[i]->k();
         }
         d->m_view_agent->setSelectedClusters(ks);
-    } else if (evt->key() == Qt::Key_Left) {
+    }
+    else if (evt->key() == Qt::Key_Left) {
         int view_index = d->get_current_view_index();
         if (view_index > 0) {
             int k = d->m_views[view_index - 1]->k();
@@ -425,7 +431,8 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             d->m_view_agent->setSelectedClusters(ks);
             d->m_view_agent->setCurrentCluster(k);
         }
-    } else if (evt->key() == Qt::Key_Right) {
+    }
+    else if (evt->key() == Qt::Key_Right) {
         int view_index = d->get_current_view_index();
         if ((view_index >= 0) && (view_index + 1 < d->m_views.count())) {
             int k = d->m_views[view_index + 1]->k();
@@ -437,13 +444,15 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             d->m_view_agent->setSelectedClusters(ks);
             d->m_view_agent->setCurrentCluster(k);
         }
-    } else if (evt->matches(QKeySequence::SelectAll)) {
+    }
+    else if (evt->matches(QKeySequence::SelectAll)) {
         QList<int> all_ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             all_ks << d->m_views[i]->k();
         }
         d->m_view_agent->setSelectedClusters(all_ks);
-    } else
+    }
+    else
         evt->ignore();
 }
 
@@ -561,7 +570,8 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
     int view_index = d->find_view_index_at(pt);
     if (view_index >= 0) {
         d->set_hovered_k(d->m_views[view_index]->k());
-    } else {
+    }
+    else {
         d->set_hovered_k(-1);
     }
 }
@@ -662,7 +672,8 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
         m_scroll_x = x0 - 100;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    } else if (x0 > m_scroll_x + q->width()) {
+    }
+    else if (x0 > m_scroll_x + q->width()) {
         m_scroll_x = x0 - q->width() + 100;
     }
 }
@@ -677,7 +688,8 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
         m_scroll_x = view->x_position_before_scaling * m_space_ratio - current_screen_x;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    } else {
+    }
+    else {
         m_space_ratio *= factor;
     }
     q->update();
@@ -746,7 +758,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     int xmargin = 1;
     int ymargin = 8;
     QRectF rect2(rect.x() + xmargin, rect.y() + ymargin, rect.width() - xmargin * 2, rect.height() - ymargin * 2);
-    painter->setClipRect(rect);
+    painter->setClipRect(rect, Qt::IntersectClip);
 
     QColor background_color = d->m_colors["view_background"];
     if (m_highlighted)
@@ -912,27 +924,32 @@ double ClusterView::spaceNeeded()
     return 1;
 }
 
-void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
+void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_in)
 {
-    painter.fillRect(0, 0, W, H, m_colors["background"]);
+    painter.fillRect(0, 0, W_in, H_in, m_colors["background"]);
 
     int right_margin = 10; //make some room for the icon
-    W = W - right_margin;
+    int left_margin = 30; //make room for the axis
+    int W = W_in - right_margin - left_margin;
+    int H = H_in;
 
     if (m_calculator.isComputing()) {
         QFont font = painter.font();
         font.setPointSize(30);
         painter.setFont(font);
-        painter.drawText(QRectF(0, 0, W, H), Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
+        painter.drawText(QRectF(left_margin, 0, W, H), Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
         return;
     }
+
+    painter.setClipRect(QRectF(left_margin, 0, W, H));
 
     QList<ClusterData> cluster_data_merged;
     QMap<int, QJsonObject> cluster_attributes;
     if (m_view_agent) {
         cluster_data_merged = merge_cluster_data(m_view_agent->clusterMerge(), m_cluster_data);
         cluster_attributes = m_view_agent->clusterAttributes();
-    } else {
+    }
+    else {
         cluster_data_merged = m_cluster_data;
     }
 
@@ -971,15 +988,46 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W, int H)
     ChannelSpacingInfo csi = compute_channel_spacing_info(cluster_data_merged, m_vscale_factor);
 
     float x0_before_scaling = 0;
+    ClusterView* first_view = 0;
     for (int i = 0; i < m_views.count(); i++) {
         ClusterView* V = m_views[i];
-        QRectF rect(x0_before_scaling * m_space_ratio - m_scroll_x, 0, V->spaceNeeded() * m_space_ratio, H);
+        QRectF rect(left_margin + x0_before_scaling * m_space_ratio - m_scroll_x, 0, V->spaceNeeded() * m_space_ratio, H);
         V->setChannelSpacingInfo(csi);
-        if ((rect.x() + rect.width() >= 0) && (rect.x() <= W)) {
+        if ((rect.x() + rect.width() >= left_margin) && (rect.x() <= left_margin + W)) {
+            first_view = V;
+            QRegion save_clip_region = painter.clipRegion();
             V->paint(&painter, rect);
+            painter.setClipRegion(save_clip_region);
         }
         V->x_position_before_scaling = x0_before_scaling;
         x0_before_scaling += V->spaceNeeded();
+    }
+
+    painter.setClipRect(0, 0, W_in, H_in);
+    if (first_view) {
+        double fac0 = 0.95; //to leave a bit of a gap
+        ClusterView* V = first_view;
+        int M = cluster_data_merged[0].template0.N1();
+        Q_UNUSED(M)
+        //for (int m = 0; m < M; m++) {
+        for (int m = 0; m <= 0; m++) {
+            QPointF pt1 = V->template_coord2pix(m, 0, -0.5 / csi.vert_scaling_factor * fac0);
+            QPointF pt2 = V->template_coord2pix(m, 0, 0.5 / csi.vert_scaling_factor * fac0);
+            pt1.setX(left_margin);
+            pt2.setX(left_margin);
+            pt1.setY(pt1.y());
+            pt2.setY(pt2.y());
+            draw_axis_opts opts;
+            opts.pt1 = pt1;
+            opts.pt2 = pt2;
+            opts.draw_tick_labels = false;
+            opts.tick_length = 0;
+            opts.draw_range = true;
+            opts.minval = -0.5 / csi.vert_scaling_factor * fac0;
+            opts.maxval = 0.5 / csi.vert_scaling_factor * fac0;
+            opts.orientation = Qt::Vertical;
+            draw_axis(&painter, opts);
+        }
     }
 }
 
@@ -1061,7 +1109,8 @@ QList<ClusterData> MVClusterDetailWidgetPrivate::merge_cluster_data(const Cluste
                 }
             }
             ret << combine_cluster_data_group(group, CD[i]);
-        } else {
+        }
+        else {
             ClusterData CD0;
             CD0.k = CD[i].k;
             CD0.channel = CD[i].channel;
@@ -1073,7 +1122,7 @@ QList<ClusterData> MVClusterDetailWidgetPrivate::merge_cluster_data(const Cluste
 
 QPointF ClusterView::template_coord2pix(int m, double t, double val)
 {
-    double pcty = m_csi.channel_locations.value(m) - val * m_csi.vert_scaling_factor; //negative because (0,0) is top-left, not bottom-right
+    double pcty = m_csi.channel_locations.value(m) - m_csi.channel_location_spacing * val * m_csi.vert_scaling_factor; //negative because (0,0) is top-left, not bottom-right
     double pctx = 0;
     if (m_T)
         pctx = (t + 0.5) / m_T;
@@ -1100,11 +1149,14 @@ QColor ClusterView::get_cluster_assessment_text_color(QString aa)
     Q_UNUSED(aa)
     if (aa.toLower() == "noise") {
         return Qt::darkGray;
-    } else if (aa.toLower() == "good") {
+    }
+    else if (aa.toLower() == "good") {
         return Qt::darkGreen;
-    } else if (aa.toLower() == "mua") {
+    }
+    else if (aa.toLower() == "mua") {
         return Qt::darkBlue;
-    } else {
+    }
+    else {
         return Qt::black;
     }
 }

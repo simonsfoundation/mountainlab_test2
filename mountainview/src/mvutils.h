@@ -11,6 +11,7 @@
 #include <QList>
 #include <QColor>
 #include <math.h>
+#include <QPainter>
 
 ///A firing event defined by a time and a label
 struct MVEvent {
@@ -49,5 +50,26 @@ Mda compute_features(const QList<DiskArrayModel_New*>& C);
 QColor get_heat_map_color(double val);
 
 void user_save_image(const QImage& img);
+
+struct draw_axis_opts {
+    draw_axis_opts()
+    {
+        orientation = Qt::Vertical;
+        minval = 0;
+        maxval = 1;
+        tick_length = 5;
+        draw_tick_labels = true;
+        draw_range = false;
+    }
+
+    QPointF pt1, pt2;
+    Qt::Orientation orientation;
+    double minval, maxval;
+    double tick_length;
+    bool draw_tick_labels;
+    bool draw_range;
+};
+
+void draw_axis(QPainter* painter, draw_axis_opts opts);
 
 #endif // MVUTILS_H
