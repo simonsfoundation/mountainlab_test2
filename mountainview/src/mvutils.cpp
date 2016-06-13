@@ -235,3 +235,54 @@ void user_save_image(const QImage& img)
 {
     ImageSaveDialog::presentImage(img);
 }
+
+void draw_axis(QPainter* painter, draw_axis_opts opts)
+{
+    painter->drawLine(opts.pt1, opts.pt2);
+    double range = opts.maxval - opts.minval;
+    if (opts.maxval <= opts.minval)
+        return;
+    QList<double> possible_tick_intervals;
+    for (double x = 0.00001; x <= 10000; x *= 10) {
+        possible_tick_intervals << x << x * 2 << x * 5;
+    }
+
+    long best_count = 0;
+    double best_interval = 0;
+    for (int i = 0; i < possible_tick_intervals.count(); i++) {
+        long count = (long)range / possible_tick_intervals[i];
+        if (count >= 4) {
+            if ((best_interval == 0) || (count < best_count)) {
+                best_count = count;
+                best_interval = possible_tick_intervals[i];
+            }
+        }
+    }
+    double tick_length = opts.tick_length;
+    if (best_interval) {
+        long ind1 = (long)(opts.minval / best_interval) - 1;
+        long ind2 = (long)(opts.maxval / best_interval) + 1;
+        for (long ind = ind1; ind <= ind2; ind++) {
+            if ((opts.minval <= ind * best_interval) && (ind * best_interval <= opts.maxval)) {
+                double pct = (ind * best_interval - opts.minval) / (opts.maxval - opts.minval);
+                QPointF ptA = opts.pt1 + pct * (opts.pt2 - opts.pt1);
+                QPointF ptB;
+                QRectF text_rect;
+                int align;
+                if (opts.orientation == Qt::Horizontal) {
+                    ptB = ptA + QPointF(0, tick_length);
+                    text_rect=QRectF(ptB-QPointF(-20,0),QSize(40,50));
+                    align=Qt::AlignTop;
+                }
+                else { //vertical
+                    ptB = ptA + QPointF(-tick_length, 0);
+                    text_rect=QRectF(ptB-QPointF(-50,-20),QSize(50,40));
+                    align=Qt::AlignRight;
+                }
+                painter->drawLine(ptA, ptB);
+                QString text=QString("%1").arg(ind*best_interval);
+                painter->drawText(text_rect,align,text);
+            }
+        }
+    }
+}
