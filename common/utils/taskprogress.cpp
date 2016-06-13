@@ -15,229 +15,6 @@
 #include <QColor>
 #endif
 
-#if 0
-
-class TaskProgressPrivate {
-public:
-    TaskProgress* q;
-    TaskInfo m_info;
-};
-
-class TaskProgressAgentPrivate {
-public:
-    TaskProgressAgent* q;
-    QList<TaskInfo> m_completed_tasks;
-    QList<TaskProgress*> m_active_tasks;
-    bool m_emit_tasks_changed_scheduled;
-    QDateTime m_last_emit_tasks_changed;
-    QMutex m_addtask_removetask_mutex;
-    QMap<QString, double> m_quantities;
-    QMutex m_mutex;
-};
-
-TaskProgress::TaskProgress(const QString& label, const QString& description)
-{
-    d = new TaskProgressPrivate;
-    d->q = this;
-
-    d->m_info.label = label;
-    d->m_info.description = description;
-    d->m_info.progress = 0;
-    d->m_info.start_time = QDateTime::currentDateTime();
-
-    TaskProgressAgent::globalInstance()->addTask(this);
-}
-
-TaskProgress::~TaskProgress()
-{
-    this->log("Destructor");
-    if (d->m_info.progress != 1) {
-        d->m_info.end_time = QDateTime::currentDateTime();
-    }
-    TaskProgressAgent::globalInstance()->removeTask(this);
-    delete d;
-}
-
-void TaskProgress::setLabel(const QString& label)
-{
-    {
-        if (d->m_info.label == label)
-            return;
-        d->m_info.label = label;
-        emit changed();
-    }
-    this->log(label);
-}
-
-void TaskProgress::setDescription(const QString& description)
-{
-    {
-        if (d->m_info.description == description)
-            return;
-        d->m_info.description = description;
-        emit changed();
-    }
-    this->log(description);
-}
-
-void TaskProgress::log(const QString& log_message)
-{
-    TaskProgressLogMessage MSG;
-    MSG.message = log_message;
-    MSG.time = QDateTime::currentDateTime();
-    d->m_info.log_messages << MSG;
-    emit changed();
-}
-
-void TaskProgress::error(const QString& error_message)
-{
-    qWarning() << "TaskProgress Error:: " + error_message;
-    this->log("ERROR: " + error_message);
-    {
-        d->m_info.error = error_message;
-    }
-}
-
-void TaskProgress::setProgress(double pct)
-{
-    if (d->m_info.progress == pct)
-        return;
-    d->m_info.progress = pct;
-    emit changed();
-    if (pct == 1) {
-        d->m_info.end_time = QDateTime::currentDateTime();
-        emit completed(d->m_info);
-    }
-}
-
-TaskInfo TaskProgress::getInfo() const
-{
-    return d->m_info;
-}
-
-TaskProgressAgent::TaskProgressAgent()
-{
-    d = new TaskProgressAgentPrivate;
-    d->q = this;
-    d->m_emit_tasks_changed_scheduled = false;
-}
-
-TaskProgressAgent::~TaskProgressAgent()
-{
-    delete d;
-}
-
-QList<TaskInfo> TaskProgressAgent::activeTasks()
-{
-    QMutexLocker locker(&d->m_mutex);
-    QList<TaskInfo> ret;
-    QList<TaskProgress*> to_remove;
-    foreach(TaskProgress * X, d->m_active_tasks)
-    {
-        TaskInfo info = X->getInfo();
-        if (!info.label.isEmpty()) {
-            if (info.progress < 1) {
-                ret << X->getInfo();
-            }
-        }
-    }
-
-    return ret;
-}
-
-QList<TaskInfo> TaskProgressAgent::completedTasks()
-{
-    QMutexLocker locker(&d->m_mutex);
-    for (int i = 0; i < d->m_completed_tasks.count(); i++) {
-        d->m_completed_tasks[i].progress = 1; // kind of a hack to make sure the progress is 1 for all completed tasks
-    }
-    QList<TaskInfo> ret;
-    for (int i = 0; i < d->m_completed_tasks.count(); i++) {
-        if (!d->m_completed_tasks[i].label.isEmpty())
-            ret << d->m_completed_tasks[i];
-    }
-    return ret;
-}
-
-/// Witold will this way work?
-Q_GLOBAL_STATIC(QMutex, global_instance_mutex)
-Q_GLOBAL_STATIC(TaskProgressAgent, theInstance)
-TaskProgressAgent* TaskProgressAgent::globalInstance()
-{
-    QMutexLocker locker(global_instance_mutex);
-    return theInstance;
-}
-
-void TaskProgressAgent::slot_schedule_emit_tasks_changed()
-{
-    if (d->m_emit_tasks_changed_scheduled)
-        return;
-    if (d->m_last_emit_tasks_changed.secsTo(QDateTime::currentDateTime()) >= 1) {
-        slot_emit_tasks_changed();
-    } else {
-        d->m_emit_tasks_changed_scheduled = true;
-        QTimer::singleShot(300, this, SLOT(slot_emit_tasks_changed()));
-    }
-}
-
-void TaskProgressAgent::slot_emit_tasks_changed()
-{
-    {
-        d->m_last_emit_tasks_changed = QDateTime::currentDateTime();
-        d->m_emit_tasks_changed_scheduled = false;
-    }
-    emit tasksChanged();
-}
-
-void TaskProgressAgent::slot_task_completed(TaskInfo info)
-{
-    QMutexLocker locker(&d->m_mutex);
-    d->m_completed_tasks.prepend(info);
-}
-
-void TaskProgressAgent::addTask(TaskProgress* T)
-{
-    {
-        QMutexLocker locker(&d->m_mutex);
-        QString label = T->getInfo().label;
-        d->m_active_tasks.prepend(T);
-        connect(T, SIGNAL(changed()), this, SLOT(slot_schedule_emit_tasks_changed()), Qt::QueuedConnection);
-        connect(T, SIGNAL(completed(TaskInfo)), this, SLOT(slot_task_completed(TaskInfo)), Qt::QueuedConnection);
-    }
-    emit tasksChanged();
-}
-
-void TaskProgressAgent::removeTask(TaskProgress* T)
-{
-    {
-        QMutexLocker locker(&d->m_mutex);
-        QString label = T->getInfo().label;
-        TaskInfo info = T->getInfo();
-        if (info.progress != 1) {
-            d->m_completed_tasks.prepend(T->getInfo());
-        }
-        d->m_active_tasks.removeAll(T);
-    }
-    emit tasksChanged();
-}
-
-void TaskProgressAgent::incrementQuantity(QString name, double val)
-{
-    {
-        QMutexLocker locker(&d->m_mutex);
-        d->m_quantities[name] = d->m_quantities[name] + val;
-    }
-    emit quantitiesChanged();
-}
-
-double TaskProgressAgent::getQuantity(QString name)
-{
-    QMutexLocker locker(&d->m_mutex);
-    return d->m_quantities.value(name);
-}
-
-#else
-
 TaskProgress::TaskProgress()
     : QObject()
 {
@@ -380,8 +157,6 @@ QString TaskProgress::catToString(TaskProgress::StandardCategory cat) const
     }
 }
 
-#endif
-
 namespace TaskManager {
 
 /*!
@@ -409,6 +184,7 @@ public:
     TaskProgressMonitorPrivate()
         : lock(QMutex::Recursive)
     {
+        qRegisterMetaType<TaskInfo>();
     }
     ~TaskProgressMonitorPrivate()
     {
@@ -434,6 +210,11 @@ public:
 
     void update(TaskProgressAgent* agent)
     {
+        // if progress reaches 1.0, we should "complete" the task
+        // by moving it in the list
+
+        if (agent->progress() >= 1.0)
+            complete(agent);
         emit changed(agent);
     }
     void addLog(TaskProgressAgent* agent)
@@ -444,18 +225,24 @@ public:
     int count() const override
     {
         QMutexLocker locker(&lock);
-        return m_data.count();
+        return m_completedData.count()+m_data.count();
     }
     TaskProgressAgent* at(int index) const override
     {
         QMutexLocker locker(&lock);
-        return m_data.at(index);
+        const int adc = m_data.count();
+        if (index < adc)
+            return m_data.at(index);
+        return m_completedData.at(index-adc);
     }
 
     int indexOf(TaskProgressAgent* agent) const override
     {
         QMutexLocker locker(&lock);
-        return m_data.indexOf(agent);
+        int idx = m_data.indexOf(agent);
+        if (idx >=0) return idx;
+        const int adc = m_data.count();
+        return m_completedData.indexOf(agent)+adc;
     }
     void move(TaskProgressAgent* agent, int to)
     {
@@ -467,7 +254,7 @@ public:
     {
         QMutexLocker locker(&lock);
         TaskProgressAgent* agent = at(from);
-        m_data.move(from, to);
+        m_data.move(from, to); /// FIXME
         emit moved(agent, from, to);
     }
 
@@ -482,17 +269,36 @@ public:
         QMutexLocker locker(&lock);
         return m_quantities.value(name, 0);
     }
+    void complete(TaskProgressAgent *agent) {
+        QMutexLocker locker(&lock);
+        const int idx = m_data.indexOf(agent);
+        if (idx < 0) return; // doesn't exist or already complete
+        const int adc = m_data.count();
+        m_completedData.prepend(agent);
+        m_data.removeAt(idx);
+        if (idx == adc-1) return; // didn't really move
+        emit moved(agent, idx, adc);
+    }
+    void complete(int idx) {
+        QMutexLocker locker(&lock);
+        const int adc = m_data.count();
+        if (idx >= adc) return; // already complete
+        TaskProgressAgent *agent = m_data.at(idx);
+        m_completedData.prepend(agent);
+        m_data.removeAt(idx);
+        if (idx == adc-1) return; // didn't really move
+        emit moved(agent, idx, adc);
+    }
 
     mutable QMutex lock;
 
     static TaskProgressMonitorPrivate* privateInstance();
 
 private:
+    QList<TaskProgressAgent*> m_completedData;
     QList<TaskProgressAgent*> m_data;
     QMap<QString, double> m_quantities;
 
-    // TaskProgressMonitor interface
-public:
 };
 
 Q_GLOBAL_STATIC(TaskProgressMonitorPrivate, _q_tpm_instance)
@@ -523,6 +329,7 @@ void TaskProgressMonitor::removeTask(TaskProgressAgent* agent)
     agent->setParent(instance);
 
     /// TODO: now the manager can reposition the agent on its list
+    instance->complete(agent);
 }
 
 TaskProgressMonitorPrivate* TaskProgressMonitorPrivate::privateInstance()
@@ -898,6 +705,12 @@ QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
         return assembleLog(task);
     case IndentedLogRole:
         return assembleLog(task, "\t");
+    case StatusRole:
+        if (task.end_time.isValid() && task.progress >= 1)
+            return Finished;
+        if (task.end_time.isValid())
+            return Canceled;
+        return Active;
     }
     return QVariant();
 }
@@ -911,6 +724,7 @@ QVariant TaskProgressModel::logData(const QModelIndex& index, int role) const
     switch (role) {
     case Qt::EditRole:
     case Qt::DisplayRole:
+//        return logMessage.time.toString(Qt::SystemLocaleShortDate) + "\t" + logMessage.message;
         if (index.column() == 0)
             return logMessage.time;
         return logMessage.message;
@@ -923,6 +737,27 @@ QVariant TaskProgressModel::logData(const QModelIndex& index, int role) const
     default:
         return QVariant();
     }
+}
+
+bool TaskProgressModel::isActive(const QModelIndex &task) const
+{
+    if (!isTask(task)) return false;
+    return (task.data(StatusRole).toInt() == Active);
+}
+
+bool TaskProgressModel::isCompletedWithin(const QModelIndex &task, int time) const
+{
+    if (!isTask(task)) return false;
+    Status s = (Status)task.data(StatusRole).toInt();
+    if (s == Active) return true;
+    const QDateTime dt = task.data(EndTimeRole).toDateTime();
+    if (dt.addSecs(time) >= QDateTime::currentDateTime()) return true;
+    return false;
+}
+
+bool TaskProgressModel::isTask(const QModelIndex &idx) const
+{
+    return !idx.parent().isValid();
 }
 
 QString TaskProgressModel::assembleLog(const TaskInfo& task, const QString& prefix) const
