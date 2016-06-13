@@ -158,3 +158,20 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
         this->setCurrentCluster(k);
     }
 }
+
+bool MVRange::operator==(const MVRange& other)
+{
+    return ((other.min == min) && (other.max == max));
+}
+
+MVRange MVRange::operator+(double offset)
+{
+    return MVRange(min + offset, max + offset);
+}
+
+MVRange MVRange::operator*(double scale)
+{
+    double center = (min + max) / 2;
+    double span = (max - min);
+    return MVRange(center - span / 2 * scale, center + span / 2 * scale);
+}
