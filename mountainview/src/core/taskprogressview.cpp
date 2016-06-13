@@ -297,7 +297,7 @@ TaskProgressView::TaskProgressView()
     setItemDelegate(new TaskProgressViewDelegate(this));
     TaskManager::TaskProgressModel* model = new TaskManager::TaskProgressModel(this);
     setModel(model);
-    header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    header()->setSectionResizeMode(0, QHeaderView::Stretch);
     header()->hide();
     setExpandsOnDoubleClick(false);
     connect(this, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showLogMessages(QModelIndex)));

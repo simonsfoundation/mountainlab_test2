@@ -119,8 +119,6 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, 0);
 
-    // I think this is no longer needed, thanks WW
-    //qRegisterMetaType<TaskInfo>();
 
     CLParams CLP(argc, argv);
 

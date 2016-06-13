@@ -45,58 +45,6 @@ struct TaskInfo {
 
 Q_DECLARE_METATYPE(TaskInfo)
 
-#if 0
-
-class TaskProgressPrivate;
-class TaskProgress : public QObject {
-    Q_OBJECT
-public:
-    friend class TaskProgressPrivate;
-    TaskProgress(const QString& label = "", const QString& description = "");
-    virtual ~TaskProgress();
-    void setLabel(const QString& label);
-    void setDescription(const QString& description);
-    void log(const QString& log_message);
-    void error(const QString& error_message);
-    void setProgress(double pct);
-
-    TaskInfo getInfo() const;
-signals:
-    void changed();
-    void completed(TaskInfo info);
-
-private:
-    TaskProgressPrivate* d;
-};
-
-class TaskProgressAgentPrivate;
-class TaskProgressAgent : public QObject {
-    Q_OBJECT
-public:
-    friend class TaskProgressAgentPrivate;
-    TaskProgressAgent();
-    virtual ~TaskProgressAgent();
-    void addTask(TaskProgress* T);
-    void removeTask(TaskProgress* T);
-    void incrementQuantity(QString name, double val);
-    double getQuantity(QString name);
-
-    QList<TaskInfo> activeTasks();
-    QList<TaskInfo> completedTasks();
-
-    static TaskProgressAgent* globalInstance();
-signals:
-    void tasksChanged();
-    void quantitiesChanged();
-private slots:
-    void slot_schedule_emit_tasks_changed();
-    void slot_emit_tasks_changed();
-    void slot_task_completed(TaskInfo info);
-
-private:
-    TaskProgressAgentPrivate* d;
-};
-#else
 
 namespace TaskManager {
 class TaskProgressAgent;
@@ -150,7 +98,6 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(TaskProgress::StandardCategories);
 
-#endif
 
 namespace TaskManager {
 
@@ -248,21 +195,31 @@ public:
         EndTimeRole,
         TagsRole,
         LogRole,
-        IndentedLogRole
+        IndentedLogRole,
+        StatusRole,
     };
     enum {
         InvalidId = 0xDEADBEEF
     };
+    enum Status {
+        Active,
+        Canceled,
+        Finished
+    };
+
     TaskProgressModel(QObject* parent = 0);
-    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex& child) const override;
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
+    QModelIndex parent(const QModelIndex& child) const Q_DECL_OVERRIDE;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const Q_DECL_OVERRIDE;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const Q_DECL_OVERRIDE;
     QVariant taskData(const QModelIndex& index, int role = Qt::DisplayRole) const;
     QVariant logData(const QModelIndex& index, int role = Qt::DisplayRole) const;
 
+    bool isActive(const QModelIndex &task) const;
+    bool isCompletedWithin(const QModelIndex &task, int time) const;
 protected:
+    bool isTask(const QModelIndex &idx) const;
     QString assembleLog(const TaskInfo& task, const QString& prefix = QString()) const;
     QString singleLog(const TaskProgressLogMessage& msg, const QString& prefix = QString()) const;
 private slots:
