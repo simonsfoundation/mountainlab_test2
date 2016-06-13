@@ -294,21 +294,9 @@ int main(int argc, char* argv[])
 
 QColor brighten(QColor col, int amount)
 {
-    int r = col.red() + amount;
-    int g = col.green() + amount;
-    int b = col.blue() + amount;
-    if (r > 255)
-        r = 255;
-    if (r < 0)
-        r = 0;
-    if (g > 255)
-        g = 255;
-    if (g < 0)
-        g = 0;
-    if (b > 255)
-        b = 255;
-    if (b < 0)
-        b = 0;
+    const int r = qBound(0, col.red() + amount, 255);
+    const int g = qBound(0, col.green() + amount, 255);
+    const int b = qBound(0, col.blue() + amount, 255);
     return QColor(r, g, b, col.alpha());
 }
 /*
