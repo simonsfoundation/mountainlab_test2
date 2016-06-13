@@ -114,8 +114,6 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, 0);
 
-    /// Witold I don't want to do this here! It should be in the taskprogress.h. What can I do?
-    qRegisterMetaType<TaskInfo>();
 
     CLParams CLP = commandlineparams(argc, argv);
 
