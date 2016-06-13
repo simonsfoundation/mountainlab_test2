@@ -22,6 +22,9 @@
 #include <QDesktopWidget>
 #include <QStandardItemModel>
 #include <QTimer>
+#include <QAction>
+#include <QMenu>
+#include <QSortFilterProxyModel>
 
 class TaskProgressViewDelegate : public QStyledItemDelegate {
 public:
@@ -39,7 +42,8 @@ public:
     }
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
     {
-        if (index.internalId() != 0xDEADBEEF || index.column() != 0) {
+//        if (index.internalId() != 0xDEADBEEF || index.column() != 0) {
+        if (index.parent().isValid() || index.column() != 0) {
             QStyledItemDelegate::paint(painter, option, index);
             return;
         }
@@ -118,170 +122,74 @@ public:
     }
 };
 
-#if 0
-class TaskProgressModel : public QAbstractItemModel {
+class TaskProgressViewModeProxy : public QSortFilterProxyModel {
 public:
-    enum {
-        ProgressRole = Qt::UserRole,
-        StartTimeRole,
-        EndTimeRole,
-        LogRole,
-        IndentedLogRole
+    enum CompleteTasksMode {
+        CTM_Shown,
+        CTM_Hidden,
+        CTM_HiddenIfOlderThan
     };
-    enum {
-        InvalidId = 0xDEADBEEF
+    enum LogsMode {
+        LM_Shown,
+        LM_Hidden
     };
-    TaskProgressModel(QObject* parent = 0)
-        : QAbstractItemModel(parent)
-    {
-        m_agent = TaskProgressAgent::globalInstance();
-        connect(m_agent, &TaskProgressAgent::tasksChanged, this, &TaskProgressModel::update);
-        update();
+
+    TaskProgressViewModeProxy(QObject *parent = 0) : QSortFilterProxyModel(parent) {}
+
+    void setCompleteTasksMode(CompleteTasksMode m) {
+        if (m == m_cMode) return;
+        m_cMode = m;
+        invalidateFilter();
     }
 
-    QModelIndex index(int row, int column,
-        const QModelIndex& parent = QModelIndex()) const override
-    {
-        if (parent.isValid() && parent.internalId() != InvalidId)
-            return QModelIndex();
-        if (parent.isValid()) {
-            return createIndex(row, column, parent.row());
-        }
-        return createIndex(row, column, InvalidId);
+    void setLogsMode(LogsMode m) {
+        if (m == m_lMode) return;
+        m_lMode = m;
+        invalidateFilter();
     }
 
-    QModelIndex parent(const QModelIndex& child) const override
-    {
-        if (child.internalId() == InvalidId)
-            return QModelIndex();
-        return createIndex(child.internalId(), 0, InvalidId);
+    void setCompleteTasksModeThreshold(unsigned int secs) {
+        if (secs == m_ctmThreshold) return;
+        m_ctmThreshold = secs;
+        if (completeTasksMode() == CTM_HiddenIfOlderThan)
+            invalidateFilter();
     }
 
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override
-    {
-        if (parent.isValid() && parent.internalId() != InvalidId)
-            return 0;
-        if (parent.isValid()) {
-            if (parent.row() < 0)
-                return 0;
-            return m_data.at(parent.row()).log_messages.size();
-        }
-        return m_data.size();
-    }
-
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override
-    {
-        if (parent.isValid())
-            return 2; // 2
-        return 2;
-    }
-
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override
-    {
-        if (!index.isValid())
-            return QVariant();
-        if (index.parent().isValid()) {
-            return logData(index, role);
-        }
-        return taskData(index, role);
-    }
-
-    QVariant logData(const QModelIndex& index, int role = Qt::DisplayRole) const
-    {
-        const TaskInfo& task = m_data.at(index.internalId());
-        const auto& logMessages = task.log_messages;
-        auto logMessage = logMessages.at(logMessages.count() - 1 - index.row()); // newest first
-        switch (role) {
-        case Qt::EditRole:
-        case Qt::DisplayRole:
-            if (index.column() == 0)
-                return logMessage.time;
-            return logMessage.message;
-        case Qt::UserRole:
-            return logMessage.time;
-        case LogRole:
-            return singleLog(logMessage);
-        case IndentedLogRole:
-            return singleLog(logMessage, "\t");
-        default:
-            return QVariant();
-        }
-    }
-    QVariant taskData(const QModelIndex& index, int role = Qt::DisplayRole) const
-    {
-        if (index.column() != 0)
-            return QVariant();
-        const TaskInfo& task = m_data.at(index.row());
-        switch (role) {
-        case Qt::EditRole:
-        case Qt::DisplayRole:
-            // modified by jfm -- 5/17/2016
-            if (!task.error.isEmpty()) {
-                return task.label + ": " + task.error;
-            }
-            else {
-                return task.label;
-            }
-        case Qt::ToolTipRole:
-            // modified by jfm -- 5/17/2016
-            if (!task.description.isEmpty())
-                return task.description;
-            else
-                return taskData(index, Qt::DisplayRole);
-        case Qt::ForegroundRole: {
-            // modified by jfm -- 5/17/2016
-            if (!task.error.isEmpty()) {
-                return QColor(Qt::red);
-            }
-            else {
-                if (task.progress < 1)
-                    return QColor(Qt::blue);
-            }
-            return QVariant();
-        }
-        case ProgressRole:
-            return task.progress;
-        case StartTimeRole:
-            return task.start_time;
-        case EndTimeRole:
-            return task.end_time;
-        case LogRole:
-            return assembleLog(task);
-        case IndentedLogRole:
-            return assembleLog(task, "\t");
-        }
-        return QVariant();
-    }
+    LogsMode logsMode() const { return m_lMode; }
+    CompleteTasksMode completeTasksMode() const { return m_cMode; }
+    unsigned int completeTasksModeThreshold() const { return m_ctmThreshold; }
 
 protected:
-    void update()
-    {
-        beginResetModel();
-        m_data.clear();
-        m_data.append(m_agent->activeTasks());
-        m_data.append(m_agent->completedTasks());
-        endResetModel();
-    }
-
-    QString assembleLog(const TaskInfo& task, const QString& prefix = QString()) const
-    {
-        QStringList entries;
-        foreach (const TaskProgressLogMessage& msg, task.log_messages) {
-            entries << singleLog(msg, prefix);
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const {
+        return true;
+        TaskManager::TaskProgressModel *mdl = taskModel();
+        if (!mdl) return true;
+        if (m_cMode == CTM_Shown) return true;
+        QModelIndex sourceIndex = mdl->index(source_row, 0, source_parent);
+        if (!sourceIndex.isValid()) return false;
+        bool isTask = mdl->isTask(sourceIndex);
+        if (!isTask && logsMode() == LM_Hidden) return false;
+        if (isTask) {
+            if (!mdl->isActive(sourceIndex)) {
+                if (completeTasksMode() == CTM_Shown) return true;
+                if (completeTasksMode() == CTM_Hidden) return false;
+                if (completeTasksMode() == CTM_HiddenIfOlderThan
+                        && !mdl->isCompletedWithin(sourceIndex, completeTasksModeThreshold()))
+                    return false;
+            }
         }
-        return entries.join("\n");
-    }
-    QString singleLog(const TaskProgressLogMessage& msg, const QString& prefix = QString()) const
-    {
-        //return QString("%1%2: %3").arg(prefix).arg(msg.time.toString(Qt::ISODate)).arg(msg.message);
-        return QString("%1%2: %3").arg(prefix).arg(msg.time.toString("yyyy-MM-dd hh:mm:ss.zzz")).arg(msg.message);
+        return true;
     }
 
+    TaskManager::TaskProgressModel *taskModel() const {
+        return qobject_cast<TaskManager::TaskProgressModel*>(sourceModel());
+    }
 private:
-    QList<TaskInfo> m_data;
-    TaskProgressAgent* m_agent;
+    CompleteTasksMode m_cMode = CTM_Shown;
+    LogsMode m_lMode = LM_Shown;
+    unsigned int m_ctmThreshold = 10; // 10 seconds
 };
-#endif
+
 class TaskProgressViewPrivate {
 public:
     TaskProgressView* q;
@@ -296,7 +204,9 @@ TaskProgressView::TaskProgressView()
     setSelectionMode(ContiguousSelection);
     setItemDelegate(new TaskProgressViewDelegate(this));
     TaskManager::TaskProgressModel* model = new TaskManager::TaskProgressModel(this);
-    setModel(model);
+    TaskProgressViewModeProxy *proxyModel = new TaskProgressViewModeProxy(this);
+    proxyModel->setSourceModel(model);
+    setModel(proxyModel);
     header()->setSectionResizeMode(0, QHeaderView::Stretch);
     header()->hide();
     setExpandsOnDoubleClick(false);
@@ -324,6 +234,24 @@ TaskProgressView::TaskProgressView()
     QTimer* timer = new QTimer(this);
     timer->start(1000);
     connect(timer, SIGNAL(timeout()), viewport(), SLOT(update()));
+
+    // setup actions menu
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+    QMenu *modeMenu = new QMenu(this);
+    modeMenu->setTitle("Mode");
+    addAction(modeMenu->menuAction());
+    QAction *defMode = new QAction("Default", this);
+    defMode->setCheckable(true);
+    modeMenu->addAction(defMode);
+    QAction *activeMode = new QAction("Active only", this);
+    activeMode->setCheckable(true);
+    modeMenu->addAction(activeMode);
+    QActionGroup *grp = new QActionGroup(this);
+    grp->addAction(defMode);
+    grp->addAction(activeMode);
+    defMode->setChecked(true);
+
+
 }
 
 TaskProgressView::~TaskProgressView()

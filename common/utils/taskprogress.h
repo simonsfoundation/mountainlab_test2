@@ -201,16 +201,18 @@ public:
 
     bool isActive(const QModelIndex &task) const;
     bool isCompletedWithin(const QModelIndex &task, int time) const;
-protected:
     bool isTask(const QModelIndex &idx) const;
+protected:
     QString assembleLog(const TaskInfo& task, const QString& prefix = QString()) const;
     QString singleLog(const TaskProgressLogMessage& msg, const QString& prefix = QString()) const;
 private slots:
     void _q_added(TaskProgressAgent*);
     void _q_changed(TaskProgressAgent*);
     void _q_logAdded(TaskProgressAgent*);
+    void _q_moved(TaskProgressAgent* a, int from, int to);
 
 private:
+    QList<TaskProgressAgent*> m_data;
     TaskProgressMonitor* m_monitor;
 };
 

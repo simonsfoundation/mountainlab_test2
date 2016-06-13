@@ -59,12 +59,12 @@ public:
         else if (m_idx % 3 == 1)
             TP1.addTag(TaskProgress::Calculate);
         TP1.setDescription("The description of the task. This should complete on destruct.");
-        for (int i = 0; i <= 100; ++i) {
+        for (int i = 0; i <= 100; i+=2) {
             TP1.setProgress(i * 1.0 / 100.0);
             TP1.setLabel(QString("Test task %1 (%2)").arg(m_idx).arg(i * 1.0 / 100.0));
             TP1.log(QString("Log #%1").arg(i + 1));
             int rand = 1 + (qrand() % 10);
-            QThread::msleep(100 * rand);
+            QThread::msleep(200 * rand);
         }
     }
 
@@ -74,7 +74,7 @@ private:
 
 void test_taskprogressview()
 {
-    int num_jobs = 30; //can increase to test a large number of jobs
+    int num_jobs = 10; //can increase to test a large number of jobs
     qsrand(QDateTime::currentDateTime().currentMSecsSinceEpoch());
     for (int i = 0; i < num_jobs; ++i) {
         QThreadPool::globalInstance()->releaseThread();

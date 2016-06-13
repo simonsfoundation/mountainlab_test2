@@ -210,6 +210,7 @@ public:
 
     void update(TaskProgressAgent* agent)
     {
+        QMutexLocker locker(&lock);
         // if progress reaches 1.0, we should "complete" the task
         // by moving it in the list
 
@@ -233,6 +234,7 @@ public:
         const int adc = m_data.count();
         if (index < adc)
             return m_data.at(index);
+        if (m_completedData.count() <= index-adc) return 0;
         return m_completedData.at(index-adc);
     }
 
@@ -608,6 +610,8 @@ TaskProgressModel::TaskProgressModel(QObject* parent)
         this, SLOT(_q_changed(TaskProgressAgent*)));
     connect(m_monitor, SIGNAL(logAdded(TaskProgressAgent*)),
         this, SLOT(_q_logAdded(TaskProgressAgent*)));
+    connect(m_monitor, SIGNAL(moved(TaskProgressAgent*,int,int)),
+            this, SLOT(_q_moved(TaskProgressAgent*, int, int)));
 }
 
 QModelIndex TaskProgressModel::index(int row, int column, const QModelIndex& parent) const
@@ -630,15 +634,20 @@ QModelIndex TaskProgressModel::parent(const QModelIndex& child) const
 int TaskProgressModel::rowCount(const QModelIndex& parent) const
 {
     if (parent.isValid() && parent.internalId() != InvalidId)
-        return 0;
+        return 0; // children of a log entry
     if (parent.isValid()) {
         if (parent.row() < 0)
             return 0;
-        TaskProgressAgent* agent = m_monitor->at(parent.row());
+
+        TaskProgressAgent* agent = m_data.at(parent.row());
+        agent->lockForRead();
+//        if (!agent) return 0;
         TaskInfo task = agent->taskInfo();
-        return task.log_messages.size();
+        int s = task.log_messages.size();
+        agent->unlock();
+        return s;
     }
-    return m_monitor->count();
+    return m_data.count();
 }
 
 int TaskProgressModel::columnCount(const QModelIndex& parent) const
@@ -662,7 +671,7 @@ QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
 {
     if (index.column() != 0)
         return QVariant();
-    TaskProgressAgent* agent = m_monitor->at(index.row());
+    TaskProgressAgent* agent = m_data.at(index.row());
     TaskInfo task = agent->taskInfo();
     switch (role) {
     case Qt::EditRole:
@@ -717,7 +726,7 @@ QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
 
 QVariant TaskProgressModel::logData(const QModelIndex& index, int role) const
 {
-    TaskProgressAgent* agent = m_monitor->at(index.internalId());
+    TaskProgressAgent* agent = m_data.at(index.internalId());
     TaskInfo task = agent->taskInfo();
     const auto& logMessages = task.log_messages;
     auto logMessage = logMessages.at(logMessages.count() - 1 - index.row()); // newest first
@@ -777,13 +786,22 @@ QString TaskProgressModel::singleLog(const TaskProgressLogMessage& msg, const QS
 
 void TaskProgressModel::_q_added(TaskProgressAgent* a)
 {
-    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+//    TaskProgressMonitorPrivate *p = TaskProgressMonitorPrivate::privateInstance();
+//    QMutexLocker l(&p->lock);
+
+//    int idx = m_monitor->indexOf(a);
+//    qDebug() << Q_FUNC_INFO << idx;
+    beginInsertRows(QModelIndex(), 0, 0);
+    m_data.prepend(a);
+//    beginInsertRows(QModelIndex(), rowCount(), rowCount());
     endInsertRows();
 }
 
 void TaskProgressModel::_q_changed(TaskProgressAgent* a)
 {
-    int idx = m_monitor->indexOf(a);
+//    TaskProgressMonitorPrivate *p = TaskProgressMonitorPrivate::privateInstance();
+//    QMutexLocker l(&p->lock);
+    int idx = m_data.indexOf(a);
     if (idx >= 0) {
         QModelIndex modelIdxFirst = createIndex(idx, 0, InvalidId);
         QModelIndex modelIdxLast = createIndex(idx, columnCount(), InvalidId);
@@ -793,13 +811,25 @@ void TaskProgressModel::_q_changed(TaskProgressAgent* a)
 
 void TaskProgressModel::_q_logAdded(TaskProgressAgent* a)
 {
-    int idx = m_monitor->indexOf(a);
+    a->lockForRead();
+//    TaskProgressMonitorPrivate *p = TaskProgressMonitorPrivate::privateInstance();
+//    QMutexLocker l(&p->lock);
+    int idx = m_data.indexOf(a);
     if (idx < 0)
         return;
     QModelIndex parentIndex = createIndex(idx, 0, InvalidId);
     TaskInfo taskInfo = a->taskInfo();
-    beginInsertRows(parentIndex, taskInfo.log_messages.size(), taskInfo.log_messages.size());
+//    beginInsertRows(parentIndex, taskInfo.log_messages.size()-1, taskInfo.log_messages.size()-1);
+    beginInsertRows(parentIndex, 0, 0);
     endInsertRows();
+    a->unlock();
+}
+
+void TaskProgressModel::_q_moved(TaskProgressAgent *a, int from, int to)
+{
+    beginMoveRows(QModelIndex(), from, from, QModelIndex(), to);
+    m_data.move(from, to-1);
+    endMoveRows();
 }
 
 TaskProgressAgent::ReadLocker::~ReadLocker()
