@@ -265,24 +265,45 @@ void draw_axis(QPainter* painter, draw_axis_opts opts)
         for (long ind = ind1; ind <= ind2; ind++) {
             if ((opts.minval <= ind * best_interval) && (ind * best_interval <= opts.maxval)) {
                 double pct = (ind * best_interval - opts.minval) / (opts.maxval - opts.minval);
+                if (opts.orientation == Qt::Vertical)
+                    pct = 1 - pct;
                 QPointF ptA = opts.pt1 + pct * (opts.pt2 - opts.pt1);
                 QPointF ptB;
                 QRectF text_rect;
                 int align;
                 if (opts.orientation == Qt::Horizontal) {
                     ptB = ptA + QPointF(0, tick_length);
-                    text_rect=QRectF(ptB-QPointF(-20,0),QSize(40,50));
-                    align=Qt::AlignTop;
+                    text_rect = QRectF(ptB + QPointF(20, 0), QSize(40, 50 - 3));
+                    align = Qt::AlignTop | Qt::AlignCenter;
                 }
                 else { //vertical
                     ptB = ptA + QPointF(-tick_length, 0);
-                    text_rect=QRectF(ptB-QPointF(-50,-20),QSize(50,40));
-                    align=Qt::AlignRight;
+                    text_rect = QRectF(ptB + QPointF(-50, -20), QSize(50 - 3, 40));
+                    align = Qt::AlignRight | Qt::AlignVCenter;
                 }
                 painter->drawLine(ptA, ptB);
-                QString text=QString("%1").arg(ind*best_interval);
-                painter->drawText(text_rect,align,text);
+                QString text = QString("%1").arg(ind * best_interval);
+                if (opts.draw_tick_labels) {
+                    painter->drawText(text_rect, align, text);
+                }
             }
+        }
+    }
+    if (opts.draw_range) {
+        if (opts.orientation == Qt::Horizontal) {
+            /// TODO handle horizontal case
+        }
+        else {
+            painter->save();
+            painter->rotate(-90);
+            QRectF rect(opts.pt1.x() - 50, opts.pt1.y(), 50 - 3, opts.pt2.y() - opts.pt1.y());
+            QTransform transform;
+            transform.rotate(90);
+            rect = transform.mapRect(rect);
+            QString text = QString("%1").arg(range);
+            int align = Qt::AlignBottom | Qt::AlignCenter;
+            painter->drawText(rect, align, text);
+            painter->restore();
         }
     }
 }

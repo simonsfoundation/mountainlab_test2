@@ -58,12 +58,16 @@ struct draw_axis_opts {
         minval = 0;
         maxval = 1;
         tick_length = 5;
+        draw_tick_labels = true;
+        draw_range = false;
     }
 
     QPointF pt1, pt2;
     Qt::Orientation orientation;
     double minval, maxval;
     double tick_length;
+    bool draw_tick_labels;
+    bool draw_range;
 };
 
 void draw_axis(QPainter* painter, draw_axis_opts opts);

@@ -377,6 +377,11 @@ void MVFiringEventViewPrivate::do_paint(QPainter& painter, int W, int H)
     opts.maxval = m_max_amplitude;
     opts.orientation = Qt::Vertical;
     opts.tick_length = 5;
+    opts.draw_tick_labels = false;
+    opts.draw_range = true;
+    font = painter.font();
+    font.setPixelSize(11);
+    painter.setFont(font);
     draw_axis(&painter, opts);
 
     painter.drawImage(target, m_image.scaled(target.width(), target.height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
