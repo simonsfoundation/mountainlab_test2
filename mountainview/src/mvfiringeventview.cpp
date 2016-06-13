@@ -82,8 +82,8 @@ void MVFiringEventView::setFirings(const Mda& firings)
     }
 
     d->m_max_timepoint = compute_max(d->m_times);
-    d->m_min_amplitude = compute_min(d->m_amplitudes);
-    d->m_max_amplitude = compute_max(d->m_amplitudes);
+    d->m_min_amplitude = qMin(0.0,compute_min(d->m_amplitudes));
+    d->m_max_amplitude = qMax(0.0,compute_max(d->m_amplitudes));
 
     d->schedule_update();
 }
@@ -377,10 +377,10 @@ void MVFiringEventViewPrivate::do_paint(QPainter& painter, int W, int H)
     opts.maxval = m_max_amplitude;
     opts.orientation = Qt::Vertical;
     opts.tick_length = 5;
-    opts.draw_tick_labels = false;
-    opts.draw_range = true;
+    opts.draw_tick_labels = true;
+    opts.draw_range = false;
     font = painter.font();
-    font.setPixelSize(11);
+    font.setPixelSize(12);
     painter.setFont(font);
     draw_axis(&painter, opts);
 
