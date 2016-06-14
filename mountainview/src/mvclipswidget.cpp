@@ -42,7 +42,6 @@ public:
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     QList<int> m_labels_to_use;
-    int m_clip_size;
     MVClipsView* m_view;
     MVClipsWidgetComputer m_computer;
     MVViewAgent* m_view_agent;
@@ -98,12 +97,6 @@ void MVClipsWidget::setFirings(const DiskReadMda& F)
 void MVClipsWidget::setLabelsToUse(const QList<int>& labels)
 {
     d->m_labels_to_use = labels;
-    d->start_computation();
-}
-
-void MVClipsWidget::setClipSize(int clip_size)
-{
-    d->m_clip_size = clip_size;
     d->start_computation();
 }
 
@@ -201,6 +194,6 @@ void MVClipsWidgetPrivate::start_computation()
     m_computer.firings = m_firings;
     m_computer.timeseries = m_timeseries;
     m_computer.labels_to_use = m_labels_to_use;
-    m_computer.clip_size = m_clip_size;
+    m_computer.clip_size = m_view_agent->option("clip_size").toInt();
     m_computer.startComputation();
 }

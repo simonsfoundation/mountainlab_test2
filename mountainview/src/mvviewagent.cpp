@@ -21,6 +21,7 @@ public:
     QList<QColor> m_channel_colors;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
+    double m_sample_rate;
     QMap<QString, QVariant> m_options;
 };
 
@@ -67,7 +68,12 @@ MVRange MVViewAgent::currentTimeRange() const
     return d->m_current_time_range;
 }
 
-QColor MVViewAgent::clusterColor(int k)
+QList<QColor> MVViewAgent::channelColors() const
+{
+    return d->m_channel_colors;
+}
+
+QColor MVViewAgent::clusterColor(int k) const
 {
     if (k <= 0)
         return Qt::black;
@@ -76,7 +82,7 @@ QColor MVViewAgent::clusterColor(int k)
     return d->m_cluster_colors[(k - 1) % d->m_cluster_colors.count()];
 }
 
-QColor MVViewAgent::channelColor(int m)
+QColor MVViewAgent::channelColor(int m) const
 {
     if (m < 0)
         return Qt::black;
@@ -93,6 +99,11 @@ DiskReadMda MVViewAgent::timeseries()
 DiskReadMda MVViewAgent::firings()
 {
     return d->m_firings;
+}
+
+double MVViewAgent::sampleRate() const
+{
+    return d->m_sample_rate;
 }
 
 DiskReadMda MVViewAgent::filteredFirings()
@@ -118,6 +129,11 @@ void MVViewAgent::setFirings(const DiskReadMda& F)
 {
     d->m_firings = F;
     emit firingsChanged();
+}
+
+void MVViewAgent::setSampleRate(double sample_rate)
+{
+    d->m_sample_rate = sample_rate;
 }
 
 ClusterMerge MVViewAgent::clusterMerge() const

@@ -198,9 +198,11 @@ int main(int argc, char* argv[])
         //QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
-        MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
-        W->setChannelColors(channel_colors);
-        W->setClusterColors(label_colors);
+        MVViewAgent* view_agent = new MVViewAgent; //note that the view agent does not get deleted. :(
+        view_agent->setChannelColors(channel_colors);
+        view_agent->setClusterColors(label_colors);
+        view_agent->setSampleRate(samplerate);
+        MVMainWindow* W = new MVMainWindow(view_agent);
 
         if (!firings_path.isEmpty()) {
             mv_file.setFiringsPath(firings_path);
@@ -242,10 +244,12 @@ int main(int argc, char* argv[])
         QStringList firings_paths = CLP.named_parameters["firings"].toString().split(",");
         double samplerate = CLP.named_parameters["samplerate"].toDouble();
 
-        SpikeSpyWidget* W = new SpikeSpyWidget(new MVViewAgent); //not that the view agent will not get deleted. :(
-        W->setChannelColors(channel_colors);
-        W->setLabelColors(label_colors);
-        W->setSampleRate(samplerate);
+        MVViewAgent* view_agent = new MVViewAgent(); //note that the view agent will not get deleted. :(
+        view_agent->setChannelColors(channel_colors);
+        view_agent->setClusterColors(label_colors);
+        view_agent->setSampleRate(samplerate);
+        SpikeSpyWidget* W = new SpikeSpyWidget(view_agent);
+
         for (int i = 0; i < timeseries_paths.count(); i++) {
             QString tsp = timeseries_paths.value(i);
             if (tsp.isEmpty())

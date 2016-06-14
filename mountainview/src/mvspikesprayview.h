@@ -11,13 +11,14 @@
 
 #include <QPaintEvent>
 #include <QWidget>
+#include "mvviewagent.h"
 
 class MVSpikeSprayViewPrivate;
 class MVSpikeSprayView : public QWidget {
     Q_OBJECT
 public:
     friend class MVSpikeSprayViewPrivate;
-    MVSpikeSprayView();
+    MVSpikeSprayView(MVViewAgent* view_agent);
     virtual ~MVSpikeSprayView();
 
     void setMLProxyUrl(const QString& url);
@@ -26,7 +27,6 @@ public:
     void setFirings(const DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
     void setClipSize(int clip_size);
-    void setLabelColors(const QList<QColor>& colors);
 private slots:
     void slot_computation_finished();
 

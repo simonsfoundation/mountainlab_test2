@@ -114,6 +114,7 @@ MVCrossCorrelogramsWidget2::~MVCrossCorrelogramsWidget2()
 void MVCrossCorrelogramsWidget2::setOptions(CrossCorrelogramOptions opts)
 {
     d->m_options = opts;
+    d->start_computation();
 }
 
 void MVCrossCorrelogramsWidget2::setColors(const QMap<QString, QColor>& colors)
@@ -416,7 +417,9 @@ typedef QList<double> DoubleList;
 typedef QList<int> IntList;
 void MVCrossCorrelogramsWidget2Computer::compute()
 {
-    TaskProgress task(TaskProgress::Calculate, "Cross Correlogram Computer 2");
+    TaskProgress task(TaskProgress::Calculate, QString("Cross Correlograms (%1)").arg(options.mode));
+
+    correlograms.clear();
 
     QList<double> times;
     QList<int> labels;
@@ -437,6 +440,25 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k1 = k;
             CC.k2 = k;
             this->correlograms << CC;
+        }
+    }
+    else if (options.mode == "cross_correlograms") {
+        int k0 = options.ks.value(0);
+        for (int k = 1; k <= K; k++) {
+            Correlogram CC;
+            CC.k1 = k0;
+            CC.k2 = k;
+            this->correlograms << CC;
+        }
+    }
+    else if (options.mode == "matrix_of_cross_correlograms") {
+        for (int i = 0; i < options.ks.count(); i++) {
+            for (int j = 0; j < options.ks.count(); j++) {
+                Correlogram CC;
+                CC.k1 = options.ks[i];
+                CC.k2 = options.ks[j];
+                this->correlograms << CC;
+            }
         }
     }
 

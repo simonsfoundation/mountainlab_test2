@@ -32,9 +32,6 @@ public:
     void setSampleRate(double freq);
 
     ///To make the color scheme uniform.
-    void setChannelColors(const QList<QColor>& colors);
-
-    ///To make the color scheme uniform.
     void setColors(const QMap<QString, QColor>& colors);
 
     void zoomAllTheWayOut();

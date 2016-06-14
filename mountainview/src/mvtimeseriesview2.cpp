@@ -72,12 +72,6 @@ void MVTimeSeriesView2::setMLProxyUrl(const QString& url)
     update();
 }
 
-void MVTimeSeriesView2::setChannelColors(const QList<QColor>& colors)
-{
-    d->m_render_manager.setChannelColors(colors);
-    update();
-}
-
 double MVTimeSeriesView2::amplitudeFactor() const
 {
     return d->m_amplitude_factor;

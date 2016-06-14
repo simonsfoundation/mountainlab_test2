@@ -32,9 +32,8 @@ public:
     MVFiringEventView2* q;
     //DiskReadMda m_timeseries;
 
-    MVViewAgent *m_view_agent;
+    MVViewAgent* m_view_agent;
     MVRange m_amplitude_range;
-    QList<QColor> m_channel_colors;
     QSet<int> m_labels_to_use;
     QVector<double> m_times0;
     QVector<int> m_labels0;
@@ -54,14 +53,14 @@ MVFiringEventView2::MVFiringEventView2(MVViewAgent* view_agent)
     d = new MVFiringEventView2Private;
     d->q = this;
 
-    d->m_view_agent=view_agent;
+    d->m_view_agent = view_agent;
 
     d->m_amplitude_range = MVRange(0, 1);
     this->setMarkersVisible(false);
     this->setMargins(60, 60, 40, 40);
 
-    QObject::connect(d->m_view_agent,SIGNAL(firingsChanged()),this,SLOT(slot_restart_calculation()));
-    QObject::connect(&d->m_calculator,SIGNAL(computationFinished()),this,SLOT(slot_computation_finished()));
+    QObject::connect(d->m_view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_restart_calculation()));
+    QObject::connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
 
     d->start_computation();
 }
@@ -71,16 +70,10 @@ MVFiringEventView2::~MVFiringEventView2()
     delete d;
 }
 
-void MVFiringEventView2::setLabelsToUse(const QSet<int> &labels_to_use)
+void MVFiringEventView2::setLabelsToUse(const QSet<int>& labels_to_use)
 {
-    d->m_labels_to_use=labels_to_use;
+    d->m_labels_to_use = labels_to_use;
     d->start_computation();
-}
-
-void MVFiringEventView2::setChannelColors(const QList<QColor>& colors)
-{
-    d->m_channel_colors = colors;
-    update();
 }
 
 void MVFiringEventView2::setAmplitudeRange(MVRange range)
@@ -106,9 +99,9 @@ void MVFiringEventView2::slot_restart_calculation()
 void MVFiringEventView2::slot_computation_finished()
 {
     d->m_calculator.stopComputation(); //because i'm paranoid
-    d->m_labels0=d->m_calculator.labels;
-    d->m_times0=d->m_calculator.times;
-    d->m_amplitudes0=d->m_calculator.amplitudes;
+    d->m_labels0 = d->m_calculator.labels;
+    d->m_times0 = d->m_calculator.times;
+    d->m_amplitudes0 = d->m_calculator.amplitudes;
     /// TODO only do this if user has specified that it should be auto calculated (should be default)
     this->autoSetAmplitudeRange();
     update();
@@ -149,7 +142,7 @@ void MVFiringEventView2::paintContent(QPainter* painter)
         double spacing = 6;
         double margin = 10;
         // it would still be better if m_labels.was presorted right from the start
-        QList<int> list=d->m_labels_to_use.toList();
+        QList<int> list = d->m_labels_to_use.toList();
         qSort(list);
         double text_height = qBound(12.0, width() * 1.0 / 10, 25.0);
         double y0 = margin;
@@ -189,26 +182,27 @@ double MVFiringEventView2Private::ypix2val(double ypix)
 void MVFiringEventView2Private::start_computation()
 {
     m_calculator.stopComputation();
-    m_calculator.labels_to_use=m_labels_to_use;
-    m_calculator.firings=m_view_agent->firings();
+    m_calculator.labels_to_use = m_labels_to_use;
+    m_calculator.firings = m_view_agent->firings();
     m_calculator.startComputation();
 }
 
 void MVFiringEventViewCalculator::compute()
 {
     TaskProgress task("Computing firing events");
-    long L=firings.N2();
+    long L = firings.N2();
     times.clear();
     labels.clear();
     amplitudes.clear();
-    for (long i=0; i<L; i++) {
-        if (this->isInterruptionRequested()) return;
-        int label0=(int)firings.value(2,i);
+    for (long i = 0; i < L; i++) {
+        if (this->isInterruptionRequested())
+            return;
+        int label0 = (int)firings.value(2, i);
         if (labels_to_use.contains(label0)) {
-            task.setProgress(i*1.0/L);
-            times << firings.value(1,i);
+            task.setProgress(i * 1.0 / L);
+            times << firings.value(1, i);
             labels << label0;
-            amplitudes << firings.value(3,i);
+            amplitudes << firings.value(3, i);
         }
     }
     task.log(QString("Found %1 events, using %2 clusters").arg(times.count()).arg(labels_to_use.count()));

@@ -26,7 +26,6 @@ public:
 
     void setTimeseries(const DiskReadMda& X);
     void setMLProxyUrl(const QString& url);
-    void setChannelColors(const QList<QColor>& colors);
 
     void setAmplitudeFactor(double factor); // display range will be between -1/factor and 1/factor, but not clipped (thus channel plots may overlap)
     void autoSetAmplitudeFactor();

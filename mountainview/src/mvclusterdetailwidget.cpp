@@ -164,7 +164,6 @@ public:
 
     QProgressDialog* m_progress_dialog;
     QMap<QString, QColor> m_colors;
-    QList<QColor> m_channel_colors;
     double m_total_time_sec;
     int m_hovered_k;
     double m_anchor_x;
@@ -218,7 +217,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
     d->m_colors["view_background_highlighted"] = QColor(250, 220, 200);
     d->m_colors["view_background_selected"] = QColor(250, 240, 230);
     d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
-    d->m_channel_colors << Qt::black;
 
     d->m_view_agent = view_agent;
     QObject::connect(view_agent, SIGNAL(clusterMergeChanged()), this, SLOT(update()));
@@ -274,12 +272,6 @@ void MVClusterDetailWidget::setSampleRate(double freq)
     d->m_samplerate = freq;
     d->compute_total_time();
     this->update();
-}
-
-void MVClusterDetailWidget::setChannelColors(const QList<QColor>& colors)
-{
-    d->m_channel_colors = colors;
-    update();
 }
 
 void MVClusterDetailWidget::setColors(const QMap<QString, QColor>& colors)
@@ -768,9 +760,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     }
 
     for (int m = 0; m < M; m++) {
-        QColor col = Qt::black;
-        if (!d->m_channel_colors.isEmpty())
-            col = d->m_channel_colors.value(m % d->m_channel_colors.count());
+        QColor col = d->m_view_agent->channelColor(m);
         QPen pen;
         pen.setWidth(1);
         pen.setColor(col);
