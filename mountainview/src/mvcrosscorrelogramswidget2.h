@@ -12,6 +12,15 @@
 
 #include <QWidget>
 
+struct CrossCorrelogramOptions {
+    CrossCorrelogramOptions() {
+        mode="all_auto_correlograms";
+    }
+
+    /// TODO use enum for mode, not string
+    QString mode;
+};
+
 class MVCrossCorrelogramsWidget2Private;
 class MVCrossCorrelogramsWidget2 : public QWidget {
     Q_OBJECT
@@ -20,8 +29,7 @@ public:
     MVCrossCorrelogramsWidget2(MVViewAgent* view_agent);
     virtual ~MVCrossCorrelogramsWidget2();
 
-    void setLabelPairs(const QList<int>& labels1, const QList<int>& labels2, const QList<QString>& text_labels);
-    void setFirings(const DiskReadMda& F);
+    void setOptions(CrossCorrelogramOptions opts);
     void setSampleRate(double rate);
     void setMaxDtTimepoints(int max_dt);
     void setColors(const QMap<QString, QColor>& colors);
@@ -43,8 +51,8 @@ private slots:
     void slot_histogram_view_activated();
     void slot_export_image();
     void slot_cluster_attributes_changed();
-    void slot_cluster_merge_changed();
     void slot_update_highlighting();
+    void slot_recalculate();
 
 private:
     MVCrossCorrelogramsWidget2Private* d;

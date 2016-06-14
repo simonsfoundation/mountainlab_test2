@@ -51,6 +51,7 @@ public:
     MVControlPanel* q;
     ControlManager m_controls;
 
+    MVViewAgent *m_view_agent;
     QLabel* create_group_label(QString label);
     QAbstractButton* find_action_button(QString name);
 };
@@ -67,10 +68,12 @@ action_button_info abi(QString name, QString label)
     return ret;
 }
 
-MVControlPanel::MVControlPanel()
+MVControlPanel::MVControlPanel(MVViewAgent *view_agent)
 {
     d = new MVControlPanelPrivate;
     d->q = this;
+
+    d->m_view_agent=view_agent;
 
     QFont font = this->font();
     font.setFamily("Arial");
@@ -94,7 +97,7 @@ MVControlPanel::MVControlPanel()
         BB << abi("open-channel-features", "Channel Features");
         BB << abi("open-spike-spray", "Spike Spray");
         BB << abi("open-firing-events", "Firing Events");
-        BB << abi("find-nearby-events", "Find Nearby Events");
+        //BB << abi("find-nearby-events", "Find Nearby Events");
         for (int i = 0; i < BB.count(); i++) {
             QToolButton* button = new QToolButton;
             QFont font = button->font();
@@ -117,28 +120,11 @@ MVControlPanel::MVControlPanel()
         d->m_controls.add_combo_box(G, "timeseries", "Use timeseries:")->setToolTip("Set the timeseries used for display");
         d->m_controls.add_float_box(G, "cc_max_dt_msec", "Max. dt (ms)", 100, 1, 1e6)->setToolTip("Maximum dt for display of cross-correlograms");
         d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", 80, 1, 1e5)->setToolTip("Set clips size used for display");
-        QPushButton* BB = new QPushButton("Update all open views");
-        BB->setProperty("action_name", "update_all_open_views");
+        QPushButton* BB = new QPushButton("Update viewing options");
+        BB->setProperty("action_name", "update_viewing_options");
         QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
         layout->addWidget(BB);
 
-        d->m_controls.add_horizontal_divider_line(layout);
-    }
-
-    {
-        //Shell splitting
-        layout->addWidget(d->create_group_label("Shell Splitting"));
-        QGridLayout* G = new QGridLayout;
-        layout->addLayout(G);
-
-        d->m_controls.add_check_box(G, "use_shell_split", "Use shell split", false);
-        QObject::connect(d->m_controls.checkbox("use_shell_split"), SIGNAL(toggled(bool)), this, SLOT(slot_update_enabled_controls()));
-        d->m_controls.add_float_box(G, "shell_increment", "Shell increment", 2, 0.1, 1e6)->setToolTip("Minimum thickness of a peak amplitude shell.");
-        d->m_controls.add_int_box(G, "min_per_shell", "Min per shell", 150, 0, 1e6)->setToolTip("Minimum number of points in peak amplitude shell.");
-        QPushButton* BB = new QPushButton("Apply Shell Splitting");
-        BB->setProperty("action_name", "apply_shell_splitting");
-        QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
-        layout->addWidget(BB);
         d->m_controls.add_horizontal_divider_line(layout);
     }
 
@@ -238,10 +224,6 @@ MVEventFilter MVControlPanel::eventFilter() const
     filter.use_event_filter = d->m_controls.get_parameter_value("use_event_filter").toBool();
     filter.max_outlier_score = d->m_controls.get_parameter_value("max_outlier_score").toDouble();
     filter.min_detectability_score = d->m_controls.get_parameter_value("min_detectability_score").toDouble();
-
-    filter.use_shell_split = d->m_controls.get_parameter_value("use_shell_split").toBool();
-    filter.shell_increment = d->m_controls.get_parameter_value("shell_increment").toDouble();
-    filter.min_per_shell = d->m_controls.get_parameter_value("min_per_shell").toInt();
     return filter;
 }
 
@@ -257,9 +239,6 @@ void MVControlPanel::setEventFilter(MVEventFilter X)
     d->m_controls.set_parameter_value("use_event_filter", X.use_event_filter);
     d->m_controls.set_parameter_value("max_outlier_score", X.max_outlier_score);
     d->m_controls.set_parameter_value("min_detectability_score", X.min_detectability_score);
-    d->m_controls.set_parameter_value("use_shell_split", X.use_shell_split);
-    d->m_controls.set_parameter_value("shell_increment", X.shell_increment);
-    d->m_controls.set_parameter_value("min_per_shell", X.min_per_shell);
 }
 
 QAbstractButton* MVControlPanel::findButton(const QString& name)
@@ -269,10 +248,6 @@ QAbstractButton* MVControlPanel::findButton(const QString& name)
 
 void MVControlPanel::slot_update_enabled_controls()
 {
-    bool use_shell_split = d->m_controls.get_parameter_value("use_shell_split").toBool();
-    d->m_controls.set_parameter_enabled("shell_increment", use_shell_split);
-    d->m_controls.set_parameter_enabled("min_per_shell", use_shell_split);
-
     bool use_event_filter = d->m_controls.get_parameter_value("use_event_filter").toBool();
     d->m_controls.set_parameter_enabled("max_outlier_score", use_event_filter);
     d->m_controls.set_parameter_enabled("min_detectability_score", use_event_filter);
@@ -520,11 +495,6 @@ QJsonObject MVViewOptions::toJsonObject() const
 MVEventFilter MVEventFilter::fromJsonObject(QJsonObject obj)
 {
     MVEventFilter ret;
-    ret.use_shell_split = obj["use_shell_split"].toBool();
-    if (obj.contains("shell_increment"))
-        ret.shell_increment = obj["shell_increment"].toDouble();
-    if (obj.contains("min_per_shell"))
-        ret.min_per_shell = obj["min_per_shell"].toInt();
     ret.use_event_filter = obj["use_event_filter"].toBool();
     ret.min_detectability_score = obj["min_detectability_score"].toDouble();
     ret.max_outlier_score = obj["max_outlier_score"].toDouble();
@@ -534,9 +504,6 @@ MVEventFilter MVEventFilter::fromJsonObject(QJsonObject obj)
 QJsonObject MVEventFilter::toJsonObject() const
 {
     QJsonObject obj;
-    obj["use_shell_split"] = this->use_shell_split;
-    obj["shell_increment"] = this->shell_increment;
-    obj["min_per_shell"] = this->min_per_shell;
     obj["use_event_filter"] = this->use_event_filter;
     obj["min_detectability_score"] = this->min_detectability_score;
     obj["max_outlier_score"] = this->max_outlier_score;

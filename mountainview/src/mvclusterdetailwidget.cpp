@@ -154,10 +154,7 @@ public:
 
     //QString m_mscmdserver_url;
     QString m_mlproxy_url;
-    DiskReadMda m_timeseries;
-    DiskReadMda m_firings;
     double m_samplerate;
-    QList<int> m_group_numbers; //for shell splitting
 
     int m_clip_size;
     QList<ClusterData> m_cluster_data;
@@ -189,7 +186,6 @@ public:
     void ensure_view_visible(ClusterView* V);
     void zoom(double factor);
     QString group_label_for_k(int k);
-    bool has_nontrivial_group_numbers();
     int get_current_view_index();
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
@@ -231,6 +227,9 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
     QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(update()));
 
+    QObject::connect(view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_recalculate()));
+    QObject::connect(view_agent, SIGNAL(timeseriesChanged()), this, SLOT(slot_recalculate()));
+
     this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
     //this->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -248,6 +247,8 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
         this->addAction(a);
         connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_toggle_stdev_shading()));
     }
+
+    d->start_calculation();
 }
 
 MVClusterDetailWidget::~MVClusterDetailWidget()
@@ -269,31 +270,12 @@ void MVClusterDetailWidget::setMLProxyUrl(const QString& url)
     d->m_mlproxy_url = url;
 }
 
-void MVClusterDetailWidget::setTimeseries(DiskReadMda& X)
-{
-    d->m_timeseries = X;
-    d->compute_total_time();
-    d->start_calculation();
-}
-
-void MVClusterDetailWidget::setFirings(const DiskReadMda& X)
-{
-    d->m_firings = X;
-    d->start_calculation();
-}
-
 void MVClusterDetailWidget::setClipSize(int T)
 {
     if (d->m_clip_size == T)
         return;
     d->m_clip_size = T;
     d->start_calculation();
-}
-
-void MVClusterDetailWidget::setGroupNumbers(const QList<int>& group_numbers)
-{
-    d->m_group_numbers = group_numbers;
-    this->update();
 }
 
 void MVClusterDetailWidget::setSampleRate(double freq)
@@ -625,9 +607,14 @@ void MVClusterDetailWidget::slot_toggle_stdev_shading()
     d->toggle_stdev_shading();
 }
 
+void MVClusterDetailWidget::slot_recalculate()
+{
+    d->start_calculation();
+}
+
 void MVClusterDetailWidgetPrivate::compute_total_time()
 {
-    m_total_time_sec = m_timeseries.N2() / m_samplerate;
+    m_total_time_sec = m_view_agent->timeseries().N2() / m_samplerate;
 }
 
 void MVClusterDetailWidgetPrivate::set_hovered_k(int k)
@@ -697,26 +684,7 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
 
 QString MVClusterDetailWidgetPrivate::group_label_for_k(int k)
 {
-    if (m_group_numbers.isEmpty())
-        return QString("%1").arg(m_view_agent->clusterMerge().clusterLabelText(k));
-    int g = m_group_numbers.value(k);
-    for (int i = 1; i < k; i++) {
-        if (m_group_numbers[i] == g) { //somebody for me has the same group number
-            return "";
-        }
-    }
-    return QString("%1").arg(m_view_agent->clusterMerge().clusterLabelText(g));
-}
-
-bool MVClusterDetailWidgetPrivate::has_nontrivial_group_numbers()
-{
-    if (m_group_numbers.isEmpty())
-        return false;
-    for (int i = 1; i < m_group_numbers.count(); i++) {
-        if (m_group_numbers[i] != i)
-            return true;
-    }
-    return false;
+    return QString("%1").arg(m_view_agent->clusterMerge().clusterLabelText(k));
 }
 
 int MVClusterDetailWidgetPrivate::get_current_view_index()
@@ -852,14 +820,6 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         compressed_info = true;
 
     QString group_label = d->group_label_for_k(m_CD.k);
-    if ((!group_label.isEmpty()) && (d->has_nontrivial_group_numbers())) {
-        QPen pen;
-        pen.setWidth(1);
-        pen.setColor(d->m_colors["divider_line"]);
-        pen.setStyle(Qt::DashLine);
-        painter->setPen(pen);
-        painter->drawLine(rect2.x(), rect2.y(), rect2.x(), rect2.y() + rect2.height());
-    }
     {
         txt = QString("%1").arg(group_label);
         //font.setPixelSize(16);
@@ -1048,9 +1008,10 @@ void MVClusterDetailWidgetPrivate::start_calculation()
     m_calculator.stopComputation();
     //m_calculator.mscmdserver_url = m_mscmdserver_url;
     m_calculator.mlproxy_url = m_mlproxy_url;
-    m_calculator.timeseries = m_timeseries;
-    m_calculator.firings = m_firings;
+    m_calculator.timeseries = m_view_agent->timeseries();
+    m_calculator.firings = DiskReadMda(m_view_agent->firings());
     m_calculator.clip_size = m_clip_size;
+    qDebug() << m_calculator.timeseries.N1() << m_calculator.timeseries.N2() << m_calculator.firings.N1() << m_calculator.firings.N2() << m_calculator.clip_size << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
     m_calculator.startComputation();
     q->update();
 }
