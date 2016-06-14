@@ -14,20 +14,6 @@
 #include <QString>
 #include <QWidget>
 
-struct MVViewOptions {
-    MVViewOptions()
-    {
-        cc_max_dt_msec = 100;
-        clip_size = 100;
-    }
-
-    QString timeseries;
-    double cc_max_dt_msec;
-    int clip_size;
-    static MVViewOptions fromJsonObject(QJsonObject obj);
-    QJsonObject toJsonObject() const;
-};
-
 struct MVEventFilter {
     MVEventFilter()
     {
@@ -53,10 +39,8 @@ public:
 
     void setTimeseriesChoices(const QStringList& names);
 
-    MVViewOptions viewOptions() const;
     MVEventFilter eventFilter() const;
 
-    void setViewOptions(MVViewOptions opts);
     void setEventFilter(MVEventFilter X);
 
     QAbstractButton* findButton(const QString& name);
@@ -67,6 +51,8 @@ signals:
 private slots:
     void slot_update_enabled_controls();
     void slot_button_clicked();
+    void slot_view_agent_option_changed(QString name);
+    void slot_update_timeseries_box();
 
 private:
     MVControlPanelPrivate* d;

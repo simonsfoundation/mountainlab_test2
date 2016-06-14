@@ -27,6 +27,11 @@ struct MVRange {
     double min, max;
 };
 
+struct TimeseriesStruct {
+    QString name;
+    DiskReadMda data;
+};
+
 class MVViewAgentPrivate;
 class MVViewAgent : public QObject {
     Q_OBJECT
@@ -46,12 +51,15 @@ public:
     QColor channelColor(int m) const;
     QList<QColor> channelColors() const;
     DiskReadMda timeseries();
+    QString timeseriesName();
+    QStringList timeseriesNames() const;
     DiskReadMda firings();
     double sampleRate() const;
     DiskReadMda filteredFirings();
     QVariant option(QString name, QVariant default_val = QVariant());
 
-    void setTimeseries(const DiskReadMda& X);
+    void addTimeseries(TimeseriesStruct timeseries);
+    void setCurrentTimeseriesName(QString name);
     void setFirings(const DiskReadMda& F);
     void setSampleRate(double sample_rate);
     void setClusterMerge(const ClusterMerge& CM);
@@ -69,6 +77,7 @@ public:
 
 signals:
     void timeseriesChanged();
+    void timeseriesChoicesChanged();
     void firingsChanged();
     void clusterMergeChanged();
     void clusterAttributesChanged();

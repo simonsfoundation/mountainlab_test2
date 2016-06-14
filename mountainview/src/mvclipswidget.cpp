@@ -39,8 +39,6 @@ public:
     MVClipsWidget* q;
     //QString m_mscmdserver_url;
     QString m_mlproxy_url;
-    DiskReadMda m_timeseries;
-    DiskReadMda m_firings;
     QList<int> m_labels_to_use;
     MVClipsView* m_view;
     MVClipsWidgetComputer m_computer;
@@ -62,6 +60,10 @@ MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
     this->setLayout(hlayout);
 
     connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
+
+    connect(view_agent, SIGNAL(timeseriesChanged()), this, SLOT(slot_restart_calculation()));
+    connect(view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_restart_calculation()));
+    connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
 }
 
 MVClipsWidget::~MVClipsWidget()
@@ -82,18 +84,6 @@ void MVClipsWidget::setMLProxyUrl(const QString& url)
     d->m_mlproxy_url = url;
 }
 
-void MVClipsWidget::setTimeseries(DiskReadMda& X)
-{
-    d->m_timeseries = X;
-    d->start_computation();
-}
-
-void MVClipsWidget::setFirings(const DiskReadMda& F)
-{
-    d->m_firings = F;
-    d->start_computation();
-}
-
 void MVClipsWidget::setLabelsToUse(const QList<int>& labels)
 {
     d->m_labels_to_use = labels;
@@ -111,6 +101,18 @@ void MVClipsWidget::slot_computation_finished()
     d->m_view->setClips(d->m_computer.clips);
     d->m_view->setTimes(d->m_computer.times);
     d->m_view->setLabels(d->m_computer.labels);
+}
+
+void MVClipsWidget::slot_restart_calculation()
+{
+    d->start_computation();
+}
+
+void MVClipsWidget::slot_view_agent_option_changed(QString name)
+{
+    if (name == "clip_size") {
+        d->start_computation();
+    }
 }
 
 void MVClipsWidgetComputer::compute()
@@ -178,7 +180,7 @@ void MVClipsWidgetComputer::compute()
     task.log("Reading: " + clips_path);
     DiskReadMda CC(clips_path);
     CC.setRemoteDataType("float32_q8"); //to save download time
-    task.log(QString("CC: %1 x %2 x %3").arg(CC.N1()).arg(CC.N2()).arg(CC.N3()));
+    task.log(QString("CC: %1 x %2 x %3, clip_size=%4").arg(CC.N1()).arg(CC.N2()).arg(CC.N3()).arg(clip_size));
     CC.readChunk(clips, 0, 0, 0, CC.N1(), CC.N2(), CC.N3());
     if (thread_interrupt_requested()) {
         task.error(QString("Halted while reading chunk from: " + clips_path));
@@ -191,8 +193,8 @@ void MVClipsWidgetPrivate::start_computation()
     m_computer.stopComputation();
     //m_computer.mscmdserver_url = m_mscmdserver_url;
     m_computer.mlproxy_url = m_mlproxy_url;
-    m_computer.firings = m_firings;
-    m_computer.timeseries = m_timeseries;
+    m_computer.firings = m_view_agent->firings();
+    m_computer.timeseries = m_view_agent->timeseries();
     m_computer.labels_to_use = m_labels_to_use;
     m_computer.clip_size = m_view_agent->option("clip_size").toInt();
     m_computer.startComputation();

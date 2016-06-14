@@ -998,7 +998,7 @@ void MVClusterDetailWidgetPrivate::start_calculation()
     m_calculator.timeseries = m_view_agent->timeseries();
     m_calculator.firings = m_view_agent->firings();
     m_calculator.clip_size = m_view_agent->option("clip_size", 100).toInt();
-    qDebug() << m_calculator.timeseries.N1() << m_calculator.timeseries.N2() << m_calculator.firings.N1() << m_calculator.firings.N2() << m_calculator.clip_size << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << m_calculator.timeseries.path() << m_calculator.firings.path() << m_calculator.clip_size << "SSSSSSSSSSSSSSSSSSSSSSSSSS";
     m_calculator.startComputation();
     q->update();
 }

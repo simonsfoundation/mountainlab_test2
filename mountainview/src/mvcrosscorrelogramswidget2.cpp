@@ -518,6 +518,5 @@ void MVCrossCorrelogramsWidget2Private::start_computation()
     m_computer.firings = m_view_agent->firings();
     m_computer.options = m_options;
     m_computer.max_dt = m_view_agent->option("cc_max_dt_msec", 100).toDouble() / 1000 * m_samplerate;
-    qDebug() << m_computer.firings.N1() << m_computer.firings.N2() << m_computer.max_dt << m_computer.options.mode << "ccccccccccccccccccccccccccccccccccccccccc";
     m_computer.startComputation();
 }

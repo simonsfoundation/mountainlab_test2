@@ -140,7 +140,12 @@ QString MVFile::timeseriesPathResolved(const QString& name) const
 
 QJsonObject MVFile::viewOptions() const
 {
-    return d->m_obj["view_options"].toObject();
+    QJsonObject ret = d->m_obj["view_options"].toObject();
+    if (!ret.contains("clip_size"))
+        ret["clip_size"] = 80;
+    if (!ret.contains("cc_max_dt_msec"))
+        ret["cc_max_dt_msec"] = 100;
+    return ret;
 }
 
 QJsonObject MVFile::eventFilter() const

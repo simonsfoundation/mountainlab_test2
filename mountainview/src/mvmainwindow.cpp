@@ -110,9 +110,6 @@ public:
     void export_filtered_firings();
     void export_file(QString source_path, QString dest_path, bool use_float64);
 
-    /// TODO this shouldn't really be here -- better in the control panel?
-    QString current_timeseries_path();
-
     //not sure about these
     QVariant get_cluster_attribute(int k, QString attr);
     void set_cluster_attribute(int k, QString attr, QVariant val);
@@ -197,15 +194,6 @@ MVMainWindow::~MVMainWindow()
     delete d;
 }
 
-void MVMainWindow::setCurrentTimeseriesName(const QString& name)
-{
-    {
-        MVViewOptions opts = d->m_control_panel->viewOptions();
-        opts.timeseries = name;
-        d->m_control_panel->setViewOptions(opts);
-    }
-}
-
 void MVMainWindow::setDefaultInitialization()
 {
     d->open_cluster_details();
@@ -227,17 +215,29 @@ void MVMainWindow::setMVFile(MVFile ff)
 {
     d->m_mv_file = ff; //we need to save the whole thing so we know what to save
 
+    /// TODO need to clear out the view_agent here in case this gets called twice
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
-    d->m_control_panel->setTimeseriesChoices(timeseries_names);
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << timeseries_names;
+    foreach (QString name, timeseries_names) {
+        TimeseriesStruct X;
+        X.name = name;
+        X.data = DiskReadMda(d->m_mv_file.timeseriesPathResolved(name));
+        d->m_view_agent->addTimeseries(X);
+    }
 
-    d->m_control_panel->setViewOptions(MVViewOptions::fromJsonObject(d->m_mv_file.viewOptions()));
+    d->m_view_agent->setOption("clip_size", d->m_mv_file.viewOptions()["clip_size"].toInt());
+    d->m_view_agent->setOption("cc_max_dt_msec", d->m_mv_file.viewOptions()["cc_max_dt_msec"].toDouble());
+
+    /// TODO fix this
     d->m_control_panel->setEventFilter(MVEventFilter::fromJsonObject(d->m_mv_file.eventFilter()));
     if (!d->m_mv_file.currentTimeseriesName().isEmpty()) {
-        MVViewOptions opts = d->m_control_panel->viewOptions();
-        opts.timeseries = d->m_mv_file.currentTimeseriesName();
-        d->m_control_panel->setViewOptions(opts);
+        d->m_view_agent->setCurrentTimeseriesName(d->m_mv_file.currentTimeseriesName());
     }
+    else {
+        d->m_view_agent->setCurrentTimeseriesName(timeseries_names.value(0));
+    }
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << d->m_view_agent->timeseriesName();
 
     {
         QJsonObject ann0 = d->m_mv_file.annotations();
@@ -267,7 +267,6 @@ void MVMainWindow::setMVFile(MVFile ff)
     }
 
     d->m_view_agent->setFirings(DiskReadMda(ff.firingsPathResolved()));
-    d->m_view_agent->setTimeseries(DiskReadMda(d->current_timeseries_path()));
     d->m_view_agent->setSampleRate(ff.sampleRate());
 }
 
@@ -275,9 +274,11 @@ void MVMainWindow::writeMVFile(const QString& mv_fname)
 {
     TaskProgress task("saving .mv file: " + mv_fname);
 
-    d->m_mv_file.setViewOptions(d->m_control_panel->viewOptions().toJsonObject());
+    QJsonObject view_options;
+    view_options["clip_size"] = d->m_view_agent->option("clip_size").toInt();
+    view_options["cc_max_dt_msec"] = d->m_view_agent->option("cc_max_dt_msec").toDouble();
     d->m_mv_file.setEventFilter(d->m_control_panel->eventFilter().toJsonObject());
-    d->m_mv_file.setCurrentTimeseriesName(d->m_control_panel->viewOptions().timeseries);
+    d->m_mv_file.setCurrentTimeseriesName(d->m_view_agent->timeseriesName());
 
     QJsonObject cluster_attributes;
     QMap<int, QJsonObject> CA = d->m_view_agent->clusterAttributes();
@@ -327,10 +328,7 @@ void MVMainWindow::keyPressEvent(QKeyEvent* evt)
 
 void MVMainWindow::slot_control_panel_user_action(QString str)
 {
-    if (str == "update_viewing_options") {
-        d->m_view_agent->setTimeseries(DiskReadMda(d->current_timeseries_path()));
-    }
-    else if (str == "open-cluster-details") {
+    if (str == "open-cluster-details") {
         d->open_cluster_details();
     }
     else if (str == "open-auto-correlograms") {
@@ -374,10 +372,6 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
     }
     else if (str == "export_filtered_firings") {
         d->export_filtered_firings();
-    }
-    else {
-        TaskProgress task(str);
-        task.error("user action not yet implemented.");
     }
 }
 
@@ -594,6 +588,7 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlogra
 
 MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "OOOOOOOOOOOOOOOOOOOOOOOOOOO" << m_view_agent->timeseriesName() << m_view_agent->timeseries().path() << m_view_agent->firings().path();
     /// TODO move sample rate into mvviewagent
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
     set_tool_button_menu(X);
@@ -627,6 +622,7 @@ void MVMainWindowPrivate::open_clips()
     //X->setMscmdServerUrl(m_mscmdserver_url);
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "clips");
+    X->setLabelsToUse(ks);
     /// TODO, pass this in a method
     //X->setProperty("ks", int_list_to_string_list(ks));
     /// TODO (LOW) more descriptive tab title in case of more than one
@@ -934,11 +930,6 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
     C->use_float64 = use_float64;
     C->setDeleteOnComplete(true);
     C->startComputation();
-}
-
-QString MVMainWindowPrivate::current_timeseries_path()
-{
-    return m_mv_file.timeseriesPathResolved(m_control_panel->viewOptions().timeseries);
 }
 
 QVariant MVMainWindowPrivate::get_cluster_attribute(int k, QString attr)
