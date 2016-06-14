@@ -60,6 +60,9 @@ struct draw_axis_opts {
         tick_length = 5;
         draw_tick_labels = true;
         draw_range = false;
+        color = Qt::black;
+        line_width = 1;
+        font_size_pix = 11;
     }
 
     QPointF pt1, pt2;
@@ -68,6 +71,9 @@ struct draw_axis_opts {
     double tick_length;
     bool draw_tick_labels;
     bool draw_range;
+    QColor color;
+    int line_width;
+    int font_size_pix;
 };
 
 void draw_axis(QPainter* painter, draw_axis_opts opts);

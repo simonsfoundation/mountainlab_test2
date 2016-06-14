@@ -42,6 +42,7 @@ public:
     QList<int> selectedClusters() const;
     double currentTimepoint() const;
     MVRange currentTimeRange() const;
+    QColor clusterColor(int k);
 
     void setClusterMerge(const ClusterMerge& CM);
     void setClusterAttributes(const QMap<int, QJsonObject>& A);
@@ -50,6 +51,7 @@ public:
     void setSelectedClusters(const QList<int>& ks);
     void setCurrentTimepoint(double tp);
     void setCurrentTimeRange(const MVRange& range);
+    void setClusterColors(const QList<QColor>& colors);
 
     void clickCluster(int k, Qt::KeyboardModifiers modifiers);
 

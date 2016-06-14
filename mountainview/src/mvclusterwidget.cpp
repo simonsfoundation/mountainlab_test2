@@ -75,23 +75,23 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     d->m_view_agent = view_agent;
 
     {
-        MVClusterView* X = new MVClusterView;
+        MVClusterView* X = new MVClusterView(d->m_view_agent);
         X->setMode(MVCV_MODE_HEAT_DENSITY);
         d->m_views << X;
     }
     {
-        MVClusterView* X = new MVClusterView;
+        MVClusterView* X = new MVClusterView(d->m_view_agent);
         X->setMode(MVCV_MODE_LABEL_COLORS);
         d->m_views << X;
     }
     {
-        MVClusterView* X = new MVClusterView;
+        MVClusterView* X = new MVClusterView(d->m_view_agent);
         X->setMode(MVCV_MODE_TIME_COLORS);
         X->setVisible(false);
         d->m_views << X;
     }
     {
-        MVClusterView* X = new MVClusterView;
+        MVClusterView* X = new MVClusterView(d->m_view_agent);
         X->setMode(MVCV_MODE_AMPLITUDE_COLORS);
         X->setVisible(false);
         d->m_views << X;
@@ -164,15 +164,13 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     QSizePolicy view_size_policy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     view_size_policy.setHorizontalStretch(1);
 
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setSizePolicy(view_size_policy);
         hlayout->addWidget(V);
         V->setEventFilter(d->m_filter_info);
     }
 
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         d->connect_view(V);
     }
 
@@ -200,8 +198,7 @@ void MVClusterWidget::setMLProxyUrl(const QString& url)
 void MVClusterWidget::setData(const Mda& X)
 {
     d->m_data = X;
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setData(Mda());
     }
     double max_abs_val = 0;
@@ -222,40 +219,35 @@ void MVClusterWidget::setData(const Mda& X)
 
 void MVClusterWidget::setTimes(const QList<double>& times)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setTimes(times);
     }
 }
 
 void MVClusterWidget::setLabels(const QList<int>& labels)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setLabels(labels);
     }
 }
 
 void MVClusterWidget::setAmplitudes(const QList<double>& amps)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setAmplitudes(amps);
     }
 }
 
 void MVClusterWidget::setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setScores(detectability_scores, outlier_scores);
     }
 }
 
 void MVClusterWidget::setCurrentEvent(const MVEvent& evt)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setCurrentEvent(evt);
     }
     d->update_clips_view();
@@ -287,15 +279,6 @@ void MVClusterWidget::setLabelsToUse(const QList<int>& labels)
     d->start_computation();
 }
 
-void MVClusterWidget::setLabelColors(const QList<QColor>& colors)
-{
-    d->m_label_colors = colors;
-    foreach(MVClusterView * V, d->m_views)
-    {
-        V->setLabelColors(colors);
-    }
-}
-
 void MVClusterWidget::setFeatureMode(QString mode)
 {
     d->m_feature_mode = mode;
@@ -308,8 +291,7 @@ void MVClusterWidget::setChannels(QList<int> channels)
 
 void MVClusterWidget::setTransformation(const AffineTransformation& T)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setTransformation(T);
     }
 }
@@ -322,8 +304,7 @@ MVEvent MVClusterWidget::currentEvent()
 void MVClusterWidget::setEventFilter(FilterInfo info)
 {
     d->m_filter_info = info;
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setEventFilter(info);
     }
 }
@@ -339,8 +320,7 @@ void MVClusterWidget::slot_view_transformation_changed()
 {
     MVClusterView* V0 = (MVClusterView*)sender();
     AffineTransformation T = V0->transformation();
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setTransformation(T);
     }
 }
@@ -429,8 +409,7 @@ int MVClusterWidgetPrivate::current_event_index()
 
 void MVClusterWidgetPrivate::set_data_on_visible_views_that_need_it()
 {
-    foreach(MVClusterView * V, m_views)
-    {
+    foreach (MVClusterView* V, m_views) {
         if (V->isVisible()) {
             if (!V->hasData()) {
                 V->setData(m_data);
@@ -458,8 +437,7 @@ void MVClusterWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -499,14 +477,14 @@ void MVClusterWidgetComputer::compute()
         features_path = MT.makeOutputFilePath("features");
 
         MT.runProcess();
-    } else if (features_mode == "channels") {
+    }
+    else if (features_mode == "channels") {
         MountainProcessRunner MT;
         QString processor_name = "extract_channel_values";
         MT.setProcessorName(processor_name);
 
         QStringList channels_strlist;
-        foreach(int ch, channels)
-        {
+        foreach (int ch, channels) {
             channels_strlist << QString("%1").arg(ch);
         }
 
@@ -520,7 +498,8 @@ void MVClusterWidgetComputer::compute()
         features_path = MT.makeOutputFilePath("values");
 
         MT.runProcess();
-    } else {
+    }
+    else {
         TaskProgress err("Computing features");
         err.error("Unrecognized features mode: " + features_mode);
         return;

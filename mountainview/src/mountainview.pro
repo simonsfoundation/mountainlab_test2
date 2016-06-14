@@ -31,6 +31,7 @@ HEADERS += \
     mvclusterview.h \
     mvclusterwidget.h \
     mvfiringeventview.h \
+    mvfiringeventview2.h \
     diskarraymodel_new.h \
     sstimeserieswidget.h \
     sstimeseriesview.h \
@@ -56,11 +57,13 @@ HEADERS += \
     mvviewagent.h \
     mvstatusbar.h \
     mvtimeseriesview.h \
+    mvtimeseriesview2.h \
     multiscaletimeseries.h \
     mvtimeseriesrendermanager.h \
     spikespywidget.h \
     mvspikesprayview.h \
-    mvfile.h
+    mvfile.h \
+    mvtimeseriesviewbase.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -75,6 +78,7 @@ SOURCES += mountainviewmain.cpp \
     mvclusterview.cpp \
     mvclusterwidget.cpp \
     mvfiringeventview.cpp \
+    mvfiringeventview2.cpp \
     diskarraymodel_new.cpp \
     sstimeserieswidget.cpp \
     sstimeseriesview.cpp \
@@ -99,11 +103,13 @@ SOURCES += mountainviewmain.cpp \
     mvviewagent.cpp \
     mvstatusbar.cpp \
     mvtimeseriesview.cpp \
+    mvtimeseriesview2.cpp \
     multiscaletimeseries.cpp \
     mvtimeseriesrendermanager.cpp \
     spikespywidget.cpp \
     mvspikesprayview.cpp \
-    mvfile.cpp
+    mvfile.cpp \
+    mvtimeseriesviewbase.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

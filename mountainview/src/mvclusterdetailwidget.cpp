@@ -73,7 +73,7 @@ public:
         m_highlighted = false;
         m_hovered = false;
         x_position_before_scaling = 0;
-        m_stdev_shading = true;
+        m_stdev_shading = false;
     }
     void setClusterData(const ClusterData& CD)
     {
@@ -215,7 +215,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
     d->m_anchor_x = -1;
     d->m_anchor_scroll_x = -1;
     d->m_anchor_view_index = -1;
-    d->m_stdev_shading = true;
+    d->m_stdev_shading = false;
 
     d->m_colors["background"] = QColor(240, 240, 240);
     d->m_colors["frame1"] = QColor(245, 245, 245);

@@ -44,6 +44,24 @@ double compute_max(const QList<double>& X)
     return ret;
 }
 
+double compute_min(const QVector<double>& X)
+{
+    double ret = X.value(0);
+    for (int i = 0; i < X.count(); i++)
+        if (X[i] < ret)
+            ret = X[i];
+    return ret;
+}
+
+double compute_max(const QVector<double>& X)
+{
+    double ret = X.value(0);
+    for (int i = 0; i < X.count(); i++)
+        if (X[i] > ret)
+            ret = X[i];
+    return ret;
+}
+
 int compute_max(const QList<int>& X)
 {
     int ret = X.value(0);

@@ -9,6 +9,7 @@
 #include <math.h>
 #include "mvutils.h"
 #include "msmisc.h"
+#include "mvviewagent.h"
 #include <QMenu>
 
 class MVClusterViewPrivate : public QObject {
@@ -23,6 +24,7 @@ public:
     int m_current_event_index;
     int m_mode;
     FilterInfo m_filter_info;
+    MVViewAgent* m_view_agent;
 
     QImage m_grid_image;
     QRectF m_image_target;
@@ -43,7 +45,6 @@ public:
     double m_max_amplitude;
     QList<int> m_labels;
     QSet<int> m_closest_inds_to_exclude;
-    QList<QColor> m_label_colors;
     bool m_emit_transformation_changed_scheduled;
 
     Mda proj_matrix; //3xnum_features
@@ -55,7 +56,6 @@ public:
     void coord2gridindex(double x0, double y0, double& i1, double& i2);
     QPointF pixel2coord(QPointF pix);
     QPointF coord2pixel(QPointF coord);
-    QColor get_label_color(int label);
     QColor get_time_color(double pct);
     int find_closest_event_index(double x, double y, const QSet<int>& inds_to_exclude);
     void set_current_event_index(int ind, bool do_emit = true);
@@ -68,11 +68,12 @@ public slots:
 };
 #include "mvclusterview.moc"
 
-MVClusterView::MVClusterView(QWidget* parent)
+MVClusterView::MVClusterView(MVViewAgent* view_agent, QWidget* parent)
     : QWidget(parent)
 {
     d = new MVClusterViewPrivate;
     d->q = this;
+    d->m_view_agent = view_agent;
     d->m_grid_N1 = d->m_grid_N2 = 300;
     d->m_grid_update_needed = false;
     d->m_data_proj_needed = true;
@@ -195,11 +196,6 @@ void MVClusterView::setTransformation(const AffineTransformation& T)
     d->m_grid_update_needed = true;
     update();
     //do not emit to avoid excessive signals
-}
-
-void MVClusterView::setLabelColors(const QList<QColor>& colors)
-{
-    d->m_label_colors = colors;
 }
 
 void MVClusterView::setEventFilter(FilterInfo F)
@@ -652,7 +648,7 @@ void MVClusterViewPrivate::update_grid()
                 }
                 else if (m_mode == MVCV_MODE_LABEL_COLORS) {
                     if (val > 0) {
-                        QColor CC = get_label_color((int)val);
+                        QColor CC = m_view_agent->clusterColor((int)val);
                         m_grid_image.setPixel(i1, i2, CC.rgb());
                     }
                     else if (val == 0) {
@@ -714,13 +710,6 @@ QPointF MVClusterViewPrivate::coord2pixel(QPointF coord)
     double pt_x = pctx * m_image_target.width() + m_image_target.x();
     double pt_y = pcty * m_image_target.height() + m_image_target.y();
     return QPointF(pt_x, pt_y);
-}
-
-QColor MVClusterViewPrivate::get_label_color(int label)
-{
-    if (!m_label_colors.size())
-        return Qt::black;
-    return m_label_colors[label % m_label_colors.size()];
 }
 
 QColor MVClusterViewPrivate::get_time_color(double pct)
@@ -815,7 +804,7 @@ void MVClusterViewPrivate::do_paint(QPainter& painter, int W, int H)
             QRectF rect(0, y0, W - margin, text_height);
             QString str = QString("%1").arg(list[i]);
             QPen pen = painter.pen();
-            pen.setColor(get_label_color(list[i]));
+            pen.setColor(m_view_agent->clusterColor(list[i]));
             painter.setPen(pen);
             painter.drawText(rect, Qt::AlignRight, str);
             y0 += text_height + spacing;

@@ -254,6 +254,13 @@ double round_down_to_2_significant_figures(double val)
 
 void draw_axis(QPainter* painter, draw_axis_opts opts)
 {
+    QPen pen = painter->pen();
+    pen.setColor(opts.color);
+    pen.setWidth(opts.line_width);
+    painter->setPen(pen);
+    QFont font = painter->font();
+    font.setPixelSize(opts.font_size_pix);
+    painter->setFont(font);
     if (opts.orientation == Qt::Vertical) {
         //ensure that pt2.y>=pt1.y
         if (opts.pt2.y() < opts.pt1.y()) {

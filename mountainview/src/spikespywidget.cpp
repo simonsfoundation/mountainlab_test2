@@ -13,12 +13,13 @@
 #include <QSplitter>
 #include <QMenuBar>
 
+/// TODO put channel colors into mvviewagent
+
 class SpikeSpyWidgetPrivate {
 public:
     SpikeSpyWidget* q;
     double m_samplerate;
     QList<QColor> m_channel_colors;
-    QList<QColor> m_label_colors;
     QList<SpikeSpyViewData> m_datas;
     QList<MVTimeSeriesView*> m_views;
     MVViewAgent* m_view_agent;
@@ -98,7 +99,7 @@ void SpikeSpyWidget::setChannelColors(const QList<QColor>& colors)
 
 void SpikeSpyWidget::setLabelColors(const QList<QColor>& colors)
 {
-    d->m_label_colors = colors;
+    d->m_view_agent->setClusterColors(colors);
 }
 
 void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
@@ -138,7 +139,6 @@ void SpikeSpyWidget::slot_open_mountainview()
 
     MVMainWindow* W = new MVMainWindow(d->m_view_agent);
     W->setChannelColors(d->m_channel_colors);
-    W->setLabelColors(d->m_label_colors);
     MVFile ff;
     ff.addTimeseriesPath("Timeseries", data.timeseries.path());
     ff.setFiringsPath(data.firings.path());
