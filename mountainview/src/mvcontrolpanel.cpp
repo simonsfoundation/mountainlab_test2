@@ -51,7 +51,7 @@ public:
     MVControlPanel* q;
     ControlManager m_controls;
 
-    MVViewAgent *m_view_agent;
+    MVViewAgent* m_view_agent;
     QLabel* create_group_label(QString label);
     QAbstractButton* find_action_button(QString name);
 };
@@ -68,12 +68,12 @@ action_button_info abi(QString name, QString label)
     return ret;
 }
 
-MVControlPanel::MVControlPanel(MVViewAgent *view_agent)
+MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
 {
     d = new MVControlPanelPrivate;
     d->q = this;
 
-    d->m_view_agent=view_agent;
+    d->m_view_agent = view_agent;
 
     QFont font = this->font();
     font.setFamily("Arial");
@@ -260,6 +260,10 @@ void MVControlPanel::slot_button_clicked()
     if (!action_name.isEmpty()) {
         emit userAction(action_name);
     }
+    if (action_name == "update_viewing_options") {
+        d->m_view_agent->setOption("clip_size", this->viewOptions().clip_size);
+        d->m_view_agent->setOption("cc_max_dt_msec", this->viewOptions().cc_max_dt_msec);
+    }
 }
 
 void ControlManager::add_group_label(QGridLayout* G, QString label)
@@ -326,8 +330,7 @@ QGroupBox* ControlManager::add_radio_button_group(QGridLayout* G, QString name, 
     int r = G->rowCount();
     QGroupBox* box = new QGroupBox;
     QHBoxLayout* hlayout = new QHBoxLayout;
-    foreach(QString option, options)
-    {
+    foreach (QString option, options) {
         QRadioButton* B = new QRadioButton(option);
         if (option == val)
             B->setChecked(true);
@@ -375,8 +378,7 @@ QVariant ControlManager::get_parameter_value(QString name, const QVariant& defau
     if (m_groupbox_controls.contains(name)) {
         QGroupBox* G = m_groupbox_controls[name];
         QList<QObject*> ch = G->children();
-        foreach(QObject * obj, ch)
-        {
+        foreach (QObject* obj, ch) {
             QRadioButton* R = dynamic_cast<QRadioButton*>(obj);
             if (R) {
                 if (R->isChecked())
@@ -398,8 +400,7 @@ void ControlManager::set_parameter_value(QString name, QVariant val)
     if (m_groupbox_controls.contains(name)) {
         QGroupBox* G = m_groupbox_controls[name];
         QList<QObject*> ch = G->children();
-        foreach(QObject * obj, ch)
-        {
+        foreach (QObject* obj, ch) {
             QRadioButton* R = dynamic_cast<QRadioButton*>(obj);
             if (R) {
                 if (R->text() == val) {
@@ -424,8 +425,7 @@ void ControlManager::set_parameter_choices(QString name, QStringList choices)
         QComboBox* CB = m_combobox_controls[name];
         QString txt = CB->currentText();
         CB->clear();
-        foreach(QString choice, choices)
-        {
+        foreach (QString choice, choices) {
             CB->addItem(choice);
         }
         if (txt.isEmpty()) {
@@ -464,8 +464,7 @@ QLabel* MVControlPanelPrivate::create_group_label(QString label)
 QAbstractButton* MVControlPanelPrivate::find_action_button(QString name)
 {
     QList<QAbstractButton*> buttons = q->findChildren<QAbstractButton*>("", Qt::FindChildrenRecursively);
-    foreach(QAbstractButton * B, buttons)
-    {
+    foreach (QAbstractButton* B, buttons) {
         if (B->property("action_name").toString() == name)
             return B;
     }

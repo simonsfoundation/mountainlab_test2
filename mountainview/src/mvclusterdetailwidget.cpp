@@ -156,7 +156,6 @@ public:
     QString m_mlproxy_url;
     double m_samplerate;
 
-    int m_clip_size;
     QList<ClusterData> m_cluster_data;
 
     double m_vscale_factor;
@@ -200,7 +199,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
 {
     d = new MVClusterDetailWidgetPrivate;
     d->q = this;
-    d->m_clip_size = 100;
     d->m_progress_dialog = 0;
     d->m_vscale_factor = 2;
     d->m_total_time_sec = 1;
@@ -229,6 +227,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
 
     QObject::connect(view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_recalculate()));
     QObject::connect(view_agent, SIGNAL(timeseriesChanged()), this, SLOT(slot_recalculate()));
+    QObject::connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
 
     this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
@@ -268,14 +267,6 @@ void MVClusterDetailWidget::setMscmdServerUrl(const QString& url)
 void MVClusterDetailWidget::setMLProxyUrl(const QString& url)
 {
     d->m_mlproxy_url = url;
-}
-
-void MVClusterDetailWidget::setClipSize(int T)
-{
-    if (d->m_clip_size == T)
-        return;
-    d->m_clip_size = T;
-    d->start_calculation();
 }
 
 void MVClusterDetailWidget::setSampleRate(double freq)
@@ -610,6 +601,12 @@ void MVClusterDetailWidget::slot_toggle_stdev_shading()
 void MVClusterDetailWidget::slot_recalculate()
 {
     d->start_calculation();
+}
+
+void MVClusterDetailWidget::slot_view_agent_option_changed(QString name)
+{
+    if (name == "clip_size")
+        d->start_calculation();
 }
 
 void MVClusterDetailWidgetPrivate::compute_total_time()
@@ -1009,8 +1006,8 @@ void MVClusterDetailWidgetPrivate::start_calculation()
     //m_calculator.mscmdserver_url = m_mscmdserver_url;
     m_calculator.mlproxy_url = m_mlproxy_url;
     m_calculator.timeseries = m_view_agent->timeseries();
-    m_calculator.firings = DiskReadMda(m_view_agent->firings());
-    m_calculator.clip_size = m_clip_size;
+    m_calculator.firings = m_view_agent->firings();
+    m_calculator.clip_size = m_view_agent->option("clip_size", 100).toInt();
     qDebug() << m_calculator.timeseries.N1() << m_calculator.timeseries.N2() << m_calculator.firings.N1() << m_calculator.firings.N2() << m_calculator.clip_size << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
     m_calculator.startComputation();
     q->update();

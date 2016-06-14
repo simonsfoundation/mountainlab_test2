@@ -21,15 +21,20 @@ public:
     MVFiringEventView2(MVViewAgent* view_agent);
     virtual ~MVFiringEventView2();
 
+    void setLabelsToUse(const QSet<int> &labels_to_use);
+
     void paintContent(QPainter* painter);
 
     //void setTimeseries(const DiskReadMda& X);
     //void setMLProxyUrl(const QString& url);
-    void setAmplitudes(const QVector<double>& amplitudes);
     void setChannelColors(const QList<QColor>& colors);
 
     void setAmplitudeRange(MVRange range);
     void autoSetAmplitudeRange();
+
+private slots:
+    void slot_restart_calculation();
+    void slot_computation_finished();
 
 private:
     MVFiringEventView2Private* d;

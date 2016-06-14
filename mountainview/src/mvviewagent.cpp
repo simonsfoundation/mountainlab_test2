@@ -18,10 +18,9 @@ public:
     double m_current_timepoint;
     MVRange m_current_time_range;
     QList<QColor> m_cluster_colors;
+    QList<QColor> m_channel_colors;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
-    Mda m_firings_array;
-    Mda m_filtered_firings_array;
     QMap<QString, QVariant> m_options;
 };
 
@@ -77,20 +76,26 @@ QColor MVViewAgent::clusterColor(int k)
     return d->m_cluster_colors[(k - 1) % d->m_cluster_colors.count()];
 }
 
+QColor MVViewAgent::channelColor(int m)
+{
+    if (m < 0)
+        return Qt::black;
+    if (d->m_channel_colors.isEmpty())
+        return Qt::black;
+    return d->m_channel_colors[m % d->m_channel_colors.count()];
+}
+
 DiskReadMda MVViewAgent::timeseries()
 {
     return d->m_timeseries;
 }
 
-Mda MVViewAgent::firings()
+DiskReadMda MVViewAgent::firings()
 {
-    if ((d->m_firings_array.N1() != d->m_firings.N1()) || (d->m_firings_array.N2() != d->m_firings.N2())) {
-        d->m_firings.readChunk(d->m_firings_array, 0, 0, d->m_firings.N1(), d->m_firings.N2());
-    }
-    return d->m_firings_array;
+    return d->m_firings;
 }
 
-Mda MVViewAgent::filteredFirings()
+DiskReadMda MVViewAgent::filteredFirings()
 {
     /// TODO actually return the filtered firings
     return firings();
@@ -192,6 +197,11 @@ void MVViewAgent::setCurrentTimeRange(const MVRange& range)
 void MVViewAgent::setClusterColors(const QList<QColor>& colors)
 {
     d->m_cluster_colors = colors;
+}
+
+void MVViewAgent::setChannelColors(const QList<QColor>& colors)
+{
+    d->m_channel_colors = colors;
 }
 
 void MVViewAgent::setOption(QString name, QVariant value)
