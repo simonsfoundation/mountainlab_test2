@@ -19,7 +19,8 @@ public:
     MVRange m_current_time_range;
     QList<QColor> m_cluster_colors;
     QList<QColor> m_channel_colors;
-    DiskReadMda m_timeseries;
+    QMap<QString, TimeseriesStruct> m_timeseries;
+    QString m_current_timeseries_name;
     DiskReadMda m_firings;
     double m_sample_rate;
     QMap<QString, QVariant> m_options;
@@ -73,6 +74,16 @@ QList<QColor> MVViewAgent::channelColors() const
     return d->m_channel_colors;
 }
 
+DiskReadMda MVViewAgent::timeseries()
+{
+    return d->m_timeseries.value(d->m_current_timeseries_name).data;
+}
+
+QString MVViewAgent::timeseriesName()
+{
+    return d->m_timeseries.value(d->m_current_timeseries_name).name;
+}
+
 QColor MVViewAgent::clusterColor(int k) const
 {
     if (k <= 0)
@@ -91,9 +102,9 @@ QColor MVViewAgent::channelColor(int m) const
     return d->m_channel_colors[m % d->m_channel_colors.count()];
 }
 
-DiskReadMda MVViewAgent::timeseries()
+QStringList MVViewAgent::timeseriesNames() const
 {
-    return d->m_timeseries;
+    return d->m_timeseries.keys();
 }
 
 DiskReadMda MVViewAgent::firings()
@@ -117,12 +128,21 @@ QVariant MVViewAgent::option(QString name, QVariant default_val)
     return d->m_options.value(name, default_val);
 }
 
-void MVViewAgent::setTimeseries(const DiskReadMda& X)
+void MVViewAgent::addTimeseries(TimeseriesStruct timeseries)
 {
-    if ((!X.path().isEmpty()) && (X.path() == d->m_timeseries.path()))
+    d->m_timeseries[timeseries.name] = timeseries;
+    if (d->m_current_timeseries_name == timeseries.name) {
+        emit this->timeseriesChanged();
+    }
+    emit this->timeseriesChoicesChanged();
+}
+
+void MVViewAgent::setCurrentTimeseriesName(QString name)
+{
+    if (d->m_current_timeseries_name == name)
         return;
-    d->m_timeseries = X;
-    emit timeseriesChanged();
+    d->m_current_timeseries_name = name;
+    emit this->timeseriesChanged();
 }
 
 void MVViewAgent::setFirings(const DiskReadMda& F)

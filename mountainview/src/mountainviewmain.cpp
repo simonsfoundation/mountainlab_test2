@@ -199,6 +199,7 @@ int main(int argc, char* argv[])
         QString window_title = CLP.named_parameters["window_title"].toString();
         QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
         MVViewAgent* view_agent = new MVViewAgent; //note that the view agent does not get deleted. :(
+        view_agent->setOption("clip_size", 130);
         view_agent->setChannelColors(channel_colors);
         view_agent->setClusterColors(label_colors);
         view_agent->setSampleRate(samplerate);

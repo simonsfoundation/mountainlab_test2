@@ -118,10 +118,10 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         layout->addLayout(G);
 
         d->m_controls.add_combo_box(G, "timeseries", "Use timeseries:")->setToolTip("Set the timeseries used for display");
-        d->m_controls.add_float_box(G, "cc_max_dt_msec", "Max. dt (ms)", 100, 1, 1e6)->setToolTip("Maximum dt for display of cross-correlograms");
-        d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", 80, 1, 1e5)->setToolTip("Set clips size used for display");
+        d->m_controls.add_float_box(G, "cc_max_dt_msec", "Max. dt (ms)", d->m_view_agent->option("cc_max_dt_msec").toFloat(), 1, 1e6)->setToolTip("Maximum dt for display of cross-correlograms");
+        d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", d->m_view_agent->option("clip_size").toInt(), 1, 1e5)->setToolTip("Set clips size used for display");
         QPushButton* BB = new QPushButton("Update viewing options");
-        BB->setProperty("action_name", "update_viewing_options");
+        BB->setProperty("action_name", "update_view_options");
         QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
         layout->addWidget(BB);
 
@@ -193,6 +193,10 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         d->m_controls.add_horizontal_divider_line(layout);
     }
 
+    QObject::connect(d->m_view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
+    QObject::connect(d->m_view_agent, SIGNAL(timeseriesChanged()), this, SLOT(slot_update_timeseries_box()));
+    QObject::connect(d->m_view_agent, SIGNAL(timeseriesChoicesChanged()), this, SLOT(slot_update_timeseries_box()));
+
     slot_update_enabled_controls();
 
     layout->addStretch(0);
@@ -204,20 +208,6 @@ MVControlPanel::~MVControlPanel()
     delete d;
 }
 
-void MVControlPanel::setTimeseriesChoices(const QStringList& names)
-{
-    d->m_controls.set_parameter_choices("timeseries", names);
-}
-
-MVViewOptions MVControlPanel::viewOptions() const
-{
-    MVViewOptions opts;
-    opts.cc_max_dt_msec = d->m_controls.get_parameter_value("cc_max_dt_msec").toDouble();
-    opts.clip_size = d->m_controls.get_parameter_value("clip_size").toInt();
-    opts.timeseries = d->m_controls.get_parameter_value("timeseries").toString();
-    return opts;
-}
-
 MVEventFilter MVControlPanel::eventFilter() const
 {
     MVEventFilter filter;
@@ -225,13 +215,6 @@ MVEventFilter MVControlPanel::eventFilter() const
     filter.max_outlier_score = d->m_controls.get_parameter_value("max_outlier_score").toDouble();
     filter.min_detectability_score = d->m_controls.get_parameter_value("min_detectability_score").toDouble();
     return filter;
-}
-
-void MVControlPanel::setViewOptions(MVViewOptions opts)
-{
-    d->m_controls.set_parameter_value("cc_max_dt_msec", opts.cc_max_dt_msec);
-    d->m_controls.set_parameter_value("clip_size", opts.clip_size);
-    d->m_controls.set_parameter_value("timeseries", opts.timeseries);
 }
 
 void MVControlPanel::setEventFilter(MVEventFilter X)
@@ -260,10 +243,23 @@ void MVControlPanel::slot_button_clicked()
     if (!action_name.isEmpty()) {
         emit userAction(action_name);
     }
-    if (action_name == "update_viewing_options") {
-        d->m_view_agent->setOption("clip_size", this->viewOptions().clip_size);
-        d->m_view_agent->setOption("cc_max_dt_msec", this->viewOptions().cc_max_dt_msec);
+    if (action_name == "update_view_options") {
+        d->m_view_agent->setOption("clip_size", d->m_controls.get_parameter_value("clip_size"));
+        d->m_view_agent->setOption("cc_max_dt_msec", d->m_controls.get_parameter_value("cc_max_dt_msec"));
+        d->m_view_agent->setCurrentTimeseriesName(d->m_controls.get_parameter_value("timeseries").toString());
     }
+}
+
+void MVControlPanel::slot_view_agent_option_changed(QString name)
+{
+    d->m_controls.set_parameter_value(name, d->m_view_agent->option(name));
+}
+
+void MVControlPanel::slot_update_timeseries_box()
+{
+    QStringList names = d->m_view_agent->timeseriesNames();
+    d->m_controls.set_parameter_choices("timeseries", names);
+    d->m_controls.set_parameter_value("timeseries", d->m_view_agent->timeseriesName());
 }
 
 void ControlManager::add_group_label(QGridLayout* G, QString label)
@@ -469,26 +465,6 @@ QAbstractButton* MVControlPanelPrivate::find_action_button(QString name)
             return B;
     }
     return 0;
-}
-
-MVViewOptions MVViewOptions::fromJsonObject(QJsonObject obj)
-{
-    MVViewOptions ret;
-    ret.timeseries = obj["timeseries"].toString();
-    if (obj.contains("cc_max_dt_msec"))
-        ret.cc_max_dt_msec = obj["cc_max_dt_msec"].toDouble();
-    if (obj.contains("clip_size"))
-        ret.clip_size = obj["clip_size"].toInt();
-    return ret;
-}
-
-QJsonObject MVViewOptions::toJsonObject() const
-{
-    QJsonObject obj;
-    obj["timeseries"] = this->timeseries;
-    obj["cc_max_dt_msec"] = this->cc_max_dt_msec;
-    obj["clip_size"] = this->clip_size;
-    return obj;
 }
 
 MVEventFilter MVEventFilter::fromJsonObject(QJsonObject obj)

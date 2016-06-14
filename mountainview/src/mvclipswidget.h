@@ -20,8 +20,6 @@ public:
     MVClipsWidget(MVViewAgent* view_agent);
     virtual ~MVClipsWidget();
     void setMLProxyUrl(const QString& url);
-    void setTimeseries(DiskReadMda& X);
-    void setFirings(const DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
 
     int currentClipIndex();
@@ -29,6 +27,8 @@ signals:
     void currentEventChanged();
 private slots:
     void slot_computation_finished();
+    void slot_restart_calculation();
+    void slot_view_agent_option_changed(QString name);
 
 private:
     MVClipsWidgetPrivate* d;
