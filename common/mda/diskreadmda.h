@@ -39,7 +39,7 @@ public:
     void setDownloadChunkSize(long size);
     long downloadChunkSize();
 
-    QString path();
+    QString path() const;
     QString makePath();
 
     ///The first dimension of the array

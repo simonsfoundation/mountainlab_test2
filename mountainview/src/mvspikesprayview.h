@@ -22,8 +22,8 @@ public:
 
     void setMLProxyUrl(const QString& url);
 
-    void setTimeseries(DiskReadMda& X);
-    void setFirings(DiskReadMda& F);
+    void setTimeseries(const DiskReadMda& X);
+    void setFirings(const DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
     void setClipSize(int clip_size);
     void setLabelColors(const QList<QColor>& colors);
@@ -32,7 +32,7 @@ private slots:
 
 protected:
     void paintEvent(QPaintEvent* evt);
-    void keyPressEvent(QKeyEvent *evt);
+    void keyPressEvent(QKeyEvent* evt);
 
 private:
     MVSpikeSprayViewPrivate* d;

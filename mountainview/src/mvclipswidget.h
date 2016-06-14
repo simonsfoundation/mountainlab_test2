@@ -21,15 +21,14 @@ public:
     virtual ~MVClipsWidget();
     void setMLProxyUrl(const QString& url);
     void setTimeseries(DiskReadMda& X);
-    void setFirings(DiskReadMda& F);
+    void setFirings(const DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
     void setClipSize(int clip_size);
 
     int currentClipIndex();
 signals:
     void currentEventChanged();
-private
-slots:
+private slots:
     void slot_computation_finished();
 
 private:

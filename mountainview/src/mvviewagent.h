@@ -43,7 +43,13 @@ public:
     double currentTimepoint() const;
     MVRange currentTimeRange() const;
     QColor clusterColor(int k);
+    DiskReadMda timeseries();
+    Mda firings();
+    Mda filteredFirings();
+    QVariant option(QString name, QVariant default_val=QVariant());
 
+    void setTimeseries(const DiskReadMda& X);
+    void setFirings(const DiskReadMda& F);
     void setClusterMerge(const ClusterMerge& CM);
     void setClusterAttributes(const QMap<int, QJsonObject>& A);
     void setCurrentEvent(const MVEvent& evt);
@@ -52,10 +58,13 @@ public:
     void setCurrentTimepoint(double tp);
     void setCurrentTimeRange(const MVRange& range);
     void setClusterColors(const QList<QColor>& colors);
+    void setOption(QString name,QVariant value);
 
     void clickCluster(int k, Qt::KeyboardModifiers modifiers);
 
 signals:
+    void timeseriesChanged();
+    void firingsChanged();
     void clusterMergeChanged();
     void clusterAttributesChanged();
     void currentEventChanged();
@@ -63,6 +72,7 @@ signals:
     void selectedClustersChanged();
     void currentTimepointChanged();
     void currentTimeRangeChanged();
+    void optionChanged(QString name);
 
 private:
     MVViewAgentPrivate* d;

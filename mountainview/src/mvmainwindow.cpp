@@ -59,6 +59,7 @@
 /// TODO put styles in central place?
 #define MV_STATUS_BAR_HEIGHT 30
 
+/*
 class shell_split_and_event_filter_calculator : public ComputationThread {
 public:
     //input
@@ -73,18 +74,12 @@ public:
 
     void compute();
 };
+*/
 
 class MVMainWindowPrivate {
 public:
     MVMainWindow* q;
-    DiskReadMda m_timeseries;
-    QString m_firings_original_path;
-    DiskReadMda m_firings_original;
-    Mda m_firings_split;
-    DiskReadMda m_firings;
     QList<Epoch> m_epochs;
-    QList<int> m_original_cluster_numbers;
-    QList<int> m_original_cluster_offsets;
     //QString m_mscmdserver_url;
     MVFile m_mv_file;
     MVViewAgent* m_view_agent;
@@ -103,19 +98,18 @@ public:
     QList<QColor> m_channel_colors;
     QMap<QString, QColor> m_colors;
 
-    shell_split_and_event_filter_calculator m_calculator;
+    //shell_split_and_event_filter_calculator m_calculator;
 
     void create_cross_correlograms_data();
     //void create_templates_data();
 
     void update_sizes();
     //void update_templates();
-    void update_all_widgets();
     void update_cluster_details();
     void update_clips();
     void update_cluster_views();
     void update_firing_event_views();
-    void start_shell_split_and_event_filter();
+    //void start_shell_split_and_event_filter();
     void add_tab(QWidget* W, QString label);
     void set_tool_button_menu(QWidget* X);
 
@@ -130,7 +124,7 @@ public:
     void open_channel_features();
     void open_spike_spray();
     void open_firing_events();
-    void find_nearby_events();
+    //void find_nearby_events();
 
     void annotate_selected();
     void merge_selected();
@@ -181,9 +175,9 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
 
     d->m_progress_dialog = 0;
 
-    connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
+    //connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
 
-    d->m_control_panel_new = new MVControlPanel;
+    d->m_control_panel_new = new MVControlPanel(view_agent);
     connect(d->m_control_panel_new, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
 
     QSplitter* splitter1 = new QSplitter;
@@ -373,8 +367,8 @@ void MVMainWindow::setMVFile(MVFile ff)
         }
     }
 
-    d->m_firings_original.setPath(ff.firingsPathResolved());
-    d->start_shell_split_and_event_filter();
+    d->m_view_agent->setFirings(DiskReadMda(ff.firingsPathResolved()));
+    d->m_view_agent->setTimeseries(DiskReadMda(d->current_timeseries_path()));
 }
 
 void MVMainWindow::writeMVFile(const QString& mv_fname)
@@ -497,11 +491,12 @@ void MVMainWindow::slot_control_panel_button_clicked(QString str)
 
 void MVMainWindow::slot_control_panel_user_action(QString str)
 {
-    if ((str == "apply_shell_splitting") || (str == "apply_filter")) {
-        d->start_shell_split_and_event_filter();
-    }
-    else if (str == "update_all_open_views") {
-        d->update_all_widgets();
+    //if ((str == "apply_shell_splitting") || (str == "apply_filter")) {
+    //d->start_shell_split_and_event_filter();
+    //}
+    if (str == "update_viewing_options") {
+        d->m_view_agent->setTimeseries(DiskReadMda(d->current_timeseries_path()));
+        d->update_cross_correlograms();
     }
     else if (str == "open-cluster-details") {
         d->open_cluster_details();
@@ -530,9 +525,9 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
     else if (str == "open-firing-events") {
         d->open_firing_events();
     }
-    else if (str == "find-nearby-events") {
-        d->find_nearby_events();
-    }
+    //else if (str == "find-nearby-events") {
+    //d->find_nearby_events();
+    //}
     else if (str == "annotate_selected") {
         d->annotate_selected();
     }
@@ -601,6 +596,7 @@ void MVMainWindow::slot_update_buttons()
     d->set_button_enabled("export_filtered_firings", true);
 }
 
+/*
 void MVMainWindowPrivate::start_shell_split_and_event_filter()
 {
     m_calculator.stopComputation();
@@ -609,7 +605,9 @@ void MVMainWindowPrivate::start_shell_split_and_event_filter()
     m_calculator.m_mlproxy_url = m_mv_file.mlproxyUrl();
     m_calculator.startComputation();
 }
+*/
 
+/*
 void MVMainWindow::slot_calculator_finished()
 {
     //d->update_cross_correlograms();
@@ -622,6 +620,7 @@ void MVMainWindow::slot_calculator_finished()
     d->m_view_agent->setSelectedClusters(QList<int>());
     slot_update_buttons();
 }
+*/
 
 void MVMainWindow::slot_action_move_to_other_tab_widget()
 {
@@ -689,6 +688,7 @@ void MVMainWindowPrivate::update_sizes()
     }
 }
 
+/*
 void MVMainWindowPrivate::update_all_widgets()
 {
     QList<QWidget*> list = get_all_widgets();
@@ -696,6 +696,7 @@ void MVMainWindowPrivate::update_all_widgets()
         update_widget(W);
     }
 }
+*/
 
 void MVMainWindowPrivate::update_cluster_details()
 {
@@ -813,9 +814,7 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_cross_correlograms(int k)
     MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
     X->setProperty("widget_type", "cross_correlograms");
     X->setProperty("kk", k);
-    QString str = QString("CC for %1(%2)").arg(m_original_cluster_numbers.value(k)).arg(m_original_cluster_offsets.value(k));
-    if (!m_control_panel_new->eventFilter().use_shell_split)
-        str = QString("CC for %1").arg(m_original_cluster_numbers.value(k));
+    QString str = QString("CC for %1").arg(k);
     add_tab(X, str);
     update_widget(X);
     return X;
@@ -863,12 +862,13 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlogra
 
 MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
+    /// TODO move sample rate into mvviewagent
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
     set_tool_button_menu(X);
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setChannelColors(m_channel_colors);
-    DiskReadMda TT(current_timeseries_path());
-    X->setTimeseries(TT);
+    //DiskReadMda TT(current_timeseries_path());
+    //X->setTimeseries(TT);
     //X->setFirings(DiskReadMda(m_firings)); //done in update_widget
     X->setSampleRate(m_mv_file.sampleRate());
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
@@ -917,12 +917,7 @@ void MVMainWindowPrivate::open_clips()
     QString tab_title = "Clips";
     if (ks.count() == 1) {
         int kk = ks[0];
-        /// TODO create a method that makes labels depending on shell split and not
-        tab_title = QString("Clips %1(%2)").arg(m_original_cluster_numbers.value(kk)).arg(m_original_cluster_offsets.value(kk));
-        bool use_shell_split = m_control_panel_new->eventFilter().use_shell_split;
-        if (!use_shell_split) {
-            tab_title = QString("Clips %1").arg(m_original_cluster_numbers.value(kk));
-        }
+        tab_title = QString("Clips %1").arg(kk);
     }
 
     add_tab(X, tab_title);
@@ -1026,6 +1021,7 @@ void MVMainWindowPrivate::open_firing_events()
     update_widget(X);
 }
 
+/*
 void MVMainWindowPrivate::find_nearby_events()
 {
     QList<int> ks = m_view_agent->selectedClusters();
@@ -1052,6 +1048,7 @@ void MVMainWindowPrivate::find_nearby_events()
     update_widget(X);
     X->setXRange(vec2(0, m_timeseries.N1() - 1));
 }
+*/
 
 void MVMainWindowPrivate::annotate_selected()
 {
@@ -1097,7 +1094,11 @@ void MVMainWindowPrivate::update_cross_correlograms()
     foreach (QWidget* W, widgets) {
         QString widget_type = W->property("widget_type").toString();
         if ((widget_type == "auto_correlograms") || (widget_type == "cross_correlograms")) {
-            update_widget(W);
+            MVCrossCorrelogramsWidget2 *WW=qobject_cast<MVCrossCorrelogramsWidget2 *>(W);
+            if (WW) {
+                qDebug() << "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << cc_max_dt_timepoints();
+                WW->setMaxDtTimepoints(cc_max_dt_timepoints());
+            }
         }
     }
 }
@@ -1184,8 +1185,6 @@ void normalize_features(Mda& F, bool individual_channels)
 
 void MVMainWindowPrivate::update_widget(QWidget* W)
 {
-    bool use_shell_split = m_control_panel_new->eventFilter().use_shell_split;
-
     QString widget_type = W->property("widget_type").toString();
     if (widget_type == "auto_correlograms") {
         TaskProgress task("update auto correlograms");
@@ -1194,9 +1193,9 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         WW->setSampleRate(m_mv_file.sampleRate());
         WW->setMaxDtTimepoints(cc_max_dt_timepoints());
         WW->setColors(m_colors);
-        WW->setFirings(m_firings);
         task.log(QString("m_samplerate = %1").arg(m_mv_file.sampleRate()));
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
+        /*
         QStringList text_labels;
         QList<int> labels1, labels2;
         for (int i = 1; i < m_original_cluster_numbers.count(); i++) {
@@ -1208,18 +1207,23 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
             else
                 text_labels << "";
         }
+        CrossCorrelogramOptions opts;
+        opts.mode="all_auto_correlograms";
+        WW->setOptions(opts);
+        qDebug() << "AAAAAAAAAAAAAAAAAAAAAA" << labels1 << labels2 << text_labels;
         //WW->setTextLabels(labels);
         WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
+        */
     }
     else if (widget_type == "cross_correlograms") {
+        /*
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         set_tool_button_menu(WW);
         int k = W->property("kk").toInt();
         WW->setColors(m_colors);
         WW->setSampleRate(m_mv_file.sampleRate());
         WW->setMaxDtTimepoints(cc_max_dt_timepoints());
-        WW->setFirings(m_firings);
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setBaseLabel(k);
         QStringList text_labels;
@@ -1236,28 +1240,25 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         //WW->setTextLabels(labels);
         WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
+        */
     }
     else if (widget_type == "matrix_of_cross_correlograms") {
+        /*
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         set_tool_button_menu(WW);
         QList<int> ks = string_list_to_int_list(W->property("ks").toStringList());
         WW->setColors(m_colors);
         WW->setSampleRate(m_mv_file.sampleRate());
         WW->setMaxDtTimepoints(cc_max_dt_timepoints());
-        WW->setFirings(m_firings);
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
         //WW->setLabelNumbers(ks);
         QStringList text_labels;
         QList<int> labels1, labels2;
         //text_labels << "";
         for (int a1 = 0; a1 < ks.count(); a1++) {
-            QString str1 = QString("%1(%2)").arg(m_original_cluster_numbers.value(ks[a1])).arg(m_original_cluster_offsets.value(ks[a1]));
-            if (!use_shell_split)
-                str1 = QString("%1").arg(m_original_cluster_numbers.value(ks[a1]));
+            QString str1 = QString("%1").arg(m_original_cluster_numbers.value(ks[a1]));
             for (int a2 = 0; a2 < ks.count(); a2++) {
-                QString str2 = QString("%1(%2)").arg(m_original_cluster_numbers.value(ks[a2])).arg(m_original_cluster_offsets.value(ks[a2]));
-                if (!use_shell_split)
-                    str2 = QString("%1").arg(m_original_cluster_numbers.value(ks[a2]));
+                QString str2 = QString("%1").arg(m_original_cluster_numbers.value(ks[a2]));
                 text_labels << QString("%1/%2").arg(str1).arg(str2);
                 labels1 << ks.value(a1);
                 labels2 << ks.value(a2);
@@ -1266,6 +1267,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         //WW->setTextLabels(labels);
         WW->setLabelPairs(labels1, labels2, text_labels);
         //WW->updateWidget();
+        */
     }
     /*else if (widget_type=="templates") {
         printf("Setting templates data...\n");
@@ -1296,10 +1298,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         int clip_size = m_control_panel_new->viewOptions().clip_size;
         WW->setColors(m_colors);
         DiskReadMda TT(current_timeseries_path());
-        WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
-        WW->setFirings(m_firings);
-        WW->setGroupNumbers(m_original_cluster_numbers);
         WW->zoomAllTheWayOut();
     }
     else if (widget_type == "clips") {
@@ -1309,9 +1308,10 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
-        WW->setFirings(m_firings);
+        WW->setFirings(DiskReadMda(m_view_agent->firings()));
         WW->setLabelsToUse(ks);
     }
+    /*
     else if (widget_type == "find_nearby_events") {
         printf("Extracting clips...\n");
         MVClipsView* WW = (MVClipsView*)W;
@@ -1389,6 +1389,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         WW->setLabels(labels_kk);
         printf(".\n");
     }
+    */
     else if (widget_type == "clusters") {
         MVClusterWidget* WW = (MVClusterWidget*)W;
         int clip_size = m_control_panel_new->viewOptions().clip_size;
@@ -1397,7 +1398,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         //WW->setFirings(m_firings);
-        WW->setFirings(m_firings_original); //now that we are doing the event filter, we should show everyone
+        WW->setFirings(DiskReadMda(m_view_agent->firings())); //now that we are doing the event filter, we should show everyone
         WW->setLabelsToUse(ks);
         FilterInfo FF;
         FF.use_filter = m_control_panel_new->eventFilter().use_event_filter;
@@ -1412,9 +1413,10 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
-        WW->setFirings(m_firings);
+        WW->setFirings(DiskReadMda(m_view_agent->firings()));
         WW->setLabelsToUse(ks);
     }
+    /*
     else if (widget_type == "firing_events") {
         //MVFiringEventView* WW = (MVFiringEventView*)W;
         MVFiringEventView2* WW = (MVFiringEventView2*)W;
@@ -1439,30 +1441,8 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         WW->setTimesLabels(times, labels);
         WW->setAmplitudes(amplitudes);
         WW->autoSetAmplitudeRange();
-
-        /*
-        QList<double> times, amplitudes;
-        QList<int> labels;
-        for (int i = 0; i < m_firings.N2(); i++) {
-            int label = (int)m_firings.value(2, i);
-            if (ks_set.contains(label)) {
-                times << m_firings.value(1, i);
-                amplitudes << m_firings.value(3, i);
-                labels << label;
-            }
-        }
-        Mda firings2;
-        firings2.allocate(4, times.count());
-        for (int i = 0; i < times.count(); i++) {
-            firings2.setValue(times[i], 1, i);
-            firings2.setValue(labels[i], 2, i);
-            firings2.setValue(amplitudes[i], 3, i);
-        }
-        WW->setFirings(firings2);
-        WW->setSampleRate(m_mv_file.sampleRate());
-        WW->setEpochs(m_epochs);
-        */
     }
+    */
     else if (widget_type == "timeseries") {
         SSTimeSeriesWidget* WW = (SSTimeSeriesWidget*)W;
         DiskArrayModel_New* X = new DiskArrayModel_New;
@@ -1479,6 +1459,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
 
 void MVMainWindowPrivate::set_times_labels_for_mvtimeseriesview(MVTimeSeriesView2* WW)
 {
+    /*
     QVector<double> times;
     QVector<int> labels;
     for (int n = 0; n < m_firings_original.N2(); n++) {
@@ -1489,10 +1470,12 @@ void MVMainWindowPrivate::set_times_labels_for_mvtimeseriesview(MVTimeSeriesView
         }
     }
     WW->setTimesLabels(times, labels);
+    */
 }
 
 void MVMainWindowPrivate::set_times_labels_for_timeseries_widget(SSTimeSeriesWidget* WW)
 {
+    /*
     QList<long> times, labels;
     for (int n = 0; n < m_firings_original.N2(); n++) {
         long label0 = (long)m_firings_original.value(2, n);
@@ -1503,6 +1486,7 @@ void MVMainWindowPrivate::set_times_labels_for_timeseries_widget(SSTimeSeriesWid
     }
     SSTimeSeriesView* V = (SSTimeSeriesView*)WW->view();
     V->setTimesLabels(times, labels);
+    */
 
     /*
     QList<QWidget*> widgets = get_all_widgets();
@@ -1791,6 +1775,8 @@ void MVMainWindowPrivate::export_mountainview_document()
 
 void MVMainWindowPrivate::export_original_firings()
 {
+    /// TODO reimplement export_original_firings
+    /*
     QString default_dir = "";
     QString fname = QFileDialog::getSaveFileName(q, "Export original firings", default_dir, "*.mda");
     if (QFileInfo(fname).suffix() != "mda")
@@ -1798,10 +1784,13 @@ void MVMainWindowPrivate::export_original_firings()
     if (!fname.isEmpty()) {
         export_file(m_firings_original.path(), fname, true);
     }
+    */
 }
 
 void MVMainWindowPrivate::export_filtered_firings()
 {
+    /// TODO reimplement export_filtered_firings
+    /*
     QString default_dir = "";
     QString fname = QFileDialog::getSaveFileName(q, "Export filtered firings", default_dir, "*.mda");
     if (QFileInfo(fname).suffix() != "mda")
@@ -1809,6 +1798,7 @@ void MVMainWindowPrivate::export_filtered_firings()
     if (!fname.isEmpty()) {
         export_file(m_firings.path(), fname, true);
     }
+    */
 }
 
 void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bool use_float64)
@@ -1845,6 +1835,7 @@ void MVMainWindowPrivate::set_button_enabled(QString name, bool val)
         B->setEnabled(val);
 }
 
+/*
 void shell_split_and_event_filter_calculator::compute()
 {
     TaskProgress task("shell_split_and_event_filter()");
@@ -1900,3 +1891,4 @@ void shell_split_and_event_filter_calculator::compute()
         m_original_cluster_offsets << offset;
     }
 }
+*/

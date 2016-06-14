@@ -18,6 +18,11 @@ public:
     double m_current_timepoint;
     MVRange m_current_time_range;
     QList<QColor> m_cluster_colors;
+    DiskReadMda m_timeseries;
+    DiskReadMda m_firings;
+    Mda m_firings_array;
+    Mda m_filtered_firings_array;
+    QMap<QString, QVariant> m_options;
 };
 
 MVViewAgent::MVViewAgent()
@@ -70,6 +75,44 @@ QColor MVViewAgent::clusterColor(int k)
     if (d->m_cluster_colors.isEmpty())
         return Qt::black;
     return d->m_cluster_colors[(k - 1) % d->m_cluster_colors.count()];
+}
+
+DiskReadMda MVViewAgent::timeseries()
+{
+    return d->m_timeseries;
+}
+
+Mda MVViewAgent::firings()
+{
+    if ((d->m_firings_array.N1() != d->m_firings.N1()) || (d->m_firings_array.N2() != d->m_firings.N2())) {
+        d->m_firings.readChunk(d->m_firings_array, 0, 0, d->m_firings.N1(), d->m_firings.N2());
+    }
+    return d->m_firings_array;
+}
+
+Mda MVViewAgent::filteredFirings()
+{
+    /// TODO actually return the filtered firings
+    return firings();
+}
+
+QVariant MVViewAgent::option(QString name, QVariant default_val)
+{
+    return d->m_options.value(name, default_val);
+}
+
+void MVViewAgent::setTimeseries(const DiskReadMda& X)
+{
+    if ((!X.path().isEmpty()) && (X.path() == d->m_timeseries.path()))
+        return;
+    d->m_timeseries = X;
+    emit timeseriesChanged();
+}
+
+void MVViewAgent::setFirings(const DiskReadMda& F)
+{
+    d->m_firings = F;
+    emit firingsChanged();
 }
 
 ClusterMerge MVViewAgent::clusterMerge() const
@@ -149,6 +192,14 @@ void MVViewAgent::setCurrentTimeRange(const MVRange& range)
 void MVViewAgent::setClusterColors(const QList<QColor>& colors)
 {
     d->m_cluster_colors = colors;
+}
+
+void MVViewAgent::setOption(QString name, QVariant value)
+{
+    if (d->m_options[name] == value)
+        return;
+    d->m_options[name] = value;
+    emit optionChanged(name);
 }
 
 void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)

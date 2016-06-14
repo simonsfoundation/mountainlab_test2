@@ -89,7 +89,7 @@ void MVClipsWidget::setTimeseries(DiskReadMda& X)
     d->start_computation();
 }
 
-void MVClipsWidget::setFirings(DiskReadMda& F)
+void MVClipsWidget::setFirings(const DiskReadMda& F)
 {
     d->m_firings = F;
     d->start_computation();

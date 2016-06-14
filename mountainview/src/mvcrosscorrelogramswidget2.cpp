@@ -18,29 +18,34 @@
 #include <math.h>
 #include "msmisc.h"
 
-typedef QList<float> FloatList;
+struct Correlogram {
+    Correlogram()
+    {
+        k1 = k2 = 0;
+    }
+
+    int k1, k2;
+    QList<float> data;
+};
 
 class MVCrossCorrelogramsWidget2Computer : public ComputationThread {
 public:
     //input
     DiskReadMda firings;
-    QList<int> labels1, labels2;
+    CrossCorrelogramOptions options;
     int max_dt;
-    ClusterMerge cluster_merge;
 
     void compute();
 
     //output
-    QList<FloatList> data;
+    QList<Correlogram> correlograms;
 };
 
 class MVCrossCorrelogramsWidget2Private {
 public:
     MVCrossCorrelogramsWidget2* q;
-    DiskReadMda m_firings;
-    QList<int> m_labels1, m_labels2;
     MVCrossCorrelogramsWidget2Computer m_computer;
-    QList<FloatList> m_data;
+    QList<Correlogram> m_correlograms;
     double m_samplerate;
     int m_max_dt;
     MVViewAgent* m_view_agent;
@@ -50,8 +55,9 @@ public:
     int m_num_columns;
 
     QList<QWidget*> m_child_widgets;
-    QStringList m_text_labels;
     QMap<QString, QColor> m_colors;
+
+    CrossCorrelogramOptions m_options;
 
     void do_highlighting();
     void start_computation();
@@ -67,9 +73,10 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
 
     d->m_view_agent = view_agent;
     QObject::connect(view_agent, SIGNAL(clusterAttributesChanged()), this, SLOT(slot_cluster_attributes_changed()));
-    QObject::connect(view_agent, SIGNAL(clusterMergeChanged()), this, SLOT(slot_cluster_merge_changed()));
     QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting()));
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
+
+    QObject::connect(view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_recalculate()));
 
     QGridLayout* GL = new QGridLayout;
     GL->setHorizontalSpacing(20);
@@ -95,6 +102,8 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
     }
 
     connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
+
+    d->start_computation();
 }
 
 MVCrossCorrelogramsWidget2::~MVCrossCorrelogramsWidget2()
@@ -103,12 +112,9 @@ MVCrossCorrelogramsWidget2::~MVCrossCorrelogramsWidget2()
     delete d;
 }
 
-void MVCrossCorrelogramsWidget2::setLabelPairs(const QList<int>& labels1, const QList<int>& labels2, const QList<QString>& text_labels)
+void MVCrossCorrelogramsWidget2::setOptions(CrossCorrelogramOptions opts)
 {
-    d->m_labels1 = labels1;
-    d->m_labels2 = labels2;
-    d->m_text_labels = text_labels;
-    d->start_computation();
+    d->m_options = opts;
 }
 
 void MVCrossCorrelogramsWidget2::setColors(const QMap<QString, QColor>& colors)
@@ -169,12 +175,6 @@ QImage MVCrossCorrelogramsWidget2::renderImage(int W, int H)
     return ret;
 }
 
-void MVCrossCorrelogramsWidget2::setFirings(const DiskReadMda& F)
-{
-    d->m_firings = F;
-    d->start_computation();
-}
-
 void MVCrossCorrelogramsWidget2::setSampleRate(double rate)
 {
     d->m_samplerate = rate;
@@ -184,6 +184,7 @@ void MVCrossCorrelogramsWidget2::setSampleRate(double rate)
 void MVCrossCorrelogramsWidget2::setMaxDtTimepoints(int max_dt)
 {
     d->m_max_dt = max_dt;
+    d->start_computation();
 }
 
 class TimeScaleWidget2 : public QWidget {
@@ -230,11 +231,11 @@ void TimeScaleWidget2::paintEvent(QPaintEvent* evt)
     painter.drawText(text_box, txt, Qt::AlignCenter | Qt::AlignTop);
 }
 
-float compute_max2(const QList<FloatList>& data0)
+float compute_max2(const QList<Correlogram>& data0)
 {
     float ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<float> tmp = data0[i];
+        QList<float> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] > ret)
                 ret = tmp[j];
@@ -246,9 +247,7 @@ float compute_max2(const QList<FloatList>& data0)
 void MVCrossCorrelogramsWidget2::slot_computation_finished()
 {
     d->m_computer.stopComputation(); //because I'm paranoid
-    d->m_data = d->m_computer.data;
-
-    QList<FloatList> data0 = d->m_data;
+    d->m_correlograms = d->m_computer.correlograms;
 
     qDeleteAll(d->m_histogram_views);
     d->m_histogram_views.clear();
@@ -258,7 +257,7 @@ void MVCrossCorrelogramsWidget2::slot_computation_finished()
 
     QGridLayout* GL = d->m_grid_layout;
     float sample_freq = d->m_samplerate;
-    float bin_max = compute_max2(data0);
+    float bin_max = compute_max2(d->m_correlograms);
     float bin_min = -bin_max;
     //int num_bins=100;
     int bin_size = 20;
@@ -269,20 +268,20 @@ void MVCrossCorrelogramsWidget2::slot_computation_finished()
         num_bins = 2000;
     float time_width = (bin_max - bin_min) / sample_freq * 1000;
 
-    int NUM = data0.count();
+    int NUM = d->m_correlograms.count();
     int num_rows = (int)sqrt(NUM);
     if (num_rows < 1)
         num_rows = 1;
     int num_cols = (NUM + num_rows - 1) / num_rows;
     d->m_num_columns = num_cols;
-    for (int ii = 0; ii < data0.count(); ii++) {
-        set_progress("Computing cross correlograms ***", "", ii * 1.0 / d->m_labels1.count());
+    for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
+        /// TODO set progress here
         HistogramView* HV = new HistogramView;
-        HV->setData(data0[ii]);
+        HV->setData(d->m_correlograms[ii].data);
         HV->setColors(d->m_colors);
         //HV->autoSetBins(50);
         HV->setBins(bin_min, bin_max, num_bins);
-        QString title0 = d->m_text_labels.value(ii);
+        QString title0 = QString("%1/%2").arg(d->m_correlograms[ii].k1).arg(d->m_correlograms[ii].k2);
         HV->setTitle(title0);
         int row0 = (ii) / num_cols;
         int col0 = (ii) % num_cols;
@@ -309,7 +308,9 @@ void MVCrossCorrelogramsWidget2::slot_computation_finished()
 void MVCrossCorrelogramsWidget2::slot_histogram_view_control_clicked()
 {
     int index = sender()->property("index").toInt();
-    int k1 = d->m_labels2.value(index);
+    //int k1 = d->m_labels2.value(index);
+    int k1 = d->m_correlograms.value(index).k1;
+    //int k2 = d->m_correlograms.value(index).k2;
 
     d->m_view_agent->clickCluster(k1, Qt::ControlModifier);
 
@@ -335,7 +336,8 @@ void MVCrossCorrelogramsWidget2::slot_histogram_view_clicked()
 {
 
     int index = sender()->property("index").toInt();
-    int k1 = d->m_labels2.value(index);
+    //int k1 = d->m_labels2.value(index);
+    int k1 = d->m_correlograms.value(index).k1;
 
     d->m_view_agent->clickCluster(k1, Qt::NoModifier);
 
@@ -371,14 +373,14 @@ void MVCrossCorrelogramsWidget2::slot_cluster_attributes_changed()
     // not implemented for now
 }
 
-void MVCrossCorrelogramsWidget2::slot_cluster_merge_changed()
-{
-    d->start_computation();
-}
-
 void MVCrossCorrelogramsWidget2::slot_update_highlighting()
 {
     d->do_highlighting();
+}
+
+void MVCrossCorrelogramsWidget2::slot_recalculate()
+{
+    d->start_computation();
 }
 
 QList<float> compute_cc_data(const QList<double>& times1_in, const QList<double>& times2_in, int max_dt, bool exclude_matches)
@@ -428,25 +430,42 @@ void MVCrossCorrelogramsWidget2Computer::compute()
     }
 
     int K = compute_max(labels);
+
+    if (options.mode == "all_auto_correlograms") {
+        for (int k = 1; k <= K; k++) {
+            Correlogram CC;
+            CC.k1 = k;
+            CC.k2 = k;
+            this->correlograms << CC;
+        }
+    }
+
+    /*
+    for (long ii = 0; ii < labels.count(); ii++) {
+        int k = labels[ii];
+        int k2 = cluster_merge.representativeLabel(k);
+        the_times[k2] << times[ii];
+    }
+    */
+
     QList<DoubleList> the_times;
     for (int k = 0; k <= K; k++) {
         the_times << DoubleList();
     }
 
     for (long ii = 0; ii < labels.count(); ii++) {
-        int k = labels[ii];
-        int k2 = cluster_merge.representativeLabel(k);
-        the_times[k2] << times[ii];
+        int k=labels[ii];
+        if (k<=the_times.count()) {
+            the_times[k] << times[ii];
+        }
     }
 
     task.log("Setting data");
     task.setProgress(0.7);
-    data.clear();
-    for (int j = 0; j < labels1.count(); j++) {
-        int k1 = labels1[j];
-        int k2 = labels2[j];
-        QList<float> data0 = compute_cc_data(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
-        data << data0;
+    for (int j = 0; j < correlograms.count(); j++) {
+        int k1 = correlograms[j].k1;
+        int k2 = correlograms[j].k2;
+        correlograms[j].data = compute_cc_data(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
     }
 }
 
@@ -456,13 +475,13 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
     for (int i = 0; i < m_histogram_views.count(); i++) {
         HistogramView* HV = m_histogram_views[i];
         int index = HV->property("index").toInt();
-        if (m_labels2.value(index) == m_view_agent->currentCluster()) {
+        if (m_correlograms.value(index).k1 == m_view_agent->currentCluster()) {
             HV->setCurrent(true);
         }
         else {
             HV->setCurrent(false);
         }
-        if (selected_clusters.contains(m_labels2.value(index))) {
+        if (selected_clusters.contains(m_correlograms.value(index).k1)) {
             HV->setSelected(true);
         }
         else {
@@ -474,15 +493,9 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
 void MVCrossCorrelogramsWidget2Private::start_computation()
 {
     m_computer.stopComputation();
-    m_computer.firings = m_firings;
-    m_computer.labels1 = m_labels1;
-    m_computer.labels2 = m_labels2;
+    m_computer.firings = DiskReadMda(m_view_agent->firings());
+    m_computer.options = m_options;
     m_computer.max_dt = m_max_dt;
-    if (m_view_agent) {
-        m_computer.cluster_merge = m_view_agent->clusterMerge();
-    }
-    else {
-        m_computer.cluster_merge.clear();
-    }
+    qDebug() << m_computer.firings.N1() << m_computer.firings.N2() << m_computer.max_dt << m_computer.options.mode << "ccccccccccccccccccccccccccccccccccccccccc";
     m_computer.startComputation();
 }

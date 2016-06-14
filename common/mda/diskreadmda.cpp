@@ -142,7 +142,7 @@ long DiskReadMda::downloadChunkSize()
 #endif
 }
 
-QString DiskReadMda::path()
+QString DiskReadMda::path() const
 {
     return d->m_path;
 }
@@ -349,7 +349,8 @@ bool DiskReadMda::readChunk(Mda& X, long i1, long i2, long size1, long size2) co
             }
         }
         return true;
-    } else {
+    }
+    else {
         printf("Warning: This case not yet supported (diskreadmda::readchunk 2d).\n");
         return false;
     }
@@ -360,7 +361,8 @@ bool DiskReadMda::readChunk(Mda& X, long i1, long i2, long i3, long size1, long 
     if (size3 == 0) {
         if (size2 == 0) {
             return readChunk(X, i1, size1);
-        } else {
+        }
+        else {
             return readChunk(X, i1, i2, size1, size2);
         }
     }
@@ -405,7 +407,8 @@ bool DiskReadMda::readChunk(Mda& X, long i1, long i2, long i3, long size1, long 
             }
         }
         return true;
-    } else {
+    }
+    else {
         printf("Warning: This case not yet supported (diskreadmda::readchunk 3d).\n");
         return false;
     }
@@ -486,7 +489,8 @@ bool DiskReadMdaPrivate::open_file_if_needed()
         m_mda_header_total_size = 1;
         for (int i = 0; i < MDAIO_MAX_DIMS; i++)
             m_mda_header_total_size *= m_header.dims[i];
-    } else {
+    }
+    else {
         printf("Failed to open diskreadmda file: %s\n", m_path.toLatin1().data());
         m_file_open_failed = true;
         return false;

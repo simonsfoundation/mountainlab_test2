@@ -28,17 +28,8 @@ public:
     //void setMscmdServerUrl(const QString& url);
     void setMLProxyUrl(const QString& url);
 
-    ///Set the time series, from which the templates and stats will be derived
-    void setTimeseries(DiskReadMda& X);
-
-    ///Set the firings info, from which the templates and stats will be derived
-    void setFirings(const DiskReadMda& X);
-
     ///The size of the templates to display
     void setClipSize(int T);
-
-    ///This is important when we have split the clusters into amplitude shells, and we want to group them together
-    void setGroupNumbers(const QList<int>& group_numbers);
 
     ///So we can display the firing rate (events per second)
     void setSampleRate(double freq);
@@ -70,6 +61,7 @@ private slots:
     void slot_calculator_finished();
     void slot_export_image();
     void slot_toggle_stdev_shading();
+    void slot_recalculate();
 
 private:
     MVClusterDetailWidgetPrivate* d;

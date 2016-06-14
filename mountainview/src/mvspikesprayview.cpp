@@ -76,7 +76,7 @@ void MVSpikeSprayView::setMLProxyUrl(const QString& url)
     d->m_mlproxy_url = url;
 }
 
-void MVSpikeSprayView::setTimeseries(DiskReadMda& X)
+void MVSpikeSprayView::setTimeseries(const DiskReadMda& X)
 {
     d->m_timeseries = X;
     /// TODO address: the following is a hack so that the array info is not downloaded during the paintEvent which seems to cause a crash
@@ -84,7 +84,7 @@ void MVSpikeSprayView::setTimeseries(DiskReadMda& X)
     d->schedule_compute();
 }
 
-void MVSpikeSprayView::setFirings(DiskReadMda& F)
+void MVSpikeSprayView::setFirings(const DiskReadMda& F)
 {
     d->m_firings = F;
     /// TODO address: the following is a hack so that the array info is not downloaded during the paintEvent which seems to cause a crash
@@ -168,7 +168,8 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         if (counts[k]) {
             alphas[k] = 255 / counts[k];
             alphas[k] = qMin(255, qMax(5, alphas[k]));
-        } else
+        }
+        else
             alphas[k] = 255;
     }
 
@@ -214,10 +215,12 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    } else {
+    }
+    else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -241,7 +244,8 @@ void MVSpikeSprayViewPrivate::render_clip(QPainter* painter, long M, long T, dou
             QPointF pt = coord2pix(m, t, val);
             if (t == 0) {
                 path.moveTo(pt);
-            } else {
+            }
+            else {
                 path.lineTo(pt);
             }
         }
@@ -279,8 +283,7 @@ void MVSpikeSprayComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
