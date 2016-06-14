@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
         QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
         MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
         W->setChannelColors(channel_colors);
-        W->setLabelColors(label_colors);
+        W->setClusterColors(label_colors);
 
         if (!firings_path.isEmpty()) {
             mv_file.setFiringsPath(firings_path);

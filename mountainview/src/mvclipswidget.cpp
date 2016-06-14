@@ -13,6 +13,9 @@
 #include "msmisc.h"
 #include "mlutils.h"
 
+/// TODO (HIGH) merge should apply to all widgets
+/// TODO (HIGH) put firings, firings_filtered, timeseries into MVViewAgent
+
 class MVClipsWidgetComputer : public ComputationThread {
 public:
     //input

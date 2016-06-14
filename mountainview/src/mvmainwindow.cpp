@@ -14,6 +14,7 @@
 #include "mvclusterwidget.h"
 #include "mvspikesprayview.h"
 #include "mvfiringeventview.h"
+#include "mvfiringeventview2.h"
 #include "extract_clips.h"
 #include "tabber.h"
 #include "computationthread.h"
@@ -25,7 +26,8 @@
 #include "clustermerge.h"
 #include "mvviewagent.h"
 #include "mvstatusbar.h"
-#include "mvtimeseriesview.h"
+//#include "mvtimeseriesview.h"
+#include "mvtimeseriesview2.h"
 #include "mlutils.h"
 #include "mvfile.h"
 
@@ -99,7 +101,6 @@ public:
     //Mda m_templates_data;
 
     QList<QColor> m_channel_colors;
-    QList<QColor> m_label_colors;
     QMap<QString, QColor> m_colors;
 
     shell_split_and_event_filter_calculator m_calculator;
@@ -140,7 +141,7 @@ public:
     void move_to_timepoint(double tp);
     void update_widget(QWidget* W);
 
-    void set_times_labels_for_mvtimeseriesview(MVTimeSeriesView* WW);
+    void set_times_labels_for_mvtimeseriesview(MVTimeSeriesView2* WW);
     void set_times_labels_for_timeseries_widget(SSTimeSeriesWidget* WW);
 
     QList<QWidget*> get_all_widgets();
@@ -314,9 +315,9 @@ void MVMainWindow::setChannelColors(const QList<QColor>& colors)
     d->m_channel_colors = colors;
 }
 
-void MVMainWindow::setLabelColors(const QList<QColor>& colors)
+void MVMainWindow::setClusterColors(const QList<QColor>& colors)
 {
-    d->m_label_colors = colors;
+    d->m_view_agent->setClusterColors(colors);
 }
 
 /*
@@ -879,7 +880,7 @@ MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 
 void MVMainWindowPrivate::open_timeseries()
 {
-    MVTimeSeriesView* X = new MVTimeSeriesView(m_view_agent);
+    MVTimeSeriesView2* X = new MVTimeSeriesView2(m_view_agent);
     X->setSampleRate(m_mv_file.sampleRate());
     X->setChannelColors(m_channel_colors);
     X->setProperty("widget_type", "mvtimeseries");
@@ -952,7 +953,6 @@ void MVMainWindowPrivate::open_pca_features()
     }
     MVClusterWidget* X = new MVClusterWidget(m_view_agent);
     X->setFeatureMode("pca");
-    X->setLabelColors(m_label_colors);
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
@@ -986,7 +986,6 @@ void MVMainWindowPrivate::open_channel_features()
     }
     MVClusterWidget* X = new MVClusterWidget(m_view_agent);
     X->setFeatureMode("channels");
-    X->setLabelColors(m_label_colors);
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "clusters");
     X->setProperty("ks", int_list_to_string_list(ks));
@@ -1004,7 +1003,6 @@ void MVMainWindowPrivate::open_spike_spray()
         return;
     }
     MVSpikeSprayView* X = new MVSpikeSprayView;
-    X->setLabelColors(m_label_colors);
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "spike_spray");
     X->setProperty("ks", int_list_to_string_list(ks));
@@ -1020,7 +1018,8 @@ void MVMainWindowPrivate::open_firing_events()
         QMessageBox::information(q, "Unable to open firing events", "You must select at least one cluster.");
         return;
     }
-    MVFiringEventView* X = new MVFiringEventView;
+    //MVFiringEventView* X = new MVFiringEventView;
+    MVFiringEventView2* X = new MVFiringEventView2(m_view_agent);
     X->setProperty("widget_type", "firing_events");
     X->setProperty("ks", int_list_to_string_list(ks));
     add_tab(X, QString("Firing Events"));
@@ -1417,10 +1416,31 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         WW->setLabelsToUse(ks);
     }
     else if (widget_type == "firing_events") {
-        MVFiringEventView* WW = (MVFiringEventView*)W;
+        //MVFiringEventView* WW = (MVFiringEventView*)W;
+        MVFiringEventView2* WW = (MVFiringEventView2*)W;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
         QSet<int> ks_set = ks.toSet();
 
+        WW->setSampleRate(m_mv_file.sampleRate());
+        DiskReadMda TT(current_timeseries_path());
+        WW->setNumTimepoints(TT.N2());
+        WW->setTimeRange(MVRange(0, TT.N2() - 1));
+        //WW->setEpochs(m_epochs);
+        QVector<double> times, amplitudes;
+        QVector<int> labels;
+        for (int i = 0; i < m_firings.N2(); i++) {
+            int label = (int)m_firings.value(2, i);
+            if (ks_set.contains(label)) {
+                times << m_firings.value(1, i);
+                amplitudes << m_firings.value(3, i);
+                labels << label;
+            }
+        }
+        WW->setTimesLabels(times, labels);
+        WW->setAmplitudes(amplitudes);
+        WW->autoSetAmplitudeRange();
+
+        /*
         QList<double> times, amplitudes;
         QList<int> labels;
         for (int i = 0; i < m_firings.N2(); i++) {
@@ -1441,6 +1461,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         WW->setFirings(firings2);
         WW->setSampleRate(m_mv_file.sampleRate());
         WW->setEpochs(m_epochs);
+        */
     }
     else if (widget_type == "timeseries") {
         SSTimeSeriesWidget* WW = (SSTimeSeriesWidget*)W;
@@ -1450,13 +1471,13 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         set_times_labels_for_timeseries_widget(WW);
     }
     else if (widget_type == "mvtimeseries") {
-        MVTimeSeriesView* WW = (MVTimeSeriesView*)W;
+        MVTimeSeriesView2* WW = (MVTimeSeriesView2*)W;
         WW->setTimeseries(DiskReadMda(current_timeseries_path()));
         set_times_labels_for_mvtimeseriesview(WW);
     }
 }
 
-void MVMainWindowPrivate::set_times_labels_for_mvtimeseriesview(MVTimeSeriesView* WW)
+void MVMainWindowPrivate::set_times_labels_for_mvtimeseriesview(MVTimeSeriesView2* WW)
 {
     QVector<double> times;
     QVector<int> labels;

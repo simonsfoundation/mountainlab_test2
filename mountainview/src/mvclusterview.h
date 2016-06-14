@@ -10,6 +10,7 @@
 #include "mda.h"
 #include "mvutils.h"
 #include "affinetransformation.h"
+#include "mvviewagent.h"
 
 #define MVCV_MODE_HEAT_DENSITY 1
 #define MVCV_MODE_LABEL_COLORS 2
@@ -41,7 +42,7 @@ class MVClusterView : public QWidget {
     Q_OBJECT
 public:
     friend class MVClusterViewPrivate;
-    MVClusterView(QWidget* parent = 0);
+    MVClusterView(MVViewAgent* view_agent, QWidget* parent = 0);
     virtual ~MVClusterView();
     ///Set the 3xL data array. Note if first dimension is >3, it only uses first 3 dims.
     void setData(const Mda& X);

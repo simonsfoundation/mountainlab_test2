@@ -24,22 +24,21 @@ public:
     virtual void paintContent(QPainter* painter) = 0;
 
     void setSampleRate(double samplerate);
-    void setTimeseries(const DiskReadMda& X);
     void setMLProxyUrl(const QString& url);
     void setTimesLabels(const QVector<double>& times, const QVector<int>& labels);
+    void setNumTimepoints(long N);
 
     void setTimeRange(MVRange);
     void setCurrentTimepoint(double t);
     void setSelectedTimeRange(MVRange range);
-    void setAmplitudeFactor(double factor); // display range will be between -1/factor and 1/factor, but not clipped (thus channel plots may overlap)
-    void autoSetAmplitudeFactor();
-    void autoSetAmplitudeFactorWithinTimeRange();
     void setActivated(bool val);
+    void setMarkersVisible(bool val);
+    void setMargins(double mleft, double mright, double mtop, double mbottom);
 
     double currentTimepoint() const;
     MVRange timeRange() const;
     double amplitudeFactor() const;
-    DiskReadMda timeseries();
+    MVViewAgent* viewAgent();
 
     void resizeEvent(QResizeEvent* evt);
     void paintEvent(QPaintEvent* evt);
@@ -50,6 +49,13 @@ public:
     void keyPressEvent(QKeyEvent* evt);
 
     static void unit_test();
+
+protected:
+    QRectF contentGeometry();
+    QVector<double> times() const;
+    QVector<int> labels() const;
+    double time2xpix(double t) const;
+    double xpix2time(double x) const;
 
 signals:
     void clicked();

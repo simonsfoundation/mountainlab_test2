@@ -31,6 +31,7 @@ HEADERS += \
     mvclusterview.h \
     mvclusterwidget.h \
     mvfiringeventview.h \
+    mvfiringeventview2.h \
     diskarraymodel_new.h \
     sstimeserieswidget.h \
     sstimeseriesview.h \
@@ -77,6 +78,7 @@ SOURCES += mountainviewmain.cpp \
     mvclusterview.cpp \
     mvclusterwidget.cpp \
     mvfiringeventview.cpp \
+    mvfiringeventview2.cpp \
     diskarraymodel_new.cpp \
     sstimeserieswidget.cpp \
     sstimeseriesview.cpp \

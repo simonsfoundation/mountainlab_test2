@@ -82,8 +82,8 @@ void MVFiringEventView::setFirings(const Mda& firings)
     }
 
     d->m_max_timepoint = compute_max(d->m_times);
-    d->m_min_amplitude = qMin(0.0,compute_min(d->m_amplitudes));
-    d->m_max_amplitude = qMax(0.0,compute_max(d->m_amplitudes));
+    d->m_min_amplitude = qMin(0.0, compute_min(d->m_amplitudes));
+    d->m_max_amplitude = qMax(0.0, compute_max(d->m_amplitudes));
 
     d->schedule_update();
 }

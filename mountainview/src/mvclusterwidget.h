@@ -33,7 +33,6 @@ public:
     ///Just as in MVClusterView::setTransformation()
     void setFirings(const DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
-    void setLabelColors(const QList<QColor>& colors);
     void setFeatureMode(QString mode); //"pca", "channels"
     void setChannels(QList<int> channels); //relevant for "channels" mode
 
@@ -60,8 +59,7 @@ private:
 signals:
     ///Just as in MVClusterView::currentEventChanged()
     void currentEventChanged();
-private
-slots:
+private slots:
     void slot_view_current_event_changed();
     void slot_view_transformation_changed();
     void slot_show_clip_view_toggled(bool val);

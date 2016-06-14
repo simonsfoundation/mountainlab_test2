@@ -33,7 +33,7 @@ public:
     void setMLProxyUrl(const QString& url);
     void setClusterMerge(ClusterMerge CM);
     void setChannelColors(const QList<QColor>& colors);
-    void setLabelColors(const QList<QColor>& colors);
+    void setClusterColors(const QList<QColor>& colors);
 
     void setMVFile(MVFile mv_file);
     void writeMVFile(const QString& mv_fname);

@@ -17,6 +17,7 @@ public:
     QList<int> m_selected_clusters;
     double m_current_timepoint;
     MVRange m_current_time_range;
+    QList<QColor> m_cluster_colors;
 };
 
 MVViewAgent::MVViewAgent()
@@ -60,6 +61,15 @@ double MVViewAgent::currentTimepoint() const
 MVRange MVViewAgent::currentTimeRange() const
 {
     return d->m_current_time_range;
+}
+
+QColor MVViewAgent::clusterColor(int k)
+{
+    if (k <= 0)
+        return Qt::black;
+    if (d->m_cluster_colors.isEmpty())
+        return Qt::black;
+    return d->m_cluster_colors[(k - 1) % d->m_cluster_colors.count()];
 }
 
 ClusterMerge MVViewAgent::clusterMerge() const
@@ -136,6 +146,11 @@ void MVViewAgent::setCurrentTimeRange(const MVRange& range)
     emit currentTimeRangeChanged();
 }
 
+void MVViewAgent::setClusterColors(const QList<QColor>& colors)
+{
+    d->m_cluster_colors = colors;
+}
+
 void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
 {
     /// TODO handle shift modifier
@@ -146,14 +161,16 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        } else {
+        }
+        else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    } else {
+    }
+    else {
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
     }
