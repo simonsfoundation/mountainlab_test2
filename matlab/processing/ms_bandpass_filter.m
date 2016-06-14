@@ -58,6 +58,7 @@ function X = freqfilter(X,fs,flo,fhi,fwid)
 %
 % Barnett 11/14/14.
 % 3/11/15: transpose to fft cols (is multicore), blocking (was slower!)
+% 6/10/16: better definitions of filter function, w/ -3dB points
 
 if nargin<3, flo = []; end
 if nargin<4, fhi = []; end
@@ -97,7 +98,7 @@ if mod(N,2)==0, f=df*[0:N/2 -N/2+1:-1];else, f=df*[0:(N-1)/2 -(N-1)/2:-1]; end
 a = ones(size(f));
 filt = 1+0*f;          % act on a unit filter amplitude array
 if ~isempty(flo)
-  relwid = 3.0;                % kills low freqs by 1e-5
+  relwid = 3.0;                         % parameter: kills low freqs by 1e-5
   filt = filt .* (1+erf(relwid*(abs(f)-flo)/flo))/2;
   filt(1) = 0;    % kill DC exactly
 end
@@ -112,7 +113,17 @@ X = ifft(bsxfun(@times, fft(X'), filt'))';
 
 end
 
-%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%% Routines for testing (ahb).......................
+function Y = run_mscmd(X,o)        % runs mscmd freq filter
+d = [tempdir,'/mountainlab'];
+in = [d,'/bptest_in.mda'];
+out = [d,'/bptest_out.mda'];
+writemda(X,in,'float32');
+if ~isfield(o,'freq_max'), o.freq_max=0; end  % required opts
+if ~isfield(o,'freq_min'), o.freq_min=0; end
+mscmd_bandpass_filter(in,out,o);
+Y = readmda(out);
+end
 
 function test_bandpass_filter   % AHB 6/10/16
 o.samplerate = 2e4;      % in Hz
@@ -123,19 +134,27 @@ figure; subplot(2,1,1);
 showpowerspectrum(X,o.samplerate,wid); hold on;
 o.freq_min = 300;        % high-pass only
 Y = ms_bandpass_filter(X,o);
+Yc = run_mscmd(X,o);
+fprintf('max diff btw matlab and C: %.3g\n',max(max(abs(Y-Yc))))
+pad = 2e3;   % empirical # timepts
+fprintf('max diff btw matlab and C ignoring end bits: %.3g\n',max(max(abs(Y(:,pad:end-pad)-Yc(:,pad:end-pad)))))
 showpowerspectrum(Y,o.samplerate,wid,'r-');
 o.freq_max = 6000;       % band-pass
 Y = ms_bandpass_filter(X,o);
+Yc = run_mscmd(X,o);
+fprintf('max diff btw matlab and C ignoring end bits: %.3g\n',max(max(abs(Y(:,pad:end-pad)-Yc(:,pad:end-pad)))))
 showpowerspectrum(Y,o.samplerate,wid,'k-');
 vline([o.freq_min,o.freq_max]);                      % check the -3dB pts
 o.freq_min = [];         % low-pass only
 Y = ms_bandpass_filter(X,o);
+Yc = run_mscmd(X,o);
+fprintf('max diff btw matlab and C ignoring end bits: %.3g\n',max(max(abs(Y(:,pad:end-pad)-Yc(:,pad:end-pad)))))
 showpowerspectrum(Y,o.samplerate,wid,'g-');
 set(gca,'yscale','linear');
 
 subplot(2,1,2); % check the impulse responses...
-X = zeros(1,1e4); X(100) = 1.0;
-j = 1:1e3;
+X = zeros(1,1e4); X(10) = 1.0;
+j = 1:100;
 t = j/o.samplerate;
 plot(t,X(j),'.-'); xlabel('time (s)');
 hold on;

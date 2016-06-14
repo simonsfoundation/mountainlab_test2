@@ -14,8 +14,20 @@
 
 \usepackage{parskip}
 
+\usepackage{amsopn}   % for math operators
+
+% macros (ahb)
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\tbox}[1]{{\mbox{\tiny #1}}}
+\DeclareMathOperator{\erf}{erf}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{MountainLab overview for SCDA - June 2016}
-\date{\vspace{-5ex}} % do not display the date, and don't use up any space
+%\date{\vspace{-5ex}} % do not display the date, and don't use up any space
+\author{Jeremy Magland and ALex Barnett}
+\date{\today}
 
 \begin{document}
 
@@ -125,7 +137,7 @@ MountainSort is a command-line program for performing low-level spike sorting ro
 \begin{lstlisting}[language=bash]
 > mountainsort bandpass_filter --timeseries=raw.mda &&
   --timeseries_out=filtered.mda --samplerate=30000 &&
-  --freq_min=300 --freq_max=2000
+  --freq_min=300 --freq_max=5000 --freq_wid=1000
 
 > mountainsort mask_out_artifacts --timeseries=filtered.mda &&
   --timeseries_out=filtered2.mda --threshold=3 --interval_size=200
@@ -175,13 +187,13 @@ To take advantage of provenance tracking and queuing (batch) functionality all o
 \begin{lstlisting}[language=bash]
 > mountainprocess run-process bandpass_filter --timeseries=raw.mda &&
   --timeseries_out=filtered.mda --samplerate=30000 &&
-  --freq_min=300 --freq_max=2000
+  --freq_min=300 --freq_max=5000 --freq_wid=1000
 \end{lstlisting}
 or
 \begin{lstlisting}[language=bash]
 > mountainprocess queue-process bandpass_filter --timeseries=raw.mda &&
   --timeseries_out=filtered.mda --samplerate=30000 &&
-  --freq_min=300 --freq_max=2000
+  --freq_min=300 --freq_max=5000 --freq_wid=1000
 \end{lstlisting}
 
 The latter (queuing) command is useful for batch and parallel processing and requires the mountainprocess daemon to be running in the background. This daemon may be launched via
@@ -245,6 +257,7 @@ it should output JSON text that provides a list of available processors together
                     {"name": "samplerate","optional": false},
                     {"name": "freq_min","optional": false},
                     {"name": "freq_max","optional": false},
+                    {"name": "freq_wid","optional": false},
                 {"name": "processing_chunk_size","optional": true},
                 {"name": "chunk_overlap_size","optional": true}
             ],
@@ -332,6 +345,48 @@ To enable remote access to spike sorting results from client workstations, three
 The mountainprocess server (mpserver) allows processing scripts to be submitted from a remote client. For example, the GUI may need to extract a collection of clips from a very large timeseries dataset. The API is minimal and consists of only one operation: queueScript. The client passes the text of the script to the server, which is then queued for processing. After the script executes, and all of the associated processes have finished, the http response is returned with information about whether the processing succeeded. Note that the results of the processing are not actually returned. Instead, the script will typically create temporary files, with names known to the client, so that the output data may be retrieved using subsequent calls to mdaserver.
 
 The multi-dimensional array server (mdaserver) is used to ........
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Mathematical algorithms}
+
+\subsection{Bandpass filtering}   % ahb 6/14/16
+
+We now use erf (error function) for smooth (in fact analytic) roll-offs at high and low frequencies,
+passing through 0.5 at the low and high points (\verb?freq_min? and \verb?freq_max?).
+We then take the square-root of this desired intensity filter to get the amplitude filter $a(f)$
+used to multiply in frequency space.
+This creates -3dB points at the desired low and high values, and minimal ringing.
+We prefer these to standard filters.
+
+Specifically, if low pass (high-frequency roll-off) is requested, the multiplier in frequency space $f$
+is
+\be
+  a(f) = \bigl[\bigl(1-\erf \frac{|f|-f_\tbox{max}}{w}\bigr)/2\bigr]^{1/2}
+\ee
+where $w$ is the width \verb?freq_wid? (a sensible value being $1000$ Hz, which is set as a default
+in the MATLAB interfaces).
+Note that $|f|$ is required since the DFT grid includes negative frequencies.
+If a high-pass is requested,
+\be
+  a(f) = \bigl[\bigl(1+\erf r\frac{|f|-f_\tbox{min}}{f_\tbox{min}}\bigr)/2\bigr]^{1/2}
+\ee
+where $r$ is the parameter deciding the amount by which very low frequencies are killed
+(currently hard-coded as \verb?relwid=3.0? which provides around $10^{-5}$ filtering at $f\approx 0$).
+A bandpass is the product of the above two formulae.
+The DC (zero frequency) component is killed exactly whenever high-pass is requested, ie $a(0)=0$.
+
+
+
+
+
+
+
+
+
 
 
 \end{document}

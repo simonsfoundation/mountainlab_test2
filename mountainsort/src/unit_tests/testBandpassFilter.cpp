@@ -31,6 +31,7 @@ void TestBandpassFilter::testGroundTruth() {
     params["samplerate"] = 20000;
     params["freq_min"] = 300;
     params["freq_max"] = 10000;
+    params["freq_wid"] = 1000;         // ahb added
     bandpass_filter_Processor proc;
     QVERIFY(proc.run(params));
     output.close();

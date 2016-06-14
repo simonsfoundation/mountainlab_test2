@@ -14,13 +14,13 @@
 #include <immintrin.h>
 #endif
 
-Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_max);
+Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_max, double freq_wid);
 bool do_fft_1d_r2c(int M, int N, double* out, double* in);
 bool do_ifft_1d_c2r(int M, int N, double* out, double* in);
 void multiply_complex_by_real_kernel(int M, int N, double* Y, double* kernel);
-void define_kernel(int N, double* kernel, double samplefreq, double freq_min, double freq_max);
+void define_kernel(int N, double* kernel, double samplefreq, double freq_min, double freq_max, double freq_wid);
 
-bool bandpass_filter0(const QString& input_path, const QString& output_path, double samplerate, double freq_min, double freq_max, const long processingChunkSize, const long chunkOverlapSize)
+bool bandpass_filter0(const QString& input_path, const QString& output_path, double samplerate, double freq_min, double freq_max, double freq_wid, const long processingChunkSize, const long chunkOverlapSize)
 {
     QTime timer_total;
     timer_total.start();
@@ -58,7 +58,7 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
             {
                 QTime timer;
                 timer.start();
-                chunk = do_bandpass_filter0(chunk, samplerate, freq_min, freq_max);
+                chunk = do_bandpass_filter0(chunk, samplerate, freq_min, freq_max, freq_wid);
                 elapsed_times_local["do_bandpass_filter0"] += timer.elapsed();
             }
             Mda chunk2;
@@ -115,7 +115,7 @@ void multiply_by_factor(long N, double* X, double factor)
         X[i] *= factor;
 }
 
-Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_max)
+Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_max, double freq_wid)
 {
     long M = X.N1();
     long N = X.N2();
@@ -126,7 +126,7 @@ Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_
 
     double* kernel0 = (double*)allocate(sizeof(double) * N);
     double* Xhat = (double*)allocate(sizeof(double) * MN * 2);
-    define_kernel(N, kernel0, samplerate, freq_min, freq_max);
+    define_kernel(N, kernel0, samplerate, freq_min, freq_max, freq_wid);
 
     do_fft_1d_r2c(M, N, Xhat, Xptr);
     multiply_complex_by_real_kernel(M, N, Xhat, kernel0);
@@ -309,25 +309,30 @@ void multiply_complex_by_real_kernel(int M, int N, double* Y, double* kernel)
 #endif
 }
 
-void define_kernel(int N, double* kernel, double samplefreq, double freq_min, double freq_max)
+void define_kernel(int N, double* kernel, double samplefreq, double freq_min, double freq_max, double freq_wid)
 {
-    //Based on ahb's MATLAB code
-    double T = N / samplefreq; //total time
-    //frequency grid
-    double df = 1 / T;
-    double fwidlo = 100; // roll-off width (Hz). Sets ringing timescale << 10 ms
-    double fwidhi = 1000; // roll-off width (Hz). Sets ringing timescale << 1 ms
+    // Matches ahb's code /matlab/processors/ms_bandpass_filter.m
+    // improved ahb, changing tanh to erf, correct -3dB pts  6/14/16
+    double T = N / samplefreq;     // total time
+    double df = 1 / T;             // frequency grid
+    double relwid = 3.0;           // relative bottom-end roll-off width param, kills low freqs by factor 1e-5.
+
+    printf("filter params: %.15g %.15g %.15g \n",freq_min,freq_max,freq_wid);  // debug
+    freq_wid = 1000.0;     // *** why not correctly read in? override hack
 
     for (int i = 0; i < N; i++) {
-        const double fgrid = (i <= (N + 1) / 2) ? df * i : df * (i - N);
-        const double absf = fabs(fgrid);
-        double val = 1;
-        if (freq_min != 0) { //(suggested by ahb) added on 3/3/16 by jfm
-            val *= (1 + tanh((absf - freq_min) / fwidlo)) / 2;
-        }
-        if (freq_max != 0) { //added on 3/3/16 by jfm
-            val *= (1 - tanh((absf - freq_max) / fwidhi)) / 2;
-        }
-        kernel[i] = val;
+      const double fgrid = (i <= (N + 1) / 2) ? df * i : df * (i - N);   // why const? (ahb)
+      const double absf = fabs(fgrid);
+      double val = 1.0;
+      if (freq_min != 0) { // (suggested by ahb) added on 3/3/16 by jfm
+	if (i==0)
+	  val = 0.0;        // kill DC part exactly - ahb
+	else
+	  val *= (1 + erf(relwid * (absf - freq_min) / freq_min)) / 2;
+      }
+      if (freq_max != 0) {  // added on 3/3/16 by jfm
+	val *= (1 - erf((absf - freq_max) / freq_wid)) / 2;
+      }
+      kernel[i] = sqrt(val);    // note sqrt of filter func to apply to spectral intensity not ampl
     }
 }

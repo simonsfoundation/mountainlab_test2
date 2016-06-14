@@ -50,7 +50,8 @@ void run_all_unit_tests()
     double samplerate=10000;
 	double freq_min=300;
 	double freq_max=3000;
-    bandpass_filter0(path1,path3,samplerate,freq_min,freq_max);
+	double freq_wid=1000;    // ahb
+	bandpass_filter0(path1,path3,samplerate,freq_min,freq_max,freq_wid);
 
 	Mda tmp; tmp.read(path3);
 	for (long i=0; i<tmp.totalSize(); i++) tmp.set(tmp.get(i)/2,i);
