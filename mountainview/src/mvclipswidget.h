@@ -23,7 +23,6 @@ public:
     void setTimeseries(DiskReadMda& X);
     void setFirings(const DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
-    void setClipSize(int clip_size);
 
     int currentClipIndex();
 signals:

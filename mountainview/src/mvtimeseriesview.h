@@ -25,7 +25,6 @@ public:
     void setTimeseries(const DiskReadMda& X);
     void setMLProxyUrl(const QString& url);
     void setTimesLabels(const QVector<double>& times, const QVector<int>& labels);
-    void setChannelColors(const QList<QColor>& colors);
 
     void setTimeRange(MVRange);
     void setCurrentTimepoint(double t);
@@ -53,8 +52,7 @@ public:
 signals:
     void clicked();
 
-private
-slots:
+private slots:
     void slot_scroll_to_current_timepoint();
 
 private:

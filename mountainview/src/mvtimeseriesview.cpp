@@ -179,13 +179,6 @@ void MVTimeSeriesView::setTimesLabels(const QVector<double>& times, const QVecto
     update();
 }
 
-void MVTimeSeriesView::setChannelColors(const QList<QColor>& colors)
-{
-    d->m_prefs.channel_colors = colors;
-    d->m_render_manager.setChannelColors(colors);
-    update();
-}
-
 MVRange MVTimeSeriesView::timeRange() const
 {
     return d->m_view_agent->currentTimeRange();
@@ -366,6 +359,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     double WW = W0 - mleft - mright;
     double HH = H0 - mtop - mbottom;
+    d->m_render_manager.setChannelColors(d->m_view_agent->channelColors());
     QImage img = d->m_render_manager.getImage(view_t1, view_t2, d->m_amplitude_factor, WW, HH);
     painter.drawImage(mleft, mtop, img);
 

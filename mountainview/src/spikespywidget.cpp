@@ -19,7 +19,6 @@ class SpikeSpyWidgetPrivate {
 public:
     SpikeSpyWidget* q;
     double m_samplerate;
-    QList<QColor> m_channel_colors;
     QList<SpikeSpyViewData> m_datas;
     QList<MVTimeSeriesView*> m_views;
     MVViewAgent* m_view_agent;
@@ -82,30 +81,14 @@ SpikeSpyWidget::~SpikeSpyWidget()
 void SpikeSpyWidget::setSampleRate(double samplerate)
 {
     d->m_samplerate = samplerate;
-    foreach(MVTimeSeriesView * V, d->m_views)
-    {
+    foreach (MVTimeSeriesView* V, d->m_views) {
         V->setSampleRate(samplerate);
     }
-}
-
-void SpikeSpyWidget::setChannelColors(const QList<QColor>& colors)
-{
-    d->m_channel_colors = colors;
-    foreach(MVTimeSeriesView * V, d->m_views)
-    {
-        V->setChannelColors(colors);
-    }
-}
-
-void SpikeSpyWidget::setLabelColors(const QList<QColor>& colors)
-{
-    d->m_view_agent->setClusterColors(colors);
 }
 
 void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
 {
     MVTimeSeriesView* W = new MVTimeSeriesView(d->m_view_agent);
-    W->setChannelColors(d->m_channel_colors);
     W->setTimeseries(data.timeseries);
     QVector<double> times;
     QVector<int> labels;
@@ -138,7 +121,6 @@ void SpikeSpyWidget::slot_open_mountainview()
     SpikeSpyViewData data = d->m_datas[current_view_index];
 
     MVMainWindow* W = new MVMainWindow(d->m_view_agent);
-    W->setChannelColors(d->m_channel_colors);
     MVFile ff;
     ff.addTimeseriesPath("Timeseries", data.timeseries.path());
     ff.setFiringsPath(data.firings.path());

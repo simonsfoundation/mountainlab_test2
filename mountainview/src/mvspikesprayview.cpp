@@ -33,12 +33,11 @@ public:
 class MVSpikeSprayViewPrivate {
 public:
     MVSpikeSprayView* q;
+    MVViewAgent* m_view_agent;
     QString m_mlproxy_url;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     QList<int> m_labels_to_use;
-    int m_clip_size;
-    QList<QColor> m_label_colors;
     bool m_compute_needed;
     double m_amplitude_factor;
 
@@ -52,11 +51,11 @@ public:
     QPointF coord2pix(int m, double t, double val);
 };
 
-MVSpikeSprayView::MVSpikeSprayView()
+MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent)
 {
     d = new MVSpikeSprayViewPrivate;
     d->q = this;
-    d->m_clip_size = 100;
+    d->m_view_agent = view_agent;
     d->m_compute_needed = false;
     d->m_amplitude_factor = 0;
 
@@ -98,18 +97,6 @@ void MVSpikeSprayView::setLabelsToUse(const QList<int>& labels)
     d->schedule_compute();
 }
 
-void MVSpikeSprayView::setClipSize(int clip_size)
-{
-    d->m_clip_size = clip_size;
-    d->schedule_compute();
-}
-
-void MVSpikeSprayView::setLabelColors(const QList<QColor>& colors)
-{
-    d->m_label_colors = colors;
-    update();
-}
-
 void MVSpikeSprayView::slot_computation_finished()
 {
     d->m_computer.stopComputation(); //because I'm paranoid
@@ -135,7 +122,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         d->m_computer.timeseries = d->m_timeseries;
         d->m_computer.firings = d->m_firings;
         d->m_computer.labels_to_use = d->m_labels_to_use;
-        d->m_computer.clip_size = d->m_clip_size;
+        d->m_computer.clip_size = d->m_view_agent->option("clip_size").toInt();
         d->m_computer.startComputation();
         d->m_compute_needed = false;
         return;
@@ -255,14 +242,13 @@ void MVSpikeSprayViewPrivate::render_clip(QPainter* painter, long M, long T, dou
 
 QColor MVSpikeSprayViewPrivate::get_label_color(int label)
 {
-    if (!m_label_colors.size())
-        return Qt::black;
-    return m_label_colors[label % m_label_colors.size()];
+    return m_view_agent->clusterColor(label);
 }
 
 QPointF MVSpikeSprayViewPrivate::coord2pix(int m, double t, double val)
 {
     long M = m_timeseries.N1();
+    int clip_size = m_view_agent->option("clip_size").toInt();
     double margin_left = 20, margin_right = 20;
     double margin_top = 20, margin_bottom = 20;
     double max_width = 300;
@@ -272,7 +258,7 @@ QPointF MVSpikeSprayViewPrivate::coord2pix(int m, double t, double val)
         margin_right += diff / 2;
     }
     QRectF rect(margin_left, margin_top, q->width() - margin_left - margin_right, q->height() - margin_top - margin_bottom);
-    double pctx = (t + 0.5) / m_clip_size;
+    double pctx = (t + 0.5) / clip_size;
     double pcty = (m + 0.5) / M - val / M * m_amplitude_factor;
     return QPointF(rect.left() + pctx * rect.width(), rect.top() + pcty * rect.height());
 }

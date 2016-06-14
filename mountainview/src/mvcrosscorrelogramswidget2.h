@@ -15,11 +15,12 @@
 struct CrossCorrelogramOptions {
     CrossCorrelogramOptions()
     {
-        mode = "all_auto_correlograms";
+        mode = "undefined";
     }
 
     /// TODO use enum for mode, not string
     QString mode;
+    QList<int> ks;
 };
 
 class MVCrossCorrelogramsWidget2Private;

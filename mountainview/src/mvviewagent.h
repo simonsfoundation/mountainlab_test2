@@ -42,15 +42,18 @@ public:
     QList<int> selectedClusters() const;
     double currentTimepoint() const;
     MVRange currentTimeRange() const;
-    QColor clusterColor(int k);
-    QColor channelColor(int m);
+    QColor clusterColor(int k) const;
+    QColor channelColor(int m) const;
+    QList<QColor> channelColors() const;
     DiskReadMda timeseries();
     DiskReadMda firings();
+    double sampleRate() const;
     DiskReadMda filteredFirings();
     QVariant option(QString name, QVariant default_val = QVariant());
 
     void setTimeseries(const DiskReadMda& X);
     void setFirings(const DiskReadMda& F);
+    void setSampleRate(double sample_rate);
     void setClusterMerge(const ClusterMerge& CM);
     void setClusterAttributes(const QMap<int, QJsonObject>& A);
     void setCurrentEvent(const MVEvent& evt);

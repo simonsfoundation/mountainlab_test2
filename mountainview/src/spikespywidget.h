@@ -25,12 +25,9 @@ public:
     SpikeSpyWidget(MVViewAgent* view_agent);
     virtual ~SpikeSpyWidget();
     void setSampleRate(double samplerate);
-    void setChannelColors(const QList<QColor>& colors);
-    void setLabelColors(const QList<QColor>& colors);
     void addView(const SpikeSpyViewData& data);
 
-private
-slots:
+private slots:
     void slot_show_tasks();
     void slot_open_mountainview();
     void slot_view_clicked();
