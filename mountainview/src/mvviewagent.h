@@ -43,10 +43,11 @@ public:
     double currentTimepoint() const;
     MVRange currentTimeRange() const;
     QColor clusterColor(int k);
+    QColor channelColor(int m);
     DiskReadMda timeseries();
-    Mda firings();
-    Mda filteredFirings();
-    QVariant option(QString name, QVariant default_val=QVariant());
+    DiskReadMda firings();
+    DiskReadMda filteredFirings();
+    QVariant option(QString name, QVariant default_val = QVariant());
 
     void setTimeseries(const DiskReadMda& X);
     void setFirings(const DiskReadMda& F);
@@ -58,7 +59,8 @@ public:
     void setCurrentTimepoint(double tp);
     void setCurrentTimeRange(const MVRange& range);
     void setClusterColors(const QList<QColor>& colors);
-    void setOption(QString name,QVariant value);
+    void setChannelColors(const QList<QColor>& colors);
+    void setOption(QString name, QVariant value);
 
     void clickCluster(int k, Qt::KeyboardModifiers modifiers);
 

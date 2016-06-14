@@ -48,7 +48,7 @@ class MVControlPanel : public QWidget {
     Q_OBJECT
 public:
     friend class MVControlPanelPrivate;
-    MVControlPanel(MVViewAgent *view_agent);
+    MVControlPanel(MVViewAgent* view_agent);
     virtual ~MVControlPanel();
 
     void setTimeseriesChoices(const QStringList& names);

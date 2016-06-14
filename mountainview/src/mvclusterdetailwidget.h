@@ -28,9 +28,6 @@ public:
     //void setMscmdServerUrl(const QString& url);
     void setMLProxyUrl(const QString& url);
 
-    ///The size of the templates to display
-    void setClipSize(int T);
-
     ///So we can display the firing rate (events per second)
     void setSampleRate(double freq);
 
@@ -62,6 +59,7 @@ private slots:
     void slot_export_image();
     void slot_toggle_stdev_shading();
     void slot_recalculate();
+    void slot_view_agent_option_changed(QString name);
 
 private:
     MVClusterDetailWidgetPrivate* d;

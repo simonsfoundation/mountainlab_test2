@@ -47,7 +47,6 @@ public:
     MVCrossCorrelogramsWidget2Computer m_computer;
     QList<Correlogram> m_correlograms;
     double m_samplerate;
-    int m_max_dt;
     MVViewAgent* m_view_agent;
 
     QGridLayout* m_grid_layout;
@@ -69,7 +68,6 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
     d->q = this;
     d->m_samplerate = 20000;
     d->m_num_columns = -1;
-    d->m_max_dt = 0;
 
     d->m_view_agent = view_agent;
     QObject::connect(view_agent, SIGNAL(clusterAttributesChanged()), this, SLOT(slot_cluster_attributes_changed()));
@@ -77,6 +75,7 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
 
     QObject::connect(view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_recalculate()));
+    QObject::connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
 
     QGridLayout* GL = new QGridLayout;
     GL->setHorizontalSpacing(20);
@@ -178,12 +177,6 @@ QImage MVCrossCorrelogramsWidget2::renderImage(int W, int H)
 void MVCrossCorrelogramsWidget2::setSampleRate(double rate)
 {
     d->m_samplerate = rate;
-    d->start_computation();
-}
-
-void MVCrossCorrelogramsWidget2::setMaxDtTimepoints(int max_dt)
-{
-    d->m_max_dt = max_dt;
     d->start_computation();
 }
 
@@ -383,6 +376,13 @@ void MVCrossCorrelogramsWidget2::slot_recalculate()
     d->start_computation();
 }
 
+void MVCrossCorrelogramsWidget2::slot_view_agent_option_changed(QString name)
+{
+    if (name == "cc_max_dt_msec") {
+        d->start_computation();
+    }
+}
+
 QList<float> compute_cc_data(const QList<double>& times1_in, const QList<double>& times2_in, int max_dt, bool exclude_matches)
 {
     QList<float> ret;
@@ -454,8 +454,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
     }
 
     for (long ii = 0; ii < labels.count(); ii++) {
-        int k=labels[ii];
-        if (k<=the_times.count()) {
+        int k = labels[ii];
+        if (k <= the_times.count()) {
             the_times[k] << times[ii];
         }
     }
@@ -493,9 +493,9 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
 void MVCrossCorrelogramsWidget2Private::start_computation()
 {
     m_computer.stopComputation();
-    m_computer.firings = DiskReadMda(m_view_agent->firings());
+    m_computer.firings = m_view_agent->firings();
     m_computer.options = m_options;
-    m_computer.max_dt = m_max_dt;
+    m_computer.max_dt = m_view_agent->option("cc_max_dt_msec", 100).toDouble() / 1000 * m_samplerate;
     qDebug() << m_computer.firings.N1() << m_computer.firings.N2() << m_computer.max_dt << m_computer.options.mode << "ccccccccccccccccccccccccccccccccccccccccc";
     m_computer.startComputation();
 }

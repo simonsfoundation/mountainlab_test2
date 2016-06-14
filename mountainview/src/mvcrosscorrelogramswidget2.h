@@ -13,8 +13,9 @@
 #include <QWidget>
 
 struct CrossCorrelogramOptions {
-    CrossCorrelogramOptions() {
-        mode="all_auto_correlograms";
+    CrossCorrelogramOptions()
+    {
+        mode = "all_auto_correlograms";
     }
 
     /// TODO use enum for mode, not string
@@ -31,7 +32,6 @@ public:
 
     void setOptions(CrossCorrelogramOptions opts);
     void setSampleRate(double rate);
-    void setMaxDtTimepoints(int max_dt);
     void setColors(const QMap<QString, QColor>& colors);
     int currentLabel1();
     int currentLabel2();
@@ -53,6 +53,7 @@ private slots:
     void slot_cluster_attributes_changed();
     void slot_update_highlighting();
     void slot_recalculate();
+    void slot_view_agent_option_changed(QString name);
 
 private:
     MVCrossCorrelogramsWidget2Private* d;

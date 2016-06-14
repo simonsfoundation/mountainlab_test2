@@ -59,41 +59,21 @@
 /// TODO put styles in central place?
 #define MV_STATUS_BAR_HEIGHT 30
 
-/*
-class shell_split_and_event_filter_calculator : public ComputationThread {
-public:
-    //input
-    MVEventFilter m_evt_filter;
-    DiskReadMda m_firings_original;
-    QString m_mlproxy_url;
-
-    //output
-    DiskReadMda m_firings;
-    QList<int> m_original_cluster_numbers;
-    QList<int> m_original_cluster_offsets;
-
-    void compute();
-};
-*/
-
 class MVMainWindowPrivate {
 public:
     MVMainWindow* q;
-    QList<Epoch> m_epochs;
-    //QString m_mscmdserver_url;
-    MVFile m_mv_file;
-    MVViewAgent* m_view_agent;
+    QList<Epoch> m_epochs; //not implemented yet -- put it in mvviewagent
+    MVFile m_mv_file; //we need to keep this in case there is other data in the .json that we want to preserver
+    MVViewAgent* m_view_agent; //gets passed to all the views and the control panel
 
-    MVControlPanel* m_control_panel_new;
+    //these widgets go on the left
+    QSplitter* m_left_splitter;
+    MVControlPanel* m_control_panel;
     TaskProgressView* m_task_progress_view;
 
-    QSplitter* m_splitter1, *m_splitter2, *m_left_splitter;
+    QSplitter* m_hsplitter, *m_vsplitter;
     TabberTabWidget* m_tabs1, *m_tabs2;
-    Tabber* m_tabber;
-    QProgressDialog* m_progress_dialog;
-
-    Mda m_cross_correlograms_data;
-    //Mda m_templates_data;
+    Tabber* m_tabber; //manages the views in the two tab widgets
 
     QList<QColor> m_channel_colors;
     QMap<QString, QColor> m_colors;
@@ -149,8 +129,6 @@ public:
 
     void set_progress(QString title, QString text, float frac);
 
-    long cc_max_dt_timepoints();
-
     void export_mountainview_document();
     void export_original_firings();
     void export_filtered_firings();
@@ -177,8 +155,8 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
 
     //connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_calculator_finished()));
 
-    d->m_control_panel_new = new MVControlPanel(view_agent);
-    connect(d->m_control_panel_new, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
+    d->m_control_panel = new MVControlPanel(view_agent);
+    connect(d->m_control_panel, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
 
     QSplitter* splitter1 = new QSplitter;
     splitter1->setOrientation(Qt::Horizontal);
@@ -189,7 +167,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     d->m_splitter2 = splitter2;
 
     QScrollArea* CP = new QScrollArea;
-    CP->setWidget(d->m_control_panel_new);
+    CP->setWidget(d->m_control_panel);
     CP->setWidgetResizable(true);
 
     d->m_task_progress_view = new TaskProgressView;
@@ -250,9 +228,9 @@ MVMainWindow::~MVMainWindow()
 void MVMainWindow::setCurrentTimeseriesName(const QString& name)
 {
     {
-        MVViewOptions opts = d->m_control_panel_new->viewOptions();
+        MVViewOptions opts = d->m_control_panel->viewOptions();
         opts.timeseries = name;
-        d->m_control_panel_new->setViewOptions(opts);
+        d->m_control_panel->setViewOptions(opts);
     }
 
     d->update_timeseries_views();
@@ -327,17 +305,17 @@ void MVMainWindow::setMVFile(MVFile ff)
 
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
-    d->m_control_panel_new->setTimeseriesChoices(timeseries_names);
+    d->m_control_panel->setTimeseriesChoices(timeseries_names);
     //if (!timeseries_names.isEmpty()) {
     //    d->m_view_agent->setCurrentTimeseriesName(timeseries_names[0]);
     //}
 
-    d->m_control_panel_new->setViewOptions(MVViewOptions::fromJsonObject(d->m_mv_file.viewOptions()));
-    d->m_control_panel_new->setEventFilter(MVEventFilter::fromJsonObject(d->m_mv_file.eventFilter()));
+    d->m_control_panel->setViewOptions(MVViewOptions::fromJsonObject(d->m_mv_file.viewOptions()));
+    d->m_control_panel->setEventFilter(MVEventFilter::fromJsonObject(d->m_mv_file.eventFilter()));
     if (!d->m_mv_file.currentTimeseriesName().isEmpty()) {
-        MVViewOptions opts = d->m_control_panel_new->viewOptions();
+        MVViewOptions opts = d->m_control_panel->viewOptions();
         opts.timeseries = d->m_mv_file.currentTimeseriesName();
-        d->m_control_panel_new->setViewOptions(opts);
+        d->m_control_panel->setViewOptions(opts);
     }
 
     {
@@ -375,9 +353,9 @@ void MVMainWindow::writeMVFile(const QString& mv_fname)
 {
     TaskProgress task("saving .mv file: " + mv_fname);
 
-    d->m_mv_file.setViewOptions(d->m_control_panel_new->viewOptions().toJsonObject());
-    d->m_mv_file.setEventFilter(d->m_control_panel_new->eventFilter().toJsonObject());
-    d->m_mv_file.setCurrentTimeseriesName(d->m_control_panel_new->viewOptions().timeseries);
+    d->m_mv_file.setViewOptions(d->m_control_panel->viewOptions().toJsonObject());
+    d->m_mv_file.setEventFilter(d->m_control_panel->eventFilter().toJsonObject());
+    d->m_mv_file.setCurrentTimeseriesName(d->m_control_panel->viewOptions().timeseries);
 
     QJsonObject cluster_attributes;
     QMap<int, QJsonObject> CA = d->m_view_agent->clusterAttributes();
@@ -600,7 +578,7 @@ void MVMainWindow::slot_update_buttons()
 void MVMainWindowPrivate::start_shell_split_and_event_filter()
 {
     m_calculator.stopComputation();
-    m_calculator.m_evt_filter = m_control_panel_new->eventFilter();
+    m_calculator.m_evt_filter = m_control_panel->eventFilter();
     m_calculator.m_firings_original = m_firings_original;
     m_calculator.m_mlproxy_url = m_mv_file.mlproxyUrl();
     m_calculator.startComputation();
@@ -1008,13 +986,15 @@ void MVMainWindowPrivate::open_spike_spray()
 void MVMainWindowPrivate::open_firing_events()
 {
     QList<int> ks = m_view_agent->selectedClusters();
-    qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(q, "Unable to open firing events", "You must select at least one cluster.");
         return;
     }
     //MVFiringEventView* X = new MVFiringEventView;
     MVFiringEventView2* X = new MVFiringEventView2(m_view_agent);
+    X->setLabelsToUse(ks.toSet());
+    X->setNumTimepoints(m_view_agent->timeseries().N2());
+    X->setSampleRate(m_mv_file.sampleRate());
     X->setProperty("widget_type", "firing_events");
     X->setProperty("ks", int_list_to_string_list(ks));
     add_tab(X, QString("Firing Events"));
@@ -1094,10 +1074,8 @@ void MVMainWindowPrivate::update_cross_correlograms()
     foreach (QWidget* W, widgets) {
         QString widget_type = W->property("widget_type").toString();
         if ((widget_type == "auto_correlograms") || (widget_type == "cross_correlograms")) {
-            MVCrossCorrelogramsWidget2 *WW=qobject_cast<MVCrossCorrelogramsWidget2 *>(W);
+            MVCrossCorrelogramsWidget2* WW = qobject_cast<MVCrossCorrelogramsWidget2*>(W);
             if (WW) {
-                qDebug() << "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << cc_max_dt_timepoints();
-                WW->setMaxDtTimepoints(cc_max_dt_timepoints());
             }
         }
     }
@@ -1191,7 +1169,6 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         MVCrossCorrelogramsWidget2* WW = (MVCrossCorrelogramsWidget2*)W;
         set_tool_button_menu(WW);
         WW->setSampleRate(m_mv_file.sampleRate());
-        WW->setMaxDtTimepoints(cc_max_dt_timepoints());
         WW->setColors(m_colors);
         task.log(QString("m_samplerate = %1").arg(m_mv_file.sampleRate()));
         //WW->setCrossCorrelogramsData(DiskReadMda(m_cross_correlograms_data));
@@ -1295,20 +1272,18 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
         MVClusterDetailWidget* WW = (MVClusterDetailWidget*)W;
         //int clip_size = m_control_panel->getParameterValue("clip_size").toInt();
         TaskProgress task("Update cluster details");
-        int clip_size = m_control_panel_new->viewOptions().clip_size;
         WW->setColors(m_colors);
         DiskReadMda TT(current_timeseries_path());
-        WW->setClipSize(clip_size);
         WW->zoomAllTheWayOut();
     }
     else if (widget_type == "clips") {
         MVClipsWidget* WW = (MVClipsWidget*)W;
-        int clip_size = m_control_panel_new->viewOptions().clip_size;
+        int clip_size = m_control_panel->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
         DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
-        WW->setFirings(DiskReadMda(m_view_agent->firings()));
+        WW->setFirings(m_view_agent->firings());
         WW->setLabelsToUse(ks);
     }
     /*
@@ -1325,7 +1300,7 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
             labels << (int)m_firings.value(2, n);
         }
 
-        int clip_size = m_control_panel_new->viewOptions().clip_size;
+        int clip_size = m_control_panel->viewOptions().clip_size;
 
         QList<long> inds;
         if (widget_type == "clips") {
@@ -1392,28 +1367,28 @@ void MVMainWindowPrivate::update_widget(QWidget* W)
     */
     else if (widget_type == "clusters") {
         MVClusterWidget* WW = (MVClusterWidget*)W;
-        int clip_size = m_control_panel_new->viewOptions().clip_size;
+        int clip_size = m_control_panel->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
         DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
         //WW->setFirings(m_firings);
-        WW->setFirings(DiskReadMda(m_view_agent->firings())); //now that we are doing the event filter, we should show everyone
+        WW->setFirings(m_view_agent->firings()); //now that we are doing the event filter, we should show everyone
         WW->setLabelsToUse(ks);
         FilterInfo FF;
-        FF.use_filter = m_control_panel_new->eventFilter().use_event_filter;
-        FF.min_detectability_score = m_control_panel_new->eventFilter().min_detectability_score;
-        FF.max_outlier_score = m_control_panel_new->eventFilter().max_outlier_score;
+        FF.use_filter = m_control_panel->eventFilter().use_event_filter;
+        FF.min_detectability_score = m_control_panel->eventFilter().min_detectability_score;
+        FF.max_outlier_score = m_control_panel->eventFilter().max_outlier_score;
         WW->setEventFilter(FF);
     }
     else if (widget_type == "spike_spray") {
         MVSpikeSprayView* WW = (MVSpikeSprayView*)W;
-        int clip_size = m_control_panel_new->viewOptions().clip_size;
+        int clip_size = m_control_panel->viewOptions().clip_size;
         QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
         DiskReadMda TT(current_timeseries_path());
         WW->setTimeseries(TT);
         WW->setClipSize(clip_size);
-        WW->setFirings(DiskReadMda(m_view_agent->firings()));
+        WW->setFirings(m_view_agent->firings());
         WW->setLabelsToUse(ks);
     }
     /*
@@ -1690,43 +1665,6 @@ void MVMainWindowPrivate::compute_geometric_median(int M, int N, double* output,
     free(weights);
 }
 
-void MVMainWindowPrivate::set_progress(QString title, QString text, float frac)
-{
-    if (!m_progress_dialog) {
-        m_progress_dialog = new QProgressDialog;
-        m_progress_dialog->setCancelButton(0);
-    }
-    static QTime* timer = 0;
-    if (!timer) {
-        timer = new QTime;
-        timer->start();
-        m_progress_dialog->show();
-        m_progress_dialog->repaint();
-        qApp->processEvents();
-    }
-    if (timer->elapsed() > 500) {
-        timer->restart();
-        if (!m_progress_dialog->isVisible()) {
-            m_progress_dialog->show();
-        }
-        m_progress_dialog->setLabelText(text);
-        m_progress_dialog->setWindowTitle(title);
-        m_progress_dialog->setValue((int)(frac * 100));
-        m_progress_dialog->repaint();
-        qApp->processEvents();
-    }
-    if (frac >= 1) {
-        delete m_progress_dialog;
-        m_progress_dialog = 0;
-    }
-}
-
-long MVMainWindowPrivate::cc_max_dt_timepoints()
-{
-    //return (int)(m_control_panel->getParameterValue("max_dt").toInt() * m_samplerate / 1000);
-    return m_control_panel_new->viewOptions().cc_max_dt_msec * m_mv_file.sampleRate() / 1000;
-}
-
 class DownloadComputer : public ComputationThread {
 public:
     //inputs
@@ -1813,7 +1751,7 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
 
 QString MVMainWindowPrivate::current_timeseries_path()
 {
-    return m_mv_file.timeseriesPathResolved(m_control_panel_new->viewOptions().timeseries);
+    return m_mv_file.timeseriesPathResolved(m_control_panel->viewOptions().timeseries);
 }
 
 QVariant MVMainWindowPrivate::get_cluster_attribute(int k, QString attr)
@@ -1830,7 +1768,7 @@ void MVMainWindowPrivate::set_cluster_attribute(int k, QString attr, QVariant va
 
 void MVMainWindowPrivate::set_button_enabled(QString name, bool val)
 {
-    QAbstractButton* B = m_control_panel_new->findButton(name);
+    QAbstractButton* B = m_control_panel->findButton(name);
     if (B)
         B->setEnabled(val);
 }
