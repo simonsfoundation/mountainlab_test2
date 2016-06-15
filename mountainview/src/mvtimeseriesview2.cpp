@@ -19,12 +19,23 @@ struct mvtsv_channel {
     QRectF geometry;
 };
 
+class MVTimeSeriesView2Calculator {
+public:
+    //input
+    DiskReadMda timeseries;
+
+    //output
+    MultiScaleTimeSeries msts;
+
+    void compute();
+};
+
 class MVTimeSeriesView2Private {
 public:
     MVTimeSeriesView2* q;
     MultiScaleTimeSeries m_msts;
 
-    MVViewAgent* m_view_agent;
+    MVTimeSeriesView2Calculator m_calculator;
 
     double m_amplitude_factor;
     QList<mvtsv_channel> m_channels;
@@ -62,6 +73,21 @@ MVTimeSeriesView2::MVTimeSeriesView2(MVViewAgent* view_agent)
 MVTimeSeriesView2::~MVTimeSeriesView2()
 {
     delete d;
+}
+
+void MVTimeSeriesView2::prepareCalculation()
+{
+    MVTimeSeriesViewBase::prepareCalculation();
+}
+
+void MVTimeSeriesView2::runCalculation()
+{
+    MVTimeSeriesViewBase::runCalculation();
+}
+
+void MVTimeSeriesView2::onCalculationFinished()
+{
+    MVTimeSeriesViewBase::onCalculationFinished();
 }
 
 double MVTimeSeriesView2::amplitudeFactor() const
@@ -144,7 +170,7 @@ void MVTimeSeriesView2::paintContent(QPainter* painter)
 
     double WW = this->contentGeometry().width();
     double HH = this->contentGeometry().height();
-    QImage img = d->m_render_manager.getImage(timeRange().min, timeRange().max, d->m_amplitude_factor, WW, HH);
+    QImage img = d->m_render_manager.getImage(viewAgent()->currentTimeRange().min, viewAgent()->currentTimeRange().max, d->m_amplitude_factor, WW, HH);
     painter->drawImage(this->contentGeometry().left(), this->contentGeometry().top(), img);
 
     // Channel labels
@@ -244,4 +270,9 @@ double MVTimeSeriesView2Private::ypix2val(int m, double ypix)
     }
     else
         return 0;
+}
+
+void MVTimeSeriesView2Calculator::compute()
+{
+    msts.setData(timeseries);
 }

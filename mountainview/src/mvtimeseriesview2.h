@@ -9,7 +9,6 @@
 
 #include <QWidget>
 #include <diskreadmda.h>
-#include "mvviewagent.h"
 #include "mvtimeseriesviewbase.h"
 
 /// TODO (0.9.1) on first load, multiscale file is created on server, the process is detached. Provide feedback to the user somehow
@@ -22,13 +21,16 @@ public:
     MVTimeSeriesView2(MVViewAgent* view_agent);
     virtual ~MVTimeSeriesView2();
 
+    void prepareCalculation() Q_DECL_OVERRIDE;
+    void runCalculation() Q_DECL_OVERRIDE;
+    void onCalculationFinished() Q_DECL_OVERRIDE;
+
     void paintContent(QPainter* painter);
 
     void setAmplitudeFactor(double factor); // display range will be between -1/factor and 1/factor, but not clipped (thus channel plots may overlap)
     void autoSetAmplitudeFactor();
     void autoSetAmplitudeFactorWithinTimeRange();
 
-    DiskReadMda timeseries();
     double amplitudeFactor() const;
 
     void resizeEvent(QResizeEvent* evt);
