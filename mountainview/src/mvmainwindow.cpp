@@ -252,6 +252,7 @@ void MVMainWindow::setMVFile(MVFile ff)
 
     d->m_view_agent->setFirings(DiskReadMda(ff.firingsPathResolved()));
     d->m_view_agent->setSampleRate(ff.sampleRate());
+    d->m_view_agent->setMLProxyUrl(ff.mlproxyUrl());
 }
 
 void MVMainWindow::writeMVFile(const QString& mv_fname)

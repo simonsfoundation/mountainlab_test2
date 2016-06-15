@@ -7,7 +7,6 @@
 #include "mvcrosscorrelogramswidget2.h"
 #include "computationthread.h"
 #include "histogramview.h"
-#include "set_progress.h"
 #include "mvutils.h"
 #include "taskprogress.h"
 
@@ -28,17 +27,17 @@ struct Correlogram {
     QList<float> data;
 };
 
-class MVCrossCorrelogramsWidget2Computer : public ComputationThread {
+class MVCrossCorrelogramsWidget2Computer {
 public:
     //input
     DiskReadMda firings;
     CrossCorrelogramOptions options;
     int max_dt;
 
-    void compute();
-
     //output
     QList<Correlogram> correlograms;
+
+    void compute();
 };
 
 class MVCrossCorrelogramsWidget2Private {
@@ -46,34 +45,30 @@ public:
     MVCrossCorrelogramsWidget2* q;
     MVCrossCorrelogramsWidget2Computer m_computer;
     QList<Correlogram> m_correlograms;
-    MVViewAgent* m_view_agent;
 
     QGridLayout* m_grid_layout;
     QList<HistogramView*> m_histogram_views;
     int m_num_columns;
 
     QList<QWidget*> m_child_widgets;
-    QMap<QString, QColor> m_colors;
 
     CrossCorrelogramOptions m_options;
 
     void do_highlighting();
-    void start_computation();
 };
 
-MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
+MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent) : MVAbstractView(view_agent)
 {
     d = new MVCrossCorrelogramsWidget2Private;
     d->q = this;
     d->m_num_columns = -1;
 
-    d->m_view_agent = view_agent;
     QObject::connect(view_agent, SIGNAL(clusterAttributesChanged()), this, SLOT(slot_cluster_attributes_changed()));
     QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting()));
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
 
-    QObject::connect(view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_recalculate()));
-    QObject::connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
+    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    this->recalculateOnOptionChanged("cc_max_dt_msec");
 
     QGridLayout* GL = new QGridLayout;
     GL->setHorizontalSpacing(20);
@@ -82,6 +77,7 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
     this->setLayout(GL);
     d->m_grid_layout = GL;
 
+    /*
     d->m_colors["background"] = QColor(240, 240, 240);
     d->m_colors["frame1"] = QColor(245, 245, 245);
     d->m_colors["info_text"] = QColor(80, 80, 80);
@@ -89,6 +85,7 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
     d->m_colors["view_background_highlighted"] = QColor(250, 220, 200);
     d->m_colors["view_background_selected"] = QColor(250, 240, 230);
     d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
+    */
 
     this->setFocusPolicy(Qt::StrongFocus);
 
@@ -98,21 +95,110 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
         connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_export_image()));
     }
 
-    connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
-
-    d->start_computation();
+    this->recalculate();
 }
 
 MVCrossCorrelogramsWidget2::~MVCrossCorrelogramsWidget2()
 {
-    d->m_computer.stopComputation(); // important do take care of this before things start getting destructed!
     delete d;
+}
+
+void MVCrossCorrelogramsWidget2::prepareCalculation()
+{
+    d->m_computer.firings = viewAgent()->firings();
+    d->m_computer.options = d->m_options;
+    d->m_computer.max_dt = viewAgent()->option("cc_max_dt_msec", 100).toDouble() / 1000 * viewAgent()->sampleRate();
+}
+
+void MVCrossCorrelogramsWidget2::runCalculation()
+{
+    d->m_computer.compute();
+}
+
+class TimeScaleWidget2 : public QWidget {
+public:
+    TimeScaleWidget2();
+    int m_time_width;
+
+protected:
+    void paintEvent(QPaintEvent* evt);
+};
+
+float compute_max2(const QList<Correlogram>& data0)
+{
+    float ret = 0;
+    for (int i = 0; i < data0.count(); i++) {
+        QList<float> tmp = data0[i].data;
+        for (int j = 0; j < tmp.count(); j++) {
+            if (tmp[j] > ret)
+                ret = tmp[j];
+        }
+    }
+    return ret;
+}
+
+void MVCrossCorrelogramsWidget2::onCalculationFinished()
+{
+    d->m_correlograms = d->m_computer.correlograms;
+
+    qDeleteAll(d->m_histogram_views);
+    d->m_histogram_views.clear();
+
+    qDeleteAll(d->m_child_widgets);
+    d->m_child_widgets.clear();
+
+    QGridLayout* GL = d->m_grid_layout;
+    float sample_freq = viewAgent()->sampleRate();
+    float bin_max = compute_max2(d->m_correlograms);
+    float bin_min = -bin_max;
+    //int num_bins=100;
+    int bin_size = 20;
+    int num_bins = (bin_max - bin_min) / bin_size;
+    if (num_bins < 100)
+        num_bins = 100;
+    if (num_bins > 2000)
+        num_bins = 2000;
+    float time_width = (bin_max - bin_min) / sample_freq * 1000;
+
+    int NUM = d->m_correlograms.count();
+    int num_rows = (int)sqrt(NUM);
+    if (num_rows < 1)
+        num_rows = 1;
+    int num_cols = (NUM + num_rows - 1) / num_rows;
+    d->m_num_columns = num_cols;
+    for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
+        /// TODO set progress here
+        HistogramView* HV = new HistogramView;
+        HV->setData(d->m_correlograms[ii].data);
+        HV->setColors(viewAgent()->colors());
+        //HV->autoSetBins(50);
+        HV->setBins(bin_min, bin_max, num_bins);
+        QString title0 = QString("%1/%2").arg(d->m_correlograms[ii].k1).arg(d->m_correlograms[ii].k2);
+        HV->setTitle(title0);
+        int row0 = (ii) / num_cols;
+        int col0 = (ii) % num_cols;
+        GL->addWidget(HV, row0, col0);
+        HV->setProperty("row", row0);
+        HV->setProperty("col", col0);
+        HV->setProperty("index", ii);
+        connect(HV, SIGNAL(control_clicked()), this, SLOT(slot_histogram_view_control_clicked()));
+        connect(HV, SIGNAL(clicked()), this, SLOT(slot_histogram_view_clicked()));
+        connect(HV, SIGNAL(activated()), this, SLOT(slot_histogram_view_activated()));
+        connect(HV, SIGNAL(signalExportHistogramMatrixImage()), this, SLOT(slot_export_image()));
+        d->m_histogram_views << HV;
+    }
+
+    TimeScaleWidget2* TSW = new TimeScaleWidget2;
+    TSW->m_time_width = time_width;
+    GL->addWidget(TSW, num_rows, 0);
+
+    d->m_child_widgets << TSW;
 }
 
 void MVCrossCorrelogramsWidget2::setOptions(CrossCorrelogramOptions opts)
 {
     d->m_options = opts;
-    d->start_computation();
+    this->recalculate();
 }
 
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
@@ -165,14 +251,16 @@ QImage MVCrossCorrelogramsWidget2::renderImage(int W, int H)
     return ret;
 }
 
-class TimeScaleWidget2 : public QWidget {
-public:
-    TimeScaleWidget2();
-    int m_time_width;
+void MVCrossCorrelogramsWidget2::paintEvent(QPaintEvent *evt)
+{
+    QWidget::paintEvent(evt);
 
-protected:
-    void paintEvent(QPaintEvent* evt);
-};
+    QPainter painter(this);
+    if (isCalculating()) {
+         //show that something is computing
+        painter.fillRect(QRectF(0, 0, width(), height()),QColor(255,230,230));
+    }
+}
 
 TimeScaleWidget2::TimeScaleWidget2()
 {
@@ -209,79 +297,7 @@ void TimeScaleWidget2::paintEvent(QPaintEvent* evt)
     painter.drawText(text_box, txt, Qt::AlignCenter | Qt::AlignTop);
 }
 
-float compute_max2(const QList<Correlogram>& data0)
-{
-    float ret = 0;
-    for (int i = 0; i < data0.count(); i++) {
-        QList<float> tmp = data0[i].data;
-        for (int j = 0; j < tmp.count(); j++) {
-            if (tmp[j] > ret)
-                ret = tmp[j];
-        }
-    }
-    return ret;
-}
 
-void MVCrossCorrelogramsWidget2::slot_computation_finished()
-{
-    d->m_computer.stopComputation(); //because I'm paranoid
-    d->m_correlograms = d->m_computer.correlograms;
-
-    qDeleteAll(d->m_histogram_views);
-    d->m_histogram_views.clear();
-
-    qDeleteAll(d->m_child_widgets);
-    d->m_child_widgets.clear();
-
-    QGridLayout* GL = d->m_grid_layout;
-    float sample_freq = d->m_view_agent->sampleRate();
-    float bin_max = compute_max2(d->m_correlograms);
-    float bin_min = -bin_max;
-    //int num_bins=100;
-    int bin_size = 20;
-    int num_bins = (bin_max - bin_min) / bin_size;
-    if (num_bins < 100)
-        num_bins = 100;
-    if (num_bins > 2000)
-        num_bins = 2000;
-    float time_width = (bin_max - bin_min) / sample_freq * 1000;
-
-    int NUM = d->m_correlograms.count();
-    int num_rows = (int)sqrt(NUM);
-    if (num_rows < 1)
-        num_rows = 1;
-    int num_cols = (NUM + num_rows - 1) / num_rows;
-    d->m_num_columns = num_cols;
-    for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
-        /// TODO set progress here
-        HistogramView* HV = new HistogramView;
-        HV->setData(d->m_correlograms[ii].data);
-        HV->setColors(d->m_view_agent->colors());
-        //HV->autoSetBins(50);
-        HV->setBins(bin_min, bin_max, num_bins);
-        QString title0 = QString("%1/%2").arg(d->m_correlograms[ii].k1).arg(d->m_correlograms[ii].k2);
-        HV->setTitle(title0);
-        int row0 = (ii) / num_cols;
-        int col0 = (ii) % num_cols;
-        GL->addWidget(HV, row0, col0);
-        HV->setProperty("row", row0);
-        HV->setProperty("col", col0);
-        HV->setProperty("index", ii);
-        connect(HV, SIGNAL(control_clicked()), this, SLOT(slot_histogram_view_control_clicked()));
-        connect(HV, SIGNAL(clicked()), this, SLOT(slot_histogram_view_clicked()));
-        connect(HV, SIGNAL(activated()), this, SLOT(slot_histogram_view_activated()));
-        connect(HV, SIGNAL(signalExportHistogramMatrixImage()), this, SLOT(slot_export_image()));
-        d->m_histogram_views << HV;
-    }
-
-    TimeScaleWidget2* TSW = new TimeScaleWidget2;
-    TSW->m_time_width = time_width;
-    GL->addWidget(TSW, num_rows, 0);
-
-    d->m_child_widgets << TSW;
-
-    set_progress("Loading cross correlograms...", "", 1);
-}
 
 void MVCrossCorrelogramsWidget2::slot_histogram_view_control_clicked()
 {
@@ -290,7 +306,7 @@ void MVCrossCorrelogramsWidget2::slot_histogram_view_control_clicked()
     int k1 = d->m_correlograms.value(index).k1;
     //int k2 = d->m_correlograms.value(index).k2;
 
-    d->m_view_agent->clickCluster(k1, Qt::ControlModifier);
+    viewAgent()->clickCluster(k1, Qt::ControlModifier);
 
     /*
     //int k2 = d->m_labels2.value(index);
@@ -317,7 +333,7 @@ void MVCrossCorrelogramsWidget2::slot_histogram_view_clicked()
     //int k1 = d->m_labels2.value(index);
     int k1 = d->m_correlograms.value(index).k1;
 
-    d->m_view_agent->clickCluster(k1, Qt::NoModifier);
+    viewAgent()->clickCluster(k1, Qt::NoModifier);
 
     /*
     int index = sender()->property("index").toInt();
@@ -354,18 +370,6 @@ void MVCrossCorrelogramsWidget2::slot_cluster_attributes_changed()
 void MVCrossCorrelogramsWidget2::slot_update_highlighting()
 {
     d->do_highlighting();
-}
-
-void MVCrossCorrelogramsWidget2::slot_recalculate()
-{
-    d->start_computation();
-}
-
-void MVCrossCorrelogramsWidget2::slot_view_agent_option_changed(QString name)
-{
-    if (name == "cc_max_dt_msec") {
-        d->start_computation();
-    }
 }
 
 QList<float> compute_cc_data(const QList<double>& times1_in, const QList<double>& times2_in, int max_dt, bool exclude_matches)
@@ -477,11 +481,11 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
 void MVCrossCorrelogramsWidget2Private::do_highlighting()
 {
-    QList<int> selected_clusters = m_view_agent->selectedClusters();
+    QList<int> selected_clusters = q->viewAgent()->selectedClusters();
     for (int i = 0; i < m_histogram_views.count(); i++) {
         HistogramView* HV = m_histogram_views[i];
         int index = HV->property("index").toInt();
-        if (m_correlograms.value(index).k1 == m_view_agent->currentCluster()) {
+        if (m_correlograms.value(index).k1 == q->viewAgent()->currentCluster()) {
             HV->setCurrent(true);
         }
         else {
@@ -496,11 +500,3 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
     }
 }
 
-void MVCrossCorrelogramsWidget2Private::start_computation()
-{
-    m_computer.stopComputation();
-    m_computer.firings = m_view_agent->firings();
-    m_computer.options = m_options;
-    m_computer.max_dt = m_view_agent->option("cc_max_dt_msec", 100).toDouble() / 1000 * m_view_agent->sampleRate();
-    m_computer.startComputation();
-}

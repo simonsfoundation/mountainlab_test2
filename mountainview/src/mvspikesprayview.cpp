@@ -14,6 +14,8 @@
 #include "mlutils.h"
 #include "msmisc.h"
 
+/// TODO spike spray should respond to mouse wheel and show current position with marker
+
 class MVSpikeSprayComputer {
 public:
     //input
@@ -48,7 +50,8 @@ public:
     QPointF coord2pix(int m, double t, double val);
 };
 
-MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent) : MVAbstractView(view_agent)
+MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent)
+    : MVAbstractView(view_agent)
 {
     d = new MVSpikeSprayViewPrivate;
     d->q = this;
@@ -57,8 +60,8 @@ MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent) : MVAbstractView(vie
     d->m_num_channels = 1;
 
     recalculateOnOptionChanged("clip_size");
-    recalculateOn(viewAgent(),SIGNAL(timeseriesNamesChanged()));
-    recalculateOn(viewAgent(),SIGNAL(firingsChanged()));
+    recalculateOn(viewAgent(), SIGNAL(timeseriesNamesChanged()));
+    recalculateOn(viewAgent(), SIGNAL(firingsChanged()));
 
     /// TODO should we put this in the abstract view?
     this->setFocusPolicy(Qt::StrongFocus);
@@ -105,6 +108,14 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
+    if (isCalculating()) {
+        QFont font = painter.font();
+        font.setPointSize(20);
+        painter.setFont(font);
+        painter.drawText(QRectF(0, 0, width(), height()), Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
+        return;
+    }
+
     /// TODO (LOW) this should be a configured color to match the cluster view
     painter.fillRect(0, 0, width(), height(), QBrush(QColor(60, 60, 60)));
 
@@ -135,8 +146,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         if (counts[k]) {
             alphas[k] = 255 / counts[k];
             alphas[k] = qMin(255, qMax(5, alphas[k]));
-        }
-        else
+        } else
             alphas[k] = 255;
     }
 
@@ -182,12 +192,10 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    }
-    else {
+    } else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -205,8 +213,7 @@ void MVSpikeSprayViewPrivate::render_clip(QPainter* painter, long M, long T, dou
             QPointF pt = coord2pix(m, t, val);
             if (t == 0) {
                 path.moveTo(pt);
-            }
-            else {
+            } else {
                 path.lineTo(pt);
             }
         }
@@ -239,12 +246,13 @@ QPointF MVSpikeSprayViewPrivate::coord2pix(int m, double t, double val)
 
 void MVSpikeSprayComputer::compute()
 {
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     TaskProgress task("Spike spray computer");
     QString firings_out_path;
     {
         QString labels_str;
-        foreach (int x, labels_to_use) {
+        foreach(int x, labels_to_use)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);

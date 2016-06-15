@@ -8,7 +8,7 @@
 #define MVCROSSCORRELOGRAMSWIDGET2_H
 
 #include "diskreadmda.h"
-#include "mvviewagent.h"
+#include "mvabstractview.h"
 
 #include <QWidget>
 
@@ -24,12 +24,16 @@ struct CrossCorrelogramOptions {
 };
 
 class MVCrossCorrelogramsWidget2Private;
-class MVCrossCorrelogramsWidget2 : public QWidget {
+class MVCrossCorrelogramsWidget2 : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVCrossCorrelogramsWidget2Private;
     MVCrossCorrelogramsWidget2(MVViewAgent* view_agent);
     virtual ~MVCrossCorrelogramsWidget2();
+
+    void prepareCalculation() Q_DECL_OVERRIDE;
+    void runCalculation() Q_DECL_OVERRIDE;
+    void onCalculationFinished() Q_DECL_OVERRIDE;
 
     void setOptions(CrossCorrelogramOptions opts);
     int currentLabel1();
@@ -41,18 +45,17 @@ public:
     void setSelectedLabels1(const QList<int>& L);
     void setSelectedLabels2(const QList<int>& L);
     QImage renderImage(int W = 0, int H = 0);
+
+    void paintEvent(QPaintEvent *evt);
 signals:
     void histogramActivated();
 private slots:
-    void slot_computation_finished();
     void slot_histogram_view_control_clicked();
     void slot_histogram_view_clicked();
     void slot_histogram_view_activated();
     void slot_export_image();
     void slot_cluster_attributes_changed();
     void slot_update_highlighting();
-    void slot_recalculate();
-    void slot_view_agent_option_changed(QString name);
 
 private:
     MVCrossCorrelogramsWidget2Private* d;

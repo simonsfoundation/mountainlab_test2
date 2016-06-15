@@ -9,7 +9,7 @@
 #include "diskreadmda.h"
 #include "mda.h"
 #include <QWidget>
-#include "mvviewagent.h"
+#include "mvabstractview.h"
 
 /** \class MVClusterDetailWidget
  *  \brief Display a view of each cluster -- mainly the template shapes and some stats
@@ -17,13 +17,19 @@
  *  The user may click to change the current cluster, or use the Ctrl/Shift keys to select multiple clusters.
  */
 
+class ClusterView;
 class MVClusterDetailWidgetPrivate;
-class MVClusterDetailWidget : public QWidget {
+class MVClusterDetailWidget : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVClusterDetailWidgetPrivate;
-    MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* parent = 0);
+    friend class ClusterView;
+    MVClusterDetailWidget(MVViewAgent* view_agent);
     virtual ~MVClusterDetailWidget();
+
+    void prepareCalculation() Q_DECL_OVERRIDE;
+    void runCalculation() Q_DECL_OVERRIDE;
+    void onCalculationFinished() Q_DECL_OVERRIDE;
 
     void zoomAllTheWayOut();
 
@@ -41,13 +47,11 @@ protected:
 signals:
     ///A cluster has been double-clicked (or enter pressed?)
     void signalTemplateActivated();
-private slots:
+private
+slots:
     //void slot_context_menu(const QPoint& pos);
-    void slot_calculator_finished();
     void slot_export_image();
     void slot_toggle_stdev_shading();
-    void slot_recalculate();
-    void slot_view_agent_option_changed(QString name);
 
 private:
     MVClusterDetailWidgetPrivate* d;

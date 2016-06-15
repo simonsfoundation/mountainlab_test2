@@ -68,21 +68,18 @@ void MVAbstractView::recalculateOn(QObject* obj, const char* signal)
 
 void MVAbstractView::recalculate()
 {
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     d->stop_calculation();
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     d->schedule_calculation();
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
 }
 
 void MVAbstractView::slot_do_calculation()
 {
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     emit this->calculationStarted();
+    this->update();
     prepareCalculation();
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     d->m_calculation_thread.start();
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
+    d->m_calculation_scheduled=false;
+    this->update();
 }
 
 void MVAbstractView::slot_calculation_finished()
