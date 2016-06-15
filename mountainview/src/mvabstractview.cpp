@@ -78,7 +78,7 @@ void MVAbstractView::slot_do_calculation()
     this->update();
     prepareCalculation();
     d->m_calculation_thread.start();
-    d->m_calculation_scheduled=false;
+    d->m_calculation_scheduled = false;
     this->update();
 }
 

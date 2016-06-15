@@ -13,6 +13,8 @@
 #include <taskprogress.h>
 #include "computationthread.h"
 
+/// TODO control brightness in firing event view
+
 class MVFiringEventViewCalculator : public ComputationThread {
 public:
     //input

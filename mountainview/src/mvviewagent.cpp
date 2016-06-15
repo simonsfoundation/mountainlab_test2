@@ -50,7 +50,7 @@ MVViewAgent::MVViewAgent()
     d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
     d->m_colors["view_frame_selected"] = QColor(50, 20, 20);
     d->m_colors["divider_line"] = QColor(255, 100, 150);
-    d->m_colors["calculation-in-progress"] = QColor(130,130,140,50);
+    d->m_colors["calculation-in-progress"] = QColor(130, 130, 140, 50);
 }
 
 MVViewAgent::~MVViewAgent()
@@ -301,16 +301,14 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        }
-        else {
+        } else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    }
-    else {
+    } else {
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
     }

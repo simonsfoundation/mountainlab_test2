@@ -57,7 +57,8 @@ public:
     void do_highlighting();
 };
 
-MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent) : MVAbstractView(view_agent)
+MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
+    : MVAbstractView(view_agent)
 {
     d = new MVCrossCorrelogramsWidget2Private;
     d->q = this;
@@ -203,12 +204,12 @@ void MVCrossCorrelogramsWidget2::setOptions(CrossCorrelogramOptions opts)
 
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach (int a, S1)
-        if (!S2.contains(a))
-            return false;
-    foreach (int a, S2)
-        if (!S1.contains(a))
-            return false;
+    foreach(int a, S1)
+    if (!S2.contains(a))
+        return false;
+    foreach(int a, S2)
+    if (!S1.contains(a))
+        return false;
     return true;
 }
 
@@ -251,14 +252,14 @@ QImage MVCrossCorrelogramsWidget2::renderImage(int W, int H)
     return ret;
 }
 
-void MVCrossCorrelogramsWidget2::paintEvent(QPaintEvent *evt)
+void MVCrossCorrelogramsWidget2::paintEvent(QPaintEvent* evt)
 {
     QWidget::paintEvent(evt);
 
     QPainter painter(this);
     if (isCalculating()) {
-         //show that something is computing
-        painter.fillRect(QRectF(0, 0, width(), height()),viewAgent()->color("calculation-in-progress"));
+        //show that something is computing
+        painter.fillRect(QRectF(0, 0, width(), height()), viewAgent()->color("calculation-in-progress"));
     }
 }
 
@@ -296,8 +297,6 @@ void TimeScaleWidget2::paintEvent(QPaintEvent* evt)
     QString txt = QString("%1 ms").arg((int)(m_time_width / 2 + 0.5));
     painter.drawText(text_box, txt, Qt::AlignCenter | Qt::AlignTop);
 }
-
-
 
 void MVCrossCorrelogramsWidget2::slot_histogram_view_control_clicked()
 {
@@ -429,8 +428,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == "cross_correlograms") {
+    } else if (options.mode == "cross_correlograms") {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram CC;
@@ -438,8 +436,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == "matrix_of_cross_correlograms") {
+    } else if (options.mode == "matrix_of_cross_correlograms") {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram CC;
@@ -487,16 +484,13 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
         int index = HV->property("index").toInt();
         if (m_correlograms.value(index).k1 == q->viewAgent()->currentCluster()) {
             HV->setCurrent(true);
-        }
-        else {
+        } else {
             HV->setCurrent(false);
         }
         if (selected_clusters.contains(m_correlograms.value(index).k1)) {
             HV->setSelected(true);
-        }
-        else {
+        } else {
             HV->setSelected(false);
         }
     }
 }
-

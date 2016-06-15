@@ -46,10 +46,11 @@ public:
     void setSelectedLabels2(const QList<int>& L);
     QImage renderImage(int W = 0, int H = 0);
 
-    void paintEvent(QPaintEvent *evt);
+    void paintEvent(QPaintEvent* evt);
 signals:
     void histogramActivated();
-private slots:
+private
+slots:
     void slot_histogram_view_control_clicked();
     void slot_histogram_view_clicked();
     void slot_histogram_view_activated();

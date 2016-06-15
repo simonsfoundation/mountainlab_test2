@@ -15,6 +15,7 @@
 
 /// TODO (HIGH) merge should apply to all widgets
 /// TODO (HIGH) put firings, firings_filtered, timeseries into MVViewAgent
+/// TODO handle case where there are too many clips to want to download
 
 class MVClipsWidgetComputer : public ComputationThread {
 public:

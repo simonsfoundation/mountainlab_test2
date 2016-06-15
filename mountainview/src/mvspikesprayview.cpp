@@ -113,7 +113,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         QFont font = painter.font();
         font.setPointSize(20);
         painter.setFont(font);
-        painter.fillRect(QRectF(0, 0, width(), height()),viewAgent()->color("calculation-in-progress"));
+        painter.fillRect(QRectF(0, 0, width(), height()), viewAgent()->color("calculation-in-progress"));
         painter.drawText(QRectF(0, 0, width(), height()), Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
         return;
     }
@@ -315,7 +315,7 @@ void MVSpikeSprayComputer::compute()
     task.setProgress(0.75);
 
     DiskReadMda firings2(firings_out_path);
-    task.log(QString("%1x%2 from %3x%4").arg(firings2.N1()).arg(firings2.N2()).arg(firings.N1()).arg(firings.N2()));
+    task.log(QString("%1x%2 from %3x%4 (%5x%6x%7) (%8)").arg(firings2.N1()).arg(firings2.N2()).arg(firings.N1()).arg(firings.N2()).arg(clips0.N1()).arg(clips0.N2()).arg(clips0.N3()).arg(clips_to_render.N3()));
     Mda firings0;
     firings2.readChunk(firings0, 0, 0, firings2.N1(), firings2.N2());
     task.setProgress(0.9);

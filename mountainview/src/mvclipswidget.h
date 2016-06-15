@@ -26,9 +26,10 @@ public:
 
     void setLabelsToUse(const QList<int>& labels);
 
-    void paintEvent(QPaintEvent *evt);
+    void paintEvent(QPaintEvent* evt);
 signals:
-private slots:
+private
+slots:
 
 private:
     MVClipsWidgetPrivate* d;
