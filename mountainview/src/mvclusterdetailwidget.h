@@ -28,9 +28,6 @@ public:
     //void setMscmdServerUrl(const QString& url);
     void setMLProxyUrl(const QString& url);
 
-    ///So we can display the firing rate (events per second)
-    void setSampleRate(double freq);
-
     ///To make the color scheme uniform.
     void setColors(const QMap<QString, QColor>& colors);
 

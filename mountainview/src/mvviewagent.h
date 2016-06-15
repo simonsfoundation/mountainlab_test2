@@ -27,11 +27,6 @@ struct MVRange {
     double min, max;
 };
 
-struct TimeseriesStruct {
-    QString name;
-    DiskReadMda data;
-};
-
 class MVViewAgentPrivate;
 class MVViewAgent : public QObject {
     Q_OBJECT
@@ -40,44 +35,55 @@ public:
     MVViewAgent();
     virtual ~MVViewAgent();
 
+    /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;
     QMap<int, QJsonObject> clusterAttributes() const;
+    void setClusterMerge(const ClusterMerge& CM);
+    void setClusterAttributes(const QMap<int, QJsonObject>& A);
+
+    /////////////////////////////////////////////////
     MVEvent currentEvent() const;
     int currentCluster() const;
     QList<int> selectedClusters() const;
     double currentTimepoint() const;
     MVRange currentTimeRange() const;
-    QColor clusterColor(int k) const;
-    QColor channelColor(int m) const;
-    QList<QColor> channelColors() const;
-    DiskReadMda timeseries();
-    QString timeseriesName();
-    QStringList timeseriesNames() const;
-    DiskReadMda firings();
-    double sampleRate() const;
-    DiskReadMda filteredFirings();
-    QVariant option(QString name, QVariant default_val = QVariant());
-
-    void addTimeseries(TimeseriesStruct timeseries);
-    void setCurrentTimeseriesName(QString name);
-    void setFirings(const DiskReadMda& F);
-    void setSampleRate(double sample_rate);
-    void setClusterMerge(const ClusterMerge& CM);
-    void setClusterAttributes(const QMap<int, QJsonObject>& A);
     void setCurrentEvent(const MVEvent& evt);
     void setCurrentCluster(int k);
     void setSelectedClusters(const QList<int>& ks);
     void setCurrentTimepoint(double tp);
     void setCurrentTimeRange(const MVRange& range);
-    void setClusterColors(const QList<QColor>& colors);
-    void setChannelColors(const QList<QColor>& colors);
-    void setOption(QString name, QVariant value);
-
     void clickCluster(int k, Qt::KeyboardModifiers modifiers);
 
+    /////////////////////////////////////////////////
+    QColor clusterColor(int k) const;
+    QColor channelColor(int m) const;
+    QList<QColor> channelColors() const;
+    QList<QColor> clusterColors() const;
+    void setClusterColors(const QList<QColor>& colors);
+    void setChannelColors(const QList<QColor>& colors);
+
+    /////////////////////////////////////////////////
+    DiskReadMda currentTimeseries();
+    QString currentTimeseriesName();
+    QStringList timeseriesNames() const;
+    void addTimeseries(QString name, DiskReadMda timeseries);
+    void setCurrentTimeseriesName(QString name);
+
+    /////////////////////////////////////////////////
+    DiskReadMda firings();
+    void setFirings(const DiskReadMda& F);
+
+    /////////////////////////////////////////////////
+    double sampleRate() const;
+    void setSampleRate(double sample_rate);
+
+    /////////////////////////////////////////////////
+    QVariant option(QString name, QVariant default_val = QVariant());
+    void setOption(QString name, QVariant value);
+
 signals:
-    void timeseriesChanged();
-    void timeseriesChoicesChanged();
+    void currentTimeseriesChanged();
+    void timeseriesNamesChanged();
     void firingsChanged();
     void clusterMergeChanged();
     void clusterAttributesChanged();

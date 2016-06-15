@@ -194,8 +194,8 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
     }
 
     QObject::connect(d->m_view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
-    QObject::connect(d->m_view_agent, SIGNAL(timeseriesChanged()), this, SLOT(slot_update_timeseries_box()));
-    QObject::connect(d->m_view_agent, SIGNAL(timeseriesChoicesChanged()), this, SLOT(slot_update_timeseries_box()));
+    QObject::connect(d->m_view_agent, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_update_timeseries_box()));
+    QObject::connect(d->m_view_agent, SIGNAL(timeseriesNamesChanged()), this, SLOT(slot_update_timeseries_box()));
 
     slot_update_enabled_controls();
 
@@ -259,7 +259,7 @@ void MVControlPanel::slot_update_timeseries_box()
 {
     QStringList names = d->m_view_agent->timeseriesNames();
     d->m_controls.set_parameter_choices("timeseries", names);
-    d->m_controls.set_parameter_value("timeseries", d->m_view_agent->timeseriesName());
+    d->m_controls.set_parameter_value("timeseries", d->m_view_agent->currentTimeseriesName());
 }
 
 void ControlManager::add_group_label(QGridLayout* G, QString label)

@@ -61,7 +61,7 @@ MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
 
     connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
 
-    connect(view_agent, SIGNAL(timeseriesChanged()), this, SLOT(slot_restart_calculation()));
+    connect(view_agent, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_restart_calculation()));
     connect(view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_restart_calculation()));
     connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
 }
@@ -194,7 +194,7 @@ void MVClipsWidgetPrivate::start_computation()
     //m_computer.mscmdserver_url = m_mscmdserver_url;
     m_computer.mlproxy_url = m_mlproxy_url;
     m_computer.firings = m_view_agent->firings();
-    m_computer.timeseries = m_view_agent->timeseries();
+    m_computer.timeseries = m_view_agent->currentTimeseries();
     m_computer.labels_to_use = m_labels_to_use;
     m_computer.clip_size = m_view_agent->option("clip_size").toInt();
     m_computer.startComputation();

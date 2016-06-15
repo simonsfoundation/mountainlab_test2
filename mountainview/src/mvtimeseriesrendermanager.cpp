@@ -66,6 +66,13 @@ MVTimeSeriesRenderManager::~MVTimeSeriesRenderManager()
     delete d;
 }
 
+void MVTimeSeriesRenderManager::clear()
+{
+    d->m_image_panels.clear();
+    d->m_running_panel_codes.clear();
+    d->m_thread_manager.clear();
+}
+
 void MVTimeSeriesRenderManager::setMultiScaleTimeSeries(MultiScaleTimeSeries* ts)
 {
     d->m_ts = ts;
@@ -411,6 +418,16 @@ void ThreadManager::stop(QString id)
     if (m_running_threads.contains(id)) {
         m_running_threads[id]->requestInterruption();
     }
+}
+
+void ThreadManager::clear()
+{
+    QStringList keys=m_running_threads.keys();
+    foreach (QString key,keys) {
+        this->stop(key);
+    }
+    m_running_threads.clear();
+    m_queued_threads.clear();
 }
 
 void ThreadManager::slot_timer()

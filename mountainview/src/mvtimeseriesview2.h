@@ -24,7 +24,6 @@ public:
 
     void paintContent(QPainter* painter);
 
-    void setTimeseries(const DiskReadMda& X);
     void setMLProxyUrl(const QString& url);
 
     void setAmplitudeFactor(double factor); // display range will be between -1/factor and 1/factor, but not clipped (thus channel plots may overlap)
@@ -36,6 +35,9 @@ public:
 
     void resizeEvent(QResizeEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
+
+private slots:
+    void slot_current_timeseries_changed();
 
 private:
     MVTimeSeriesView2Private* d;

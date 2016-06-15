@@ -24,7 +24,6 @@ public:
     friend class SpikeSpyWidgetPrivate;
     SpikeSpyWidget(MVViewAgent* view_agent);
     virtual ~SpikeSpyWidget();
-    void setSampleRate(double samplerate);
     void addView(const SpikeSpyViewData& data);
 
 private slots:

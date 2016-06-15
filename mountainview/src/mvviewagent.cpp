@@ -7,6 +7,11 @@
 #include "mvviewagent.h"
 #include <QDebug>
 
+struct TimeseriesStruct {
+    QString name;
+    DiskReadMda data;
+};
+
 class MVViewAgentPrivate {
 public:
     MVViewAgent* q;
@@ -74,14 +79,19 @@ QList<QColor> MVViewAgent::channelColors() const
     return d->m_channel_colors;
 }
 
-DiskReadMda MVViewAgent::timeseries()
+QList<QColor> MVViewAgent::clusterColors() const
+{
+    return d->m_cluster_colors;
+}
+
+DiskReadMda MVViewAgent::currentTimeseries()
 {
     return d->m_timeseries.value(d->m_current_timeseries_name).data;
 }
 
-QString MVViewAgent::timeseriesName()
+QString MVViewAgent::currentTimeseriesName()
 {
-    return d->m_timeseries.value(d->m_current_timeseries_name).name;
+    return d->m_current_timeseries_name;
 }
 
 QColor MVViewAgent::clusterColor(int k) const
@@ -107,6 +117,15 @@ QStringList MVViewAgent::timeseriesNames() const
     return d->m_timeseries.keys();
 }
 
+void MVViewAgent::addTimeseries(QString name, DiskReadMda timeseries)
+{
+    TimeseriesStruct X;
+    X.data = timeseries;
+    X.name = name;
+    d->m_timeseries[name] = X;
+    emit this->timeseriesNamesChanged();
+}
+
 DiskReadMda MVViewAgent::firings()
 {
     return d->m_firings;
@@ -117,24 +136,9 @@ double MVViewAgent::sampleRate() const
     return d->m_sample_rate;
 }
 
-DiskReadMda MVViewAgent::filteredFirings()
-{
-    /// TODO actually return the filtered firings
-    return firings();
-}
-
 QVariant MVViewAgent::option(QString name, QVariant default_val)
 {
     return d->m_options.value(name, default_val);
-}
-
-void MVViewAgent::addTimeseries(TimeseriesStruct timeseries)
-{
-    d->m_timeseries[timeseries.name] = timeseries;
-    if (d->m_current_timeseries_name == timeseries.name) {
-        emit this->timeseriesChanged();
-    }
-    emit this->timeseriesChoicesChanged();
 }
 
 void MVViewAgent::setCurrentTimeseriesName(QString name)
@@ -142,7 +146,7 @@ void MVViewAgent::setCurrentTimeseriesName(QString name)
     if (d->m_current_timeseries_name == name)
         return;
     d->m_current_timeseries_name = name;
-    emit this->timeseriesChanged();
+    emit this->currentTimeseriesChanged();
 }
 
 void MVViewAgent::setFirings(const DiskReadMda& F)

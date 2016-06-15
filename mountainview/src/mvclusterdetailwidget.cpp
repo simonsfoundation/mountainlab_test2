@@ -154,7 +154,6 @@ public:
 
     //QString m_mscmdserver_url;
     QString m_mlproxy_url;
-    double m_samplerate;
 
     QList<ClusterData> m_cluster_data;
 
@@ -201,7 +200,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
     d->m_progress_dialog = 0;
     d->m_vscale_factor = 2;
     d->m_total_time_sec = 1;
-    d->m_samplerate = 0;
     d->m_hovered_k = -1;
     d->m_space_ratio = 50;
     d->m_scroll_x = 0;
@@ -224,7 +222,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(update()));
 
     QObject::connect(view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_recalculate()));
-    QObject::connect(view_agent, SIGNAL(timeseriesChanged()), this, SLOT(slot_recalculate()));
+    QObject::connect(view_agent, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_recalculate()));
     QObject::connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
 
     this->setFocusPolicy(Qt::StrongFocus);
@@ -265,13 +263,6 @@ void MVClusterDetailWidget::setMscmdServerUrl(const QString& url)
 void MVClusterDetailWidget::setMLProxyUrl(const QString& url)
 {
     d->m_mlproxy_url = url;
-}
-
-void MVClusterDetailWidget::setSampleRate(double freq)
-{
-    d->m_samplerate = freq;
-    d->compute_total_time();
-    this->update();
 }
 
 void MVClusterDetailWidget::setColors(const QMap<QString, QColor>& colors)
@@ -603,7 +594,7 @@ void MVClusterDetailWidget::slot_view_agent_option_changed(QString name)
 
 void MVClusterDetailWidgetPrivate::compute_total_time()
 {
-    m_total_time_sec = m_view_agent->timeseries().N2() / m_samplerate;
+    m_total_time_sec = m_view_agent->currentTimeseries().N2() / m_view_agent->sampleRate();
 }
 
 void MVClusterDetailWidgetPrivate::set_hovered_k(int k)
@@ -993,9 +984,10 @@ void MVClusterDetailWidgetPrivate::toggle_stdev_shading()
 void MVClusterDetailWidgetPrivate::start_calculation()
 {
     m_calculator.stopComputation();
+    compute_total_time();
     //m_calculator.mscmdserver_url = m_mscmdserver_url;
     m_calculator.mlproxy_url = m_mlproxy_url;
-    m_calculator.timeseries = m_view_agent->timeseries();
+    m_calculator.timeseries = m_view_agent->currentTimeseries();
     m_calculator.firings = m_view_agent->firings();
     m_calculator.clip_size = m_view_agent->option("clip_size", 100).toInt();
     qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << m_calculator.timeseries.path() << m_calculator.firings.path() << m_calculator.clip_size << "SSSSSSSSSSSSSSSSSSSSSSSSSS";

@@ -220,10 +220,7 @@ void MVMainWindow::setMVFile(MVFile ff)
 
     qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << timeseries_names;
     foreach (QString name, timeseries_names) {
-        TimeseriesStruct X;
-        X.name = name;
-        X.data = DiskReadMda(d->m_mv_file.timeseriesPathResolved(name));
-        d->m_view_agent->addTimeseries(X);
+        d->m_view_agent->addTimeseries(name, DiskReadMda(d->m_mv_file.timeseriesPathResolved(name)));
     }
 
     d->m_view_agent->setOption("clip_size", d->m_mv_file.viewOptions()["clip_size"].toInt());
@@ -237,7 +234,7 @@ void MVMainWindow::setMVFile(MVFile ff)
     else {
         d->m_view_agent->setCurrentTimeseriesName(timeseries_names.value(0));
     }
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << d->m_view_agent->timeseriesName();
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << d->m_view_agent->currentTimeseriesName();
 
     {
         QJsonObject ann0 = d->m_mv_file.annotations();
@@ -278,7 +275,7 @@ void MVMainWindow::writeMVFile(const QString& mv_fname)
     view_options["clip_size"] = d->m_view_agent->option("clip_size").toInt();
     view_options["cc_max_dt_msec"] = d->m_view_agent->option("cc_max_dt_msec").toDouble();
     d->m_mv_file.setEventFilter(d->m_control_panel->eventFilter().toJsonObject());
-    d->m_mv_file.setCurrentTimeseriesName(d->m_view_agent->timeseriesName());
+    d->m_mv_file.setCurrentTimeseriesName(d->m_view_agent->currentTimeseriesName());
 
     QJsonObject cluster_attributes;
     QMap<int, QJsonObject> CA = d->m_view_agent->clusterAttributes();
@@ -588,12 +585,10 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlogra
 
 MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "OOOOOOOOOOOOOOOOOOOOOOOOOOO" << m_view_agent->timeseriesName() << m_view_agent->timeseries().path() << m_view_agent->firings().path();
     /// TODO move sample rate into mvviewagent
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
     set_tool_button_menu(X);
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
-    X->setSampleRate(m_mv_file.sampleRate());
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
     X->setProperty("widget_type", "cluster_details");
     add_tab(X, QString("Details"));
@@ -603,7 +598,6 @@ MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 void MVMainWindowPrivate::open_timeseries()
 {
     MVTimeSeriesView2* X = new MVTimeSeriesView2(m_view_agent);
-    X->setSampleRate(m_mv_file.sampleRate());
     X->setProperty("widget_type", "mvtimeseries");
     X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     add_tab(X, QString("Timeseries"));
@@ -711,8 +705,7 @@ void MVMainWindowPrivate::open_firing_events()
     //MVFiringEventView* X = new MVFiringEventView;
     MVFiringEventView2* X = new MVFiringEventView2(m_view_agent);
     X->setLabelsToUse(ks.toSet());
-    X->setNumTimepoints(m_view_agent->timeseries().N2());
-    X->setSampleRate(m_mv_file.sampleRate());
+    X->setNumTimepoints(m_view_agent->currentTimeseries().N2());
     X->setProperty("widget_type", "firing_events");
     /// TODO pass this in a method
     //X->setProperty("ks", int_list_to_string_list(ks));
