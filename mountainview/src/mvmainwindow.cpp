@@ -207,7 +207,6 @@ void MVMainWindow::setMVFile(MVFile ff)
     /// TODO need to clear out the view_agent here in case this gets called twice
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" << timeseries_names;
     foreach (QString name, timeseries_names) {
         d->m_view_agent->addTimeseries(name, DiskReadMda(d->m_mv_file.timeseriesPathResolved(name)));
     }
@@ -223,7 +222,6 @@ void MVMainWindow::setMVFile(MVFile ff)
     else {
         d->m_view_agent->setCurrentTimeseriesName(timeseries_names.value(0));
     }
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << d->m_view_agent->currentTimeseriesName();
 
     {
         QJsonObject ann0 = d->m_mv_file.annotations();
