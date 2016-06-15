@@ -15,6 +15,7 @@
 #include "msmisc.h"
 
 /// TODO spike spray should respond to mouse wheel and show current position with marker
+/// TODO much more responsive rendering of spike spray
 
 class MVSpikeSprayComputer {
 public:
@@ -112,6 +113,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         QFont font = painter.font();
         font.setPointSize(20);
         painter.setFont(font);
+        painter.fillRect(QRectF(0, 0, width(), height()),viewAgent()->color("calculation-in-progress"));
         painter.drawText(QRectF(0, 0, width(), height()), Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
         return;
     }

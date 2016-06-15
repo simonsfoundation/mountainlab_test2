@@ -883,6 +883,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
         QFont font = painter.font();
         font.setPointSize(20);
         painter.setFont(font);
+        painter.fillRect(QRectF(0, 0, q->width(), q->height()),q->viewAgent()->color("calculation-in-progress"));
         painter.drawText(QRectF(left_margin, 0, W, H), Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
     }
 }

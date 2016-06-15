@@ -90,6 +90,7 @@ void MVAbstractView::slot_calculation_finished()
         return;
     }
     this->onCalculationFinished();
+    this->update();
     emit this->calculationFinished();
 }
 

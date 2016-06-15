@@ -21,7 +21,6 @@ public:
     //input
     DiskReadMda firings;
     DiskReadMda timeseries;
-    //QString mscmdserver_url;
     QString mlproxy_url;
     int clip_size;
     QList<int> labels_to_use;
@@ -40,65 +39,65 @@ public:
     QList<int> m_labels_to_use;
     MVClipsView* m_view;
     MVClipsWidgetComputer m_computer;
-    MVViewAgent* m_view_agent;
-
-    void start_computation();
 };
 
-MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
+MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent) : MVAbstractView(view_agent)
 {
     d = new MVClipsWidgetPrivate;
     d->q = this;
 
-    d->m_view_agent = view_agent;
     d->m_view = new MVClipsView(view_agent);
 
     QHBoxLayout* hlayout = new QHBoxLayout;
     hlayout->addWidget(d->m_view);
     this->setLayout(hlayout);
 
-    connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
-
-    connect(view_agent, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_restart_calculation()));
-    connect(view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_restart_calculation()));
-    connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
+    this->recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
+    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    this->recalculateOnOptionChanged("clip_size");
 }
 
 MVClipsWidget::~MVClipsWidget()
 {
-    d->m_computer.stopComputation(); // important do take care of this before things start getting destructed!
     delete d;
 }
 
-void MVClipsWidget::setLabelsToUse(const QList<int>& labels)
+void MVClipsWidget::prepareCalculation()
 {
-    d->m_labels_to_use = labels;
-    d->start_computation();
+    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
+    d->m_computer.firings = viewAgent()->firings();
+    d->m_computer.timeseries = viewAgent()->currentTimeseries();
+    d->m_computer.labels_to_use = d->m_labels_to_use;
+    d->m_computer.clip_size = viewAgent()->option("clip_size").toInt();
 }
 
-int MVClipsWidget::currentClipIndex()
+void MVClipsWidget::runCalculation()
 {
-    return d->m_view->currentClipIndex();
+    d->m_computer.compute();
 }
 
-void MVClipsWidget::slot_computation_finished()
+void MVClipsWidget::onCalculationFinished()
 {
-    d->m_computer.stopComputation(); //because I'm paranoid
     d->m_view->setClips(d->m_computer.clips);
     d->m_view->setTimes(d->m_computer.times);
     d->m_view->setLabels(d->m_computer.labels);
 }
 
-void MVClipsWidget::slot_restart_calculation()
+void MVClipsWidget::setLabelsToUse(const QList<int>& labels)
 {
-    d->start_computation();
+    d->m_labels_to_use = labels;
+    this->recalculate();
 }
 
-void MVClipsWidget::slot_view_agent_option_changed(QString name)
+void MVClipsWidget::paintEvent(QPaintEvent *evt)
 {
-    if (name == "clip_size") {
-        d->start_computation();
+    QPainter painter(this);
+    if (isCalculating()) {
+         //show that something is computing
+        painter.fillRect(QRectF(0, 0, width(), height()),viewAgent()->color("calculation-in-progress"));
     }
+
+    QWidget::paintEvent(evt);
 }
 
 void MVClipsWidgetComputer::compute()
@@ -172,15 +171,4 @@ void MVClipsWidgetComputer::compute()
         task.error(QString("Halted while reading chunk from: " + clips_path));
         return;
     }
-}
-
-void MVClipsWidgetPrivate::start_computation()
-{
-    m_computer.stopComputation();
-    m_computer.mlproxy_url = m_view_agent->mlProxyUrl();
-    m_computer.firings = m_view_agent->firings();
-    m_computer.timeseries = m_view_agent->currentTimeseries();
-    m_computer.labels_to_use = m_labels_to_use;
-    m_computer.clip_size = m_view_agent->option("clip_size").toInt();
-    m_computer.startComputation();
 }

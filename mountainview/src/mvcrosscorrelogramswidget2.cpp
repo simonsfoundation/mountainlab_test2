@@ -258,7 +258,7 @@ void MVCrossCorrelogramsWidget2::paintEvent(QPaintEvent *evt)
     QPainter painter(this);
     if (isCalculating()) {
          //show that something is computing
-        painter.fillRect(QRectF(0, 0, width(), height()),QColor(255,230,230));
+        painter.fillRect(QRectF(0, 0, width(), height()),viewAgent()->color("calculation-in-progress"));
     }
 }
 
