@@ -29,6 +29,8 @@ public:
     DiskReadMda m_firings;
     double m_sample_rate;
     QMap<QString, QVariant> m_options;
+    QString m_mlproxy_url;
+    QMap<QString, QColor> m_colors;
 };
 
 MVViewAgent::MVViewAgent()
@@ -37,6 +39,17 @@ MVViewAgent::MVViewAgent()
     d->q = this;
     d->m_current_cluster = 0;
     d->m_current_timepoint = 0;
+
+    // default colors
+    d->m_colors["background"] = QColor(240, 240, 240);
+    d->m_colors["frame1"] = QColor(245, 245, 245);
+    d->m_colors["info_text"] = QColor(80, 80, 80);
+    d->m_colors["view_background"] = QColor(245, 245, 245);
+    d->m_colors["view_background_highlighted"] = QColor(210, 230, 250);
+    d->m_colors["view_background_selected"] = QColor(220, 240, 250);
+    d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
+    d->m_colors["view_frame_selected"] = QColor(50, 20, 20);
+    d->m_colors["divider_line"] = QColor(255, 100, 150);
 }
 
 MVViewAgent::~MVViewAgent()
@@ -112,6 +125,16 @@ QColor MVViewAgent::channelColor(int m) const
     return d->m_channel_colors[m % d->m_channel_colors.count()];
 }
 
+QColor MVViewAgent::color(QString name, QColor default_color) const
+{
+    return d->m_colors.value(name, default_color);
+}
+
+QMap<QString, QColor> MVViewAgent::colors() const
+{
+    return d->m_colors;
+}
+
 QStringList MVViewAgent::timeseriesNames() const
 {
     return d->m_timeseries.keys();
@@ -158,6 +181,16 @@ void MVViewAgent::setFirings(const DiskReadMda& F)
 void MVViewAgent::setSampleRate(double sample_rate)
 {
     d->m_sample_rate = sample_rate;
+}
+
+QString MVViewAgent::mlProxyUrl() const
+{
+    return d->m_mlproxy_url;
+}
+
+void MVViewAgent::setMLProxyUrl(QString url)
+{
+    d->m_mlproxy_url = url;
 }
 
 ClusterMerge MVViewAgent::clusterMerge() const
@@ -242,6 +275,11 @@ void MVViewAgent::setClusterColors(const QList<QColor>& colors)
 void MVViewAgent::setChannelColors(const QList<QColor>& colors)
 {
     d->m_channel_colors = colors;
+}
+
+void MVViewAgent::setColors(const QMap<QString, QColor>& colors)
+{
+    d->m_colors = colors;
 }
 
 void MVViewAgent::setOption(QString name, QVariant value)

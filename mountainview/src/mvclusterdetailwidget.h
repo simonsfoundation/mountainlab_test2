@@ -25,12 +25,6 @@ public:
     MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* parent = 0);
     virtual ~MVClusterDetailWidget();
 
-    //void setMscmdServerUrl(const QString& url);
-    void setMLProxyUrl(const QString& url);
-
-    ///To make the color scheme uniform.
-    void setColors(const QMap<QString, QColor>& colors);
-
     void zoomAllTheWayOut();
 
     ///Create an image of the current view

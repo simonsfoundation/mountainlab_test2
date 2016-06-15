@@ -65,65 +65,22 @@ class ClusterView {
 public:
     friend class MVClusterDetailWidgetPrivate;
     friend class MVClusterDetailWidget;
-    ClusterView(MVClusterDetailWidget* q0, MVClusterDetailWidgetPrivate* d0)
-    {
-        q = q0;
-        d = d0;
-        m_T = 1;
-        m_highlighted = false;
-        m_hovered = false;
-        x_position_before_scaling = 0;
-        m_stdev_shading = false;
-    }
-    void setClusterData(const ClusterData& CD)
-    {
-        m_CD = CD;
-    }
-    void setAttributes(QJsonObject aa)
-    {
-        m_attributes = aa;
-    }
+    ClusterView(MVClusterDetailWidget* q0, MVClusterDetailWidgetPrivate* d0);
+    void setClusterData(const ClusterData& CD);
+    void setAttributes(QJsonObject aa);
 
-    int k()
-    {
-        return this->clusterData()->k;
-    }
-    void setChannelSpacingInfo(const ChannelSpacingInfo& csi)
-    {
-        m_csi = csi;
-        m_T = 0;
-    }
-    void setHighlighted(bool val)
-    {
-        m_highlighted = val;
-    }
-    void setHovered(bool val)
-    {
-        m_hovered = val;
-    }
-    void setSelected(bool val)
-    {
-        m_selected = val;
-    }
-    void setStdevShading(bool val)
-    {
-        m_stdev_shading = val;
-    }
-    bool stdevShading()
-    {
-        return m_stdev_shading;
-    }
+    int k();
+    void setChannelSpacingInfo(const ChannelSpacingInfo& csi);
+    void setHighlighted(bool val);
+    void setHovered(bool val);
+    void setSelected(bool val);
+    void setStdevShading(bool val);
+    bool stdevShading();
 
     void paint(QPainter* painter, QRectF rect);
     double spaceNeeded();
-    ClusterData* clusterData()
-    {
-        return &m_CD;
-    }
-    QRectF rect()
-    {
-        return m_rect;
-    }
+    ClusterData* clusterData();
+    QRectF rect();
     QPointF template_coord2pix(int m, double t, double val);
 
     MVClusterDetailWidget* q;
@@ -152,9 +109,6 @@ class MVClusterDetailWidgetPrivate {
 public:
     MVClusterDetailWidget* q;
 
-    //QString m_mscmdserver_url;
-    QString m_mlproxy_url;
-
     QList<ClusterData> m_cluster_data;
 
     double m_vscale_factor;
@@ -162,7 +116,6 @@ public:
     double m_scroll_x;
 
     QProgressDialog* m_progress_dialog;
-    QMap<QString, QColor> m_colors;
     double m_total_time_sec;
     int m_hovered_k;
     double m_anchor_x;
@@ -208,14 +161,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, QWidget* p
     d->m_anchor_view_index = -1;
     d->m_stdev_shading = false;
 
-    d->m_colors["background"] = QColor(240, 240, 240);
-    d->m_colors["frame1"] = QColor(245, 245, 245);
-    d->m_colors["info_text"] = QColor(80, 80, 80);
-    d->m_colors["view_background"] = QColor(245, 245, 245);
-    d->m_colors["view_background_highlighted"] = QColor(250, 220, 200);
-    d->m_colors["view_background_selected"] = QColor(250, 240, 230);
-    d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
-
     d->m_view_agent = view_agent;
     QObject::connect(view_agent, SIGNAL(clusterMergeChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(update()));
@@ -251,23 +196,6 @@ MVClusterDetailWidget::~MVClusterDetailWidget()
     d->m_calculator.stopComputation(); // important do take care of this before things start getting destructed!
     qDeleteAll(d->m_views);
     delete d;
-}
-
-/*
-void MVClusterDetailWidget::setMscmdServerUrl(const QString& url)
-{
-    d->m_mscmdserver_url = url;
-}
-*/
-
-void MVClusterDetailWidget::setMLProxyUrl(const QString& url)
-{
-    d->m_mlproxy_url = url;
-}
-
-void MVClusterDetailWidget::setColors(const QMap<QString, QColor>& colors)
-{
-    d->m_colors = colors;
 }
 
 bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
@@ -440,8 +368,8 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
         }
     }
 
+    /// TODO implement shift select
     /*
-
     if (evt->modifiers() & Qt::ControlModifier) {
 
         int view_index = d->find_view_index_at(pt);
@@ -708,21 +636,21 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     QRectF rect2(rect.x() + xmargin, rect.y() + ymargin, rect.width() - xmargin * 2, rect.height() - ymargin * 2);
     painter->setClipRect(rect, Qt::IntersectClip);
 
-    QColor background_color = d->m_colors["view_background"];
+    QColor background_color = d->m_view_agent->color("view_background");
     if (m_highlighted)
-        background_color = d->m_colors["view_background_highlighted"];
+        background_color = d->m_view_agent->color("view_background_highlighted");
     else if (m_selected)
-        background_color = d->m_colors["view_background_selected"];
+        background_color = d->m_view_agent->color("view_background_selected");
     else if (m_hovered)
-        background_color = d->m_colors["view_background_hovered"];
+        background_color = d->m_view_agent->color("view_background_hovered");
     painter->fillRect(rect, QColor(220, 220, 225));
     painter->fillRect(rect2, background_color);
 
     QPen pen_frame;
     pen_frame.setWidth(1);
-    pen_frame.setColor(d->m_colors["frame1"]);
+    pen_frame.setColor(d->m_view_agent->color("frame1"));
     if (m_selected)
-        pen_frame.setColor(d->m_colors["view_frame_selected"]);
+        pen_frame.setColor(d->m_view_agent->color("view_frame_selected"));
     painter->setPen(pen_frame);
     painter->drawRect(rect2);
 
@@ -823,7 +751,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         txt = QString("%1 spikes").arg(m_CD.inds.count());
         QPen pen;
         pen.setWidth(1);
-        pen.setColor(d->m_colors["info_text"]);
+        pen.setColor(d->m_view_agent->color("info_text"));
         painter->setFont(font);
         painter->setPen(pen);
         painter->drawText(RR, Qt::AlignCenter | Qt::AlignBottom, txt);
@@ -864,7 +792,7 @@ double ClusterView::spaceNeeded()
 
 void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_in)
 {
-    painter.fillRect(0, 0, W_in, H_in, m_colors["background"]);
+    painter.fillRect(0, 0, W_in, H_in, m_view_agent->color("background"));
 
     int right_margin = 10; //make some room for the icon
     int left_margin = 30; //make room for the axis
@@ -986,7 +914,7 @@ void MVClusterDetailWidgetPrivate::start_calculation()
     m_calculator.stopComputation();
     compute_total_time();
     //m_calculator.mscmdserver_url = m_mscmdserver_url;
-    m_calculator.mlproxy_url = m_mlproxy_url;
+    m_calculator.mlproxy_url = m_view_agent->mlProxyUrl();
     m_calculator.timeseries = m_view_agent->currentTimeseries();
     m_calculator.firings = m_view_agent->firings();
     m_calculator.clip_size = m_view_agent->option("clip_size", 100).toInt();
@@ -1240,4 +1168,62 @@ void MVClusterDetailWidgetCalculator::compute()
             cluster_data << CD;
         }
     }
+}
+
+ClusterView::ClusterView(MVClusterDetailWidget* q0, MVClusterDetailWidgetPrivate* d0)
+{
+    q = q0;
+    d = d0;
+    m_T = 1;
+    m_highlighted = false;
+    m_hovered = false;
+    x_position_before_scaling = 0;
+    m_stdev_shading = false;
+}
+void ClusterView::setClusterData(const ClusterData& CD)
+{
+    m_CD = CD;
+}
+void ClusterView::setAttributes(QJsonObject aa)
+{
+    m_attributes = aa;
+}
+
+int ClusterView::k()
+{
+    return this->clusterData()->k;
+}
+void ClusterView::setChannelSpacingInfo(const ChannelSpacingInfo& csi)
+{
+    m_csi = csi;
+    m_T = 0;
+}
+void ClusterView::setHighlighted(bool val)
+{
+    m_highlighted = val;
+}
+void ClusterView::setHovered(bool val)
+{
+    m_hovered = val;
+}
+void ClusterView::setSelected(bool val)
+{
+    m_selected = val;
+}
+void ClusterView::setStdevShading(bool val)
+{
+    m_stdev_shading = val;
+}
+bool ClusterView::stdevShading()
+{
+    return m_stdev_shading;
+}
+
+ClusterData* ClusterView::clusterData()
+{
+    return &m_CD;
+}
+QRectF ClusterView::rect()
+{
+    return m_rect;
 }

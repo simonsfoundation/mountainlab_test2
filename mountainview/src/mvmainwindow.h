@@ -29,10 +29,10 @@ public:
     virtual ~MVMainWindow();
     void setCurrentTimeseriesName(const QString& name);
     void setDefaultInitialization();
-    void setEpochs(const QList<Epoch>& epochs);
-    void setMLProxyUrl(const QString& url);
-    void setClusterMerge(ClusterMerge CM);
+    void setEpochs(const QList<Epoch>& epochs); //put in view agent
+    void setClusterMerge(ClusterMerge CM); //put in view agent
 
+    /// TODO replace these by load and save
     void setMVFile(MVFile mv_file);
     void writeMVFile(const QString& mv_fname);
 

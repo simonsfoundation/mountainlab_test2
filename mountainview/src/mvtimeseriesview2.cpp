@@ -29,6 +29,7 @@ public:
     double m_amplitude_factor;
     QList<mvtsv_channel> m_channels;
     bool m_layout_needed;
+    bool m_time_range_has_been_initialized;
 
     MVTimeSeriesRenderManager m_render_manager;
 
@@ -48,7 +49,9 @@ MVTimeSeriesView2::MVTimeSeriesView2(MVViewAgent* view_agent)
 
     d->m_amplitude_factor = 1.0;
     d->m_render_manager.setMultiScaleTimeSeries(&d->m_msts);
+    d->m_render_manager.setChannelColors(view_agent->channelColors());
     d->m_layout_needed = true;
+    d->m_time_range_has_been_initialized = false;
 
     QObject::connect(&d->m_render_manager, SIGNAL(updated()), this, SLOT(update()));
     QObject::connect(d->m_view_agent, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_current_timeseries_changed()));
@@ -59,12 +62,6 @@ MVTimeSeriesView2::MVTimeSeriesView2(MVViewAgent* view_agent)
 MVTimeSeriesView2::~MVTimeSeriesView2()
 {
     delete d;
-}
-
-void MVTimeSeriesView2::setMLProxyUrl(const QString& url)
-{
-    d->m_msts.setMLProxyUrl(url);
-    update();
 }
 
 double MVTimeSeriesView2::amplitudeFactor() const
@@ -173,9 +170,13 @@ void MVTimeSeriesView2::slot_current_timeseries_changed()
 {
     DiskReadMda TS = d->m_view_agent->currentTimeseries();
     this->setNumTimepoints(TS.N2());
+    if (!d->m_time_range_has_been_initialized) {
+        this->setTimeRange(MVRange(0, TS.N2() - 1));
+        d->m_time_range_has_been_initialized = true;
+    }
     d->m_msts.setData(TS);
     d->m_layout_needed = true;
-    this->setTimeRange(MVRange(0, TS.N2() - 1));
+
     this->autoSetAmplitudeFactor();
     update();
 }

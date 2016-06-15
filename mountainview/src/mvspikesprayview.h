@@ -20,15 +20,11 @@ public:
     friend class MVSpikeSprayViewPrivate;
     MVSpikeSprayView(MVViewAgent* view_agent);
     virtual ~MVSpikeSprayView();
-
-    void setMLProxyUrl(const QString& url);
-
-    void setTimeseries(const DiskReadMda& X);
-    void setFirings(const DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
-    void setClipSize(int clip_size);
 private slots:
     void slot_computation_finished();
+    void slot_view_agent_option_changed(QString name);
+    void slot_restart_calculation();
 
 protected:
     void paintEvent(QPaintEvent* evt);

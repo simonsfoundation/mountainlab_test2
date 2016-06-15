@@ -168,17 +168,6 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     vlayout->addWidget(status_bar);
     this->setLayout(vlayout);
 
-    d->m_colors["background"] = QColor(240, 240, 240);
-    d->m_colors["frame1"] = QColor(245, 245, 245);
-    d->m_colors["info_text"] = QColor(80, 80, 80);
-    d->m_colors["view_background"] = QColor(245, 245, 245);
-    d->m_colors["view_background_highlighted"] = QColor(210, 230, 250);
-    d->m_colors["view_background_selected"] = QColor(220, 240, 250);
-    d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
-
-    d->m_colors["view_frame_selected"] = QColor(50, 20, 20);
-    d->m_colors["divider_line"] = QColor(255, 100, 150);
-
     //update which buttons are enabled/disabled
     slot_update_buttons();
     connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_buttons()));
@@ -417,17 +406,6 @@ void MVMainWindow::slot_update_buttons()
 }
 
 /*
-void MVMainWindowPrivate::start_shell_split_and_event_filter()
-{
-    m_calculator.stopComputation();
-    m_calculator.m_evt_filter = m_control_panel->eventFilter();
-    m_calculator.m_firings_original = m_firings_original;
-    m_calculator.m_mlproxy_url = m_mv_file.mlproxyUrl();
-    m_calculator.startComputation();
-}
-*/
-
-/*
 void MVMainWindow::slot_calculator_finished()
 {
     //d->update_cross_correlograms();
@@ -588,7 +566,6 @@ MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
     /// TODO move sample rate into mvviewagent
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
     set_tool_button_menu(X);
-    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
     X->setProperty("widget_type", "cluster_details");
     add_tab(X, QString("Details"));
@@ -599,7 +576,6 @@ void MVMainWindowPrivate::open_timeseries()
 {
     MVTimeSeriesView2* X = new MVTimeSeriesView2(m_view_agent);
     X->setProperty("widget_type", "mvtimeseries");
-    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     add_tab(X, QString("Timeseries"));
 }
 
@@ -613,8 +589,6 @@ void MVMainWindowPrivate::open_clips()
     }
 
     MVClipsWidget* X = new MVClipsWidget(m_view_agent);
-    //X->setMscmdServerUrl(m_mscmdserver_url);
-    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "clips");
     X->setLabelsToUse(ks);
     /// TODO, pass this in a method
@@ -639,7 +613,6 @@ void MVMainWindowPrivate::open_pca_features()
     }
     MVClusterWidget* X = new MVClusterWidget(m_view_agent);
     X->setFeatureMode("pca");
-    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "clusters");
     /// TODO pass this in a method
     //X->setProperty("ks", int_list_to_string_list(ks));
@@ -672,7 +645,6 @@ void MVMainWindowPrivate::open_channel_features()
     }
     MVClusterWidget* X = new MVClusterWidget(m_view_agent);
     X->setFeatureMode("channels");
-    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "clusters");
     /// TODO pass this in a method
     //X->setProperty("ks", int_list_to_string_list(ks));
@@ -689,7 +661,6 @@ void MVMainWindowPrivate::open_spike_spray()
         return;
     }
     MVSpikeSprayView* X = new MVSpikeSprayView(m_view_agent);
-    X->setMLProxyUrl(m_mv_file.mlproxyUrl());
     X->setProperty("widget_type", "spike_spray");
     X->setLabelsToUse(ks);
     add_tab(X, QString("Spike Spray"));
