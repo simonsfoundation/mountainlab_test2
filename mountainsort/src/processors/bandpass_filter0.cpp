@@ -82,14 +82,14 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
                 num_timepoints_handled += qMin(chunk_size, N - timepoint);
                 if ((timer_status.elapsed() > 5000) || (num_timepoints_handled == N) || (timepoint == 0)) {
                     printf("%ld/%ld (%d%%) - Elapsed(s): RC:%g, BPF:%g, GC:%g, WC:%g, Total:%g, %d threads\n",
-                           num_timepoints_handled, N,
-                           (int)(num_timepoints_handled * 1.0 / N * 100),
-                           elapsed_times["readChunk"] * 1.0 / 1000,
-                           elapsed_times["do_bandpass_filter0"] * 1.0 / 1000,
-                           elapsed_times["getChunk"] * 1.0 / 1000,
-                           elapsed_times["writeChunk"] * 1.0 / 1000,
-                           timer_total.elapsed() * 1.0 / 1000,
-                           omp_get_num_threads());
+                        num_timepoints_handled, N,
+                        (int)(num_timepoints_handled * 1.0 / N * 100),
+                        elapsed_times["readChunk"] * 1.0 / 1000,
+                        elapsed_times["do_bandpass_filter0"] * 1.0 / 1000,
+                        elapsed_times["getChunk"] * 1.0 / 1000,
+                        elapsed_times["writeChunk"] * 1.0 / 1000,
+                        timer_total.elapsed() * 1.0 / 1000,
+                        omp_get_num_threads());
                     timer_status.restart();
                 }
             }
@@ -313,26 +313,26 @@ void define_kernel(int N, double* kernel, double samplefreq, double freq_min, do
 {
     // Matches ahb's code /matlab/processors/ms_bandpass_filter.m
     // improved ahb, changing tanh to erf, correct -3dB pts  6/14/16
-    double T = N / samplefreq;     // total time
-    double df = 1 / T;             // frequency grid
-    double relwid = 3.0;           // relative bottom-end roll-off width param, kills low freqs by factor 1e-5.
+    double T = N / samplefreq; // total time
+    double df = 1 / T; // frequency grid
+    double relwid = 3.0; // relative bottom-end roll-off width param, kills low freqs by factor 1e-5.
 
-    printf("filter params: %.15g %.15g %.15g \n",freq_min,freq_max,freq_wid);  // debug
-    freq_wid = 1000.0;     // *** why not correctly read in? override hack
+    //printf("filter params: %.15g %.15g %.15g \n", freq_min, freq_max, freq_wid); // debug
+    //freq_wid = 1000.0; // *** why not correctly read in? override hack
 
     for (int i = 0; i < N; i++) {
-      const double fgrid = (i <= (N + 1) / 2) ? df * i : df * (i - N);   // why const? (ahb)
-      const double absf = fabs(fgrid);
-      double val = 1.0;
-      if (freq_min != 0) { // (suggested by ahb) added on 3/3/16 by jfm
-	if (i==0)
-	  val = 0.0;        // kill DC part exactly - ahb
-	else
-	  val *= (1 + erf(relwid * (absf - freq_min) / freq_min)) / 2;
-      }
-      if (freq_max != 0) {  // added on 3/3/16 by jfm
-	val *= (1 - erf((absf - freq_max) / freq_wid)) / 2;
-      }
-      kernel[i] = sqrt(val);    // note sqrt of filter func to apply to spectral intensity not ampl
+        const double fgrid = (i <= (N + 1) / 2) ? df * i : df * (i - N); // why const? (ahb)
+        const double absf = fabs(fgrid);
+        double val = 1.0;
+        if (freq_min != 0) { // (suggested by ahb) added on 3/3/16 by jfm
+            if (i == 0)
+                val = 0.0; // kill DC part exactly - ahb
+            else
+                val *= (1 + erf(relwid * (absf - freq_min) / freq_min)) / 2;
+        }
+        if (freq_max != 0) { // added on 3/3/16 by jfm
+            val *= (1 - erf((absf - freq_max) / freq_wid)) / 2;
+        }
+        kernel[i] = sqrt(val); // note sqrt of filter func to apply to spectral intensity not ampl
     }
 }
