@@ -14,7 +14,7 @@
 #include "mlutils.h"
 #include "msmisc.h"
 
-class MVSpikeSprayComputer : public ComputationThread {
+class MVSpikeSprayComputer {
 public:
     //input
     DiskReadMda timeseries;
@@ -43,13 +43,12 @@ public:
     QList<int> m_labels_to_render;
     MVSpikeSprayComputer m_computer;
 
-    void schedule_compute();
     void render_clip(QPainter* painter, long M, long T, double* ptr, QColor col);
     QColor get_label_color(int label);
     QPointF coord2pix(int m, double t, double val);
 };
 
-MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent)
+MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent) : MVAbstractView(view_agent)
 {
     d = new MVSpikeSprayViewPrivate;
     d->q = this;
@@ -57,12 +56,11 @@ MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent)
     d->m_amplitude_factor = 0;
     d->m_num_channels = 1;
 
-    QObject::connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
+    recalculateOnOptionChanged("clip_size");
+    recalculateOn(viewAgent(),SIGNAL(timeseriesNamesChanged()));
+    recalculateOn(viewAgent(),SIGNAL(firingsChanged()));
 
-    QObject::connect(d->m_view_agent, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_restart_calculation()));
-    QObject::connect(d->m_view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_restart_calculation()));
-    QObject::connect(d->m_view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
-
+    /// TODO should we put this in the abstract view?
     this->setFocusPolicy(Qt::StrongFocus);
 }
 
@@ -74,37 +72,30 @@ MVSpikeSprayView::~MVSpikeSprayView()
 void MVSpikeSprayView::setLabelsToUse(const QList<int>& labels)
 {
     d->m_labels_to_use = labels;
-    slot_restart_calculation();
+    recalculate();
 }
 
-void MVSpikeSprayView::slot_computation_finished()
+void MVSpikeSprayView::prepareCalculation()
 {
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << "FFFFFFFFFFFFFFFFF";
-    d->m_computer.stopComputation(); //because I'm paranoid
-    d->m_clips_to_render = d->m_computer.clips_to_render;
-    d->m_labels_to_render = d->m_computer.labels_to_render;
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << d->m_labels_to_render.count() << d->m_clips_to_render.N1() << d->m_clips_to_render.N2() << d->m_clips_to_render.N3();
-    update();
-}
-
-void MVSpikeSprayView::slot_view_agent_option_changed(QString name)
-{
-    if (name == "clip_size")
-        slot_restart_calculation();
-}
-
-void MVSpikeSprayView::slot_restart_calculation()
-{
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << "RRRRRRRRRRRRRRRRRRRRRRRRR";
     d->m_num_channels = d->m_view_agent->currentTimeseries().N1(); //important for rendering
     d->m_labels_to_render.clear();
-    d->m_computer.stopComputation();
     d->m_computer.mlproxy_url = d->m_view_agent->mlProxyUrl();
     d->m_computer.timeseries = d->m_view_agent->currentTimeseries();
     d->m_computer.firings = d->m_view_agent->firings();
     d->m_computer.labels_to_use = d->m_labels_to_use;
     d->m_computer.clip_size = d->m_view_agent->option("clip_size").toInt();
-    d->m_computer.startComputation();
+}
+
+void MVSpikeSprayView::runCalculation()
+{
+    d->m_computer.compute();
+}
+
+void MVSpikeSprayView::onCalculationFinished()
+{
+    d->m_clips_to_render = d->m_computer.clips_to_render;
+    d->m_labels_to_render = d->m_computer.labels_to_render;
+    update();
 }
 
 void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
@@ -116,9 +107,6 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
 
     /// TODO (LOW) this should be a configured color to match the cluster view
     painter.fillRect(0, 0, width(), height(), QBrush(QColor(60, 60, 60)));
-
-    if (d->m_computer.isComputing())
-        return;
 
     if (d->m_clips_to_render.N3() != d->m_labels_to_render.count()) {
         qWarning() << "Number of clips to render does not match the number of labels to render" << d->m_clips_to_render.N3() << d->m_labels_to_render.count();
@@ -251,6 +239,7 @@ QPointF MVSpikeSprayViewPrivate::coord2pix(int m, double t, double val)
 
 void MVSpikeSprayComputer::compute()
 {
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     TaskProgress task("Spike spray computer");
     QString firings_out_path;
     {

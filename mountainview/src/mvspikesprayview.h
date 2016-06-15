@@ -11,20 +11,20 @@
 
 #include <QPaintEvent>
 #include <QWidget>
-#include "mvviewagent.h"
+#include "mvabstractview.h"
 
 class MVSpikeSprayViewPrivate;
-class MVSpikeSprayView : public QWidget {
+class MVSpikeSprayView : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVSpikeSprayViewPrivate;
     MVSpikeSprayView(MVViewAgent* view_agent);
     virtual ~MVSpikeSprayView();
     void setLabelsToUse(const QList<int>& labels);
-private slots:
-    void slot_computation_finished();
-    void slot_view_agent_option_changed(QString name);
-    void slot_restart_calculation();
+
+    void prepareCalculation() Q_DECL_OVERRIDE;
+    void runCalculation() Q_DECL_OVERRIDE;
+    void onCalculationFinished() Q_DECL_OVERRIDE;
 
 protected:
     void paintEvent(QPaintEvent* evt);
