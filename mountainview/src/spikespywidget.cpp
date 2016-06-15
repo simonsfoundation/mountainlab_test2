@@ -18,7 +18,6 @@
 class SpikeSpyWidgetPrivate {
 public:
     SpikeSpyWidget* q;
-    double m_samplerate;
     QList<SpikeSpyViewData> m_datas;
     QList<MVTimeSeriesView*> m_views;
     MVViewAgent* m_view_agent;
@@ -36,7 +35,6 @@ SpikeSpyWidget::SpikeSpyWidget(MVViewAgent* view_agent)
 {
     d = new SpikeSpyWidgetPrivate;
     d->q = this;
-    d->m_samplerate = 0;
     d->m_view_agent = view_agent;
     d->m_current_view_index = 0;
 
@@ -78,14 +76,6 @@ SpikeSpyWidget::~SpikeSpyWidget()
     delete d;
 }
 
-void SpikeSpyWidget::setSampleRate(double samplerate)
-{
-    d->m_samplerate = samplerate;
-    foreach (MVTimeSeriesView* V, d->m_views) {
-        V->setSampleRate(samplerate);
-    }
-}
-
 void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
 {
     MVTimeSeriesView* W = new MVTimeSeriesView(d->m_view_agent);
@@ -97,7 +87,6 @@ void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
         labels << (int)data.firings.value(2, i);
     }
     W->setTimesLabels(times, labels);
-    W->setSampleRate(d->m_samplerate);
     d->m_splitter->addWidget(W);
     d->m_views << W;
     d->m_datas << data;
@@ -124,7 +113,6 @@ void SpikeSpyWidget::slot_open_mountainview()
     MVFile ff;
     ff.addTimeseriesPath("Timeseries", data.timeseries.path());
     ff.setFiringsPath(data.firings.path());
-    ff.setSampleRate(d->m_samplerate);
     W->setMVFile(ff);
     W->setDefaultInitialization();
     W->show();

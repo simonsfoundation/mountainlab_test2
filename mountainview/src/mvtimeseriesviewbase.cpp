@@ -52,7 +52,6 @@ class MVTimeSeriesViewBasePrivate {
 public:
     MVTimeSeriesViewBase* q;
 
-    double m_samplerate;
     QVector<double> m_times;
     QVector<int> m_labels;
 
@@ -97,7 +96,6 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVViewAgent* view_agent)
     d->m_left_click_anchor_pix = QPointF(-1, -1);
     d->m_left_click_dragging = false;
     this->setMouseTracking(true);
-    d->m_samplerate = 0;
     d->m_num_timepoints = 1;
 
     d->m_view_agent = view_agent;
@@ -111,12 +109,6 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVViewAgent* view_agent)
 MVTimeSeriesViewBase::~MVTimeSeriesViewBase()
 {
     delete d;
-}
-
-void MVTimeSeriesViewBase::setSampleRate(double samplerate)
-{
-    d->m_samplerate = samplerate;
-    update();
 }
 
 void MVTimeSeriesViewBase::setTimesLabels(const QVector<double>& times, const QVector<int>& labels)
@@ -281,7 +273,8 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
     // Status
     {
         QString str;
-        if (d->m_samplerate) {
+        double samplerate = d->m_view_agent->sampleRate();
+        if (samplerate) {
             str = QString("%1 (tp: %2)").arg(d->format_time(d->m_view_agent->currentTimepoint())).arg((long)d->m_view_agent->currentTimepoint());
         }
         else {
@@ -592,7 +585,7 @@ void MVTimeSeriesViewBasePrivate::paint_message_at_top(QPainter* painter, QStrin
 
 void MVTimeSeriesViewBasePrivate::paint_time_axis(QPainter* painter, double W, double H)
 {
-    double samplerate = m_samplerate;
+    double samplerate = m_view_agent->sampleRate();
     long min_pixel_spacing_between_ticks = 30;
 
     double view_t1 = m_view_agent->currentTimeRange().min;
@@ -754,7 +747,7 @@ void MVTimeSeriesViewBasePrivate::scroll_to_current_timepoint()
 
 QString MVTimeSeriesViewBasePrivate::format_time(double tp)
 {
-    double samplerate = m_samplerate;
+    double samplerate = m_view_agent->sampleRate();
     double sec = tp / samplerate;
     long day = (long)floor(sec / (24 * 60 * 60));
     sec -= day * 24 * 60 * 60;

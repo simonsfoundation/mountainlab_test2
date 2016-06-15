@@ -52,6 +52,7 @@ void MultiScaleTimeSeries::setData(const DiskReadMda& X)
 {
     QMutexLocker locker(&d->m_mutex);
     d->m_data = X;
+    d->m_multiscale_data = DiskReadMda(); //important
 }
 
 void MultiScaleTimeSeries::setMLProxyUrl(const QString& url)

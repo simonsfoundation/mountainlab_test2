@@ -46,7 +46,6 @@ public:
     MVCrossCorrelogramsWidget2* q;
     MVCrossCorrelogramsWidget2Computer m_computer;
     QList<Correlogram> m_correlograms;
-    double m_samplerate;
     MVViewAgent* m_view_agent;
 
     QGridLayout* m_grid_layout;
@@ -66,7 +65,6 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
 {
     d = new MVCrossCorrelogramsWidget2Private;
     d->q = this;
-    d->m_samplerate = 20000;
     d->m_num_columns = -1;
 
     d->m_view_agent = view_agent;
@@ -175,12 +173,6 @@ QImage MVCrossCorrelogramsWidget2::renderImage(int W, int H)
     return ret;
 }
 
-void MVCrossCorrelogramsWidget2::setSampleRate(double rate)
-{
-    d->m_samplerate = rate;
-    d->start_computation();
-}
-
 class TimeScaleWidget2 : public QWidget {
 public:
     TimeScaleWidget2();
@@ -250,7 +242,7 @@ void MVCrossCorrelogramsWidget2::slot_computation_finished()
     d->m_child_widgets.clear();
 
     QGridLayout* GL = d->m_grid_layout;
-    float sample_freq = d->m_samplerate;
+    float sample_freq = d->m_view_agent->sampleRate();
     float bin_max = compute_max2(d->m_correlograms);
     float bin_min = -bin_max;
     //int num_bins=100;
@@ -517,6 +509,6 @@ void MVCrossCorrelogramsWidget2Private::start_computation()
     m_computer.stopComputation();
     m_computer.firings = m_view_agent->firings();
     m_computer.options = m_options;
-    m_computer.max_dt = m_view_agent->option("cc_max_dt_msec", 100).toDouble() / 1000 * m_samplerate;
+    m_computer.max_dt = m_view_agent->option("cc_max_dt_msec", 100).toDouble() / 1000 * m_view_agent->sampleRate();
     m_computer.startComputation();
 }

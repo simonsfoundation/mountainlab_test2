@@ -23,6 +23,7 @@ public:
     MVTimeSeriesRenderManager();
     virtual ~MVTimeSeriesRenderManager();
 
+    void clear();
     void setMultiScaleTimeSeries(MultiScaleTimeSeries* ts);
     void setChannelColors(const QList<QColor>& colors);
     double visibleMinimum() const;
@@ -69,6 +70,7 @@ public:
     virtual ~ThreadManager();
     void start(QString id, QThread* thread);
     void stop(QString id);
+    void clear();
 private
 slots:
     void slot_timer();

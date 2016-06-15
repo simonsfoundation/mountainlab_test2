@@ -22,8 +22,9 @@ struct mvtsv_channel {
 class MVTimeSeriesView2Private {
 public:
     MVTimeSeriesView2* q;
-    DiskReadMda m_timeseries;
     MultiScaleTimeSeries m_msts;
+
+    MVViewAgent* m_view_agent;
 
     double m_amplitude_factor;
     QList<mvtsv_channel> m_channels;
@@ -43,27 +44,21 @@ MVTimeSeriesView2::MVTimeSeriesView2(MVViewAgent* view_agent)
 {
     d = new MVTimeSeriesView2Private;
     d->q = this;
+    d->m_view_agent = view_agent;
+
     d->m_amplitude_factor = 1.0;
     d->m_render_manager.setMultiScaleTimeSeries(&d->m_msts);
     d->m_layout_needed = true;
 
     QObject::connect(&d->m_render_manager, SIGNAL(updated()), this, SLOT(update()));
+    QObject::connect(d->m_view_agent, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_current_timeseries_changed()));
+
+    slot_current_timeseries_changed();
 }
 
 MVTimeSeriesView2::~MVTimeSeriesView2()
 {
     delete d;
-}
-
-void MVTimeSeriesView2::setTimeseries(const DiskReadMda& X)
-{
-    d->m_timeseries = X;
-    this->setNumTimepoints(d->m_timeseries.N2());
-    d->m_msts.setData(X);
-    d->m_layout_needed = true;
-    this->setTimeRange(MVRange(0, d->m_timeseries.N2() - 1)); //above hack not strictly needed because we now call N2() here.
-    this->autoSetAmplitudeFactor();
-    update();
 }
 
 void MVTimeSeriesView2::setMLProxyUrl(const QString& url)
@@ -81,11 +76,6 @@ void MVTimeSeriesView2::resizeEvent(QResizeEvent* evt)
 {
     d->m_layout_needed = true;
     MVTimeSeriesViewBase::resizeEvent(evt);
-}
-
-DiskReadMda MVTimeSeriesView2::timeseries()
-{
-    return d->m_timeseries;
 }
 
 void MVTimeSeriesView2::setAmplitudeFactor(double factor)
@@ -143,8 +133,9 @@ void MVTimeSeriesView2::autoSetAmplitudeFactorWithinTimeRange()
 void MVTimeSeriesView2::paintContent(QPainter* painter)
 {
     // Geometry of channels
+    DiskReadMda TS = d->m_view_agent->currentTimeseries();
     if (d->m_layout_needed) {
-        int M = d->m_timeseries.N1();
+        int M = TS.N1();
         d->m_layout_needed = false;
         d->m_channels = d->make_channel_layout(M);
         for (long m = 0; m < M; m++) {
@@ -178,6 +169,17 @@ void MVTimeSeriesView2::keyPressEvent(QKeyEvent* evt)
     }
 }
 
+void MVTimeSeriesView2::slot_current_timeseries_changed()
+{
+    DiskReadMda TS = d->m_view_agent->currentTimeseries();
+    this->setNumTimepoints(TS.N2());
+    d->m_msts.setData(TS);
+    d->m_layout_needed = true;
+    this->setTimeRange(MVRange(0, TS.N2() - 1));
+    this->autoSetAmplitudeFactor();
+    update();
+}
+
 QList<mvtsv_channel> MVTimeSeriesView2Private::make_channel_layout(int M)
 {
     QList<mvtsv_channel> channels;
@@ -208,7 +210,7 @@ void MVTimeSeriesView2Private::paint_channel_labels(QPainter* painter, double W,
     font.setPixelSize(13);
     painter->setFont(font);
 
-    long M = m_timeseries.N1();
+    long M = m_view_agent->currentTimeseries().N1();
     for (int m = 0; m < M; m++) {
         double ypix = val2ypix(m, 0);
         QRectF rect(0, ypix - 30, q->contentGeometry().left() - 5, 60);
