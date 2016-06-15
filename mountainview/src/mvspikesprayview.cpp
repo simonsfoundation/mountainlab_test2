@@ -248,7 +248,6 @@ QPointF MVSpikeSprayViewPrivate::coord2pix(int m, double t, double val)
 
 void MVSpikeSprayComputer::compute()
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     TaskProgress task("Spike spray computer");
     QString firings_out_path;
     {

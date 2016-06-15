@@ -36,8 +36,8 @@ public:
     void resizeEvent(QResizeEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
 
-private slots:
-    void slot_current_timeseries_changed();
+private
+slots:
 
 private:
     MVTimeSeriesView2Private* d;

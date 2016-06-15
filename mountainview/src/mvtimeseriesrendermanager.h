@@ -24,7 +24,7 @@ public:
     virtual ~MVTimeSeriesRenderManager();
 
     void clear();
-    void setMultiScaleTimeSeries(MultiScaleTimeSeries* ts);
+    void setMultiScaleTimeSeries(MultiScaleTimeSeries ts);
     void setChannelColors(const QList<QColor>& colors);
     double visibleMinimum() const;
     double visibleMaximum() const;
@@ -52,7 +52,7 @@ public:
     long panel_num_points;
     long index;
     QList<QColor> channel_colors;
-    MultiScaleTimeSeries* ts;
+    MultiScaleTimeSeries ts;
     QColor get_channel_color(long m);
 
     //output
