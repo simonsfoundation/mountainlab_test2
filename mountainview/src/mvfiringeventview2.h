@@ -25,9 +25,6 @@ public:
 
     void paintContent(QPainter* painter);
 
-    //void setTimeseries(const DiskReadMda& X);
-    //void setMLProxyUrl(const QString& url);
-
     void setAmplitudeRange(MVRange range);
     void autoSetAmplitudeRange();
 

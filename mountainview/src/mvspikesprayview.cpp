@@ -17,9 +17,9 @@
 class MVSpikeSprayComputer : public ComputationThread {
 public:
     //input
-    QString mlproxy_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
+    QString mlproxy_url;
     QList<int> labels_to_use;
     int clip_size;
 
@@ -34,11 +34,8 @@ class MVSpikeSprayViewPrivate {
 public:
     MVSpikeSprayView* q;
     MVViewAgent* m_view_agent;
-    QString m_mlproxy_url;
-    DiskReadMda m_timeseries;
-    DiskReadMda m_firings;
     QList<int> m_labels_to_use;
-    bool m_compute_needed;
+
     double m_amplitude_factor;
 
     Mda m_clips_to_render;
@@ -56,45 +53,26 @@ MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent)
     d = new MVSpikeSprayViewPrivate;
     d->q = this;
     d->m_view_agent = view_agent;
-    d->m_compute_needed = false;
     d->m_amplitude_factor = 0;
 
     QObject::connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
+
+    QObject::connect(d->m_view_agent,SIGNAL(currentTimeseriesChanged()),this,SLOT(slot_restart_calculation()));
+    QObject::connect(d->m_view_agent,SIGNAL(firingsChanged()),this,SLOT(slot_restart_calculation()));
+    QObject::connect(d->m_view_agent,SIGNAL(optionChanged(QString)),this,SLOT(slot_view_agent_option_changed(QString)));
 
     this->setFocusPolicy(Qt::StrongFocus);
 }
 
 MVSpikeSprayView::~MVSpikeSprayView()
 {
-    d->m_computer.stopComputation();
     delete d;
-}
-
-void MVSpikeSprayView::setMLProxyUrl(const QString& url)
-{
-    d->m_mlproxy_url = url;
-}
-
-void MVSpikeSprayView::setTimeseries(const DiskReadMda& X)
-{
-    d->m_timeseries = X;
-    /// TODO address: the following is a hack so that the array info is not downloaded during the paintEvent which seems to cause a crash
-    d->m_timeseries.N1();
-    d->schedule_compute();
-}
-
-void MVSpikeSprayView::setFirings(const DiskReadMda& F)
-{
-    d->m_firings = F;
-    /// TODO address: the following is a hack so that the array info is not downloaded during the paintEvent which seems to cause a crash
-    d->m_firings.N1();
-    d->schedule_compute();
 }
 
 void MVSpikeSprayView::setLabelsToUse(const QList<int>& labels)
 {
     d->m_labels_to_use = labels;
-    d->schedule_compute();
+    slot_restart_calculation();
 }
 
 void MVSpikeSprayView::slot_computation_finished()
@@ -105,9 +83,27 @@ void MVSpikeSprayView::slot_computation_finished()
     update();
 }
 
+void MVSpikeSprayView::slot_view_agent_option_changed(QString name)
+{
+    if (name=="clip_size") slot_restart_calculation();
+}
+
+void MVSpikeSprayView::slot_restart_calculation()
+{
+    d->m_labels_to_render.clear();
+    d->m_computer.stopComputation();
+    d->m_computer.mlproxy_url = d->m_view_agent->mlProxyUrl();
+    d->m_computer.timeseries = d->m_view_agent->currentTimeseries();
+    d->m_computer.firings = d->m_view_agent->firings();
+    d->m_computer.labels_to_use = d->m_labels_to_use;
+    d->m_computer.clip_size = d->m_view_agent->option("clip_size").toInt();
+    d->m_computer.startComputation();
+}
+
 void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt)
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -115,34 +111,27 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
     /// TODO (LOW) this should be a configured color to match the cluster view
     painter.fillRect(0, 0, width(), height(), QBrush(QColor(60, 60, 60)));
 
-    if (d->m_compute_needed) {
-        d->m_labels_to_render.clear();
-        d->m_computer.stopComputation();
-        d->m_computer.mlproxy_url = d->m_mlproxy_url;
-        d->m_computer.timeseries = d->m_timeseries;
-        d->m_computer.firings = d->m_firings;
-        d->m_computer.labels_to_use = d->m_labels_to_use;
-        d->m_computer.clip_size = d->m_view_agent->option("clip_size").toInt();
-        d->m_computer.startComputation();
-        d->m_compute_needed = false;
-        return;
-    }
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     if (d->m_computer.isComputing())
         return;
 
     if (d->m_clips_to_render.N3() != d->m_labels_to_render.count())
         return;
 
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     if (!d->m_amplitude_factor) {
         double maxval = qMax(qAbs(d->m_clips_to_render.minimum()), qAbs(d->m_clips_to_render.maximum()));
         if (maxval)
             d->m_amplitude_factor = 1.5 / maxval;
     }
 
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     int K = compute_max(d->m_labels_to_render);
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << K;
     if (!K)
         return;
     int counts[K + 1];
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     for (int k = 0; k < K + 1; k++)
         counts[k] = 0;
     for (long i = 0; i < d->m_labels_to_render.count(); i++) {
@@ -159,11 +148,13 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         else
             alphas[k] = 255;
     }
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
 
     long M = d->m_clips_to_render.N1();
     long T = d->m_clips_to_render.N2();
     double* ptr = d->m_clips_to_render.dataPtr();
     for (long i = 0; i < d->m_labels_to_render.count(); i++) {
+        qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << i << d->m_labels_to_render.count();
         int label0 = d->m_labels_to_render[i];
         QColor col = d->get_label_color(label0);
         if (label0 >= 0) {
@@ -172,6 +163,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         d->render_clip(&painter, M, T, &ptr[M * T * i], col);
     }
 
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
     //legend
     {
         double W = width();
@@ -195,6 +187,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
             y0 += text_height + spacing;
         }
     }
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
 }
 
 void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
@@ -212,12 +205,6 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
     }
 }
 
-void MVSpikeSprayViewPrivate::schedule_compute()
-{
-    m_compute_needed = true;
-    q->update();
-}
-
 void MVSpikeSprayViewPrivate::render_clip(QPainter* painter, long M, long T, double* ptr, QColor col)
 {
     QPen pen = painter->pen();
@@ -228,7 +215,8 @@ void MVSpikeSprayViewPrivate::render_clip(QPainter* painter, long M, long T, dou
         QPainterPath path;
         for (long t = 0; t < T; t++) {
             double val = ptr[m + M * t];
-            QPointF pt = coord2pix(m, t, val);
+            //QPointF pt = coord2pix(m, t, val);
+            QPointF pt(50,50);
             if (t == 0) {
                 path.moveTo(pt);
             }
@@ -247,7 +235,7 @@ QColor MVSpikeSprayViewPrivate::get_label_color(int label)
 
 QPointF MVSpikeSprayViewPrivate::coord2pix(int m, double t, double val)
 {
-    long M = m_timeseries.N1();
+    long M = m_view_agent->currentTimeseries().N1();
     int clip_size = m_view_agent->option("clip_size").toInt();
     double margin_left = 20, margin_right = 20;
     double margin_top = 20, margin_bottom = 20;

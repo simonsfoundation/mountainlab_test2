@@ -115,14 +115,6 @@ void MVCrossCorrelogramsWidget2::setOptions(CrossCorrelogramOptions opts)
     d->start_computation();
 }
 
-void MVCrossCorrelogramsWidget2::setColors(const QMap<QString, QColor>& colors)
-{
-    d->m_colors = colors;
-    foreach (HistogramView* V, d->m_histogram_views) {
-        V->setColors(d->m_colors);
-    }
-}
-
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
     foreach (int a, S1)
@@ -264,7 +256,7 @@ void MVCrossCorrelogramsWidget2::slot_computation_finished()
         /// TODO set progress here
         HistogramView* HV = new HistogramView;
         HV->setData(d->m_correlograms[ii].data);
-        HV->setColors(d->m_colors);
+        HV->setColors(d->m_view_agent->colors());
         //HV->autoSetBins(50);
         HV->setBins(bin_min, bin_max, num_bins);
         QString title0 = QString("%1/%2").arg(d->m_correlograms[ii].k1).arg(d->m_correlograms[ii].k2);

@@ -32,7 +32,6 @@ public:
     virtual ~MVCrossCorrelogramsWidget2();
 
     void setOptions(CrossCorrelogramOptions opts);
-    void setColors(const QMap<QString, QColor>& colors);
     int currentLabel1();
     int currentLabel2();
     void setCurrentLabel1(int k);

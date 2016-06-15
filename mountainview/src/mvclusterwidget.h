@@ -25,8 +25,6 @@ public:
     MVClusterWidget(MVViewAgent* view_agent);
     virtual ~MVClusterWidget();
 
-    void setMLProxyUrl(const QString& url);
-
     void setClipSize(int clip_size);
     ///Set the time series for purpose of computing the clip to display when corresponding datapoint is selected
     void setTimeseries(const DiskReadMda& X);

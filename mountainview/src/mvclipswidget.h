@@ -19,7 +19,6 @@ public:
     friend class MVClipsWidgetPrivate;
     MVClipsWidget(MVViewAgent* view_agent);
     virtual ~MVClipsWidget();
-    void setMLProxyUrl(const QString& url);
     void setLabelsToUse(const QList<int>& labels);
 
     int currentClipIndex();

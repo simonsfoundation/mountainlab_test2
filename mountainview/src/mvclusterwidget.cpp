@@ -43,8 +43,6 @@ public:
     MVClipsView* m_clips_view;
     QLabel* m_info_bar;
     Mda m_data;
-    //QString m_mscmdserver_url;
-    QString m_mlproxy_url;
     DiskReadMda m_timeseries;
     DiskReadMda m_firings;
     QList<int> m_labels_to_use;
@@ -180,18 +178,6 @@ MVClusterWidget::~MVClusterWidget()
 {
     d->m_computer.stopComputation(); // important do take care of this before things start getting destructed!
     delete d;
-}
-
-/*
-void MVClusterWidget::setMscmdServerUrl(const QString& url)
-{
-    d->m_mscmdserver_url = url;
-}
-*/
-
-void MVClusterWidget::setMLProxyUrl(const QString& url)
-{
-    d->m_mlproxy_url = url;
 }
 
 void MVClusterWidget::setData(const Mda& X)
@@ -420,8 +406,7 @@ void MVClusterWidgetPrivate::set_data_on_visible_views_that_need_it()
 void MVClusterWidgetPrivate::start_computation()
 {
     m_computer.stopComputation();
-    //m_computer.mscmdserver_url = m_mscmdserver_url;
-    m_computer.mlproxy_url = m_mlproxy_url;
+    m_computer.mlproxy_url = m_view_agent->mlProxyUrl();
     m_computer.timeseries = m_timeseries;
     m_computer.firings = m_firings;
     m_computer.clip_size = m_clip_size;

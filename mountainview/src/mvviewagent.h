@@ -57,10 +57,13 @@ public:
     /////////////////////////////////////////////////
     QColor clusterColor(int k) const;
     QColor channelColor(int m) const;
+    QColor color(QString name, QColor default_color = Qt::black) const;
+    QMap<QString, QColor> colors() const;
     QList<QColor> channelColors() const;
     QList<QColor> clusterColors() const;
     void setClusterColors(const QList<QColor>& colors);
     void setChannelColors(const QList<QColor>& colors);
+    void setColors(const QMap<QString, QColor>& colors);
 
     /////////////////////////////////////////////////
     DiskReadMda currentTimeseries();
@@ -74,8 +77,11 @@ public:
     void setFirings(const DiskReadMda& F);
 
     /////////////////////////////////////////////////
+    // these should be set once at beginning
     double sampleRate() const;
     void setSampleRate(double sample_rate);
+    QString mlProxyUrl() const;
+    void setMLProxyUrl(QString url);
 
     /////////////////////////////////////////////////
     QVariant option(QString name, QVariant default_val = QVariant());

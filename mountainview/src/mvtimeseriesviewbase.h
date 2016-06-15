@@ -23,7 +23,7 @@ public:
 
     virtual void paintContent(QPainter* painter) = 0;
 
-    void setMLProxyUrl(const QString& url);
+    /// TODO get rid of setTimesLabels
     void setTimesLabels(const QVector<double>& times, const QVector<int>& labels);
     void setNumTimepoints(long N);
 

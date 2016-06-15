@@ -37,8 +37,6 @@ public:
 class MVClipsWidgetPrivate {
 public:
     MVClipsWidget* q;
-    //QString m_mscmdserver_url;
-    QString m_mlproxy_url;
     QList<int> m_labels_to_use;
     MVClipsView* m_view;
     MVClipsWidgetComputer m_computer;
@@ -70,18 +68,6 @@ MVClipsWidget::~MVClipsWidget()
 {
     d->m_computer.stopComputation(); // important do take care of this before things start getting destructed!
     delete d;
-}
-
-/*
-void MVClipsWidget::setMscmdServerUrl(const QString& url)
-{
-    d->m_mscmdserver_url = url;
-}
-*/
-
-void MVClipsWidget::setMLProxyUrl(const QString& url)
-{
-    d->m_mlproxy_url = url;
 }
 
 void MVClipsWidget::setLabelsToUse(const QList<int>& labels)
@@ -191,8 +177,7 @@ void MVClipsWidgetComputer::compute()
 void MVClipsWidgetPrivate::start_computation()
 {
     m_computer.stopComputation();
-    //m_computer.mscmdserver_url = m_mscmdserver_url;
-    m_computer.mlproxy_url = m_mlproxy_url;
+    m_computer.mlproxy_url = m_view_agent->mlProxyUrl();
     m_computer.firings = m_view_agent->firings();
     m_computer.timeseries = m_view_agent->currentTimeseries();
     m_computer.labels_to_use = m_labels_to_use;
