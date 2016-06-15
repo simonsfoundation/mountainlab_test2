@@ -137,7 +137,7 @@ MountainSort is a command-line program for performing low-level spike sorting ro
 \begin{lstlisting}[language=bash]
 > mountainsort bandpass_filter --timeseries=raw.mda &&
   --timeseries_out=filtered.mda --samplerate=30000 &&
-  --freq_min=300 --freq_max=5000 --freq_wid=1000
+  --freq_min=300 --freq_max=5000
 
 > mountainsort mask_out_artifacts --timeseries=filtered.mda &&
   --timeseries_out=filtered2.mda --threshold=3 --interval_size=200
@@ -187,13 +187,13 @@ To take advantage of provenance tracking and queuing (batch) functionality all o
 \begin{lstlisting}[language=bash]
 > mountainprocess run-process bandpass_filter --timeseries=raw.mda &&
   --timeseries_out=filtered.mda --samplerate=30000 &&
-  --freq_min=300 --freq_max=5000 --freq_wid=1000
+  --freq_min=300 --freq_max=5000
 \end{lstlisting}
 or
 \begin{lstlisting}[language=bash]
 > mountainprocess queue-process bandpass_filter --timeseries=raw.mda &&
   --timeseries_out=filtered.mda --samplerate=30000 &&
-  --freq_min=300 --freq_max=5000 --freq_wid=1000
+  --freq_min=300 --freq_max=5000
 \end{lstlisting}
 
 The latter (queuing) command is useful for batch and parallel processing and requires the mountainprocess daemon to be running in the background. This daemon may be launched via
@@ -257,7 +257,7 @@ it should output JSON text that provides a list of available processors together
                     {"name": "samplerate","optional": false},
                     {"name": "freq_min","optional": false},
                     {"name": "freq_max","optional": false},
-                    {"name": "freq_wid","optional": false},
+                {"name": "freq_wid","optional": true},
                 {"name": "processing_chunk_size","optional": true},
                 {"name": "chunk_overlap_size","optional": true}
             ],

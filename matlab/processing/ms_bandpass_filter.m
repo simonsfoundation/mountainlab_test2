@@ -69,7 +69,7 @@ if fhi<=0, warning('fhi should be positive'); end
 
 [M N] = size(X);
 
-% -------- do it in blocks (power of 2 = efficient for FFT)
+% -------- do it in blocks (power of 2 = efficient for FFT) ... NB not padded
 Nbig = inf; %2^22;      % inf: never uses blocking
 if N>2*Nbig
   pad = 1e3;   % only good if filters localized in time (smooth in k space)
@@ -91,6 +91,9 @@ end                   % todo: figure out why this was slower than unblocked
                       % even for Nbig = 2^22
 % ---------
 
+pad = 1e4;   % enough for our filters
+X = [zeros(M,pad) X zeros(M,pad)]; N = size(X,2);  % remove end effects
+
 T = N/fs;  % total time
 df = 1/T;  % freq grid including negative ones...
 if mod(N,2)==0, f=df*[0:N/2 -N/2+1:-1];else, f=df*[0:(N-1)/2 -(N-1)/2:-1]; end
@@ -111,11 +114,14 @@ end
 filt = sqrt(filt);         % so 0.5 in the filter func becomes -3dB
 X = ifft(bsxfun(@times, fft(X'), filt'))'; 
 
+X = X(:,pad+1:end-pad);    % take only central bit
+
 end
 
 %%%%%%%%%%%%%%% Routines for testing (ahb).......................
 function Y = run_mscmd(X,o)        % runs mscmd freq filter
 d = [tempdir,'/mountainlab'];
+if ~exist(d), mkdir(d); end
 in = [d,'/bptest_in.mda'];
 out = [d,'/bptest_out.mda'];
 writemda(X,in,'float32');
@@ -127,7 +133,8 @@ end
 
 function test_bandpass_filter   % AHB 6/10/16
 o.samplerate = 2e4;      % in Hz
-X = randn(5,1e6);
+X = randn(5,2e6);         % C++ chunk size is 1e6, BTW
+%X = 0*X; X(1,1) = 1;   % delta func variant
 % check the power spectra...
 wid = 100;               % PS smoothing in Hz
 figure; subplot(2,1,1);

@@ -34,8 +34,8 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
     long chunk_size = processingChunkSize > 0 ? processingChunkSize : PROCESSING_CHUNK_SIZE;
     long overlap_size = chunkOverlapSize > 0 ? chunkOverlapSize : PROCESSING_CHUNK_OVERLAP_SIZE;
     if (N < chunk_size) {
-        chunk_size = N;
-        overlap_size = 0;
+      chunk_size = N+1;     // +1 is to prevent triggering another chunk
+      // note we leave the overlap_size as is, to remove end effects
     }
 
     DiskWriteMda Y(MDAIO_TYPE_FLOAT32, output_path, M, N);
@@ -317,12 +317,9 @@ void define_kernel(int N, double* kernel, double samplefreq, double freq_min, do
     double df = 1 / T;             // frequency grid
     double relwid = 3.0;           // relative bottom-end roll-off width param, kills low freqs by factor 1e-5.
 
-    printf("filter params: %.15g %.15g %.15g \n",freq_min,freq_max,freq_wid);  // debug
-    freq_wid = 1000.0;     // *** why not correctly read in? override hack
-
     for (int i = 0; i < N; i++) {
-      const double fgrid = (i <= (N + 1) / 2) ? df * i : df * (i - N);   // why const? (ahb)
-      const double absf = fabs(fgrid);
+      double fgrid = (i <= (N + 1) / 2) ? df * i : df * (i - N);
+      double absf = fabs(fgrid);
       double val = 1.0;
       if (freq_min != 0) { // (suggested by ahb) added on 3/3/16 by jfm
 	if (i==0)
