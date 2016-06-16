@@ -23,8 +23,9 @@ bool thread_interrupt_requested();
 QString http_get_text_curl(const QString& url);
 QString http_get_text(const QString& url);
 QString http_get_binary_file(const QString& url);
-QString get_path_query(const QString &path);
-QString get_path_without_query(const QString &path);
-QMap<QString,QString> parse_query(const QString &query);
+//QString get_path_query(const QString &path);
+//QString get_path_without_query(const QString &path);
+//QMap<QString,QString> parse_query(const QString &query);
+//QMap<QString,QString> parse_path_query(const QString &path);
 
 #endif // MLUTILS_H

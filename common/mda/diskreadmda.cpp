@@ -8,6 +8,7 @@
 #include "cachemanager.h"
 #include "taskprogress.h"
 #include "remotereadmda.h"
+#include "mlutils.h"
 
 #define MAX_PATH_LEN 10000
 #define DEFAULT_CHUNK_SIZE 1e6
@@ -77,7 +78,7 @@ void DiskReadMda::operator=(const DiskReadMda& other)
     d->copy_from(other);
 }
 
-void DiskReadMda::setPath(const QString& path_in)
+void DiskReadMda::setPath(const QString& file_path)
 {
     if (d->m_file) {
         fclose(d->m_file);
@@ -85,23 +86,6 @@ void DiskReadMda::setPath(const QString& path_in)
     }
     d->construct_and_clear();
 
-    QString file_path;
-    int ind00 = path_in.lastIndexOf("?");
-    QMap<QString, QString> query;
-    if (ind00 > 0) {
-        file_path = path_in.mid(0, ind00);
-        QString query_str = path_in.mid(ind00 + 1);
-        QStringList list = query_str.split("&");
-        foreach(QString str, list)
-        {
-            QStringList tmp = str.split("=");
-            if (tmp.count() == 2) {
-                query[tmp[0]] = tmp[1];
-            }
-        }
-    } else {
-        file_path = path_in;
-    }
     if (file_path.startsWith("http://")) {
         d->m_use_remote_mda = true;
         d->m_remote_mda.setPath(file_path);
@@ -111,10 +95,6 @@ void DiskReadMda::setPath(const QString& path_in)
         return;
     } else {
         d->m_path = file_path;
-    }
-
-    if (query.contains("N1")) {
-        this->reshape(query.value("N1", "1").toLong(), query.value("N2", "1").toLong(), query.value("N3", "1").toLong(), query.value("N4", "1").toLong(), query.value("N5", "1").toLong(), query.value("N6", "1").toLong());
     }
 }
 
@@ -171,11 +151,7 @@ QString DiskReadMda::makePath() const
     if (d->m_use_remote_mda) {
         return d->m_remote_mda.makePath();
     }
-    if (d->m_reshaped) {
-        return QString("%1?N1=%2&N2=%3&N3=%4&N4=%5&N5=%6&N6=%7").arg(d->m_path).arg(N1()).arg(N2()).arg(N3()).arg(N4()).arg(N5()).arg(N6());
-    } else {
-        return d->m_path;
-    }
+    return d->m_path;
 }
 
 /// TODO do not read the file every time we need the header!

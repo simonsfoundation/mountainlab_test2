@@ -316,6 +316,7 @@ QString http_get_text(const QString& url)
 #endif
 }
 
+/*
 QString get_path_query(const QString& path)
 {
     int ind1 = path.lastIndexOf("?");
@@ -349,3 +350,9 @@ QMap<QString, QString> parse_query(const QString& query)
     }
     return ret;
 }
+
+QMap<QString, QString> parse_path_query(const QString &path)
+{
+    return parse_query(get_path_query(path));
+}
+*/
