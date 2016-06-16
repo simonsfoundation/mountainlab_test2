@@ -1,33 +1,24 @@
 #include "mvmainwindow.h"
 #include "diskreadmda.h"
 #include "mvcrosscorrelogramswidget2.h"
-#ifdef USE_LAPACK
-#include "get_pca_features.h"
-#else
-#include "get_principal_components.h"
-#endif
-#include "get_sort_indices.h"
 #include "mvclusterdetailwidget.h"
-#include "mvclipsview.h"
+#include "mvclipswidget.h"
 #include "mvclusterwidget.h"
 #include "mvspikesprayview.h"
-#include "mvfiringeventview.h"
 #include "mvfiringeventview2.h"
-#include "extract_clips.h"
 #include "tabber.h"
 #include "computationthread.h"
-#include "mountainprocessrunner.h"
 #include "mvclipswidget.h"
 #include "taskprogressview.h"
 #include "mvcontrolpanel.h"
 #include "taskprogress.h"
-#include "clustermerge.h"
 #include "mvviewagent.h"
 #include "mvstatusbar.h"
-//#include "mvtimeseriesview.h"
 #include "mvtimeseriesview2.h"
 #include "mlutils.h"
 #include "mvfile.h"
+
+/// TODO, get rid of computationthread
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -96,9 +87,6 @@ public:
     void annotate_selected();
     void merge_selected();
     void unmerge_selected();
-
-    /// TODO get rid of setting times and labels for views (do this internally based on the MVViewAgent)
-    void set_times_labels_for_mvtimeseriesview(MVTimeSeriesView2* WW);
 
     TabberTabWidget* tab_widget_of(QWidget* W);
 
@@ -360,6 +348,7 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
     }
 }
 
+/// TODO figure out how to implement such functionality outside main window??
 void MVMainWindow::slot_auto_correlogram_activated()
 {
     TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
@@ -404,21 +393,7 @@ void MVMainWindow::slot_update_buttons()
     d->set_button_enabled("export_filtered_firings", true);
 }
 
-/*
-void MVMainWindow::slot_calculator_finished()
-{
-    //d->update_cross_correlograms();
-    //d->update_cluster_details();
-    //d->update_timeseries_views();
-    d->m_firings = d->m_calculator.m_firings;
-    d->m_original_cluster_numbers = d->m_calculator.m_original_cluster_numbers;
-    d->m_original_cluster_offsets = d->m_original_cluster_offsets;
-    d->update_all_widgets();
-    d->m_view_agent->setSelectedClusters(QList<int>());
-    slot_update_buttons();
-}
-*/
-
+/// TODO this functionality should be moved to tabber
 void MVMainWindow::slot_action_move_to_other_tab_widget()
 {
     QAction* a = qobject_cast<QAction*>(sender());
@@ -449,8 +424,8 @@ void MVMainWindowPrivate::update_sizes()
     int W1 = W0 / 3;
     if (W1 < 150)
         W1 = 150;
-    if (W1 > 400)
-        W1 = 400;
+    if (W1 > 600)
+        W1 = 600;
     int W2 = W0 - W1;
 
     int H1 = H0 / 2;
@@ -489,9 +464,9 @@ void MVMainWindowPrivate::add_tab(QWidget* W, QString label)
 {
     W->setFocusPolicy(Qt::StrongFocus);
     m_tabber->addWidget(m_tabber->currentContainerName(), label, W);
-    W->setProperty("tab_label", label); //won't be needed in future, once Tabber is fully implemented
 }
 
+/// TODO move this functionality into tabber
 void MVMainWindowPrivate::set_tool_button_menu(QWidget* X)
 {
     X->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -752,55 +727,6 @@ void MVMainWindowPrivate::unmerge_selected()
     CM.unmerge(m_view_agent->selectedClusters());
     m_view_agent->setClusterMerge(CM);
 }
-
-/*
-void MVMainWindowPrivate::update_widget(QWidget* W)
-{
-    QString widget_type = W->property("widget_type").toString();
-
-    if (widget_type == "clips") {
-        MVClipsWidget* WW = (MVClipsWidget*)W;
-        int clip_size = m_control_panel->viewOptions().clip_size;
-        QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
-        DiskReadMda TT(current_timeseries_path());
-        WW->setTimeseries(TT);
-        WW->setClipSize(clip_size);
-        WW->setFirings(m_view_agent->firings());
-        WW->setLabelsToUse(ks);
-    }
-    else if (widget_type == "clusters") {
-        MVClusterWidget* WW = (MVClusterWidget*)W;
-        int clip_size = m_control_panel->viewOptions().clip_size;
-        QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
-        DiskReadMda TT(current_timeseries_path());
-        WW->setTimeseries(TT);
-        WW->setClipSize(clip_size);
-        //WW->setFirings(m_firings);
-        WW->setFirings(m_view_agent->firings()); //now that we are doing the event filter, we should show everyone
-        WW->setLabelsToUse(ks);
-        FilterInfo FF;
-        FF.use_filter = m_control_panel->eventFilter().use_event_filter;
-        FF.min_detectability_score = m_control_panel->eventFilter().min_detectability_score;
-        FF.max_outlier_score = m_control_panel->eventFilter().max_outlier_score;
-        WW->setEventFilter(FF);
-    }
-    else if (widget_type == "spike_spray") {
-        MVSpikeSprayView* WW = (MVSpikeSprayView*)W;
-        int clip_size = m_control_panel->viewOptions().clip_size;
-        QList<int> ks = string_list_to_int_list(WW->property("ks").toStringList());
-        DiskReadMda TT(current_timeseries_path());
-        WW->setTimeseries(TT);
-        WW->setClipSize(clip_size);
-        WW->setFirings(m_view_agent->firings());
-        WW->setLabelsToUse(ks);
-    }
-    else if (widget_type == "mvtimeseries") {
-        MVTimeSeriesView2* WW = (MVTimeSeriesView2*)W;
-        WW->setTimeseries(DiskReadMda(current_timeseries_path()));
-        set_times_labels_for_mvtimeseriesview(WW);
-    }
-}
-*/
 
 TabberTabWidget* MVMainWindowPrivate::tab_widget_of(QWidget* W)
 {
