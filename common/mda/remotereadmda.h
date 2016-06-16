@@ -27,7 +27,9 @@ public:
     long downloadChunkSize();
 
     void setPath(const QString& path);
-    QString path() const;
+    QString makePath() const;
+
+    bool reshape(long N1b, long N2b, long N3b);
 
     long N1() const;
     long N2() const;

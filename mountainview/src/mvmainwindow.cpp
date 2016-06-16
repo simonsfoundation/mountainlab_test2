@@ -1,7 +1,5 @@
 #include "mvmainwindow.h"
 #include "diskreadmda.h"
-#include "sstimeseriesview.h"
-#include "sstimeserieswidget.h"
 #include "mvcrosscorrelogramswidget2.h"
 #ifdef USE_LAPACK
 #include "get_pca_features.h"
@@ -101,7 +99,6 @@ public:
 
     /// TODO get rid of setting times and labels for views (do this internally based on the MVViewAgent)
     void set_times_labels_for_mvtimeseriesview(MVTimeSeriesView2* WW);
-    void set_times_labels_for_timeseries_widget(SSTimeSeriesWidget* WW);
 
     TabberTabWidget* tab_widget_of(QWidget* W);
 
@@ -525,7 +522,7 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_auto_correlograms()
 {
     MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
     CrossCorrelogramOptions opts;
-    opts.mode = "all_auto_correlograms";
+    opts.mode = All_Auto_Correlograms;
     X->setOptions(opts);
     X->setProperty("widget_type", "auto_correlograms"); //not really needed
     add_tab(X, "Auto-Correlograms");
@@ -537,7 +534,7 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_cross_correlograms(int k)
 {
     MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
     CrossCorrelogramOptions opts;
-    opts.mode = "cross_correlograms";
+    opts.mode = Cross_Correlograms;
     opts.ks << k;
     X->setOptions(opts);
     X->setProperty("widget_type", "cross_correlograms"); //not really needed
@@ -556,7 +553,7 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlogra
     if (ks.isEmpty())
         return X;
     CrossCorrelogramOptions opts;
-    opts.mode = "matrix_of_cross_correlograms";
+    opts.mode = Matrix_Of_Cross_Correlograms;
     opts.ks = ks;
     X->setOptions(opts);
     add_tab(X, QString("CC Matrix"));

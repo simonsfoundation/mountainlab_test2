@@ -19,10 +19,6 @@ TEMPLATE = app
 
 HEADERS += \
     histogramview.h \
-    mvstatisticswidget.h \
-    mvlabelcomparewidget.h \
-    mvcdfview.h \
-    static_neuron_colors.h \
     mvutils.h \
     mvmainwindow.h \
     correlationmatrixview.h \
@@ -32,21 +28,10 @@ HEADERS += \
     mvclusterwidget.h \
     mvfiringeventview.h \
     mvfiringeventview2.h \
-    diskarraymodel_new.h \
-    sstimeserieswidget.h \
-    sstimeseriesview.h \
-    sstimeseriesplot.h \
-    ssabstractview.h \
-    ssabstractplot.h \
-    plotarea.h \
-    sslabelsmodel.h \
-    sslabelsmodel1.h \
-    sscommon.h \
     tabber.h \
     imagesavedialog.h \
     closemehandler.h \
     computationthread.h \
-    set_progress.h \
     mvcrosscorrelogramswidget2.h \
     mountainprocessrunner.h \
     mvclipswidget.h \
@@ -67,10 +52,6 @@ HEADERS += \
     mvabstractview.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
-    mvstatisticswidget.cpp \
-    mvlabelcomparewidget.cpp \
-    mvcdfview.cpp \
-    static_neuron_colors.cpp \
     mvutils.cpp \
     mvmainwindow.cpp \
     correlationmatrixview.cpp \
@@ -80,20 +61,10 @@ SOURCES += mountainviewmain.cpp \
     mvclusterwidget.cpp \
     mvfiringeventview.cpp \
     mvfiringeventview2.cpp \
-    diskarraymodel_new.cpp \
-    sstimeserieswidget.cpp \
-    sstimeseriesview.cpp \
-    sstimeseriesplot.cpp \
-    ssabstractview.cpp \
-    ssabstractplot.cpp \
-    plotarea.cpp \
-    sslabelsmodel1.cpp \
-    sscommon.cpp \
     tabber.cpp \
     imagesavedialog.cpp \
     closemehandler.cpp \
     computationthread.cpp \
-    set_progress.cpp \
     mvcrosscorrelogramswidget2.cpp \
     mountainprocessrunner.cpp \
     mvclipswidget.cpp \
@@ -112,6 +83,23 @@ SOURCES += mountainviewmain.cpp \
     mvfile.cpp \
     mvtimeseriesviewbase.cpp \
     mvabstractview.cpp
+
+#HEADERS += sstimeserieswidget.h \
+#    sstimeseriesview.h \
+#    sstimeseriesplot.h \
+#    ssabstractview.h \
+#    ssabstractplot.h \
+#    sslabelsmodel.h \
+#    sslabelsmodel1.h \
+#    sscommon.h plotarea.h
+
+#SOURCES += sstimeserieswidget.cpp \
+#    sstimeseriesview.cpp \
+#    sstimeseriesplot.cpp \
+#    ssabstractview.cpp \
+#    ssabstractplot.cpp \
+#    sslabelsmodel1.cpp \
+#    sscommon.cpp plotarea.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

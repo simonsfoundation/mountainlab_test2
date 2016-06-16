@@ -379,7 +379,7 @@ void MVClusterWidgetComputer::compute()
         MT.setProcessorName(processor_name);
 
         QMap<QString, QVariant> params;
-        params["firings"] = firings.path();
+        params["firings"] = firings.makePath();
         params["labels"] = labels_str;
         MT.setInputParameters(params);
         //MT.setMscmdServerUrl(mscmdserver_url);
@@ -401,7 +401,7 @@ void MVClusterWidgetComputer::compute()
         MT.setProcessorName(processor_name);
 
         QMap<QString, QVariant> params;
-        params["timeseries"] = timeseries.path();
+        params["timeseries"] = timeseries.makePath();
         params["firings"] = firings_out_path;
         params["clip_size"] = clip_size;
         params["num_features"] = 3;
@@ -428,7 +428,7 @@ void MVClusterWidgetComputer::compute()
         }
 
         QMap<QString, QVariant> params;
-        params["timeseries"] = timeseries.path();
+        params["timeseries"] = timeseries.makePath();
         params["firings"] = firings_out_path;
         params["channels"] = channels_strlist.join(",");
         MT.setInputParameters(params);

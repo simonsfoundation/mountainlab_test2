@@ -29,18 +29,13 @@ public:
     ///Assignment operator
     void operator=(const DiskReadMda& other);
 
-#ifdef QT_CORE_LIB
     ///Set the path (file name) of the .mda file to read.
     void setPath(const QString& file_path);
-#endif
-    ///Set the path (file name) of the .mda file to read.
-    void setPath(const char* file_path);
     void setRemoteDataType(const QString& dtype);
     void setDownloadChunkSize(long size);
     long downloadChunkSize();
 
-    QString path() const;
-    QString makePath();
+    QString makePath() const;
 
     ///The first dimension of the array
     long N1() const;
@@ -56,6 +51,9 @@ public:
     long N6() const;
     ///The product of N1() through N6()
     long totalSize() const;
+
+    bool reshape(long N1b, long N2b, long N3b = 1, long N4b = 1, long N5b = 1, long N6b = 1);
+    DiskReadMda reshaped(long N1b, long N2b, long N3b = 1, long N4b = 1, long N5b = 1, long N6b = 1);
 
     ///Retrieve a chunk of the vectorized data of size 1xN starting at position i
     bool readChunk(Mda& X, long i, long size) const;

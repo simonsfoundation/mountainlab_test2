@@ -12,14 +12,20 @@
 
 #include <QWidget>
 
+enum CrossCorrelogramMode {
+    Undefined,
+    All_Auto_Correlograms,
+    Cross_Correlograms,
+    Matrix_Of_Cross_Correlograms
+};
+
 struct CrossCorrelogramOptions {
     CrossCorrelogramOptions()
     {
-        mode = "undefined";
+        mode = Undefined;
     }
 
-    /// TODO use enum for mode, not string
-    QString mode;
+    CrossCorrelogramMode mode;
     QList<int> ks;
 };
 
