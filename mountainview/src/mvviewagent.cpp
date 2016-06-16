@@ -301,6 +301,16 @@ void MVViewAgent::setOption(QString name, QVariant value)
     emit optionChanged(name);
 }
 
+void MVViewAgent::copySettingsFrom(MVViewAgent *other)
+{
+    this->setChannelColors(other->channelColors());
+    this->setClusterColors(other->clusterColors());
+    this->setColors(other->colors());
+    this->setMLProxyUrl(other->mlProxyUrl());
+    this->setSampleRate(other->sampleRate());
+    this->d->m_options=other->d->m_options;
+}
+
 void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
 {
     /// TODO handle shift modifier

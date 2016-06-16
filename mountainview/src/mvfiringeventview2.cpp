@@ -58,7 +58,7 @@ MVFiringEventView2::MVFiringEventView2(MVViewAgent* view_agent)
     mvtsv_colors clrs;
     clrs.axis_color = Qt::white;
     clrs.text_color = Qt::white;
-    clrs.background_color = QColor(100, 100, 100);
+    clrs.background_color = Qt::black;
     this->setColors(clrs);
 
     this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
@@ -114,7 +114,7 @@ void MVFiringEventView2::autoSetAmplitudeRange()
 
 void MVFiringEventView2::paintContent(QPainter* painter)
 {
-    double alpha_pct = 0.3;
+    double alpha_pct = 0.7;
     for (long i = 0; i < d->m_times0.count(); i++) {
         double t0 = d->m_times0.value(i);
         int k0 = d->m_labels0.value(i);

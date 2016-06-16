@@ -87,6 +87,9 @@ public:
     QVariant option(QString name, QVariant default_val = QVariant());
     void setOption(QString name, QVariant value);
 
+    /////////////////////////////////////////////////
+    void copySettingsFrom(MVViewAgent *other);
+
 signals:
     void currentTimeseriesChanged();
     void timeseriesNamesChanged();

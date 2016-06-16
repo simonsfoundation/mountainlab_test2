@@ -12,7 +12,7 @@ create_multiscale_timeseries_Processor::create_multiscale_timeseries_Processor()
     d->q = this;
 
     this->setName("create_multiscale_timeseries");
-    this->setVersion("0.15");
+    this->setVersion("0.17");
     this->setInputFileParameters("timeseries");
     this->setOutputFileParameters("timeseries_out");
     //this->setRequiredParameters();

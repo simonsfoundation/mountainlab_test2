@@ -507,11 +507,14 @@ bool DiskReadMdaPrivate::open_file_if_needed()
         return false;
     m_file = fopen(m_path.toLatin1().data(), "rb");
     if (m_file) {
-        mda_read_header(&m_header, m_file);
-        m_mda_header_total_size = 1;
-        for (int i = 0; i < MDAIO_MAX_DIMS; i++)
-            m_mda_header_total_size *= m_header.dims[i];
-        m_header_read = true;
+        if (!m_header_read) {
+            //important not to read it again in case we have reshaped the array
+            mda_read_header(&m_header, m_file);
+            m_mda_header_total_size = 1;
+            for (int i = 0; i < MDAIO_MAX_DIMS; i++)
+                m_mda_header_total_size *= m_header.dims[i];
+            m_header_read = true;
+        }
     } else {
         printf("Failed to open diskreadmda file: %s\n", m_path.toLatin1().data());
         m_file_open_failed = true; //we don't want to try this more than once

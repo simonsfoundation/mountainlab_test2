@@ -61,7 +61,6 @@ MVTimeSeriesView2::MVTimeSeriesView2(MVViewAgent* view_agent)
     d->q = this;
 
     d->m_amplitude_factor = 1.0;
-    d->m_render_manager.setChannelColors(view_agent->channelColors());
     d->m_layout_needed = true;
     d->m_num_channels = 1;
 
@@ -95,6 +94,7 @@ void MVTimeSeriesView2::runCalculation()
 void MVTimeSeriesView2::onCalculationFinished()
 {
     d->m_msts = d->m_calculator.msts;
+    d->m_render_manager.setChannelColors(viewAgent()->channelColors());
     d->m_render_manager.setMultiScaleTimeSeries(d->m_msts);
     d->m_num_channels = d->m_calculator.num_channels;
 
@@ -163,12 +163,10 @@ void MVTimeSeriesView2::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    }
-    else {
+    } else {
         MVTimeSeriesViewBase::keyPressEvent(evt);
     }
 }
@@ -233,8 +231,7 @@ double MVTimeSeriesView2Private::ypix2val(int m, double ypix)
     if (m_amplitude_factor) {
         double val = (ypix - (CH->geometry.y() + CH->geometry.height() / 2)) / m_amplitude_factor / (CH->geometry.height() / 2);
         return val;
-    }
-    else
+    } else
         return 0;
 }
 

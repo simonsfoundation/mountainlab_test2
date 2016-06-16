@@ -102,7 +102,7 @@ void MultiScaleTimeSeries::initialize()
         MPR.setInputParameters(params);
         MPR.setMLProxyUrl(d->m_mlproxy_url);
         path_out = MPR.makeOutputFilePath("timeseries_out");
-        MPR.setDetach(true);
+        //MPR.setDetach(true);
         task.log("Running process");
     }
     MPR.runProcess();
