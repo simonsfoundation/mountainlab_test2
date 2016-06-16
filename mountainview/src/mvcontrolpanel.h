@@ -7,39 +7,21 @@
 #ifndef MVCONTROLPANEL_H
 #define MVCONTROLPANEL_H
 
+#include "mvviewagent.h"
+
 #include <QAbstractButton>
 #include <QJsonObject>
 #include <QString>
 #include <QWidget>
 
-struct MVViewOptions {
-    MVViewOptions()
-    {
-        cc_max_dt_msec = 100;
-        clip_size = 100;
-    }
-
-    QString timeseries;
-    double cc_max_dt_msec;
-    int clip_size;
-    static MVViewOptions fromJsonObject(QJsonObject obj);
-    QJsonObject toJsonObject() const;
-};
-
 struct MVEventFilter {
     MVEventFilter()
     {
-        use_shell_split = false;
-        shell_increment = 2;
-        min_per_shell = 150;
         use_event_filter = false;
         min_detectability_score = 0;
         max_outlier_score = 0;
     }
 
-    bool use_shell_split;
-    double shell_increment;
-    int min_per_shell;
     bool use_event_filter;
     double min_detectability_score;
     double max_outlier_score;
@@ -52,15 +34,13 @@ class MVControlPanel : public QWidget {
     Q_OBJECT
 public:
     friend class MVControlPanelPrivate;
-    MVControlPanel();
+    MVControlPanel(MVViewAgent* view_agent);
     virtual ~MVControlPanel();
 
     void setTimeseriesChoices(const QStringList& names);
 
-    MVViewOptions viewOptions() const;
     MVEventFilter eventFilter() const;
 
-    void setViewOptions(MVViewOptions opts);
     void setEventFilter(MVEventFilter X);
 
     QAbstractButton* findButton(const QString& name);
@@ -68,10 +48,11 @@ public:
 signals:
     void userAction(QString name);
 
-private
-slots:
+private slots:
     void slot_update_enabled_controls();
     void slot_button_clicked();
+    void slot_view_agent_option_changed(QString name);
+    void slot_update_timeseries_box();
 
 private:
     MVControlPanelPrivate* d;

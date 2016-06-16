@@ -29,12 +29,10 @@ public:
     virtual ~MVMainWindow();
     void setCurrentTimeseriesName(const QString& name);
     void setDefaultInitialization();
-    void setEpochs(const QList<Epoch>& epochs);
-    void setMLProxyUrl(const QString& url);
-    void setClusterMerge(ClusterMerge CM);
-    void setChannelColors(const QList<QColor>& colors);
-    void setClusterColors(const QList<QColor>& colors);
+    void setEpochs(const QList<Epoch>& epochs); //put in view agent
+    void setClusterMerge(ClusterMerge CM); //put in view agent
 
+    /// TODO replace these by load and save
     void setMVFile(MVFile mv_file);
     void writeMVFile(const QString& mv_fname);
 
@@ -53,7 +51,7 @@ private slots:
     void slot_details_template_activated();
     //void slot_cross_correlogram_computer_finished();
     void slot_update_buttons();
-    void slot_calculator_finished();
+    //void slot_calculator_finished();
     void slot_action_move_to_other_tab_widget();
     void slot_pop_out_widget();
 

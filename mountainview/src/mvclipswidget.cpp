@@ -15,13 +15,13 @@
 
 /// TODO (HIGH) merge should apply to all widgets
 /// TODO (HIGH) put firings, firings_filtered, timeseries into MVViewAgent
+/// TODO handle case where there are too many clips to want to download
 
 class MVClipsWidgetComputer : public ComputationThread {
 public:
     //input
     DiskReadMda firings;
     DiskReadMda timeseries;
-    //QString mscmdserver_url;
     QString mlproxy_url;
     int clip_size;
     QList<int> labels_to_use;
@@ -37,87 +37,69 @@ public:
 class MVClipsWidgetPrivate {
 public:
     MVClipsWidget* q;
-    //QString m_mscmdserver_url;
-    QString m_mlproxy_url;
-    DiskReadMda m_timeseries;
-    DiskReadMda m_firings;
     QList<int> m_labels_to_use;
-    int m_clip_size;
     MVClipsView* m_view;
     MVClipsWidgetComputer m_computer;
-    MVViewAgent* m_view_agent;
-
-    void start_computation();
 };
 
 MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
+    : MVAbstractView(view_agent)
 {
     d = new MVClipsWidgetPrivate;
     d->q = this;
 
-    d->m_view_agent = view_agent;
     d->m_view = new MVClipsView(view_agent);
 
     QHBoxLayout* hlayout = new QHBoxLayout;
     hlayout->addWidget(d->m_view);
     this->setLayout(hlayout);
 
-    connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
+    this->recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
+    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    this->recalculateOnOptionChanged("clip_size");
 }
 
 MVClipsWidget::~MVClipsWidget()
 {
-    d->m_computer.stopComputation(); // important do take care of this before things start getting destructed!
     delete d;
 }
 
-/*
-void MVClipsWidget::setMscmdServerUrl(const QString& url)
+void MVClipsWidget::prepareCalculation()
 {
-    d->m_mscmdserver_url = url;
-}
-*/
-
-void MVClipsWidget::setMLProxyUrl(const QString& url)
-{
-    d->m_mlproxy_url = url;
+    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
+    d->m_computer.firings = viewAgent()->firings();
+    d->m_computer.timeseries = viewAgent()->currentTimeseries();
+    d->m_computer.labels_to_use = d->m_labels_to_use;
+    d->m_computer.clip_size = viewAgent()->option("clip_size").toInt();
 }
 
-void MVClipsWidget::setTimeseries(DiskReadMda& X)
+void MVClipsWidget::runCalculation()
 {
-    d->m_timeseries = X;
-    d->start_computation();
+    d->m_computer.compute();
 }
 
-void MVClipsWidget::setFirings(DiskReadMda& F)
+void MVClipsWidget::onCalculationFinished()
 {
-    d->m_firings = F;
-    d->start_computation();
+    d->m_view->setClips(d->m_computer.clips);
+    d->m_view->setTimes(d->m_computer.times);
+    d->m_view->setLabels(d->m_computer.labels);
 }
 
 void MVClipsWidget::setLabelsToUse(const QList<int>& labels)
 {
     d->m_labels_to_use = labels;
-    d->start_computation();
+    this->recalculate();
 }
 
-void MVClipsWidget::setClipSize(int clip_size)
+void MVClipsWidget::paintEvent(QPaintEvent* evt)
 {
-    d->m_clip_size = clip_size;
-    d->start_computation();
-}
+    QPainter painter(this);
+    if (isCalculating()) {
+        //show that something is computing
+        painter.fillRect(QRectF(0, 0, width(), height()), viewAgent()->color("calculation-in-progress"));
+    }
 
-int MVClipsWidget::currentClipIndex()
-{
-    return d->m_view->currentClipIndex();
-}
-
-void MVClipsWidget::slot_computation_finished()
-{
-    d->m_computer.stopComputation(); //because I'm paranoid
-    d->m_view->setClips(d->m_computer.clips);
-    d->m_view->setTimes(d->m_computer.times);
-    d->m_view->setLabels(d->m_computer.labels);
+    QWidget::paintEvent(evt);
 }
 
 void MVClipsWidgetComputer::compute()
@@ -185,22 +167,10 @@ void MVClipsWidgetComputer::compute()
     task.log("Reading: " + clips_path);
     DiskReadMda CC(clips_path);
     CC.setRemoteDataType("float32_q8"); //to save download time
-    task.log(QString("CC: %1 x %2 x %3").arg(CC.N1()).arg(CC.N2()).arg(CC.N3()));
+    task.log(QString("CC: %1 x %2 x %3, clip_size=%4").arg(CC.N1()).arg(CC.N2()).arg(CC.N3()).arg(clip_size));
     CC.readChunk(clips, 0, 0, 0, CC.N1(), CC.N2(), CC.N3());
     if (thread_interrupt_requested()) {
         task.error(QString("Halted while reading chunk from: " + clips_path));
         return;
     }
-}
-
-void MVClipsWidgetPrivate::start_computation()
-{
-    m_computer.stopComputation();
-    //m_computer.mscmdserver_url = m_mscmdserver_url;
-    m_computer.mlproxy_url = m_mlproxy_url;
-    m_computer.firings = m_firings;
-    m_computer.timeseries = m_timeseries;
-    m_computer.labels_to_use = m_labels_to_use;
-    m_computer.clip_size = m_clip_size;
-    m_computer.startComputation();
 }

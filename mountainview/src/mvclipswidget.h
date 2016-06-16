@@ -10,27 +10,26 @@
 #include "diskreadmda.h"
 #include <QWidget>
 #include "mvutils.h"
-#include "mvviewagent.h"
+#include "mvabstractview.h"
 
 class MVClipsWidgetPrivate;
-class MVClipsWidget : public QWidget {
+class MVClipsWidget : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVClipsWidgetPrivate;
     MVClipsWidget(MVViewAgent* view_agent);
     virtual ~MVClipsWidget();
-    void setMLProxyUrl(const QString& url);
-    void setTimeseries(DiskReadMda& X);
-    void setFirings(DiskReadMda& F);
-    void setLabelsToUse(const QList<int>& labels);
-    void setClipSize(int clip_size);
 
-    int currentClipIndex();
+    void prepareCalculation() Q_DECL_OVERRIDE;
+    void runCalculation() Q_DECL_OVERRIDE;
+    void onCalculationFinished() Q_DECL_OVERRIDE;
+
+    void setLabelsToUse(const QList<int>& labels);
+
+    void paintEvent(QPaintEvent* evt);
 signals:
-    void currentEventChanged();
 private
 slots:
-    void slot_computation_finished();
 
 private:
     MVClipsWidgetPrivate* d;

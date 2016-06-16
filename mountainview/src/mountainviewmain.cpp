@@ -149,13 +149,11 @@ int main(int argc, char* argv[])
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
             return 0;
-        }
-        else if (arg2 == "remotereadmda2") {
+        } else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
             return 0;
-        }
-        else if (arg2 == "taskprogressview") {
+        } else if (arg2 == "taskprogressview") {
             MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
@@ -164,19 +162,13 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            }
-            else {
+            } else {
                 W->resize(W0, H0);
             }
             test_taskprogressview();
             qWarning() << "No such unit test: " + arg2;
             return 0;
-        }
-        else if (arg2 == "multiscaletimeseries") {
-            MultiScaleTimeSeries::unit_test(3, 10);
-            return 0;
-        }
-        else if (arg2 == "mvtimeseriesview") {
+        } else if (arg2 == "mvtimeseriesview") {
             MVTimeSeriesView::unit_test();
         }
     }
@@ -198,9 +190,12 @@ int main(int argc, char* argv[])
         //QString epochs_path = CLP.named_parameters["epochs"].toString();
         QString window_title = CLP.named_parameters["window_title"].toString();
         QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
-        MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
-        W->setChannelColors(channel_colors);
-        W->setClusterColors(label_colors);
+        MVViewAgent* view_agent = new MVViewAgent; //note that the view agent does not get deleted. :(
+        view_agent->setOption("clip_size", 130);
+        view_agent->setChannelColors(channel_colors);
+        view_agent->setClusterColors(label_colors);
+        view_agent->setSampleRate(samplerate);
+        MVMainWindow* W = new MVMainWindow(view_agent);
 
         if (!firings_path.isEmpty()) {
             mv_file.setFiringsPath(firings_path);
@@ -235,17 +230,18 @@ int main(int argc, char* argv[])
         a.processEvents();
         W->setMVFile(mv_file);
         W->setDefaultInitialization();
-    }
-    else if (mode == "spikespy") {
+    } else if (mode == "spikespy") {
         printf("spikespy...\n");
         QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
         QStringList firings_paths = CLP.named_parameters["firings"].toString().split(",");
         double samplerate = CLP.named_parameters["samplerate"].toDouble();
 
-        SpikeSpyWidget* W = new SpikeSpyWidget(new MVViewAgent); //not that the view agent will not get deleted. :(
-        W->setChannelColors(channel_colors);
-        W->setLabelColors(label_colors);
-        W->setSampleRate(samplerate);
+        MVViewAgent* view_agent = new MVViewAgent(); //note that the view agent will not get deleted. :(
+        view_agent->setChannelColors(channel_colors);
+        view_agent->setClusterColors(label_colors);
+        view_agent->setSampleRate(samplerate);
+        SpikeSpyWidget* W = new SpikeSpyWidget(view_agent);
+
         for (int i = 0; i < timeseries_paths.count(); i++) {
             QString tsp = timeseries_paths.value(i);
             if (tsp.isEmpty())

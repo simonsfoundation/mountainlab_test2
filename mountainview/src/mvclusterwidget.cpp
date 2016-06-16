@@ -13,10 +13,11 @@
 #include "extract_clips.h"
 #include "mountainprocessrunner.h"
 
+/// TODO control brightness in 3D density view
+
 class MVClusterWidgetComputer : public ComputationThread {
 public:
     //input
-    //QString mscmdserver_url;
     QString mlproxy_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
@@ -43,17 +44,9 @@ public:
     MVClipsView* m_clips_view;
     QLabel* m_info_bar;
     Mda m_data;
-    //QString m_mscmdserver_url;
-    QString m_mlproxy_url;
-    DiskReadMda m_timeseries;
-    DiskReadMda m_firings;
     QList<int> m_labels_to_use;
-    QList<QColor> m_label_colors;
-    int m_clip_size;
     QList<double> m_outlier_scores;
     MVClusterWidgetComputer m_computer;
-    FilterInfo m_filter_info;
-    MVViewAgent* m_view_agent;
     QString m_feature_mode;
     QList<int> m_channels;
 
@@ -61,37 +54,34 @@ public:
     void update_clips_view();
     int current_event_index();
     void set_data_on_visible_views_that_need_it();
-    void start_computation();
 };
 
 MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
+    : MVAbstractView(view_agent)
 {
     d = new MVClusterWidgetPrivate;
     d->q = this;
 
-    d->m_clip_size = 200;
-
-    d->m_clips_view = new MVClipsView(d->m_view_agent);
-    d->m_view_agent = view_agent;
+    d->m_clips_view = new MVClipsView(view_agent);
 
     {
-        MVClusterView* X = new MVClusterView(d->m_view_agent);
+        MVClusterView* X = new MVClusterView(view_agent);
         X->setMode(MVCV_MODE_HEAT_DENSITY);
         d->m_views << X;
     }
     {
-        MVClusterView* X = new MVClusterView(d->m_view_agent);
+        MVClusterView* X = new MVClusterView(view_agent);
         X->setMode(MVCV_MODE_LABEL_COLORS);
         d->m_views << X;
     }
     {
-        MVClusterView* X = new MVClusterView(d->m_view_agent);
+        MVClusterView* X = new MVClusterView(view_agent);
         X->setMode(MVCV_MODE_TIME_COLORS);
         X->setVisible(false);
         d->m_views << X;
     }
     {
-        MVClusterView* X = new MVClusterView(d->m_view_agent);
+        MVClusterView* X = new MVClusterView(view_agent);
         X->setMode(MVCV_MODE_AMPLITUDE_COLORS);
         X->setVisible(false);
         d->m_views << X;
@@ -151,7 +141,6 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     d->m_info_bar = new QLabel;
     d->m_info_bar->setFixedHeight(20);
     vlayout->addWidget(d->m_info_bar);
-    //d->m_clips_view->setFixedWidth(250);
 
     QSizePolicy clips_size_policy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     clips_size_policy.setHorizontalStretch(1);
@@ -167,32 +156,49 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     foreach (MVClusterView* V, d->m_views) {
         V->setSizePolicy(view_size_policy);
         hlayout->addWidget(V);
-        V->setEventFilter(d->m_filter_info);
+        /// TODO implement the event filter
+        //V->setEventFilter(d->m_filter_info);
     }
 
     foreach (MVClusterView* V, d->m_views) {
         d->connect_view(V);
     }
 
-    connect(&d->m_computer, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
+    this->recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
+    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    this->recalculateOnOptionChanged("clip_size");
+
+    connect(view_agent, SIGNAL(currentEventChanged()), this, SLOT(slot_current_event_changed()));
 }
 
 MVClusterWidget::~MVClusterWidget()
 {
-    d->m_computer.stopComputation(); // important do take care of this before things start getting destructed!
     delete d;
 }
 
-/*
-void MVClusterWidget::setMscmdServerUrl(const QString& url)
+void MVClusterWidget::prepareCalculation()
 {
-    d->m_mscmdserver_url = url;
+    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
+    d->m_computer.timeseries = viewAgent()->currentTimeseries();
+    d->m_computer.firings = viewAgent()->firings();
+    d->m_computer.clip_size = viewAgent()->option("clip_size").toInt();
+    d->m_computer.labels_to_use = d->m_labels_to_use;
+    d->m_computer.features_mode = d->m_feature_mode;
+    d->m_computer.channels = d->m_channels;
 }
-*/
 
-void MVClusterWidget::setMLProxyUrl(const QString& url)
+void MVClusterWidget::runCalculation()
 {
-    d->m_mlproxy_url = url;
+    d->m_computer.compute();
+}
+
+void MVClusterWidget::onCalculationFinished()
+{
+    this->setTimes(d->m_computer.times);
+    this->setLabels(d->m_computer.labels);
+    this->setAmplitudes(d->m_computer.amplitudes);
+    this->setScores(d->m_computer.detectability_scores, d->m_computer.outlier_scores);
+    this->setData(d->m_computer.data);
 }
 
 void MVClusterWidget::setData(const Mda& X)
@@ -245,48 +251,30 @@ void MVClusterWidget::setScores(const QList<double>& detectability_scores, const
     }
 }
 
-void MVClusterWidget::setCurrentEvent(const MVEvent& evt)
+void MVClusterWidget::slot_current_event_changed()
 {
     foreach (MVClusterView* V, d->m_views) {
-        V->setCurrentEvent(evt);
+        V->setCurrentEvent(viewAgent()->currentEvent());
     }
     d->update_clips_view();
-}
-
-void MVClusterWidget::setClipSize(int clip_size)
-{
-    d->m_clip_size = clip_size;
-    d->start_computation();
-}
-
-void MVClusterWidget::setTimeseries(const DiskReadMda& X)
-{
-    d->m_timeseries = X;
-    d->m_timeseries.N1();
-    d->start_computation();
-}
-
-void MVClusterWidget::setFirings(const DiskReadMda& F)
-{
-    d->m_firings = F;
-    d->m_firings.N1();
-    d->start_computation();
 }
 
 void MVClusterWidget::setLabelsToUse(const QList<int>& labels)
 {
     d->m_labels_to_use = labels;
-    d->start_computation();
+    this->recalculate();
 }
 
 void MVClusterWidget::setFeatureMode(QString mode)
 {
     d->m_feature_mode = mode;
+    this->recalculate();
 }
 
 void MVClusterWidget::setChannels(QList<int> channels)
 {
     d->m_channels = channels;
+    this->recalculate();
 }
 
 void MVClusterWidget::setTransformation(const AffineTransformation& T)
@@ -296,24 +284,10 @@ void MVClusterWidget::setTransformation(const AffineTransformation& T)
     }
 }
 
-MVEvent MVClusterWidget::currentEvent()
-{
-    return d->m_views[0]->currentEvent();
-}
-
-void MVClusterWidget::setEventFilter(FilterInfo info)
-{
-    d->m_filter_info = info;
-    foreach (MVClusterView* V, d->m_views) {
-        V->setEventFilter(info);
-    }
-}
-
 void MVClusterWidget::slot_view_current_event_changed()
 {
     MVClusterView* V0 = (MVClusterView*)sender();
-    this->setCurrentEvent(V0->currentEvent());
-    emit currentEventChanged();
+    viewAgent()->setCurrentEvent(V0->currentEvent());
 }
 
 void MVClusterWidget::slot_view_transformation_changed()
@@ -339,37 +313,6 @@ void MVClusterWidget::slot_show_view_toggled(bool val)
     d->set_data_on_visible_views_that_need_it();
 }
 
-void MVClusterWidget::slot_computation_finished()
-{
-    d->m_computer.stopComputation(); //because I'm paranoid
-
-    /*
-    int K = compute_max(labels);
-    QList<int> labels_map;
-    labels_map << 0;
-    int aa = 1;
-    for (int k = 1; k <= K; k++) {
-        if (d->m_labels_to_use.indexOf(k) >= 0) {
-            labels_map << aa;
-            aa++;
-        }
-        else {
-            labels_map << 0;
-        }
-    }
-    for (long j = 0; j < labels.count(); j++) {
-        labels[j] = labels_map[labels[j]];
-    }
-    */
-
-    this->setTimes(d->m_computer.times);
-    this->setLabels(d->m_computer.labels);
-    this->setAmplitudes(d->m_computer.amplitudes);
-    this->setScores(d->m_computer.detectability_scores, d->m_computer.outlier_scores);
-
-    this->setData(d->m_computer.data);
-}
-
 void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 {
     QObject::connect(V, SIGNAL(currentEventChanged()), q, SLOT(slot_view_current_event_changed()));
@@ -378,7 +321,7 @@ void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 
 void MVClusterWidgetPrivate::update_clips_view()
 {
-    /// TODO -- to avoid crash the extract clips should be done in worker thread?
+    /// TODO -- to avoid crash the extract clips should be done in worker thread
     QMessageBox::information(q, "Feature disabled", "This feature has been temporarily disabled. Normally you would see the current clip on the left.");
     /*
     MVEvent evt = q->currentEvent();
@@ -404,6 +347,8 @@ void MVClusterWidgetPrivate::update_clips_view()
 
 int MVClusterWidgetPrivate::current_event_index()
 {
+    if (m_views.isEmpty())
+        return 0;
     return m_views[0]->currentEventIndex();
 }
 
@@ -416,20 +361,6 @@ void MVClusterWidgetPrivate::set_data_on_visible_views_that_need_it()
             }
         }
     }
-}
-
-void MVClusterWidgetPrivate::start_computation()
-{
-    m_computer.stopComputation();
-    //m_computer.mscmdserver_url = m_mscmdserver_url;
-    m_computer.mlproxy_url = m_mlproxy_url;
-    m_computer.timeseries = m_timeseries;
-    m_computer.firings = m_firings;
-    m_computer.clip_size = m_clip_size;
-    m_computer.labels_to_use = m_labels_to_use;
-    m_computer.features_mode = m_feature_mode;
-    m_computer.channels = m_channels;
-    m_computer.startComputation();
 }
 
 void MVClusterWidgetComputer::compute()
@@ -459,6 +390,10 @@ void MVClusterWidgetComputer::compute()
         MT.runProcess();
     }
 
+    if (thread_interrupt_requested()) {
+        return;
+    }
+
     QString features_path;
     if (features_mode == "pca") {
         MountainProcessRunner MT;
@@ -477,6 +412,10 @@ void MVClusterWidgetComputer::compute()
         features_path = MT.makeOutputFilePath("features");
 
         MT.runProcess();
+
+        if (thread_interrupt_requested()) {
+            return;
+        }
     }
     else if (features_mode == "channels") {
         MountainProcessRunner MT;
@@ -498,6 +437,10 @@ void MVClusterWidgetComputer::compute()
         features_path = MT.makeOutputFilePath("values");
 
         MT.runProcess();
+
+        if (thread_interrupt_requested()) {
+            return;
+        }
     }
     else {
         TaskProgress err("Computing features");
@@ -512,6 +455,10 @@ void MVClusterWidgetComputer::compute()
         amplitudes << F.value(3, j);
         outlier_scores << F.value(4, j);
         detectability_scores << F.value(5, j);
+    }
+
+    if (thread_interrupt_requested()) {
+        return;
     }
 
     DiskReadMda features(features_path);

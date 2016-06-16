@@ -35,27 +35,62 @@ public:
     MVViewAgent();
     virtual ~MVViewAgent();
 
+    /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;
     QMap<int, QJsonObject> clusterAttributes() const;
+    void setClusterMerge(const ClusterMerge& CM);
+    void setClusterAttributes(const QMap<int, QJsonObject>& A);
+
+    /////////////////////////////////////////////////
     MVEvent currentEvent() const;
     int currentCluster() const;
     QList<int> selectedClusters() const;
     double currentTimepoint() const;
     MVRange currentTimeRange() const;
-    QColor clusterColor(int k);
-
-    void setClusterMerge(const ClusterMerge& CM);
-    void setClusterAttributes(const QMap<int, QJsonObject>& A);
     void setCurrentEvent(const MVEvent& evt);
     void setCurrentCluster(int k);
     void setSelectedClusters(const QList<int>& ks);
     void setCurrentTimepoint(double tp);
     void setCurrentTimeRange(const MVRange& range);
-    void setClusterColors(const QList<QColor>& colors);
-
     void clickCluster(int k, Qt::KeyboardModifiers modifiers);
 
+    /////////////////////////////////////////////////
+    QColor clusterColor(int k) const;
+    QColor channelColor(int m) const;
+    QColor color(QString name, QColor default_color = Qt::black) const;
+    QMap<QString, QColor> colors() const;
+    QList<QColor> channelColors() const;
+    QList<QColor> clusterColors() const;
+    void setClusterColors(const QList<QColor>& colors);
+    void setChannelColors(const QList<QColor>& colors);
+    void setColors(const QMap<QString, QColor>& colors);
+
+    /////////////////////////////////////////////////
+    DiskReadMda currentTimeseries();
+    QString currentTimeseriesName();
+    QStringList timeseriesNames() const;
+    void addTimeseries(QString name, DiskReadMda timeseries);
+    void setCurrentTimeseriesName(QString name);
+
+    /////////////////////////////////////////////////
+    DiskReadMda firings();
+    void setFirings(const DiskReadMda& F);
+
+    /////////////////////////////////////////////////
+    // these should be set once at beginning
+    double sampleRate() const;
+    void setSampleRate(double sample_rate);
+    QString mlProxyUrl() const;
+    void setMLProxyUrl(QString url);
+
+    /////////////////////////////////////////////////
+    QVariant option(QString name, QVariant default_val = QVariant());
+    void setOption(QString name, QVariant value);
+
 signals:
+    void currentTimeseriesChanged();
+    void timeseriesNamesChanged();
+    void firingsChanged();
     void clusterMergeChanged();
     void clusterAttributesChanged();
     void currentEventChanged();
@@ -63,6 +98,7 @@ signals:
     void selectedClustersChanged();
     void currentTimepointChanged();
     void currentTimeRangeChanged();
+    void optionChanged(QString name);
 
 private:
     MVViewAgentPrivate* d;

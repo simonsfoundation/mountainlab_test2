@@ -24,23 +24,34 @@ public:
 
     DiskReadMda m_data;
     DiskReadMda m_multiscale_data;
-    QString m_ml_proxy_url;
+    bool m_initialized;
+    QString m_remote_data_type;
+    QString m_mlproxy_url;
 
     QString get_multiscale_fname();
     bool get_data(Mda& min, Mda& max, long t1, long t2, long ds_factor);
 
-    static bool downsample_min(const DiskReadMda& X, QString out_fname, long N);
-    static bool downsample_max(const DiskReadMda& X, QString out_fname, long N);
-    static bool write_concatenation(QStringList input_fnames, QString output_fname);
     static bool is_power_of_3(long N);
-
-    QMutex m_mutex;
 };
 
 MultiScaleTimeSeries::MultiScaleTimeSeries()
 {
     d = new MultiScaleTimeSeriesPrivate;
     d->q = this;
+    d->m_initialized = false;
+    d->m_remote_data_type = "float32";
+}
+
+MultiScaleTimeSeries::MultiScaleTimeSeries(const MultiScaleTimeSeries& other)
+{
+    d = new MultiScaleTimeSeriesPrivate;
+    d->q = this;
+
+    d->m_data = other.d->m_data;
+    d->m_multiscale_data = other.d->m_multiscale_data;
+    d->m_initialized = other.d->m_initialized;
+    d->m_mlproxy_url = other.d->m_mlproxy_url;
+    d->m_remote_data_type = other.d->m_remote_data_type;
 }
 
 MultiScaleTimeSeries::~MultiScaleTimeSeries()
@@ -48,32 +59,72 @@ MultiScaleTimeSeries::~MultiScaleTimeSeries()
     delete d;
 }
 
+void MultiScaleTimeSeries::operator=(const MultiScaleTimeSeries& other)
+{
+    d->m_data = other.d->m_data;
+    d->m_multiscale_data = other.d->m_multiscale_data;
+    d->m_initialized = other.d->m_initialized;
+    d->m_mlproxy_url = other.d->m_mlproxy_url;
+    d->m_remote_data_type = other.d->m_remote_data_type;
+}
+
 void MultiScaleTimeSeries::setData(const DiskReadMda& X)
 {
-    QMutexLocker locker(&d->m_mutex);
     d->m_data = X;
+    d->m_multiscale_data = DiskReadMda();
+    d->m_initialized = false;
 }
 
 void MultiScaleTimeSeries::setMLProxyUrl(const QString& url)
 {
-    d->m_ml_proxy_url = url;
+    d->m_mlproxy_url = url;
+}
+
+void MultiScaleTimeSeries::initialize()
+{
+    TaskProgress task("Initializing multiscaletimeseries");
+    QString path;
+    {
+        path = d->m_data.makePath();
+        if (path.isEmpty()) {
+            qWarning() << "Unable to initialize multiscaletimeseries.... path is empty.";
+            d->m_initialized = true;
+            return;
+        }
+    }
+
+    MountainProcessRunner MPR;
+    QString path_out;
+    {
+        MPR.setProcessorName("create_multiscale_timeseries");
+        QVariantMap params;
+        params["timeseries"] = path;
+        MPR.setInputParameters(params);
+        MPR.setMLProxyUrl(d->m_mlproxy_url);
+        path_out = MPR.makeOutputFilePath("timeseries_out");
+        MPR.setDetach(true);
+        task.log("Running process");
+    }
+    MPR.runProcess();
+    {
+        d->m_multiscale_data.setPath(path_out);
+        task.log(QString("%1x%2").arg(d->m_multiscale_data.N1()).arg(d->m_multiscale_data.N2()));
+        d->m_initialized = true;
+    }
 }
 
 long MultiScaleTimeSeries::N1()
 {
-    QMutexLocker locker(&d->m_mutex);
     return d->m_data.N1();
 }
 
 long MultiScaleTimeSeries::N2()
 {
-    QMutexLocker locker(&d->m_mutex);
     return d->m_data.N2();
 }
 
 bool MultiScaleTimeSeries::getData(Mda& min, Mda& max, long t1, long t2, long ds_factor)
 {
-    QMutexLocker locker(&d->m_mutex);
     return d->get_data(min, max, t1, t2, ds_factor);
 }
 
@@ -93,38 +144,6 @@ double MultiScaleTimeSeries::maximum()
     return max.maximum();
 }
 
-bool MultiScaleTimeSeries::unit_test(long M, long N)
-{
-    QString fname1 = "tmp1.mda";
-    QString fname_min = "tmp1_min.mda";
-    QString fname_max = "tmp1_max.mda";
-
-    //write an array
-    Mda X(M, N);
-    for (long n = 0; n < N; n++) {
-        for (long m = 0; m < M; m++) {
-            X.setValue(sin(m + m * n), m, n);
-        }
-    }
-    X.write32(fname1);
-
-    //load it as a diskreadmda
-    DiskReadMda Y(fname1);
-
-    //open it as a multiscale time series
-    MultiScaleTimeSeries Z;
-    Z.setData(Y);
-
-    //get some data
-    Mda min0, max0;
-    Z.getData(min0, max0, 0, N - 1, 9);
-
-    min0.write32(fname_min);
-    max0.write32(fname_max);
-
-    return true;
-}
-
 long MultiScaleTimeSeries::smallest_power_of_3_larger_than(long N)
 {
     long ret = 1;
@@ -134,71 +153,27 @@ long MultiScaleTimeSeries::smallest_power_of_3_larger_than(long N)
     return ret;
 }
 
-QString compute_file_code(const QString& path)
-{
-    //didn't compile on mac so using the following which only depends on size and modification date
-
-    QFileInfo info(path);
-    return QString("%1:%2").arg(info.size()).arg(info.lastModified().toMSecsSinceEpoch());
-
-    /*
-    //the code comprises the device,inode,size, and modification time (in seconds)
-    //note that it is not dependent on the file name
-    struct stat SS;
-    stat(path.toLatin1().data(), &SS);
-    QString id_string = QString("%1:%2:%3:%4").arg(SS.st_dev).arg(SS.st_ino).arg(SS.st_size).arg(SS.st_mtim.tv_sec);
-    return id_string;
-    */
-}
-
-QString MultiScaleTimeSeriesPrivate::get_multiscale_fname()
-{
-    QString path = m_data.makePath();
-    if (path.isEmpty()) {
-        qWarning() << "Unable to get_multiscale_fname.... path is empty.";
-        return "";
-    }
-
-    //if (path.startsWith("http:")) {
-    MountainProcessRunner MPR;
-    MPR.setProcessorName("create_multiscale_timeseries");
-    QVariantMap params;
-    params["timeseries"] = path;
-    MPR.setInputParameters(params);
-    MPR.setMLProxyUrl(m_ml_proxy_url);
-    QString path_out = MPR.makeOutputFilePath("timeseries_out");
-    MPR.setDetach(true);
-    MPR.runProcess();
-    return path_out;
-    //} else {
-    /*
-        QString code = compute_hash(compute_file_code(path));
-        QString ret = CacheManager::globalInstance()->makeLocalFile(code + ".multiscale.mda", CacheManager::ShortTerm);
-        if (!QFile::exists(ret)) {
-            if (!create_multiscale_file(ret))
-                return "";
-        }
-        if (QFile::exists(ret))
-            return ret;
-        else
-            return "";
-            */
-    //}
-}
-
 bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2, long ds_factor)
 {
-    long M = m_data.N1();
-    long N = MultiScaleTimeSeries::smallest_power_of_3_larger_than(m_data.N2());
+    long M, N, N2;
+    {
+        if (!m_initialized) {
+            qWarning() << "Cannot get_data. Multiscale timeseries is not initialized!";
+            return false;
+        }
+        M = m_data.N1();
+        N2 = m_data.N2();
+        N = MultiScaleTimeSeries::smallest_power_of_3_larger_than(N2);
 
-    if ((t2 < 0) || (t1 >= m_data.N2() / ds_factor)) {
-        //we are completely out of range, so we return all zeros
-        min.allocate(M, (t2 - t1 + 1));
-        max.allocate(M, (t2 - t1 + 1));
-        return true;
+        if ((t2 < 0) || (t1 >= m_data.N2() / ds_factor)) {
+            //we are completely out of range, so we return all zeros
+            min.allocate(M, (t2 - t1 + 1));
+            max.allocate(M, (t2 - t1 + 1));
+            return true;
+        }
     }
 
-    if ((t1 < 0) || (t2 >= m_data.N2() / ds_factor)) {
+    if ((t1 < 0) || (t2 >= N2 / ds_factor)) {
         //we are somewhat out of range.
         min.allocate(M, t2 - t1 + 1);
         max.allocate(M, t2 - t1 + 1);
@@ -206,16 +181,15 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         long s1 = t1, s2 = t2;
         if (s1 < 0)
             s1 = 0;
-        if (s2 >= m_data.N2() / ds_factor)
-            s2 = m_data.N2() / ds_factor - 1;
+        if (s2 >= N2 / ds_factor)
+            s2 = N2 / ds_factor - 1;
         if (!get_data(min0, max0, s1, s2, ds_factor)) {
             return false;
         }
         if (t1 >= 0) {
             min.setChunk(min0, 0, 0);
             max.setChunk(max0, 0, 0);
-        }
-        else {
+        } else {
             min.setChunk(min0, 0, -t1);
             max.setChunk(max0, 0, -t1);
         }
@@ -228,116 +202,29 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         return true;
     }
 
-    if (!is_power_of_3(ds_factor)) {
-        qWarning() << "Invalid ds_factor: " + ds_factor;
-        return false;
-    }
-
-    if (m_multiscale_data.path().isEmpty()) {
-        //m_multiscale_data.setPath(m_data.makePath() + ".multiscale");
-        //m_multiscale_data.setRemoteDataType("float32"); //to save download time!
-
-        QString multiscale_fname = get_multiscale_fname();
-        if (multiscale_fname.isEmpty()) {
-            qWarning() << "Unable to create multiscale file";
+    {
+        if (!is_power_of_3(ds_factor)) {
+            qWarning() << "Invalid ds_factor: " + ds_factor;
             return false;
         }
-        m_multiscale_data.setPath(multiscale_fname);
-        m_multiscale_data.setRemoteDataType("float32"); //to save download time!
-        //m_multiscale_data.setRemoteDataType("float32_q8"); //to save download time!
-    }
 
-    long t_offset_min = 0;
-    long ds_factor_0 = 3;
-    while (ds_factor_0 < ds_factor) {
-        t_offset_min += 2 * (N / ds_factor_0);
-        ds_factor_0 *= 3;
-    }
-    long t_offset_max = t_offset_min + N / ds_factor;
+        m_multiscale_data.setRemoteDataType(m_remote_data_type);
 
-    m_multiscale_data.readChunk(min, 0, t1 + t_offset_min, M, t2 - t1 + 1);
-    m_multiscale_data.readChunk(max, 0, t1 + t_offset_max, M, t2 - t1 + 1);
+        long t_offset_min = 0;
+        long ds_factor_0 = 3;
+        while (ds_factor_0 < ds_factor) {
+            t_offset_min += 2 * (N / ds_factor_0);
+            ds_factor_0 *= 3;
+        }
+        long t_offset_max = t_offset_min + N / ds_factor;
 
-    if (thread_interrupt_requested()) {
-        return false;
-    }
+        m_multiscale_data.readChunk(min, 0, t1 + t_offset_min, M, t2 - t1 + 1);
+        m_multiscale_data.readChunk(max, 0, t1 + t_offset_max, M, t2 - t1 + 1);
 
-    return true;
-}
-
-bool MultiScaleTimeSeriesPrivate::downsample_min(const DiskReadMda& X, QString out_fname, long N)
-{
-    /// TODO do this in chunks to avoid using RAM
-    Mda input;
-    if (!X.readChunk(input, 0, 0, X.N1(), N)) {
-        qWarning() << "Problem reading chunk in downsample_min";
-        return false;
-    }
-    Mda output(X.N1(), N / 3);
-    for (long i = 0; i < N / 3; i++) {
-        for (long m = 0; m < X.N1(); m++) {
-            double val1 = input.value(m, i * 3);
-            double val2 = input.value(m, i * 3 + 1);
-            double val3 = input.value(m, i * 3 + 2);
-            double val = qMin(qMin(val1, val2), val3);
-            output.setValue(val, m, i);
+        if (thread_interrupt_requested()) {
+            return false;
         }
     }
-    if (!output.write32(out_fname)) {
-        qWarning() << "Problem write output file in downsample_min: " + out_fname;
-        return false;
-    }
-    return true;
-}
-
-bool MultiScaleTimeSeriesPrivate::downsample_max(const DiskReadMda& X, QString out_fname, long N)
-{
-    /// TO DO do this in chunks to avoid using RAM
-    Mda input;
-    if (!X.readChunk(input, 0, 0, X.N1(), N)) {
-        qWarning() << "Problem reading chunk in downsample_max";
-        return false;
-    }
-    Mda output(X.N1(), N / 3);
-    for (long i = 0; i < N / 3; i++) {
-        for (long m = 0; m < X.N1(); m++) {
-            double val1 = input.value(m, i * 3);
-            double val2 = input.value(m, i * 3 + 1);
-            double val3 = input.value(m, i * 3 + 2);
-            double val = qMax(qMax(val1, val2), val3);
-            output.setValue(val, m, i);
-        }
-    }
-    if (!output.write32(out_fname)) {
-        qWarning() << "Problem write output file in downsample_max: " + out_fname;
-        return false;
-    }
-    return true;
-}
-
-bool MultiScaleTimeSeriesPrivate::write_concatenation(QStringList input_fnames, QString output_fname)
-{
-    long M = 1, N = 0;
-    foreach (QString fname, input_fnames) {
-        DiskReadMda X(fname);
-        M = X.N1();
-        N += X.N2();
-    }
-    DiskWriteMda Y;
-    if (!Y.open(MDAIO_TYPE_FLOAT32, output_fname, M, N)) {
-        qWarning() << "Unable to open output file: " + output_fname;
-        return false;
-    }
-    long offset = 0;
-    foreach (QString fname, input_fnames) {
-        DiskReadMda X(fname);
-        /// TODO do this in chunks so we don't use RAM
-        Mda tmp;
-        X.readChunk(tmp, 0, 0, M, X.N2());
-        Y.writeChunk(tmp, 0, offset);
-        offset += X.N2();
-    }
-    Y.close();
 
     return true;
 }

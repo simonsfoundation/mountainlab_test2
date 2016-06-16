@@ -130,7 +130,7 @@ MVTimeSeriesView::MVTimeSeriesView(MVViewAgent* view_agent)
     d->m_left_click_dragging = false;
     d->m_layout_needed = true;
     this->setMouseTracking(true);
-    d->m_render_manager.setMultiScaleTimeSeries(&d->m_msts);
+    d->m_render_manager.setMultiScaleTimeSeries(d->m_msts);
     d->m_samplerate = 0;
 
     d->m_view_agent = view_agent;
@@ -176,13 +176,6 @@ void MVTimeSeriesView::setTimesLabels(const QVector<double>& times, const QVecto
 {
     d->m_times = times;
     d->m_labels = labels;
-    update();
-}
-
-void MVTimeSeriesView::setChannelColors(const QList<QColor>& colors)
-{
-    d->m_prefs.channel_colors = colors;
-    d->m_render_manager.setChannelColors(colors);
     update();
 }
 
@@ -366,6 +359,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     double WW = W0 - mleft - mright;
     double HH = H0 - mtop - mbottom;
+    d->m_render_manager.setChannelColors(d->m_view_agent->channelColors());
     QImage img = d->m_render_manager.getImage(view_t1, view_t2, d->m_amplitude_factor, WW, HH);
     painter.drawImage(mleft, mtop, img);
 

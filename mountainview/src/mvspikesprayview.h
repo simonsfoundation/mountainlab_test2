@@ -11,28 +11,24 @@
 
 #include <QPaintEvent>
 #include <QWidget>
+#include "mvabstractview.h"
 
 class MVSpikeSprayViewPrivate;
-class MVSpikeSprayView : public QWidget {
+class MVSpikeSprayView : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVSpikeSprayViewPrivate;
-    MVSpikeSprayView();
+    MVSpikeSprayView(MVViewAgent* view_agent);
     virtual ~MVSpikeSprayView();
-
-    void setMLProxyUrl(const QString& url);
-
-    void setTimeseries(DiskReadMda& X);
-    void setFirings(DiskReadMda& F);
     void setLabelsToUse(const QList<int>& labels);
-    void setClipSize(int clip_size);
-    void setLabelColors(const QList<QColor>& colors);
-private slots:
-    void slot_computation_finished();
+
+    void prepareCalculation() Q_DECL_OVERRIDE;
+    void runCalculation() Q_DECL_OVERRIDE;
+    void onCalculationFinished() Q_DECL_OVERRIDE;
 
 protected:
     void paintEvent(QPaintEvent* evt);
-    void keyPressEvent(QKeyEvent *evt);
+    void keyPressEvent(QKeyEvent* evt);
 
 private:
     MVSpikeSprayViewPrivate* d;

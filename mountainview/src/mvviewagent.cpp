@@ -7,6 +7,11 @@
 #include "mvviewagent.h"
 #include <QDebug>
 
+struct TimeseriesStruct {
+    QString name;
+    DiskReadMda data;
+};
+
 class MVViewAgentPrivate {
 public:
     MVViewAgent* q;
@@ -18,6 +23,14 @@ public:
     double m_current_timepoint;
     MVRange m_current_time_range;
     QList<QColor> m_cluster_colors;
+    QList<QColor> m_channel_colors;
+    QMap<QString, TimeseriesStruct> m_timeseries;
+    QString m_current_timeseries_name;
+    DiskReadMda m_firings;
+    double m_sample_rate;
+    QMap<QString, QVariant> m_options;
+    QString m_mlproxy_url;
+    QMap<QString, QColor> m_colors;
 };
 
 MVViewAgent::MVViewAgent()
@@ -26,6 +39,18 @@ MVViewAgent::MVViewAgent()
     d->q = this;
     d->m_current_cluster = 0;
     d->m_current_timepoint = 0;
+
+    // default colors
+    d->m_colors["background"] = QColor(240, 240, 240);
+    d->m_colors["frame1"] = QColor(245, 245, 245);
+    d->m_colors["info_text"] = QColor(80, 80, 80);
+    d->m_colors["view_background"] = QColor(245, 245, 245);
+    d->m_colors["view_background_highlighted"] = QColor(210, 230, 250);
+    d->m_colors["view_background_selected"] = QColor(220, 240, 250);
+    d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
+    d->m_colors["view_frame_selected"] = QColor(50, 20, 20);
+    d->m_colors["divider_line"] = QColor(255, 100, 150);
+    d->m_colors["calculation-in-progress"] = QColor(130, 130, 140, 50);
 }
 
 MVViewAgent::~MVViewAgent()
@@ -63,13 +88,110 @@ MVRange MVViewAgent::currentTimeRange() const
     return d->m_current_time_range;
 }
 
-QColor MVViewAgent::clusterColor(int k)
+QList<QColor> MVViewAgent::channelColors() const
+{
+    return d->m_channel_colors;
+}
+
+QList<QColor> MVViewAgent::clusterColors() const
+{
+    return d->m_cluster_colors;
+}
+
+DiskReadMda MVViewAgent::currentTimeseries()
+{
+    return d->m_timeseries.value(d->m_current_timeseries_name).data;
+}
+
+QString MVViewAgent::currentTimeseriesName()
+{
+    return d->m_current_timeseries_name;
+}
+
+QColor MVViewAgent::clusterColor(int k) const
 {
     if (k <= 0)
         return Qt::black;
     if (d->m_cluster_colors.isEmpty())
         return Qt::black;
     return d->m_cluster_colors[(k - 1) % d->m_cluster_colors.count()];
+}
+
+QColor MVViewAgent::channelColor(int m) const
+{
+    if (m < 0)
+        return Qt::black;
+    if (d->m_channel_colors.isEmpty())
+        return Qt::black;
+    return d->m_channel_colors[m % d->m_channel_colors.count()];
+}
+
+QColor MVViewAgent::color(QString name, QColor default_color) const
+{
+    return d->m_colors.value(name, default_color);
+}
+
+QMap<QString, QColor> MVViewAgent::colors() const
+{
+    return d->m_colors;
+}
+
+QStringList MVViewAgent::timeseriesNames() const
+{
+    return d->m_timeseries.keys();
+}
+
+void MVViewAgent::addTimeseries(QString name, DiskReadMda timeseries)
+{
+    TimeseriesStruct X;
+    X.data = timeseries;
+    X.name = name;
+    d->m_timeseries[name] = X;
+    emit this->timeseriesNamesChanged();
+}
+
+DiskReadMda MVViewAgent::firings()
+{
+    return d->m_firings;
+}
+
+double MVViewAgent::sampleRate() const
+{
+    return d->m_sample_rate;
+}
+
+QVariant MVViewAgent::option(QString name, QVariant default_val)
+{
+    return d->m_options.value(name, default_val);
+}
+
+void MVViewAgent::setCurrentTimeseriesName(QString name)
+{
+    if (d->m_current_timeseries_name == name)
+        return;
+    d->m_current_timeseries_name = name;
+    emit this->currentTimeseriesChanged();
+}
+
+void MVViewAgent::setFirings(const DiskReadMda& F)
+{
+    d->m_firings = F;
+    emit firingsChanged();
+}
+
+void MVViewAgent::setSampleRate(double sample_rate)
+{
+    d->m_sample_rate = sample_rate;
+}
+
+QString MVViewAgent::mlProxyUrl() const
+{
+    return d->m_mlproxy_url;
+}
+
+void MVViewAgent::setMLProxyUrl(QString url)
+{
+    d->m_mlproxy_url = url;
 }
 
 ClusterMerge MVViewAgent::clusterMerge() const
@@ -138,8 +260,18 @@ void MVViewAgent::setCurrentTimepoint(double tp)
     emit currentTimepointChanged();
 }
 
-void MVViewAgent::setCurrentTimeRange(const MVRange& range)
+void MVViewAgent::setCurrentTimeRange(const MVRange& range_in)
 {
+    MVRange range = range_in;
+    if (range.min < 0) {
+        range = range + (0 - range.min);
+    }
+    if (range.max >= this->currentTimeseries().N2()) {
+        range.max = this->currentTimeseries().N2()-1;
+    }
+    if (range.max - range.min < 30) { //don't allow range to be too small
+        range.max = range.min + 30;
+    }
     if (d->m_current_time_range == range)
         return;
     d->m_current_time_range = range;
@@ -149,6 +281,24 @@ void MVViewAgent::setCurrentTimeRange(const MVRange& range)
 void MVViewAgent::setClusterColors(const QList<QColor>& colors)
 {
     d->m_cluster_colors = colors;
+}
+
+void MVViewAgent::setChannelColors(const QList<QColor>& colors)
+{
+    d->m_channel_colors = colors;
+}
+
+void MVViewAgent::setColors(const QMap<QString, QColor>& colors)
+{
+    d->m_colors = colors;
+}
+
+void MVViewAgent::setOption(QString name, QVariant value)
+{
+    if (d->m_options[name] == value)
+        return;
+    d->m_options[name] = value;
+    emit optionChanged(name);
 }
 
 void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)

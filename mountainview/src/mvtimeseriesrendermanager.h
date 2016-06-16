@@ -23,7 +23,8 @@ public:
     MVTimeSeriesRenderManager();
     virtual ~MVTimeSeriesRenderManager();
 
-    void setMultiScaleTimeSeries(MultiScaleTimeSeries* ts);
+    void clear();
+    void setMultiScaleTimeSeries(MultiScaleTimeSeries ts);
     void setChannelColors(const QList<QColor>& colors);
     double visibleMinimum() const;
     double visibleMaximum() const;
@@ -33,8 +34,7 @@ public:
 signals:
     void updated();
 
-private
-slots:
+private slots:
     void slot_thread_finished();
 
 private:
@@ -51,7 +51,7 @@ public:
     long panel_num_points;
     long index;
     QList<QColor> channel_colors;
-    MultiScaleTimeSeries* ts;
+    MultiScaleTimeSeries ts;
     QColor get_channel_color(long m);
 
     //output
@@ -69,8 +69,8 @@ public:
     virtual ~ThreadManager();
     void start(QString id, QThread* thread);
     void stop(QString id);
-private
-slots:
+    void clear();
+private slots:
     void slot_timer();
     void slot_thread_finished();
 

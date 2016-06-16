@@ -36,7 +36,8 @@ public:
 signals:
     ///The user has selected a new current clip, which affects the outputs of currentClipIndex() and currentEvent()
     void currentEventChanged();
-private slots:
+private
+slots:
     void slot_current_x_changed();
 
 private:
