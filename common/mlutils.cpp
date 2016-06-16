@@ -165,7 +165,6 @@ QString http_get_text_curl(const QString& url)
     return ret;
 }
 
-
 QString get_temp_fname()
 {
     return CacheManager::globalInstance()->makeLocalFile();
@@ -235,7 +234,7 @@ QString http_get_text_curl(const QString& url)
 
 QString http_get_binary_file(const QString& url)
 {
-    #ifdef QT_GUI_LIB
+#ifdef QT_GUI_LIB
     if (in_gui_thread()) {
         qCritical() << "Cannot call http_get_binary_file from within the GUI thread: " + url;
         exit(-1);
@@ -272,11 +271,11 @@ QString http_get_binary_file(const QString& url)
         return "";
     }
     return fname;
-    #else
+#else
     Q_UNUSED(url)
     qWarning() << "Cannot download binary file in non-gui application.";
     return "";
-    #endif
+#endif
 }
 
 QString abbreviate(const QString& str, int len1, int len2)
@@ -288,7 +287,7 @@ QString abbreviate(const QString& str, int len1, int len2)
 
 QString http_get_text(const QString& url)
 {
-    #ifdef QT_GUI_LIB
+#ifdef QT_GUI_LIB
     if (in_gui_thread()) {
         return http_get_text_curl(url);
     }
@@ -310,9 +309,43 @@ QString http_get_text(const QString& url)
 
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_downloaded", ret.count());
     return ret;
-    #else
+#else
     Q_UNUSED(url)
     qWarning() << "Cannot download text file in non-gui application.";
     return "";
-    #endif
+#endif
+}
+
+QString get_path_query(const QString& path)
+{
+    int ind1 = path.lastIndexOf("?");
+    int ind2 = path.lastIndexOf("/");
+    if (ind1 < 0)
+        return "";
+    if (ind2 > ind1)
+        return "";
+    return path.mid(ind1 + 1);
+}
+
+QString get_path_without_query(const QString& path)
+{
+    int count = get_path_query(path).count();
+    if (count == 0)
+        return path;
+    else
+        return path.mid(0, path.count() - count - 1);
+}
+
+QMap<QString, QString> parse_query(const QString& query)
+{
+    QMap<QString, QString> ret;
+    QStringList list = query.split("&");
+    foreach(QString str, list)
+    {
+        QStringList tmp = str.split("=");
+        if (tmp.count() == 2) {
+            ret[tmp[0]] = tmp[1];
+        }
+    }
+    return ret;
 }
