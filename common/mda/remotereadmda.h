@@ -27,7 +27,7 @@ public:
     long downloadChunkSize();
 
     void setPath(const QString& path);
-    QString makePath() const;
+    QString makePath() const; //not capturing the reshaping
 
     bool reshape(long N1b, long N2b, long N3b);
 

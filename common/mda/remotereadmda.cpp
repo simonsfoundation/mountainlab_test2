@@ -86,42 +86,16 @@ long RemoteReadMda::downloadChunkSize()
     return d->m_download_chunk_size;
 }
 
-void RemoteReadMda::setPath(const QString& path_in)
+void RemoteReadMda::setPath(const QString& file_path)
 {
     d->construct_and_clear();
 
-    QString file_path;
-    int ind00 = path_in.lastIndexOf("?");
-    QMap<QString, QString> query;
-    if (ind00 > 0) {
-        file_path = path_in.mid(0, ind00);
-        QString query_str = path_in.mid(ind00 + 1);
-        QStringList list = query_str.split("&");
-        foreach(QString str, list)
-        {
-            QStringList tmp = str.split("=");
-            if (tmp.count() == 2) {
-                query[tmp[0]] = tmp[1];
-            }
-        }
-    } else {
-        file_path = path_in;
-    }
-
     d->m_path = file_path;
-
-    if (query.contains("N1")) {
-        this->reshape(query.value("N1", "1").toLong(), query.value("N2", "1").toLong(), query.value("N3", "1").toLong());
-    }
 }
 
 QString RemoteReadMda::makePath() const
 {
-    if (d->m_reshaped) {
-        return QString("%1?N1=%2&N2=%3&N3=%4").arg(d->m_path).arg(N1()).arg(N2()).arg(N3());
-    } else {
-        return d->m_path;
-    }
+    return d->m_path;
 }
 
 bool RemoteReadMda::reshape(long N1b, long N2b, long N3b)

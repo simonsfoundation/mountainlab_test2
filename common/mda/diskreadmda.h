@@ -35,7 +35,7 @@ public:
     void setDownloadChunkSize(long size);
     long downloadChunkSize();
 
-    QString makePath() const;
+    QString makePath() const; //not capturing the reshaping
 
     ///The first dimension of the array
     long N1() const;

@@ -14,6 +14,7 @@ bool write_concatenation(QStringList input_fnames, QString output_fname);
 bool create_multiscale_timeseries(QString path_in, QString path_out)
 {
     DiskReadMda X(path_in);
+    X.reshape(X.N1(),X.N2()*X.N3()); //to handle the case of clips (3D array)
 
     long N = smallest_power_of_3_larger_than(X.N2());
 

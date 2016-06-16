@@ -430,9 +430,9 @@ void MVMainWindowPrivate::update_sizes()
             tv_height = 300;
         }
         if (H0 > 900) {
-            tv_height = 200;
+            tv_height = 300;
         } else {
-            tv_height = 100;
+            tv_height = 200;
         }
         int cp_height = H0 - tv_height;
         QList<int> sizes;
