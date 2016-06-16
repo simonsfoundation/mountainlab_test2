@@ -21,5 +21,7 @@ QString resolve_path(QString basepath, QString path);
 bool in_gui_thread();
 bool thread_interrupt_requested();
 QString http_get_text_curl(const QString& url);
+QString http_get_text(const QString& url);
+QString http_get_binary_file(const QString& url);
 
 #endif // MLUTILS_H

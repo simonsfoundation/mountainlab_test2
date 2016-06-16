@@ -108,7 +108,7 @@ void MultiScaleTimeSeries::initialize()
     MPR.runProcess();
     {
         d->m_multiscale_data.setPath(path_out);
-        task.log(QString("%1x%2").arg(d->m_multiscale_data.N1()).arg(d->m_multiscale_data.N2()));
+        task.log(QString("%1x%2 -- %3x%4").arg(d->m_multiscale_data.N1()).arg(d->m_multiscale_data.N2()).arg(d->m_data.N1()).arg(d->m_data.N2()));
         d->m_initialized = true;
     }
 }
