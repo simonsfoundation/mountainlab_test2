@@ -85,6 +85,7 @@ void MVClipsWidget::runCalculation()
 void MVClipsWidget::onCalculationFinished()
 {
     DiskReadMda clips = d->m_computer.clips.reshaped(d->m_computer.clips.N1(), d->m_computer.clips.N2() * d->m_computer.clips.N3());
+    d->m_view_view_agent.setSampleRate(this->viewAgent()->sampleRate());
     d->m_view_view_agent.addTimeseries("clips", clips);
     d->m_view_view_agent.setCurrentTimeseriesName("clips");
     d->m_view_view_agent.setCurrentTimeRange(MVRange(0, clips.N2() - 1));
