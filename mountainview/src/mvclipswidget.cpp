@@ -12,6 +12,7 @@
 #include "mountainprocessrunner.h"
 #include "msmisc.h"
 #include "mlutils.h"
+#include "mvtimeseriesview2.h"
 
 /// TODO (HIGH) merge should apply to all widgets
 /// TODO (HIGH) put firings, firings_filtered, timeseries into MVViewAgent
@@ -27,7 +28,7 @@ public:
     QList<int> labels_to_use;
 
     //output
-    Mda clips;
+    DiskReadMda clips;
     QList<double> times;
     QList<int> labels;
 
@@ -38,7 +39,9 @@ class MVClipsWidgetPrivate {
 public:
     MVClipsWidget* q;
     QList<int> m_labels_to_use;
-    MVClipsView* m_view;
+    //MVClipsView* m_view;
+    MVTimeSeriesView2* m_view;
+    MVViewAgent m_view_view_agent;
     MVClipsWidgetComputer m_computer;
 };
 
@@ -48,7 +51,8 @@ MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
     d = new MVClipsWidgetPrivate;
     d->q = this;
 
-    d->m_view = new MVClipsView(view_agent);
+    //d->m_view = new MVClipsView(view_agent);
+    d->m_view = new MVTimeSeriesView2(&d->m_view_view_agent);
 
     QHBoxLayout* hlayout = new QHBoxLayout;
     hlayout->addWidget(d->m_view);
@@ -80,9 +84,13 @@ void MVClipsWidget::runCalculation()
 
 void MVClipsWidget::onCalculationFinished()
 {
-    d->m_view->setClips(d->m_computer.clips);
-    d->m_view->setTimes(d->m_computer.times);
-    d->m_view->setLabels(d->m_computer.labels);
+    DiskReadMda clips = d->m_computer.clips.reshaped(d->m_computer.clips.N1(), d->m_computer.clips.N2() * d->m_computer.clips.N3());
+    d->m_view_view_agent.addTimeseries("clips", clips);
+    d->m_view_view_agent.setCurrentTimeseriesName("clips");
+    d->m_view_view_agent.setCurrentTimeRange(MVRange(0, clips.N2() - 1));
+    //d->m_view->setClips(d->m_computer.clips);
+    //d->m_view->setTimes(d->m_computer.times);
+    //d->m_view->setLabels(d->m_computer.labels);
 }
 
 void MVClipsWidget::setLabelsToUse(const QList<int>& labels)
@@ -119,7 +127,7 @@ void MVClipsWidgetComputer::compute()
         MT.setProcessorName(processor_name);
 
         QMap<QString, QVariant> params;
-        params["firings"] = firings.path();
+        params["firings"] = firings.makePath();
         params["labels"] = labels_str;
         MT.setInputParameters(params);
         //MT.setMscmdServerUrl(mscmdserver_url);
@@ -141,7 +149,7 @@ void MVClipsWidgetComputer::compute()
         MT.setProcessorName(processor_name);
 
         QMap<QString, QVariant> params;
-        params["timeseries"] = timeseries.path();
+        params["timeseries"] = timeseries.makePath();
         params["firings"] = firings_out_path;
         params["clip_size"] = clip_size;
         MT.setInputParameters(params);
@@ -168,9 +176,12 @@ void MVClipsWidgetComputer::compute()
     DiskReadMda CC(clips_path);
     CC.setRemoteDataType("float32_q8"); //to save download time
     task.log(QString("CC: %1 x %2 x %3, clip_size=%4").arg(CC.N1()).arg(CC.N2()).arg(CC.N3()).arg(clip_size));
+    clips = CC;
+    /*
     CC.readChunk(clips, 0, 0, 0, CC.N1(), CC.N2(), CC.N3());
     if (thread_interrupt_requested()) {
         task.error(QString("Halted while reading chunk from: " + clips_path));
         return;
     }
+    */
 }

@@ -14,12 +14,8 @@
 #include <QDir>
 #include <QImageWriter>
 #include "commandlineparams.h"
-#include "diskarraymodel_new.h"
 #include "histogramview.h"
-#include "mvlabelcomparewidget.h"
 #include "mvmainwindow.h"
-#include "sstimeserieswidget.h"
-#include "sstimeseriesview.h"
 #include "mvclusterwidget.h"
 #include "closemehandler.h"
 #include "remotereadmda.h"

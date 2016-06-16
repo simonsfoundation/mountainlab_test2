@@ -267,7 +267,7 @@ void MVSpikeSprayComputer::compute()
         MT.setProcessorName(processor_name);
 
         QMap<QString, QVariant> params;
-        params["firings"] = firings.path();
+        params["firings"] = firings.makePath();
         params["labels"] = labels_str;
         params["max_per_label"] = 512;
         MT.setInputParameters(params);
@@ -293,7 +293,7 @@ void MVSpikeSprayComputer::compute()
         MT.setProcessorName(processor_name);
 
         QMap<QString, QVariant> params;
-        params["timeseries"] = timeseries.path();
+        params["timeseries"] = timeseries.makePath();
         params["firings"] = firings_out_path;
         params["clip_size"] = clip_size;
         MT.setInputParameters(params);

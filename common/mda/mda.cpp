@@ -673,13 +673,13 @@ double Mda::maximum()
     return ret;
 }
 
-void Mda::reshape(int N1b, int N2b, int N3b, int N4b, int N5b, int N6b)
+bool Mda::reshape(int N1b, int N2b, int N3b, int N4b, int N5b, int N6b)
 {
     if (N1b * N2b * N3b * N4b * N5b * N6b != this->totalSize()) {
-        qWarning() << "Unable to reshape, wrong total size";
+        qWarning() << "Unable to reshape Mda, wrong total size";
         qWarning() << N1b << N2b << N3b << N4b << N5b << N6b;
         qWarning() << N1() << N2() << N3() << N4() << N5() << N6();
-        return;
+        return false;
     }
     d->m_dims[0] = N1b;
     d->m_dims[1] = N2b;
@@ -687,6 +687,7 @@ void Mda::reshape(int N1b, int N2b, int N3b, int N4b, int N5b, int N6b)
     d->m_dims[3] = N4b;
     d->m_dims[4] = N5b;
     d->m_dims[5] = N6b;
+    return true;
 }
 
 void Mda::set(double val, long i)

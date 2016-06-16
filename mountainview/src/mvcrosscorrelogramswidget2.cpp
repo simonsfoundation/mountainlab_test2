@@ -421,7 +421,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
     int K = compute_max(labels);
 
-    if (options.mode == "all_auto_correlograms") {
+    if (options.mode == All_Auto_Correlograms) {
         for (int k = 1; k <= K; k++) {
             Correlogram CC;
             CC.k1 = k;
@@ -429,7 +429,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             this->correlograms << CC;
         }
     }
-    else if (options.mode == "cross_correlograms") {
+    else if (options.mode == Cross_Correlograms) {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram CC;
@@ -438,7 +438,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             this->correlograms << CC;
         }
     }
-    else if (options.mode == "matrix_of_cross_correlograms") {
+    else if (options.mode == Matrix_Of_Cross_Correlograms) {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram CC;

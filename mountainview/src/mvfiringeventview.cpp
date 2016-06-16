@@ -7,7 +7,6 @@
 #include <QTimer>
 #include <QMouseEvent>
 #include <QMenu>
-#include "sstimeseriesview.h"
 #include "mvutils.h"
 #include "msmisc.h"
 

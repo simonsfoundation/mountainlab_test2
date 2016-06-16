@@ -6,7 +6,6 @@
 #ifndef MVUTILS_H
 #define MVUTILS_H
 
-#include "diskarraymodel_new.h"
 #include "diskreadmda.h"
 #include <QList>
 #include <QColor>
@@ -37,15 +36,6 @@ struct Epoch {
 };
 ///Read a set of epochs from a text file (special format)
 QList<Epoch> read_epochs(const QString& path);
-
-///Utility
-Mda compute_mean_waveform(DiskArrayModel_New* C);
-///Utility
-Mda compute_mean_stdev_waveform(DiskArrayModel_New* C);
-///Utility
-Mda compute_features(DiskArrayModel_New* C);
-///Utility
-Mda compute_features(const QList<DiskArrayModel_New*>& C);
 
 QColor get_heat_map_color(double val);
 

@@ -111,8 +111,8 @@ void SpikeSpyWidget::slot_open_mountainview()
 
     MVMainWindow* W = new MVMainWindow(d->m_view_agent);
     MVFile ff;
-    ff.addTimeseriesPath("Timeseries", data.timeseries.path());
-    ff.setFiringsPath(data.firings.path());
+    ff.addTimeseriesPath("Timeseries", data.timeseries.makePath());
+    ff.setFiringsPath(data.firings.makePath());
     W->setMVFile(ff);
     W->setDefaultInitialization();
     W->show();

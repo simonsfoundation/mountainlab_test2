@@ -135,7 +135,7 @@ public:
     double minimum();
     double maximum();
 
-    void reshape(int N1b, int N2b, int N3b = 1, int N4b = 1, int N5b = 1, int N6b = 1);
+    bool reshape(int N1b, int N2b, int N3b = 1, int N4b = 1, int N5b = 1, int N6b = 1);
 
 private:
     MdaPrivate* d;
