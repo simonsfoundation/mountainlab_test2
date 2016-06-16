@@ -323,6 +323,7 @@ void MVTimeSeriesRenderManagerThread::run()
         if (thread_interrupt_requested())
             return;
         pen.setColor(get_channel_color(m));
+        if (ds_factor==1) pen.setWidth(3);
         painter.setPen(pen);
         QRectF geom(0, y0, panel_width, channel_height);
         /*
@@ -357,15 +358,20 @@ void MVTimeSeriesRenderManagerThread::run()
             else
                 path.lineTo(pt_min);
         }
-        for (long ii = t2; ii >= t1; ii--) {
-            double val_max = Xmax.value(m, ii - t1);
-            double pctx = (ii - t1) * 1.0 / (t2 - t1);
-            double pcty_max = 1 - (val_max * amp_factor + 1) / 2;
-            QPointF pt_max = QPointF(geom.x() + pctx * geom.width(), geom.y() + pcty_max * geom.height());
-            path.lineTo(pt_max);
+        if (ds_factor>1) {
+            for (long ii = t2; ii >= t1; ii--) {
+                double val_max = Xmax.value(m, ii - t1);
+                double pctx = (ii - t1) * 1.0 / (t2 - t1);
+                double pcty_max = 1 - (val_max * amp_factor + 1) / 2;
+                QPointF pt_max = QPointF(geom.x() + pctx * geom.width(), geom.y() + pcty_max * geom.height());
+                path.lineTo(pt_max);
+            }
+            path.lineTo(first);
+            painter.fillPath(path, painter.pen().color());
         }
-        path.lineTo(first);
-        painter.fillPath(path, painter.pen().color());
+        else {
+            painter.drawPath(path);
+        }
 
         if (thread_interrupt_requested())
             return;
