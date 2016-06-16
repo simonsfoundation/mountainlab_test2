@@ -23,10 +23,6 @@ double compute_mean(const QList<double>& X);
 double compute_stdev(const QList<double>& X);
 Mda grab_clips_subset(Mda& clips, const QList<int>& inds);
 double compute_norm(long N, double* X);
-#ifdef QT_GUI_LIB
-QString http_get_text(const QString& url);
-QString http_get_binary_file(const QString& url);
-#endif
 QString compute_hash(const QString& str);
 
 #endif // MSMISC_H
