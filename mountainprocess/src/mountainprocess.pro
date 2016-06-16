@@ -30,8 +30,8 @@ HEADERS += mlutils.h
 SOURCES += mlutils.cpp
 
 #DEFINES += USE_REMOTE_MDA
-#HEADERS += remotereadmda.h
-#SOURCES += remotereadmda.cpp
+HEADERS += remotereadmda.h
+SOURCES += remotereadmda.cpp
 
 INCLUDEPATH += ../../common/cachemanager
 VPATH += ../../common/cachemanager

@@ -89,6 +89,8 @@ DEPENDPATH += ../../common/mda
 VPATH += ../../common/mda
 HEADERS += diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
 SOURCES += diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
+HEADERS += remotereadmda.h
+SOURCES += remotereadmda.cpp
 
 INCLUDEPATH += ../../common/cachemanager
 DEPENDPATH += ../../common/cachemanager
