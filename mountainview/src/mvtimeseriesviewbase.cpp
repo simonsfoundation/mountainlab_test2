@@ -46,12 +46,29 @@ struct TickStruct {
     bool show_scale;
 };
 
+class mvtsvb_calculator {
+public:
+    //input
+    DiskReadMda firings;
+    QSet<int> labels_to_use;
+
+    //output
+    QVector<double> times;
+    QVector<int> labels;
+
+    void compute();
+};
+
 class MVTimeSeriesViewBasePrivate {
 public:
     MVTimeSeriesViewBase* q;
 
     QVector<double> m_times;
     QVector<int> m_labels;
+
+    QSet<int> m_labels_to_view;
+
+    mvtsvb_calculator m_calculator;
 
     mvtsv_prefs m_prefs;
     mvtsv_colors m_colors;
@@ -101,6 +118,8 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
 
+    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+
     this->setFocusPolicy(Qt::StrongFocus);
 }
 
@@ -111,14 +130,19 @@ MVTimeSeriesViewBase::~MVTimeSeriesViewBase()
 
 void MVTimeSeriesViewBase::prepareCalculation()
 {
+    d->m_calculator.firings = viewAgent()->firings();
+    d->m_calculator.labels_to_use = d->m_labels_to_view;
 }
 
 void MVTimeSeriesViewBase::runCalculation()
 {
+    d->m_calculator.compute();
 }
 
 void MVTimeSeriesViewBase::onCalculationFinished()
 {
+    d->m_times = d->m_calculator.times;
+    d->m_labels = d->m_calculator.labels;
 }
 
 /*
@@ -138,6 +162,12 @@ void MVTimeSeriesViewBase::setNumTimepoints(long N)
 void MVTimeSeriesViewBase::setColors(mvtsv_colors colors)
 {
     d->m_colors = colors;
+}
+
+void MVTimeSeriesViewBase::setLabelsToView(const QSet<int>& labels)
+{
+    d->m_labels_to_view = labels;
+    this->recalculate();
 }
 
 QRectF MVTimeSeriesViewBase::contentGeometry()
@@ -708,5 +738,19 @@ void MVTimeSeriesViewBasePrivate::update_cursor()
     }
     else {
         q->setCursor(Qt::ArrowCursor);
+    }
+}
+
+void mvtsvb_calculator::compute()
+{
+    if (labels_to_use.isEmpty())
+        return;
+    long L = firings.N2();
+    for (long i = 0; i < L; i++) {
+        int label0 = firings.value(2, i);
+        if (labels_to_use.contains(label0)) {
+            times << firings.value(1, i);
+            labels << label0;
+        }
     }
 }

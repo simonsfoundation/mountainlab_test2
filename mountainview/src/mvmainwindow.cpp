@@ -210,9 +210,6 @@ void MVMainWindow::setMVFile(MVFile ff)
     foreach (QString name, timeseries_names) {
         DiskReadMda TS(d->m_mv_file.timeseriesPathResolved(name));
         d->m_view_agent->addTimeseries(name, DiskReadMda(TS));
-        if (TS.N2()>1) {
-            d->m_view_agent->setCurrentTimeRange(MVRange(0,TS.N2()-1));
-        }
     }
 
     d->m_view_agent->setOption("clip_size", d->m_mv_file.viewOptions()["clip_size"].toInt());
@@ -226,6 +223,8 @@ void MVMainWindow::setMVFile(MVFile ff)
     else {
         d->m_view_agent->setCurrentTimeseriesName(timeseries_names.value(0));
     }
+
+    d->m_view_agent->setCurrentTimeRange(MVRange(0, d->m_view_agent->currentTimeseries().N2()-1));
 
     {
         QJsonObject ann0 = d->m_mv_file.annotations();
@@ -579,6 +578,8 @@ void MVMainWindowPrivate::open_timeseries()
 {
     MVTimeSeriesView2* X = new MVTimeSeriesView2(m_view_agent);
     X->setProperty("widget_type", "mvtimeseries");
+    QList<int> ks = m_view_agent->selectedClusters();
+    X->setLabelsToView(ks.toSet());
     add_tab(X, QString("Timeseries"));
 }
 

@@ -266,6 +266,9 @@ void MVViewAgent::setCurrentTimeRange(const MVRange& range_in)
     if (range.min < 0) {
         range = range + (0 - range.min);
     }
+    if (range.max >= this->currentTimeseries().N2()) {
+        range.max = this->currentTimeseries().N2()-1;
+    }
     if (range.max - range.min < 30) { //don't allow range to be too small
         range.max = range.min + 30;
     }
@@ -339,4 +342,3 @@ MVRange MVRange::operator*(double scale)
     double span = (max - min);
     return MVRange(center - span / 2 * scale, center + span / 2 * scale);
 }
-

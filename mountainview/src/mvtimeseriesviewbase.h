@@ -41,6 +41,7 @@ public:
     void setNumTimepoints(long N); //called by subclass
     void setColors(mvtsv_colors colors);
 
+    void setLabelsToView(const QSet<int>& labels);
     void setActivated(bool val);
     void setMarkersVisible(bool val);
     void setMargins(double mleft, double mright, double mtop, double mbottom);
