@@ -43,7 +43,6 @@ public:
     double m_amplitude_factor;
     QList<mvtsv_channel> m_channels;
     bool m_layout_needed;
-    bool m_time_range_has_been_initialized;
     int m_num_channels;
 
     MVTimeSeriesRenderManager m_render_manager;
@@ -64,7 +63,6 @@ MVTimeSeriesView2::MVTimeSeriesView2(MVViewAgent* view_agent)
     d->m_amplitude_factor = 1.0;
     d->m_render_manager.setChannelColors(view_agent->channelColors());
     d->m_layout_needed = true;
-    d->m_time_range_has_been_initialized = false;
     d->m_num_channels = 1;
 
     QObject::connect(&d->m_render_manager, SIGNAL(updated()), this, SLOT(update()));
@@ -105,13 +103,7 @@ void MVTimeSeriesView2::onCalculationFinished()
         this->setAmplitudeFactor(1.5 / max_range);
     }
 
-    if (!d->m_time_range_has_been_initialized) {
-        if (viewAgent()->currentTimeseries().N2() >= 10) {
-            this->setNumTimepoints(viewAgent()->currentTimeseries().N2());
-            this->setTimeRange(MVRange(0, viewAgent()->currentTimeseries().N2() - 1));
-            d->m_time_range_has_been_initialized = true;
-        }
-    }
+    d->m_layout_needed = true;
 
     MVTimeSeriesViewBase::onCalculationFinished();
 }
@@ -159,9 +151,8 @@ void MVTimeSeriesView2::paintContent(QPainter* painter)
     double WW = this->contentGeometry().width();
     double HH = this->contentGeometry().height();
     QImage img;
-    img=d->m_render_manager.getImage(viewAgent()->currentTimeRange().min, viewAgent()->currentTimeRange().max, d->m_amplitude_factor, WW, HH);
+    img = d->m_render_manager.getImage(viewAgent()->currentTimeRange().min, viewAgent()->currentTimeRange().max, d->m_amplitude_factor, WW, HH);
     painter->drawImage(this->contentGeometry().left(), this->contentGeometry().top(), img);
-
 
     // Channel labels
     d->paint_channel_labels(painter, this->width(), this->height());
@@ -172,10 +163,12 @@ void MVTimeSeriesView2::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    } else {
+    }
+    else {
         MVTimeSeriesViewBase::keyPressEvent(evt);
     }
 }
@@ -214,7 +207,7 @@ void MVTimeSeriesView2Private::paint_channel_labels(QPainter* painter, double W,
     for (int m = 0; m < M; m++) {
         double ypix = val2ypix(m, 0);
         QRectF rect(0, ypix - 30, q->contentGeometry().left() - 5, 60);
-        QString str = QString("%1").arg(m + 1);
+        QString str = QString("[%1]").arg(m + 1);
         painter->drawText(rect, Qt::AlignRight | Qt::AlignVCenter, str);
     }
 }
@@ -240,7 +233,8 @@ double MVTimeSeriesView2Private::ypix2val(int m, double ypix)
     if (m_amplitude_factor) {
         double val = (ypix - (CH->geometry.y() + CH->geometry.height() / 2)) / m_amplitude_factor / (CH->geometry.height() / 2);
         return val;
-    } else
+    }
+    else
         return 0;
 }
 

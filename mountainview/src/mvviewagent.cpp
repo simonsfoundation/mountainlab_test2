@@ -260,8 +260,15 @@ void MVViewAgent::setCurrentTimepoint(double tp)
     emit currentTimepointChanged();
 }
 
-void MVViewAgent::setCurrentTimeRange(const MVRange& range)
+void MVViewAgent::setCurrentTimeRange(const MVRange& range_in)
 {
+    MVRange range = range_in;
+    if (range.min < 0) {
+        range = range + (0 - range.min);
+    }
+    if (range.max - range.min < 30) { //don't allow range to be too small
+        range.max = range.min + 30;
+    }
     if (d->m_current_time_range == range)
         return;
     d->m_current_time_range = range;
@@ -301,14 +308,16 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        } else {
+        }
+        else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    } else {
+    }
+    else {
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
     }
@@ -330,3 +339,4 @@ MVRange MVRange::operator*(double scale)
     double span = (max - min);
     return MVRange(center - span / 2 * scale, center + span / 2 * scale);
 }
+

@@ -8,6 +8,7 @@
 #define MVABSTRACTVIEW_H
 
 #include "mvviewagent.h"
+#include "mlutils.h"
 #include <QWidget>
 
 class MVAbstractViewPrivate;

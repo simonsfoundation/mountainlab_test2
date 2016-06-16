@@ -20,13 +20,11 @@ struct mvtsv_prefs {
         mbottom = 40;
         mleft = 40;
         mright = 40;
-        marker_color = QColor(200, 0, 0, 120);
         markers_visible = true;
     }
 
     int num_label_levels;
     int label_font_height;
-    QColor marker_color;
     double mleft, mright, mtop, mbottom;
     bool markers_visible;
 };
@@ -56,6 +54,7 @@ public:
     QVector<int> m_labels;
 
     mvtsv_prefs m_prefs;
+    mvtsv_colors m_colors;
 
     MVRange m_selected_t_range;
     bool m_activated;
@@ -136,6 +135,11 @@ void MVTimeSeriesViewBase::setNumTimepoints(long N)
     d->m_num_timepoints = N;
 }
 
+void MVTimeSeriesViewBase::setColors(mvtsv_colors colors)
+{
+    d->m_colors = colors;
+}
+
 QRectF MVTimeSeriesViewBase::contentGeometry()
 {
     return d->content_geometry();
@@ -158,15 +162,6 @@ void MVTimeSeriesViewBase::resizeEvent(QResizeEvent* evt)
 
 void MVTimeSeriesViewBase::setTimeRange(MVRange range)
 {
-    if (range.min < 0) {
-        range = range + (0 - range.min);
-    }
-    if (range.max >= d->m_num_timepoints) {
-        range = range + (d->m_num_timepoints - range.max);
-    }
-    if ((range.min < 0) || (range.max >= d->m_num_timepoints)) {
-        range = MVRange(0, d->m_num_timepoints - 1);
-    }
     viewAgent()->setCurrentTimeRange(range);
 }
 
@@ -215,9 +210,7 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    QColor back_col = QColor(240, 240, 240);
-    if (d->m_activated)
-        back_col = Qt::white;
+    QColor back_col = d->m_colors.background_color;
     painter.fillRect(0, 0, width(), height(), back_col);
 
     double W0 = this->width();
@@ -243,7 +236,8 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
         double min_avg_pixels_per_marker = 10;
         if ((times0.count()) && (W0 / times0.count() >= min_avg_pixels_per_marker)) {
             d->paint_markers(&painter, times0, labels0, W0, H0);
-        } else {
+        }
+        else {
             if (times0.count()) {
                 d->paint_message_at_top(&painter, "Zoom in to view markers", W0, H0);
             }
@@ -262,7 +256,8 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
         double samplerate = viewAgent()->sampleRate();
         if (samplerate) {
             str = QString("%1 (tp: %2)").arg(d->format_time(viewAgent()->currentTimepoint())).arg((long)viewAgent()->currentTimepoint());
-        } else {
+        }
+        else {
             str = QString("Sample rate is null (tp: %2)").arg((long)viewAgent()->currentTimepoint());
         }
         d->paint_status_string(&painter, W0, H0, str);
@@ -323,10 +318,12 @@ void MVTimeSeriesViewBase::wheelEvent(QWheelEvent* evt)
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
             d->zoom_out(viewAgent()->currentTimepoint());
-        } else if (delta > 0) {
+        }
+        else if (delta > 0) {
             d->zoom_in(viewAgent()->currentTimepoint());
         }
-    } else {
+    }
+    else {
         //This used to allow zooming at hover position -- probably not needed
         /*
         float frac = 1;
@@ -347,22 +344,28 @@ void MVTimeSeriesViewBase::keyPressEvent(QKeyEvent* evt)
         double range = trange.max - trange.min;
         viewAgent()->setCurrentTimepoint(viewAgent()->currentTimepoint() - range / 10);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_Right) {
+    }
+    else if (evt->key() == Qt::Key_Right) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
         viewAgent()->setCurrentTimepoint(viewAgent()->currentTimepoint() + range / 10);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_Home) {
+    }
+    else if (evt->key() == Qt::Key_Home) {
         viewAgent()->setCurrentTimepoint(0);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_End) {
+    }
+    else if (evt->key() == Qt::Key_End) {
         viewAgent()->setCurrentTimepoint(d->m_num_timepoints - 1);
         d->scroll_to_current_timepoint();
-    } else if (evt->key() == Qt::Key_Equal) {
+    }
+    else if (evt->key() == Qt::Key_Equal) {
         d->zoom_in(viewAgent()->currentTimepoint());
-    } else if (evt->key() == Qt::Key_Minus) {
+    }
+    else if (evt->key() == Qt::Key_Minus) {
         d->zoom_out(viewAgent()->currentTimepoint());
-    } else {
+    }
+    else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -480,7 +483,7 @@ void MVTimeSeriesViewBasePrivate::paint_markers(QPainter* painter, const QVector
         }
     }
     QPen pen = painter->pen();
-    pen.setColor(m_prefs.marker_color);
+    pen.setColor(m_colors.marker_color);
     painter->setPen(pen);
     QFont font = painter->font();
     font.setPixelSize(m_prefs.label_font_height);
@@ -499,7 +502,7 @@ void MVTimeSeriesViewBasePrivate::paint_message_at_top(QPainter* painter, QStrin
 {
     Q_UNUSED(H)
     QPen pen = painter->pen();
-    pen.setColor(m_prefs.marker_color);
+    pen.setColor(m_colors.marker_color);
     painter->setPen(pen);
     QFont font = painter->font();
     font.setPixelSize(m_prefs.label_font_height);
@@ -517,8 +520,10 @@ void MVTimeSeriesViewBasePrivate::paint_time_axis(QPainter* painter, double W, d
     double view_t1 = q->viewAgent()->currentTimeRange().min;
     double view_t2 = q->viewAgent()->currentTimeRange().max;
 
+    QColor axis_color = m_colors.axis_color;
+
     QPen pen = painter->pen();
-    pen.setColor(Qt::black);
+    pen.setColor(axis_color);
     painter->setPen(pen);
 
     QPointF pt1(m_prefs.mleft, H - m_prefs.mbottom);
@@ -593,13 +598,15 @@ void MVTimeSeriesViewBasePrivate::paint_time_axis_unit(QPainter* painter, double
 
 void MVTimeSeriesViewBasePrivate::paint_status_string(QPainter* painter, double W, double H, QString str)
 {
+    QColor text_col = m_colors.text_color;
+
     double status_height = 12;
     double voffset = 4;
     QFont font = painter->font();
     font.setPixelSize(status_height);
     painter->setFont(font);
     QPen pen = painter->pen();
-    pen.setColor(Qt::black);
+    pen.setColor(text_col);
     painter->setPen(pen);
 
     QRectF rect(m_prefs.mleft, H - voffset - status_height, W - m_prefs.mleft - m_prefs.mright, status_height);
@@ -665,7 +672,8 @@ void MVTimeSeriesViewBasePrivate::scroll_to_current_timepoint()
     double range = trange.max - trange.min;
     if (t < trange.min) {
         q->setTimeRange(trange + (t - trange.min - range / 10));
-    } else {
+    }
+    else {
         q->setTimeRange(trange + (t - trange.max + range / 10));
     }
 }
@@ -697,7 +705,8 @@ void MVTimeSeriesViewBasePrivate::update_cursor()
 {
     if (m_left_click_dragging) {
         q->setCursor(Qt::OpenHandCursor);
-    } else {
+    }
+    else {
         q->setCursor(Qt::ArrowCursor);
     }
 }

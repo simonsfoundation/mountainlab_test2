@@ -21,6 +21,10 @@ public:
     MVFiringEventView2(MVViewAgent* view_agent);
     virtual ~MVFiringEventView2();
 
+    void prepareCalculation() Q_DECL_OVERRIDE;
+    void runCalculation() Q_DECL_OVERRIDE;
+    void onCalculationFinished() Q_DECL_OVERRIDE;
+
     void setLabelsToUse(const QSet<int>& labels_to_use);
 
     void paintContent(QPainter* painter);
@@ -29,8 +33,6 @@ public:
     void autoSetAmplitudeRange();
 
 private slots:
-    void slot_restart_calculation();
-    void slot_computation_finished();
 
 private:
     MVFiringEventView2Private* d;

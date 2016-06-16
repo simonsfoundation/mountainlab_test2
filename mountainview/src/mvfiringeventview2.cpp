@@ -11,11 +11,10 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <taskprogress.h>
-#include "computationthread.h"
 
 /// TODO control brightness in firing event view
 
-class MVFiringEventViewCalculator : public ComputationThread {
+class MVFiringEventViewCalculator {
 public:
     //input
     DiskReadMda firings;
@@ -34,7 +33,6 @@ public:
     MVFiringEventView2* q;
     //DiskReadMda m_timeseries;
 
-    MVViewAgent* m_view_agent;
     MVRange m_amplitude_range;
     QSet<int> m_labels_to_use;
     QVector<double> m_times0;
@@ -45,8 +43,6 @@ public:
 
     double val2ypix(double val);
     double ypix2val(double ypix);
-
-    void start_computation();
 };
 
 MVFiringEventView2::MVFiringEventView2(MVViewAgent* view_agent)
@@ -55,16 +51,19 @@ MVFiringEventView2::MVFiringEventView2(MVViewAgent* view_agent)
     d = new MVFiringEventView2Private;
     d->q = this;
 
-    d->m_view_agent = view_agent;
-
     d->m_amplitude_range = MVRange(0, 1);
     this->setMarkersVisible(false);
     this->setMargins(60, 60, 40, 40);
 
-    QObject::connect(d->m_view_agent, SIGNAL(firingsChanged()), this, SLOT(slot_restart_calculation()));
-    QObject::connect(&d->m_calculator, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
+    mvtsv_colors clrs;
+    clrs.axis_color = Qt::white;
+    clrs.text_color = Qt::white;
+    clrs.background_color = QColor(100, 100, 100);
+    this->setColors(clrs);
 
-    d->start_computation();
+    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+
+    this->recalculate();
 }
 
 MVFiringEventView2::~MVFiringEventView2()
@@ -72,10 +71,30 @@ MVFiringEventView2::~MVFiringEventView2()
     delete d;
 }
 
+void MVFiringEventView2::prepareCalculation()
+{
+    d->m_calculator.labels_to_use = d->m_labels_to_use;
+    d->m_calculator.firings = viewAgent()->firings();
+}
+
+void MVFiringEventView2::runCalculation()
+{
+    d->m_calculator.compute();
+}
+
+void MVFiringEventView2::onCalculationFinished()
+{
+    d->m_labels0 = d->m_calculator.labels;
+    d->m_times0 = d->m_calculator.times;
+    d->m_amplitudes0 = d->m_calculator.amplitudes;
+    /// TODO only do this if user has specified that it should be auto calculated (should be default)
+    this->autoSetAmplitudeRange();
+}
+
 void MVFiringEventView2::setLabelsToUse(const QSet<int>& labels_to_use)
 {
     d->m_labels_to_use = labels_to_use;
-    d->start_computation();
+    this->recalculate();
 }
 
 void MVFiringEventView2::setAmplitudeRange(MVRange range)
@@ -91,22 +110,6 @@ void MVFiringEventView2::autoSetAmplitudeRange()
     double min0 = compute_min(d->m_amplitudes0);
     double max0 = compute_max(d->m_amplitudes0);
     setAmplitudeRange(MVRange(qMin(0.0, min0), qMax(0.0, max0)));
-}
-
-void MVFiringEventView2::slot_restart_calculation()
-{
-    d->start_computation();
-}
-
-void MVFiringEventView2::slot_computation_finished()
-{
-    d->m_calculator.stopComputation(); //because i'm paranoid
-    d->m_labels0 = d->m_calculator.labels;
-    d->m_times0 = d->m_calculator.times;
-    d->m_amplitudes0 = d->m_calculator.amplitudes;
-    /// TODO only do this if user has specified that it should be auto calculated (should be default)
-    this->autoSetAmplitudeRange();
-    update();
 }
 
 void MVFiringEventView2::paintContent(QPainter* painter)
@@ -135,6 +138,7 @@ void MVFiringEventView2::paintContent(QPainter* painter)
         opts.pt1 = contentGeometry().bottomLeft() + QPointF(-3, 0);
         opts.pt2 = contentGeometry().topLeft() + QPointF(-3, 0);
         opts.tick_length = 5;
+        opts.color = Qt::white;
         draw_axis(painter, opts);
     }
 
@@ -181,14 +185,6 @@ double MVFiringEventView2Private::ypix2val(double ypix)
     return m_amplitude_range.min + pcty * (m_amplitude_range.max - m_amplitude_range.min);
 }
 
-void MVFiringEventView2Private::start_computation()
-{
-    m_calculator.stopComputation();
-    m_calculator.labels_to_use = m_labels_to_use;
-    m_calculator.firings = m_view_agent->firings();
-    m_calculator.startComputation();
-}
-
 void MVFiringEventViewCalculator::compute()
 {
     TaskProgress task("Computing firing events");
@@ -197,10 +193,15 @@ void MVFiringEventViewCalculator::compute()
     labels.clear();
     amplitudes.clear();
     for (long i = 0; i < L; i++) {
-        if (this->isInterruptionRequested())
-            return;
+        if (i % 100 == 0) {
+            if (thread_interrupt_requested()) {
+                task.error("Halted");
+                return;
+            }
+        }
         int label0 = (int)firings.value(2, i);
         if (labels_to_use.contains(label0)) {
+
             task.setProgress(i * 1.0 / L);
             times << firings.value(1, i);
             labels << label0;

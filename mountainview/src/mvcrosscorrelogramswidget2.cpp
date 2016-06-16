@@ -204,12 +204,12 @@ void MVCrossCorrelogramsWidget2::setOptions(CrossCorrelogramOptions opts)
 
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach(int a, S1)
-    if (!S2.contains(a))
-        return false;
-    foreach(int a, S2)
-    if (!S1.contains(a))
-        return false;
+    foreach (int a, S1)
+        if (!S2.contains(a))
+            return false;
+    foreach (int a, S2)
+        if (!S1.contains(a))
+            return false;
     return true;
 }
 
@@ -428,7 +428,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    } else if (options.mode == "cross_correlograms") {
+    }
+    else if (options.mode == "cross_correlograms") {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram CC;
@@ -436,7 +437,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    } else if (options.mode == "matrix_of_cross_correlograms") {
+    }
+    else if (options.mode == "matrix_of_cross_correlograms") {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram CC;
@@ -470,6 +472,9 @@ void MVCrossCorrelogramsWidget2Computer::compute()
     task.log("Setting data");
     task.setProgress(0.7);
     for (int j = 0; j < correlograms.count(); j++) {
+        if (thread_interrupt_requested()) {
+            return;
+        }
         int k1 = correlograms[j].k1;
         int k2 = correlograms[j].k2;
         correlograms[j].data = compute_cc_data(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
@@ -484,12 +489,14 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
         int index = HV->property("index").toInt();
         if (m_correlograms.value(index).k1 == q->viewAgent()->currentCluster()) {
             HV->setCurrent(true);
-        } else {
+        }
+        else {
             HV->setCurrent(false);
         }
         if (selected_clusters.contains(m_correlograms.value(index).k1)) {
             HV->setSelected(true);
-        } else {
+        }
+        else {
             HV->setSelected(false);
         }
     }

@@ -13,6 +13,18 @@
 
 /// TODO (0.9.1) on first load, multiscale file is created on server, the process is detached. Provide feedback to the user somehow
 
+struct mvtsv_colors {
+    mvtsv_colors()
+    {
+        marker_color = QColor(200, 0, 0, 120);
+        text_color = Qt::black;
+        axis_color = Qt::black;
+        background_color = Qt::white;
+    }
+
+    QColor marker_color, text_color, axis_color, background_color;
+};
+
 class MVTimeSeriesViewBasePrivate;
 class MVTimeSeriesViewBase : public MVAbstractView {
     Q_OBJECT
@@ -26,8 +38,8 @@ public:
     virtual void onCalculationFinished() Q_DECL_OVERRIDE;
 
     virtual void paintContent(QPainter* painter) = 0;
-
-    void setNumTimepoints(long N);
+    void setNumTimepoints(long N); //called by subclass
+    void setColors(mvtsv_colors colors);
 
     void setActivated(bool val);
     void setMarkersVisible(bool val);

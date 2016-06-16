@@ -42,7 +42,8 @@ public:
     MVClipsWidgetComputer m_computer;
 };
 
-MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent) : MVAbstractView(view_agent)
+MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
+    : MVAbstractView(view_agent)
 {
     d = new MVClipsWidgetPrivate;
     d->q = this;
@@ -90,12 +91,12 @@ void MVClipsWidget::setLabelsToUse(const QList<int>& labels)
     this->recalculate();
 }
 
-void MVClipsWidget::paintEvent(QPaintEvent *evt)
+void MVClipsWidget::paintEvent(QPaintEvent* evt)
 {
     QPainter painter(this);
     if (isCalculating()) {
-         //show that something is computing
-        painter.fillRect(QRectF(0, 0, width(), height()),viewAgent()->color("calculation-in-progress"));
+        //show that something is computing
+        painter.fillRect(QRectF(0, 0, width(), height()), viewAgent()->color("calculation-in-progress"));
     }
 
     QWidget::paintEvent(evt);
