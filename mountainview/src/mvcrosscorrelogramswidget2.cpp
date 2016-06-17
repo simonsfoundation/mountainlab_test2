@@ -30,7 +30,9 @@ struct Correlogram {
 class MVCrossCorrelogramsWidget2Computer {
 public:
     //input
+    QString mlproxy_url;
     DiskReadMda firings;
+    MVEventFilter event_filter;
     CrossCorrelogramOptions options;
     int max_dt;
 
@@ -106,7 +108,9 @@ MVCrossCorrelogramsWidget2::~MVCrossCorrelogramsWidget2()
 
 void MVCrossCorrelogramsWidget2::prepareCalculation()
 {
+    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
     d->m_computer.firings = viewAgent()->firings();
+    d->m_computer.event_filter = viewAgent()->eventFilter();
     d->m_computer.options = d->m_options;
     d->m_computer.max_dt = viewAgent()->option("cc_max_dt_msec", 100).toDouble() / 1000 * viewAgent()->sampleRate();
 }
@@ -408,6 +412,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
     correlograms.clear();
 
+    DiskReadMda firings_filtered = compute_filtered_firings(mlproxy_url, firings, event_filter);
+
     QList<double> times;
     QList<int> labels;
     long L = firings.N2();
@@ -415,8 +421,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
     task.log("Setting up times and labels");
     task.setProgress(0.2);
     for (int n = 0; n < L; n++) {
-        times << firings.value(1, n);
-        labels << (int)firings.value(2, n);
+        times << firings_filtered.value(1, n);
+        labels << (int)firings_filtered.value(2, n);
     }
 
     int K = compute_max(labels);

@@ -53,8 +53,14 @@ MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
 
     //d->m_view = new MVClipsView(view_agent);
     d->m_view = new MVTimeSeriesView2(&d->m_view_view_agent);
+    mvtsv_prefs p = d->m_view->prefs();
+    p.show_current_timepoint = false;
+    p.show_time_axis = false;
+    d->m_view->setPrefs(p);
 
     QHBoxLayout* hlayout = new QHBoxLayout;
+    hlayout->setMargin(0);
+    hlayout->setSpacing(0);
     hlayout->addWidget(d->m_view);
     this->setLayout(hlayout);
 
@@ -116,8 +122,7 @@ void MVClipsWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);

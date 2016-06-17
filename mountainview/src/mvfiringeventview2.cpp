@@ -55,11 +55,11 @@ MVFiringEventView2::MVFiringEventView2(MVViewAgent* view_agent)
     this->setMarkersVisible(false);
     this->setMargins(60, 60, 40, 40);
 
-    mvtsv_colors clrs;
-    clrs.axis_color = Qt::white;
-    clrs.text_color = Qt::white;
-    clrs.background_color = Qt::black;
-    this->setColors(clrs);
+    mvtsv_prefs p = this->prefs();
+    p.colors.axis_color = Qt::white;
+    p.colors.text_color = Qt::white;
+    p.colors.background_color = Qt::black;
+    this->setPrefs(p);
 
     this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
 

@@ -21,6 +21,7 @@
 #include <QMessageBox>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <mountainprocessrunner.h>
 #endif
 
 QString cfp(const QString& path)
@@ -101,7 +102,8 @@ QString resolve_path(QString basepath, QString path)
 {
     if (QFileInfo(path).isRelative()) {
         return basepath + "/" + path;
-    } else
+    }
+    else
         return path;
 }
 
@@ -356,3 +358,30 @@ QMap<QString, QString> parse_path_query(const QString &path)
     return parse_query(get_path_query(path));
 }
 */
+
+DiskReadMda compute_filtered_firings(QString mlproxy_url, const DiskReadMda& firings, MVEventFilter filter)
+{
+    if (!filter.use_event_filter)
+        return firings;
+
+    TaskProgress task(TaskProgress::Calculate, "compute filtered firings");
+    MountainProcessRunner X;
+    QString processor_name = "mv_firings_filter";
+    X.setProcessorName(processor_name);
+
+    QMap<QString, QVariant> params;
+    params["firings"] = firings.makePath();
+    params["use_shell_split"] = false;
+    params["use_event_filter"] = filter.use_event_filter;
+    params["min_amplitude"] = 0;
+    params["min_detectability_score"] = filter.min_detectability_score;
+    params["max_outlier_score"] = filter.max_outlier_score;
+    X.setInputParameters(params);
+    X.setMLProxyUrl(mlproxy_url);
+
+    QString firings_out_path = X.makeOutputFilePath("firings_out");
+
+    X.runProcess();
+    DiskReadMda ret(firings_out_path);
+    return ret;
+}

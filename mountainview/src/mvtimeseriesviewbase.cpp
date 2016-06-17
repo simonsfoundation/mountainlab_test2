@@ -11,24 +11,6 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-struct mvtsv_prefs {
-    mvtsv_prefs()
-    {
-        num_label_levels = 3;
-        label_font_height = 12;
-        mtop = 40;
-        mbottom = 40;
-        mleft = 40;
-        mright = 40;
-        markers_visible = true;
-    }
-
-    int num_label_levels;
-    int label_font_height;
-    double mleft, mright, mtop, mbottom;
-    bool markers_visible;
-};
-
 struct TickStruct {
     TickStruct(QString str0, long min_pixel_spacing_between_ticks0, double tick_height0, double timepoint_interval0)
     {
@@ -71,7 +53,6 @@ public:
     mvtsvb_calculator m_calculator;
 
     mvtsv_prefs m_prefs;
-    mvtsv_colors m_colors;
 
     MVRange m_selected_t_range;
     bool m_activated;
@@ -159,9 +140,14 @@ void MVTimeSeriesViewBase::setNumTimepoints(long N)
     d->m_num_timepoints = N;
 }
 
-void MVTimeSeriesViewBase::setColors(mvtsv_colors colors)
+mvtsv_prefs MVTimeSeriesViewBase::prefs() const
 {
-    d->m_colors = colors;
+    return d->m_prefs;
+}
+
+void MVTimeSeriesViewBase::setPrefs(mvtsv_prefs prefs)
+{
+    d->m_prefs = prefs;
 }
 
 void MVTimeSeriesViewBase::setLabelsToView(const QSet<int>& labels)
@@ -240,7 +226,9 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    QColor back_col = d->m_colors.background_color;
+    mvtsv_colors colors = d->m_prefs.colors;
+
+    QColor back_col = colors.background_color;
     painter.fillRect(0, 0, width(), height(), back_col);
 
     double W0 = this->width();
@@ -278,17 +266,21 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
     d->paint_cursor(&painter, W0, H0);
 
     // Time axis
-    d->paint_time_axis(&painter, W0, H0);
+    if (d->m_prefs.show_time_axis) {
+        d->paint_time_axis(&painter, W0, H0);
+    }
 
     // Status
     {
         QString str;
-        double samplerate = viewAgent()->sampleRate();
-        if (samplerate) {
-            str = QString("%1 (tp: %2)").arg(d->format_time(viewAgent()->currentTimepoint())).arg((long)viewAgent()->currentTimepoint());
-        }
-        else {
-            str = QString("Sample rate is null (tp: %2)").arg((long)viewAgent()->currentTimepoint());
+        if (d->m_prefs.show_current_timepoint) {
+            double samplerate = viewAgent()->sampleRate();
+            if (samplerate) {
+                str = QString("%1 (tp: %2)").arg(d->format_time(viewAgent()->currentTimepoint())).arg((long)viewAgent()->currentTimepoint());
+            }
+            else {
+                str = QString("Sample rate is null (tp: %2)").arg((long)viewAgent()->currentTimepoint());
+            }
         }
         d->paint_status_string(&painter, W0, H0, str);
     }
@@ -492,6 +484,8 @@ void MVTimeSeriesViewBasePrivate::paint_markers(QPainter* painter, const QVector
     double mtop = m_prefs.mtop;
     double mbottom = m_prefs.mbottom;
 
+    mvtsv_colors colors = m_prefs.colors;
+
     QList<MarkerRecord> marker_recs;
 
     int min_dist = 20;
@@ -513,7 +507,7 @@ void MVTimeSeriesViewBasePrivate::paint_markers(QPainter* painter, const QVector
         }
     }
     QPen pen = painter->pen();
-    pen.setColor(m_colors.marker_color);
+    pen.setColor(colors.marker_color);
     painter->setPen(pen);
     QFont font = painter->font();
     font.setPixelSize(m_prefs.label_font_height);
@@ -532,7 +526,7 @@ void MVTimeSeriesViewBasePrivate::paint_message_at_top(QPainter* painter, QStrin
 {
     Q_UNUSED(H)
     QPen pen = painter->pen();
-    pen.setColor(m_colors.marker_color);
+    pen.setColor(m_prefs.colors.marker_color);
     painter->setPen(pen);
     QFont font = painter->font();
     font.setPixelSize(m_prefs.label_font_height);
@@ -550,7 +544,7 @@ void MVTimeSeriesViewBasePrivate::paint_time_axis(QPainter* painter, double W, d
     double view_t1 = q->viewAgent()->currentTimeRange().min;
     double view_t2 = q->viewAgent()->currentTimeRange().max;
 
-    QColor axis_color = m_colors.axis_color;
+    QColor axis_color = m_prefs.colors.axis_color;
 
     QPen pen = painter->pen();
     pen.setColor(axis_color);
@@ -628,7 +622,7 @@ void MVTimeSeriesViewBasePrivate::paint_time_axis_unit(QPainter* painter, double
 
 void MVTimeSeriesViewBasePrivate::paint_status_string(QPainter* painter, double W, double H, QString str)
 {
-    QColor text_col = m_colors.text_color;
+    QColor text_col = m_prefs.colors.text_color;
 
     double status_height = 12;
     double voffset = 4;

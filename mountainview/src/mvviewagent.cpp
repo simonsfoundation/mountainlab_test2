@@ -27,6 +27,7 @@ public:
     QMap<QString, TimeseriesStruct> m_timeseries;
     QString m_current_timeseries_name;
     DiskReadMda m_firings;
+    MVEventFilter m_event_filter;
     double m_sample_rate;
     QMap<QString, QVariant> m_options;
     QString m_mlproxy_url;
@@ -177,6 +178,21 @@ void MVViewAgent::setFirings(const DiskReadMda& F)
 {
     d->m_firings = F;
     emit firingsChanged();
+    emit filteredFiringsChanged();
+}
+
+MVEventFilter MVViewAgent::eventFilter()
+{
+    return d->m_event_filter;
+}
+
+void MVViewAgent::setEventFilter(const MVEventFilter& EF)
+{
+    if (d->m_event_filter == EF)
+        return;
+    d->m_event_filter = EF;
+    emit eventFilterChanged();
+    emit filteredFiringsChanged();
 }
 
 void MVViewAgent::setSampleRate(double sample_rate)
@@ -267,7 +283,7 @@ void MVViewAgent::setCurrentTimeRange(const MVRange& range_in)
         range = range + (0 - range.min);
     }
     if (range.max >= this->currentTimeseries().N2()) {
-        range.max = this->currentTimeseries().N2()-1;
+        range.max = this->currentTimeseries().N2() - 1;
     }
     if (range.max - range.min < 30) { //don't allow range to be too small
         range.max = range.min + 30;
@@ -301,14 +317,14 @@ void MVViewAgent::setOption(QString name, QVariant value)
     emit optionChanged(name);
 }
 
-void MVViewAgent::copySettingsFrom(MVViewAgent *other)
+void MVViewAgent::copySettingsFrom(MVViewAgent* other)
 {
     this->setChannelColors(other->channelColors());
     this->setClusterColors(other->clusterColors());
     this->setColors(other->colors());
     this->setMLProxyUrl(other->mlProxyUrl());
     this->setSampleRate(other->sampleRate());
-    this->d->m_options=other->d->m_options;
+    this->d->m_options = other->d->m_options;
 }
 
 void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
@@ -336,7 +352,7 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
     }
 }
 
-bool MVRange::operator==(const MVRange& other)
+bool MVRange::operator==(const MVRange& other) const
 {
     return ((other.min == min) && (other.max == max));
 }
