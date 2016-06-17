@@ -64,7 +64,8 @@ HEADERS += \
     mvspikesprayview.h \
     mvfile.h \
     mvtimeseriesviewbase.h \
-    mvabstractview.h
+    mvabstractview.h \
+    mvabstractviewfactory.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvstatisticswidget.cpp \
@@ -111,7 +112,8 @@ SOURCES += mountainviewmain.cpp \
     mvspikesprayview.cpp \
     mvfile.cpp \
     mvtimeseriesviewbase.cpp \
-    mvabstractview.cpp
+    mvabstractview.cpp \
+    mvabstractviewfactory.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

@@ -14,6 +14,8 @@
 #include "mvutils.h"
 #include "mvviewagent.h"
 
+class MVAbstractViewFactory;
+
 /** \class MVMainWindow
  *  \brief The main window (for now) showing an overview of the results of sorting by providing a number of interactive and synchronized views.
  *
@@ -35,6 +37,8 @@ public:
     /// TODO replace these by load and save
     void setMVFile(MVFile mv_file);
     void writeMVFile(const QString& mv_fname);
+    void registerViewFactory(MVAbstractViewFactory *f);
+    void unregisterViewFactory(MVAbstractViewFactory *f);
 
 protected:
     void resizeEvent(QResizeEvent* evt);
