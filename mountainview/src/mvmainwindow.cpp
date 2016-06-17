@@ -92,6 +92,8 @@ public:
     void export_filtered_firings();
     void export_file(QString source_path, QString dest_path, bool use_float64);
 
+    void recalculate_views(QString str);
+
     //not sure about these
     QVariant get_cluster_attribute(int k, QString attr);
     void set_cluster_attribute(int k, QString attr, QVariant val);
@@ -322,6 +324,14 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
         d->export_original_firings();
     } else if (str == "export_filtered_firings") {
         d->export_filtered_firings();
+    } else if (str == "recalculate-all") {
+        d->recalculate_views("all");
+    } else if (str == "recalculate-all-suggested") {
+        d->recalculate_views("all-suggested");
+    } else if (str == "recalculate-all-visible") {
+        d->recalculate_views("all-visible");
+    } else if (str == "recalculate-all-suggested-and-visible") {
+        d->recalculate_views("all-suggested-and-visible");
     }
 }
 
@@ -777,6 +787,29 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
     C->use_float64 = use_float64;
     C->setDeleteOnComplete(true);
     C->startComputation();
+}
+
+void MVMainWindowPrivate::recalculate_views(QString str)
+{
+    QList<QWidget*> widgets = m_tabber->allWidgets();
+    foreach(QWidget * W, widgets)
+    {
+        MVAbstractView* VV = qobject_cast<MVAbstractView*>(W);
+        if (VV) {
+            bool do_it = false;
+            if (str == "all")
+                do_it = true;
+            else if (str == "all-suggested")
+                do_it = VV->recalculateSuggested();
+            else if (str == "all-visible")
+                do_it = VV->isVisible();
+            else if (str == "all-suggested-and-visible")
+                do_it = ((VV->isVisible()) && (VV->recalculateSuggested()));
+            if (do_it) {
+                VV->recalculate();
+            }
+        }
+    }
 }
 
 QVariant MVMainWindowPrivate::get_cluster_attribute(int k, QString attr)

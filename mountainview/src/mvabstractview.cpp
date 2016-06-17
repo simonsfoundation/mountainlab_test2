@@ -68,12 +68,12 @@ MVAbstractView::~MVAbstractView()
     delete d;
 }
 
-bool MVAbstractView::isCalculating()
+bool MVAbstractView::isCalculating() const
 {
     return d->m_calculation_thread.isRunning();
 }
 
-bool MVAbstractView::recalculateSuggested()
+bool MVAbstractView::recalculateSuggested() const
 {
     return d->m_recalculate_suggested;
 }
