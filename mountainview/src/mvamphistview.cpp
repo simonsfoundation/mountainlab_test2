@@ -15,3 +15,18 @@ MVAmpHistView::~MVAmpHistView()
 {
     delete d;
 }
+
+void MVAmpHistView::prepareCalculation()
+{
+
+}
+
+void MVAmpHistView::runCalculation()
+{
+
+}
+
+void MVAmpHistView::onCalculationFinished()
+{
+
+}
