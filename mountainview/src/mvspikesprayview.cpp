@@ -23,6 +23,7 @@ public:
     DiskReadMda timeseries;
     DiskReadMda firings;
     QString mlproxy_url;
+    MVEventFilter filter;
     QList<int> labels_to_use;
     int clip_size;
 
@@ -62,7 +63,7 @@ MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent)
 
     recalculateOnOptionChanged("clip_size");
     recalculateOn(viewAgent(), SIGNAL(timeseriesNamesChanged()));
-    recalculateOn(viewAgent(), SIGNAL(firingsChanged()));
+    recalculateOn(viewAgent(), SIGNAL(filteredFiringsChanged()));
 
     /// TODO should we put this in the abstract view?
     this->setFocusPolicy(Qt::StrongFocus);
@@ -86,6 +87,7 @@ void MVSpikeSprayView::prepareCalculation()
     d->m_computer.mlproxy_url = d->m_view_agent->mlProxyUrl();
     d->m_computer.timeseries = d->m_view_agent->currentTimeseries();
     d->m_computer.firings = d->m_view_agent->firings();
+    d->m_computer.filter = d->m_view_agent->eventFilter();
     d->m_computer.labels_to_use = d->m_labels_to_use;
     d->m_computer.clip_size = d->m_view_agent->option("clip_size").toInt();
 }
@@ -148,8 +150,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         if (counts[k]) {
             alphas[k] = 255 / counts[k];
             alphas[k] = qMin(255, qMax(5, alphas[k]));
-        }
-        else
+        } else
             alphas[k] = 255;
     }
 
@@ -195,12 +196,10 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    }
-    else {
+    } else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -218,8 +217,7 @@ void MVSpikeSprayViewPrivate::render_clip(QPainter* painter, long M, long T, dou
             QPointF pt = coord2pix(m, t, val);
             if (t == 0) {
                 path.moveTo(pt);
-            }
-            else {
+            } else {
                 path.lineTo(pt);
             }
         }
@@ -253,10 +251,14 @@ QPointF MVSpikeSprayViewPrivate::coord2pix(int m, double t, double val)
 void MVSpikeSprayComputer::compute()
 {
     TaskProgress task("Spike spray computer");
+
+    firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
+
     QString firings_out_path;
     {
         QString labels_str;
-        foreach (int x, labels_to_use) {
+        foreach(int x, labels_to_use)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);

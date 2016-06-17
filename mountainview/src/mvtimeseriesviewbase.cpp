@@ -32,6 +32,7 @@ class mvtsvb_calculator {
 public:
     //input
     DiskReadMda firings;
+    MVEventFilter filter;
     QSet<int> labels_to_use;
 
     //output
@@ -99,7 +100,7 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
 
-    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
 
     this->setFocusPolicy(Qt::StrongFocus);
 }
@@ -112,6 +113,7 @@ MVTimeSeriesViewBase::~MVTimeSeriesViewBase()
 void MVTimeSeriesViewBase::prepareCalculation()
 {
     d->m_calculator.firings = viewAgent()->firings();
+    d->m_calculator.filter = viewAgent()->eventFilter();
     d->m_calculator.labels_to_use = d->m_labels_to_view;
 }
 
@@ -725,8 +727,14 @@ void MVTimeSeriesViewBasePrivate::update_cursor()
 
 void mvtsvb_calculator::compute()
 {
+    times.clear();
+    labels.clear();
+
     if (labels_to_use.isEmpty())
         return;
+
+    firings = compute_filtered_firings_locally(firings, filter);
+
     long L = firings.N2();
     for (long i = 0; i < L; i++) {
         int label0 = firings.value(2, i);
