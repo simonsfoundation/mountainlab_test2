@@ -24,6 +24,7 @@ public:
     DiskReadMda firings;
     DiskReadMda timeseries;
     QString mlproxy_url;
+    MVEventFilter filter;
     int clip_size;
     QList<int> labels_to_use;
 
@@ -65,7 +66,7 @@ MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
     this->setLayout(hlayout);
 
     this->recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
-    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
     this->recalculateOnOptionChanged("clip_size");
 
     recalculate();
@@ -79,6 +80,7 @@ MVClipsWidget::~MVClipsWidget()
 void MVClipsWidget::prepareCalculation()
 {
     d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
+    d->m_computer.filter = viewAgent()->eventFilter();
     d->m_computer.firings = viewAgent()->firings();
     d->m_computer.timeseries = viewAgent()->currentTimeseries();
     d->m_computer.labels_to_use = d->m_labels_to_use;
@@ -119,10 +121,18 @@ void MVClipsWidget::paintEvent(QPaintEvent* evt)
 void MVClipsWidgetComputer::compute()
 {
     TaskProgress task(TaskProgress::Calculate, "Clips Widget Computer");
+
+    /// TODO think about how to automatically assemble a pipeline that gets sent to server in one shot
+
+    //need to compute remotely because of subsequent steps
+    firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
+    //firings = compute_filtered_firings_locally(firings, filter);
+
     QString firings_out_path;
     {
         QString labels_str;
-        foreach (int x, labels_to_use) {
+        foreach(int x, labels_to_use)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);

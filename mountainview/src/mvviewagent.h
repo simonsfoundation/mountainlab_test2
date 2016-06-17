@@ -45,6 +45,8 @@ struct MVEventFilter {
     QJsonObject toJsonObject() const;
 };
 
+#include "mvmisc.h"
+
 class MVViewAgentPrivate;
 class MVViewAgent : public QObject {
     Q_OBJECT

@@ -23,6 +23,7 @@
 #include "toolbuttonmenu.h"
 #include <math.h>
 #include "mlutils.h"
+#include "mvmisc.h"
 
 struct ClusterData {
     ClusterData()
@@ -51,6 +52,7 @@ public:
     //input
     //QString mscmdserver_url;
     QString mlproxy_url;
+    MVEventFilter filter;
     DiskReadMda timeseries;
     DiskReadMda firings;
     int clip_size;
@@ -162,7 +164,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(update()));
 
-    recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
     recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
     recalculateOnOptionChanged("clip_size");
 
@@ -196,6 +198,7 @@ void MVClusterDetailWidget::prepareCalculation()
 
     d->compute_total_time();
     d->m_calculator.mlproxy_url = viewAgent()->mlProxyUrl();
+    d->m_calculator.filter = viewAgent()->eventFilter();
     d->m_calculator.timeseries = viewAgent()->currentTimeseries();
     d->m_calculator.firings = viewAgent()->firings();
     d->m_calculator.clip_size = viewAgent()->option("clip_size", 100).toInt();
@@ -219,11 +222,13 @@ void MVClusterDetailWidget::onCalculationFinished()
 
 bool sets_are_equal(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach (int val, S1) {
+    foreach(int val, S1)
+    {
         if (!S2.contains(val))
             return false;
     }
-    foreach (int val, S2) {
+    foreach(int val, S2)
+    {
         if (!S1.contains(val))
             return false;
     }
@@ -304,25 +309,20 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_vscale_factor *= factor;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_vscale_factor /= factor;
         update();
-    }
-    else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
+    } else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
         d->zoom(1.1);
-    }
-    else if (evt->key() == Qt::Key_Minus) {
+    } else if (evt->key() == Qt::Key_Minus) {
         d->zoom(1 / 1.1);
-    }
-    else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
+    } else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
         QList<int> ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             ks << d->m_views[i]->k();
         }
         viewAgent()->setSelectedClusters(ks);
-    }
-    else if (evt->key() == Qt::Key_Left) {
+    } else if (evt->key() == Qt::Key_Left) {
         int view_index = d->get_current_view_index();
         if (view_index > 0) {
             int k = d->m_views[view_index - 1]->k();
@@ -334,8 +334,7 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             viewAgent()->setSelectedClusters(ks);
             viewAgent()->setCurrentCluster(k);
         }
-    }
-    else if (evt->key() == Qt::Key_Right) {
+    } else if (evt->key() == Qt::Key_Right) {
         int view_index = d->get_current_view_index();
         if ((view_index >= 0) && (view_index + 1 < d->m_views.count())) {
             int k = d->m_views[view_index + 1]->k();
@@ -347,15 +346,13 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             viewAgent()->setSelectedClusters(ks);
             viewAgent()->setCurrentCluster(k);
         }
-    }
-    else if (evt->matches(QKeySequence::SelectAll)) {
+    } else if (evt->matches(QKeySequence::SelectAll)) {
         QList<int> all_ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             all_ks << d->m_views[i]->k();
         }
         viewAgent()->setSelectedClusters(all_ks);
-    }
-    else
+    } else
         evt->ignore();
 }
 
@@ -473,8 +470,7 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
     int view_index = d->find_view_index_at(pt);
     if (view_index >= 0) {
         d->set_hovered_k(d->m_views[view_index]->k());
-    }
-    else {
+    } else {
         d->set_hovered_k(-1);
     }
 }
@@ -568,8 +564,7 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
         m_scroll_x = x0 - 100;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    }
-    else if (x0 > m_scroll_x + q->width()) {
+    } else if (x0 > m_scroll_x + q->width()) {
         m_scroll_x = x0 - q->width() + 100;
     }
 }
@@ -584,8 +579,7 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
         m_scroll_x = view->x_position_before_scaling * m_space_ratio - current_screen_x;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    }
-    else {
+    } else {
         m_space_ratio *= factor;
     }
     q->update();
@@ -807,8 +801,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     if (q->viewAgent()) {
         cluster_data_merged = merge_cluster_data(q->viewAgent()->clusterMerge(), m_cluster_data);
         cluster_attributes = q->viewAgent()->clusterAttributes();
-    }
-    else {
+    } else {
         cluster_data_merged = m_cluster_data;
     }
 
@@ -964,8 +957,7 @@ QList<ClusterData> MVClusterDetailWidgetPrivate::merge_cluster_data(const Cluste
                 }
             }
             ret << combine_cluster_data_group(group, CD[i]);
-        }
-        else {
+        } else {
             ClusterData CD0;
             CD0.k = CD[i].k;
             CD0.channel = CD[i].channel;
@@ -1004,14 +996,11 @@ QColor ClusterView::get_cluster_assessment_text_color(QString aa)
     Q_UNUSED(aa)
     if (aa.toLower() == "noise") {
         return Qt::darkGray;
-    }
-    else if (aa.toLower() == "good") {
+    } else if (aa.toLower() == "good") {
         return Qt::darkGreen;
-    }
-    else if (aa.toLower() == "mua") {
+    } else if (aa.toLower() == "mua") {
         return Qt::darkBlue;
-    }
-    else {
+    } else {
         return Qt::black;
     }
 }
@@ -1077,6 +1066,8 @@ void MVClusterDetailWidgetCalculator::compute()
     QTime timer;
     timer.start();
     task.setProgress(0.1);
+
+    firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
 
     int M = timeseries.N1();
     //int N = timeseries.N2();

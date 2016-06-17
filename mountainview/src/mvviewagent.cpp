@@ -149,6 +149,8 @@ void MVViewAgent::addTimeseries(QString name, DiskReadMda timeseries)
     X.name = name;
     d->m_timeseries[name] = X;
     emit this->timeseriesNamesChanged();
+    if (name == d->m_current_timeseries_name)
+        emit this->currentTimeseriesChanged();
 }
 
 DiskReadMda MVViewAgent::firings()
@@ -337,16 +339,14 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        }
-        else {
+        } else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    }
-    else {
+    } else {
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
     }

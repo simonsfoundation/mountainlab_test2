@@ -19,6 +19,7 @@ class MVClusterWidgetComputer : public ComputationThread {
 public:
     //input
     QString mlproxy_url;
+    MVEventFilter filter;
     DiskReadMda timeseries;
     DiskReadMda firings;
     int clip_size;
@@ -53,7 +54,7 @@ public:
     void connect_view(MVClusterView* V);
     void update_clips_view();
     int current_event_index();
-    void set_data_on_visible_views_that_need_it();
+    void set_data_on_visible_views();
 };
 
 MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
@@ -153,19 +154,21 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     QSizePolicy view_size_policy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     view_size_policy.setHorizontalStretch(1);
 
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setSizePolicy(view_size_policy);
         hlayout->addWidget(V);
         /// TODO implement the event filter
         //V->setEventFilter(d->m_filter_info);
     }
 
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         d->connect_view(V);
     }
 
     this->recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
-    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
     this->recalculateOnOptionChanged("clip_size");
 
     connect(view_agent, SIGNAL(currentEventChanged()), this, SLOT(slot_current_event_changed()));
@@ -179,6 +182,7 @@ MVClusterWidget::~MVClusterWidget()
 void MVClusterWidget::prepareCalculation()
 {
     d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
+    d->m_computer.filter = viewAgent()->eventFilter();
     d->m_computer.timeseries = viewAgent()->currentTimeseries();
     d->m_computer.firings = viewAgent()->firings();
     d->m_computer.clip_size = viewAgent()->option("clip_size").toInt();
@@ -204,7 +208,8 @@ void MVClusterWidget::onCalculationFinished()
 void MVClusterWidget::setData(const Mda& X)
 {
     d->m_data = X;
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setData(Mda());
     }
     double max_abs_val = 0;
@@ -220,40 +225,45 @@ void MVClusterWidget::setData(const Mda& X)
         T.scale(1.0 / max_abs_val * factor, 1.0 / max_abs_val * factor, 1.0 / max_abs_val * factor);
         this->setTransformation(T);
     }
-    d->set_data_on_visible_views_that_need_it();
+    d->set_data_on_visible_views();
 }
 
 void MVClusterWidget::setTimes(const QList<double>& times)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setTimes(times);
     }
 }
 
 void MVClusterWidget::setLabels(const QList<int>& labels)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setLabels(labels);
     }
 }
 
 void MVClusterWidget::setAmplitudes(const QList<double>& amps)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setAmplitudes(amps);
     }
 }
 
 void MVClusterWidget::setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setScores(detectability_scores, outlier_scores);
     }
 }
 
 void MVClusterWidget::slot_current_event_changed()
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setCurrentEvent(viewAgent()->currentEvent());
     }
     d->update_clips_view();
@@ -279,7 +289,8 @@ void MVClusterWidget::setChannels(QList<int> channels)
 
 void MVClusterWidget::setTransformation(const AffineTransformation& T)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setTransformation(T);
     }
 }
@@ -294,7 +305,8 @@ void MVClusterWidget::slot_view_transformation_changed()
 {
     MVClusterView* V0 = (MVClusterView*)sender();
     AffineTransformation T = V0->transformation();
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setTransformation(T);
     }
 }
@@ -310,7 +322,7 @@ void MVClusterWidget::slot_show_view_toggled(bool val)
     if ((index >= 0) && (index < d->m_views.count())) {
         d->m_views[index]->setVisible(val);
     }
-    d->set_data_on_visible_views_that_need_it();
+    d->set_data_on_visible_views();
 }
 
 void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
@@ -352,23 +364,27 @@ int MVClusterWidgetPrivate::current_event_index()
     return m_views[0]->currentEventIndex();
 }
 
-void MVClusterWidgetPrivate::set_data_on_visible_views_that_need_it()
+void MVClusterWidgetPrivate::set_data_on_visible_views()
 {
-    foreach (MVClusterView* V, m_views) {
+    foreach(MVClusterView * V, m_views)
+    {
         if (V->isVisible()) {
-            if (!V->hasData()) {
-                V->setData(m_data);
-            }
+            V->setData(m_data);
         }
     }
 }
 
 void MVClusterWidgetComputer::compute()
 {
+
+    //firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
+    firings = compute_filtered_firings_locally(firings, filter);
+
     QString firings_out_path;
     {
         QString labels_str;
-        foreach (int x, labels_to_use) {
+        foreach(int x, labels_to_use)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -416,14 +432,14 @@ void MVClusterWidgetComputer::compute()
         if (thread_interrupt_requested()) {
             return;
         }
-    }
-    else if (features_mode == "channels") {
+    } else if (features_mode == "channels") {
         MountainProcessRunner MT;
         QString processor_name = "extract_channel_values";
         MT.setProcessorName(processor_name);
 
         QStringList channels_strlist;
-        foreach (int ch, channels) {
+        foreach(int ch, channels)
+        {
             channels_strlist << QString("%1").arg(ch);
         }
 
@@ -441,14 +457,18 @@ void MVClusterWidgetComputer::compute()
         if (thread_interrupt_requested()) {
             return;
         }
-    }
-    else {
+    } else {
         TaskProgress err("Computing features");
         err.error("Unrecognized features mode: " + features_mode);
         return;
     }
     DiskReadMda F(firings_out_path);
 
+    times.clear();
+    labels.clear();
+    amplitudes.clear();
+    outlier_scores.clear();
+    detectability_scores.clear();
     for (long j = 0; j < F.N2(); j++) {
         times << F.value(1, j);
         labels << (int)F.value(2, j);

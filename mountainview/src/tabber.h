@@ -25,21 +25,13 @@ public:
     friend class TabberPrivate;
     Tabber();
     virtual ~Tabber();
-    ///Create a new tab widget that will be under the controll of this Tabber
     TabberTabWidget* createTabWidget(const QString& container_name);
-    ///Add a widget to a particular container (e.g., tab widget) with a given tab label
     void addWidget(const QString& container_name, const QString& label, QWidget* W);
-    ///Add a widget to a particular container with a given tab label
     void addWidget(TabberTabWidget* TW, const QString& label, QWidget* W);
-    ///The name of the last clicked container, and it controls where the next addWidget will go
     QString currentContainerName();
-    ///Set the current container by name (see currentContainerName)
     void setCurrentContainerName(const QString& container_name);
-    ///Set the current container
     void setCurrentContainer(TabberTabWidget* TW);
-    ///Move the current container to another one -- or if there are only to, the "other" one. Useful for popping up a view on a different view.
     void switchCurrentContainer();
-    ///Retrieve all widgets that have been added and have not been removed and deleted
     QList<QWidget*> allWidgets();
 
     void moveWidgetToOtherContainer(QWidget* W);
@@ -49,6 +41,7 @@ private slots:
     void slot_tab_bar_clicked(int index);
     void slot_tab_bar_double_clicked(int index);
     void slot_widget_destroyed(QObject* obj);
+    void slot_recalculate_suggested_changed();
 
 private:
     TabberPrivate* d;

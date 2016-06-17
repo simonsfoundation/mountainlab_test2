@@ -163,12 +163,10 @@ void MVTimeSeriesView2::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    }
-    else {
+    } else {
         MVTimeSeriesViewBase::keyPressEvent(evt);
     }
 }
@@ -233,8 +231,7 @@ double MVTimeSeriesView2Private::ypix2val(int m, double ypix)
     if (m_amplitude_factor) {
         double val = (ypix - (CH->geometry.y() + CH->geometry.height() / 2)) / m_amplitude_factor / (CH->geometry.height() / 2);
         return val;
-    }
-    else
+    } else
         return 0;
 }
 

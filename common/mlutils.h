@@ -9,7 +9,6 @@
 
 #include <QString>
 #include <QDebug>
-#include <mvviewagent.h>
 
 QString cfp(const QString& path); //cannonical file path
 QString compute_checksum_of_file(const QString& path);
@@ -28,7 +27,5 @@ QString http_get_binary_file(const QString& url);
 //QString get_path_without_query(const QString &path);
 //QMap<QString,QString> parse_query(const QString &query);
 //QMap<QString,QString> parse_path_query(const QString &path);
-
-DiskReadMda compute_filtered_firings(QString mlproxy_url, const DiskReadMda& firings, MVEventFilter filter);
 
 #endif // MLUTILS_H
