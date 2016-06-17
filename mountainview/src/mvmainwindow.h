@@ -15,8 +15,6 @@
 #include "mvviewagent.h"
 
 class MVAbstractViewFactory;
-class TabberTabWidget;
-class Tabber;
 
 /** \class MVMainWindow
  *  \brief The main window (for now) showing an overview of the results of sorting by providing a number of interactive and synchronized views.

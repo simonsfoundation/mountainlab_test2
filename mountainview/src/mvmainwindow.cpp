@@ -18,6 +18,7 @@
 #include "mvtimeseriesview2.h"
 #include "mlutils.h"
 #include "mvfile.h"
+#include "mvabstractviewfactory.h"
 #include "mvamphistview.h"
 #include "mvclustercontextmenu.h"
 #include "mvamphistview2.h"
@@ -76,12 +77,6 @@ public:
     TabberTabWidget* m_tabs1, *m_tabs2;
     Tabber* m_tabber; //manages the views in the two tab widgets
     QList<MVAbstractViewFactory*> m_viewFactories;
-    QSignalMapper* m_viewMapper;
-
-    void registerAllViews();
-
-    MVAbstractViewFactory* viewFactoryById(const QString &id) const;
-    MVAbstractView* openView(MVAbstractViewFactory *factory);
 
     ClusterAnnotationGuide* m_cluster_annotation_guide;
 
