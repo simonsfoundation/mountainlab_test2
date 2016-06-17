@@ -306,6 +306,31 @@ const QList<MVAbstractViewFactory *> &MVMainWindow::viewFactories() const
     return d->m_viewFactories;
 }
 
+void MVMainWindow::registerViewFactory(MVAbstractViewFactory *f)
+{
+    // sort by group name and order
+    QList<MVAbstractViewFactory*>::iterator iter
+            = qLowerBound(d->m_viewFactories.begin(), d->m_viewFactories.end(),
+                          f, [](MVAbstractViewFactory *f1, MVAbstractViewFactory *f2) {
+            if (f1->group() < f2->group())
+                return true;
+            if (f1->group() == f2->group() && f1->order() < f2->order())
+                return true;
+            return false;
+    });
+    d->m_viewFactories.insert(iter, f);
+}
+
+void MVMainWindow::unregisterViewFactory(MVAbstractViewFactory *f)
+{
+    d->m_viewFactories.removeOne(f);
+}
+
+const QList<MVAbstractViewFactory *> &MVMainWindow::viewFactories() const
+{
+    return d->m_viewFactories;
+}
+
 void MVMainWindow::resizeEvent(QResizeEvent* evt)
 {
     Q_UNUSED(evt)

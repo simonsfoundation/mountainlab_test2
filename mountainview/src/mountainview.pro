@@ -100,6 +100,23 @@ SOURCES += mountainviewmain.cpp \
     mvamphistview2.cpp \
     mvabstractviewfactory.cpp
 
+#HEADERS += sstimeserieswidget.h \
+#    sstimeseriesview.h \
+#    sstimeseriesplot.h \
+#    ssabstractview.h \
+#    ssabstractplot.h \
+#    sslabelsmodel.h \
+#    sslabelsmodel1.h \
+#    sscommon.h plotarea.h
+
+#SOURCES += sstimeserieswidget.cpp \
+#    sstimeseriesview.cpp \
+#    sstimeseriesplot.cpp \
+#    ssabstractview.cpp \
+#    ssabstractplot.cpp \
+#    sslabelsmodel1.cpp \
+#    sscommon.cpp plotarea.cpp
+
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams
 HEADERS += commandlineparams.h
