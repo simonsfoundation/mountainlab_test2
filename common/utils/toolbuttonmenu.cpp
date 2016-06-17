@@ -89,8 +89,7 @@ protected:
         if (e->type() == QEvent::HoverEnter || e->type() == QEvent::HoverMove) {
             m_hovering = true;
             //            stop();
-        }
-        else if (e->type() == QEvent::HoverLeave) {
+        } else if (e->type() == QEvent::HoverLeave) {
             m_hovering = false;
             start();
         }
@@ -146,16 +145,13 @@ bool ToolButtonMenu::eventFilter(QObject* o, QEvent* e)
             FadingButton* tb = toolButton(w);
             tb->fadeIn();
             tb->start();
-        }
-        else if (e->type() == QEvent::HoverEnter || e->type() == QEvent::HoverMove) {
+        } else if (e->type() == QEvent::HoverEnter || e->type() == QEvent::HoverMove) {
             FadingButton* tb = toolButton(w);
             tb->fadeIn();
-        }
-        else if (e->type() == QEvent::HoverLeave) {
+        } else if (e->type() == QEvent::HoverLeave) {
             FadingButton* tb = toolButton(w);
             tb->fadeOut();
-        }
-        else if (e->type() == QEvent::Resize) {
+        } else if (e->type() == QEvent::Resize) {
             updateButtonPosition(w);
         }
     }
@@ -170,7 +166,7 @@ void ToolButtonMenu::updateButtonPosition(QWidget* w, QToolButton* tb)
         return;
     QSize sh = tb->sizeHint();
     tb->setGeometry(w->width() - sh.width() - offset().width(), offset().height(),
-        sh.width(), sh.height());
+                    sh.width(), sh.height());
 }
 
 FadingButton* ToolButtonMenu::toolButton(QWidget* w) const

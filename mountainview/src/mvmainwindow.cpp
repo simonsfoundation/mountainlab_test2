@@ -449,12 +449,13 @@ void MVMainWindowPrivate::add_tab(QWidget* W, QString label)
     {
         QAction* a = new QAction("Move to other tab widget", W);
         QObject::connect(a, SIGNAL(triggered(bool)), q, SLOT(slot_action_move_to_other_tab_widget()));
-        W->insertAction(W->actions().value(1), a);
+        W->insertAction(W->actions().value(0), a);
     }
     {
         QAction* a = new QAction("Pop out", W);
         QObject::connect(a, SIGNAL(triggered(bool)), q, SLOT(slot_pop_out_widget()));
-        W->insertAction(W->actions().value(1), a);
+        //W->insertAction(W->actions().value(0), a);
+        W->addAction(a);
     }
 
     m_tabber->addWidget(m_tabber->currentContainerName(), label, W);
@@ -467,7 +468,7 @@ void MVMainWindowPrivate::set_tool_button_menu(QWidget* X)
     ToolButtonMenu* MM = new ToolButtonMenu(X);
     MM->setOffset(QSize(4, 4));
     QToolButton* tb = MM->activateOn(X);
-    tb->setIconSize(QSize(48, 48));
+    tb->setIconSize(QSize(26, 26));
     QIcon icon(":images/gear.png");
     tb->setIcon(icon);
 }

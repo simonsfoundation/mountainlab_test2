@@ -158,7 +158,8 @@ void MVAbstractViewPrivate::schedule_calculation()
 
 void MVAbstractViewPrivate::set_recalculate_suggested(bool val)
 {
-    if (m_recalculate_suggested==val) return;
-    m_recalculate_suggested=val;
+    if (m_recalculate_suggested == val)
+        return;
+    m_recalculate_suggested = val;
     emit q->recalculateSuggestedChanged();
 }
