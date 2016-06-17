@@ -248,6 +248,9 @@ void MVControlPanel::slot_button_clicked()
         d->m_view_agent->setOption("cc_max_dt_msec", d->m_controls.get_parameter_value("cc_max_dt_msec"));
         d->m_view_agent->setCurrentTimeseriesName(d->m_controls.get_parameter_value("timeseries").toString());
     }
+    else if (action_name == "apply_filter") {
+        d->m_view_agent->setEventFilter(this->eventFilter());
+    }
 }
 
 void MVControlPanel::slot_view_agent_option_changed(QString name)

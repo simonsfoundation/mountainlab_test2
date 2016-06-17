@@ -17,7 +17,7 @@ public:
     ClusterMerge(const ClusterMerge& other);
     virtual ~ClusterMerge();
     void operator=(const ClusterMerge& other);
-    bool operator==(const ClusterMerge& other);
+    bool operator==(const ClusterMerge& other) const;
     void clear();
     void merge(const QSet<int>& labels);
     void merge(const QList<int>& labels);

@@ -22,10 +22,12 @@ public:
     virtual ~MVAbstractView();
 
     bool isCalculating();
+    bool recalculateSuggested();
 
 signals:
     void calculationStarted();
     void calculationFinished();
+    void recalculateSuggestedChanged();
 
 protected:
     virtual void prepareCalculation() = 0;
@@ -45,6 +47,7 @@ slots:
     void slot_do_calculation();
     void slot_calculation_finished();
     void slot_view_agent_option_changed(QString name);
+    void slot_suggest_recalculate();
 
 private:
     MVAbstractViewPrivate* d;

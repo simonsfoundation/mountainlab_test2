@@ -1,7 +1,10 @@
+#include "mvabstractview.h"
 #include "tabber.h"
 #include <QMap>
 #include <QVariant>
 #include <QDebug>
+#include <QMenu>
+#include <QTabBar>
 
 struct TabberWidget {
     QWidget* widget;
@@ -28,6 +31,8 @@ public:
     bool contains_widget(QWidget* W);
     ///Get the name of a different container, or "" if none
     QString find_other_container_name(QString name);
+
+    void update_tab_labels();
 };
 
 Tabber::Tabber()
@@ -62,6 +67,12 @@ void Tabber::addWidget(const QString& container_name, const QString& label, QWid
     X.label = label;
     d->m_widgets << X;
     d->put_widget_in_container(container_name, X.widget);
+
+    MVAbstractView *VV=qobject_cast<MVAbstractView *>(W);
+    if (VV) {
+        connect(VV,SIGNAL(recalculateSuggestedChanged()),this,SLOT(slot_recalculate_suggested_changed()));
+    }
+
     connect(W, SIGNAL(destroyed(QObject*)), this, SLOT(slot_widget_destroyed(QObject*)));
 }
 
@@ -142,6 +153,19 @@ void Tabber::slot_tab_bar_clicked(int index)
     Q_UNUSED(index);
     TabberTabWidget* TW = (TabberTabWidget*)sender();
     d->m_current_container_name = TW->property("container_name").toString();
+
+    if (index==TW->currentIndex()) {
+        MVAbstractView *VV=qobject_cast<MVAbstractView *>(TW->widget(index));
+        if (VV) {
+            QMenu m;
+            m.addActions(VV->actions());
+            //m.exec(VV->mapToGlobal(QPoint(0,0)));
+            m.exec(TW->tabBar()->mapToGlobal(TW->tabBar()->tabRect(index).bottomLeft()));
+            //m.exec(tb->mapToGlobal(tb->rect().bottomLeft()));
+        }
+    }
+
+
 }
 
 void Tabber::slot_tab_bar_double_clicked(int index)
@@ -156,6 +180,11 @@ void Tabber::slot_tab_bar_double_clicked(int index)
 void Tabber::slot_widget_destroyed(QObject* obj)
 {
     d->remove_widget((QWidget*)obj);
+}
+
+void Tabber::slot_recalculate_suggested_changed()
+{
+    d->update_tab_labels();
 }
 
 void TabberPrivate::put_widget_in_container(QString container_name, QWidget* W)
@@ -242,6 +271,29 @@ QString TabberPrivate::find_other_container_name(QString name)
             return str;
     }
     return "";
+}
+
+bool recalculate_suggested(QWidget *W) {
+    MVAbstractView *VV=qobject_cast<MVAbstractView *>(W);
+    if (VV) {
+        return VV->recalculateSuggested();
+    }
+    return false;
+}
+
+void TabberPrivate::update_tab_labels()
+{
+    foreach (QTabWidget *W,m_tab_widgets) {
+        for (int i=0; i<W->count(); i++) {
+            QWidget *w=W->widget(i);
+            TabberWidget *v=find_tabber_widget(w);
+            if (v) {
+                QString label=v->label;
+                if (recalculate_suggested(w)) label+=" (*)";
+                W->setTabText(i,label);
+            }
+        }
+    }
 }
 
 class TabberTabWidgetPrivate {

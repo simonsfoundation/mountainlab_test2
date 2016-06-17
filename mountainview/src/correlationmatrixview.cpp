@@ -103,8 +103,7 @@ QPoint CorrelationMatrixViewPrivate::pixel2index(QPointF pt)
     if (W0 * N2 < H0 * N1) {
         //limited by width
         square_size = W0 * 1.0 / N1;
-    }
-    else {
+    } else {
         //limited by height
         square_size = H0 * 1.0 / N2;
     }

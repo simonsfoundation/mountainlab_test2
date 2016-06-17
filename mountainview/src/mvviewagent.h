@@ -21,11 +21,31 @@ struct MVRange {
         min = min0;
         max = max0;
     }
-    bool operator==(const MVRange& other);
+    bool operator==(const MVRange& other) const;
     MVRange operator+(double offset);
     MVRange operator*(double scale);
     double min, max;
 };
+
+struct MVEventFilter {
+    bool use_event_filter = false;
+    double min_detectability_score = 0;
+    double max_outlier_score = 0;
+    bool operator==(const MVEventFilter& other) const
+    {
+        if (use_event_filter != other.use_event_filter)
+            return false;
+        if (min_detectability_score != other.min_detectability_score)
+            return false;
+        if (max_outlier_score != other.max_outlier_score)
+            return false;
+        return true;
+    }
+    static MVEventFilter fromJsonObject(QJsonObject obj);
+    QJsonObject toJsonObject() const;
+};
+
+#include "mvmisc.h"
 
 class MVViewAgentPrivate;
 class MVViewAgent : public QObject {
@@ -75,6 +95,8 @@ public:
     /////////////////////////////////////////////////
     DiskReadMda firings();
     void setFirings(const DiskReadMda& F);
+    MVEventFilter eventFilter();
+    void setEventFilter(const MVEventFilter& EF);
 
     /////////////////////////////////////////////////
     // these should be set once at beginning
@@ -88,12 +110,14 @@ public:
     void setOption(QString name, QVariant value);
 
     /////////////////////////////////////////////////
-    void copySettingsFrom(MVViewAgent *other);
+    void copySettingsFrom(MVViewAgent* other);
 
 signals:
     void currentTimeseriesChanged();
     void timeseriesNamesChanged();
     void firingsChanged();
+    void eventFilterChanged();
+    void filteredFiringsChanged();
     void clusterMergeChanged();
     void clusterAttributesChanged();
     void currentEventChanged();

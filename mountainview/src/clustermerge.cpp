@@ -63,16 +63,16 @@ void ClusterMerge::operator=(const ClusterMerge& other)
     d->m_merge_pairs = other.d->m_merge_pairs;
 }
 
-bool ClusterMerge::operator==(const ClusterMerge& other)
+bool ClusterMerge::operator==(const ClusterMerge& other) const
 {
     if (d->m_merge_pairs.count() != other.d->m_merge_pairs.count())
         return false;
-    foreach(merge_pair mp, d->m_merge_pairs)
-    if (!other.d->m_merge_pairs.contains(mp))
-        return false;
-    foreach(merge_pair mp, other.d->m_merge_pairs)
-    if (!d->m_merge_pairs.contains(mp))
-        return false;
+    foreach (merge_pair mp, d->m_merge_pairs)
+        if (!other.d->m_merge_pairs.contains(mp))
+            return false;
+    foreach (merge_pair mp, other.d->m_merge_pairs)
+        if (!d->m_merge_pairs.contains(mp))
+            return false;
     return true;
 }
 
@@ -104,8 +104,7 @@ void ClusterMerge::merge(const QList<int>& labels)
 void ClusterMerge::unmerge(int label)
 {
     QSet<merge_pair> new_pairs;
-    foreach(merge_pair mp, d->m_merge_pairs)
-    {
+    foreach (merge_pair mp, d->m_merge_pairs) {
         if ((mp.label1 != label) && (mp.label2 != label)) {
             new_pairs.insert(mp);
         }
@@ -128,8 +127,7 @@ void ClusterMerge::unmerge(const QList<int>& labels)
 int ClusterMerge::representativeLabel(int label) const
 {
     int ret = label;
-    foreach(merge_pair mp, d->m_merge_pairs)
-    {
+    foreach (merge_pair mp, d->m_merge_pairs) {
         if (mp.label1 == label) {
             if (mp.label2 < ret)
                 ret = mp.label2;
@@ -141,8 +139,7 @@ int ClusterMerge::representativeLabel(int label) const
 QList<int> ClusterMerge::representativeLabels() const
 {
     QSet<int> ret;
-    foreach(merge_pair mp, d->m_merge_pairs)
-    {
+    foreach (merge_pair mp, d->m_merge_pairs) {
         ret.insert(this->representativeLabel(mp.label1));
     }
     QList<int> ret2 = ret.toList();
@@ -154,8 +151,7 @@ QList<int> ClusterMerge::getMergeGroup(int label) const
 {
     QList<int> ret;
     ret << label;
-    foreach(merge_pair mp, d->m_merge_pairs)
-    {
+    foreach (merge_pair mp, d->m_merge_pairs) {
         if (mp.label1 == label) {
             ret << mp.label2;
         }
@@ -221,8 +217,7 @@ bool ClusterMergePrivate::is_merged(int label1, int label2)
 void ClusterMergePrivate::make_transitive()
 {
     QSet<int> all_labels;
-    foreach(merge_pair mp, m_merge_pairs)
-    {
+    foreach (merge_pair mp, m_merge_pairs) {
         all_labels.insert(mp.label1);
     }
     QList<int> all_labels0 = all_labels.toList();

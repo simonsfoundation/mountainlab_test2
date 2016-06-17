@@ -16,6 +16,7 @@
 #include <QPainter>
 #include <math.h>
 #include "msmisc.h"
+#include "mvmisc.h"
 
 struct Correlogram {
     Correlogram()
@@ -30,7 +31,9 @@ struct Correlogram {
 class MVCrossCorrelogramsWidget2Computer {
 public:
     //input
+    QString mlproxy_url;
     DiskReadMda firings;
+    MVEventFilter event_filter;
     CrossCorrelogramOptions options;
     int max_dt;
 
@@ -68,7 +71,7 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting()));
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
 
-    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
     this->recalculateOnOptionChanged("cc_max_dt_msec");
 
     QGridLayout* GL = new QGridLayout;
@@ -106,7 +109,9 @@ MVCrossCorrelogramsWidget2::~MVCrossCorrelogramsWidget2()
 
 void MVCrossCorrelogramsWidget2::prepareCalculation()
 {
+    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
     d->m_computer.firings = viewAgent()->firings();
+    d->m_computer.event_filter = viewAgent()->eventFilter();
     d->m_computer.options = d->m_options;
     d->m_computer.max_dt = viewAgent()->option("cc_max_dt_msec", 100).toDouble() / 1000 * viewAgent()->sampleRate();
 }
@@ -204,12 +209,12 @@ void MVCrossCorrelogramsWidget2::setOptions(CrossCorrelogramOptions opts)
 
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach (int a, S1)
-        if (!S2.contains(a))
-            return false;
-    foreach (int a, S2)
-        if (!S1.contains(a))
-            return false;
+    foreach(int a, S1)
+    if (!S2.contains(a))
+        return false;
+    foreach(int a, S2)
+    if (!S1.contains(a))
+        return false;
     return true;
 }
 
@@ -408,6 +413,9 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
     correlograms.clear();
 
+    //DiskReadMda firings_filtered = compute_filtered_firings_remotely(mlproxy_url, firings, event_filter);
+    firings = compute_filtered_firings_locally(firings, event_filter);
+
     QList<double> times;
     QList<int> labels;
     long L = firings.N2();
@@ -428,8 +436,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == Cross_Correlograms) {
+    } else if (options.mode == Cross_Correlograms) {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram CC;
@@ -437,8 +444,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == Matrix_Of_Cross_Correlograms) {
+    } else if (options.mode == Matrix_Of_Cross_Correlograms) {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram CC;
@@ -489,14 +495,12 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
         int index = HV->property("index").toInt();
         if (m_correlograms.value(index).k1 == q->viewAgent()->currentCluster()) {
             HV->setCurrent(true);
-        }
-        else {
+        } else {
             HV->setCurrent(false);
         }
         if (selected_clusters.contains(m_correlograms.value(index).k1)) {
             HV->setSelected(true);
-        }
-        else {
+        } else {
             HV->setSelected(false);
         }
     }

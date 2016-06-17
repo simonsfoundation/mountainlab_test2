@@ -18,6 +18,7 @@ class MVFiringEventViewCalculator {
 public:
     //input
     DiskReadMda firings;
+    MVEventFilter filter;
     QSet<int> labels_to_use;
 
     //output
@@ -55,13 +56,13 @@ MVFiringEventView2::MVFiringEventView2(MVViewAgent* view_agent)
     this->setMarkersVisible(false);
     this->setMargins(60, 60, 40, 40);
 
-    mvtsv_colors clrs;
-    clrs.axis_color = Qt::white;
-    clrs.text_color = Qt::white;
-    clrs.background_color = Qt::black;
-    this->setColors(clrs);
+    mvtsv_prefs p = this->prefs();
+    p.colors.axis_color = Qt::white;
+    p.colors.text_color = Qt::white;
+    p.colors.background_color = Qt::black;
+    this->setPrefs(p);
 
-    this->recalculateOn(view_agent, SIGNAL(firingsChanged()));
+    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
 
     this->recalculate();
 }
@@ -75,6 +76,7 @@ void MVFiringEventView2::prepareCalculation()
 {
     d->m_calculator.labels_to_use = d->m_labels_to_use;
     d->m_calculator.firings = viewAgent()->firings();
+    d->m_calculator.filter = viewAgent()->eventFilter();
 }
 
 void MVFiringEventView2::runCalculation()
@@ -188,6 +190,9 @@ double MVFiringEventView2Private::ypix2val(double ypix)
 void MVFiringEventViewCalculator::compute()
 {
     TaskProgress task("Computing firing events");
+
+    firings = compute_filtered_firings_locally(firings, filter);
+
     long L = firings.N2();
     times.clear();
     labels.clear();

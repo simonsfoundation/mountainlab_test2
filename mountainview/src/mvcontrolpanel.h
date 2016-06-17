@@ -14,21 +14,6 @@
 #include <QString>
 #include <QWidget>
 
-struct MVEventFilter {
-    MVEventFilter()
-    {
-        use_event_filter = false;
-        min_detectability_score = 0;
-        max_outlier_score = 0;
-    }
-
-    bool use_event_filter;
-    double min_detectability_score;
-    double max_outlier_score;
-    static MVEventFilter fromJsonObject(QJsonObject obj);
-    QJsonObject toJsonObject() const;
-};
-
 class MVControlPanelPrivate;
 class MVControlPanel : public QWidget {
     Q_OBJECT

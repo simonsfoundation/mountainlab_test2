@@ -5,8 +5,10 @@
 *******************************************************/
 
 #include "mvabstractview.h"
+#include <QAction>
 #include <QThread>
 #include <QTimer>
+#include <QToolButton>
 
 class CalculationThread : public QThread {
 public:
@@ -20,11 +22,13 @@ public:
     MVViewAgent* m_view_agent;
     QSet<QString> m_recalculate_on_option_names;
     bool m_calculation_scheduled;
+    bool m_recalculate_suggested;
 
     CalculationThread m_calculation_thread;
 
     void stop_calculation();
     void schedule_calculation();
+    void set_recalculate_suggested(bool val);
 };
 
 MVAbstractView::MVAbstractView(MVViewAgent* view_agent)
@@ -32,12 +36,30 @@ MVAbstractView::MVAbstractView(MVViewAgent* view_agent)
     d = new MVAbstractViewPrivate;
     d->q = this;
     d->m_calculation_thread.q = this;
+    d->m_recalculate_suggested = false;
 
     d->m_view_agent = view_agent;
     d->m_calculation_scheduled = false;
 
     QObject::connect(&d->m_calculation_thread, SIGNAL(finished()), this, SLOT(slot_calculation_finished()));
     QObject::connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
+
+    {
+        QAction* a = new QAction("Recalculate", this);
+        this->addAction(a);
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(recalculate()));
+    }
+
+    /*
+     // just thinking out loud
+    QToolButton *recalculate_button=new QToolButton(this);
+    recalculate_button->setText("Recalculate");
+    recalculate_button->setAutoRaise(true);
+    recalculate_button->setBackgroundRole(QPalette::Window);
+    connect(recalculate_button,SIGNAL(clicked(bool)),this,SLOT(recalculate()));
+    */
+
+    setContextMenuPolicy(Qt::ActionsContextMenu);
 }
 
 MVAbstractView::~MVAbstractView()
@@ -49,6 +71,11 @@ MVAbstractView::~MVAbstractView()
 bool MVAbstractView::isCalculating()
 {
     return d->m_calculation_thread.isRunning();
+}
+
+bool MVAbstractView::recalculateSuggested()
+{
+    return d->m_recalculate_suggested;
 }
 
 MVViewAgent* MVAbstractView::viewAgent()
@@ -63,7 +90,7 @@ void MVAbstractView::recalculateOnOptionChanged(QString name)
 
 void MVAbstractView::recalculateOn(QObject* obj, const char* signal)
 {
-    QObject::connect(obj, signal, this, SLOT(recalculate()));
+    QObject::connect(obj, signal, this, SLOT(slot_suggest_recalculate()));
 }
 
 void MVAbstractView::recalculate()
@@ -74,6 +101,7 @@ void MVAbstractView::recalculate()
 
 void MVAbstractView::slot_do_calculation()
 {
+    d->set_recalculate_suggested(false);
     emit this->calculationStarted();
     this->update();
     prepareCalculation();
@@ -92,13 +120,19 @@ void MVAbstractView::slot_calculation_finished()
     this->onCalculationFinished();
     this->update();
     emit this->calculationFinished();
+    d->set_recalculate_suggested(false);
 }
 
 void MVAbstractView::slot_view_agent_option_changed(QString name)
 {
     if (d->m_recalculate_on_option_names.contains(name)) {
-        recalculate();
+        slot_suggest_recalculate();
     }
+}
+
+void MVAbstractView::slot_suggest_recalculate()
+{
+    d->set_recalculate_suggested(true);
 }
 
 void CalculationThread::run()
@@ -120,4 +154,12 @@ void MVAbstractViewPrivate::schedule_calculation()
         return;
     m_calculation_scheduled = true;
     QTimer::singleShot(100, q, SLOT(slot_do_calculation()));
+}
+
+void MVAbstractViewPrivate::set_recalculate_suggested(bool val)
+{
+    if (m_recalculate_suggested == val)
+        return;
+    m_recalculate_suggested = val;
+    emit q->recalculateSuggestedChanged();
 }

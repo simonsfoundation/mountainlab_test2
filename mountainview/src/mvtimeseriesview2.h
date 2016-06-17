@@ -11,8 +11,6 @@
 #include <diskreadmda.h>
 #include "mvtimeseriesviewbase.h"
 
-/// TODO (0.9.1) on first load, multiscale file is created on server, the process is detached. Provide feedback to the user somehow
-
 class MVTimeSeriesView2Private;
 class MVTimeSeriesView2 : public MVTimeSeriesViewBase {
     Q_OBJECT
@@ -36,8 +34,7 @@ public:
     void resizeEvent(QResizeEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
 
-private
-slots:
+private slots:
 
 private:
     MVTimeSeriesView2Private* d;
