@@ -22,6 +22,7 @@
 #include "mvclustercontextmenu.h"
 #include "mvamphistview2.h"
 #include "mvdiscrimhistview.h"
+#include "mvabstractviewfactory.h"
 
 /// TODO, get rid of computationthread
 
@@ -71,6 +72,7 @@ public:
     QSplitter* m_hsplitter, *m_vsplitter;
     TabberTabWidget* m_tabs1, *m_tabs2;
     Tabber* m_tabber; //manages the views in the two tab widgets
+    QList<MVAbstractViewFactory*> m_viewFactories;
 
     ClusterAnnotationGuide* m_cluster_annotation_guide;
 
@@ -302,6 +304,31 @@ MVFile MVMainWindow::getMVFile()
     d->m_mv_file.setSampleRate(d->m_view_agent->sampleRate());
 
     return d->m_mv_file;
+}
+
+void MVMainWindow::registerViewFactory(MVAbstractViewFactory *f)
+{
+    // sort by group name and order
+    QList<MVAbstractViewFactory*>::iterator iter
+            = qLowerBound(d->m_viewFactories.begin(), d->m_viewFactories.end(),
+                          f, [](MVAbstractViewFactory *f1, MVAbstractViewFactory *f2) {
+            if (f1->group() < f2->group())
+                return true;
+            if (f1->group() == f2->group() && f1->order() < f2->order())
+                return true;
+            return false;
+    });
+    d->m_viewFactories.insert(iter, f);
+}
+
+void MVMainWindow::unregisterViewFactory(MVAbstractViewFactory *f)
+{
+    d->m_viewFactories.removeOne(f);
+}
+
+const QList<MVAbstractViewFactory *> &MVMainWindow::viewFactories() const
+{
+    return d->m_viewFactories;
 }
 
 void MVMainWindow::applyUserAction(QString action)
