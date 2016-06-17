@@ -52,13 +52,8 @@ protected:
     virtual void runCalculation() = 0;
     virtual void onCalculationFinished() = 0;
 
-    MVViewAgent* viewAgent();
     void recalculateOnOptionChanged(QString name, bool suggest_only = true);
     void recalculateOn(QObject*, const char* signal, bool suggest_only = true);
-
-protected
-slots:
-    void recalculate();
 
 private
 slots:
