@@ -10,6 +10,8 @@
 #include "mvutils.h"
 #include "msmisc.h"
 
+/// TODO (LOW) remove mvfiringeventview.h/cpp
+
 class MVFiringEventViewPrivate {
 public:
     MVFiringEventView* q;
@@ -262,7 +264,6 @@ void MVFiringEventView::mouseReleaseEvent(QMouseEvent* evt)
     Q_UNUSED(evt)
     //QPointF pt = evt->pos();
     //long index = d->find_closest_event_index(pt);
-    /// TODO implement clicking response in MVFiringEventView
 }
 
 QPointF MVFiringEventViewPrivate::coord2imagepix(const QPointF& p, int W, int H)
@@ -308,7 +309,6 @@ int MVFiringEventViewPrivate::find_closest_event_index(const QPointF& pt)
 
 int MVFiringEventViewPrivate::find_closest_event_index(int i1, int i2)
 {
-    /// TODO change all int to long in MVFiringEventView
     int best_ind = -1;
     double best_dist = 0;
     for (int y = 0; y < m_event_index_grid.N2(); y++) {
@@ -363,8 +363,7 @@ void MVFiringEventViewPrivate::do_paint(QPainter& painter, int W, int H)
         RR.adjust(0, m_tmargin, 0, 0); //might not be right
         if (fabs(m_max_amplitude) > fabs(m_min_amplitude)) {
             painter.drawText(RR, Qt::AlignTop | Qt::AlignHCenter, epoch.name);
-        }
-        else {
+        } else {
             painter.drawText(RR, Qt::AlignBottom | Qt::AlignHCenter, epoch.name);
         }
     }

@@ -157,11 +157,9 @@ void MVTimeSeriesView::setSampleRate(double samplerate)
 void MVTimeSeriesView::setTimeseries(const DiskReadMda& X)
 {
     d->m_timeseries = X;
-    /// TODO address: the following is a hack so that the array info is not downloaded during the paintEvent which seems to cause a crash
-    d->m_timeseries.N1();
     d->m_msts.setData(X);
     d->m_layout_needed = true;
-    this->setTimeRange(MVRange(0, d->m_timeseries.N2() - 1)); //above hack not strictly needed because we now call N2() here.
+    this->setTimeRange(MVRange(0, d->m_timeseries.N2() - 1));
     this->autoSetAmplitudeFactor();
     update();
 }
@@ -343,12 +341,10 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         }
     }
 
-    /// TODO add this to prefs
-    double min_avg_pixels_per_marker = 10;
+    double min_avg_pixels_per_marker = 10; // probably add this to prefs
     if ((times0.count()) && (W0 / times0.count() >= min_avg_pixels_per_marker)) {
         d->paint_markers(&painter, times0, labels0, W0, H0);
-    }
-    else {
+    } else {
         if (times0.count()) {
             d->paint_message_at_top(&painter, "Zoom in to view markers", W0, H0);
         }
@@ -374,8 +370,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         QString str;
         if (d->m_samplerate) {
             str = QString("%1 (tp: %2)").arg(d->format_time(d->m_view_agent->currentTimepoint())).arg((long)d->m_view_agent->currentTimepoint());
-        }
-        else {
+        } else {
             str = QString("Sample rate is null (tp: %2)").arg((long)d->m_view_agent->currentTimepoint());
         }
         d->paint_status_string(&painter, W0, H0, str);
@@ -434,12 +429,10 @@ void MVTimeSeriesView::wheelEvent(QWheelEvent* evt)
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
             d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-        }
-        else if (delta > 0) {
+        } else if (delta > 0) {
             d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
         }
-    }
-    else {
+    } else {
         //This used to allow zooming at hover position -- probably not needed
         /*
         float frac = 1;
@@ -458,41 +451,32 @@ void MVTimeSeriesView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    }
-    else if (evt->key() == Qt::Key_A) {
+    } else if (evt->key() == Qt::Key_A) {
         autoSetAmplitudeFactorWithinTimeRange();
-    }
-    else if (evt->key() == Qt::Key_Left) {
+    } else if (evt->key() == Qt::Key_Left) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
         this->setCurrentTimepoint(this->currentTimepoint() - range / 10);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_Right) {
+    } else if (evt->key() == Qt::Key_Right) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
         this->setCurrentTimepoint(this->currentTimepoint() + range / 10);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_Home) {
+    } else if (evt->key() == Qt::Key_Home) {
         this->setCurrentTimepoint(0);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_End) {
+    } else if (evt->key() == Qt::Key_End) {
         this->setCurrentTimepoint(d->m_timeseries.N2() - 1);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_Equal) {
+    } else if (evt->key() == Qt::Key_Equal) {
         d->zoom_in(mvtsv_coord::from_t(this->currentTimepoint()));
-    }
-    else if (evt->key() == Qt::Key_Minus) {
+    } else if (evt->key() == Qt::Key_Minus) {
         d->zoom_out(mvtsv_coord::from_t(this->currentTimepoint()));
-    }
-    else {
+    } else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -889,8 +873,7 @@ void MVTimeSeriesViewPrivate::scroll_to_current_timepoint()
     double range = trange.max - trange.min;
     if (t < trange.min) {
         q->setTimeRange(trange + (t - trange.min - range / 10));
-    }
-    else {
+    } else {
         q->setTimeRange(trange + (t - trange.max + range / 10));
     }
 }
@@ -922,8 +905,7 @@ void MVTimeSeriesViewPrivate::update_cursor()
 {
     if (m_left_click_dragging) {
         q->setCursor(Qt::OpenHandCursor);
-    }
-    else {
+    } else {
         q->setCursor(Qt::ArrowCursor);
     }
 }

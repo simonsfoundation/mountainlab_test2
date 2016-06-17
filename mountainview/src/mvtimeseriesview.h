@@ -11,8 +11,6 @@
 #include <diskreadmda.h>
 #include "mvviewagent.h"
 
-/// TODO (0.9.1) on first load, multiscale file is created on server, the process is detached. Provide feedback to the user somehow
-
 class MVTimeSeriesViewPrivate;
 class MVTimeSeriesView : public QWidget {
     Q_OBJECT
@@ -52,7 +50,8 @@ public:
 signals:
     void clicked();
 
-private slots:
+private
+slots:
     void slot_scroll_to_current_timepoint();
 
 private:

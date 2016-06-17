@@ -194,6 +194,7 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
     }
 
     QObject::connect(d->m_view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
+    QObject::connect(d->m_view_agent, SIGNAL(eventFilterChanged()), this, SLOT(slot_view_agent_event_filter_changed()));
     QObject::connect(d->m_view_agent, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_update_timeseries_box()));
     QObject::connect(d->m_view_agent, SIGNAL(timeseriesNamesChanged()), this, SLOT(slot_update_timeseries_box()));
 
@@ -208,6 +209,7 @@ MVControlPanel::~MVControlPanel()
     delete d;
 }
 
+/*
 MVEventFilter MVControlPanel::eventFilter() const
 {
     MVEventFilter filter;
@@ -223,6 +225,7 @@ void MVControlPanel::setEventFilter(MVEventFilter X)
     d->m_controls.set_parameter_value("max_outlier_score", X.max_outlier_score);
     d->m_controls.set_parameter_value("min_detectability_score", X.min_detectability_score);
 }
+*/
 
 QAbstractButton* MVControlPanel::findButton(const QString& name)
 {
@@ -247,15 +250,26 @@ void MVControlPanel::slot_button_clicked()
         d->m_view_agent->setOption("clip_size", d->m_controls.get_parameter_value("clip_size"));
         d->m_view_agent->setOption("cc_max_dt_msec", d->m_controls.get_parameter_value("cc_max_dt_msec"));
         d->m_view_agent->setCurrentTimeseriesName(d->m_controls.get_parameter_value("timeseries").toString());
-    }
-    else if (action_name == "apply_filter") {
-        d->m_view_agent->setEventFilter(this->eventFilter());
+    } else if (action_name == "apply_filter") {
+        MVEventFilter filter;
+        filter.use_event_filter = d->m_controls.get_parameter_value("use_event_filter").toBool();
+        filter.max_outlier_score = d->m_controls.get_parameter_value("max_outlier_score").toDouble();
+        filter.min_detectability_score = d->m_controls.get_parameter_value("min_detectability_score").toDouble();
+        d->m_view_agent->setEventFilter(filter);
     }
 }
 
 void MVControlPanel::slot_view_agent_option_changed(QString name)
 {
     d->m_controls.set_parameter_value(name, d->m_view_agent->option(name));
+}
+
+void MVControlPanel::slot_view_agent_event_filter_changed()
+{
+    MVEventFilter X = d->m_view_agent->eventFilter();
+    d->m_controls.set_parameter_value("use_event_filter", X.use_event_filter);
+    d->m_controls.set_parameter_value("max_outlier_score", X.max_outlier_score);
+    d->m_controls.set_parameter_value("min_detectability_score", X.min_detectability_score);
 }
 
 void MVControlPanel::slot_update_timeseries_box()
@@ -329,7 +343,8 @@ QGroupBox* ControlManager::add_radio_button_group(QGridLayout* G, QString name, 
     int r = G->rowCount();
     QGroupBox* box = new QGroupBox;
     QHBoxLayout* hlayout = new QHBoxLayout;
-    foreach (QString option, options) {
+    foreach(QString option, options)
+    {
         QRadioButton* B = new QRadioButton(option);
         if (option == val)
             B->setChecked(true);
@@ -377,7 +392,8 @@ QVariant ControlManager::get_parameter_value(QString name, const QVariant& defau
     if (m_groupbox_controls.contains(name)) {
         QGroupBox* G = m_groupbox_controls[name];
         QList<QObject*> ch = G->children();
-        foreach (QObject* obj, ch) {
+        foreach(QObject * obj, ch)
+        {
             QRadioButton* R = dynamic_cast<QRadioButton*>(obj);
             if (R) {
                 if (R->isChecked())
@@ -399,7 +415,8 @@ void ControlManager::set_parameter_value(QString name, QVariant val)
     if (m_groupbox_controls.contains(name)) {
         QGroupBox* G = m_groupbox_controls[name];
         QList<QObject*> ch = G->children();
-        foreach (QObject* obj, ch) {
+        foreach(QObject * obj, ch)
+        {
             QRadioButton* R = dynamic_cast<QRadioButton*>(obj);
             if (R) {
                 if (R->text() == val) {
@@ -424,7 +441,8 @@ void ControlManager::set_parameter_choices(QString name, QStringList choices)
         QComboBox* CB = m_combobox_controls[name];
         QString txt = CB->currentText();
         CB->clear();
-        foreach (QString choice, choices) {
+        foreach(QString choice, choices)
+        {
             CB->addItem(choice);
         }
         if (txt.isEmpty()) {
@@ -463,7 +481,8 @@ QLabel* MVControlPanelPrivate::create_group_label(QString label)
 QAbstractButton* MVControlPanelPrivate::find_action_button(QString name)
 {
     QList<QAbstractButton*> buttons = q->findChildren<QAbstractButton*>("", Qt::FindChildrenRecursively);
-    foreach (QAbstractButton* B, buttons) {
+    foreach(QAbstractButton * B, buttons)
+    {
         if (B->property("action_name").toString() == name)
             return B;
     }

@@ -59,6 +59,15 @@ MVViewAgent::~MVViewAgent()
     delete d;
 }
 
+void MVViewAgent::clear()
+{
+    d->m_cluster_merge.clear();
+    d->m_cluster_attributes.clear();
+    d->m_timeseries.clear();
+    d->m_firings = DiskReadMda();
+    d->m_options.clear();
+}
+
 QMap<int, QJsonObject> MVViewAgent::clusterAttributes() const
 {
     return d->m_cluster_attributes;
@@ -331,7 +340,6 @@ void MVViewAgent::copySettingsFrom(MVViewAgent* other)
 
 void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
 {
-    /// TODO handle shift modifier
     if (modifiers & Qt::ControlModifier) {
         if (k < 0)
             return;

@@ -12,7 +12,7 @@
 #include <QPainter>
 #include <taskprogress.h>
 
-/// TODO control brightness in firing event view
+/// TODO (MEDIUM) control brightness in firing event view
 
 class MVFiringEventViewCalculator {
 public:
@@ -89,7 +89,7 @@ void MVFiringEventView2::onCalculationFinished()
     d->m_labels0 = d->m_calculator.labels;
     d->m_times0 = d->m_calculator.times;
     d->m_amplitudes0 = d->m_calculator.amplitudes;
-    /// TODO only do this if user has specified that it should be auto calculated (should be default)
+    /// TODO (MEDIUM) only do this if user has specified that it should be auto calculated (should be default)
     this->autoSetAmplitudeRange();
 }
 
@@ -145,7 +145,7 @@ void MVFiringEventView2::paintContent(QPainter* painter)
     }
 
     //legend
-    /// TODO make general legend "widget"
+    /// TODO (LOW) make general legend "widget"
     {
         double spacing = 6;
         double margin = 10;

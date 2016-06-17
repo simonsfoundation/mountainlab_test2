@@ -32,9 +32,8 @@ public:
     void setEpochs(const QList<Epoch>& epochs); //put in view agent
     void setClusterMerge(ClusterMerge CM); //put in view agent
 
-    /// TODO replace these by load and save
     void setMVFile(MVFile mv_file);
-    void writeMVFile(const QString& mv_fname);
+    MVFile getMVFile();
 
 protected:
     void resizeEvent(QResizeEvent* evt);
@@ -42,9 +41,11 @@ protected:
 
 signals:
 
-public slots:
+public
+slots:
 
-private slots:
+private
+slots:
     void slot_control_panel_user_action(QString str);
     void slot_auto_correlogram_activated();
     //void slot_templates_clicked();

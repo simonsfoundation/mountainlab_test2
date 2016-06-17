@@ -13,7 +13,7 @@
 #include "extract_clips.h"
 #include "mountainprocessrunner.h"
 
-/// TODO control brightness in 3D density view
+/// TODO (MEDIUM) control brightness in 3D density view
 
 class MVClusterWidgetComputer : public ComputationThread {
 public:
@@ -158,8 +158,6 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     {
         V->setSizePolicy(view_size_policy);
         hlayout->addWidget(V);
-        /// TODO implement the event filter
-        //V->setEventFilter(d->m_filter_info);
     }
 
     foreach(MVClusterView * V, d->m_views)
@@ -333,7 +331,7 @@ void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 
 void MVClusterWidgetPrivate::update_clips_view()
 {
-    /// TODO -- to avoid crash the extract clips should be done in worker thread
+    /// TODO: (HIGH) -- restore functionality in MVClusterWidget, click on current point
     QMessageBox::information(q, "Feature disabled", "This feature has been temporarily disabled. Normally you would see the current clip on the left.");
     /*
     MVEvent evt = q->currentEvent();

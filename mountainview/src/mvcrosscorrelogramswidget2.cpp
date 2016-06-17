@@ -173,7 +173,6 @@ void MVCrossCorrelogramsWidget2::onCalculationFinished()
     int num_cols = (NUM + num_rows - 1) / num_rows;
     d->m_num_columns = num_cols;
     for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
-        /// TODO set progress here
         HistogramView* HV = new HistogramView;
         HV->setData(d->m_correlograms[ii].data);
         HV->setColors(viewAgent()->colors());

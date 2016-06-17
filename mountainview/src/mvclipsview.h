@@ -24,11 +24,12 @@ public:
     virtual ~MVClipsView();
 
     void setClips(const DiskReadMda& clips);
-/// TODO implement times/labels for purpose of current event and labeling
+/// TODO: (MEDIUM) in mvclipsview implement times/labels for purpose of current event and labeling
 //void setTimes(const QList<double>& times);
 //void setLabels(const QList<int>& labels);
 signals:
-private slots:
+private
+slots:
 
 private:
     MVClipsViewPrivate* d;

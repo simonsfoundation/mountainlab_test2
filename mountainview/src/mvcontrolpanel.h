@@ -24,19 +24,20 @@ public:
 
     void setTimeseriesChoices(const QStringList& names);
 
-    MVEventFilter eventFilter() const;
-
-    void setEventFilter(MVEventFilter X);
+    //MVEventFilter eventFilter() const;
+    //void setEventFilter(MVEventFilter X);
 
     QAbstractButton* findButton(const QString& name);
 
 signals:
     void userAction(QString name);
 
-private slots:
+private
+slots:
     void slot_update_enabled_controls();
     void slot_button_clicked();
     void slot_view_agent_option_changed(QString name);
+    void slot_view_agent_event_filter_changed();
     void slot_update_timeseries_box();
 
 private:

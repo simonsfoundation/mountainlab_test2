@@ -246,7 +246,7 @@ void RemoteReadMdaPrivate::construct_and_clear()
     this->m_info = RemoteReadMdaInfo();
     this->m_info_downloaded = false;
     this->m_path = "";
-    /// TODO use enum instead of string "float64", "float32", etc
+    /// TODO (LOW) use enum instead of string "float64", "float32", etc
     this->m_remote_datatype = "float64";
     this->m_reshaped = false;
 }
@@ -313,7 +313,6 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         binary_url = m_path.mid(0, ind) + "/mdaserver/" + binary_url;
     }
 
-    /// TODO I think this should be http_get_text_file
     QString mda_fname = http_get_binary_file(binary_url);
     if (mda_fname.isEmpty())
         return "";

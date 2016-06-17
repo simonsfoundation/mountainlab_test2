@@ -384,7 +384,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
         }
     }
 
-    /// TODO implement shift select
+    /// TODO: (MEDIUM) implement shift select
     /*
     if (evt->modifiers() & Qt::ControlModifier) {
 

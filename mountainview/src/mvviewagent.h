@@ -55,6 +55,8 @@ public:
     MVViewAgent();
     virtual ~MVViewAgent();
 
+    void clear();
+
     /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;
     QMap<int, QJsonObject> clusterAttributes() const;
