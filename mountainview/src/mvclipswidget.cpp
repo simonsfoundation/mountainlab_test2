@@ -14,9 +14,9 @@
 #include "mlutils.h"
 #include "mvtimeseriesview2.h"
 
-/// TODO (HIGH) merge should apply to all widgets
-/// TODO (HIGH) put firings, firings_filtered, timeseries into MVViewAgent
-/// TODO handle case where there are too many clips to want to download
+/// TODO: (HIGH) merge should apply to all widgets
+/// TODO (LOW) handle case where there are too many clips to want to download
+/// TODO: (MEDIUM) labels in clips widget
 
 class MVClipsWidgetComputer : public ComputationThread {
 public:
@@ -122,7 +122,7 @@ void MVClipsWidgetComputer::compute()
 {
     TaskProgress task(TaskProgress::Calculate, "Clips Widget Computer");
 
-    /// TODO think about how to automatically assemble a pipeline that gets sent to server in one shot
+    /// TODO (LOW) think about how to automatically assemble a pipeline that gets sent to server in one shot
 
     //need to compute remotely because of subsequent steps
     firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);

@@ -21,8 +21,12 @@ public:
     MVAbstractView(MVViewAgent* view_agent);
     virtual ~MVAbstractView();
 
-    bool isCalculating();
-    bool recalculateSuggested();
+    bool isCalculating() const;
+    bool recalculateSuggested() const;
+
+public
+slots:
+    void recalculate();
 
 signals:
     void calculationStarted();
@@ -37,10 +41,6 @@ protected:
     MVViewAgent* viewAgent();
     void recalculateOnOptionChanged(QString name);
     void recalculateOn(QObject*, const char* signal);
-
-protected
-slots:
-    void recalculate();
 
 private
 slots:

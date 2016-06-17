@@ -11,8 +11,6 @@
 #include <diskreadmda.h>
 #include "mvabstractview.h"
 
-/// TODO (0.9.1) on first load, multiscale file is created on server, the process is detached. Provide feedback to the user somehow
-
 struct mvtsv_colors {
     QColor marker_color = QColor(200, 0, 0, 120);
     QColor text_color = Qt::black;
@@ -78,7 +76,8 @@ protected:
 signals:
     void clicked();
 
-private slots:
+private
+slots:
     void slot_scroll_to_current_timepoint();
 
 private:

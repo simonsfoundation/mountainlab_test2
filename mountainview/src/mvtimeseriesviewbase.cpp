@@ -252,8 +252,7 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
             }
         }
 
-        /// TODO add this to prefs
-        double min_avg_pixels_per_marker = 10;
+        double min_avg_pixels_per_marker = 10; //probably add this to prefs
         if ((times0.count()) && (W0 / times0.count() >= min_avg_pixels_per_marker)) {
             d->paint_markers(&painter, times0, labels0, W0, H0);
         } else {

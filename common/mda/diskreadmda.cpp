@@ -154,7 +154,6 @@ QString DiskReadMda::makePath() const
     return d->m_path;
 }
 
-/// TODO do not read the file every time we need the header!
 long DiskReadMda::N1() const
 {
     if (d->m_use_memory_mda) {
@@ -525,7 +524,7 @@ bool DiskReadMdaPrivate::open_file_if_needed()
 
 void DiskReadMdaPrivate::copy_from(const DiskReadMda& other)
 {
-    /// TODO think about copying over additional information such as internal chunks
+    /// TODO (LOW) think about copying over additional information such as internal chunks
 
     if (this->m_file) {
         fclose(this->m_file);

@@ -3,23 +3,20 @@
 
 #include <QWidget>
 
-
-/// TODO change copyright notice throughout
-
 class MVStatusBarPrivate;
-class MVStatusBar : public QWidget
-{
+class MVStatusBar : public QWidget {
     Q_OBJECT
 public:
     friend class MVStatusBarPrivate;
     MVStatusBar();
     virtual ~MVStatusBar();
-private slots:
+private
+slots:
     void slot_update_quantities();
     void slot_update_tasks();
+
 private:
-    MVStatusBarPrivate *d;
+    MVStatusBarPrivate* d;
 };
 
 #endif // MVSTATUSBAR_H
-

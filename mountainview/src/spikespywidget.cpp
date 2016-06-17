@@ -13,8 +13,6 @@
 #include <QSplitter>
 #include <QMenuBar>
 
-/// TODO put channel colors into mvviewagent
-
 class SpikeSpyWidgetPrivate {
 public:
     SpikeSpyWidget* q;
@@ -121,7 +119,6 @@ void SpikeSpyWidget::slot_open_mountainview()
 
 void SpikeSpyWidget::slot_view_clicked()
 {
-    /// TODO highlight the current view differently
     for (int i = 0; i < d->m_views.count(); i++) {
         if (d->m_views[i] == sender()) {
             d->m_current_view_index = i;

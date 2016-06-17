@@ -11,8 +11,6 @@
 #include <diskreadmda.h>
 #include "mvtimeseriesviewbase.h"
 
-/// TODO (0.9.1) on first load, multiscale file is created on server, the process is detached. Provide feedback to the user somehow
-
 class MVFiringEventView2Private;
 class MVFiringEventView2 : public MVTimeSeriesViewBase {
     Q_OBJECT
@@ -32,7 +30,8 @@ public:
     void setAmplitudeRange(MVRange range);
     void autoSetAmplitudeRange();
 
-private slots:
+private
+slots:
 
 private:
     MVFiringEventView2Private* d;

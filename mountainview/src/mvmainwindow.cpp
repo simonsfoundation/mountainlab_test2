@@ -45,7 +45,7 @@
 #include <QAction>
 #include "textfile.h"
 
-/// TODO put styles in central place?
+/// TODO (LOW) put styles in central place?
 #define MV_STATUS_BAR_HEIGHT 30
 
 class MVMainWindowPrivate {
@@ -64,9 +64,6 @@ public:
     TabberTabWidget* m_tabs1, *m_tabs2;
     Tabber* m_tabber; //manages the views in the two tab widgets
 
-    /// TODO put m_colors somewhere else (call it style colors?)
-    QMap<QString, QColor> m_colors;
-
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(QWidget* W, QString label);
     void set_tool_button_menu(QWidget* X);
@@ -81,7 +78,7 @@ public:
     void open_channel_features();
     void open_spike_spray();
     void open_firing_events();
-    /// TODO implement find_nearby_events
+    /// TODO: (MEDIUM) implement find_nearby_events
     //void find_nearby_events();
 
     void annotate_selected();
@@ -94,6 +91,8 @@ public:
     void export_original_firings();
     void export_filtered_firings();
     void export_file(QString source_path, QString dest_path, bool use_float64);
+
+    void recalculate_views(QString str);
 
     //not sure about these
     QVariant get_cluster_attribute(int k, QString attr);
@@ -189,7 +188,7 @@ void MVMainWindow::setMVFile(MVFile ff)
 {
     d->m_mv_file = ff; //we need to save the whole thing so we know what to save
 
-    /// TODO need to clear out the view_agent here in case this gets called twice
+    d->m_view_agent->clear();
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
     foreach(QString name, timeseries_names)
@@ -201,8 +200,8 @@ void MVMainWindow::setMVFile(MVFile ff)
     d->m_view_agent->setOption("clip_size", d->m_mv_file.viewOptions()["clip_size"].toInt());
     d->m_view_agent->setOption("cc_max_dt_msec", d->m_mv_file.viewOptions()["cc_max_dt_msec"].toDouble());
 
-    /// TODO fix this
-    d->m_control_panel->setEventFilter(MVEventFilter::fromJsonObject(d->m_mv_file.eventFilter()));
+    d->m_view_agent->setEventFilter(MVEventFilter::fromJsonObject(d->m_mv_file.eventFilter()));
+    //d->m_control_panel->setEventFilter();
     if (!d->m_mv_file.currentTimeseriesName().isEmpty()) {
         d->m_view_agent->setCurrentTimeseriesName(d->m_mv_file.currentTimeseriesName());
     } else {
@@ -242,14 +241,14 @@ void MVMainWindow::setMVFile(MVFile ff)
     d->m_view_agent->setMLProxyUrl(ff.mlproxyUrl());
 }
 
-void MVMainWindow::writeMVFile(const QString& mv_fname)
+MVFile MVMainWindow::getMVFile()
 {
-    TaskProgress task("saving .mv file: " + mv_fname);
-
+    /// TODO (LOW) improve relationship between mvfile and view agent
     QJsonObject view_options;
     view_options["clip_size"] = d->m_view_agent->option("clip_size").toInt();
     view_options["cc_max_dt_msec"] = d->m_view_agent->option("cc_max_dt_msec").toDouble();
-    d->m_mv_file.setEventFilter(d->m_control_panel->eventFilter().toJsonObject());
+    //d->m_mv_file.setEventFilter(d->m_control_panel->eventFilter().toJsonObject());
+    d->m_mv_file.setEventFilter(d->m_view_agent->eventFilter().toJsonObject());
     d->m_mv_file.setCurrentTimeseriesName(d->m_view_agent->currentTimeseriesName());
 
     QJsonObject cluster_attributes;
@@ -270,9 +269,7 @@ void MVMainWindow::writeMVFile(const QString& mv_fname)
     d->m_mv_file.setAnnotations(annotations);
     d->m_mv_file.setSampleRate(d->m_view_agent->sampleRate());
 
-    if (!d->m_mv_file.write(mv_fname)) {
-        task.error("Error writing .mv file: " + mv_fname);
-    }
+    return d->m_mv_file;
 }
 
 void MVMainWindow::resizeEvent(QResizeEvent* evt)
@@ -327,10 +324,18 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
         d->export_original_firings();
     } else if (str == "export_filtered_firings") {
         d->export_filtered_firings();
+    } else if (str == "recalculate-all") {
+        d->recalculate_views("all");
+    } else if (str == "recalculate-all-suggested") {
+        d->recalculate_views("all-suggested");
+    } else if (str == "recalculate-all-visible") {
+        d->recalculate_views("all-visible");
+    } else if (str == "recalculate-all-suggested-and-visible") {
+        d->recalculate_views("all-suggested-and-visible");
     }
 }
 
-/// TODO figure out how to implement such functionality outside main window??
+/// TODO (LOW) figure out how to implement such functionality outside main window class
 void MVMainWindow::slot_auto_correlogram_activated()
 {
     TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
@@ -353,7 +358,7 @@ void MVMainWindow::slot_details_template_activated()
 void MVMainWindow::slot_update_buttons()
 {
     //bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
-    /// TODO (0.9.1) restore this has_peaks without accessing m_firings in gui thread
+    /// TODO: (0.9.1) restore this has_peaks without accessing m_firings in gui thread
     bool has_peaks = true;
     bool something_selected = (!d->m_view_agent->selectedClusters().isEmpty());
 
@@ -375,7 +380,7 @@ void MVMainWindow::slot_update_buttons()
     d->set_button_enabled("export_filtered_firings", true);
 }
 
-/// TODO this functionality should be moved to tabber
+/// TODO (MEDIUM) this functionality should be moved to tabber
 void MVMainWindow::slot_action_move_to_other_tab_widget()
 {
     QAction* a = qobject_cast<QAction*>(sender());
@@ -445,7 +450,7 @@ void MVMainWindowPrivate::add_tab(QWidget* W, QString label)
 {
     W->setFocusPolicy(Qt::StrongFocus);
 
-    /// TODO put these in the tabber, in fact put all actions where they belong
+    /// TODO (MEDIUM) put these in the tabber, in fact put all actions where they belong
     {
         QAction* a = new QAction("Move to other tab widget", W);
         QObject::connect(a, SIGNAL(triggered(bool)), q, SLOT(slot_action_move_to_other_tab_widget()));
@@ -461,7 +466,6 @@ void MVMainWindowPrivate::add_tab(QWidget* W, QString label)
     m_tabber->addWidget(m_tabber->currentContainerName(), label, W);
 }
 
-/// TODO move this functionality into tabber
 void MVMainWindowPrivate::set_tool_button_menu(QWidget* X)
 {
     X->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -479,7 +483,6 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_auto_correlograms()
     CrossCorrelogramOptions opts;
     opts.mode = All_Auto_Correlograms;
     X->setOptions(opts);
-    X->setProperty("widget_type", "auto_correlograms"); //not really needed
     add_tab(X, "Auto-Correlograms");
     QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_auto_correlogram_activated()));
     return X;
@@ -492,8 +495,6 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_cross_correlograms(int k)
     opts.mode = Cross_Correlograms;
     opts.ks << k;
     X->setOptions(opts);
-    X->setProperty("widget_type", "cross_correlograms"); //not really needed
-    X->setProperty("kk", k); //not really needed
     QString str = QString("CC for %1").arg(k);
     add_tab(X, str);
     return X;
@@ -502,7 +503,6 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_cross_correlograms(int k)
 MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlograms()
 {
     MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
-    X->setProperty("widget_type", "matrix_of_cross_correlograms");
     QList<int> ks = m_view_agent->selectedClusters();
     qSort(ks);
     if (ks.isEmpty())
@@ -517,11 +517,9 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlogra
 
 MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
-    /// TODO move sample rate into mvviewagent
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
     set_tool_button_menu(X);
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
-    X->setProperty("widget_type", "cluster_details");
     add_tab(X, QString("Details"));
     return X;
 }
@@ -529,7 +527,6 @@ MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 void MVMainWindowPrivate::open_timeseries()
 {
     MVTimeSeriesView2* X = new MVTimeSeriesView2(m_view_agent);
-    X->setProperty("widget_type", "mvtimeseries");
     QList<int> ks = m_view_agent->selectedClusters();
     X->setLabelsToView(ks.toSet());
     add_tab(X, QString("Timeseries"));
@@ -545,10 +542,7 @@ void MVMainWindowPrivate::open_clips()
     }
 
     MVClipsWidget* X = new MVClipsWidget(m_view_agent);
-    X->setProperty("widget_type", "clips");
     X->setLabelsToUse(ks);
-    /// TODO, pass this in a method
-    //X->setProperty("ks", int_list_to_string_list(ks));
     /// TODO (LOW) more descriptive tab title in case of more than one
     QString tab_title = "Clips";
     if (ks.count() == 1) {
@@ -570,9 +564,6 @@ void MVMainWindowPrivate::open_pca_features()
     MVClusterWidget* X = new MVClusterWidget(m_view_agent);
     X->setLabelsToUse(ks);
     X->setFeatureMode("pca");
-    X->setProperty("widget_type", "clusters");
-    /// TODO pass this in a method
-    //X->setProperty("ks", int_list_to_string_list(ks));
     add_tab(X, QString("PCA features"));
 }
 
@@ -604,9 +595,6 @@ void MVMainWindowPrivate::open_channel_features()
     MVClusterWidget* X = new MVClusterWidget(m_view_agent);
     X->setLabelsToUse(ks);
     X->setFeatureMode("channels");
-    X->setProperty("widget_type", "clusters");
-    /// TODO pass this in a method
-    //X->setProperty("ks", int_list_to_string_list(ks));
     X->setChannels(channels);
     add_tab(X, QString("Ch. features"));
 }
@@ -620,7 +608,6 @@ void MVMainWindowPrivate::open_spike_spray()
         return;
     }
     MVSpikeSprayView* X = new MVSpikeSprayView(m_view_agent);
-    X->setProperty("widget_type", "spike_spray");
     X->setLabelsToUse(ks);
     add_tab(X, QString("Spike Spray"));
 }
@@ -636,9 +623,6 @@ void MVMainWindowPrivate::open_firing_events()
     MVFiringEventView2* X = new MVFiringEventView2(m_view_agent);
     X->setLabelsToUse(ks.toSet());
     X->setNumTimepoints(m_view_agent->currentTimeseries().N2());
-    X->setProperty("widget_type", "firing_events");
-    /// TODO pass this in a method
-    //X->setProperty("ks", int_list_to_string_list(ks));
     add_tab(X, QString("Firing Events"));
 }
 
@@ -653,8 +637,6 @@ void MVMainWindowPrivate::find_nearby_events()
     }
 
     MVClipsView* X = new MVClipsView(m_view_agent);
-    X->setProperty("widget_type", "find_nearby_events");
-    X->setProperty("ks", int_list_to_string_list(ks));
     QString tab_title = "Nearby Clips";
     if (ks.count() == 2) {
         int kk1 = ks[0];
@@ -763,35 +745,38 @@ void MVMainWindowPrivate::export_mountainview_document()
     QString fname = QFileDialog::getSaveFileName(q, "Export mountainview document", default_dir, "*.mv");
     if (QFileInfo(fname).suffix() != "mv")
         fname = fname + ".mv";
-    q->writeMVFile(fname);
+    MVFile ff = q->getMVFile();
+    if (!ff.write(fname)) {
+        TaskProgress task("export mountainview document");
+        task.error("Error writing .mv file: " + fname);
+    }
 }
 
 void MVMainWindowPrivate::export_original_firings()
 {
-    /// TODO reimplement export_original_firings
-    /*
     QString default_dir = "";
     QString fname = QFileDialog::getSaveFileName(q, "Export original firings", default_dir, "*.mda");
     if (QFileInfo(fname).suffix() != "mda")
         fname = fname + ".mda";
+
+    DiskReadMda firings = m_view_agent->firings();
     if (!fname.isEmpty()) {
-        export_file(m_firings_original.path(), fname, true);
+        export_file(firings.makePath(), fname, true);
     }
-    */
 }
 
 void MVMainWindowPrivate::export_filtered_firings()
 {
-    /// TODO reimplement export_filtered_firings
-    /*
     QString default_dir = "";
-    QString fname = QFileDialog::getSaveFileName(q, "Export filtered firings", default_dir, "*.mda");
+    QString fname = QFileDialog::getSaveFileName(q, "Export original firings", default_dir, "*.mda");
     if (QFileInfo(fname).suffix() != "mda")
         fname = fname + ".mda";
+
+    DiskReadMda firings = m_view_agent->firings();
+    firings = compute_filtered_firings_remotely(m_view_agent->mlProxyUrl(), firings, m_view_agent->eventFilter());
     if (!fname.isEmpty()) {
-        export_file(m_firings.path(), fname, true);
+        export_file(firings.makePath(), fname, true);
     }
-    */
 }
 
 void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bool use_float64)
@@ -802,6 +787,29 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
     C->use_float64 = use_float64;
     C->setDeleteOnComplete(true);
     C->startComputation();
+}
+
+void MVMainWindowPrivate::recalculate_views(QString str)
+{
+    QList<QWidget*> widgets = m_tabber->allWidgets();
+    foreach(QWidget * W, widgets)
+    {
+        MVAbstractView* VV = qobject_cast<MVAbstractView*>(W);
+        if (VV) {
+            bool do_it = false;
+            if (str == "all")
+                do_it = true;
+            else if (str == "all-suggested")
+                do_it = VV->recalculateSuggested();
+            else if (str == "all-visible")
+                do_it = VV->isVisible();
+            else if (str == "all-suggested-and-visible")
+                do_it = ((VV->isVisible()) && (VV->recalculateSuggested()));
+            if (do_it) {
+                VV->recalculate();
+            }
+        }
+    }
 }
 
 QVariant MVMainWindowPrivate::get_cluster_attribute(int k, QString attr)

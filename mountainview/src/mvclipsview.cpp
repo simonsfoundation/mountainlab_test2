@@ -1,8 +1,6 @@
 #include "mvclipsview.h"
 #include <QDebug>
 
-/// TODO labels above the clips in the clips view -- but rewrite the whole thing anyway
-
 class MVClipsViewPrivate {
 public:
     MVClipsView* q;
