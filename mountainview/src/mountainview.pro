@@ -50,7 +50,8 @@ HEADERS += \
     mvfile.h \
     mvtimeseriesviewbase.h \
     mvabstractview.h \
-    mvmisc.h
+    mvmisc.h \
+    mvamphistview.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvutils.cpp \
@@ -84,7 +85,8 @@ SOURCES += mountainviewmain.cpp \
     mvfile.cpp \
     mvtimeseriesviewbase.cpp \
     mvabstractview.cpp \
-    mvmisc.cpp
+    mvmisc.cpp \
+    mvamphistview.cpp
 
 #HEADERS += sstimeserieswidget.h \
 #    sstimeseriesview.h \
