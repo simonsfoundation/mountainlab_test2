@@ -52,6 +52,7 @@ public:
     ControlManager m_controls;
 
     MVViewAgent* m_view_agent;
+    FlowLayout* m_viewLayout;
     QLabel* create_group_label(QString label);
     QAbstractButton* find_action_button(QString name);
 };
@@ -85,8 +86,9 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
     {
         //Views
         layout->addWidget(d->create_group_label("Open Views"));
-        FlowLayout* F = new FlowLayout;
-        layout->addLayout(F);
+        d->m_viewLayout = new FlowLayout;
+        layout->addLayout(d->m_viewLayout);
+#if 0
         QList<action_button_info> BB;
         BB << abi("open-cluster-details", "Cluster Details");
         BB << abi("open-auto-correlograms", "Auto-Correlograms");
@@ -106,8 +108,9 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
             button->setText(BB[i].label);
             button->setProperty("action_name", BB[i].name);
             connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
-            F->addWidget(button);
+            d->m_viewLayout ->addWidget(button);
         }
+#endif
         d->m_controls.add_horizontal_divider_line(layout);
     }
 
@@ -228,6 +231,8 @@ QAbstractButton* MVControlPanel::findButton(const QString& name)
 {
     return d->find_action_button(name);
 }
+
+QLayout *MVControlPanel::viewLayout() const { return d->m_viewLayout; }
 
 void MVControlPanel::slot_update_enabled_controls()
 {

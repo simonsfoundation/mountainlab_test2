@@ -13,11 +13,12 @@ public:
     explicit MVAbstractViewFactory(QObject *parent = 0);
     bool isEnabled() const;
 
-    virtual int order() const { return 0; }
-
+    virtual QString id() const = 0;
     virtual QString name() const = 0;
     virtual QString group() const;
     virtual QString toolTip() const;
+    virtual QString title() const;  /// TODO: move title to the view itself
+    virtual int order() const { return 0; }
 
     virtual MVAbstractView* createView(MVViewAgent *agent, QWidget *parent = 0) = 0;
 signals:

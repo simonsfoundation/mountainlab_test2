@@ -1,4 +1,6 @@
 #include "mvclusterdetailwidget.h"
+#include "mvmainwindow.h"
+#include "tabber.h"
 #include "taskprogress.h"
 
 #include <QPainter>
@@ -110,6 +112,7 @@ private:
 class MVClusterDetailWidgetPrivate {
 public:
     MVClusterDetailWidget* q;
+    MVAbstractViewFactory* f;
 
     QList<ClusterData> m_cluster_data;
 
@@ -144,11 +147,12 @@ public:
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
 
-MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent)
+MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, MVAbstractViewFactory *factory)
     : MVAbstractView(view_agent)
 {
     d = new MVClusterDetailWidgetPrivate;
     d->q = this;
+    d->f = factory;
     d->m_vscale_factor = 2;
     d->m_total_time_sec = 1;
     d->m_hovered_k = -1;
@@ -191,6 +195,11 @@ MVClusterDetailWidget::~MVClusterDetailWidget()
 {
     qDeleteAll(d->m_views);
     delete d;
+}
+
+MVAbstractViewFactory *MVClusterDetailWidget::viewFactory() const
+{
+    return d->f;
 }
 
 void MVClusterDetailWidget::prepareCalculation()
@@ -1204,4 +1213,41 @@ ClusterData* ClusterView::clusterData()
 QRectF ClusterView::rect()
 {
     return m_rect;
+}
+
+MVClusterDetailsFactory::MVClusterDetailsFactory(QObject *parent) : MVAbstractViewFactory(parent) {}
+
+QString MVClusterDetailsFactory::id() const
+{
+    return QStringLiteral("open-cluster-details");
+}
+
+QString MVClusterDetailsFactory::name() const
+{
+    return tr("Cluster Details");
+}
+
+QString MVClusterDetailsFactory::title() const {
+    return tr("Details");
+}
+
+MVAbstractView *MVClusterDetailsFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    MVClusterDetailWidget* X = new MVClusterDetailWidget(agent);
+    connect(X, SIGNAL(signalTemplateActivated()), this, SLOT(openClipsForTemplate()));
+    X->setProperty("widget_type", "cluster_details");
+    return X;
+}
+
+void MVClusterDetailsFactory::openClipsForTemplate()
+{
+    MVAbstractView *view = qobject_cast<MVAbstractView*>(sender());
+    if (!view) return;
+    MVMainWindow *mw = MVMainWindow::instance();
+    int k = mw->viewAgent()->currentCluster();
+    if (k<0) return;
+    TabberTabWidget* TW = mw->tabWidget(view);
+    mw->tabber()->setCurrentContainer(TW);
+    mw->tabber()->switchCurrentContainer();
+    mw->openView("open-clips");
 }
