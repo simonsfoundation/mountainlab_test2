@@ -55,8 +55,7 @@ public:
     void paintEvent(QPaintEvent* evt);
 signals:
     void histogramActivated();
-private
-slots:
+private slots:
     void slot_histogram_view_control_clicked();
     void slot_histogram_view_clicked();
     void slot_histogram_view_activated();

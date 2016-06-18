@@ -208,12 +208,12 @@ void MVCrossCorrelogramsWidget2::setOptions(CrossCorrelogramOptions opts)
 
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach(int a, S1)
-    if (!S2.contains(a))
-        return false;
-    foreach(int a, S2)
-    if (!S1.contains(a))
-        return false;
+    foreach (int a, S1)
+        if (!S2.contains(a))
+            return false;
+    foreach (int a, S2)
+        if (!S1.contains(a))
+            return false;
     return true;
 }
 
@@ -334,9 +334,9 @@ void MVCrossCorrelogramsWidget2::slot_histogram_view_clicked()
 
     int index = sender()->property("index").toInt();
     //int k1 = d->m_labels2.value(index);
-    int k1 = d->m_correlograms.value(index).k1;
+    int k2 = d->m_correlograms.value(index).k2;
 
-    viewAgent()->clickCluster(k1, Qt::NoModifier);
+    viewAgent()->clickCluster(k2, Qt::NoModifier);
 
     /*
     int index = sender()->property("index").toInt();
@@ -412,22 +412,23 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
     correlograms.clear();
 
-    //DiskReadMda firings_filtered = compute_filtered_firings_remotely(mlproxy_url, firings, event_filter);
     firings = compute_filtered_firings_locally(firings, event_filter);
 
     QList<double> times;
     QList<int> labels;
     long L = firings.N2();
 
-    task.log("Setting up times and labels");
+    //assemble the times and labels arrays
     task.setProgress(0.2);
     for (int n = 0; n < L; n++) {
         times << firings.value(1, n);
         labels << (int)firings.value(2, n);
     }
 
+    //compute K (the maximum label)
     int K = compute_max(labels);
 
+    //Assemble the correlogram objects depending on mode
     if (options.mode == All_Auto_Correlograms) {
         for (int k = 1; k <= K; k++) {
             Correlogram CC;
@@ -435,7 +436,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    } else if (options.mode == Cross_Correlograms) {
+    }
+    else if (options.mode == Cross_Correlograms) {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram CC;
@@ -443,7 +445,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    } else if (options.mode == Matrix_Of_Cross_Correlograms) {
+    }
+    else if (options.mode == Matrix_Of_Cross_Correlograms) {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram CC;
@@ -454,19 +457,11 @@ void MVCrossCorrelogramsWidget2Computer::compute()
         }
     }
 
-    /*
-    for (long ii = 0; ii < labels.count(); ii++) {
-        int k = labels[ii];
-        int k2 = cluster_merge.representativeLabel(k);
-        the_times[k2] << times[ii];
-    }
-    */
-
+    //assemble the times organized by k
     QList<DoubleList> the_times;
     for (int k = 0; k <= K; k++) {
         the_times << DoubleList();
     }
-
     for (long ii = 0; ii < labels.count(); ii++) {
         int k = labels[ii];
         if (k <= the_times.count()) {
@@ -474,7 +469,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
         }
     }
 
-    task.log("Setting data");
+    //compute the cross-correlograms
     task.setProgress(0.7);
     for (int j = 0; j < correlograms.count(); j++) {
         if (thread_interrupt_requested()) {
@@ -492,14 +487,16 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
     for (int i = 0; i < m_histogram_views.count(); i++) {
         HistogramView* HV = m_histogram_views[i];
         int index = HV->property("index").toInt();
-        if (m_correlograms.value(index).k1 == q->viewAgent()->currentCluster()) {
+        if (m_correlograms.value(index).k2 == q->viewAgent()->currentCluster()) {
             HV->setCurrent(true);
-        } else {
+        }
+        else {
             HV->setCurrent(false);
         }
-        if (selected_clusters.contains(m_correlograms.value(index).k1)) {
+        if (selected_clusters.contains(m_correlograms.value(index).k2)) {
             HV->setSelected(true);
-        } else {
+        }
+        else {
             HV->setSelected(false);
         }
     }

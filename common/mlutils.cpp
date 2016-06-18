@@ -101,7 +101,8 @@ QString resolve_path(QString basepath, QString path)
 {
     if (QFileInfo(path).isRelative()) {
         return basepath + "/" + path;
-    } else
+    }
+    else
         return path;
 }
 

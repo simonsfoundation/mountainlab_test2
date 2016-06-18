@@ -48,6 +48,7 @@ private
 slots:
     void slot_control_panel_user_action(QString str);
     void slot_auto_correlogram_activated();
+    void slot_amplitude_histogram_activated();
     //void slot_templates_clicked();
     void slot_details_template_activated();
     //void slot_cross_correlogram_computer_finished();

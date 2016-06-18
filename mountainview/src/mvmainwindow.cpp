@@ -17,6 +17,7 @@
 #include "mvtimeseriesview2.h"
 #include "mlutils.h"
 #include "mvfile.h"
+#include "mvamphistview.h"
 
 /// TODO, get rid of computationthread
 
@@ -76,6 +77,7 @@ public:
     void open_clips();
     void open_pca_features();
     void open_channel_features();
+    void open_amplitude_histograms();
     void open_spike_spray();
     void open_firing_events();
     /// TODO: (MEDIUM) implement find_nearby_events
@@ -308,6 +310,8 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
         d->open_pca_features();
     } else if (str == "open-channel-features") {
         d->open_channel_features();
+    } else if (str == "open-amplitude-histograms") {
+        d->open_amplitude_histograms();
     } else if (str == "open-spike-spray") {
         d->open_spike_spray();
     } else if (str == "open-firing-events") {
@@ -342,6 +346,11 @@ void MVMainWindow::slot_auto_correlogram_activated()
     d->m_tabber->setCurrentContainer(TW);
     d->m_tabber->switchCurrentContainer();
     d->open_cross_correlograms(d->m_view_agent->currentCluster());
+}
+
+void MVMainWindow::slot_amplitude_histogram_activated()
+{
+    //not sure what to do here
 }
 
 void MVMainWindow::slot_details_template_activated()
@@ -597,6 +606,13 @@ void MVMainWindowPrivate::open_channel_features()
     X->setFeatureMode("channels");
     X->setChannels(channels);
     add_tab(X, QString("Ch. features"));
+}
+
+void MVMainWindowPrivate::open_amplitude_histograms()
+{
+    MVAmpHistView* X = new MVAmpHistView(m_view_agent);
+    add_tab(X, "Amplitudes");
+    QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_amplitude_histogram_activated()));
 }
 
 void MVMainWindowPrivate::open_spike_spray()
