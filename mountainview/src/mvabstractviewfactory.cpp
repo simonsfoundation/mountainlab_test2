@@ -16,6 +16,8 @@ QString MVAbstractViewFactory::group() const { return QString(); }
 
 QString MVAbstractViewFactory::toolTip() const { return QString(); }
 
+QString MVAbstractViewFactory::title() const { return name(); }
+
 void MVAbstractViewFactory::setEnabled(bool e)
 {
     if (isEnabled() == e) return;
