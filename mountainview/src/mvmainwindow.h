@@ -15,6 +15,8 @@
 #include "mvviewagent.h"
 
 class MVAbstractViewFactory;
+class TabberTabWidget;
+class Tabber;
 
 /** \class MVMainWindow
  *  \brief The main window (for now) showing an overview of the results of sorting by providing a number of interactive and synchronized views.
@@ -41,6 +43,14 @@ public:
     const QList<MVAbstractViewFactory *> &viewFactories() const;
 
     void applyUserAction(QString action);
+
+    static MVMainWindow* instance(); // helper while implementing view factories
+    TabberTabWidget* tabWidget(QWidget *w) const;
+    Tabber* tabber() const;
+    void openView(const QString &id);
+    MVViewAgent* viewAgent() const;
+
+    const QList<MVAbstractViewFactory*>& viewFactories() const;
 
     static MVMainWindow* instance(); // helper while implementing view factories
     TabberTabWidget* tabWidget(QWidget *w) const;
