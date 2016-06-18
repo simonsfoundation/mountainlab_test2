@@ -27,6 +27,7 @@
 
 #include <QHBoxLayout>
 #include <QMessageBox>
+#include <QSignalMapper>
 #include <QSplitter>
 #include <QTime>
 #include <QTimer>
@@ -53,6 +54,8 @@
 /// TODO (LOW) put styles in central place?
 #define MV_STATUS_BAR_HEIGHT 30
 
+MVMainWindow* MVMainWindow::window_instance = 0;
+
 class MVMainWindowPrivate {
 public:
     MVMainWindow* q;
@@ -69,6 +72,12 @@ public:
     TabberTabWidget* m_tabs1, *m_tabs2;
     Tabber* m_tabber; //manages the views in the two tab widgets
     QList<MVAbstractViewFactory*> m_viewFactories;
+    QSignalMapper* m_viewMapper;
+
+    void registerAllViews();
+
+    MVAbstractViewFactory* viewFactoryById(const QString &id) const;
+    MVAbstractView* openView(MVAbstractViewFactory *factory);
 
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
@@ -76,9 +85,11 @@ public:
     MVCrossCorrelogramsWidget3* open_auto_correlograms();
     MVCrossCorrelogramsWidget3* open_cross_correlograms(int k);
     MVCrossCorrelogramsWidget3* open_matrix_of_cross_correlograms();
+#if 0
     MVClusterDetailWidget* open_cluster_details();
-    void open_timeseries();
     void open_clips();
+#endif
+    void open_timeseries();
     void open_pca_features();
     void open_channel_features();
     void open_amplitude_histograms();
@@ -109,14 +120,24 @@ public:
 MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     : QWidget(parent)
 {
+    window_instance = this;
     d = new MVMainWindowPrivate;
     d->q = this;
+    d->m_viewMapper = new QSignalMapper(this);
+    connect(d->m_viewMapper, SIGNAL(mapped(QObject*)),
+            this, SLOT(slot_open_view(QObject*)));
 
     d->m_view_agent = view_agent;
+
+    registerViewFactory(new MVClusterDetailsFactory(this));
+    registerViewFactory(new MVClipsFactory(this));
 
     d->m_control_panel = new MVControlPanel(view_agent);
     //probably get rid of the following line
     connect(d->m_control_panel, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
+
+    d->registerAllViews();
+
 
     QSplitter* hsplitter = new QSplitter;
     hsplitter->setOrientation(Qt::Horizontal);
@@ -178,11 +199,14 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
 MVMainWindow::~MVMainWindow()
 {
     delete d;
+    window_instance = 0;
 }
 
 void MVMainWindow::setDefaultInitialization()
 {
-    d->open_cluster_details();
+    MVAbstractViewFactory *f = d->viewFactoryById("open-cluster-details");
+    if (f)
+        d->openView(f);
     d->m_tabber->switchCurrentContainer();
     d->open_auto_correlograms();
 }
@@ -310,7 +334,7 @@ void MVMainWindow::registerViewFactory(MVAbstractViewFactory *f)
 {
     // sort by group name and order
     QList<MVAbstractViewFactory*>::iterator iter
-            = qLowerBound(d->m_viewFactories.begin(), d->m_viewFactories.end(),
+            = qUpperBound(d->m_viewFactories.begin(), d->m_viewFactories.end(),
                           f, [](MVAbstractViewFactory *f1, MVAbstractViewFactory *f2) {
             if (f1->group() < f2->group())
                 return true;
@@ -329,6 +353,33 @@ void MVMainWindow::unregisterViewFactory(MVAbstractViewFactory *f)
 const QList<MVAbstractViewFactory *> &MVMainWindow::viewFactories() const
 {
     return d->m_viewFactories;
+}
+
+MVMainWindow *MVMainWindow::instance()
+{
+    return window_instance;
+}
+
+TabberTabWidget *MVMainWindow::tabWidget(QWidget *w) const
+{
+    return d->tab_widget_of(w);
+}
+
+Tabber *MVMainWindow::tabber() const
+{
+    return d->m_tabber;
+}
+
+void MVMainWindow::openView(const QString &id)
+{
+    MVAbstractViewFactory *f = d->viewFactoryById(id);
+    if (f)
+        d->openView(f);
+}
+
+MVViewAgent *MVMainWindow::viewAgent() const
+{
+    return d->m_view_agent;
 }
 
 void MVMainWindow::resizeEvent(QResizeEvent* evt)
@@ -351,16 +402,21 @@ void MVMainWindow::keyPressEvent(QKeyEvent* evt)
 
 void MVMainWindow::slot_control_panel_user_action(QString str)
 {
+#if 0
     if (str == "open-cluster-details") {
         d->open_cluster_details();
-    } else if (str == "open-auto-correlograms") {
+    } else
+#endif
+        if (str == "open-auto-correlograms") {
         d->open_auto_correlograms();
     } else if (str == "open-matrix-of-cross-correlograms") {
         d->open_matrix_of_cross_correlograms();
     } else if (str == "open-timeseries-data") {
         d->open_timeseries();
+#if 0
     } else if (str == "open-clips") {
         d->open_clips();
+#endif
     } else if (str == "open-pca-features") {
         d->open_pca_features();
     } else if (str == "open-channel-features") {
@@ -408,6 +464,7 @@ void MVMainWindow::slot_amplitude_histogram_activated()
     //not sure what to do here
 }
 
+#if 0
 void MVMainWindow::slot_details_template_activated()
 {
     int k = d->m_view_agent->currentCluster();
@@ -418,6 +475,7 @@ void MVMainWindow::slot_details_template_activated()
     d->m_tabber->switchCurrentContainer();
     d->open_clips();
 }
+#endif
 
 void MVMainWindow::slot_update_buttons()
 {
@@ -426,7 +484,7 @@ void MVMainWindow::slot_update_buttons()
     bool has_peaks = true;
     bool something_selected = (!d->m_view_agent->selectedClusters().isEmpty());
 
-    d->set_button_enabled("open-cluster-details", true);
+//    d->set_button_enabled("open-cluster-details", true);
     d->set_button_enabled("open-auto-correlograms", true);
     d->set_button_enabled("open-matrix-of-cross-correlograms", something_selected);
     d->set_button_enabled("open-timeseries-data", true);
@@ -465,6 +523,53 @@ void MVMainWindow::slot_pop_out_widget()
     if (!W)
         return;
     d->m_tabber->popOutWidget(W);
+}
+
+void MVMainWindow::slot_open_view(QObject *o)
+{
+    MVAbstractViewFactory *factory = qobject_cast<MVAbstractViewFactory*>(o);
+    if (!factory) return;
+    d->openView(factory);
+}
+
+void MVMainWindowPrivate::registerAllViews()
+{
+    // unregister all existing views
+    QLayoutItem *item;
+    while((item = m_control_panel->viewLayout()->takeAt(0))) {
+        delete item;
+    }
+
+    // register all views again
+    foreach(MVAbstractViewFactory *f, m_viewFactories) {
+        QToolButton *button = new QToolButton;
+        QFont font = button->font();
+        font.setPixelSize(14);
+        button->setFont(font);
+        button->setText(f->name());
+        button->setProperty("action_name", f->id());
+        button->setEnabled(f->isEnabled());
+        m_control_panel->viewLayout()->addWidget(button);
+        m_viewMapper->setMapping(button, f);
+        QObject::connect(button, SIGNAL(clicked()), m_viewMapper, SLOT(map()));
+        QObject::connect(f, SIGNAL(enabledChanged(bool)), button, SLOT(setEnabled(bool)));
+    }
+}
+
+MVAbstractViewFactory *MVMainWindowPrivate::viewFactoryById(const QString &id) const
+{
+    foreach(MVAbstractViewFactory *f, m_viewFactories) {
+        if (f->id() == id) return f;
+    }
+    return Q_NULLPTR;
+}
+
+MVAbstractView *MVMainWindowPrivate::openView(MVAbstractViewFactory *factory)
+{
+    MVAbstractView *view = factory->createView(m_view_agent);
+    set_tool_button_menu(view);
+    add_tab(view, factory->title());
+    return view;
 }
 
 void MVMainWindowPrivate::update_sizes()
@@ -554,6 +659,8 @@ MVCrossCorrelogramsWidget3* MVMainWindowPrivate::open_matrix_of_cross_correlogra
     return X;
 }
 
+#if 0
+/// DEPRECATED: MVMainWindowPrivate::open_cluster_details()
 MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
@@ -561,6 +668,7 @@ MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
     add_tab(X, QString("Details"));
     return X;
 }
+#endif
 
 void MVMainWindowPrivate::open_timeseries()
 {
@@ -570,6 +678,7 @@ void MVMainWindowPrivate::open_timeseries()
     add_tab(X, QString("Timeseries"));
 }
 
+#if 0
 void MVMainWindowPrivate::open_clips()
 {
     QList<int> ks = m_view_agent->selectedClusters();
@@ -590,6 +699,7 @@ void MVMainWindowPrivate::open_clips()
 
     add_tab(X, tab_title);
 }
+#endif
 
 void MVMainWindowPrivate::open_pca_features()
 {

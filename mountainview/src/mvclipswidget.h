@@ -11,6 +11,7 @@
 #include <QWidget>
 #include "mvutils.h"
 #include "mvabstractview.h"
+#include "mvabstractviewfactory.h"
 
 class MVClipsWidgetPrivate;
 class MVClipsWidget : public MVAbstractView {
@@ -33,6 +34,19 @@ slots:
 
 private:
     MVClipsWidgetPrivate* d;
+};
+
+class MVClipsFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVClipsFactory(QObject *parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+    int order() const Q_DECL_OVERRIDE;
+private slots:
+    void updateEnabled();
 };
 
 #endif // MVCLIPSWIDGET_H
