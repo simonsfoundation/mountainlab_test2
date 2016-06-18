@@ -13,6 +13,8 @@
 #include "msmisc.h"
 #include "mlutils.h"
 #include "mvtimeseriesview2.h"
+#include "mvmainwindow.h"
+#include <QMessageBox>
 
 /// TODO: (HIGH) merge should apply to all widgets
 /// TODO (LOW) handle case where there are too many clips to want to download
@@ -202,4 +204,58 @@ void MVClipsWidgetComputer::compute()
         return;
     }
     */
+}
+
+MVClipsFactory::MVClipsFactory(QObject *parent)
+{
+    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+            this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVClipsFactory::id() const
+{
+    return QStringLiteral("open-clips");
+}
+
+QString MVClipsFactory::name() const
+{
+    return tr("Clips");
+}
+
+QString MVClipsFactory::title() const
+{
+    return tr("Clips");
+}
+
+MVAbstractView *MVClipsFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    QList<int> ks = agent->selectedClusters();
+    qSort(ks);
+    if (ks.count() == 0) {
+        QMessageBox::information(MVMainWindow::instance(), "Unable to open clips", "You must select at least one cluster.");
+        return Q_NULLPTR;
+    }
+    MVClipsWidget *X = new MVClipsWidget(agent);
+    X->setProperty("widget_type", "clips");
+    X->setLabelsToUse(ks);
+    /// TODO, pass this in a method
+    //X->setProperty("ks", int_list_to_string_list(ks));
+    /// TODO (LOW) more descriptive tab title in case of more than one
+
+//    QString tab_title = "Clips";
+//    if (ks.count() == 1) {
+//        int kk = ks[0];
+//        tab_title = QString("Clips %1").arg(kk);
+//    }
+    return X;
+}
+
+int MVClipsFactory::order() const {
+    return 1;
+}
+
+void MVClipsFactory::updateEnabled()
+{
+    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
 }

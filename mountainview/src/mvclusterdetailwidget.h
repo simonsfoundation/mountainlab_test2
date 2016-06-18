@@ -10,6 +10,7 @@
 #include "mda.h"
 #include <QWidget>
 #include "mvabstractview.h"
+#include "mvabstractviewfactory.h"
 
 /** \class MVClusterDetailWidget
  *  \brief Display a view of each cluster -- mainly the template shapes and some stats
@@ -24,8 +25,10 @@ class MVClusterDetailWidget : public MVAbstractView {
 public:
     friend class MVClusterDetailWidgetPrivate;
     friend class ClusterView;
-    MVClusterDetailWidget(MVViewAgent* view_agent);
+    MVClusterDetailWidget(MVViewAgent* view_agent, MVAbstractViewFactory *factory = 0);
     virtual ~MVClusterDetailWidget();
+
+    MVAbstractViewFactory* viewFactory() const Q_DECL_OVERRIDE;
 
     void prepareCalculation() Q_DECL_OVERRIDE;
     void runCalculation() Q_DECL_OVERRIDE;
@@ -58,6 +61,18 @@ private slots:
 
 private:
     MVClusterDetailWidgetPrivate* d;
+};
+
+class MVClusterDetailsFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVClusterDetailsFactory(QObject *parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+private slots:
+    void openClipsForTemplate();
 };
 
 #endif // MVCLUSTERDETAILWIDGET_H

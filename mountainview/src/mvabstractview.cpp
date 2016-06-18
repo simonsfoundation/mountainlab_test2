@@ -70,9 +70,24 @@ bool MVAbstractView::recalculateSuggested() const
     return ((!d->m_never_suggest_recalculate) && (d->m_recalculate_suggested));
 }
 
+MVAbstractViewFactory *MVAbstractView::viewFactory() const
+{
+    return 0;
+}
+
 MVViewAgent* MVAbstractView::viewAgent()
 {
     return d->m_view_agent;
+}
+
+MVAbstractView::ViewFeatures MVAbstractView::viewFeatures() const
+{
+    return NoFeatures; // no features by default
+}
+
+void MVAbstractView::renderView(QPainter *painter)
+{
+    // do nothing in the base class
 }
 
 void MVAbstractView::recalculateOnOptionChanged(QString name)

@@ -34,6 +34,8 @@ public:
 
     QAbstractButton* findButton(const QString& name);
 
+    QLayout *viewLayout() const;
+
 signals:
     void userAction(QString name);
 
