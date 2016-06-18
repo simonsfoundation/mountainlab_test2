@@ -71,7 +71,7 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         BB << abi("open-channel-features", "Channel Features");
         BB << abi("open-spike-spray", "Spike Spray");
         BB << abi("open-firing-events", "Firing Events");
-        BB << abi("open-amplitude-histograms","Amplitude Histograms");
+        BB << abi("open-amplitude-histograms", "Amplitude Histograms");
         //BB << abi("find-nearby-events", "Find Nearby Events");
         for (int i = 0; i < BB.count(); i++) {
             QToolButton* button = new QToolButton;

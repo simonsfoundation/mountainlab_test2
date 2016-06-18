@@ -41,11 +41,9 @@ protected:
 
 signals:
 
-public
-slots:
+public slots:
 
-private
-slots:
+private slots:
     void slot_control_panel_user_action(QString str);
     void slot_auto_correlogram_activated();
     void slot_amplitude_histogram_activated();

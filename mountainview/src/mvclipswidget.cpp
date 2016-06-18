@@ -94,11 +94,14 @@ void MVClipsWidget::runCalculation()
 
 void MVClipsWidget::onCalculationFinished()
 {
+    TaskProgress task("MVClipsWidget::onCalculationFinished");
+    task.log(QString("%1x%2x%3").arg(d->m_computer.clips.N1()).arg(d->m_computer.clips.N2()).arg(d->m_computer.clips.N3()));
     DiskReadMda clips = d->m_computer.clips.reshaped(d->m_computer.clips.N1(), d->m_computer.clips.N2() * d->m_computer.clips.N3());
     d->m_view_view_agent.copySettingsFrom(viewAgent());
     d->m_view_view_agent.addTimeseries("clips", clips);
     d->m_view_view_agent.setCurrentTimeseriesName("clips");
     d->m_view_view_agent.setCurrentTimeRange(MVRange(0, clips.N2() - 1));
+    d->m_view->recalculate();
 }
 
 void MVClipsWidget::setLabelsToUse(const QList<int>& labels)
@@ -131,8 +134,7 @@ void MVClipsWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
