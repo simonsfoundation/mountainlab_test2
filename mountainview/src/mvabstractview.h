@@ -11,11 +11,18 @@
 #include "mlutils.h"
 #include <QWidget>
 
+class MVAbstractViewFactory;
 class MVAbstractViewPrivate;
 class CalculationThread;
 class MVAbstractView : public QWidget {
     Q_OBJECT
 public:
+    enum ViewFeature {
+        NoFeatures = 0x0,
+        RenderView = 0x1    // can render itself on a given painter (e.g. for export)
+    };
+    Q_DECLARE_FLAGS(ViewFeatures, ViewFeature)
+
     friend class MVAbstractViewPrivate;
     friend class CalculationThread;
     MVAbstractView(MVViewAgent* view_agent);
@@ -28,6 +35,12 @@ public
 slots:
     void recalculate();
     void neverSuggestRecalculate();
+
+    virtual MVAbstractViewFactory* viewFactory() const;
+    MVViewAgent* viewAgent();
+
+    virtual ViewFeatures viewFeatures() const;
+    virtual void renderView(QPainter *painter); // add render opts
 
 signals:
     void calculationStarted();
@@ -43,6 +56,10 @@ protected:
     void recalculateOnOptionChanged(QString name, bool suggest_only = true);
     void recalculateOn(QObject*, const char* signal, bool suggest_only = true);
 
+protected
+slots:
+    void recalculate();
+
 private
 slots:
     void slot_do_calculation();
@@ -53,5 +70,7 @@ slots:
 private:
     MVAbstractViewPrivate* d;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(MVAbstractView::ViewFeatures)
 
 #endif // MVABSTRACTVIEW_H
