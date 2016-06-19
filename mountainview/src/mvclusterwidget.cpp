@@ -154,14 +154,12 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     QSizePolicy view_size_policy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     view_size_policy.setHorizontalStretch(1);
 
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setSizePolicy(view_size_policy);
         hlayout->addWidget(V);
     }
 
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         d->connect_view(V);
     }
 
@@ -206,8 +204,7 @@ void MVClusterWidget::onCalculationFinished()
 void MVClusterWidget::setData(const Mda& X)
 {
     d->m_data = X;
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setData(Mda());
     }
     double max_abs_val = 0;
@@ -228,40 +225,35 @@ void MVClusterWidget::setData(const Mda& X)
 
 void MVClusterWidget::setTimes(const QList<double>& times)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setTimes(times);
     }
 }
 
 void MVClusterWidget::setLabels(const QList<int>& labels)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setLabels(labels);
     }
 }
 
 void MVClusterWidget::setAmplitudes(const QList<double>& amps)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setAmplitudes(amps);
     }
 }
 
 void MVClusterWidget::setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setScores(detectability_scores, outlier_scores);
     }
 }
 
 void MVClusterWidget::slot_current_event_changed()
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setCurrentEvent(viewAgent()->currentEvent());
     }
     d->update_clips_view();
@@ -287,8 +279,7 @@ void MVClusterWidget::setChannels(QList<int> channels)
 
 void MVClusterWidget::setTransformation(const AffineTransformation& T)
 {
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setTransformation(T);
     }
 }
@@ -303,8 +294,7 @@ void MVClusterWidget::slot_view_transformation_changed()
 {
     MVClusterView* V0 = (MVClusterView*)sender();
     AffineTransformation T = V0->transformation();
-    foreach(MVClusterView * V, d->m_views)
-    {
+    foreach (MVClusterView* V, d->m_views) {
         V->setTransformation(T);
     }
 }
@@ -364,8 +354,7 @@ int MVClusterWidgetPrivate::current_event_index()
 
 void MVClusterWidgetPrivate::set_data_on_visible_views()
 {
-    foreach(MVClusterView * V, m_views)
-    {
+    foreach (MVClusterView* V, m_views) {
         if (V->isVisible()) {
             V->setData(m_data);
         }
@@ -374,15 +363,15 @@ void MVClusterWidgetPrivate::set_data_on_visible_views()
 
 void MVClusterWidgetComputer::compute()
 {
+    TaskProgress task(TaskProgress::Calculate, "MVClusterWidgetComputer");
 
     //firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
-    firings = compute_filtered_firings_locally(firings, filter);
+    firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
 
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -391,6 +380,8 @@ void MVClusterWidgetComputer::compute()
         MountainProcessRunner MT;
         QString processor_name = "mv_subfirings";
         MT.setProcessorName(processor_name);
+
+        task.log(QString("firings = %1").arg(firings.makePath()));
 
         QMap<QString, QVariant> params;
         params["firings"] = firings.makePath();
@@ -430,14 +421,14 @@ void MVClusterWidgetComputer::compute()
         if (thread_interrupt_requested()) {
             return;
         }
-    } else if (features_mode == "channels") {
+    }
+    else if (features_mode == "channels") {
         MountainProcessRunner MT;
         QString processor_name = "extract_channel_values";
         MT.setProcessorName(processor_name);
 
         QStringList channels_strlist;
-        foreach(int ch, channels)
-        {
+        foreach (int ch, channels) {
             channels_strlist << QString("%1").arg(ch);
         }
 
@@ -455,7 +446,8 @@ void MVClusterWidgetComputer::compute()
         if (thread_interrupt_requested()) {
             return;
         }
-    } else {
+    }
+    else {
         TaskProgress err("Computing features");
         err.error("Unrecognized features mode: " + features_mode);
         return;

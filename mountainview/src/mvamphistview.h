@@ -3,23 +3,32 @@
 
 #include "mvabstractview.h"
 
-
 class MVAmpHistViewPrivate;
-class MVAmpHistView : public MVAbstractView
-{
+class MVAmpHistView : public MVAbstractView {
+    Q_OBJECT
 public:
     friend class MVAmpHistViewPrivate;
-    MVAmpHistView(MVViewAgent *view_agent);
+    MVAmpHistView(MVViewAgent* view_agent);
     virtual ~MVAmpHistView();
 
     void prepareCalculation() Q_DECL_OVERRIDE;
     void runCalculation() Q_DECL_OVERRIDE;
     void onCalculationFinished() Q_DECL_OVERRIDE;
 
+    QImage renderImage(int W = 0, int H = 0);
+
+signals:
+    void histogramActivated();
+
+private slots:
+    void slot_histogram_view_control_clicked();
+    void slot_histogram_view_clicked();
+    void slot_histogram_view_activated();
+    void slot_export_image();
+    void slot_update_highlighting();
 
 private:
-    MVAmpHistViewPrivate *d;
+    MVAmpHistViewPrivate* d;
 };
 
 #endif // MVAMPHISTVIEW_H
-

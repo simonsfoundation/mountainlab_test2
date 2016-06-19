@@ -13,6 +13,8 @@
 #define MAX_PATH_LEN 10000
 #define DEFAULT_CHUNK_SIZE 1e6
 
+/// TODO (HIGH) make tmp directory with different name on server, so we can really test if it is doing the computation in the right place
+
 class DiskReadMdaPrivate {
 public:
     DiskReadMda* q;
@@ -530,6 +532,7 @@ void DiskReadMdaPrivate::copy_from(const DiskReadMda& other)
         fclose(this->m_file);
         this->m_file = 0;
     }
+    this->construct_and_clear();
     this->m_current_internal_chunk_index = -1;
     this->m_file_open_failed = other.d->m_file_open_failed;
     this->m_header = other.d->m_header;
