@@ -363,9 +363,10 @@ void MVClusterWidgetPrivate::set_data_on_visible_views()
 
 void MVClusterWidgetComputer::compute()
 {
+    TaskProgress task(TaskProgress::Calculate, "MVClusterWidgetComputer");
 
     //firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
-    firings = compute_filtered_firings_locally(firings, filter);
+    firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
 
     QString firings_out_path;
     {
@@ -379,6 +380,8 @@ void MVClusterWidgetComputer::compute()
         MountainProcessRunner MT;
         QString processor_name = "mv_subfirings";
         MT.setProcessorName(processor_name);
+
+        task.log(QString("firings = %1").arg(firings.makePath()));
 
         QMap<QString, QVariant> params;
         params["firings"] = firings.makePath();

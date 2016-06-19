@@ -43,8 +43,7 @@ private:
     void setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores);
 
 signals:
-private
-slots:
+private slots:
     void slot_current_event_changed();
     void slot_view_current_event_changed();
     void slot_view_transformation_changed();

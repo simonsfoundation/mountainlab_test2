@@ -530,6 +530,7 @@ void DiskReadMdaPrivate::copy_from(const DiskReadMda& other)
         fclose(this->m_file);
         this->m_file = 0;
     }
+    this->construct_and_clear();
     this->m_current_internal_chunk_index = -1;
     this->m_file_open_failed = other.d->m_file_open_failed;
     this->m_header = other.d->m_header;
