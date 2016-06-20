@@ -4,6 +4,7 @@
 #include <taskprogress.h>
 #include "msmisc.h"
 #include "histogramview.h"
+#include <QWheelEvent>
 
 struct Histogram {
     int k;
@@ -33,6 +34,7 @@ public:
     QList<Histogram> m_histograms;
     QList<HistogramView*> m_histogram_views;
     QList<QWidget*> m_child_widgets;
+    double m_zoom_factor = 1;
 
     void do_highlighting();
 };
@@ -115,10 +117,10 @@ void MVAmpHistView::onCalculationFinished()
 
     QGridLayout* GL = d->m_grid_layout;
     float bin_min = compute_min2(d->m_histograms);
-    ;
     float bin_max = compute_max2(d->m_histograms);
+    double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
 
-    int num_bins = 200;
+    int num_bins = 200; //how to choose this?
 
     int NUM = d->m_histograms.count();
     int num_rows = (int)sqrt(NUM);
@@ -134,6 +136,8 @@ void MVAmpHistView::onCalculationFinished()
         HV->setBins(bin_min, bin_max, num_bins);
         QString title0 = QString("%1").arg(d->m_histograms[ii].k);
         HV->setTitle(title0);
+        HV->setDrawVerticalAxisAtZero(true);
+        HV->setXRange(MVRange(-max00, max00));
         int row0 = (ii) / num_cols;
         int col0 = (ii) % num_cols;
         GL->addWidget(HV, row0, col0);
@@ -276,4 +280,18 @@ QImage MVAmpHistView::renderImage(int W, int H)
     }
 
     return ret;
+}
+
+void MVAmpHistView::wheelEvent(QWheelEvent* evt)
+{
+    double zoom_factor = 1;
+    if (evt->delta() > 0) {
+        zoom_factor *= 1.2;
+    }
+    else if (evt->delta() < 0) {
+        zoom_factor /= 1.2;
+    }
+    for (int i = 0; i < d->m_histogram_views.count(); i++) {
+        d->m_histogram_views[i]->setXRange(d->m_histogram_views[i]->xRange() * (1.0 / zoom_factor));
+    }
 }

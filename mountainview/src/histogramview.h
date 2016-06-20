@@ -6,6 +6,8 @@
 #ifndef HISTOGRAMVIEW_H
 #define HISTOGRAMVIEW_H
 
+#include "mvviewagent.h"
+
 #include <QWidget>
 
 /** \class HistogramView
@@ -35,6 +37,10 @@ public:
     void setTitle(const QString& title);
     ///Controls background and highlighting colors. For consistent app look.
     void setColors(const QMap<QString, QColor>& colors);
+
+    MVRange xRange() const;
+    void setXRange(MVRange range);
+    void setDrawVerticalAxisAtZero(bool val);
 
     ///Set this as the current histogram (affects highlighting)
     void setCurrent(bool val);

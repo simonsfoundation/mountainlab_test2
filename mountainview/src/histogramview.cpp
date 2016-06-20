@@ -24,6 +24,8 @@ public:
     bool m_hovered;
     bool m_current;
     bool m_selected;
+    bool m_draw_vertical_axis_at_zero = false;
+    MVRange m_xrange=MVRange(0,0);
 
     void update_bin_counts();
     QPointF coord2pix(QPointF pt, int W = 0, int H = 0);
@@ -150,6 +152,26 @@ void HistogramView::setColors(const QMap<QString, QColor>& colors)
     d->m_colors = colors;
 }
 
+MVRange HistogramView::xRange() const
+{
+    return d->m_xrange;
+}
+
+void HistogramView::setXRange(MVRange range)
+{
+    if (range==d->m_xrange) return;
+    d->m_xrange=range;
+    update();
+}
+
+void HistogramView::setDrawVerticalAxisAtZero(bool val)
+{
+    if (d->m_draw_vertical_axis_at_zero == val)
+        return;
+    d->m_draw_vertical_axis_at_zero = val;
+    update();
+}
+
 void HistogramView::setCurrent(bool val)
 {
     if (d->m_current != val) {
@@ -232,7 +254,8 @@ void HistogramView::mousePressEvent(QMouseEvent* evt)
     Q_UNUSED(evt);
     if ((evt->modifiers() & Qt::ControlModifier) || (evt->modifiers() & Qt::ShiftModifier)) {
         emit control_clicked();
-    } else {
+    }
+    else {
         emit clicked();
     }
 }
@@ -275,7 +298,8 @@ void HistogramView::slot_context_menu(const QPoint& pos)
     QAction* selected = M.exec(this->mapToGlobal(pos));
     if (selected == export_image) {
         d->export_image();
-    } else if (selected == export_matrix_image) {
+    }
+    else if (selected == export_matrix_image) {
         emit this->signalExportHistogramMatrixImage();
     }
 }
@@ -333,6 +357,11 @@ QPointF HistogramViewPrivate::coord2pix(QPointF pt, int W, int H)
     float ymin = 0;
     float ymax = m_max_bin_count;
 
+    if (m_xrange.min!=m_xrange.max) {
+        xmin=m_xrange.min;
+        xmax=m_xrange.max;
+    }
+
     float xfrac = 0.5;
     if (xmax > xmin)
         xfrac = (pt.x() - xmin) / (xmax - xmin);
@@ -369,6 +398,11 @@ QPointF HistogramViewPrivate::pix2coord(QPointF pt, int W, int H)
     float xmax = m_bin_centers[m_num_bins - 1] + spacing / 2;
     float ymin = 0;
     float ymax = m_max_bin_count;
+
+    if (m_xrange.min!=m_xrange.max) {
+        xmin=m_xrange.min;
+        xmax=m_xrange.max;
+    }
 
     float xfrac = (pt.x() - m_margin_left) / (W - m_margin_left - m_margin_right);
     float yfrac = 1 - (pt.y() - m_margin_top) / (H - m_margin_top - m_margin_bottom);
@@ -416,11 +450,14 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
 
     if (m_current) {
         painter.fillRect(R, m_colors["view_background_highlighted"]);
-    } else if (m_selected) {
+    }
+    else if (m_selected) {
         painter.fillRect(R, m_colors["view_background_selected"]);
-    } else if (m_hovered) {
+    }
+    else if (m_hovered) {
         painter.fillRect(R, m_colors["view_background_hovered"]);
-    } else {
+    }
+    else {
         painter.fillRect(R, m_colors["view_background"]);
     }
 
@@ -447,6 +484,15 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
         painter.fillRect(R, col);
         painter.setPen(m_line_color);
         painter.drawRect(R);
+    }
+
+    if (m_draw_vertical_axis_at_zero) {
+        QPointF pt0=coord2pix(QPointF(0,0));
+        QPointF pt1=coord2pix(QPointF(0,m_max_bin_count));
+        QPen pen=painter.pen();
+        pen.setColor(Qt::green);
+        painter.setPen(pen);
+        painter.drawLine(pt0,pt1);
     }
 
     if (!m_title.isEmpty()) {
