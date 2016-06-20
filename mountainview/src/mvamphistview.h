@@ -16,7 +16,7 @@ public:
     void onCalculationFinished() Q_DECL_OVERRIDE;
 
     QImage renderImage(int W = 0, int H = 0);
-    void wheelEvent(QWheelEvent *evt);
+    void wheelEvent(QWheelEvent* evt);
 
 signals:
     void histogramActivated();

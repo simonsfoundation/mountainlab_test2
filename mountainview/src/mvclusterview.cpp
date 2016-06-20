@@ -46,6 +46,9 @@ public:
     QList<int> m_labels;
     QSet<int> m_closest_inds_to_exclude;
     bool m_emit_transformation_changed_scheduled;
+    QList<int> m_cluster_numbers;
+
+    MVClusterLegend m_legend;
 
     Mda proj_matrix; //3xnum_features
     AffineTransformation m_transformation; //3x4
@@ -63,8 +66,7 @@ public:
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
     //bool exclude_based_on_filter(long ind);
-public
-slots:
+public slots:
     void slot_emit_transformation_changed();
 };
 #include "mvclusterview.moc"
@@ -125,6 +127,19 @@ void MVClusterView::setTimes(const QList<double>& times)
 void MVClusterView::setLabels(const QList<int>& labels)
 {
     d->m_labels = labels;
+
+    QList<int> list;
+    for (long i = 0; i < d->m_labels.count(); i++) {
+        const int value = d->m_labels.at(i);
+        QList<int>::iterator iter = qLowerBound(list.begin(), list.end(), value);
+        if (iter == list.end() || *iter != value) {
+            list.insert(iter, value);
+        }
+    }
+    d->m_cluster_numbers = list;
+    d->m_legend.setClusterNumbers(list);
+    d->m_legend.setActiveClusterNumbers(list.toSet());
+
     d->m_grid_update_needed = true;
     update();
 }
@@ -199,6 +214,31 @@ void MVClusterView::setTransformation(const AffineTransformation& T)
     //do not emit to avoid excessive signals
 }
 
+QSet<int> MVClusterView::activeClusterNumbers() const
+{
+    return d->m_legend.activeClusterNumbers();
+}
+
+bool sets_are_equal2(const QSet<int>& A, const QSet<int>& B)
+{
+    foreach (int a, A)
+        if (!B.contains(a))
+            return false;
+    foreach (int b, B)
+        if (!A.contains(b))
+            return false;
+    return true;
+}
+
+void MVClusterView::setActiveClusterNumbers(const QSet<int>& A)
+{
+    if (!sets_are_equal2(A, d->m_legend.activeClusterNumbers())) {
+        d->m_legend.setActiveClusterNumbers(A);
+        d->m_grid_update_needed = true;
+        update();
+    }
+}
+
 /*
 void MVClusterView::setEventFilter(FilterInfo F)
 {
@@ -240,7 +280,8 @@ QRectF compute_centered_square(QRectF R)
     int H0 = R.height() - margin * 2;
     if (W0 > H0) {
         return QRectF(margin + (W0 - H0) / 2, margin, H0, H0);
-    } else {
+    }
+    else {
         return QRectF(margin, margin + (H0 - W0) / 2, W0, W0);
     }
 }
@@ -272,6 +313,14 @@ void MVClusterView::mouseMoveEvent(QMouseEvent* evt)
             update();
         }
     }
+    else {
+        int hovered_cluster_number = d->m_legend.clusterNumberAt(pt);
+        if ((hovered_cluster_number != d->m_legend.hoveredClusterNumber())) {
+            d->m_legend.setHoveredClusterNumber(hovered_cluster_number);
+            d->m_grid_update_needed = true;
+            update();
+        }
+    }
 }
 
 void MVClusterView::mousePressEvent(QMouseEvent* evt)
@@ -292,6 +341,14 @@ void MVClusterView::mouseReleaseEvent(QMouseEvent* evt)
         if (evt->pos() != d->m_last_mouse_release_point)
             d->m_closest_inds_to_exclude.clear();
         if (!d->m_moved_from_anchor) {
+            int cluster_number_at_pos = d->m_legend.clusterNumberAt(evt->pos());
+            if (cluster_number_at_pos >= 0) {
+                d->m_legend.toggleActiveClusterNumber(cluster_number_at_pos);
+                d->m_grid_update_needed = true;
+                update();
+                emit this->activeClusterNumberToggled();
+                return;
+            }
             QPointF coord = d->pixel2coord(evt->pos());
             int ind = d->find_closest_event_index(coord.x(), coord.y(), d->m_closest_inds_to_exclude);
             if (ind >= 0)
@@ -308,7 +365,8 @@ void MVClusterView::wheelEvent(QWheelEvent* evt)
     double factor = 1;
     if (delta > 0) {
         factor = 1.1;
-    } else if (delta < 0) {
+    }
+    else if (delta < 0) {
         factor = 1 / 1.1;
     }
     if (delta != 1) {
@@ -388,6 +446,10 @@ QColor make_color(double r, double g, double b)
 
 void MVClusterViewPrivate::update_grid()
 {
+
+    int hovered_cluster_number = m_legend.hoveredClusterNumber();
+    QSet<int> active_cluster_numbers = m_legend.activeClusterNumbers();
+
     if (m_data_proj_needed) {
         compute_data_proj();
         m_data_proj_needed = false;
@@ -453,15 +515,18 @@ void MVClusterViewPrivate::update_grid()
     QList<double> time0s;
     QList<double> amp0s;
     for (int j = 0; j < m_data_trans.N2(); j++) {
-        double x0 = m_data_trans.value(0, j);
-        double y0 = m_data_trans.value(1, j);
-        double z0 = m_data_trans.value(2, j);
-        x0s << x0;
-        y0s << y0;
-        z0s << z0;
-        label0s << m_labels.value(j);
-        time0s << m_times.value(j);
-        amp0s << m_amplitudes.value(j);
+        int label0 = m_labels.value(j);
+        if (active_cluster_numbers.contains(label0)) {
+            double x0 = m_data_trans.value(0, j);
+            double y0 = m_data_trans.value(1, j);
+            double z0 = m_data_trans.value(2, j);
+            x0s << x0;
+            y0s << y0;
+            z0s << z0;
+            label0s << m_labels.value(j);
+            time0s << m_times.value(j);
+            amp0s << m_amplitudes.value(j);
+        }
     }
 
     if (m_mode != MVCV_MODE_HEAT_DENSITY) {
@@ -543,7 +608,8 @@ void MVClusterViewPrivate::update_grid()
                     }
                     z_grid_ptr[iiii] = z0;
                 }
-            } else {
+            }
+            else {
                 m_point_grid_ptr[iiii] = 1;
                 /*
                 if (m_mode == MVCV_MODE_TIME_COLORS) {
@@ -614,7 +680,8 @@ void MVClusterViewPrivate::update_grid()
                 }
             }
         }
-    } else {
+    }
+    else {
         for (int i2 = 0; i2 < N2; i2++) {
             for (int i1 = 0; i1 < N1; i1++) {
                 double val = m_point_grid.value(i1, i2);
@@ -625,35 +692,46 @@ void MVClusterViewPrivate::update_grid()
                             QColor CC = get_time_color(time0 / m_max_time);
                             m_grid_image.setPixel(i1, i2, CC.rgb());
                         }
-                    } else if (val == -2) {
+                    }
+                    else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    } else if (val == -3) { //filtered out by event filter
+                    }
+                    else if (val == -3) { //filtered out by event filter
                         QColor CC = QColor(60, 60, 60);
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
-                } else if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
+                }
+                else if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
                     if (val >= 0) {
                         double amp0 = m_amplitude_grid.value(i1, i2);
                         if (m_max_amplitude) {
                             QColor CC = get_time_color(amp0 / m_max_amplitude);
                             m_grid_image.setPixel(i1, i2, CC.rgb());
                         }
-                    } else if (val == -2) {
+                    }
+                    else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    } else if (val == -3) { //filtered out by event filter
+                    }
+                    else if (val == -3) { //filtered out by event filter
                         QColor CC = QColor(60, 60, 60);
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
-                } else if (m_mode == MVCV_MODE_LABEL_COLORS) {
+                }
+                else if (m_mode == MVCV_MODE_LABEL_COLORS) {
                     if (val > 0) {
                         QColor CC = m_view_agent->clusterColor((int)val);
+                        if (val == hovered_cluster_number)
+                            CC = Qt::white;
                         m_grid_image.setPixel(i1, i2, CC.rgb());
-                    } else if (val == 0) {
+                    }
+                    else if (val == 0) {
                         QColor CC = Qt::white;
                         m_grid_image.setPixel(i1, i2, CC.rgb());
-                    } else if (val == -2) {
+                    }
+                    else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    } else if (val == -3) { //filtered out by event filter
+                    }
+                    else if (val == -3) { //filtered out by event filter
                         QColor CC = QColor(60, 60, 60);
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
@@ -779,31 +857,9 @@ void MVClusterViewPrivate::do_paint(QPainter& painter, int W, int H)
 
     //legend
     if (this->m_mode == MVCV_MODE_LABEL_COLORS) {
-        double spacing = 6;
-        double margin = 10;
-        // it would still be better if m_labels.was presorted right from the start
-        QList<int> list;
-        for (long i = 0; i < m_labels.count(); i++) {
-            const int value = m_labels.at(i);
-            QList<int>::iterator iter = qLowerBound(list.begin(), list.end(), value);
-            if (iter == list.end() || *iter != value) {
-                list.insert(iter, value);
-            }
-        }
-        double text_height = qBound(12.0, W * 1.0 / 10, 25.0);
-        double y0 = margin;
-        QFont font = painter.font();
-        font.setPixelSize(text_height - 1);
-        painter.setFont(font);
-        for (int i = 0; i < list.count(); i++) {
-            QRectF rect(0, y0, W - margin, text_height);
-            QString str = QString("%1").arg(list[i]);
-            QPen pen = painter.pen();
-            pen.setColor(m_view_agent->clusterColor(list[i]));
-            painter.setPen(pen);
-            painter.drawText(rect, Qt::AlignRight, str);
-            y0 += text_height + spacing;
-        }
+        this->m_legend.setParentWindowSize(q->size());
+        this->m_legend.setClusterColors(m_view_agent->clusterColors());
+        this->m_legend.draw(&painter);
     }
 }
 
@@ -811,6 +867,105 @@ void MVClusterViewPrivate::export_image()
 {
     QImage img = q->renderImage(1000, 800);
     user_save_image(img);
+}
+
+void MVClusterLegend::setClusterColors(const QList<QColor>& colors)
+{
+    m_cluster_colors = colors;
+}
+
+void MVClusterLegend::setClusterNumbers(const QList<int>& numbers)
+{
+    m_cluster_numbers = numbers;
+}
+
+void MVClusterLegend::setParentWindowSize(QSize size)
+{
+    m_parent_window_size = size;
+}
+
+QColor MVClusterLegend::cluster_color(int k) const
+{
+    if (k <= 0)
+        return Qt::black;
+    if (m_cluster_colors.isEmpty())
+        return Qt::black;
+    return m_cluster_colors[(k - 1) % m_cluster_colors.count()];
+}
+
+void MVClusterLegend::draw(QPainter* painter)
+{
+    double spacing = 6;
+    double margin = 10;
+    double W = m_parent_window_size.width();
+    //double H = m_parent_window_size.height();
+    double text_height = qBound(12.0, W * 1.0 / 10, 25.0);
+    double y0 = margin;
+    QFont font = painter->font();
+    font.setPixelSize(text_height - 2);
+    painter->setFont(font);
+    m_cluster_number_rects.clear();
+    for (int i = 0; i < m_cluster_numbers.count(); i++) {
+        QString str = QString("%1").arg(m_cluster_numbers[i]);
+        double text_width = QFontMetrics(painter->font()).width(str);
+        QRectF rect(W - margin - text_width, y0, text_width, text_height);
+        QPen pen = painter->pen();
+
+        if (m_active_cluster_numbers.contains(m_cluster_numbers[i])) {
+            pen.setColor(cluster_color(m_cluster_numbers[i]));
+            if (m_cluster_numbers[i] == m_hovered_cluster_number) {
+                pen.setColor(Qt::white);
+            }
+        }
+        else {
+            pen.setColor(Qt::gray);
+            if (m_cluster_numbers[i] == m_hovered_cluster_number) {
+                pen.setColor(QColor(180, 180, 200));
+            }
+        }
+        painter->setPen(pen);
+        painter->drawText(rect, Qt::AlignRight, str);
+
+        m_cluster_number_rects << rect;
+        y0 += text_height + spacing;
+    }
+}
+
+int MVClusterLegend::hoveredClusterNumber() const
+{
+    return m_hovered_cluster_number;
+}
+
+void MVClusterLegend::setHoveredClusterNumber(int num)
+{
+    m_hovered_cluster_number = num;
+}
+
+QSet<int> MVClusterLegend::activeClusterNumbers() const
+{
+    return m_active_cluster_numbers;
+}
+
+void MVClusterLegend::setActiveClusterNumbers(const QSet<int>& A)
+{
+    m_active_cluster_numbers = A;
+}
+
+void MVClusterLegend::toggleActiveClusterNumber(int num)
+{
+    if (m_active_cluster_numbers.contains(num))
+        m_active_cluster_numbers.remove(num);
+    else
+        m_active_cluster_numbers.insert(num);
+}
+
+int MVClusterLegend::clusterNumberAt(QPointF pos) const
+{
+    for (int i = 0; i < m_cluster_number_rects.count(); i++) {
+        if (m_cluster_number_rects[i].contains(pos))
+            return m_cluster_numbers.value(i, -1);
+    }
+    return -1;
 }
 
 /*

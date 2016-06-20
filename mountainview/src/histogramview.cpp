@@ -25,7 +25,7 @@ public:
     bool m_current;
     bool m_selected;
     bool m_draw_vertical_axis_at_zero = false;
-    MVRange m_xrange=MVRange(0,0);
+    MVRange m_xrange = MVRange(0, 0);
 
     void update_bin_counts();
     QPointF coord2pix(QPointF pt, int W = 0, int H = 0);
@@ -159,8 +159,9 @@ MVRange HistogramView::xRange() const
 
 void HistogramView::setXRange(MVRange range)
 {
-    if (range==d->m_xrange) return;
-    d->m_xrange=range;
+    if (range == d->m_xrange)
+        return;
+    d->m_xrange = range;
     update();
 }
 
@@ -357,9 +358,9 @@ QPointF HistogramViewPrivate::coord2pix(QPointF pt, int W, int H)
     float ymin = 0;
     float ymax = m_max_bin_count;
 
-    if (m_xrange.min!=m_xrange.max) {
-        xmin=m_xrange.min;
-        xmax=m_xrange.max;
+    if (m_xrange.min != m_xrange.max) {
+        xmin = m_xrange.min;
+        xmax = m_xrange.max;
     }
 
     float xfrac = 0.5;
@@ -399,9 +400,9 @@ QPointF HistogramViewPrivate::pix2coord(QPointF pt, int W, int H)
     float ymin = 0;
     float ymax = m_max_bin_count;
 
-    if (m_xrange.min!=m_xrange.max) {
-        xmin=m_xrange.min;
-        xmax=m_xrange.max;
+    if (m_xrange.min != m_xrange.max) {
+        xmin = m_xrange.min;
+        xmax = m_xrange.max;
     }
 
     float xfrac = (pt.x() - m_margin_left) / (W - m_margin_left - m_margin_right);
@@ -487,12 +488,12 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
     }
 
     if (m_draw_vertical_axis_at_zero) {
-        QPointF pt0=coord2pix(QPointF(0,0));
-        QPointF pt1=coord2pix(QPointF(0,m_max_bin_count));
-        QPen pen=painter.pen();
+        QPointF pt0 = coord2pix(QPointF(0, 0));
+        QPointF pt1 = coord2pix(QPointF(0, m_max_bin_count));
+        QPen pen = painter.pen();
         pen.setColor(Qt::green);
         painter.setPen(pen);
-        painter.drawLine(pt0,pt1);
+        painter.drawLine(pt0, pt1);
     }
 
     if (!m_title.isEmpty()) {

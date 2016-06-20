@@ -13,6 +13,9 @@
 #include "extract_clips.h"
 #include "mountainprocessrunner.h"
 
+/// TODO legend as separate class
+/// TODO highlight white on hover over label
+/// TODO toggle on/off
 /// TODO (MEDIUM) control brightness in 3D density view
 
 class MVClusterWidgetComputer : public ComputationThread {
@@ -299,6 +302,16 @@ void MVClusterWidget::slot_view_transformation_changed()
     }
 }
 
+void MVClusterWidget::slot_view_active_cluster_number_toggled()
+{
+    /// TODO (LOW) replace all these casts with qobject_cast's
+    MVClusterView* V0 = (MVClusterView*)sender();
+    QSet<int> active_cluster_numbers=V0->activeClusterNumbers();
+    foreach (MVClusterView* V, d->m_views) {
+        V->setActiveClusterNumbers(active_cluster_numbers);
+    }
+}
+
 void MVClusterWidget::slot_show_clip_view_toggled(bool val)
 {
     d->m_clips_view->setVisible(val);
@@ -317,6 +330,7 @@ void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 {
     QObject::connect(V, SIGNAL(currentEventChanged()), q, SLOT(slot_view_current_event_changed()));
     QObject::connect(V, SIGNAL(transformationChanged()), q, SLOT(slot_view_transformation_changed()));
+    QObject::connect(V, SIGNAL(activeClusterNumberToggled()),q,SLOT(slot_view_active_cluster_number_toggled()));
 }
 
 void MVClusterWidgetPrivate::update_clips_view()

@@ -61,13 +61,16 @@ public:
 
     void setEventFilter(FilterInfo F);
 
+    QSet<int> activeClusterNumbers() const;
+    void setActiveClusterNumbers(const QSet<int> &A);
+
     QImage renderImage(int W, int H);
 signals:
     void currentEventChanged();
     void transformationChanged();
+    void activeClusterNumberToggled();
 
-private
-slots:
+private slots:
     void slot_context_menu(const QPoint& pos);
 
 protected:
@@ -79,6 +82,31 @@ protected:
 
 private:
     MVClusterViewPrivate* d;
+};
+
+class MVClusterLegend {
+public:
+    void setClusterColors(const QList<QColor>& colors);
+    void setClusterNumbers(const QList<int>& numbers);
+    void setParentWindowSize(QSize size);
+    void draw(QPainter* painter);
+    int clusterNumberAt(QPointF pos) const;
+
+    int hoveredClusterNumber() const;
+    void setHoveredClusterNumber(int num);
+    QSet<int> activeClusterNumbers() const;
+    void setActiveClusterNumbers(const QSet<int>& A);
+    void toggleActiveClusterNumber(int num);
+
+private:
+    QList<QColor> m_cluster_colors;
+    QList<int> m_cluster_numbers;
+    QSize m_parent_window_size;
+    QList<QRectF> m_cluster_number_rects;
+    int m_hovered_cluster_number = -1;
+    QSet<int> m_active_cluster_numbers;
+
+    QColor cluster_color(int k) const;
 };
 
 #endif // MVCLUSTERVIEW_H
