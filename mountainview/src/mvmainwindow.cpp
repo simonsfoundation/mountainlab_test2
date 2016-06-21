@@ -80,7 +80,6 @@ public:
     QList<MVAbstractViewFactory*> m_viewFactories;
     QSignalMapper* m_viewMapper;
 
-
     void registerAllViews();
 
     MVAbstractViewFactory* viewFactoryById(const QString &id) const;
@@ -97,6 +96,8 @@ public:
 
     void open_discrim_histograms();
     /// TODO: (MEDIUM) implement find_nearby_events
+
+    void open_timeseries();
     //void find_nearby_events();
 
     void merge_selected();
