@@ -8,6 +8,7 @@
 #define MVSPIKESPRAYVIEW_H
 
 #include "diskreadmda.h"
+#include "mvabstractviewfactory.h"
 
 #include <QPaintEvent>
 #include <QWidget>
@@ -32,6 +33,18 @@ protected:
 
 private:
     MVSpikeSprayViewPrivate* d;
+};
+
+class MVSpikeSprayFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVSpikeSprayFactory(QObject *parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+private slots:
+    void updateEnabled();
 };
 
 #endif // MVSPIKESPRAYVIEW_H

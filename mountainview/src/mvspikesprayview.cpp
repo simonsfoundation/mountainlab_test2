@@ -8,7 +8,9 @@
 #include "computationthread.h"
 #include "extract_clips.h"
 #include "mountainprocessrunner.h"
+#include "mvmainwindow.h"
 
+#include <QMessageBox>
 #include <QPainter>
 #include <taskprogress.h>
 #include "mlutils.h"
@@ -327,4 +329,45 @@ void MVSpikeSprayComputer::compute()
         int label0 = (int)firings0.value(2, i);
         labels_to_render << label0;
     }
+}
+
+MVSpikeSprayFactory::MVSpikeSprayFactory(QObject *parent)
+    : MVAbstractViewFactory(parent)
+{
+    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+            this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVSpikeSprayFactory::id() const
+{
+    return QStringLiteral("open-spike-spray");
+}
+
+QString MVSpikeSprayFactory::name() const
+{
+    return tr("Spike Spray");
+}
+
+QString MVSpikeSprayFactory::title() const
+{
+    return tr("Spike Spray");
+}
+
+MVAbstractView *MVSpikeSprayFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    QList<int> ks = agent->selectedClusters();
+    qSort(ks);
+    if (ks.isEmpty()) {
+        QMessageBox::information(MVMainWindow::instance(), "Unable to open spike spray", "You must select at least one cluster.");
+        return Q_NULLPTR;
+    }
+    MVSpikeSprayView* X = new MVSpikeSprayView(agent);
+    X->setLabelsToUse(ks);
+    return X;
+}
+
+void MVSpikeSprayFactory::updateEnabled()
+{
+    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
 }

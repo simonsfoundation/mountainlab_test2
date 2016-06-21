@@ -8,6 +8,7 @@
 #include <math.h>
 
 #include <QImageWriter>
+#include <QMessageBox>
 #include <QMouseEvent>
 #include <QPainter>
 #include <taskprogress.h>
@@ -107,6 +108,7 @@ void MVFiringEventView2::setAmplitudeRange(MVRange range)
 
 #include "computationthread.h"
 #include "msmisc.h"
+#include "mvmainwindow.h"
 void MVFiringEventView2::autoSetAmplitudeRange()
 {
     double min0 = compute_min(d->m_amplitudes0);
@@ -214,4 +216,47 @@ void MVFiringEventViewCalculator::compute()
         }
     }
     task.log(QString("Found %1 events, using %2 clusters").arg(times.count()).arg(labels_to_use.count()));
+}
+
+MVFiringEventsFactory::MVFiringEventsFactory(QObject *parent)
+    : MVAbstractViewFactory(parent) {
+    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+            this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVFiringEventsFactory::id() const
+{
+    return QStringLiteral("open-firing-events");
+}
+
+QString MVFiringEventsFactory::name() const
+{
+    return tr("Firing Events");
+}
+
+QString MVFiringEventsFactory::title() const
+{
+    return tr("Firing Events");
+}
+
+MVAbstractView *MVFiringEventsFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    QList<int> ks = agent->selectedClusters();
+    if (ks.isEmpty()) {
+        QMessageBox::information(MVMainWindow::instance(), "Unable to open firing events", "You must select at least one cluster.");
+        return Q_NULLPTR;
+    }
+    MVFiringEventView2* X = new MVFiringEventView2(agent);
+    X->setLabelsToUse(ks.toSet());
+    X->setNumTimepoints(agent->currentTimeseries().N2());
+    return X;
+}
+
+void MVFiringEventsFactory::updateEnabled()
+{
+    //bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
+    /// TODO: (0.9.1) restore this has_peaks without accessing m_firings in gui thread
+    bool has_peaks = true;
+    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty() && has_peaks);
 }

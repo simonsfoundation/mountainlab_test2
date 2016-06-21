@@ -3,12 +3,14 @@
 #include "computationthread.h"
 #include <QCheckBox>
 #include <QHBoxLayout>
+#include <QInputDialog>
 #include <QLabel>
 #include <QList>
 #include <QMessageBox>
 #include <taskprogress.h>
 #include "mvclipsview.h"
 #include "msmisc.h"
+#include <QSettings>
 #include <math.h>
 #include "extract_clips.h"
 #include "mountainprocessrunner.h"
@@ -497,4 +499,104 @@ void MVClusterWidgetComputer::compute()
     DiskReadMda features(features_path);
     features.setRemoteDataType("float32");
     features.readChunk(data, 0, 0, features.N1(), features.N2());
+}
+
+MVPCAFeaturesFactory::MVPCAFeaturesFactory(QObject *parent)
+    : MVAbstractViewFactory(parent)
+{
+    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+            this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVPCAFeaturesFactory::id() const {
+    return QStringLiteral("open-pca-features");
+}
+
+QString MVPCAFeaturesFactory::name() const {
+    return tr("PCA Features");
+}
+
+QString MVPCAFeaturesFactory::title() const
+{
+    return tr("PCA features");
+}
+
+MVAbstractView *MVPCAFeaturesFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    QList<int> ks = agent->selectedClusters();
+    qSort(ks);
+    if (ks.count() == 0) {
+        QMessageBox::information(MVMainWindow::instance(), "Unable to open clusters", "You must select at least one cluster.");
+        return Q_NULLPTR;
+    }
+    MVClusterWidget* X = new MVClusterWidget(agent);
+    X->setLabelsToUse(ks);
+    X->setFeatureMode("pca");
+    return X;
+}
+
+void MVPCAFeaturesFactory::updateEnabled()
+{
+    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
+}
+
+
+MVChannelFeaturesFactory::MVChannelFeaturesFactory(QObject *parent)
+    : MVAbstractViewFactory(parent)
+{
+    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+            this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVChannelFeaturesFactory::id() const
+{
+    return QStringLiteral("open-channel-features");
+}
+
+QString MVChannelFeaturesFactory::name() const
+{
+    return tr("Channel Features");
+}
+
+QString MVChannelFeaturesFactory::title() const
+{
+    return tr("Ch. features");
+}
+
+MVAbstractView *MVChannelFeaturesFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    QSettings settings("SCDA", "MountainView");
+    QString str = settings.value("open_channel_features_channels", "1,2,3").toString();
+    str = QInputDialog::getText(0, "Open Channel Features", "Channels:", QLineEdit::Normal, str);
+    if (str.isEmpty())
+        return Q_NULLPTR;
+    QStringList strlist = str.split(",", QString::SkipEmptyParts);
+    QList<int> channels;
+    foreach (QString a, strlist) {
+        bool ok;
+        channels << a.toInt(&ok);
+        if (!ok) {
+            QMessageBox::warning(MVMainWindow::instance(), "Open channel features", "Invalid channels string");
+        }
+    }
+    settings.setValue("open_channel_features_channels", strlist.join(","));
+
+    QList<int> ks = agent->selectedClusters();
+    qSort(ks);
+    if (ks.isEmpty()) {
+        QMessageBox::information(MVMainWindow::instance(), "Unable to open clusters", "You must select at least one cluster.");
+        return Q_NULLPTR;
+    }
+    MVClusterWidget* X = new MVClusterWidget(agent);
+    X->setLabelsToUse(ks);
+    X->setFeatureMode("channels");
+    X->setChannels(channels);
+    return X;
+}
+
+void MVChannelFeaturesFactory::updateEnabled()
+{
+    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
 }

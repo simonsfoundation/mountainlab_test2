@@ -11,6 +11,8 @@
 #include "affinetransformation.h"
 #include "mvclusterview.h" //for FilterInfo
 #include "mvabstractview.h"
+#include "mvabstractviewfactory.h"
+#include "mvmainwindow.h"
 
 /** \class MVClusterWidget
  *  \brief Presents one or more cluster views and a synchronized clip view
@@ -53,6 +55,30 @@ private slots:
 
 private:
     MVClusterWidgetPrivate* d;
+};
+
+class MVPCAFeaturesFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVPCAFeaturesFactory(QObject *parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+public slots:
+    void updateEnabled();
+};
+
+class MVChannelFeaturesFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVChannelFeaturesFactory(QObject *parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+public slots:
+    void updateEnabled();
 };
 
 #endif // MVCLUSTERWIDGET_H

@@ -276,3 +276,32 @@ void MVTimeSeriesView2Calculator::compute()
     maxval = msts.maximum();
     num_channels = timeseries.N1();
 }
+
+MVTimeSeriesDataFactory::MVTimeSeriesDataFactory(QObject *parent)
+    : MVAbstractViewFactory(parent)
+{
+
+}
+
+QString MVTimeSeriesDataFactory::id() const
+{
+    return QStringLiteral("open-timeseries-data");
+}
+
+QString MVTimeSeriesDataFactory::name() const
+{
+    return tr("Timeseries Data");
+}
+
+QString MVTimeSeriesDataFactory::title() const
+{
+    return tr("Timeseries");
+}
+
+MVAbstractView *MVTimeSeriesDataFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    MVTimeSeriesView2* X = new MVTimeSeriesView2(agent);
+    QList<int> ks = agent->selectedClusters();
+    X->setLabelsToView(ks.toSet());
+    return X;
+}

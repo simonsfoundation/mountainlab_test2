@@ -49,6 +49,7 @@
 #include <QAbstractButton>
 #include <QSettings>
 #include <QScrollArea>
+#include <QToolButton>
 #include <QAction>
 #include <QShortcut>
 #include <QToolBar>
@@ -90,19 +91,10 @@ public:
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
 
-    MVCrossCorrelogramsWidget3* open_auto_correlograms();
-    MVCrossCorrelogramsWidget3* open_cross_correlograms(int k);
-    MVCrossCorrelogramsWidget3* open_matrix_of_cross_correlograms();
-#if 0
-    MVClusterDetailWidget* open_cluster_details();
-    void open_clips();
-#endif
-    void open_timeseries();
-    void open_pca_features();
-    void open_channel_features();
-    void open_amplitude_histograms();
-    void open_spike_spray();
-    void open_firing_events();
+    MVCrossCorrelogramsWidget2* open_auto_correlograms();
+    MVCrossCorrelogramsWidget2* open_cross_correlograms(int k);
+    MVCrossCorrelogramsWidget2* open_matrix_of_cross_correlograms();
+
     void open_discrim_histograms();
     /// TODO: (MEDIUM) implement find_nearby_events
     //void find_nearby_events();
@@ -139,7 +131,15 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     d->m_view_agent = view_agent;
 
     registerViewFactory(new MVClusterDetailsFactory(this));
+    registerViewFactory(new MVAutoCorrelogramsFactory(this));
+    registerViewFactory(new MVMatrixOfCrossCorrelogramsFactory(this));
+    registerViewFactory(new MVTimeSeriesDataFactory(this));
     registerViewFactory(new MVClipsFactory(this));
+    registerViewFactory(new MVPCAFeaturesFactory(this));
+    registerViewFactory(new MVChannelFeaturesFactory(this));
+    registerViewFactory(new MVSpikeSprayFactory(this));
+    registerViewFactory(new MVFiringEventsFactory(this));
+    registerViewFactory(new MVAmplitudeHistogramsFactory(this));
 
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_view_agent, this);
     QToolBar* main_toolbar = new QToolBar;
@@ -231,11 +231,9 @@ MVMainWindow::~MVMainWindow()
 
 void MVMainWindow::setDefaultInitialization()
 {
-    MVAbstractViewFactory *f = d->viewFactoryById("open-cluster-details");
-    if (f)
-        d->openView(f);
+    openView("open-cluster-details");
     d->m_tabber->switchCurrentContainer();
-    d->open_auto_correlograms();
+    openView("open-auto-correlograms");
 }
 
 void MVMainWindow::setEpochs(const QList<Epoch>& epochs)
@@ -474,34 +472,11 @@ void MVMainWindow::slot_amplitude_histogram_activated()
     //not sure what to do here
 }
 
-#if 0
-void MVMainWindow::slot_details_template_activated()
-{
-    int k = d->m_view_agent->currentCluster();
-    if (k < 0)
-        return;
-    TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
-    d->m_tabber->setCurrentContainer(TW);
-    d->m_tabber->switchCurrentContainer();
-    d->open_clips();
-}
-#endif
-
 void MVMainWindow::slot_update_buttons()
 {
-    //bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
-    /// TODO: (0.9.1) restore this has_peaks without accessing m_firings in gui thread
-    bool has_peaks = true;
     bool something_selected = (!d->m_view_agent->selectedClusters().isEmpty());
 
-//    d->set_button_enabled("open-cluster-details", true);
-    d->set_button_enabled("open-auto-correlograms", true);
-    d->set_button_enabled("open-matrix-of-cross-correlograms", something_selected);
-    d->set_button_enabled("open-timeseries-data", true);
-    d->set_button_enabled("open-clips", something_selected);
     d->set_button_enabled("open-clusters", something_selected);
-    d->set_button_enabled("open-spike-spray", something_selected);
-    d->set_button_enabled("open-firing-events", (something_selected) && (has_peaks));
     d->set_button_enabled("find-nearby-events", d->m_view_agent->selectedClusters().count() >= 2);
     d->set_button_enabled("open-discrim-histograms", d->m_view_agent->selectedClusters().count() >= 2);
 
@@ -583,7 +558,8 @@ MVAbstractViewFactory *MVMainWindowPrivate::viewFactoryById(const QString &id) c
 MVAbstractView *MVMainWindowPrivate::openView(MVAbstractViewFactory *factory)
 {
     MVAbstractView *view = factory->createView(m_view_agent);
-    set_tool_button_menu(view);
+    if (!view) return Q_NULLPTR;
+//    set_tool_button_menu(view);
     add_tab(view, factory->title());
     return view;
 }
@@ -810,6 +786,8 @@ void MVMainWindowPrivate::open_discrim_histograms()
     QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_discrim_histogram_activated()));
 }
 
+=======
+>>>>>>> Moved more views to the new infrastructure
 /*
 void MVMainWindowPrivate::find_nearby_events()
 {
