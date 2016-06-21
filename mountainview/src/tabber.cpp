@@ -5,9 +5,11 @@
 #include <QDebug>
 #include <QMenu>
 #include <QTabBar>
+#include "tabberframe.h"
 
 struct TabberWidget {
-    QWidget* widget;
+    TabberFrame* frame;
+    MVAbstractView* widget;
     QString label;
     QString current_container_name;
 };
@@ -20,15 +22,15 @@ public:
     QString m_current_container_name; //the name of the last selected container -- empty means floating
 
     ///Put the widget in the specified tab widget (removing from existing tab widget if necessary)
-    void put_widget_in_container(QString container_name, QWidget* W);
+    void put_widget_in_container(QString container_name, MVAbstractView* W);
     ///Find the struct (TabberWidget) that corresponds to W
-    TabberWidget* find_tabber_widget(QWidget* W);
+    TabberWidget* find_tabber_widget(MVAbstractView* W);
     ///Find the index of a widget within a particular tab widget
-    int find_widget_index_in_container(QString container_name, QWidget* W);
+    int find_widget_index_in_container(QString container_name, MVAbstractView* W);
     ///Remove widget (but don't delete) from its container (or tab widget)
-    void remove_widget(QWidget* W);
+    void remove_widget(MVAbstractView* W);
     ///Check if this widget is contained in the list of widgets
-    bool contains_widget(QWidget* W);
+    bool contains_widget(MVAbstractView* W);
     ///Get the name of a different container, or "" if none
     QString find_other_container_name(QString name);
 
@@ -49,6 +51,7 @@ Tabber::~Tabber()
 TabberTabWidget* Tabber::createTabWidget(const QString& container_name)
 {
     TabberTabWidget* TW = new TabberTabWidget;
+    TW->setTabPosition(QTabWidget::South);
     d->m_tab_widgets[container_name] = TW;
     TW->setProperty("container_name", container_name);
     connect(TW, SIGNAL(tabCloseRequested(int)), this, SLOT(slot_tab_close_requested(int)));
@@ -60,23 +63,20 @@ TabberTabWidget* Tabber::createTabWidget(const QString& container_name)
     return TW;
 }
 
-void Tabber::addWidget(const QString& container_name, const QString& label, QWidget* W)
+void Tabber::addWidget(const QString& container_name, const QString& label, MVAbstractView* W)
 {
     TabberWidget X;
+    X.frame = new TabberFrame(W);
     X.widget = W;
     X.label = label;
     d->m_widgets << X;
     d->put_widget_in_container(container_name, X.widget);
 
-    MVAbstractView *VV=qobject_cast<MVAbstractView *>(W);
-    if (VV) {
-        connect(VV,SIGNAL(recalculateSuggestedChanged()),this,SLOT(slot_recalculate_suggested_changed()));
-    }
-
+    connect(W, SIGNAL(recalculateSuggestedChanged()), this, SLOT(slot_recalculate_suggested_changed()));
     connect(W, SIGNAL(destroyed(QObject*)), this, SLOT(slot_widget_destroyed(QObject*)));
 }
 
-void Tabber::addWidget(TabberTabWidget* TW, const QString& label, QWidget* W)
+void Tabber::addWidget(TabberTabWidget* TW, const QString& label, MVAbstractView* W)
 {
     QString container_name = TW->property("container_name").toString();
     if (container_name.isEmpty())
@@ -106,16 +106,16 @@ void Tabber::switchCurrentContainer()
     d->m_current_container_name = d->find_other_container_name(d->m_current_container_name);
 }
 
-QList<QWidget*> Tabber::allWidgets()
+QList<MVAbstractView*> Tabber::allWidgets()
 {
-    QList<QWidget*> ret;
+    QList<MVAbstractView*> ret;
     for (int i = 0; i < d->m_widgets.count(); i++) {
         ret << d->m_widgets[i].widget;
     }
     return ret;
 }
 
-void Tabber::moveWidgetToOtherContainer(QWidget* W)
+void Tabber::moveWidgetToOtherContainer(MVAbstractView* W)
 {
     TabberWidget* X = d->find_tabber_widget(W);
     if (!X)
@@ -125,7 +125,7 @@ void Tabber::moveWidgetToOtherContainer(QWidget* W)
     d->put_widget_in_container(cname2, W);
 }
 
-void Tabber::popOutWidget(QWidget* W)
+void Tabber::popOutWidget(MVAbstractView* W)
 {
     TabberWidget* X = d->find_tabber_widget(W);
     if (!X)
@@ -139,7 +139,7 @@ void Tabber::slot_tab_close_requested(int index)
     TabberTabWidget* TW = qobject_cast<TabberTabWidget*>(sender());
     if (!TW)
         return;
-    QWidget* W = TW->widget(index);
+    MVAbstractView* W = TW->view(index);
     if (!W)
         return;
     if (d->contains_widget(W)) { // I think this condition is important so we don't delete the same widget twice if the user requests close twice
@@ -154,8 +154,8 @@ void Tabber::slot_tab_bar_clicked(int index)
     TabberTabWidget* TW = (TabberTabWidget*)sender();
     d->m_current_container_name = TW->property("container_name").toString();
 
-    if (index==TW->currentIndex()) {
-        MVAbstractView *VV=qobject_cast<MVAbstractView *>(TW->widget(index));
+    if (index == TW->currentIndex()) {
+        MVAbstractView* VV = TW->view(index);
         if (VV) {
             QMenu m;
             m.addActions(VV->actions());
@@ -164,14 +164,12 @@ void Tabber::slot_tab_bar_clicked(int index)
             //m.exec(tb->mapToGlobal(tb->rect().bottomLeft()));
         }
     }
-
-
 }
 
 void Tabber::slot_tab_bar_double_clicked(int index)
 {
     TabberTabWidget* TW = (TabberTabWidget*)sender();
-    QWidget* W = TW->widget(index);
+    MVAbstractView* W = TW->view(index);
     if (!W)
         return;
     moveWidgetToOtherContainer(W);
@@ -179,7 +177,7 @@ void Tabber::slot_tab_bar_double_clicked(int index)
 
 void Tabber::slot_widget_destroyed(QObject* obj)
 {
-    d->remove_widget((QWidget*)obj);
+    d->remove_widget((MVAbstractView*)obj);
 }
 
 void Tabber::slot_recalculate_suggested_changed()
@@ -187,7 +185,7 @@ void Tabber::slot_recalculate_suggested_changed()
     d->update_tab_labels();
 }
 
-void TabberPrivate::put_widget_in_container(QString container_name, QWidget* W)
+void TabberPrivate::put_widget_in_container(QString container_name, MVAbstractView* W)
 {
     TabberWidget* X = find_tabber_widget(W);
     if (!X)
@@ -195,22 +193,22 @@ void TabberPrivate::put_widget_in_container(QString container_name, QWidget* W)
     if (!container_name.isEmpty()) {
         if (!m_tab_widgets.contains(container_name))
             return;
-        int index = m_tab_widgets[container_name]->addTab(X->widget, X->label);
+        int index = m_tab_widgets[container_name]->addTab(X->frame, X->label);
         if (index >= 0) {
             m_tab_widgets[container_name]->setCurrentIndex(index);
         }
     }
     else {
         if (!X->current_container_name.isEmpty()) {
-            QPoint position = W->mapToGlobal(W->pos());
+            QPoint position = X->frame->mapToGlobal(X->frame->pos());
             int index = find_widget_index_in_container(X->current_container_name, X->widget);
             if (index < 0)
                 return;
             m_tab_widgets[X->current_container_name]->removeTab(index);
 
-            W->setParent(0);
-            W->show();
-            W->move(position);
+            X->frame->setParent(0);
+            X->frame->show();
+            X->frame->move(position);
         }
     }
     X->current_container_name = container_name;
@@ -219,7 +217,7 @@ void TabberPrivate::put_widget_in_container(QString container_name, QWidget* W)
     }
 }
 
-TabberWidget* TabberPrivate::find_tabber_widget(QWidget* W)
+TabberWidget* TabberPrivate::find_tabber_widget(MVAbstractView* W)
 {
     for (int i = 0; i < m_widgets.count(); i++) {
         if (m_widgets[i].widget == W) {
@@ -229,19 +227,19 @@ TabberWidget* TabberPrivate::find_tabber_widget(QWidget* W)
     return 0;
 }
 
-int TabberPrivate::find_widget_index_in_container(QString container_name, QWidget* W)
+int TabberPrivate::find_widget_index_in_container(QString container_name, MVAbstractView* W)
 {
     if (!m_tab_widgets.contains(container_name))
         return -1;
     TabberTabWidget* TW = m_tab_widgets[container_name];
     for (int i = 0; i < TW->count(); i++) {
-        if (TW->widget(i) == W)
+        if (TW->view(i) == W)
             return i;
     }
     return -1;
 }
 
-void TabberPrivate::remove_widget(QWidget* W)
+void TabberPrivate::remove_widget(MVAbstractView* W)
 {
     for (int i = 0; i < m_widgets.count(); i++) {
         if (m_widgets[i].widget == W) {
@@ -251,7 +249,7 @@ void TabberPrivate::remove_widget(QWidget* W)
     }
 }
 
-bool TabberPrivate::contains_widget(QWidget* W)
+bool TabberPrivate::contains_widget(MVAbstractView* W)
 {
     for (int i = 0; i < m_widgets.count(); i++) {
         if (m_widgets[i].widget == W) {
@@ -273,24 +271,17 @@ QString TabberPrivate::find_other_container_name(QString name)
     return "";
 }
 
-bool recalculate_suggested(QWidget *W) {
-    MVAbstractView *VV=qobject_cast<MVAbstractView *>(W);
-    if (VV) {
-        return VV->recalculateSuggested();
-    }
-    return false;
-}
-
 void TabberPrivate::update_tab_labels()
 {
-    foreach (QTabWidget *W,m_tab_widgets) {
-        for (int i=0; i<W->count(); i++) {
-            QWidget *w=W->widget(i);
-            TabberWidget *v=find_tabber_widget(w);
+    foreach (TabberTabWidget* W, m_tab_widgets) {
+        for (int i = 0; i < W->count(); i++) {
+            MVAbstractView* w = W->view(i);
+            TabberWidget* v = find_tabber_widget(w);
             if (v) {
-                QString label=v->label;
-                if (recalculate_suggested(w)) label+=" (*)";
-                W->setTabText(i,label);
+                QString label = v->label;
+                if (w->recalculateSuggested())
+                    label += " (*)";
+                W->setTabText(i, label);
             }
         }
     }
@@ -313,4 +304,12 @@ TabberTabWidget::TabberTabWidget()
 TabberTabWidget::~TabberTabWidget()
 {
     delete d;
+}
+
+MVAbstractView* TabberTabWidget::view(int index)
+{
+    TabberFrame* TF = qobject_cast<TabberFrame*>(this->widget(index));
+    if (!TF)
+        return 0;
+    return TF->view();
 }

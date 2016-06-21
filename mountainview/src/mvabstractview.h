@@ -24,9 +24,9 @@ public:
     bool isCalculating() const;
     bool recalculateSuggested() const;
 
-public
-slots:
+public slots:
     void recalculate();
+    void neverSuggestRecalculate();
 
 signals:
     void calculationStarted();
@@ -42,8 +42,7 @@ protected:
     void recalculateOnOptionChanged(QString name);
     void recalculateOn(QObject*, const char* signal);
 
-private
-slots:
+private slots:
     void slot_do_calculation();
     void slot_calculation_finished();
     void slot_view_agent_option_changed(QString name);

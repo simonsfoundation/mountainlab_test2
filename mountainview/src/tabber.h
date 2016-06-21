@@ -6,6 +6,8 @@
 #ifndef TABBER_H
 #define TABBER_H
 
+#include "mvabstractview.h"
+
 #include <QTabWidget>
 #include <QString>
 
@@ -26,16 +28,16 @@ public:
     Tabber();
     virtual ~Tabber();
     TabberTabWidget* createTabWidget(const QString& container_name);
-    void addWidget(const QString& container_name, const QString& label, QWidget* W);
-    void addWidget(TabberTabWidget* TW, const QString& label, QWidget* W);
+    void addWidget(const QString& container_name, const QString& label, MVAbstractView* W);
+    void addWidget(TabberTabWidget* TW, const QString& label, MVAbstractView* W);
     QString currentContainerName();
     void setCurrentContainerName(const QString& container_name);
     void setCurrentContainer(TabberTabWidget* TW);
     void switchCurrentContainer();
-    QList<QWidget*> allWidgets();
+    QList<MVAbstractView*> allWidgets();
 
-    void moveWidgetToOtherContainer(QWidget* W);
-    void popOutWidget(QWidget* W);
+    void moveWidgetToOtherContainer(MVAbstractView* W);
+    void popOutWidget(MVAbstractView* W);
 private slots:
     void slot_tab_close_requested(int index);
     void slot_tab_bar_clicked(int index);
@@ -54,6 +56,7 @@ public:
     friend class TabberTabWidgetPrivate;
     TabberTabWidget();
     virtual ~TabberTabWidget();
+    MVAbstractView* view(int index);
 
 private:
     TabberTabWidgetPrivate* d;

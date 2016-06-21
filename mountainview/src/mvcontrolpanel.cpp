@@ -86,6 +86,7 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         d->m_controls.add_horizontal_divider_line(layout);
     }
 
+    /*
     {
         //Recalculate Views
         layout->addWidget(d->create_group_label("Recalculate Views"));
@@ -95,7 +96,7 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         BB << abi("recalculate-all", "Recalculate all");
         BB << abi("recalculate-all-suggested", "... all suggested");
         BB << abi("recalculate-all-visible", "... all visible");
-        BB << abi("recalculate-all-visible", "... all suggested and visible");
+        BB << abi("recalculate-all-suggested-and-visible", "... all suggested and visible");
         for (int i = 0; i < BB.count(); i++) {
             QToolButton* button = new QToolButton;
             QFont font = button->font();
@@ -108,6 +109,7 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         }
         d->m_controls.add_horizontal_divider_line(layout);
     }
+    */
 
     {
         //Viewing options
@@ -120,6 +122,19 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", d->m_view_agent->option("clip_size").toInt(), 1, 1e5)->setToolTip("Set clips size used for display");
 
         d->m_controls.add_horizontal_divider_line(layout);
+
+        {
+            QPushButton* BB = new QPushButton("Recalculate Visible");
+            BB->setProperty("action_name", "recalculate-all-suggested-and-visible");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
+        {
+            QPushButton* BB = new QPushButton("Recalculate All");
+            BB->setProperty("action_name", "recalculate-all-suggested");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
     }
 
     {
@@ -133,6 +148,19 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         d->m_controls.add_float_box(G, "min_detectability_score", "Min detectability score", 0, 0, 1e6)->setToolTip("Filter events by detectability score. Use 0 for no filter.");
         d->m_controls.add_float_box(G, "max_outlier_score", "Max outlier score", 3, 0, 1e6)->setToolTip("Filter events by outlier score. Use 0 for no filter.");
         d->m_controls.add_horizontal_divider_line(layout);
+
+        {
+            QPushButton* BB = new QPushButton("Recalculate Visible");
+            BB->setProperty("action_name", "recalculate-all-suggested-and-visible");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
+        {
+            QPushButton* BB = new QPushButton("Recalculate All");
+            BB->setProperty("action_name", "recalculate-all-suggested");
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            layout->addWidget(BB);
+        }
     }
 
     {
