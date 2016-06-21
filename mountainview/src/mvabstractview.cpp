@@ -46,19 +46,10 @@ MVAbstractView::MVAbstractView(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
 
     {
-        QAction* a = new QAction("Recalculate", this);
+        QAction* a = new QAction(QIcon(":/image/gear.png"), "Force recalculate", this);
         this->addAction(a);
         connect(a, SIGNAL(triggered(bool)), this, SLOT(recalculate()));
     }
-
-    /*
-     // just thinking out loud
-    QToolButton *recalculate_button=new QToolButton(this);
-    recalculate_button->setText("Recalculate");
-    recalculate_button->setAutoRaise(true);
-    recalculate_button->setBackgroundRole(QPalette::Window);
-    connect(recalculate_button,SIGNAL(clicked(bool)),this,SLOT(recalculate()));
-    */
 
     setContextMenuPolicy(Qt::ActionsContextMenu);
 }

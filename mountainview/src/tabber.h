@@ -40,10 +40,12 @@ public:
     void popOutWidget(MVAbstractView* W);
 private slots:
     void slot_tab_close_requested(int index);
-    void slot_tab_bar_clicked(int index);
     void slot_tab_bar_double_clicked(int index);
     void slot_widget_destroyed(QObject* obj);
     void slot_recalculate_suggested_changed();
+    void slot_move_to_other_container();
+    void slot_pop_out();
+    void slot_pop_in();
 
 private:
     TabberPrivate* d;

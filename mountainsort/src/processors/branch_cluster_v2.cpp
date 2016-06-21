@@ -26,7 +26,7 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
     DiskReadMda detect;
     detect.setPath(detect_path);
     long L = detect.N2();
-    printf("#events = %ld\n",L);
+    printf("#events = %ld\n", L);
 
     Mda AM;
     if (!adjacency_matrix_path.isEmpty()) {

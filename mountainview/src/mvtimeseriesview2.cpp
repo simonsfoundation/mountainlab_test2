@@ -9,6 +9,8 @@
 #include "mvtimeseriesrendermanager.h"
 #include <math.h>
 
+#include <QAction>
+#include <QIcon>
 #include <QImageWriter>
 #include <QMouseEvent>
 #include <QPainter>
@@ -63,6 +65,21 @@ MVTimeSeriesView2::MVTimeSeriesView2(MVViewAgent* view_agent)
     d->m_amplitude_factor = 1.0;
     d->m_layout_needed = true;
     d->m_num_channels = 1;
+
+    {
+        QAction* a = new QAction(QIcon(":/images/vertical-zoom-in.png"), "Vertical Zoom In", this);
+        a->setProperty("action_type", "toolbar");
+        a->setToolTip("Vertical zoom in. Alternatively, use the UP arrow.");
+        this->addAction(a);
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_vertical_zoom_in()));
+    }
+    {
+        QAction* a = new QAction(QIcon(":/images/vertical-zoom-out.png"), "Vertical Zoom Out", this);
+        a->setProperty("action_type", "toolbar");
+        a->setToolTip("Vertical zoom out. Alternatively, use the DOWN arrow.");
+        this->addAction(a);
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_vertical_zoom_out()));
+    }
 
     QObject::connect(&d->m_render_manager, SIGNAL(updated()), this, SLOT(update()));
     this->recalculateOn(viewAgent(), SIGNAL(currentTimeseriesChanged()));
@@ -171,6 +188,18 @@ void MVTimeSeriesView2::keyPressEvent(QKeyEvent* evt)
     else {
         MVTimeSeriesViewBase::keyPressEvent(evt);
     }
+}
+
+void MVTimeSeriesView2::slot_vertical_zoom_in()
+{
+    d->m_amplitude_factor *= 1.2;
+    update();
+}
+
+void MVTimeSeriesView2::slot_vertical_zoom_out()
+{
+    d->m_amplitude_factor /= 1.2;
+    update();
 }
 
 QList<mvtsv_channel> MVTimeSeriesView2Private::make_channel_layout(int M)

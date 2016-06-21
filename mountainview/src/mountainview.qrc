@@ -1,11 +1,18 @@
 <RCC>
     <qresource prefix="/">
-        <file>statistics.css</file>
+        <file>images/calculator.png</file>
+        <file>images/calculator-no.png</file>
+        <file>images/down.png</file>
+        <file>images/process.png</file>
+        <file>images/up.png</file>
+        <file>images/pop-in.png</file>
+        <file>images/pop-out.png</file>
         <file>images/gear.png</file>
-    </qresource>
-    <qresource prefix="/images">
-        <file>calculator.png</file>
-        <file>down.png</file>
-        <file>process.png</file>
+        <file>images/zoom-out.png</file>
+        <file>images/zoom-in.png</file>
+        <file>images/vertical-zoom-in.png</file>
+        <file>images/vertical-zoom-out.png</file>
+        <file>images/move-up.png</file>
+        <file>images/move-down.png</file>
     </qresource>
 </RCC>

@@ -42,7 +42,6 @@
 #include <QAbstractButton>
 #include <QSettings>
 #include <QScrollArea>
-#include <toolbuttonmenu.h>
 #include <QAction>
 #include "textfile.h"
 
@@ -67,7 +66,6 @@ public:
 
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
-    void set_tool_button_menu(QWidget* X);
 
     MVCrossCorrelogramsWidget2* open_auto_correlograms();
     MVCrossCorrelogramsWidget2* open_cross_correlograms(int k);
@@ -482,35 +480,7 @@ void MVMainWindowPrivate::update_sizes()
 void MVMainWindowPrivate::add_tab(MVAbstractView* W, QString label)
 {
     W->setFocusPolicy(Qt::StrongFocus);
-
-    /// TODO (MEDIUM) put these in the tabber, in fact put all actions where they belong
-    {
-        QAction* a = new QAction("Move to other tab widget", W);
-        /// TODO handle "action_type" in a better way. Ask WW
-        a->setProperty("action_type", "toolbar");
-        QObject::connect(a, SIGNAL(triggered(bool)), q, SLOT(slot_action_move_to_other_tab_widget()));
-        W->insertAction(W->actions().value(0), a);
-    }
-    {
-        QAction* a = new QAction("Pop out", W);
-        a->setProperty("action_type", "toolbar");
-        QObject::connect(a, SIGNAL(triggered(bool)), q, SLOT(slot_pop_out_widget()));
-        //W->insertAction(W->actions().value(0), a);
-        W->addAction(a);
-    }
-
     m_tabber->addWidget(m_tabber->currentContainerName(), label, W);
-}
-
-void MVMainWindowPrivate::set_tool_button_menu(QWidget* X)
-{
-    X->setContextMenuPolicy(Qt::ActionsContextMenu);
-    ToolButtonMenu* MM = new ToolButtonMenu(X);
-    MM->setOffset(QSize(4, 4));
-    QToolButton* tb = MM->activateOn(X);
-    tb->setIconSize(QSize(26, 26));
-    QIcon icon(":images/gear.png");
-    tb->setIcon(icon);
 }
 
 MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_auto_correlograms()
@@ -554,7 +524,6 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlogra
 MVClusterDetailWidget* MVMainWindowPrivate::open_cluster_details()
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(m_view_agent);
-    set_tool_button_menu(X);
     QObject::connect(X, SIGNAL(signalTemplateActivated()), q, SLOT(slot_details_template_activated()));
     add_tab(X, QString("Details"));
     return X;

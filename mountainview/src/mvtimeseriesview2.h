@@ -35,6 +35,8 @@ public:
     void keyPressEvent(QKeyEvent* evt);
 
 private slots:
+    void slot_vertical_zoom_in();
+    void slot_vertical_zoom_out();
 
 private:
     MVTimeSeriesView2Private* d;

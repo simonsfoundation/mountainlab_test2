@@ -20,7 +20,6 @@
 #include "compute_templates_0.h"
 #include "computationthread.h"
 #include "mountainprocessrunner.h"
-#include "toolbuttonmenu.h"
 #include <math.h>
 #include "mlutils.h"
 #include "mvmisc.h"
@@ -182,6 +181,34 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent)
         QAction* a = new QAction("Toggle std. dev. shading", this);
         this->addAction(a);
         connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_toggle_stdev_shading()));
+    }
+    {
+        QAction* a = new QAction(QIcon(":/images/zoom-in.png"), "Zoom In", this);
+        a->setProperty("action_type", "toolbar");
+        a->setToolTip("Zoom in. Alternatively, use the mouse wheel.");
+        this->addAction(a);
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_zoom_in()));
+    }
+    {
+        QAction* a = new QAction(QIcon(":/images/zoom-out.png"), "Zoom Out", this);
+        a->setProperty("action_type", "toolbar");
+        a->setToolTip("Zoom out. Alternatively, use the mouse wheel.");
+        this->addAction(a);
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_zoom_out()));
+    }
+    {
+        QAction* a = new QAction(QIcon(":/images/vertical-zoom-in.png"), "Vertical Zoom In", this);
+        a->setProperty("action_type", "toolbar");
+        a->setToolTip("Vertical zoom in. Alternatively, use the UP arrow.");
+        this->addAction(a);
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_vertical_zoom_in()));
+    }
+    {
+        QAction* a = new QAction(QIcon(":/images/vertical-zoom-out.png"), "Vertical Zoom Out", this);
+        a->setProperty("action_type", "toolbar");
+        a->setToolTip("Vertical zoom out. Alternatively, use the DOWN arrow.");
+        this->addAction(a);
+        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_vertical_zoom_out()));
     }
 
     recalculate();
@@ -509,6 +536,28 @@ void MVClusterDetailWidget::slot_export_image()
 void MVClusterDetailWidget::slot_toggle_stdev_shading()
 {
     d->toggle_stdev_shading();
+}
+
+void MVClusterDetailWidget::slot_zoom_in()
+{
+    d->zoom(1.2);
+}
+
+void MVClusterDetailWidget::slot_zoom_out()
+{
+    d->zoom(1 / 1.2);
+}
+
+void MVClusterDetailWidget::slot_vertical_zoom_in()
+{
+    d->m_vscale_factor *= 1.15;
+    update();
+}
+
+void MVClusterDetailWidget::slot_vertical_zoom_out()
+{
+    d->m_vscale_factor /= 1.15;
+    update();
 }
 
 void MVClusterDetailWidgetPrivate::compute_total_time()

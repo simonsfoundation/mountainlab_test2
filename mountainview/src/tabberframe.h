@@ -17,6 +17,11 @@ public:
     TabberFrame(MVAbstractView* view);
     virtual ~TabberFrame();
     MVAbstractView* view();
+    void setContainerName(QString name);
+signals:
+    void signalMoveToOtherContainer();
+    void signalPopOut();
+    void signalPopIn();
 private slots:
     void slot_update_action_visibility();
 

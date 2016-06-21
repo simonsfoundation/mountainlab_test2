@@ -13,11 +13,11 @@ bool compute_templates(const QString& timeseries_path, const QString& firings_pa
     DiskReadMda firings(firings_path);
     QList<double> times;
     QList<int> labels;
-    for (long i=0; i<firings.N2(); i++) {
-        times << firings.value(1,i);
-        labels << (int)firings.value(2,i);
+    for (long i = 0; i < firings.N2(); i++) {
+        times << firings.value(1, i);
+        labels << (int)firings.value(2, i);
     }
-    Mda templates=compute_templates_0(X,times,labels,clip_size);
+    Mda templates = compute_templates_0(X, times, labels, clip_size);
     templates.write32(templates_out_path);
     return true;
 }

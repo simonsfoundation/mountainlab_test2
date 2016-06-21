@@ -47,11 +47,14 @@ protected:
 signals:
     ///A cluster has been double-clicked (or enter pressed?)
     void signalTemplateActivated();
-private
-slots:
+private slots:
     //void slot_context_menu(const QPoint& pos);
     void slot_export_image();
     void slot_toggle_stdev_shading();
+    void slot_zoom_in();
+    void slot_zoom_out();
+    void slot_vertical_zoom_in();
+    void slot_vertical_zoom_out();
 
 private:
     MVClusterDetailWidgetPrivate* d;
