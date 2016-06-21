@@ -48,7 +48,7 @@ TabberFrame::TabberFrame(MVAbstractView* view)
 
     d->m_toolbar->addAction(d->m_recalc_action);
     d->m_toolbar->addAction(d->m_never_recalc_action);
-    d->m_to
+    //d->m_to
 
     QList<QAction*> toolbar_actions = d->find_actions_of_type(view->actions(), "toolbar");
     foreach (QAction* a, toolbar_actions) {
