@@ -9,6 +9,7 @@
 
 #include "diskreadmda.h"
 #include "mvabstractview.h"
+#include "mvabstractviewfactory.h"
 
 #include <QWidget>
 
@@ -65,6 +66,30 @@ private slots:
 
 private:
     MVCrossCorrelogramsWidget2Private* d;
+};
+
+class MVAutoCorrelogramsFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVAutoCorrelogramsFactory(QObject *parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+private slots:
+    void slot_auto_correlogram_activated();
+};
+
+class MVMatrixOfCrossCorrelogramsFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVMatrixOfCrossCorrelogramsFactory(QObject *parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+private slots:
+    void updateEnabled();
 };
 
 #endif // MVCROSSCORRELOGRAMSWIDGET2_H
