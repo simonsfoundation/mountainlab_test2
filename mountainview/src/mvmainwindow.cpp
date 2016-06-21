@@ -43,6 +43,7 @@
 #include <QSettings>
 #include <QScrollArea>
 #include <QAction>
+#include <QShortcut>
 #include "textfile.h"
 
 /// TODO (LOW) put styles in central place?
@@ -160,6 +161,9 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     connect(view_agent, SIGNAL(currentEventChanged()), this, SLOT(slot_update_buttons()));
     connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(slot_update_buttons()));
     connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_buttons()));
+
+    QShortcut *closeWindowShortcut = new QShortcut(QKeySequence("Ctrl+W"), this, SLOT(close()));
+
 }
 
 MVMainWindow::~MVMainWindow()
@@ -280,10 +284,7 @@ void MVMainWindow::resizeEvent(QResizeEvent* evt)
 
 void MVMainWindow::keyPressEvent(QKeyEvent* evt)
 {
-    if ((evt->key() == Qt::Key_W) && (evt->modifiers() & Qt::ControlModifier)) {
-        this->close();
-    }
-    else if (evt->key() == Qt::Key_A) {
+    if (evt->key() == Qt::Key_A) {
         d->annotate_selected();
     }
     else if (evt->key() == Qt::Key_M) {
