@@ -108,8 +108,8 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
             button->setText(BB[i].label);
             button->setProperty("action_name", BB[i].name);
             connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
-            F->addWidget(button);
         }
+#endif
         d->m_controls.add_horizontal_divider_line(layout);
     }
     */
@@ -254,6 +254,8 @@ QAbstractButton* MVControlPanel::findButton(const QString& name)
 {
     return d->find_action_button(name);
 }
+
+QLayout *MVControlPanel::viewLayout() const { return d->m_viewLayout; }
 
 QLayout *MVControlPanel::viewLayout() const { return d->m_viewLayout; }
 

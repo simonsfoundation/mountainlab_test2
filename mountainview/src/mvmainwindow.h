@@ -63,6 +63,7 @@ private slots:
     void slot_amplitude_histogram_activated();
     //void slot_templates_clicked();
 
+#endif
     //void slot_cross_correlogram_computer_finished();
     void slot_update_buttons();
     //void slot_calculator_finished();
