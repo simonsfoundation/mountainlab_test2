@@ -62,7 +62,7 @@ public:
     void setEventFilter(FilterInfo F);
 
     QSet<int> activeClusterNumbers() const;
-    void setActiveClusterNumbers(const QSet<int> &A);
+    void setActiveClusterNumbers(const QSet<int>& A);
 
     QImage renderImage(int W, int H);
 signals:

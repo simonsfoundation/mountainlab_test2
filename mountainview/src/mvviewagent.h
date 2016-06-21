@@ -14,7 +14,6 @@
 #include <QObject>
 #include "mvutils.h"
 
-/// Witold is there a Qt struct that captures this?
 struct MVRange {
     MVRange(double min0 = 0, double max0 = 1)
     {

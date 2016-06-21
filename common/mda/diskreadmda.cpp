@@ -13,7 +13,7 @@
 #define MAX_PATH_LEN 10000
 #define DEFAULT_CHUNK_SIZE 1e6
 
-/// TODO (HIGH) make tmp directory with different name on server, so we can really test if it is doing the computation in the right place
+/// TODO (LOW) make tmp directory with different name on server, so we can really test if it is doing the computation in the right place
 
 class DiskReadMdaPrivate {
 public:

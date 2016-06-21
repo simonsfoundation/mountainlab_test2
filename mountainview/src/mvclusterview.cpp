@@ -219,20 +219,9 @@ QSet<int> MVClusterView::activeClusterNumbers() const
     return d->m_legend.activeClusterNumbers();
 }
 
-bool sets_are_equal2(const QSet<int>& A, const QSet<int>& B)
-{
-    foreach (int a, A)
-        if (!B.contains(a))
-            return false;
-    foreach (int b, B)
-        if (!A.contains(b))
-            return false;
-    return true;
-}
-
 void MVClusterView::setActiveClusterNumbers(const QSet<int>& A)
 {
-    if (!sets_are_equal2(A, d->m_legend.activeClusterNumbers())) {
+    if (A != d->m_legend.activeClusterNumbers()) {
         d->m_legend.setActiveClusterNumbers(A);
         d->m_grid_update_needed = true;
         update();
