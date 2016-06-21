@@ -23,6 +23,7 @@ public:
     QSet<QString> m_recalculate_on_option_names;
     bool m_calculation_scheduled;
     bool m_recalculate_suggested;
+    bool m_never_suggest_recalculate = false;
 
     CalculationThread m_calculation_thread;
 
@@ -75,7 +76,7 @@ bool MVAbstractView::isCalculating() const
 
 bool MVAbstractView::recalculateSuggested() const
 {
-    return d->m_recalculate_suggested;
+    return ((!d->m_never_suggest_recalculate) && (d->m_recalculate_suggested));
 }
 
 MVViewAgent* MVAbstractView::viewAgent()
@@ -97,6 +98,15 @@ void MVAbstractView::recalculate()
 {
     d->stop_calculation();
     d->schedule_calculation();
+}
+
+void MVAbstractView::neverSuggestRecalculate()
+{
+    d->m_never_suggest_recalculate = true;
+    if (d->m_recalculate_suggested) {
+        d->m_recalculate_suggested = false;
+        emit recalculateSuggestedChanged();
+    }
 }
 
 void MVAbstractView::slot_do_calculation()
@@ -158,6 +168,9 @@ void MVAbstractViewPrivate::schedule_calculation()
 
 void MVAbstractViewPrivate::set_recalculate_suggested(bool val)
 {
+    if (m_never_suggest_recalculate) {
+        val = false;
+    }
     if (m_recalculate_suggested == val)
         return;
     m_recalculate_suggested = val;

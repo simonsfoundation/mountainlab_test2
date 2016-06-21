@@ -66,7 +66,7 @@ public:
     Tabber* m_tabber; //manages the views in the two tab widgets
 
     void update_sizes(); //update sizes of all the widgets when the main window is resized
-    void add_tab(QWidget* W, QString label);
+    void add_tab(MVAbstractView* W, QString label);
     void set_tool_button_menu(QWidget* X);
 
     MVCrossCorrelogramsWidget2* open_auto_correlograms();
@@ -418,7 +418,7 @@ void MVMainWindow::slot_action_move_to_other_tab_widget()
     QAction* a = qobject_cast<QAction*>(sender());
     if (!a)
         return;
-    QWidget* W = a->parentWidget();
+    MVAbstractView* W = qobject_cast<MVAbstractView*>(a->parentWidget());
     if (!W)
         return;
     d->m_tabber->moveWidgetToOtherContainer(W);
@@ -429,7 +429,7 @@ void MVMainWindow::slot_pop_out_widget()
     QAction* a = qobject_cast<QAction*>(sender());
     if (!a)
         return;
-    QWidget* W = a->parentWidget();
+    MVAbstractView* W = qobject_cast<MVAbstractView*>(a->parentWidget());
     if (!W)
         return;
     d->m_tabber->popOutWidget(W);
@@ -479,7 +479,7 @@ void MVMainWindowPrivate::update_sizes()
     }
 }
 
-void MVMainWindowPrivate::add_tab(QWidget* W, QString label)
+void MVMainWindowPrivate::add_tab(MVAbstractView* W, QString label)
 {
     W->setFocusPolicy(Qt::StrongFocus);
 
@@ -832,9 +832,8 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
 
 void MVMainWindowPrivate::recalculate_views(QString str)
 {
-    QList<QWidget*> widgets = m_tabber->allWidgets();
-    foreach (QWidget* W, widgets) {
-        MVAbstractView* VV = qobject_cast<MVAbstractView*>(W);
+    QList<MVAbstractView*> widgets = m_tabber->allWidgets();
+    foreach (MVAbstractView* VV, widgets) {
         if (VV) {
             bool do_it = false;
             if (str == "all")
