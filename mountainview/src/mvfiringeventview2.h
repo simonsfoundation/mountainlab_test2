@@ -9,6 +9,7 @@
 
 #include <QWidget>
 #include <diskreadmda.h>
+#include "mvabstractviewfactory.h"
 #include "mvtimeseriesviewbase.h"
 
 class MVFiringEventView2Private;
@@ -36,5 +37,18 @@ slots:
 private:
     MVFiringEventView2Private* d;
 };
+
+class MVFiringEventsFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVFiringEventsFactory(QObject *parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+private slots:
+    void updateEnabled();
+};
+
 
 #endif // MVFiringEventView2_H

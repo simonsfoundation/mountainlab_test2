@@ -9,6 +9,8 @@
 #include "histogramview.h"
 #include "mvutils.h"
 #include "taskprogress.h"
+#include "mvmainwindow.h"
+#include "tabber.h"
 
 #include <QAction>
 #include <QGridLayout>
@@ -500,4 +502,90 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
             HV->setSelected(false);
         }
     }
+}
+
+MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(QObject *parent)
+    : MVAbstractViewFactory(parent)
+{
+
+}
+
+QString MVAutoCorrelogramsFactory::id() const
+{
+    return QStringLiteral("open-auto-correlograms");
+}
+
+QString MVAutoCorrelogramsFactory::name() const
+{
+    return tr("Auto-Correlograms");
+}
+
+QString MVAutoCorrelogramsFactory::title() const
+{
+    return tr("Auto-Correlograms");
+}
+
+MVAbstractView *MVAutoCorrelogramsFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(agent);
+    CrossCorrelogramOptions opts;
+    opts.mode = All_Auto_Correlograms;
+    X->setOptions(opts);
+    QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_auto_correlogram_activated()));
+    return X;
+}
+
+void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
+{
+    MVAbstractView *view = qobject_cast<MVAbstractView*>(sender());
+    if (!view) return;
+    MVMainWindow *mw = MVMainWindow::instance();
+    int k = mw->viewAgent()->currentCluster();
+    TabberTabWidget* TW = mw->tabWidget(view);
+    mw->tabber()->setCurrentContainer(TW);
+    mw->tabber()->switchCurrentContainer();
+    /// TODO: d->open_cross_correlograms(k);
+    /// mw->openView("cross-correlograms", k);
+}
+
+MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(QObject *parent)
+    : MVAbstractViewFactory(parent)
+{
+    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+            this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVMatrixOfCrossCorrelogramsFactory::id() const
+{
+    return QStringLiteral("open-matrix-of-cross-correlograms");
+}
+
+QString MVMatrixOfCrossCorrelogramsFactory::name() const
+{
+    return tr("Matrix of Cross-Correlograms");
+}
+
+QString MVMatrixOfCrossCorrelogramsFactory::title() const
+{
+    return tr("CC Matrix");
+}
+
+MVAbstractView *MVMatrixOfCrossCorrelogramsFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(agent);
+    QList<int> ks = agent->selectedClusters();
+    qSort(ks);
+    if (ks.isEmpty())
+        return X;
+    CrossCorrelogramOptions opts;
+    opts.mode = Matrix_Of_Cross_Correlograms;
+    opts.ks = ks;
+    X->setOptions(opts);
+    return X;
+}
+
+void MVMatrixOfCrossCorrelogramsFactory::updateEnabled()
+{
+    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
 }

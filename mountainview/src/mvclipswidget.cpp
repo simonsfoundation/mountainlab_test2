@@ -252,7 +252,7 @@ MVAbstractView *MVClipsFactory::createView(MVViewAgent *agent, QWidget *parent)
 }
 
 int MVClipsFactory::order() const {
-    return 1;
+    return 0;
 }
 
 void MVClipsFactory::updateEnabled()
