@@ -75,11 +75,6 @@ MVAbstractViewFactory *MVAbstractView::viewFactory() const
     return 0;
 }
 
-MVAbstractViewFactory *MVAbstractView::viewFactory() const
-{
-    return 0;
-}
-
 MVViewAgent* MVAbstractView::viewAgent()
 {
     return d->m_view_agent;

@@ -70,14 +70,6 @@ public:
     Tabber* m_tabber; //manages the views in the two tab widgets
     QList<MVAbstractViewFactory*> m_viewFactories;
     QSignalMapper* m_viewMapper;
-
-
-    void registerAllViews();
-
-    MVAbstractViewFactory* viewFactoryById(const QString &id) const;
-    MVAbstractView* openView(MVAbstractViewFactory *factory);
-
-
     void registerAllViews();
 
     MVAbstractViewFactory* viewFactoryById(const QString &id) const;
@@ -91,7 +83,7 @@ public:
     MVCrossCorrelogramsWidget2* open_matrix_of_cross_correlograms();
 
     /// TODO: (MEDIUM) implement find_nearby_events
-#endif
+
     void open_timeseries();
     //void find_nearby_events();
 
@@ -203,8 +195,6 @@ MVMainWindow::~MVMainWindow()
 void MVMainWindow::setDefaultInitialization()
 {
     openView("open-cluster-details");
-    if (f)
-        d->openView(f);
     d->m_tabber->switchCurrentContainer();
     openView("open-auto-correlograms");
 }
@@ -305,58 +295,6 @@ MVFile MVMainWindow::getMVFile()
     d->m_mv_file.setSampleRate(d->m_view_agent->sampleRate());
 
     return d->m_mv_file;
-}
-
-void MVMainWindow::registerViewFactory(MVAbstractViewFactory *f)
-{
-    // sort by group name and order
-    QList<MVAbstractViewFactory*>::iterator iter
-            = qUpperBound(d->m_viewFactories.begin(), d->m_viewFactories.end(),
-                          f, [](MVAbstractViewFactory *f1, MVAbstractViewFactory *f2) {
-            if (f1->group() < f2->group())
-                return true;
-            if (f1->group() == f2->group() && f1->order() < f2->order())
-                return true;
-            return false;
-    });
-    d->m_viewFactories.insert(iter, f);
-}
-
-void MVMainWindow::unregisterViewFactory(MVAbstractViewFactory *f)
-{
-    d->m_viewFactories.removeOne(f);
-}
-
-const QList<MVAbstractViewFactory *> &MVMainWindow::viewFactories() const
-{
-    return d->m_viewFactories;
-}
-
-MVMainWindow *MVMainWindow::instance()
-{
-    return window_instance;
-}
-
-TabberTabWidget *MVMainWindow::tabWidget(QWidget *w) const
-{
-    return d->tab_widget_of(w);
-}
-
-Tabber *MVMainWindow::tabber() const
-{
-    return d->m_tabber;
-}
-
-void MVMainWindow::openView(const QString &id)
-{
-    MVAbstractViewFactory *f = d->viewFactoryById(id);
-    if (f)
-        d->openView(f);
-}
-
-MVViewAgent *MVMainWindow::viewAgent() const
-{
-    return d->m_view_agent;
 }
 
 void MVMainWindow::registerViewFactory(MVAbstractViewFactory *f)
@@ -515,7 +453,6 @@ void MVMainWindow::slot_amplitude_histogram_activated()
 {
     //not sure what to do here
 }
-#endif
 
 void MVMainWindow::slot_update_buttons()
 {

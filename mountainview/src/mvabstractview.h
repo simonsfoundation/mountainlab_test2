@@ -41,12 +41,6 @@ public slots:
     virtual ViewFeatures viewFeatures() const;
     virtual void renderView(QPainter *painter); // add render opts
 
-    virtual MVAbstractViewFactory* viewFactory() const;
-    MVViewAgent* viewAgent();
-
-    virtual ViewFeatures viewFeatures() const;
-    virtual void renderView(QPainter *painter); // add render opts
-
 signals:
     void calculationStarted();
     void calculationFinished();

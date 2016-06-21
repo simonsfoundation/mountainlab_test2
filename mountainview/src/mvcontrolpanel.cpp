@@ -257,8 +257,6 @@ QAbstractButton* MVControlPanel::findButton(const QString& name)
 
 QLayout *MVControlPanel::viewLayout() const { return d->m_viewLayout; }
 
-QLayout *MVControlPanel::viewLayout() const { return d->m_viewLayout; }
-
 void MVControlPanel::slot_update_enabled_controls()
 {
     bool use_event_filter = d->m_controls.get_parameter_value("use_event_filter").toBool();
