@@ -104,6 +104,10 @@ bool Mda::allocate(long N1, long N2, long N3, long N4, long N5, long N6)
     d->m_data = 0;
     if (d->m_total_size > 0) {
         d->m_data = (double*)::allocate(sizeof(double) * d->m_total_size);
+        if (!d->m_data) {
+            qCritical() << QString("Unable to allocate Mda of size %1x%2x%3x%4x%5x%6 (total=%7)").arg(N1).arg(N2).arg(N3).arg(N4).arg(N5).arg(N6).arg(d->m_total_size);
+            exit(-1);
+        }
         TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", d->m_total_size);
         for (long i = 0; i < d->m_total_size; i++)
             d->m_data[i] = 0;

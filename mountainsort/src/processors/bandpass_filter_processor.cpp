@@ -12,7 +12,7 @@ bandpass_filter_Processor::bandpass_filter_Processor()
     d->q = this;
 
     this->setName("bandpass_filter");
-    this->setVersion("0.2");
+    this->setVersion("0.21");
     this->setInputFileParameters("timeseries");
     this->setOutputFileParameters("timeseries_out");
     this->setRequiredParameters("samplerate", "freq_min", "freq_max");
@@ -41,5 +41,7 @@ bool bandpass_filter_Processor::run(const QMap<QString, QVariant>& params)
     double freq_wid = params.value("freq_wid", 1000).toDouble();
     const long chunkSize = params.value("processing_chunk_size", -1).toLongLong();
     const long overlapSize = params.value("chunk_overlap_size", -1).toLongLong();
+    if (!freq_wid)
+        freq_wid = 1000; //added on 6/21/16
     return bandpass_filter0(input, output, samplerate, freq_min, freq_max, freq_wid, chunkSize, overlapSize);
 }

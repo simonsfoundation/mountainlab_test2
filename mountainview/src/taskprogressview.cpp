@@ -367,7 +367,7 @@ void TaskProgressView::showLogMessages(const QModelIndex& index)
 {
     if (index.parent().isValid())
         return;
-    QWidget *dlg = new QWidget(this);
+    QWidget* dlg = new QWidget(this);
     // forcing the widget to be a window despite having a parent so that the window
     // is destroyed with the main window
     dlg->setWindowFlags(Qt::Window);

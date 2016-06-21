@@ -34,8 +34,8 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
     long chunk_size = processingChunkSize > 0 ? processingChunkSize : PROCESSING_CHUNK_SIZE;
     long overlap_size = chunkOverlapSize > 0 ? chunkOverlapSize : PROCESSING_CHUNK_OVERLAP_SIZE;
     if (N < chunk_size) {
-      chunk_size = N+1;     // +1 is to prevent triggering another chunk
-      // note we leave the overlap_size as is, to remove end effects
+        chunk_size = N + 1; // +1 is to prevent triggering another chunk
+        // note we leave the overlap_size as is, to remove end effects
     }
 
     DiskWriteMda Y(MDAIO_TYPE_FLOAT32, output_path, M, N);
@@ -82,14 +82,14 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
                 num_timepoints_handled += qMin(chunk_size, N - timepoint);
                 if ((timer_status.elapsed() > 5000) || (num_timepoints_handled == N) || (timepoint == 0)) {
                     printf("%ld/%ld (%d%%) - Elapsed(s): RC:%g, BPF:%g, GC:%g, WC:%g, Total:%g, %d threads\n",
-                           num_timepoints_handled, N,
-                           (int)(num_timepoints_handled * 1.0 / N * 100),
-                           elapsed_times["readChunk"] * 1.0 / 1000,
-                           elapsed_times["do_bandpass_filter0"] * 1.0 / 1000,
-                           elapsed_times["getChunk"] * 1.0 / 1000,
-                           elapsed_times["writeChunk"] * 1.0 / 1000,
-                           timer_total.elapsed() * 1.0 / 1000,
-                           omp_get_num_threads());
+                        num_timepoints_handled, N,
+                        (int)(num_timepoints_handled * 1.0 / N * 100),
+                        elapsed_times["readChunk"] * 1.0 / 1000,
+                        elapsed_times["do_bandpass_filter0"] * 1.0 / 1000,
+                        elapsed_times["getChunk"] * 1.0 / 1000,
+                        elapsed_times["writeChunk"] * 1.0 / 1000,
+                        timer_total.elapsed() * 1.0 / 1000,
+                        omp_get_num_threads());
                     timer_status.restart();
                 }
             }

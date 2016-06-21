@@ -486,11 +486,14 @@ void MVMainWindowPrivate::add_tab(MVAbstractView* W, QString label)
     /// TODO (MEDIUM) put these in the tabber, in fact put all actions where they belong
     {
         QAction* a = new QAction("Move to other tab widget", W);
+        /// TODO handle "action_type" in a better way. Ask WW
+        a->setProperty("action_type", "toolbar");
         QObject::connect(a, SIGNAL(triggered(bool)), q, SLOT(slot_action_move_to_other_tab_widget()));
         W->insertAction(W->actions().value(0), a);
     }
     {
         QAction* a = new QAction("Pop out", W);
+        a->setProperty("action_type", "toolbar");
         QObject::connect(a, SIGNAL(triggered(bool)), q, SLOT(slot_pop_out_widget()));
         //W->insertAction(W->actions().value(0), a);
         W->addAction(a);

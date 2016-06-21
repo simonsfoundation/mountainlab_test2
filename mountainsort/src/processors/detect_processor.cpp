@@ -12,7 +12,7 @@ detect_Processor::detect_Processor() {
 	d->q=this;
 
 	this->setName("detect");
-	this->setVersion("0.1");
+    this->setVersion("0.12");
 	this->setInputFileParameters("timeseries");
     this->setOutputFileParameters("detect_out");
 	this->setRequiredParameters("clip_size","detect_interval","detect_threshold");
