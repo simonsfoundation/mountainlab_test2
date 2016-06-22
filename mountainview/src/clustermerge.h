@@ -7,6 +7,7 @@
 #ifndef CLUSTERMERGE
 #define CLUSTERMERGE
 
+#include <QMap>
 #include <QSet>
 
 class ClusterMergePrivate;
@@ -29,6 +30,7 @@ public:
     QList<int> representativeLabels() const;
     QList<int> getMergeGroup(int label) const;
     QString toJson() const;
+    QMap<int, int> labelMap(int K) const;
 
     QString clusterLabelText(int label);
 

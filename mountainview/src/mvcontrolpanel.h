@@ -37,8 +37,7 @@ public:
 signals:
     void userAction(QString name);
 
-private
-slots:
+private slots:
     void slot_update_enabled_controls();
     void slot_button_clicked();
     void slot_view_agent_option_changed(QString name);

@@ -32,6 +32,7 @@ public:
     QMap<QString, QVariant> m_options;
     QString m_mlproxy_url;
     QMap<QString, QColor> m_colors;
+    ClusterVisibilityRule m_visibility_rule;
 };
 
 MVViewAgent::MVViewAgent()
@@ -201,6 +202,10 @@ void MVViewAgent::setEventFilter(const MVEventFilter& EF)
 {
     if (d->m_event_filter == EF)
         return;
+    if ((!d->m_event_filter.use_event_filter) && (!EF.use_event_filter)) {
+        //if we are not using event filter, don't bother to change the other parameters
+        return;
+    }
     d->m_event_filter = EF;
     emit eventFilterChanged();
     emit filteredFiringsChanged();
@@ -232,6 +237,9 @@ void MVViewAgent::setClusterMerge(const ClusterMerge& CM)
         return;
     d->m_cluster_merge = CM;
     emit this->clusterMergeChanged();
+    if (!d->m_visibility_rule.view_merged) {
+        emit this->clusterVisibilityChanged();
+    }
 }
 
 void MVViewAgent::setClusterAttributes(const QMap<int, QJsonObject>& A)
@@ -240,6 +248,34 @@ void MVViewAgent::setClusterAttributes(const QMap<int, QJsonObject>& A)
         return;
     d->m_cluster_attributes = A;
     emit this->clusterAttributesChanged();
+    /// TODO (LOW) only emit this if there really was a change
+    if (!d->m_visibility_rule.invisibility_assessments.isEmpty()) {
+        emit this->clusterVisibilityChanged();
+    }
+}
+
+ClusterVisibilityRule MVViewAgent::visibilityRule()
+{
+    return d->m_visibility_rule;
+}
+
+void MVViewAgent::setVisibilityRule(const ClusterVisibilityRule& rule)
+{
+    if (d->m_visibility_rule == rule)
+        return;
+    d->m_visibility_rule = rule;
+    emit this->clusterVisibilityChanged();
+}
+
+QList<int> MVViewAgent::visibleClusters(int K)
+{
+    QList<int> ret;
+    for (int k = 1; k <= K; k++) {
+        if (d->m_visibility_rule.isVisible(this, k)) {
+            ret << k;
+        }
+    }
+    return ret;
 }
 
 void MVViewAgent::setCurrentEvent(const MVEvent& evt)
@@ -377,4 +413,52 @@ MVRange MVRange::operator*(double scale)
     double center = (min + max) / 2;
     double span = (max - min);
     return MVRange(center - span / 2 * scale, center + span / 2 * scale);
+}
+
+ClusterVisibilityRule::ClusterVisibilityRule()
+{
+}
+
+ClusterVisibilityRule::ClusterVisibilityRule(const ClusterVisibilityRule& other)
+{
+    copy_from(other);
+}
+
+ClusterVisibilityRule::~ClusterVisibilityRule()
+{
+}
+
+void ClusterVisibilityRule::operator=(const ClusterVisibilityRule& other)
+{
+    copy_from(other);
+}
+
+bool ClusterVisibilityRule::operator==(const ClusterVisibilityRule& other) const
+{
+    if (this->invisibility_assessments != other.invisibility_assessments)
+        return false;
+    if (this->view_merged != other.view_merged)
+        return false;
+    return true;
+}
+
+void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
+{
+    this->invisibility_assessments = other.invisibility_assessments;
+    this->view_merged = other.view_merged;
+}
+
+bool ClusterVisibilityRule::isVisible(MVContext* context, int cluster_num) const
+{
+    /// Witold, is there a method to avoid copying the full QMap<int,QJsonObject> object in this statement?
+    QJsonObject obj = context->clusterAttributes()[cluster_num];
+    QString assessment = obj["assessment"].toString();
+    if (this->invisibility_assessments.contains(assessment.toLower()))
+        return false;
+    if (!this->view_merged) {
+        /// Witold, same question as above
+        if (context->clusterMerge().representativeLabel(cluster_num) != cluster_num)
+            return false;
+    }
+    return true;
 }

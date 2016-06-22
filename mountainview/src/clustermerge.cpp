@@ -176,6 +176,15 @@ QString ClusterMerge::toJson() const
     return QJsonDocument(X).toJson();
 }
 
+QMap<int, int> ClusterMerge::labelMap(int K) const
+{
+    QMap<int, int> ret;
+    for (int k = 1; k <= K; k++) {
+        ret[k] = this->representativeLabel(k);
+    }
+    return ret;
+}
+
 QString ClusterMerge::clusterLabelText(int label)
 {
     QList<int> grp = this->getMergeGroup(label);

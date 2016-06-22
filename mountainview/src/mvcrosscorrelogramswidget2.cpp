@@ -36,6 +36,7 @@ public:
     MVEventFilter event_filter;
     CrossCorrelogramOptions options;
     int max_dt;
+    ClusterMerge cluster_merge;
 
     //output
     QList<Correlogram> correlograms;
@@ -72,6 +73,8 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
 
     this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(view_agent, SIGNAL(clusterMergeChanged()));
+    this->recalculateOn(view_agent, SIGNAL(clusterVisibilityChanged()));
     this->recalculateOnOptionChanged("cc_max_dt_msec");
 
     QGridLayout* GL = new QGridLayout;
@@ -114,6 +117,7 @@ void MVCrossCorrelogramsWidget2::prepareCalculation()
     d->m_computer.event_filter = viewAgent()->eventFilter();
     d->m_computer.options = d->m_options;
     d->m_computer.max_dt = viewAgent()->option("cc_max_dt_msec", 100).toDouble() / 1000 * viewAgent()->sampleRate();
+    d->m_computer.cluster_merge = viewAgent()->clusterMerge();
 }
 
 void MVCrossCorrelogramsWidget2::runCalculation()
@@ -420,13 +424,19 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
     //assemble the times and labels arrays
     task.setProgress(0.2);
-    for (int n = 0; n < L; n++) {
+    for (long n = 0; n < L; n++) {
         times << firings.value(1, n);
         labels << (int)firings.value(2, n);
     }
 
     //compute K (the maximum label)
     int K = compute_max(labels);
+
+    //handle the merge
+    QMap<int, int> label_map = cluster_merge.labelMap(K);
+    for (long n = 0; n < L; n++) {
+        labels[n] = label_map[labels[n]];
+    }
 
     //Assemble the correlogram objects depending on mode
     if (options.mode == All_Auto_Correlograms) {

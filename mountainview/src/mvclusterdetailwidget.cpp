@@ -162,6 +162,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(clusterMergeChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(update()));
+    connect(view_agent, SIGNAL(clusterVisibilityChanged()), this, SLOT(update()));
 
     recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
     recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
@@ -856,14 +857,16 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     QList<int> selected_clusters = q->viewAgent()->selectedClusters();
     for (int i = 0; i < cluster_data_merged.count(); i++) {
         ClusterData CD = cluster_data_merged[i];
-        ClusterView* V = new ClusterView(q, this);
-        V->setStdevShading(m_stdev_shading);
-        V->setHighlighted(CD.k == q->viewAgent()->currentCluster());
-        V->setSelected(selected_clusters.contains(CD.k));
-        V->setHovered(CD.k == m_hovered_k);
-        V->setClusterData(CD);
-        V->setAttributes(cluster_attributes[CD.k]);
-        m_views << V;
+        if (q->viewAgent()->visibilityRule().isVisible(q->viewAgent(), CD.k)) {
+            ClusterView* V = new ClusterView(q, this);
+            V->setStdevShading(m_stdev_shading);
+            V->setHighlighted(CD.k == q->viewAgent()->currentCluster());
+            V->setSelected(selected_clusters.contains(CD.k));
+            V->setHovered(CD.k == m_hovered_k);
+            V->setClusterData(CD);
+            V->setAttributes(cluster_attributes[CD.k]);
+            m_views << V;
+        }
     }
 
     double total_space_needed = 0;
