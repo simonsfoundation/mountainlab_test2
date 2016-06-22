@@ -21,6 +21,7 @@ public:
     MVAbstractView* q;
     MVViewAgent* m_view_agent;
     QSet<QString> m_recalculate_on_option_names;
+    QSet<QString> m_suggest_recalculate_on_option_names;
     bool m_calculation_scheduled;
     bool m_recalculate_suggested;
     bool m_never_suggest_recalculate = false;
@@ -75,14 +76,20 @@ MVViewAgent* MVAbstractView::viewAgent()
     return d->m_view_agent;
 }
 
-void MVAbstractView::recalculateOnOptionChanged(QString name)
+void MVAbstractView::recalculateOnOptionChanged(QString name, bool suggest_only)
 {
-    d->m_recalculate_on_option_names.insert(name);
+    if (suggest_only)
+        d->m_suggest_recalculate_on_option_names.insert(name);
+    else
+        d->m_recalculate_on_option_names.insert(name);
 }
 
-void MVAbstractView::recalculateOn(QObject* obj, const char* signal)
+void MVAbstractView::recalculateOn(QObject* obj, const char* signal, bool suggest_only)
 {
-    QObject::connect(obj, signal, this, SLOT(slot_suggest_recalculate()));
+    if (suggest_only)
+        QObject::connect(obj, signal, this, SLOT(slot_suggest_recalculate()));
+    else
+        QObject::connect(obj, signal, this, SLOT(recalculate()));
 }
 
 void MVAbstractView::recalculate()
@@ -127,6 +134,9 @@ void MVAbstractView::slot_calculation_finished()
 void MVAbstractView::slot_view_agent_option_changed(QString name)
 {
     if (d->m_recalculate_on_option_names.contains(name)) {
+        recalculate();
+    }
+    if (d->m_suggest_recalculate_on_option_names.contains(name)) {
         slot_suggest_recalculate();
     }
 }

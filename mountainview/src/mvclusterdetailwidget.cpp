@@ -139,6 +139,7 @@ public:
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
     void toggle_stdev_shading();
+    void shift_select_clusters_between(int k1, int k2);
 
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
@@ -162,6 +163,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(clusterMergeChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(update()));
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(update()));
+    connect(view_agent, SIGNAL(clusterVisibilityChanged()), this, SLOT(update()));
 
     recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
     recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
@@ -321,25 +323,20 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_vscale_factor *= factor;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_vscale_factor /= factor;
         update();
-    }
-    else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
+    } else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
         d->zoom(1.1);
-    }
-    else if (evt->key() == Qt::Key_Minus) {
+    } else if (evt->key() == Qt::Key_Minus) {
         d->zoom(1 / 1.1);
-    }
-    else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
+    } else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
         QList<int> ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             ks << d->m_views[i]->k();
         }
         viewAgent()->setSelectedClusters(ks);
-    }
-    else if (evt->key() == Qt::Key_Left) {
+    } else if (evt->key() == Qt::Key_Left) {
         int view_index = d->get_current_view_index();
         if (view_index > 0) {
             int k = d->m_views[view_index - 1]->k();
@@ -351,8 +348,7 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             viewAgent()->setSelectedClusters(ks);
             viewAgent()->setCurrentCluster(k);
         }
-    }
-    else if (evt->key() == Qt::Key_Right) {
+    } else if (evt->key() == Qt::Key_Right) {
         int view_index = d->get_current_view_index();
         if ((view_index >= 0) && (view_index + 1 < d->m_views.count())) {
             int k = d->m_views[view_index + 1]->k();
@@ -364,15 +360,13 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             viewAgent()->setSelectedClusters(ks);
             viewAgent()->setCurrentCluster(k);
         }
-    }
-    else if (evt->matches(QKeySequence::SelectAll)) {
+    } else if (evt->matches(QKeySequence::SelectAll)) {
         QList<int> all_ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             all_ks << d->m_views[i]->k();
         }
         viewAgent()->setSelectedClusters(all_ks);
-    }
-    else
+    } else
         evt->ignore();
 }
 
@@ -400,7 +394,12 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             int k = d->m_views[view_index]->k();
-            viewAgent()->clickCluster(k, evt->modifiers());
+            if (evt->modifiers() & Qt::ShiftModifier) {
+                int k0 = viewAgent()->currentCluster();
+                d->shift_select_clusters_between(k0, k);
+            } else {
+                viewAgent()->clickCluster(k, evt->modifiers());
+            }
         }
     }
 
@@ -490,8 +489,7 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
     int view_index = d->find_view_index_at(pt);
     if (view_index >= 0) {
         d->set_hovered_k(d->m_views[view_index]->k());
-    }
-    else {
+    } else {
         d->set_hovered_k(-1);
     }
 }
@@ -607,8 +605,7 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
         m_scroll_x = x0 - 100;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    }
-    else if (x0 > m_scroll_x + q->width()) {
+    } else if (x0 > m_scroll_x + q->width()) {
         m_scroll_x = x0 - q->width() + 100;
     }
 }
@@ -623,8 +620,7 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
         m_scroll_x = view->x_position_before_scaling * m_space_ratio - current_screen_x;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    }
-    else {
+    } else {
         m_space_ratio *= factor;
     }
     q->update();
@@ -846,8 +842,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     if (q->viewAgent()) {
         cluster_data_merged = merge_cluster_data(q->viewAgent()->clusterMerge(), m_cluster_data);
         cluster_attributes = q->viewAgent()->clusterAttributes();
-    }
-    else {
+    } else {
         cluster_data_merged = m_cluster_data;
     }
 
@@ -856,14 +851,16 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     QList<int> selected_clusters = q->viewAgent()->selectedClusters();
     for (int i = 0; i < cluster_data_merged.count(); i++) {
         ClusterData CD = cluster_data_merged[i];
-        ClusterView* V = new ClusterView(q, this);
-        V->setStdevShading(m_stdev_shading);
-        V->setHighlighted(CD.k == q->viewAgent()->currentCluster());
-        V->setSelected(selected_clusters.contains(CD.k));
-        V->setHovered(CD.k == m_hovered_k);
-        V->setClusterData(CD);
-        V->setAttributes(cluster_attributes[CD.k]);
-        m_views << V;
+        if (q->viewAgent()->visibilityRule().isVisible(q->viewAgent(), CD.k)) {
+            ClusterView* V = new ClusterView(q, this);
+            V->setStdevShading(m_stdev_shading);
+            V->setHighlighted(CD.k == q->viewAgent()->currentCluster());
+            V->setSelected(selected_clusters.contains(CD.k));
+            V->setHovered(CD.k == m_hovered_k);
+            V->setClusterData(CD);
+            V->setAttributes(cluster_attributes[CD.k]);
+            m_views << V;
+        }
     }
 
     double total_space_needed = 0;
@@ -949,6 +946,23 @@ void MVClusterDetailWidgetPrivate::toggle_stdev_shading()
     q->update();
 }
 
+void MVClusterDetailWidgetPrivate::shift_select_clusters_between(int k1, int k2)
+{
+    QSet<int> selected_clusters = q->viewAgent()->selectedClusters().toSet();
+    int ind1 = find_view_index_for_k(k1);
+    int ind2 = find_view_index_for_k(k2);
+    if ((ind1 >= 0) && (ind2 >= 0)) {
+        for (int ii = qMin(ind1, ind2); ii <= qMax(ind1, ind2); ii++) {
+            selected_clusters.insert(m_views[ii]->k());
+        }
+    } else if (ind1 >= 0) {
+        selected_clusters.insert(m_views[ind1]->k());
+    } else if (ind2 >= 0) {
+        selected_clusters.insert(m_views[ind2]->k());
+    }
+    q->viewAgent()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
+}
+
 ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterData main_CD)
 {
     ClusterData ret;
@@ -1003,8 +1017,7 @@ QList<ClusterData> MVClusterDetailWidgetPrivate::merge_cluster_data(const Cluste
                 }
             }
             ret << combine_cluster_data_group(group, CD[i]);
-        }
-        else {
+        } else {
             ClusterData CD0;
             CD0.k = CD[i].k;
             CD0.channel = CD[i].channel;
@@ -1043,14 +1056,11 @@ QColor ClusterView::get_cluster_assessment_text_color(QString aa)
     Q_UNUSED(aa)
     if (aa.toLower() == "noise") {
         return Qt::darkGray;
-    }
-    else if (aa.toLower() == "good") {
+    } else if (aa.toLower() == "good") {
         return Qt::darkGreen;
-    }
-    else if (aa.toLower() == "mua") {
+    } else if (aa.toLower() == "mua") {
         return Qt::darkBlue;
-    }
-    else {
+    } else {
         return Qt::black;
     }
 }

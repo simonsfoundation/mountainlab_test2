@@ -253,12 +253,15 @@ void HistogramView::paintEvent(QPaintEvent* evt)
 void HistogramView::mousePressEvent(QMouseEvent* evt)
 {
     Q_UNUSED(evt);
+    emit clicked(evt->modifiers());
+    /*
     if ((evt->modifiers() & Qt::ControlModifier) || (evt->modifiers() & Qt::ShiftModifier)) {
         emit control_clicked();
     }
     else {
         emit clicked();
     }
+    */
 }
 
 void HistogramView::mouseMoveEvent(QMouseEvent* evt)

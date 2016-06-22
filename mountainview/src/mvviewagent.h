@@ -14,6 +14,10 @@
 #include <QObject>
 #include "mvutils.h"
 
+/// TODO: (MEDIUM) rename MVViewAgent to MVContext throughout -- for now we use typedef
+class MVViewAgent;
+typedef MVViewAgent MVContext;
+
 struct MVRange {
     MVRange(double min0 = 0, double max0 = 1)
     {
@@ -44,6 +48,22 @@ struct MVEventFilter {
     QJsonObject toJsonObject() const;
 };
 
+class ClusterVisibilityRule {
+public:
+    ClusterVisibilityRule();
+    ClusterVisibilityRule(const ClusterVisibilityRule& other);
+    virtual ~ClusterVisibilityRule();
+    void operator=(const ClusterVisibilityRule& other);
+    bool operator==(const ClusterVisibilityRule& other) const;
+    bool isVisible(const MVContext* context, int cluster_num) const;
+
+    QSet<QString> invisibility_assessments;
+    bool view_merged = true;
+
+private:
+    void copy_from(const ClusterVisibilityRule& other);
+};
+
 #include "mvmisc.h"
 
 class MVViewAgentPrivate;
@@ -61,6 +81,12 @@ public:
     QMap<int, QJsonObject> clusterAttributes() const;
     void setClusterMerge(const ClusterMerge& CM);
     void setClusterAttributes(const QMap<int, QJsonObject>& A);
+
+    /////////////////////////////////////////////////
+    ClusterVisibilityRule visibilityRule() const;
+    QList<int> visibleClusters(int K) const;
+    bool clusterIsVisible(int k) const;
+    void setVisibilityRule(const ClusterVisibilityRule& rule);
 
     /////////////////////////////////////////////////
     MVEvent currentEvent() const;
@@ -127,6 +153,7 @@ signals:
     void currentTimepointChanged();
     void currentTimeRangeChanged();
     void optionChanged(QString name);
+    void clusterVisibilityChanged();
 
 private:
     MVViewAgentPrivate* d;

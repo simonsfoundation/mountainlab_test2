@@ -57,11 +57,7 @@ protected:
     void leaveEvent(QEvent* evt);
     void mouseDoubleClickEvent(QMouseEvent* evt);
 signals:
-    ///The histogram was somewhere clicked
-    void clicked();
-    ///The histogram was somewhere control-clicked
-    void control_clicked();
-    ///The histogram was somewhere double-clicked (or enter was pressed, not sure??)
+    void clicked(Qt::KeyboardModifiers modifiers);
     void activated();
 
     void signalExportHistogramMatrixImage();

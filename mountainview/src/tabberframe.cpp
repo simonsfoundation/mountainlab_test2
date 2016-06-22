@@ -43,7 +43,7 @@ TabberFrame::TabberFrame(MVAbstractView* view)
     }
     {
         QAction* A = new QAction(QIcon(":/images/calculator-no.png"), "", this);
-        A->setToolTip("Never recalculate this view");
+        A->setToolTip("Lock this view so that it will not auto-recalculate");
         QObject::connect(A, SIGNAL(triggered(bool)), view, SLOT(neverSuggestRecalculate()));
         d->m_never_recalc_action = A;
     }
