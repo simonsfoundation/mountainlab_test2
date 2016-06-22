@@ -24,7 +24,8 @@ public:
     bool isCalculating() const;
     bool recalculateSuggested() const;
 
-public slots:
+public
+slots:
     void recalculate();
     void neverSuggestRecalculate();
 
@@ -39,10 +40,11 @@ protected:
     virtual void onCalculationFinished() = 0;
 
     MVViewAgent* viewAgent();
-    void recalculateOnOptionChanged(QString name);
-    void recalculateOn(QObject*, const char* signal);
+    void recalculateOnOptionChanged(QString name, bool suggest_only = true);
+    void recalculateOn(QObject*, const char* signal, bool suggest_only = true);
 
-private slots:
+private
+slots:
     void slot_do_calculation();
     void slot_calculation_finished();
     void slot_view_agent_option_changed(QString name);

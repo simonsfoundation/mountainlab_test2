@@ -6,6 +6,9 @@
 #include "histogramview.h"
 #include <QWheelEvent>
 
+/// TODO zoom in/out icons
+/// TODO (HIGH) figure out panning? Should it be per view?
+
 struct Histogram {
     int k;
     QList<float> data;
@@ -49,6 +52,8 @@ MVAmpHistView::MVAmpHistView(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
 
     this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(view_agent, SIGNAL(clusterMergeChanged()), false);
+    this->recalculateOn(view_agent, SIGNAL(clusterVisibilityChanged()), false);
 
     QGridLayout* GL = new QGridLayout;
     GL->setHorizontalSpacing(20);
@@ -122,13 +127,22 @@ void MVAmpHistView::onCalculationFinished()
 
     int num_bins = 200; //how to choose this?
 
-    int NUM = d->m_histograms.count();
+    QList<int> inds_to_use;
+    for (int ii = 0; ii < d->m_histograms.count(); ii++) {
+        int k0 = d->m_histograms[ii].k;
+        if (viewAgent()->clusterIsVisible(k0)) {
+            inds_to_use << ii;
+        }
+    }
+
+    int NUM = inds_to_use.count();
     int num_rows = (int)sqrt(NUM);
     if (num_rows < 1)
         num_rows = 1;
     int num_cols = (NUM + num_rows - 1) / num_rows;
     d->m_num_columns = num_cols;
-    for (int ii = 0; ii < d->m_histograms.count(); ii++) {
+    for (int jj = 0; jj < inds_to_use.count(); jj++) {
+        int ii = inds_to_use[jj];
         HistogramView* HV = new HistogramView;
         HV->setData(d->m_histograms[ii].data);
         HV->setColors(viewAgent()->colors());
@@ -138,8 +152,8 @@ void MVAmpHistView::onCalculationFinished()
         HV->setTitle(title0);
         HV->setDrawVerticalAxisAtZero(true);
         HV->setXRange(MVRange(-max00, max00));
-        int row0 = (ii) / num_cols;
-        int col0 = (ii) % num_cols;
+        int row0 = (jj) / num_cols;
+        int col0 = (jj) % num_cols;
         GL->addWidget(HV, row0, col0);
         HV->setProperty("row", row0);
         HV->setProperty("col", col0);
@@ -159,13 +173,15 @@ void MVAmpHistView::onCalculationFinished()
 
 void MVAmpHistView::slot_histogram_view_control_clicked()
 {
-    d->do_highlighting();
+    int index = sender()->property("index").toInt();
+    int k = d->m_histograms.value(index).k;
+
+    viewAgent()->clickCluster(k, Qt::ControlModifier);
 }
 
 void MVAmpHistView::slot_histogram_view_clicked()
 {
     int index = sender()->property("index").toInt();
-    //int k1 = d->m_labels2.value(index);
     int k = d->m_histograms.value(index).k;
 
     viewAgent()->clickCluster(k, Qt::NoModifier);
@@ -230,14 +246,12 @@ void MVAmpHistViewPrivate::do_highlighting()
         int index = HV->property("index").toInt();
         if (m_histograms.value(index).k == q->viewAgent()->currentCluster()) {
             HV->setCurrent(true);
-        }
-        else {
+        } else {
             HV->setCurrent(false);
         }
         if (selected_clusters.contains(m_histograms.value(index).k)) {
             HV->setSelected(true);
-        }
-        else {
+        } else {
             HV->setSelected(false);
         }
     }
@@ -287,8 +301,7 @@ void MVAmpHistView::wheelEvent(QWheelEvent* evt)
     double zoom_factor = 1;
     if (evt->delta() > 0) {
         zoom_factor *= 1.2;
-    }
-    else if (evt->delta() < 0) {
+    } else if (evt->delta() < 0) {
         zoom_factor /= 1.2;
     }
     for (int i = 0; i < d->m_histogram_views.count(); i++) {

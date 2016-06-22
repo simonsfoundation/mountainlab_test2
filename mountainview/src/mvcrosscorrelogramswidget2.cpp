@@ -73,8 +73,8 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
     QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
 
     this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
-    this->recalculateOn(view_agent, SIGNAL(clusterMergeChanged()));
-    this->recalculateOn(view_agent, SIGNAL(clusterVisibilityChanged()));
+    this->recalculateOn(view_agent, SIGNAL(clusterMergeChanged()), false);
+    this->recalculateOn(view_agent, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOnOptionChanged("cc_max_dt_msec");
 
     QGridLayout* GL = new QGridLayout;
@@ -170,13 +170,24 @@ void MVCrossCorrelogramsWidget2::onCalculationFinished()
         num_bins = 2000;
     float time_width = (bin_max - bin_min) / sample_freq * 1000;
 
-    int NUM = d->m_correlograms.count();
+    QList<int> inds_to_use;
+    for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
+        int k1 = d->m_correlograms[ii].k1;
+        int k2 = d->m_correlograms[ii].k2;
+        if ((viewAgent()->clusterIsVisible(k1)) && (viewAgent()->clusterIsVisible(k2))) {
+            inds_to_use << ii;
+        }
+    }
+
+    int NUM = inds_to_use.count();
     int num_rows = (int)sqrt(NUM);
     if (num_rows < 1)
         num_rows = 1;
     int num_cols = (NUM + num_rows - 1) / num_rows;
     d->m_num_columns = num_cols;
-    for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
+
+    for (int jj = 0; jj < inds_to_use.count(); jj++) {
+        int ii = inds_to_use[jj];
         HistogramView* HV = new HistogramView;
         HV->setData(d->m_correlograms[ii].data);
         HV->setColors(viewAgent()->colors());
@@ -184,8 +195,8 @@ void MVCrossCorrelogramsWidget2::onCalculationFinished()
         HV->setBins(bin_min, bin_max, num_bins);
         QString title0 = QString("%1/%2").arg(d->m_correlograms[ii].k1).arg(d->m_correlograms[ii].k2);
         HV->setTitle(title0);
-        int row0 = (ii) / num_cols;
-        int col0 = (ii) % num_cols;
+        int row0 = (jj) / num_cols;
+        int col0 = (jj) % num_cols;
         GL->addWidget(HV, row0, col0);
         HV->setProperty("row", row0);
         HV->setProperty("col", col0);
@@ -212,12 +223,12 @@ void MVCrossCorrelogramsWidget2::setOptions(CrossCorrelogramOptions opts)
 
 bool sets_match2(const QSet<int>& S1, const QSet<int>& S2)
 {
-    foreach (int a, S1)
-        if (!S2.contains(a))
-            return false;
-    foreach (int a, S2)
-        if (!S1.contains(a))
-            return false;
+    foreach(int a, S1)
+    if (!S2.contains(a))
+        return false;
+    foreach(int a, S2)
+    if (!S1.contains(a))
+        return false;
     return true;
 }
 
@@ -309,53 +320,18 @@ void TimeScaleWidget2::paintEvent(QPaintEvent* evt)
 void MVCrossCorrelogramsWidget2::slot_histogram_view_control_clicked()
 {
     int index = sender()->property("index").toInt();
-    //int k1 = d->m_labels2.value(index);
     int k1 = d->m_correlograms.value(index).k1;
-    //int k2 = d->m_correlograms.value(index).k2;
 
     viewAgent()->clickCluster(k1, Qt::ControlModifier);
-
-    /*
-    //int k2 = d->m_labels2.value(index);
-    if (d->m_current_index == index) {
-        setCurrentIndex(-1);
-    }
-    if (!d->m_selected_indices.contains(index)) {
-        d->m_selected_indices << index;
-        d->do_highlighting();
-        if (d->m_current_index <= 0)
-            setCurrentIndex(index);
-    } else {
-        d->m_selected_indices.remove(index);
-        d->do_highlighting();
-    }
-    emit selectedIndicesChanged();
-    */
 }
 
 void MVCrossCorrelogramsWidget2::slot_histogram_view_clicked()
 {
-
     int index = sender()->property("index").toInt();
     //int k1 = d->m_labels2.value(index);
     int k2 = d->m_correlograms.value(index).k2;
 
     viewAgent()->clickCluster(k2, Qt::NoModifier);
-
-    /*
-    int index = sender()->property("index").toInt();
-    d->m_selected_indices.clear();
-    if (d->m_current_index == index) {
-    } else {
-        setCurrentIndex(index);
-        d->m_selected_indices.clear();
-        d->m_selected_indices << index;
-        d->do_highlighting();
-        emit selectedIndicesChanged();
-        update();
-    }
-    emit selectedIndicesChanged();
-    */
 }
 
 void MVCrossCorrelogramsWidget2::slot_histogram_view_activated()
@@ -446,8 +422,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == Cross_Correlograms) {
+    } else if (options.mode == Cross_Correlograms) {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram CC;
@@ -455,8 +430,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == Matrix_Of_Cross_Correlograms) {
+    } else if (options.mode == Matrix_Of_Cross_Correlograms) {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram CC;
@@ -499,14 +473,12 @@ void MVCrossCorrelogramsWidget2Private::do_highlighting()
         int index = HV->property("index").toInt();
         if (m_correlograms.value(index).k2 == q->viewAgent()->currentCluster()) {
             HV->setCurrent(true);
-        }
-        else {
+        } else {
             HV->setCurrent(false);
         }
         if (selected_clusters.contains(m_correlograms.value(index).k2)) {
             HV->setSelected(true);
-        }
-        else {
+        } else {
             HV->setSelected(false);
         }
     }

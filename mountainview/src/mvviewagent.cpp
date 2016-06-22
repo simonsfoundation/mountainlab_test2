@@ -254,9 +254,25 @@ void MVViewAgent::setClusterAttributes(const QMap<int, QJsonObject>& A)
     }
 }
 
-ClusterVisibilityRule MVViewAgent::visibilityRule()
+ClusterVisibilityRule MVViewAgent::visibilityRule() const
 {
     return d->m_visibility_rule;
+}
+
+QList<int> MVViewAgent::visibleClusters(int K) const
+{
+    QList<int> ret;
+    for (int k = 1; k <= K; k++) {
+        if (this->clusterIsVisible(k)) {
+            ret << k;
+        }
+    }
+    return ret;
+}
+
+bool MVViewAgent::clusterIsVisible(int k) const
+{
+    return d->m_visibility_rule.isVisible(this, k);
 }
 
 void MVViewAgent::setVisibilityRule(const ClusterVisibilityRule& rule)
@@ -265,17 +281,6 @@ void MVViewAgent::setVisibilityRule(const ClusterVisibilityRule& rule)
         return;
     d->m_visibility_rule = rule;
     emit this->clusterVisibilityChanged();
-}
-
-QList<int> MVViewAgent::visibleClusters(int K)
-{
-    QList<int> ret;
-    for (int k = 1; k <= K; k++) {
-        if (d->m_visibility_rule.isVisible(this, k)) {
-            ret << k;
-        }
-    }
-    return ret;
 }
 
 void MVViewAgent::setCurrentEvent(const MVEvent& evt)
@@ -383,16 +388,14 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        }
-        else {
+        } else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    }
-    else {
+    } else {
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
     }
@@ -448,7 +451,7 @@ void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
     this->view_merged = other.view_merged;
 }
 
-bool ClusterVisibilityRule::isVisible(MVContext* context, int cluster_num) const
+bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num) const
 {
     /// Witold, is there a method to avoid copying the full QMap<int,QJsonObject> object in this statement?
     QJsonObject obj = context->clusterAttributes()[cluster_num];

@@ -55,7 +55,7 @@ public:
     virtual ~ClusterVisibilityRule();
     void operator=(const ClusterVisibilityRule& other);
     bool operator==(const ClusterVisibilityRule& other) const;
-    bool isVisible(MVContext* context, int cluster_num) const;
+    bool isVisible(const MVContext* context, int cluster_num) const;
 
     QSet<QString> invisibility_assessments;
     bool view_merged = true;
@@ -83,9 +83,10 @@ public:
     void setClusterAttributes(const QMap<int, QJsonObject>& A);
 
     /////////////////////////////////////////////////
-    ClusterVisibilityRule visibilityRule();
+    ClusterVisibilityRule visibilityRule() const;
+    QList<int> visibleClusters(int K) const;
+    bool clusterIsVisible(int k) const;
     void setVisibilityRule(const ClusterVisibilityRule& rule);
-    QList<int> visibleClusters(int K);
 
     /////////////////////////////////////////////////
     MVEvent currentEvent() const;

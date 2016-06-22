@@ -47,7 +47,8 @@ protected:
 signals:
     ///A cluster has been double-clicked (or enter pressed?)
     void signalTemplateActivated();
-private slots:
+private
+slots:
     //void slot_context_menu(const QPoint& pos);
     void slot_export_image();
     void slot_toggle_stdev_shading();
