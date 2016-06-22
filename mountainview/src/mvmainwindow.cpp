@@ -285,7 +285,6 @@ void MVMainWindow::keyPressEvent(QKeyEvent* evt)
         d->unmerge_selected();
     } else
         evt->ignore();
-    }
 }
 
 void MVMainWindow::slot_control_panel_user_action(QString str)
