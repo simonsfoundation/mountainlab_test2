@@ -62,7 +62,8 @@ signals:
 
     void signalExportHistogramMatrixImage();
 
-private slots:
+private
+slots:
     void slot_context_menu(const QPoint& pos);
 
 private:

@@ -52,7 +52,8 @@ HEADERS += \
     mvabstractview.h \
     mvmisc.h \
     mvamphistview.h \
-    tabberframe.h
+    tabberframe.h \
+    mvclustercontextmenu.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvutils.cpp \
@@ -88,7 +89,8 @@ SOURCES += mountainviewmain.cpp \
     mvabstractview.cpp \
     mvmisc.cpp \
     mvamphistview.cpp \
-    tabberframe.cpp
+    tabberframe.cpp \
+    mvclustercontextmenu.cpp
 
 #HEADERS += sstimeserieswidget.h \
 #    sstimeseriesview.h \

@@ -76,7 +76,8 @@ void ImageSaveDialog::presentImage(const QImage& img)
     dlg.exec();
 }
 
-static QPixmap fit_display(const QImage& img) {
+static QPixmap fit_display(const QImage& img)
+{
     static QRect screenRect;
     static int margin = 20;
     QPixmap result = QPixmap::fromImage(img);
@@ -106,8 +107,7 @@ void ImageSaveDialog::slot_save()
         full_fname = QFileDialog::getSaveFileName(0, "Save image", dirname, "Image Files (*.png *.jpg *.bmp)");
         if (full_fname.isEmpty())
             return;
-    }
-    else {
+    } else {
         full_fname = dirname + "/" + fname;
     }
     QSettings settings("SCDA", "mountainview");

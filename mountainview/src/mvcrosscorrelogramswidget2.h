@@ -53,10 +53,11 @@ public:
     QImage renderImage(int W = 0, int H = 0);
 
     void paintEvent(QPaintEvent* evt);
-    void keyPressEvent(QKeyEvent *evt);
+    void keyPressEvent(QKeyEvent* evt);
 signals:
     void histogramActivated();
-private slots:
+private
+slots:
     void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);
     void slot_histogram_view_activated();
     void slot_export_image();

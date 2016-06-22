@@ -82,7 +82,6 @@ public:
     /// TODO: (MEDIUM) implement find_nearby_events
     //void find_nearby_events();
 
-    void annotate_selected();
     void merge_selected();
     void unmerge_selected();
 
@@ -195,7 +194,8 @@ void MVMainWindow::setMVFile(MVFile ff)
     d->m_view_agent->clear();
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
-    foreach (QString name, timeseries_names) {
+    foreach(QString name, timeseries_names)
+    {
         DiskReadMda TS(d->m_mv_file.timeseriesPathResolved(name));
         d->m_view_agent->addTimeseries(name, DiskReadMda(TS));
     }
@@ -207,8 +207,7 @@ void MVMainWindow::setMVFile(MVFile ff)
     //d->m_control_panel->setEventFilter();
     if (!d->m_mv_file.currentTimeseriesName().isEmpty()) {
         d->m_view_agent->setCurrentTimeseriesName(d->m_mv_file.currentTimeseriesName());
-    }
-    else {
+    } else {
         d->m_view_agent->setCurrentTimeseriesName(timeseries_names.value(0));
     }
 
@@ -218,25 +217,22 @@ void MVMainWindow::setMVFile(MVFile ff)
         QJsonObject ann0 = d->m_mv_file.annotations();
         if (ann0.contains("cluster_attributes")) {
             QJsonObject obj2 = ann0["cluster_attributes"].toObject();
-            QMap<int, QJsonObject> CA;
             QStringList keys = obj2.keys();
-            foreach (QString key, keys) {
+            foreach(QString key, keys)
+            {
                 bool ok;
                 int num = key.toInt(&ok);
                 if (ok) {
-                    CA[num] = obj2[key].toObject();
+                    d->m_view_agent->setClusterAttributes(num, obj2[key].toObject());
                 }
             }
-            d->m_view_agent->setClusterAttributes(CA);
         }
-        else
-            d->m_view_agent->setClusterAttributes(QMap<int, QJsonObject>());
+
         if (ann0.contains("cluster_merge")) {
             QJsonArray CM = ann0["cluster_merge"].toArray();
             QString json = QJsonDocument(CM).toJson(QJsonDocument::Compact);
             d->m_view_agent->setClusterMerge(ClusterMerge::fromJson(json));
-        }
-        else {
+        } else {
             d->m_view_agent->setClusterMerge(ClusterMerge());
         }
     }
@@ -257,12 +253,11 @@ MVFile MVMainWindow::getMVFile()
     d->m_mv_file.setCurrentTimeseriesName(d->m_view_agent->currentTimeseriesName());
 
     QJsonObject cluster_attributes;
-    QMap<int, QJsonObject> CA = d->m_view_agent->clusterAttributes();
     {
-        QList<int> keys = CA.keys();
-        foreach (int key, keys) {
-            if (!CA[key].isEmpty())
-                cluster_attributes[QString("%1").arg(key)] = CA[key];
+        QList<int> keys = d->m_view_agent->clusterAttributesKeys();
+        foreach(int key, keys)
+        {
+            cluster_attributes[QString("%1").arg(key)] = d->m_view_agent->clusterAttributes(key);
         }
     }
 
@@ -284,79 +279,54 @@ void MVMainWindow::resizeEvent(QResizeEvent* evt)
 
 void MVMainWindow::keyPressEvent(QKeyEvent* evt)
 {
-    if (evt->key() == Qt::Key_A) {
-        d->annotate_selected();
-    }
-    else if (evt->key() == Qt::Key_M) {
+    if (evt->key() == Qt::Key_M) {
         d->merge_selected();
-    }
-    else if (evt->key() == Qt::Key_U) {
+    } else if (evt->key() == Qt::Key_U) {
         d->unmerge_selected();
-    }
-    else
+    } else
         evt->ignore();
+    }
 }
 
 void MVMainWindow::slot_control_panel_user_action(QString str)
 {
     if (str == "open-cluster-details") {
         d->open_cluster_details();
-    }
-    else if (str == "open-auto-correlograms") {
+    } else if (str == "open-auto-correlograms") {
         d->open_auto_correlograms();
-    }
-    else if (str == "open-matrix-of-cross-correlograms") {
+    } else if (str == "open-matrix-of-cross-correlograms") {
         d->open_matrix_of_cross_correlograms();
-    }
-    else if (str == "open-timeseries-data") {
+    } else if (str == "open-timeseries-data") {
         d->open_timeseries();
-    }
-    else if (str == "open-clips") {
+    } else if (str == "open-clips") {
         d->open_clips();
-    }
-    else if (str == "open-pca-features") {
+    } else if (str == "open-pca-features") {
         d->open_pca_features();
-    }
-    else if (str == "open-channel-features") {
+    } else if (str == "open-channel-features") {
         d->open_channel_features();
-    }
-    else if (str == "open-amplitude-histograms") {
+    } else if (str == "open-amplitude-histograms") {
         d->open_amplitude_histograms();
-    }
-    else if (str == "open-spike-spray") {
+    } else if (str == "open-spike-spray") {
         d->open_spike_spray();
-    }
-    else if (str == "open-firing-events") {
+    } else if (str == "open-firing-events") {
         d->open_firing_events();
-    }
-    else if (str == "annotate_selected") {
-        d->annotate_selected();
-    }
-    else if (str == "merge_selected") {
+    } else if (str == "merge_selected") {
         d->merge_selected();
-    }
-    else if (str == "unmerge_selected") {
+    } else if (str == "unmerge_selected") {
         d->unmerge_selected();
-    }
-    else if (str == "export_mountainview_document") {
+    } else if (str == "export_mountainview_document") {
         d->export_mountainview_document();
-    }
-    else if (str == "export_original_firings") {
+    } else if (str == "export_original_firings") {
         d->export_original_firings();
-    }
-    else if (str == "export_filtered_firings") {
+    } else if (str == "export_filtered_firings") {
         d->export_filtered_firings();
-    }
-    else if (str == "recalculate-all") {
+    } else if (str == "recalculate-all") {
         d->recalculate_views("all");
-    }
-    else if (str == "recalculate-all-suggested") {
+    } else if (str == "recalculate-all-suggested") {
         d->recalculate_views("all-suggested");
-    }
-    else if (str == "recalculate-all-visible") {
+    } else if (str == "recalculate-all-visible") {
         d->recalculate_views("all-visible");
-    }
-    else if (str == "recalculate-all-suggested-and-visible") {
+    } else if (str == "recalculate-all-suggested-and-visible") {
         d->recalculate_views("all-suggested-and-visible");
     }
 }
@@ -403,7 +373,6 @@ void MVMainWindow::slot_update_buttons()
     d->set_button_enabled("open-firing-events", (something_selected) && (has_peaks));
     d->set_button_enabled("find-nearby-events", d->m_view_agent->selectedClusters().count() >= 2);
 
-    d->set_button_enabled("annotate_selected", something_selected);
     d->set_button_enabled("merge_selected", d->m_view_agent->selectedClusters().count() >= 2);
     d->set_button_enabled("unmerge_selected", something_selected);
     d->set_button_enabled("export_mountainview_document", true);
@@ -467,8 +436,7 @@ void MVMainWindowPrivate::update_sizes()
         }
         if (H0 > 900) {
             tv_height = 300;
-        }
-        else {
+        } else {
             tv_height = 200;
         }
         int cp_height = H0 - tv_height;
@@ -582,7 +550,8 @@ void MVMainWindowPrivate::open_channel_features()
         return;
     QStringList strlist = str.split(",", QString::SkipEmptyParts);
     QList<int> channels;
-    foreach (QString a, strlist) {
+    foreach(QString a, strlist)
+    {
         bool ok;
         channels << a.toInt(&ok);
         if (!ok) {
@@ -665,30 +634,6 @@ void MVMainWindowPrivate::find_nearby_events()
 }
 */
 
-void MVMainWindowPrivate::annotate_selected()
-{
-    if (m_view_agent->selectedClusters().isEmpty())
-        return;
-    QList<int> ks = m_view_agent->selectedClusters();
-    QString common_assessment;
-    for (int i = 0; i < ks.count(); i++) {
-        QString aa = get_cluster_attribute(ks[i], "assessment").toString();
-        if (i == 0)
-            common_assessment = aa;
-        else {
-            if (common_assessment != aa)
-                common_assessment = "";
-        }
-    }
-    bool ok;
-    QString new_assessment = QInputDialog::getText(0, "Set cluster assessment", "Cluster assessment:", QLineEdit::Normal, common_assessment, &ok);
-    if (ok) {
-        for (int i = 0; i < ks.count(); i++) {
-            set_cluster_attribute(ks[i], "assessment", new_assessment);
-        }
-    }
-}
-
 void MVMainWindowPrivate::merge_selected()
 {
     ClusterMerge CM = m_view_agent->clusterMerge();
@@ -736,8 +681,7 @@ void DownloadComputer::compute()
     if (!X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3())) {
         if (thread_interrupt_requested()) {
             task.error("Halted download: " + source_path);
-        }
-        else {
+        } else {
             task.error("Failed to readChunk from: " + source_path);
         }
         return;
@@ -746,8 +690,7 @@ void DownloadComputer::compute()
     if (use_float64) {
         task.log("Writing 64-bit to " + dest_path);
         Y.write64(dest_path);
-    }
-    else {
+    } else {
         task.log("Writing 32-bit to " + dest_path);
         Y.write32(dest_path);
     }
@@ -806,7 +749,8 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
 void MVMainWindowPrivate::recalculate_views(QString str)
 {
     QList<MVAbstractView*> widgets = m_tabber->allWidgets();
-    foreach (MVAbstractView* VV, widgets) {
+    foreach(MVAbstractView * VV, widgets)
+    {
         if (VV) {
             bool do_it = false;
             if (str == "all")
@@ -826,14 +770,14 @@ void MVMainWindowPrivate::recalculate_views(QString str)
 
 QVariant MVMainWindowPrivate::get_cluster_attribute(int k, QString attr)
 {
-    return m_view_agent->clusterAttributes().value(k).value(attr).toVariant();
+    return m_view_agent->clusterAttributes(k).value(attr).toVariant();
 }
 
 void MVMainWindowPrivate::set_cluster_attribute(int k, QString attr, QVariant val)
 {
-    QMap<int, QJsonObject> CA = m_view_agent->clusterAttributes();
-    CA[k][attr] = QJsonValue::fromVariant(val);
-    m_view_agent->setClusterAttributes(CA);
+    QJsonObject tmp = m_view_agent->clusterAttributes(k);
+    tmp[attr] = QJsonValue::fromVariant(val);
+    m_view_agent->setClusterAttributes(k, tmp);
 }
 
 void MVMainWindowPrivate::set_button_enabled(QString name, bool val)

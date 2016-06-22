@@ -203,8 +203,8 @@ void MVCrossCorrelogramsWidget2::onCalculationFinished()
         int row0 = (jj) / num_cols;
         int col0 = (jj) % num_cols;
         GL->addWidget(HV, row0, col0);
-        HV->setProperty("k1",d->m_correlograms[ii].k1);
-        HV->setProperty("k2",d->m_correlograms[ii].k2);
+        HV->setProperty("k1", d->m_correlograms[ii].k1);
+        HV->setProperty("k2", d->m_correlograms[ii].k2);
         HV->setProperty("row", row0);
         HV->setProperty("col", col0);
         HV->setProperty("index", ii);
@@ -288,7 +288,7 @@ void MVCrossCorrelogramsWidget2::paintEvent(QPaintEvent* evt)
     }
 }
 
-void MVCrossCorrelogramsWidget2::keyPressEvent(QKeyEvent *evt)
+void MVCrossCorrelogramsWidget2::keyPressEvent(QKeyEvent* evt)
 {
     if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
         QList<int> ks;
@@ -305,14 +305,12 @@ void MVCrossCorrelogramsWidget2::slot_histogram_view_clicked(Qt::KeyboardModifie
     //int k1 = d->m_labels2.value(index);
     int k2 = d->m_correlograms.value(index).k2;
 
-    if (modifiers&Qt::ControlModifier) {
+    if (modifiers & Qt::ControlModifier) {
         viewAgent()->clickCluster(k2, Qt::ControlModifier);
-    }
-    else if (modifiers&Qt::ShiftModifier) {
-        int k0=viewAgent()->currentCluster();
-        d->shift_select_clusters_between(k0,k2);
-    }
-    else {
+    } else if (modifiers & Qt::ShiftModifier) {
+        int k0 = viewAgent()->currentCluster();
+        d->shift_select_clusters_between(k0, k2);
+    } else {
         viewAgent()->clickCluster(k2, Qt::NoModifier);
     }
 }

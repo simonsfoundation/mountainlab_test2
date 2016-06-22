@@ -1,3 +1,4 @@
+#include "mvclustercontextmenu.h"
 #include "mvclusterdetailwidget.h"
 #include "taskprogress.h"
 
@@ -14,6 +15,7 @@
 #include <QImageWriter>
 #include "extract_clips.h"
 #include <QFileDialog>
+#include <QJsonArray>
 #include <QMenu>
 #include <QMessageBox>
 #include <QTimer>
@@ -103,7 +105,6 @@ private:
     bool m_stdev_shading;
 
     QColor get_firing_rate_text_color(double rate);
-    QColor get_cluster_assessment_text_color(QString aa);
 };
 
 class MVClusterDetailWidgetPrivate {
@@ -171,8 +172,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent)
 
     this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
-    //this->setContextMenuPolicy(Qt::CustomContextMenu);
-    //connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
 
     {
         QAction* a = new QAction("Export image", this);
@@ -372,14 +371,18 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
 
 void MVClusterDetailWidget::mousePressEvent(QMouseEvent* evt)
 {
-    QPoint pt = evt->pos();
-    d->m_anchor_x = pt.x();
-    d->m_anchor_scroll_x = d->m_scroll_x;
+    if (evt->button() == Qt::LeftButton) {
+        QPoint pt = evt->pos();
+        d->m_anchor_x = pt.x();
+        d->m_anchor_scroll_x = d->m_scroll_x;
+    }
 }
 
 void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
 {
     QPoint pt = evt->pos();
+
+    int view_index = d->find_view_index_at(pt);
 
     if (evt->button() == Qt::LeftButton) {
         if ((d->m_anchor_x >= 0) && (qAbs(pt.x() - d->m_anchor_x) > 5)) {
@@ -391,7 +394,6 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
 
         d->m_anchor_x = -1;
 
-        int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             int k = d->m_views[view_index]->k();
             if (evt->modifiers() & Qt::ShiftModifier) {
@@ -403,78 +405,16 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
         }
     }
 
-    /// TODO: (MEDIUM) implement shift select
-    /*
-    if (evt->modifiers() & Qt::ControlModifier) {
-
-        int view_index = d->find_view_index_at(pt);
-        d->m_anchor_view_index = -1;
+    if (evt->button() == Qt::RightButton) {
         if (view_index >= 0) {
             int k = d->m_views[view_index]->k();
-
-            if (viewAgent()->currentCluster() == k) {
-                d->set_current_k(-1);
+            if (!viewAgent()->selectedClusters().contains(k)) {
+                viewAgent()->clickCluster(k, Qt::NoModifier);
             }
-            if (d->m_selected_ks.contains(k)) {
-                d->m_selected_ks.remove(k);
-                emit signalSelectedKsChanged();
-                update();
-            } else {
-                d->m_anchor_view_index = view_index;
-                if (k)
-                    d->m_selected_ks.insert(k);
-                emit signalSelectedKsChanged();
-                update();
-            }
-
         }
-    } else if (evt->modifiers() & Qt::ShiftModifier) {
-        int view_index = d->find_view_index_at(pt);
-        if (view_index >= 0) {
-
-            if (d->m_anchor_view_index >= 0) {
-                int min_index = qMin(d->m_anchor_view_index, view_index);
-                int max_index = qMax(d->m_anchor_view_index, view_index);
-                for (int i = min_index; i <= max_index; i++) {
-                    if (i < d->m_views.count()) {
-                        int k = d->m_views[i]->k();
-                        if (k)
-                            d->m_selected_ks.insert(k);
-                    }
-                }
-                emit signalSelectedKsChanged();
-                update();
-            }
-
-        }
-    } else {
-        d->m_anchor_view_index = -1;
-        int view_index = d->find_view_index_at(pt);
-        if (view_index >= 0) {
-
-            d->m_anchor_view_index = view_index;
-            int k = d->m_views[view_index]->k();
-            if (viewAgent()->currentCluster() == k) {
-            } else {
-                d->set_current_k(k);
-                d->m_selected_ks.clear();
-                if (k)
-                    d->m_selected_ks.insert(k);
-                emit signalSelectedKsChanged();
-                update();
-            }
-
-        } else {
-
-            d->set_current_k(-1);
-            d->m_selected_ks.clear();
-            emit signalSelectedKsChanged();
-            update();
-
-        }
+        MVClusterContextMenu* menu = new MVClusterContextMenu(viewAgent(), viewAgent()->selectedClusters().toSet());
+        menu->popup(this->mapToGlobal(pt));
     }
-
-    */
 }
 
 void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
@@ -812,9 +752,9 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         QPen pen;
         pen.setWidth(1);
         RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height * 3, m_bottom_rect.width(), text_height);
-        QString aa = m_attributes["assessment"].toString();
-        pen.setColor(get_cluster_assessment_text_color(aa));
-        txt = aa;
+        QJsonArray aa = m_attributes["tags"].toArray();
+        QStringList aa_strlist = jsonarray2stringlist(aa);
+        txt = aa_strlist.join(" ");
         painter->setFont(font);
         painter->setPen(pen);
         painter->drawText(RR, Qt::AlignCenter | Qt::AlignBottom, txt);
@@ -838,10 +778,8 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     painter.setClipRect(QRectF(left_margin, 0, W, H));
 
     QList<ClusterData> cluster_data_merged;
-    QMap<int, QJsonObject> cluster_attributes;
     if (q->viewAgent()) {
         cluster_data_merged = merge_cluster_data(q->viewAgent()->clusterMerge(), m_cluster_data);
-        cluster_attributes = q->viewAgent()->clusterAttributes();
     } else {
         cluster_data_merged = m_cluster_data;
     }
@@ -858,7 +796,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
             V->setSelected(selected_clusters.contains(CD.k));
             V->setHovered(CD.k == m_hovered_k);
             V->setClusterData(CD);
-            V->setAttributes(cluster_attributes[CD.k]);
+            V->setAttributes(q->viewAgent()->clusterAttributes(CD.k));
             m_views << V;
         }
     }
@@ -1049,20 +987,6 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
     if (rate <= 10)
         return QColor(0, 50, 0);
     return QColor(50, 0, 0);
-}
-
-QColor ClusterView::get_cluster_assessment_text_color(QString aa)
-{
-    Q_UNUSED(aa)
-    if (aa.toLower() == "noise") {
-        return Qt::darkGray;
-    } else if (aa.toLower() == "good") {
-        return Qt::darkGreen;
-    } else if (aa.toLower() == "mua") {
-        return Qt::darkBlue;
-    } else {
-        return Qt::black;
-    }
 }
 
 DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
