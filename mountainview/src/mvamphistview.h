@@ -23,8 +23,7 @@ signals:
 
 private
 slots:
-    void slot_histogram_view_control_clicked();
-    void slot_histogram_view_clicked();
+    void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);
     void slot_histogram_view_activated();
     void slot_export_image();
     void slot_update_highlighting();

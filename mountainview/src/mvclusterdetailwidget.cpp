@@ -139,6 +139,7 @@ public:
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
     void toggle_stdev_shading();
+    void shift_select_clusters_between(int k1, int k2);
 
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
@@ -393,7 +394,12 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
         int view_index = d->find_view_index_at(pt);
         if (view_index >= 0) {
             int k = d->m_views[view_index]->k();
-            viewAgent()->clickCluster(k, evt->modifiers());
+            if (evt->modifiers() & Qt::ShiftModifier) {
+                int k0 = viewAgent()->currentCluster();
+                d->shift_select_clusters_between(k0, k);
+            } else {
+                viewAgent()->clickCluster(k, evt->modifiers());
+            }
         }
     }
 
@@ -938,6 +944,23 @@ void MVClusterDetailWidgetPrivate::toggle_stdev_shading()
 {
     m_stdev_shading = !m_stdev_shading;
     q->update();
+}
+
+void MVClusterDetailWidgetPrivate::shift_select_clusters_between(int k1, int k2)
+{
+    QSet<int> selected_clusters = q->viewAgent()->selectedClusters().toSet();
+    int ind1 = find_view_index_for_k(k1);
+    int ind2 = find_view_index_for_k(k2);
+    if ((ind1 >= 0) && (ind2 >= 0)) {
+        for (int ii = qMin(ind1, ind2); ii <= qMax(ind1, ind2); ii++) {
+            selected_clusters.insert(m_views[ii]->k());
+        }
+    } else if (ind1 >= 0) {
+        selected_clusters.insert(m_views[ind1]->k());
+    } else if (ind2 >= 0) {
+        selected_clusters.insert(m_views[ind2]->k());
+    }
+    q->viewAgent()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
 }
 
 ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterData main_CD)
