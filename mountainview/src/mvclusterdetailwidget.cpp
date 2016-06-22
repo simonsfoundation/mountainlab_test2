@@ -15,6 +15,7 @@
 #include <QImageWriter>
 #include "extract_clips.h"
 #include <QFileDialog>
+#include <QJsonArray>
 #include <QMenu>
 #include <QMessageBox>
 #include <QTimer>
@@ -104,7 +105,6 @@ private:
     bool m_stdev_shading;
 
     QColor get_firing_rate_text_color(double rate);
-    QColor get_cluster_assessment_text_color(QString aa);
 };
 
 class MVClusterDetailWidgetPrivate {
@@ -371,9 +371,11 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
 
 void MVClusterDetailWidget::mousePressEvent(QMouseEvent* evt)
 {
-    QPoint pt = evt->pos();
-    d->m_anchor_x = pt.x();
-    d->m_anchor_scroll_x = d->m_scroll_x;
+    if (evt->button() == Qt::LeftButton) {
+        QPoint pt = evt->pos();
+        d->m_anchor_x = pt.x();
+        d->m_anchor_scroll_x = d->m_scroll_x;
+    }
 }
 
 void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
@@ -404,10 +406,10 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
     }
 
     if (evt->button() == Qt::RightButton) {
-        if (view_index>=0) {
+        if (view_index >= 0) {
             int k = d->m_views[view_index]->k();
             if (!viewAgent()->selectedClusters().contains(k)) {
-                viewAgent()->clickCluster(k,Qt::NoModifier);
+                viewAgent()->clickCluster(k, Qt::NoModifier);
             }
         }
         MVClusterContextMenu* menu = new MVClusterContextMenu(viewAgent(), viewAgent()->selectedClusters().toSet());
@@ -750,9 +752,9 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         QPen pen;
         pen.setWidth(1);
         RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height * 3, m_bottom_rect.width(), text_height);
-        QString aa = m_attributes["assessment"].toString();
-        pen.setColor(get_cluster_assessment_text_color(aa));
-        txt = aa;
+        QJsonArray aa = m_attributes["tags"].toArray();
+        QStringList aa_strlist = jsonarray2stringlist(aa);
+        txt = aa_strlist.join(" ");
         painter->setFont(font);
         painter->setPen(pen);
         painter->drawText(RR, Qt::AlignCenter | Qt::AlignBottom, txt);
@@ -985,20 +987,6 @@ QColor ClusterView::get_firing_rate_text_color(double rate)
     if (rate <= 10)
         return QColor(0, 50, 0);
     return QColor(50, 0, 0);
-}
-
-QColor ClusterView::get_cluster_assessment_text_color(QString aa)
-{
-    Q_UNUSED(aa)
-    if (aa.toLower() == "noise") {
-        return Qt::darkGray;
-    } else if (aa.toLower() == "good") {
-        return Qt::darkGreen;
-    } else if (aa.toLower() == "mua") {
-        return Qt::darkBlue;
-    } else {
-        return Qt::black;
-    }
 }
 
 DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)

@@ -81,7 +81,6 @@ public:
     /// TODO: (MEDIUM) implement find_nearby_events
     //void find_nearby_events();
 
-    void annotate_selected();
     void merge_selected();
     void unmerge_selected();
 
@@ -278,8 +277,6 @@ void MVMainWindow::keyPressEvent(QKeyEvent* evt)
 {
     if ((evt->key() == Qt::Key_W) && (evt->modifiers() & Qt::ControlModifier)) {
         this->close();
-    } else if (evt->key() == Qt::Key_A) {
-        d->annotate_selected();
     } else if (evt->key() == Qt::Key_M) {
         d->merge_selected();
     } else if (evt->key() == Qt::Key_U) {
@@ -310,8 +307,6 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
         d->open_spike_spray();
     } else if (str == "open-firing-events") {
         d->open_firing_events();
-    } else if (str == "annotate_selected") {
-        d->annotate_selected();
     } else if (str == "merge_selected") {
         d->merge_selected();
     } else if (str == "unmerge_selected") {
@@ -375,7 +370,6 @@ void MVMainWindow::slot_update_buttons()
     d->set_button_enabled("open-firing-events", (something_selected) && (has_peaks));
     d->set_button_enabled("find-nearby-events", d->m_view_agent->selectedClusters().count() >= 2);
 
-    d->set_button_enabled("annotate_selected", something_selected);
     d->set_button_enabled("merge_selected", d->m_view_agent->selectedClusters().count() >= 2);
     d->set_button_enabled("unmerge_selected", something_selected);
     d->set_button_enabled("export_mountainview_document", true);
@@ -636,30 +630,6 @@ void MVMainWindowPrivate::find_nearby_events()
     X->setXRange(vec2(0, m_timeseries.N1() - 1));
 }
 */
-
-void MVMainWindowPrivate::annotate_selected()
-{
-    if (m_view_agent->selectedClusters().isEmpty())
-        return;
-    QList<int> ks = m_view_agent->selectedClusters();
-    QString common_assessment;
-    for (int i = 0; i < ks.count(); i++) {
-        QString aa = get_cluster_attribute(ks[i], "assessment").toString();
-        if (i == 0)
-            common_assessment = aa;
-        else {
-            if (common_assessment != aa)
-                common_assessment = "";
-        }
-    }
-    bool ok;
-    QString new_assessment = QInputDialog::getText(0, "Set cluster assessment", "Cluster assessment:", QLineEdit::Normal, common_assessment, &ok);
-    if (ok) {
-        for (int i = 0; i < ks.count(); i++) {
-            set_cluster_attribute(ks[i], "assessment", new_assessment);
-        }
-    }
-}
 
 void MVMainWindowPrivate::merge_selected()
 {

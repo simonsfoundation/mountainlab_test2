@@ -24,7 +24,8 @@ MVClusterContextMenu::MVClusterContextMenu(MVContext* mvcontext, QSet<int> clust
                << "artifact";
 
     QSet<QString> tags_set;
-    foreach (int cluster_number, d->m_cluster_numbers) {
+    foreach(int cluster_number, d->m_cluster_numbers)
+    {
         QJsonObject attributes = d->m_context->clusterAttributes(cluster_number);
         QJsonArray tags = attributes["tags"].toArray();
         for (int i = 0; i < tags.count(); i++) {
@@ -79,27 +80,6 @@ MVClusterContextMenu::~MVClusterContextMenu()
     delete d;
 }
 
-QJsonArray stringset2jsonarray(QSet<QString> set)
-{
-    QJsonArray ret;
-    QStringList list = set.toList();
-    qSort(list);
-    foreach(QString str, list)
-    {
-        ret.append(str);
-    }
-    return ret;
-}
-
-QSet<QString> jsonarray2stringset(QJsonArray X)
-{
-    QSet<QString> ret;
-    for (int i = 0; i < X.count(); i++) {
-        ret.insert(X[i].toString());
-    }
-    return ret;
-}
-
 void MVClusterContextMenu::slot_add_tag()
 {
     QAction* A = qobject_cast<QAction*>(sender());
@@ -109,13 +89,11 @@ void MVClusterContextMenu::slot_add_tag()
     if (tag.isEmpty())
         return;
 
-    foreach (int cluster_number, d->m_cluster_numbers) {
-        QJsonObject attributes = d->m_context->clusterAttributes(cluster_number);
-        QJsonArray tags = attributes["tags"].toArray();
-        QSet<QString> tags_set = jsonarray2stringset(tags);
-        tags_set.insert(tag);
-        attributes["tags"] = stringset2jsonarray(tags_set);
-        d->m_context->setClusterAttributes(cluster_number, attributes);
+    foreach(int cluster_number, d->m_cluster_numbers)
+    {
+        QSet<QString> tags = d->m_context->clusterTags(cluster_number);
+        tags.insert(tag);
+        d->m_context->setClusterTags(cluster_number, tags);
     }
 }
 
@@ -128,21 +106,20 @@ void MVClusterContextMenu::slot_remove_tag()
     if (tag.isEmpty())
         return;
 
-    foreach (int cluster_number, d->m_cluster_numbers) {
-        QJsonObject attributes = d->m_context->clusterAttributes(cluster_number);
-        QJsonArray tags = attributes["tags"].toArray();
-        QSet<QString> tags_set = jsonarray2stringset(tags);
-        tags_set.insert(tag);
-        attributes["tags"] = stringset2jsonarray(tags_set);
-        d->m_context->setClusterAttributes(cluster_number, attributes);
+    foreach(int cluster_number, d->m_cluster_numbers)
+    {
+        QSet<QString> tags = d->m_context->clusterTags(cluster_number);
+        tags.remove(tag);
+        d->m_context->setClusterTags(cluster_number, tags);
     }
 }
 
 void MVClusterContextMenu::slot_clear_tags()
 {
-    foreach (int cluster_number, d->m_cluster_numbers) {
-        QJsonObject attributes = d->m_context->clusterAttributes(cluster_number);
-        attributes["tags"] = QJsonArray();
-        d->m_context->setClusterAttributes(cluster_number, attributes);
+    foreach(int cluster_number, d->m_cluster_numbers)
+    {
+        QSet<QString> tags = d->m_context->clusterTags(cluster_number);
+        tags.clear();
+        d->m_context->setClusterTags(cluster_number, tags);
     }
 }

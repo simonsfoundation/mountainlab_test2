@@ -11,6 +11,7 @@
 #include <QColor>
 #include <math.h>
 #include <QPainter>
+#include <QJsonArray>
 
 ///A firing event defined by a time and a label
 struct MVEvent {
@@ -67,5 +68,9 @@ struct draw_axis_opts {
 };
 
 void draw_axis(QPainter* painter, draw_axis_opts opts);
+
+QJsonArray stringset2jsonarray(QSet<QString> set);
+QSet<QString> jsonarray2stringset(QJsonArray X);
+QStringList jsonarray2stringlist(QJsonArray X);
 
 #endif // MVUTILS_H

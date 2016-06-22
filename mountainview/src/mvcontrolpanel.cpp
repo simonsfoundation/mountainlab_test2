@@ -176,8 +176,9 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         QGridLayout* G = new QGridLayout;
         layout->addLayout(G);
 
-        d->m_controls.add_check_box(G, "noise_visible", "Noise", true);
-        d->m_controls.add_check_box(G, "merged_visible", "Merged", true);
+        d->m_controls.add_check_box(G, "view_merged", "Merged", true);
+        d->m_controls.add_check_box(G, "view_all_untagged", "All untagged", true);
+        d->m_controls.add_check_box(G, "view_all_tagged", "All tagged", true);
 
         d->m_controls.add_horizontal_divider_line(layout);
     }
@@ -188,13 +189,6 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
 
         FlowLayout* flayout = new FlowLayout;
         layout->addLayout(flayout);
-        {
-            QToolButton* BB = new QToolButton;
-            BB->setText("Annotate selected (A) ...");
-            BB->setProperty("action_name", "annotate_selected");
-            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
-            flayout->addWidget(BB);
-        }
         {
             QToolButton* BB = new QToolButton;
             BB->setText("Merge selected (M)");
@@ -335,11 +329,9 @@ void MVControlPanel::slot_update_view_agent()
 
     {
         ClusterVisibilityRule rule = d->m_view_agent->visibilityRule();
-        if (d->m_controls.get_parameter_value("noise_visible").toBool())
-            rule.invisibility_assessments.remove("noise");
-        else
-            rule.invisibility_assessments.insert("noise");
-        rule.view_merged = d->m_controls.get_parameter_value("merged_visible").toBool();
+        rule.view_merged = d->m_controls.get_parameter_value("view_merged").toBool();
+        rule.view_all_untagged = d->m_controls.get_parameter_value("view_all_untagged").toBool();
+        rule.view_all_tagged = d->m_controls.get_parameter_value("view_all_tagged").toBool();
         d->m_view_agent->setVisibilityRule(rule);
     }
 }

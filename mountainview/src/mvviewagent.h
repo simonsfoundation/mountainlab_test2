@@ -57,7 +57,9 @@ public:
     bool operator==(const ClusterVisibilityRule& other) const;
     bool isVisible(const MVContext* context, int cluster_num) const;
 
-    QSet<QString> invisibility_assessments;
+    bool view_all_untagged = true;
+    bool view_all_tagged = true;
+    QSet<QString> view_tags;
     bool view_merged = true;
 
 private:
@@ -80,8 +82,10 @@ public:
     ClusterMerge clusterMerge() const;
     QJsonObject clusterAttributes(int num) const;
     QList<int> clusterAttributesKeys() const;
+    QSet<QString> clusterTags(int num) const; //part of attributes
     void setClusterMerge(const ClusterMerge& CM);
-    void setClusterAttributes(int num, const QJsonObject& attr);
+    void setClusterAttributes(int num, const QJsonObject& obj);
+    void setClusterTags(int num, const QSet<QString>& tags); //part of attributes
 
     /////////////////////////////////////////////////
     ClusterVisibilityRule visibilityRule() const;
