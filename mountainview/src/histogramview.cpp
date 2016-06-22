@@ -302,8 +302,7 @@ void HistogramView::slot_context_menu(const QPoint& pos)
     QAction* selected = M.exec(this->mapToGlobal(pos));
     if (selected == export_image) {
         d->export_image();
-    }
-    else if (selected == export_matrix_image) {
+    } else if (selected == export_matrix_image) {
         emit this->signalExportHistogramMatrixImage();
     }
 }
@@ -454,14 +453,11 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
 
     if (m_current) {
         painter.fillRect(R, m_colors["view_background_highlighted"]);
-    }
-    else if (m_selected) {
+    } else if (m_selected) {
         painter.fillRect(R, m_colors["view_background_selected"]);
-    }
-    else if (m_hovered) {
+    } else if (m_hovered) {
         painter.fillRect(R, m_colors["view_background_hovered"]);
-    }
-    else {
+    } else {
         painter.fillRect(R, m_colors["view_background"]);
     }
 

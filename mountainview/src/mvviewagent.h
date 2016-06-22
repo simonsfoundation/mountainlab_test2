@@ -78,9 +78,10 @@ public:
 
     /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;
-    QMap<int, QJsonObject> clusterAttributes() const;
+    QJsonObject clusterAttributes(int num) const;
+    QList<int> clusterAttributesKeys() const;
     void setClusterMerge(const ClusterMerge& CM);
-    void setClusterAttributes(const QMap<int, QJsonObject>& A);
+    void setClusterAttributes(int num, const QJsonObject& attr);
 
     /////////////////////////////////////////////////
     ClusterVisibilityRule visibilityRule() const;
@@ -146,7 +147,7 @@ signals:
     void eventFilterChanged();
     void filteredFiringsChanged();
     void clusterMergeChanged();
-    void clusterAttributesChanged();
+    void clusterAttributesChanged(int cluster_number);
     void currentEventChanged();
     void currentClusterChanged();
     void selectedClustersChanged();

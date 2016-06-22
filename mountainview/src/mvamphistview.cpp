@@ -175,10 +175,9 @@ void MVAmpHistView::slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers)
     int index = sender()->property("index").toInt();
     int k = d->m_histograms.value(index).k;
 
-    if (modifiers&Qt::ControlModifier) {
+    if (modifiers & Qt::ControlModifier) {
         viewAgent()->clickCluster(k, Qt::ControlModifier);
-    }
-    else {
+    } else {
         viewAgent()->clickCluster(k, Qt::NoModifier);
     }
 }

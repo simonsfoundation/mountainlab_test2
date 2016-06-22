@@ -69,11 +69,6 @@ void MVViewAgent::clear()
     d->m_options.clear();
 }
 
-QMap<int, QJsonObject> MVViewAgent::clusterAttributes() const
-{
-    return d->m_cluster_attributes;
-}
-
 MVEvent MVViewAgent::currentEvent() const
 {
     return d->m_current_event;
@@ -231,6 +226,16 @@ ClusterMerge MVViewAgent::clusterMerge() const
     return d->m_cluster_merge;
 }
 
+QJsonObject MVViewAgent::clusterAttributes(int num) const
+{
+    return d->m_cluster_attributes.value(num);
+}
+
+QList<int> MVViewAgent::clusterAttributesKeys() const
+{
+    return d->m_cluster_attributes.keys();
+}
+
 void MVViewAgent::setClusterMerge(const ClusterMerge& CM)
 {
     if (d->m_cluster_merge == CM)
@@ -242,12 +247,12 @@ void MVViewAgent::setClusterMerge(const ClusterMerge& CM)
     }
 }
 
-void MVViewAgent::setClusterAttributes(const QMap<int, QJsonObject>& A)
+void MVViewAgent::setClusterAttributes(int num, const QJsonObject& attr)
 {
-    if (d->m_cluster_attributes == A)
+    if (d->m_cluster_attributes.value(num) == attr)
         return;
-    d->m_cluster_attributes = A;
-    emit this->clusterAttributesChanged();
+    d->m_cluster_attributes[num] = attr;
+    emit this->clusterAttributesChanged(num);
     /// TODO (LOW) only emit this if there really was a change
     if (!d->m_visibility_rule.invisibility_assessments.isEmpty()) {
         emit this->clusterVisibilityChanged();
@@ -454,7 +459,7 @@ void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
 bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num) const
 {
     /// Witold, is there a method to avoid copying the full QMap<int,QJsonObject> object in this statement?
-    QJsonObject obj = context->clusterAttributes()[cluster_num];
+    QJsonObject obj = context->clusterAttributes(cluster_num);
     QString assessment = obj["assessment"].toString();
     if (this->invisibility_assessments.contains(assessment.toLower()))
         return false;

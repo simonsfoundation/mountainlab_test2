@@ -6,6 +6,8 @@
 
 #include "mvabstractview.h"
 #include <QAction>
+#include <QJsonArray>
+#include <QMenu>
 #include <QThread>
 #include <QTimer>
 #include <QToolButton>
@@ -51,8 +53,6 @@ MVAbstractView::MVAbstractView(MVViewAgent* view_agent)
         this->addAction(a);
         connect(a, SIGNAL(triggered(bool)), this, SLOT(recalculate()));
     }
-
-    setContextMenuPolicy(Qt::ActionsContextMenu);
 }
 
 MVAbstractView::~MVAbstractView()

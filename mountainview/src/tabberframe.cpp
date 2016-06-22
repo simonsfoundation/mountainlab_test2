@@ -82,7 +82,8 @@ TabberFrame::TabberFrame(MVAbstractView* view)
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     QList<QAction*> toolbar_actions = d->find_actions_of_type(view->actions(), "toolbar");
-    foreach (QAction* a, toolbar_actions) {
+    foreach(QAction * a, toolbar_actions)
+    {
         d->m_toolbar->addAction(a);
     }
 
@@ -136,8 +137,7 @@ void TabberFramePrivate::update_action_visibility()
     if (m_view->recalculateSuggested()) {
         m_recalc_action->setVisible(true);
         m_never_recalc_action->setVisible(true);
-    }
-    else {
+    } else {
         m_recalc_action->setVisible(false);
         m_never_recalc_action->setVisible(false);
     }
@@ -147,14 +147,12 @@ void TabberFramePrivate::update_action_visibility()
         m_move_down_action->setVisible(true);
         m_pop_out_action->setVisible(true);
         m_pop_in_action->setVisible(false);
-    }
-    else if (m_container_name == "south") {
+    } else if (m_container_name == "south") {
         m_move_up_action->setVisible(true);
         m_move_down_action->setVisible(false);
         m_pop_out_action->setVisible(true);
         m_pop_in_action->setVisible(false);
-    }
-    else {
+    } else {
         m_move_up_action->setVisible(false);
         m_move_down_action->setVisible(false);
         m_pop_out_action->setVisible(false);

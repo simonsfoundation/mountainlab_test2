@@ -66,7 +66,8 @@ public:
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
     //bool exclude_based_on_filter(long ind);
-public slots:
+public
+slots:
     void slot_emit_transformation_changed();
 };
 #include "mvclusterview.moc"
@@ -269,8 +270,7 @@ QRectF compute_centered_square(QRectF R)
     int H0 = R.height() - margin * 2;
     if (W0 > H0) {
         return QRectF(margin + (W0 - H0) / 2, margin, H0, H0);
-    }
-    else {
+    } else {
         return QRectF(margin, margin + (H0 - W0) / 2, W0, W0);
     }
 }
@@ -301,8 +301,7 @@ void MVClusterView::mouseMoveEvent(QMouseEvent* evt)
             d->m_grid_update_needed = true;
             update();
         }
-    }
-    else {
+    } else {
         int hovered_cluster_number = d->m_legend.clusterNumberAt(pt);
         if ((hovered_cluster_number != d->m_legend.hoveredClusterNumber())) {
             d->m_legend.setHoveredClusterNumber(hovered_cluster_number);
@@ -354,8 +353,7 @@ void MVClusterView::wheelEvent(QWheelEvent* evt)
     double factor = 1;
     if (delta > 0) {
         factor = 1.1;
-    }
-    else if (delta < 0) {
+    } else if (delta < 0) {
         factor = 1 / 1.1;
     }
     if (delta != 1) {
@@ -597,8 +595,7 @@ void MVClusterViewPrivate::update_grid()
                     }
                     z_grid_ptr[iiii] = z0;
                 }
-            }
-            else {
+            } else {
                 m_point_grid_ptr[iiii] = 1;
                 /*
                 if (m_mode == MVCV_MODE_TIME_COLORS) {
@@ -669,8 +666,7 @@ void MVClusterViewPrivate::update_grid()
                 }
             }
         }
-    }
-    else {
+    } else {
         for (int i2 = 0; i2 < N2; i2++) {
             for (int i1 = 0; i1 < N1; i1++) {
                 double val = m_point_grid.value(i1, i2);
@@ -681,46 +677,37 @@ void MVClusterViewPrivate::update_grid()
                             QColor CC = get_time_color(time0 / m_max_time);
                             m_grid_image.setPixel(i1, i2, CC.rgb());
                         }
-                    }
-                    else if (val == -2) {
+                    } else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    }
-                    else if (val == -3) { //filtered out by event filter
+                    } else if (val == -3) { //filtered out by event filter
                         QColor CC = QColor(60, 60, 60);
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
-                }
-                else if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
+                } else if (m_mode == MVCV_MODE_AMPLITUDE_COLORS) {
                     if (val >= 0) {
                         double amp0 = m_amplitude_grid.value(i1, i2);
                         if (m_max_amplitude) {
                             QColor CC = get_time_color(amp0 / m_max_amplitude);
                             m_grid_image.setPixel(i1, i2, CC.rgb());
                         }
-                    }
-                    else if (val == -2) {
+                    } else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    }
-                    else if (val == -3) { //filtered out by event filter
+                    } else if (val == -3) { //filtered out by event filter
                         QColor CC = QColor(60, 60, 60);
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
-                }
-                else if (m_mode == MVCV_MODE_LABEL_COLORS) {
+                } else if (m_mode == MVCV_MODE_LABEL_COLORS) {
                     if (val > 0) {
                         QColor CC = m_view_agent->clusterColor((int)val);
                         if (val == hovered_cluster_number)
                             CC = Qt::white;
                         m_grid_image.setPixel(i1, i2, CC.rgb());
-                    }
-                    else if (val == 0) {
+                    } else if (val == 0) {
                         QColor CC = Qt::white;
                         m_grid_image.setPixel(i1, i2, CC.rgb());
-                    }
-                    else if (val == -2) {
+                    } else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
-                    }
-                    else if (val == -3) { //filtered out by event filter
+                    } else if (val == -3) { //filtered out by event filter
                         QColor CC = QColor(60, 60, 60);
                         m_grid_image.setPixel(i1, i2, CC.rgb()); //oddly we can't just use Qt::black directly -- debug pitfall
                     }
@@ -905,8 +892,7 @@ void MVClusterLegend::draw(QPainter* painter)
             if (m_cluster_numbers[i] == m_hovered_cluster_number) {
                 pen.setColor(Qt::white);
             }
-        }
-        else {
+        } else {
             pen.setColor(Qt::gray);
             if (m_cluster_numbers[i] == m_hovered_cluster_number) {
                 pen.setColor(QColor(180, 180, 200));
