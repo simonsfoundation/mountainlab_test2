@@ -21,31 +21,22 @@ public:
     explicit HistogramView(QWidget* parent = 0);
     virtual ~HistogramView();
 
-    ///The data to view
-    void setData(const QList<float> values);
-    ///Alternative specification
-    void setData(int N, float* values);
-    ///Set evenly spaced bins
-    void setBins(float bin_min, float bin_max, int num_bins);
-    ///Auto set evenly spaced bins based on range of data (call setData first)
-    void autoSetBins(int num_bins);
-    ///The color for filling the histogram bars
-    void setFillColor(const QColor& col);
-    ///The edge color for the bars
-    void setLineColor(const QColor& col);
-    ///Displayed title of histogram
+    void setData(const QList<double>& values); // The data to view
+    void setData(int N, double* values); // Alternative specification
+    void setBins(double bin_min, double bin_max, int num_bins); //Set evenly spaced bins
+    void autoSetBins(int num_bins); // auto set evenly spaced bins based on range of data (call setData first)
+    void setFillColor(const QColor& col); // The color for filling the histogram bars
+    void setLineColor(const QColor& col); // The edge color for the bars
     void setTitle(const QString& title);
-    ///Controls background and highlighting colors. For consistent app look.
-    void setColors(const QMap<QString, QColor>& colors);
+    void setColors(const QMap<QString, QColor>& colors); // Controls background and highlighting colors. For consistent app look.
 
     MVRange xRange() const;
     void setXRange(MVRange range);
+    void autoCenterXRange(); //centers range based on data
     void setDrawVerticalAxisAtZero(bool val);
 
-    ///Set this as the current histogram (affects highlighting)
-    void setCurrent(bool val);
-    ///Set this as among the selected histograms (affects highlighting)
-    void setSelected(bool val);
+    void setCurrent(bool val); // Set this as the current histogram (affects highlighting)
+    void setSelected(bool val); // Set this as among the selected histograms (affects highlighting)
 
     QImage renderImage(int W, int H);
 

@@ -22,8 +22,8 @@
 /// TODO: (MEDIUM) make abstract histogram view that encompasses both cross-correlograms and amplitude histograms
 
 struct Correlogram3 {
-    int k1=0, k2=0;
-    QList<float> data;
+    int k1 = 0, k2 = 0;
+    QList<double> data;
 };
 
 class MVCrossCorrelogramsWidget3Computer {
@@ -87,11 +87,11 @@ void MVCrossCorrelogramsWidget3::runCalculation()
     d->m_computer.compute();
 }
 
-float compute_max2(const QList<Correlogram3>& data0)
+double compute_max2(const QList<Correlogram3>& data0)
 {
-    float ret = 0;
+    double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<float> tmp = data0[i].data;
+        QList<double> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] > ret)
                 ret = tmp[j];
@@ -104,8 +104,8 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
 {
     d->m_correlograms = d->m_computer.correlograms;
 
-    float bin_max = compute_max2(d->m_correlograms);
-    float bin_min = -bin_max;
+    double bin_max = compute_max2(d->m_correlograms);
+    double bin_min = -bin_max;
     //int num_bins=100;
     int bin_size = 20;
     int num_bins = (bin_max - bin_min) / bin_size;
@@ -113,11 +113,15 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
         num_bins = 100;
     if (num_bins > 2000)
         num_bins = 2000;
-    //float sample_freq = viewAgent()->sampleRate();
-    //float time_width = (bin_max - bin_min) / sample_freq * 1000;
+    double sample_freq = viewAgent()->sampleRate();
+    double time_width = (bin_max - bin_min) / sample_freq * 1000;
+    HorizontalScaleAxisData X;
+    X.use_it = true;
+    X.label = QString("%1 ms").arg((int)(time_width / 2));
+    this->setHorizontalScaleAxis(X);
 
-    QList<HistogramView *> histogram_views;
-    for (int ii=0; ii<d->m_correlograms.count(); ii++) {
+    QList<HistogramView*> histogram_views;
+    for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
         int k1 = d->m_correlograms[ii].k1;
         int k2 = d->m_correlograms[ii].k2;
         if ((viewAgent()->clusterIsVisible(k1)) && (viewAgent()->clusterIsVisible(k2))) {
@@ -142,9 +146,9 @@ void MVCrossCorrelogramsWidget3::setOptions(CrossCorrelogramOptions3 opts)
     this->recalculate();
 }
 
-QList<float> compute_cc_data3(const QList<double>& times1_in, const QList<double>& times2_in, int max_dt, bool exclude_matches)
+QList<double> compute_cc_data3(const QList<double>& times1_in, const QList<double>& times2_in, int max_dt, bool exclude_matches)
 {
-    QList<float> ret;
+    QList<double> ret;
     QList<double> times1 = times1_in;
     QList<double> times2 = times2_in;
     qSort(times1);
@@ -209,8 +213,7 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == Cross_Correlograms3) {
+    } else if (options.mode == Cross_Correlograms3) {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram3 CC;
@@ -218,8 +221,7 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == Matrix_Of_Cross_Correlograms3) {
+    } else if (options.mode == Matrix_Of_Cross_Correlograms3) {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram3 CC;
@@ -253,4 +255,3 @@ void MVCrossCorrelogramsWidget3Computer::compute()
         correlograms[j].data = compute_cc_data3(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
     }
 }
-

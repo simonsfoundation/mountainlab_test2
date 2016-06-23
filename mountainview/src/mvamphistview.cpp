@@ -11,7 +11,7 @@
 
 struct Histogram {
     int k;
-    QList<float> data;
+    QList<double> data;
 };
 
 class MVAmpHistViewComputer {
@@ -37,7 +37,6 @@ public:
     QList<Histogram> m_histograms;
     QList<HistogramView*> m_histogram_views;
     QList<QWidget*> m_child_widgets;
-    double m_zoom_factor = 1;
 
     void do_highlighting();
 };
@@ -84,11 +83,11 @@ void MVAmpHistView::runCalculation()
     d->m_computer.compute();
 }
 
-float compute_min2(const QList<Histogram>& data0)
+double compute_min2(const QList<Histogram>& data0)
 {
-    float ret = 0;
+    double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<float> tmp = data0[i].data;
+        QList<double> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] < ret)
                 ret = tmp[j];
@@ -97,11 +96,11 @@ float compute_min2(const QList<Histogram>& data0)
     return ret;
 }
 
-float compute_max2(const QList<Histogram>& data0)
+double compute_max2(const QList<Histogram>& data0)
 {
-    float ret = 0;
+    double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<float> tmp = data0[i].data;
+        QList<double> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] > ret)
                 ret = tmp[j];
@@ -121,8 +120,8 @@ void MVAmpHistView::onCalculationFinished()
     d->m_child_widgets.clear();
 
     QGridLayout* GL = d->m_grid_layout;
-    float bin_min = compute_min2(d->m_histograms);
-    float bin_max = compute_max2(d->m_histograms);
+    double bin_min = compute_min2(d->m_histograms);
+    double bin_max = compute_max2(d->m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
 
     int num_bins = 200; //how to choose this?

@@ -55,7 +55,8 @@ HEADERS += \
     tabberframe.h \
     mvclustercontextmenu.h \
     mvhistogramgrid.h \
-    mvcrosscorrelogramswidget3.h
+    mvcrosscorrelogramswidget3.h \
+    mvamphistview2.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvutils.cpp \
@@ -94,7 +95,8 @@ SOURCES += mountainviewmain.cpp \
     tabberframe.cpp \
     mvclustercontextmenu.cpp \
     mvhistogramgrid.cpp \
-    mvcrosscorrelogramswidget3.cpp
+    mvcrosscorrelogramswidget3.cpp \
+    mvamphistview2.cpp
 
 #HEADERS += sstimeserieswidget.h \
 #    sstimeseriesview.h \

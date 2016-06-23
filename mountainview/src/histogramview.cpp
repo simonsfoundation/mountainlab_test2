@@ -9,8 +9,8 @@ class HistogramViewPrivate {
 public:
     HistogramView* q;
     int m_N;
-    float* m_data;
-    float* m_bin_centers;
+    double* m_data;
+    double* m_bin_centers;
     int* m_bin_counts;
     int m_max_bin_count;
     bool m_update_required;
@@ -71,9 +71,9 @@ HistogramView::~HistogramView()
     delete d;
 }
 
-void HistogramView::setData(const QList<float> values)
+void HistogramView::setData(const QList<double>& values)
 {
-    float* tmp = (float*)malloc(sizeof(float) * values.count());
+    double* tmp = (double*)malloc(sizeof(double) * values.count());
     for (int i = 0; i < values.count(); i++) {
         tmp[i] = values[i];
     }
@@ -81,18 +81,18 @@ void HistogramView::setData(const QList<float> values)
     free(tmp);
 }
 
-void HistogramView::setData(int N, float* values)
+void HistogramView::setData(int N, double* values)
 {
     if (d->m_data)
         free(d->m_data);
-    d->m_data = (float*)malloc(sizeof(float) * N);
+    d->m_data = (double*)malloc(sizeof(double) * N);
     for (int i = 0; i < N; i++)
         d->m_data[i] = values[i];
     d->m_N = N;
     d->m_update_required = true;
 }
 
-void HistogramView::setBins(float bin_min, float bin_max, int num_bins)
+void HistogramView::setBins(double bin_min, double bin_max, int num_bins)
 {
     if (num_bins <= 1)
         return;
@@ -100,7 +100,7 @@ void HistogramView::setBins(float bin_min, float bin_max, int num_bins)
         free(d->m_bin_centers);
     if (d->m_bin_counts)
         free(d->m_bin_counts);
-    d->m_bin_centers = (float*)malloc(sizeof(float) * num_bins);
+    d->m_bin_centers = (double*)malloc(sizeof(double) * num_bins);
     d->m_bin_counts = (int*)malloc(sizeof(int) * num_bins);
     d->m_num_bins = num_bins;
     for (int i = 0; i < num_bins; i++) {
@@ -115,7 +115,7 @@ void HistogramView::autoSetBins(int num_bins)
         return;
     if (d->m_N == 0)
         return;
-    float data_min = d->m_data[0], data_max = d->m_data[1];
+    double data_min = d->m_data[0], data_max = d->m_data[1];
     for (int i = 0; i < d->m_N; i++) {
         if (d->m_data[i] < data_min)
             data_min = d->m_data[i];
@@ -126,8 +126,8 @@ void HistogramView::autoSetBins(int num_bins)
         data_min -= 1;
         data_max += 1;
     }
-    float bin_min = data_min;
-    float bin_max = data_max;
+    double bin_min = data_min;
+    double bin_max = data_max;
     setBins(bin_min, bin_max, num_bins);
 }
 
@@ -163,6 +163,16 @@ void HistogramView::setXRange(MVRange range)
         return;
     d->m_xrange = range;
     update();
+}
+
+#include "msmisc.h"
+void HistogramView::autoCenterXRange()
+{
+    double mean_value = compute_mean(d->m_N, d->m_data);
+    MVRange xrange = this->xRange();
+    double center1 = (xrange.min + xrange.max) / 2;
+    xrange = xrange + (mean_value - center1);
+    this->setXRange(xrange);
 }
 
 void HistogramView::setDrawVerticalAxisAtZero(bool val)
@@ -215,10 +225,10 @@ QImage HistogramView::renderImage(int W, int H)
 
 QRectF make_rect(QPointF p1, QPointF p2)
 {
-    float x = qMin(p1.x(), p2.x());
-    float y = qMin(p1.y(), p2.y());
-    float w = qAbs(p2.x() - p1.x());
-    float h = qAbs(p2.y() - p1.y());
+    double x = qMin(p1.x(), p2.x());
+    double y = qMin(p1.y(), p2.y());
+    double w = qAbs(p2.x() - p1.x());
+    double h = qAbs(p2.y() - p1.y());
     return QRectF(x, y, w, h);
 }
 
@@ -313,17 +323,17 @@ void HistogramViewPrivate::update_bin_counts()
         m_bin_counts[i] = 0;
     }
     m_max_bin_count = 0;
-    QList<float> list;
+    QList<double> list;
     for (int i = 0; i < m_N; i++) {
         list << m_data[i];
     }
     qSort(list);
     if (m_num_bins < 1)
         return;
-    float spacing = m_bin_centers[1] - m_bin_centers[0];
+    double spacing = m_bin_centers[1] - m_bin_centers[0];
     int jj = 0;
     for (int i = 0; i < list.count(); i++) {
-        float val = list[i];
+        double val = list[i];
         while ((jj + 1 < m_num_bins) && (m_bin_centers[jj] + spacing / 2 < val)) {
             jj++;
         }
@@ -354,26 +364,26 @@ QPointF HistogramViewPrivate::coord2pix(QPointF pt, int W, int H)
     if (H <= m_margin_top + m_margin_bottom + 5)
         return QPointF(0, 0);
 
-    float spacing = m_bin_centers[1] - m_bin_centers[0];
-    float xmin = m_bin_centers[0] - spacing / 2;
-    float xmax = m_bin_centers[m_num_bins - 1] + spacing / 2;
-    float ymin = 0;
-    float ymax = m_max_bin_count;
+    double spacing = m_bin_centers[1] - m_bin_centers[0];
+    double xmin = m_bin_centers[0] - spacing / 2;
+    double xmax = m_bin_centers[m_num_bins - 1] + spacing / 2;
+    double ymin = 0;
+    double ymax = m_max_bin_count;
 
     if (m_xrange.min != m_xrange.max) {
         xmin = m_xrange.min;
         xmax = m_xrange.max;
     }
 
-    float xfrac = 0.5;
+    double xfrac = 0.5;
     if (xmax > xmin)
         xfrac = (pt.x() - xmin) / (xmax - xmin);
-    float yfrac = 0.5;
+    double yfrac = 0.5;
     if (ymax > ymin)
         yfrac = (pt.y() - ymin) / (ymax - ymin);
 
-    float x0 = m_margin_left + xfrac * (W - m_margin_left - m_margin_right);
-    float y0 = H - (m_margin_bottom + yfrac * (H - m_margin_top - m_margin_bottom));
+    double x0 = m_margin_left + xfrac * (W - m_margin_left - m_margin_right);
+    double y0 = H - (m_margin_bottom + yfrac * (H - m_margin_top - m_margin_bottom));
 
     return QPointF(x0, y0);
 }
@@ -396,22 +406,22 @@ QPointF HistogramViewPrivate::pix2coord(QPointF pt, int W, int H)
     if (H <= m_margin_top + m_margin_bottom + 5)
         return QPointF(0, 0);
 
-    float spacing = m_bin_centers[1] - m_bin_centers[0];
-    float xmin = m_bin_centers[0] - spacing / 2;
-    float xmax = m_bin_centers[m_num_bins - 1] + spacing / 2;
-    float ymin = 0;
-    float ymax = m_max_bin_count;
+    double spacing = m_bin_centers[1] - m_bin_centers[0];
+    double xmin = m_bin_centers[0] - spacing / 2;
+    double xmax = m_bin_centers[m_num_bins - 1] + spacing / 2;
+    double ymin = 0;
+    double ymax = m_max_bin_count;
 
     if (m_xrange.min != m_xrange.max) {
         xmin = m_xrange.min;
         xmax = m_xrange.max;
     }
 
-    float xfrac = (pt.x() - m_margin_left) / (W - m_margin_left - m_margin_right);
-    float yfrac = 1 - (pt.y() - m_margin_top) / (H - m_margin_top - m_margin_bottom);
+    double xfrac = (pt.x() - m_margin_left) / (W - m_margin_left - m_margin_right);
+    double yfrac = 1 - (pt.y() - m_margin_top) / (H - m_margin_top - m_margin_bottom);
 
-    float x0 = xmin + xfrac * (xmax - xmin);
-    float y0 = ymin + yfrac * (ymax - ymin);
+    double x0 = xmin + xfrac * (xmax - xmin);
+    double y0 = ymin + yfrac * (ymax - ymin);
 
     return QPointF(x0, y0);
 }
@@ -422,7 +432,7 @@ int HistogramViewPrivate::get_bin_index_at(QPointF pt_pix)
         return -1;
     }
     QPointF pt = pix2coord(pt_pix);
-    float spacing = m_bin_centers[1] - m_bin_centers[0];
+    double spacing = m_bin_centers[1] - m_bin_centers[0];
     for (int i = 0; i < m_num_bins; i++) {
         if ((pt.x() >= m_bin_centers[i] - spacing / 2) && (pt.x() <= m_bin_centers[i] + spacing / 2)) {
             //if ((0<=pt.y())&&(pt.y()<=m_bin_counts[i])) {
@@ -473,7 +483,7 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
 
     if (m_num_bins <= 1)
         return;
-    float spacing = m_bin_centers[1] - m_bin_centers[0];
+    double spacing = m_bin_centers[1] - m_bin_centers[0];
     for (int i = 0; i < m_num_bins; i++) {
         QPointF pt1 = coord2pix(QPointF(m_bin_centers[i] - spacing / 2, 0), W, H);
         QPointF pt2 = coord2pix(QPointF(m_bin_centers[i] + spacing / 2, m_bin_counts[i]), W, H);

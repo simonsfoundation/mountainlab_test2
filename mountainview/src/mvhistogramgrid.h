@@ -10,6 +10,11 @@
 #include "mvabstractview.h"
 #include "histogramview.h"
 
+struct HorizontalScaleAxisData {
+    bool use_it = false;
+    QString label;
+};
+
 class MVHistogramGridPrivate;
 class MVHistogramGrid : public MVAbstractView {
     Q_OBJECT
@@ -24,9 +29,13 @@ public:
     void keyPressEvent(QKeyEvent* evt);
 signals:
     void histogramActivated();
+
 protected:
-    void setHistogramViews(const QList<HistogramView *> views);
-private slots:
+    void setHorizontalScaleAxis(HorizontalScaleAxisData X);
+    void setHistogramViews(const QList<HistogramView*> views);
+    QList<HistogramView*> histogramViews();
+private
+slots:
     void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);
     void slot_histogram_view_activated();
     void slot_export_image();

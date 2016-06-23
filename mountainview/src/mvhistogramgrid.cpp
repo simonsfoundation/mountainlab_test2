@@ -25,12 +25,22 @@ public:
     QGridLayout* m_grid_layout;
     QList<HistogramView*> m_histogram_views;
     int m_num_columns;
+    HorizontalScaleAxisData m_horizontal_scale_axis_data;
 
     QList<QWidget*> m_child_widgets;
 
     void do_highlighting();
     int find_view_index_for_k(int k);
     void shift_select_clusters_between(int kA, int kB);
+};
+
+class HorizontalScaleAxis : public QWidget {
+public:
+    HorizontalScaleAxis();
+    HorizontalScaleAxisData m_data;
+
+protected:
+    void paintEvent(QPaintEvent* evt);
 };
 
 MVHistogramGrid::MVHistogramGrid(MVViewAgent* view_agent)
@@ -58,8 +68,6 @@ MVHistogramGrid::MVHistogramGrid(MVViewAgent* view_agent)
         this->addAction(a);
         connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_export_image()));
     }
-
-    this->recalculate();
 }
 
 MVHistogramGrid::~MVHistogramGrid()
@@ -128,10 +136,16 @@ void MVHistogramGrid::keyPressEvent(QKeyEvent* evt)
     }
 }
 
-void MVHistogramGrid::setHistogramViews(const QList<HistogramView *> views)
+void MVHistogramGrid::setHorizontalScaleAxis(HorizontalScaleAxisData X)
 {
+    d->m_horizontal_scale_axis_data = X;
+}
+
+void MVHistogramGrid::setHistogramViews(const QList<HistogramView*> views)
+{
+    qDeleteAll(d->m_child_widgets);
     qDeleteAll(d->m_histogram_views);
-    d->m_histogram_views=views;
+    d->m_histogram_views = views;
 
     int NUM = views.count();
     int num_rows = (int)sqrt(NUM);
@@ -140,7 +154,7 @@ void MVHistogramGrid::setHistogramViews(const QList<HistogramView *> views)
     int num_cols = (NUM + num_rows - 1) / num_rows;
     d->m_num_columns = num_cols;
 
-    QGridLayout *GL=d->m_grid_layout;
+    QGridLayout* GL = d->m_grid_layout;
     for (int jj = 0; jj < views.count(); jj++) {
         HistogramView* HV = views[jj];
         int row0 = (jj) / num_cols;
@@ -153,20 +167,30 @@ void MVHistogramGrid::setHistogramViews(const QList<HistogramView *> views)
         connect(HV, SIGNAL(activated()), this, SLOT(slot_histogram_view_activated()));
         connect(HV, SIGNAL(signalExportHistogramMatrixImage()), this, SLOT(slot_export_image()));
     }
+
+    if (d->m_horizontal_scale_axis_data.use_it) {
+        HorizontalScaleAxis* HSA = new HorizontalScaleAxis;
+        HSA->m_data = d->m_horizontal_scale_axis_data;
+        d->m_child_widgets << HSA;
+        GL->addWidget(HSA, num_rows, 0);
+    }
+}
+
+QList<HistogramView*> MVHistogramGrid::histogramViews()
+{
+    return d->m_histogram_views;
 }
 
 void MVHistogramGrid::slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers)
 {
-    int k=sender()->property("k").toInt();
+    int k = sender()->property("k").toInt();
 
     if (modifiers & Qt::ControlModifier) {
         viewAgent()->clickCluster(k, Qt::ControlModifier);
-    }
-    else if (modifiers & Qt::ShiftModifier) {
+    } else if (modifiers & Qt::ShiftModifier) {
         int k0 = viewAgent()->currentCluster();
         d->shift_select_clusters_between(k0, k);
-    }
-    else {
+    } else {
         viewAgent()->clickCluster(k, Qt::NoModifier);
     }
 }
@@ -201,14 +225,12 @@ void MVHistogramGridPrivate::do_highlighting()
         int k = HV->property("k").toInt();
         if (k == q->viewAgent()->currentCluster()) {
             HV->setCurrent(true);
-        }
-        else {
+        } else {
             HV->setCurrent(false);
         }
         if (selected_clusters.contains(k)) {
             HV->setSelected(true);
-        }
-        else {
+        } else {
             HV->setSelected(false);
         }
     }
@@ -223,11 +245,9 @@ void MVHistogramGridPrivate::shift_select_clusters_between(int kA, int kB)
         for (int ii = qMin(ind1, ind2); ii <= qMax(ind1, ind2); ii++) {
             selected_clusters.insert(m_histogram_views[ii]->property("k2").toInt());
         }
-    }
-    else if (ind1 >= 0) {
+    } else if (ind1 >= 0) {
         selected_clusters.insert(m_histogram_views[ind1]->property("k2").toInt());
-    }
-    else if (ind2 >= 0) {
+    } else if (ind2 >= 0) {
         selected_clusters.insert(m_histogram_views[ind2]->property("k2").toInt());
     }
     q->viewAgent()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
@@ -240,4 +260,38 @@ int MVHistogramGridPrivate::find_view_index_for_k(int k)
             return i;
     }
     return -1;
+}
+
+HorizontalScaleAxis::HorizontalScaleAxis()
+{
+    setFixedHeight(25);
+}
+
+void HorizontalScaleAxis::paintEvent(QPaintEvent* evt)
+{
+    Q_UNUSED(evt)
+    QPainter painter(this);
+    QPen pen = painter.pen();
+    pen.setColor(Qt::black);
+    painter.setPen(pen);
+
+    int W0 = width();
+    //int H0=height();
+    int H1 = 8;
+    int margin1 = 6;
+    int len1 = 6;
+    QPointF pt1(W0 / 2, H1);
+    QPointF pt2(W0 - margin1, H1);
+    QPointF pt3(W0 / 2, H1 - len1);
+    QPointF pt4(W0 - margin1, H1 - len1);
+    painter.drawLine(pt1, pt2);
+    painter.drawLine(pt1, pt3);
+    painter.drawLine(pt2, pt4);
+
+    QFont font = painter.font();
+    font.setPixelSize(12);
+    painter.setFont(font);
+    QRect text_box(W0 / 2, H1 + 3, W0 / 2, H1 + 3);
+    QString txt = QString("%1").arg(m_data.label);
+    painter.drawText(text_box, txt, Qt::AlignCenter | Qt::AlignTop);
 }

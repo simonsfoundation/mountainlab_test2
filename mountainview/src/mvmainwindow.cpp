@@ -20,6 +20,7 @@
 #include "mvfile.h"
 #include "mvamphistview.h"
 #include "mvclustercontextmenu.h"
+#include "mvamphistview2.h"
 
 /// TODO, get rid of computationthread
 
@@ -71,8 +72,8 @@ public:
     void add_tab(MVAbstractView* W, QString label);
 
     MVCrossCorrelogramsWidget3* open_auto_correlograms();
-    MVCrossCorrelogramsWidget2* open_cross_correlograms(int k);
-    MVCrossCorrelogramsWidget2* open_matrix_of_cross_correlograms();
+    MVCrossCorrelogramsWidget3* open_cross_correlograms(int k);
+    MVCrossCorrelogramsWidget3* open_matrix_of_cross_correlograms();
     MVClusterDetailWidget* open_cluster_details();
     void open_timeseries();
     void open_clips();
@@ -155,7 +156,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     vlayout->addWidget(status_bar);
     this->setLayout(vlayout);
 
-    QFont fnt=this->font();
+    QFont fnt = this->font();
     fnt.setPointSize(12);
     this->setFont(fnt);
 
@@ -169,6 +170,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_buttons()));
 
     QShortcut* closeWindowShortcut = new QShortcut(QKeySequence("Ctrl+W"), this, SLOT(close()));
+    Q_UNUSED(closeWindowShortcut)
 }
 
 MVMainWindow::~MVMainWindow()
@@ -200,7 +202,8 @@ void MVMainWindow::setMVFile(MVFile ff)
     d->m_view_agent->clear();
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
-    foreach (QString name, timeseries_names) {
+    foreach(QString name, timeseries_names)
+    {
         DiskReadMda TS(d->m_mv_file.timeseriesPathResolved(name));
         d->m_view_agent->addTimeseries(name, DiskReadMda(TS));
     }
@@ -212,8 +215,7 @@ void MVMainWindow::setMVFile(MVFile ff)
     //d->m_control_panel->setEventFilter();
     if (!d->m_mv_file.currentTimeseriesName().isEmpty()) {
         d->m_view_agent->setCurrentTimeseriesName(d->m_mv_file.currentTimeseriesName());
-    }
-    else {
+    } else {
         d->m_view_agent->setCurrentTimeseriesName(timeseries_names.value(0));
     }
 
@@ -224,7 +226,8 @@ void MVMainWindow::setMVFile(MVFile ff)
         if (ann0.contains("cluster_attributes")) {
             QJsonObject obj2 = ann0["cluster_attributes"].toObject();
             QStringList keys = obj2.keys();
-            foreach (QString key, keys) {
+            foreach(QString key, keys)
+            {
                 bool ok;
                 int num = key.toInt(&ok);
                 if (ok) {
@@ -237,8 +240,7 @@ void MVMainWindow::setMVFile(MVFile ff)
             QJsonArray CM = ann0["cluster_merge"].toArray();
             QString json = QJsonDocument(CM).toJson(QJsonDocument::Compact);
             d->m_view_agent->setClusterMerge(ClusterMerge::fromJson(json));
-        }
-        else {
+        } else {
             d->m_view_agent->setClusterMerge(ClusterMerge());
         }
     }
@@ -261,7 +263,8 @@ MVFile MVMainWindow::getMVFile()
     QJsonObject cluster_attributes;
     {
         QList<int> keys = d->m_view_agent->clusterAttributesKeys();
-        foreach (int key, keys) {
+        foreach(int key, keys)
+        {
             cluster_attributes[QString("%1").arg(key)] = d->m_view_agent->clusterAttributes(key);
         }
     }
@@ -286,14 +289,11 @@ void MVMainWindow::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->key() == Qt::Key_M) {
         d->merge_selected();
-    }
-    else if (evt->key() == Qt::Key_U) {
+    } else if (evt->key() == Qt::Key_U) {
         d->unmerge_selected();
-    }
-    else if (evt->key() == Qt::Key_T) {
+    } else if (evt->key() == Qt::Key_T) {
         d->tag_selected();
-    }
-    else
+    } else
         evt->ignore();
 }
 
@@ -301,62 +301,43 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
 {
     if (str == "open-cluster-details") {
         d->open_cluster_details();
-    }
-    else if (str == "open-auto-correlograms") {
+    } else if (str == "open-auto-correlograms") {
         d->open_auto_correlograms();
-    }
-    else if (str == "open-matrix-of-cross-correlograms") {
+    } else if (str == "open-matrix-of-cross-correlograms") {
         d->open_matrix_of_cross_correlograms();
-    }
-    else if (str == "open-timeseries-data") {
+    } else if (str == "open-timeseries-data") {
         d->open_timeseries();
-    }
-    else if (str == "open-clips") {
+    } else if (str == "open-clips") {
         d->open_clips();
-    }
-    else if (str == "open-pca-features") {
+    } else if (str == "open-pca-features") {
         d->open_pca_features();
-    }
-    else if (str == "open-channel-features") {
+    } else if (str == "open-channel-features") {
         d->open_channel_features();
-    }
-    else if (str == "open-amplitude-histograms") {
+    } else if (str == "open-amplitude-histograms") {
         d->open_amplitude_histograms();
-    }
-    else if (str == "open-spike-spray") {
+    } else if (str == "open-spike-spray") {
         d->open_spike_spray();
-    }
-    else if (str == "open-firing-events") {
+    } else if (str == "open-firing-events") {
         d->open_firing_events();
-    }
-    else if (str == "merge_selected") {
+    } else if (str == "merge_selected") {
         d->merge_selected();
-    }
-    else if (str == "unmerge_selected") {
+    } else if (str == "unmerge_selected") {
         d->unmerge_selected();
-    }
-    else if (str == "tag_selected") {
+    } else if (str == "tag_selected") {
         d->tag_selected();
-    }
-    else if (str == "export_mountainview_document") {
+    } else if (str == "export_mountainview_document") {
         d->export_mountainview_document();
-    }
-    else if (str == "export_original_firings") {
+    } else if (str == "export_original_firings") {
         d->export_original_firings();
-    }
-    else if (str == "export_filtered_firings") {
+    } else if (str == "export_filtered_firings") {
         d->export_filtered_firings();
-    }
-    else if (str == "recalculate-all") {
+    } else if (str == "recalculate-all") {
         d->recalculate_views("all");
-    }
-    else if (str == "recalculate-all-suggested") {
+    } else if (str == "recalculate-all-suggested") {
         d->recalculate_views("all-suggested");
-    }
-    else if (str == "recalculate-all-visible") {
+    } else if (str == "recalculate-all-visible") {
         d->recalculate_views("all-visible");
-    }
-    else if (str == "recalculate-all-suggested-and-visible") {
+    } else if (str == "recalculate-all-suggested-and-visible") {
         d->recalculate_views("all-suggested-and-visible");
     }
 }
@@ -467,8 +448,7 @@ void MVMainWindowPrivate::update_sizes()
         }
         if (H0 > 900) {
             tv_height = 300;
-        }
-        else {
+        } else {
             tv_height = 200;
         }
         int cp_height = H0 - tv_height;
@@ -495,11 +475,11 @@ MVCrossCorrelogramsWidget3* MVMainWindowPrivate::open_auto_correlograms()
     return X;
 }
 
-MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_cross_correlograms(int k)
+MVCrossCorrelogramsWidget3* MVMainWindowPrivate::open_cross_correlograms(int k)
 {
-    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
-    CrossCorrelogramOptions opts;
-    opts.mode = Cross_Correlograms;
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(m_view_agent);
+    CrossCorrelogramOptions3 opts;
+    opts.mode = Cross_Correlograms3;
     opts.ks << k;
     X->setOptions(opts);
     QString str = QString("CC for %1").arg(k);
@@ -507,15 +487,15 @@ MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_cross_correlograms(int k)
     return X;
 }
 
-MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_matrix_of_cross_correlograms()
+MVCrossCorrelogramsWidget3* MVMainWindowPrivate::open_matrix_of_cross_correlograms()
 {
-    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(m_view_agent);
     QList<int> ks = m_view_agent->selectedClusters();
     qSort(ks);
     if (ks.isEmpty())
         return X;
-    CrossCorrelogramOptions opts;
-    opts.mode = Matrix_Of_Cross_Correlograms;
+    CrossCorrelogramOptions3 opts;
+    opts.mode = Matrix_Of_Cross_Correlograms3;
     opts.ks = ks;
     X->setOptions(opts);
     add_tab(X, QString("CC Matrix"));
@@ -582,7 +562,8 @@ void MVMainWindowPrivate::open_channel_features()
         return;
     QStringList strlist = str.split(",", QString::SkipEmptyParts);
     QList<int> channels;
-    foreach (QString a, strlist) {
+    foreach(QString a, strlist)
+    {
         bool ok;
         channels << a.toInt(&ok);
         if (!ok) {
@@ -606,7 +587,7 @@ void MVMainWindowPrivate::open_channel_features()
 
 void MVMainWindowPrivate::open_amplitude_histograms()
 {
-    MVAmpHistView* X = new MVAmpHistView(m_view_agent);
+    MVAmpHistView2* X = new MVAmpHistView2(m_view_agent);
     add_tab(X, "Amplitudes");
     QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_amplitude_histogram_activated()));
 }
@@ -719,8 +700,7 @@ void DownloadComputer::compute()
     if (!X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3())) {
         if (thread_interrupt_requested()) {
             task.error("Halted download: " + source_path);
-        }
-        else {
+        } else {
             task.error("Failed to readChunk from: " + source_path);
         }
         return;
@@ -729,8 +709,7 @@ void DownloadComputer::compute()
     if (use_float64) {
         task.log("Writing 64-bit to " + dest_path);
         Y.write64(dest_path);
-    }
-    else {
+    } else {
         task.log("Writing 32-bit to " + dest_path);
         Y.write32(dest_path);
     }
@@ -789,7 +768,8 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
 void MVMainWindowPrivate::recalculate_views(QString str)
 {
     QList<MVAbstractView*> widgets = m_tabber->allWidgets();
-    foreach (MVAbstractView* VV, widgets) {
+    foreach(MVAbstractView * VV, widgets)
+    {
         if (VV) {
             bool do_it = false;
             if (str == "all")
