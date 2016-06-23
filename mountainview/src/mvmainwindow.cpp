@@ -695,8 +695,6 @@ void MVMainWindowPrivate::open_clips()
 }
 #endif
 
-}
-
 void MVMainWindowPrivate::open_discrim_histograms()
 {
     QList<int> ks = m_view_agent->selectedClusters();
@@ -708,6 +706,7 @@ void MVMainWindowPrivate::open_discrim_histograms()
     X->setClusterNumbers(ks);
     add_tab(X, "Discrim");
     QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_discrim_histogram_activated()));
+}
 /*
 void MVMainWindowPrivate::find_nearby_events()
 {
