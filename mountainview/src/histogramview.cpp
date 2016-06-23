@@ -8,10 +8,13 @@
 class HistogramViewPrivate {
 public:
     HistogramView* q;
+    /// TODO (LOW) we should be using QVector<double> instead of ridiculous malloc's
     int m_N;
     double* m_data;
+    QList<double> m_second_data;
     double* m_bin_centers;
     int* m_bin_counts;
+    int *m_second_bin_counts;
     int m_max_bin_count;
     bool m_update_required;
     int m_num_bins;
@@ -44,6 +47,7 @@ HistogramView::HistogramView(QWidget* parent)
     d->m_data = 0;
     d->m_bin_centers = 0;
     d->m_bin_counts = 0;
+    d->m_second_bin_counts = 0;
     d->m_max_bin_count = 0;
     d->m_num_bins = 0;
     d->m_hovered_bin_index = -1;
@@ -66,6 +70,8 @@ HistogramView::~HistogramView()
         free(d->m_data);
     if (d->m_bin_counts)
         free(d->m_bin_counts);
+    if (d->m_second_bin_counts)
+        free(d->m_second_bin_counts);
     if (d->m_bin_centers)
         free(d->m_bin_centers);
     delete d;
@@ -92,6 +98,12 @@ void HistogramView::setData(int N, double* values)
     d->m_update_required = true;
 }
 
+void HistogramView::setSecondData(const QList<double> &values)
+{
+    d->m_second_data=values;
+    d->m_update_required=true;
+}
+
 void HistogramView::setBins(double bin_min, double bin_max, int num_bins)
 {
     if (num_bins <= 1)
@@ -100,8 +112,11 @@ void HistogramView::setBins(double bin_min, double bin_max, int num_bins)
         free(d->m_bin_centers);
     if (d->m_bin_counts)
         free(d->m_bin_counts);
+    if (d->m_second_bin_counts)
+        free(d->m_second_bin_counts);
     d->m_bin_centers = (double*)malloc(sizeof(double) * num_bins);
     d->m_bin_counts = (int*)malloc(sizeof(int) * num_bins);
+    d->m_second_bin_counts = (int*)malloc(sizeof(int) * num_bins);
     d->m_num_bins = num_bins;
     for (int i = 0; i < num_bins; i++) {
         d->m_bin_centers[i] = bin_min + (bin_max - bin_min) * i * 1.0F / (num_bins - 1);
@@ -321,29 +336,48 @@ void HistogramViewPrivate::update_bin_counts()
 {
     for (int i = 0; i < m_num_bins; i++) {
         m_bin_counts[i] = 0;
+        m_second_bin_counts[i]=0;
     }
     m_max_bin_count = 0;
-    QList<double> list;
-    for (int i = 0; i < m_N; i++) {
-        list << m_data[i];
-    }
-    qSort(list);
-    if (m_num_bins < 1)
-        return;
-    double spacing = m_bin_centers[1] - m_bin_centers[0];
-    int jj = 0;
-    for (int i = 0; i < list.count(); i++) {
-        double val = list[i];
-        while ((jj + 1 < m_num_bins) && (m_bin_centers[jj] + spacing / 2 < val)) {
-            jj++;
+    for (int pass=1; pass<=2; pass++) {
+        QList<double> list;
+        if (pass==1) {
+            for (int i = 0; i < m_N; i++) {
+                list << m_data[i];
+            }
         }
-        if ((val >= m_bin_centers[jj] - spacing / 2) && (val <= m_bin_centers[jj] + spacing / 2)) {
-            m_bin_counts[jj]++;
+        else {
+            list=m_second_data;
         }
-    }
-    for (int i = 0; i < m_num_bins; i++) {
-        if (m_bin_counts[i] > m_max_bin_count)
-            m_max_bin_count = m_bin_counts[i];
+        qSort(list);
+        if (m_num_bins < 1)
+            return;
+        double spacing = m_bin_centers[1] - m_bin_centers[0];
+        int jj = 0;
+        for (int i = 0; i < list.count(); i++) {
+            double val = list[i];
+            while ((jj + 1 < m_num_bins) && (m_bin_centers[jj] + spacing / 2 < val)) {
+                jj++;
+            }
+            if ((val >= m_bin_centers[jj] - spacing / 2) && (val <= m_bin_centers[jj] + spacing / 2)) {
+                if (pass==1) {
+                    m_bin_counts[jj]++;
+                }
+                else {
+                    m_second_bin_counts[jj]++;
+                }
+            }
+        }
+        for (int i = 0; i < m_num_bins; i++) {
+            if (pass==1) {
+                if (m_bin_counts[i] > m_max_bin_count)
+                    m_max_bin_count = m_bin_counts[i];
+            }
+            else {
+                if (m_second_bin_counts[i] > m_max_bin_count)
+                    m_max_bin_count = m_second_bin_counts[i];
+            }
+        }
     }
 }
 
@@ -449,6 +483,13 @@ void HistogramViewPrivate::export_image()
     user_save_image(img);
 }
 
+QColor modify_color_for_second_histogram(QColor col) {
+    QColor ret=col;
+    ret.setGreen(qMin(255,ret.green()+30)); //more green
+    ret=lighten(ret,-20,-20,-20); //darker
+    return ret;
+}
+
 void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
 {
     //d->m_colors["view_background"]=QColor(245,245,245);
@@ -484,23 +525,36 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
     if (m_num_bins <= 1)
         return;
     double spacing = m_bin_centers[1] - m_bin_centers[0];
-    for (int i = 0; i < m_num_bins; i++) {
-        QPointF pt1 = coord2pix(QPointF(m_bin_centers[i] - spacing / 2, 0), W, H);
-        QPointF pt2 = coord2pix(QPointF(m_bin_centers[i] + spacing / 2, m_bin_counts[i]), W, H);
-        QRectF R = make_rect(pt1, pt2);
+
+    for (int pass=1; pass<=2; pass++) {
+        int *bin_counts;
+        if (pass==1) bin_counts=m_bin_counts;
+        else bin_counts=m_second_bin_counts;
         QColor col = m_fill_color;
-        if (i == m_hovered_bin_index)
-            col = lighten(col, 15, 15, 15);
-        painter.fillRect(R, col);
-        painter.setPen(m_line_color);
-        painter.drawRect(R);
+        QColor line_color = m_line_color;
+        if (pass==2) {
+            col=modify_color_for_second_histogram(col);
+            line_color = modify_color_for_second_histogram(line_color);
+        }
+        for (int i = 0; i < m_num_bins; i++) {
+            QPointF pt1 = coord2pix(QPointF(m_bin_centers[i] - spacing / 2, 0), W, H);
+            QPointF pt2 = coord2pix(QPointF(m_bin_centers[i] + spacing / 2, bin_counts[i]), W, H);
+            QRectF R = make_rect(pt1, pt2);
+            if (i == m_hovered_bin_index)
+                painter.fillRect(R, lighten(col,25,25,25));
+            else
+                painter.fillRect(R, col);
+            painter.setPen(line_color);
+            painter.drawRect(R);
+        }
     }
 
     if (m_draw_vertical_axis_at_zero) {
         QPointF pt0 = coord2pix(QPointF(0, 0));
         QPointF pt1 = coord2pix(QPointF(0, m_max_bin_count));
         QPen pen = painter.pen();
-        pen.setColor(Qt::green);
+        pen.setColor(Qt::black);
+        pen.setStyle(Qt::DashLine);
         painter.setPen(pen);
         painter.drawLine(pt0, pt1);
     }

@@ -7,7 +7,6 @@
 #include <QWheelEvent>
 
 /// TODO zoom in/out icons
-/// TODO (HIGH) figure out panning? Should it be per view?
 
 struct AmpHistogram {
     int k;

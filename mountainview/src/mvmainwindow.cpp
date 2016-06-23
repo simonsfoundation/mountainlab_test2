@@ -21,6 +21,7 @@
 #include "mvamphistview.h"
 #include "mvclustercontextmenu.h"
 #include "mvamphistview2.h"
+#include "mvdiscrimhistview.h"
 
 /// TODO, get rid of computationthread
 
@@ -82,6 +83,7 @@ public:
     void open_amplitude_histograms();
     void open_spike_spray();
     void open_firing_events();
+    void open_discrim_histograms();
     /// TODO: (MEDIUM) implement find_nearby_events
     //void find_nearby_events();
 
@@ -315,6 +317,8 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
         d->open_channel_features();
     } else if (str == "open-amplitude-histograms") {
         d->open_amplitude_histograms();
+    } else if (str == "open-discrim-histograms") {
+        d->open_discrim_histograms();
     } else if (str == "open-spike-spray") {
         d->open_spike_spray();
     } else if (str == "open-firing-events") {
@@ -383,6 +387,7 @@ void MVMainWindow::slot_update_buttons()
     d->set_button_enabled("open-spike-spray", something_selected);
     d->set_button_enabled("open-firing-events", (something_selected) && (has_peaks));
     d->set_button_enabled("find-nearby-events", d->m_view_agent->selectedClusters().count() >= 2);
+    d->set_button_enabled("open-discrim-histograms", d->m_view_agent->selectedClusters().count() >= 2);
 
     d->set_button_enabled("merge_selected", d->m_view_agent->selectedClusters().count() >= 2);
     d->set_button_enabled("unmerge_selected", something_selected);
@@ -617,6 +622,19 @@ void MVMainWindowPrivate::open_firing_events()
     X->setLabelsToUse(ks.toSet());
     X->setNumTimepoints(m_view_agent->currentTimeseries().N2());
     add_tab(X, QString("Firing Events"));
+}
+
+void MVMainWindowPrivate::open_discrim_histograms()
+{
+    QList<int> ks = m_view_agent->selectedClusters();
+    if (ks.count() == 0) {
+        QMessageBox::information(q, "Unable to open discrimination histograms", "You must select at least one cluster.");
+        return;
+    }
+    MVDiscrimHistView* X = new MVDiscrimHistView(m_view_agent);
+    X->setClusterNumbers(ks);
+    add_tab(X, "Discrim");
+    QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_discrim_histogram_activated()));
 }
 
 /*

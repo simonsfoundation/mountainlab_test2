@@ -35,6 +35,8 @@
 #include "geom2adj_processor.h"
 #include "create_multiscale_timeseries_processor.h"
 #include "extract_channel_values_processor.h"
+#include "mv_discrimhist_processor.h"
+
 #include "mlutils.h"
 
 #include "textfile.h"
@@ -100,6 +102,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new geom2adj_Processor);
     loadProcessor(new create_multiscale_timeseries_Processor);
     loadProcessor(new extract_channel_values_Processor);
+    loadProcessor(new mv_discrimhist_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString& processor_name) const

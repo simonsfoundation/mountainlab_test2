@@ -6,7 +6,7 @@
 #endif
 #include "get_principal_components.h"
 
-Mda extract_clips(DiskReadMda& X, const QList<double>& times, int clip_size)
+Mda extract_clips(const DiskReadMda& X, const QList<double>& times, int clip_size)
 {
     int M = X.N1();
     int N = X.N2();
@@ -30,7 +30,7 @@ Mda extract_clips(DiskReadMda& X, const QList<double>& times, int clip_size)
     return clips;
 }
 
-Mda extract_clips(DiskReadMda& X, const QList<double>& times, const QList<int>& channels, int clip_size)
+Mda extract_clips(const DiskReadMda& X, const QList<double>& times, const QList<int>& channels, int clip_size)
 {
     int M = X.N1();
     int N = X.N2();

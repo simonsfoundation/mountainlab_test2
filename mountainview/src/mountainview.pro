@@ -52,11 +52,13 @@ HEADERS += \
     mvabstractview.h \
     mvmisc.h \
     mvamphistview.h \
+    mvdiscrimhistview.h \
     tabberframe.h \
     mvclustercontextmenu.h \
     mvhistogramgrid.h \
     mvcrosscorrelogramswidget3.h \
     mvamphistview2.h
+
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvutils.cpp \
@@ -92,6 +94,7 @@ SOURCES += mountainviewmain.cpp \
     mvabstractview.cpp \
     mvmisc.cpp \
     mvamphistview.cpp \
+    mvdiscrimhistview.cpp \
     tabberframe.cpp \
     mvclustercontextmenu.cpp \
     mvhistogramgrid.cpp \

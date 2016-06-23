@@ -9,17 +9,17 @@
 #include "msprocessor.h"
 
 class compute_outlier_scores_ProcessorPrivate;
-class compute_outlier_scores_Processor : public MSProcessor
-{
+class compute_outlier_scores_Processor : public MSProcessor {
 public:
-	friend class compute_outlier_scores_ProcessorPrivate;
-	compute_outlier_scores_Processor();
-	virtual ~compute_outlier_scores_Processor();
+    friend class compute_outlier_scores_ProcessorPrivate;
+    compute_outlier_scores_Processor();
+    virtual ~compute_outlier_scores_Processor();
 
-	bool check(const QMap<QString,QVariant> &params);
-	bool run(const QMap<QString,QVariant> &params);
+    bool check(const QMap<QString, QVariant>& params);
+    bool run(const QMap<QString, QVariant>& params);
+
 private:
-	compute_outlier_scores_ProcessorPrivate *d;
+    compute_outlier_scores_ProcessorPrivate* d;
 };
 
 #endif // COMPUTE_OUTLIER_SCORES_PROCESSOR_H
