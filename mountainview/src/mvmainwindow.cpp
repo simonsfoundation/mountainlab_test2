@@ -1,6 +1,7 @@
 #include "mvmainwindow.h"
 #include "diskreadmda.h"
 #include "mvcrosscorrelogramswidget2.h"
+#include "mvcrosscorrelogramswidget3.h"
 #include "mvclusterdetailwidget.h"
 #include "mvclipswidget.h"
 #include "mvclusterwidget.h"
@@ -69,7 +70,7 @@ public:
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
 
-    MVCrossCorrelogramsWidget2* open_auto_correlograms();
+    MVCrossCorrelogramsWidget3* open_auto_correlograms();
     MVCrossCorrelogramsWidget2* open_cross_correlograms(int k);
     MVCrossCorrelogramsWidget2* open_matrix_of_cross_correlograms();
     MVClusterDetailWidget* open_cluster_details();
@@ -153,6 +154,10 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     vlayout->addWidget(hsplitter);
     vlayout->addWidget(status_bar);
     this->setLayout(vlayout);
+
+    QFont fnt=this->font();
+    fnt.setPointSize(12);
+    this->setFont(fnt);
 
     //update which buttons are enabled/disabled
     slot_update_buttons();
@@ -479,11 +484,11 @@ void MVMainWindowPrivate::add_tab(MVAbstractView* W, QString label)
     m_tabber->addWidget(m_tabber->currentContainerName(), label, W);
 }
 
-MVCrossCorrelogramsWidget2* MVMainWindowPrivate::open_auto_correlograms()
+MVCrossCorrelogramsWidget3* MVMainWindowPrivate::open_auto_correlograms()
 {
-    MVCrossCorrelogramsWidget2* X = new MVCrossCorrelogramsWidget2(m_view_agent);
-    CrossCorrelogramOptions opts;
-    opts.mode = All_Auto_Correlograms;
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(m_view_agent);
+    CrossCorrelogramOptions3 opts;
+    opts.mode = All_Auto_Correlograms3;
     X->setOptions(opts);
     add_tab(X, "Auto-Correlograms");
     QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_auto_correlogram_activated()));

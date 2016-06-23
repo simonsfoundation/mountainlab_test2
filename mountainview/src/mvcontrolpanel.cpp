@@ -51,7 +51,7 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
 
     QFont font = this->font();
     font.setFamily("Arial");
-    font.setPixelSize(12);
+    font.setPointSize(12);
     this->setFont(font);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -76,7 +76,7 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         for (int i = 0; i < BB.count(); i++) {
             QToolButton* button = new QToolButton;
             QFont font = button->font();
-            font.setPixelSize(14);
+            font.setPointSize(14);
             button->setFont(font);
             button->setText(BB[i].label);
             button->setProperty("action_name", BB[i].name);
@@ -100,7 +100,7 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         for (int i = 0; i < BB.count(); i++) {
             QToolButton* button = new QToolButton;
             QFont font = button->font();
-            font.setPixelSize(14);
+            font.setPointSize(14);
             button->setFont(font);
             button->setText(BB[i].label);
             button->setProperty("action_name", BB[i].name);
