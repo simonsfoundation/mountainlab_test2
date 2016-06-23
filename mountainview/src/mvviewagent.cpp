@@ -241,6 +241,20 @@ QSet<QString> MVViewAgent::clusterTags(int num) const
     return jsonarray2stringset(clusterAttributes(num)["tags"].toArray());
 }
 
+QSet<QString> MVViewAgent::allClusterTags() const
+{
+    QSet<QString> ret;
+    ret.insert("accepted");
+    ret.insert("rejected");
+    QList<int> keys = clusterAttributesKeys();
+    foreach (int key, keys) {
+        QSet<QString> tags0 = clusterTags(key);
+        foreach (QString tag, tags0)
+            ret.insert(tag);
+    }
+    return ret;
+}
+
 void MVViewAgent::setClusterMerge(const ClusterMerge& CM)
 {
     if (d->m_cluster_merge == CM)
@@ -403,14 +417,16 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        } else {
+        }
+        else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    } else {
+    }
+    else {
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
     }
@@ -455,10 +471,6 @@ bool ClusterVisibilityRule::operator==(const ClusterVisibilityRule& other) const
 {
     if (this->view_merged != other.view_merged)
         return false;
-    if (this->view_all_untagged != other.view_all_untagged)
-        return false;
-    if (this->view_all_tagged != other.view_all_tagged)
-        return false;
     if (this->view_tags != other.view_tags)
         return false;
     return true;
@@ -467,8 +479,6 @@ bool ClusterVisibilityRule::operator==(const ClusterVisibilityRule& other) const
 void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
 {
     this->view_merged = other.view_merged;
-    this->view_all_untagged = other.view_all_untagged;
-    this->view_all_tagged = other.view_all_tagged;
     this->view_tags = other.view_tags;
 }
 
@@ -481,13 +491,10 @@ bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num)
 
     QSet<QString> tags = context->clusterTags(cluster_num);
 
-    if ((tags.isEmpty()) && (this->view_all_untagged))
-        return true;
-    if ((!tags.isEmpty()) && (this->view_all_tagged))
+    if (view_tags.isEmpty())
         return true;
 
-    foreach(QString tag, tags)
-    {
+    foreach (QString tag, tags) {
         if (view_tags.contains(tag))
             return true;
     }

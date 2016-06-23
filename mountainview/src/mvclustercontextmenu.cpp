@@ -17,15 +17,14 @@ MVClusterContextMenu::MVClusterContextMenu(MVContext* mvcontext, QSet<int> clust
     d->m_cluster_numbers = cluster_numbers;
 
     QStringList valid_tags;
-    valid_tags << "accept"
-               << "reject"
+    valid_tags << "accepted"
+               << "rejected"
                << "noise"
                << "mua"
                << "artifact";
 
     QSet<QString> tags_set;
-    foreach(int cluster_number, d->m_cluster_numbers)
-    {
+    foreach (int cluster_number, d->m_cluster_numbers) {
         QJsonObject attributes = d->m_context->clusterAttributes(cluster_number);
         QJsonArray tags = attributes["tags"].toArray();
         for (int i = 0; i < tags.count(); i++) {
@@ -40,8 +39,7 @@ MVClusterContextMenu::MVClusterContextMenu(MVContext* mvcontext, QSet<int> clust
         //add tag
         QMenu* M = new QMenu;
         M->setTitle("Add tag");
-        foreach(QString tag, valid_tags)
-        {
+        foreach (QString tag, valid_tags) {
             QAction* A = new QAction(this);
             A->setText(tag);
             A->setProperty("tag", tag);
@@ -54,8 +52,7 @@ MVClusterContextMenu::MVClusterContextMenu(MVContext* mvcontext, QSet<int> clust
         //remove tag
         QMenu* M = new QMenu;
         M->setTitle("Remove tag");
-        foreach(QString tag, tags_list)
-        {
+        foreach (QString tag, tags_list) {
             QAction* A = new QAction(this);
             A->setText(tag);
             A->setProperty("tag", tag);
@@ -89,8 +86,7 @@ void MVClusterContextMenu::slot_add_tag()
     if (tag.isEmpty())
         return;
 
-    foreach(int cluster_number, d->m_cluster_numbers)
-    {
+    foreach (int cluster_number, d->m_cluster_numbers) {
         QSet<QString> tags = d->m_context->clusterTags(cluster_number);
         tags.insert(tag);
         d->m_context->setClusterTags(cluster_number, tags);
@@ -106,8 +102,7 @@ void MVClusterContextMenu::slot_remove_tag()
     if (tag.isEmpty())
         return;
 
-    foreach(int cluster_number, d->m_cluster_numbers)
-    {
+    foreach (int cluster_number, d->m_cluster_numbers) {
         QSet<QString> tags = d->m_context->clusterTags(cluster_number);
         tags.remove(tag);
         d->m_context->setClusterTags(cluster_number, tags);
@@ -116,8 +111,7 @@ void MVClusterContextMenu::slot_remove_tag()
 
 void MVClusterContextMenu::slot_clear_tags()
 {
-    foreach(int cluster_number, d->m_cluster_numbers)
-    {
+    foreach (int cluster_number, d->m_cluster_numbers) {
         QSet<QString> tags = d->m_context->clusterTags(cluster_number);
         tags.clear();
         d->m_context->setClusterTags(cluster_number, tags);

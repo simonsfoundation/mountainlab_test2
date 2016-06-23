@@ -7,6 +7,7 @@
 #ifndef MVCONTROLPANEL_H
 #define MVCONTROLPANEL_H
 
+#include "flowlayout.h"
 #include "mvviewagent.h"
 
 #include <QAbstractButton>
@@ -16,6 +17,7 @@
 #include <QGroupBox>
 #include <QJsonObject>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QString>
 #include <QWidget>
 
@@ -79,6 +81,23 @@ private:
     QMap<QString, QGroupBox*> m_groupbox_controls;
     QMap<QString, QComboBox*> m_combobox_controls;
     QMap<QString, QPushButton*> m_buttons;
+};
+
+class ClusterVisibilityControls : public QObject {
+    Q_OBJECT
+public:
+    ClusterVisibilityControls(MVContext* mvcontext, FlowLayout* layout);
+    virtual ~ClusterVisibilityControls();
+
+private:
+    MVContext* m_context;
+    FlowLayout* m_flayout;
+    QList<QWidget*> m_controls;
+
+    QRadioButton* add_control(QString tag, QString label);
+private slots:
+    void slot_controls_changed();
+    void slot_update_controls();
 };
 
 #endif // MVCONTROLPANEL_H
