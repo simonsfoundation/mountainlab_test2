@@ -1,6 +1,5 @@
 #include "mvclusterwidget.h"
 #include "mvclusterview.h"
-#include "computationthread.h"
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QInputDialog>
@@ -12,12 +11,11 @@
 #include "msmisc.h"
 #include <QSettings>
 #include <math.h>
-#include "extract_clips.h"
 #include "mountainprocessrunner.h"
 
 /// TODO (MEDIUM) control brightness in 3D density view
 
-class MVClusterWidgetComputer : public ComputationThread {
+class MVClusterWidgetComputer {
 public:
     //input
     QString mlproxy_url;

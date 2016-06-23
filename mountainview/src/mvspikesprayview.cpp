@@ -5,7 +5,6 @@
 *******************************************************/
 
 #include "mvspikesprayview.h"
-#include "computationthread.h"
 #include "extract_clips.h"
 #include "mountainprocessrunner.h"
 #include "mvmainwindow.h"

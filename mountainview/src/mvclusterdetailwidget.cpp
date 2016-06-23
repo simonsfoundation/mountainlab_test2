@@ -22,7 +22,6 @@
 #include <QMessageBox>
 #include <QTimer>
 #include "compute_templates_0.h"
-#include "computationthread.h"
 #include "mountainprocessrunner.h"
 #include <math.h>
 #include "mlutils.h"

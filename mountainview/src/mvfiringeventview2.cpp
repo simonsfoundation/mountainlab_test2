@@ -106,7 +106,6 @@ void MVFiringEventView2::setAmplitudeRange(MVRange range)
     update();
 }
 
-#include "computationthread.h"
 #include "msmisc.h"
 #include "mvmainwindow.h"
 void MVFiringEventView2::autoSetAmplitudeRange()

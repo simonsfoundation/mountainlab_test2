@@ -7,7 +7,6 @@
 #include "mvspikesprayview.h"
 #include "mvfiringeventview2.h"
 #include "tabber.h"
-#include "computationthread.h"
 #include "taskprogressview.h"
 #include "mvcontrolpanel.h"
 #include "taskprogress.h"
@@ -781,6 +780,7 @@ TabberTabWidget* MVMainWindowPrivate::tab_widget_of(QWidget* W)
     return m_tabs1;
 }
 
+#include "computationthread.h"
 class DownloadComputer : public ComputationThread {
 public:
     //inputs

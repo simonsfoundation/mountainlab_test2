@@ -5,7 +5,6 @@
 *******************************************************/
 
 #include "mvcrosscorrelogramswidget2.h"
-#include "computationthread.h"
 #include "histogramview.h"
 #include "mvutils.h"
 #include "taskprogress.h"
