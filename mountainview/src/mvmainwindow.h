@@ -24,6 +24,11 @@ class Tabber;
  *  Presents user with a rich set of views. Cross-correlograms, raw data, cluster details, rotatable 3D views, firing rate vs. time view, etc.
  */
 
+/// Witold, please help do this a better way
+enum RecalculateViewsMode {
+    All,AllVisible,Suggested,SuggestedVisible
+};
+
 class MVMainWindowPrivate;
 class MVMainWindow : public QWidget {
     Q_OBJECT
@@ -31,24 +36,26 @@ public:
     friend class MVMainWindowPrivate;
     MVMainWindow(MVViewAgent* view_agent, QWidget* parent = 0);
     virtual ~MVMainWindow();
-    void setCurrentTimeseriesName(const QString& name);
     void setDefaultInitialization();
-    void setEpochs(const QList<Epoch>& epochs); //put in view agent
-    void setClusterMerge(ClusterMerge CM); //put in view agent
 
     void setMVFile(MVFile mv_file);
     MVFile getMVFile();
-    void registerViewFactory(MVAbstractViewFactory *f);
-    void unregisterViewFactory(MVAbstractViewFactory *f);
-    const QList<MVAbstractViewFactory *> &viewFactories() const;
 
-    void applyUserAction(QString action);
+    void registerViewFactory(MVAbstractViewFactory* f);
+    void unregisterViewFactory(MVAbstractViewFactory* f);
+    const QList<MVAbstractViewFactory*>& viewFactories() const;
 
+    /// Witold, I am going to use this sparingly, thinking it will eventually go away
     static MVMainWindow* instance(); // helper while implementing view factories
-    TabberTabWidget* tabWidget(QWidget *w) const;
-    Tabber* tabber() const;
-    void openView(const QString &id);
+
+    TabberTabWidget* tabWidget(QWidget* w) const; //should disappear
+    Tabber* tabber() const; //should disappear
+
     MVViewAgent* viewAgent() const;
+
+public slots:
+    void openView(const QString& id);
+    void recalculateViews(RecalculateViewsMode mode);
 
 protected:
     void resizeEvent(QResizeEvent* evt);
@@ -56,11 +63,9 @@ protected:
 
 signals:
 
-public
-slots:
+public slots:
 
-private
-slots:
+private slots:
     void slot_control_panel_user_action(QString str);
     void slot_auto_correlogram_activated();
     void slot_amplitude_histogram_activated();
@@ -76,7 +81,7 @@ slots:
 
 private:
     MVMainWindowPrivate* d;
-    static MVMainWindow *window_instance;
+    static MVMainWindow* window_instance;
 };
 
 /*

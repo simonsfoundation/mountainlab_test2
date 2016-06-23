@@ -19,6 +19,7 @@
 #include <QVBoxLayout>
 #include <QDebug>
 #include <QTimer>
+#include <QSignalMapper>
 
 class MVControlPanelPrivate {
 public:
@@ -26,6 +27,7 @@ public:
     ControlManager m_controls;
 
     MVViewAgent* m_view_agent;
+    MVMainWindow *m_main_window;
     FlowLayout* m_viewLayout;
     QLabel* create_group_label(QString label);
     QAbstractButton* find_action_button(QString name);
@@ -43,12 +45,13 @@ action_button_info abi(QString name, QString label)
     return ret;
 }
 
-MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
+MVControlPanel::MVControlPanel(MVViewAgent* view_agent, MVMainWindow *mw)
 {
     d = new MVControlPanelPrivate;
     d->q = this;
 
     d->m_view_agent = view_agent;
+    d->m_main_window= mw;
 
     QVBoxLayout* layout = new QVBoxLayout;
 
@@ -124,16 +127,14 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         layout->addLayout(flayout);
         {
             QToolButton* BB = new QToolButton;
-            BB->setText("Recalculate Visible");
-            BB->setProperty("action_name", "recalculate-all-suggested-and-visible");
-            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            BB->setText("Recalculate Visible *");
+            QObject::connect(BB,SIGNAL(clicked(bool)),this,SLOT(slot_recalculate_suggested_visible()));
             flayout->addWidget(BB);
         }
         {
             QToolButton* BB = new QToolButton;
-            BB->setText("Recalculate All");
-            BB->setProperty("action_name", "recalculate-all-suggested");
-            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_button_clicked()));
+            BB->setText("Recalculate All *");
+            QObject::connect(BB,SIGNAL(clicked(bool)),this,SLOT(slot_recalculate_suggested()));
             flayout->addWidget(BB);
         }
         d->m_controls.add_horizontal_divider_line(layout);
@@ -278,7 +279,7 @@ QAbstractButton* MVControlPanel::findButton(const QString& name)
     return d->find_action_button(name);
 }
 
-QLayout *MVControlPanel::viewLayout() const { return d->m_viewLayout; }
+QLayout* MVControlPanel::viewLayout() const { return d->m_viewLayout; }
 
 void MVControlPanel::slot_update_enabled_controls()
 {
@@ -342,6 +343,16 @@ void MVControlPanel::slot_update_view_agent()
         rule.view_merged = d->m_controls.get_parameter_value("view_merged").toBool();
         d->m_view_agent->setVisibilityRule(rule);
     }
+}
+
+void MVControlPanel::slot_recalculate_suggested_visible()
+{
+    d->m_main_window->recalculateViews(SuggestedVisible);
+}
+
+void MVControlPanel::slot_recalculate_suggested()
+{
+    d->m_main_window->recalculateViews(Suggested);
 }
 
 void ControlManager::add_group_label(QGridLayout* G, QString label)
@@ -420,8 +431,7 @@ QGroupBox* ControlManager::add_radio_button_group(QGridLayout* G, QString name, 
     int r = G->rowCount();
     QGroupBox* box = new QGroupBox;
     QHBoxLayout* hlayout = new QHBoxLayout;
-    foreach(QString option, options)
-    {
+    foreach (QString option, options) {
         QRadioButton* B = new QRadioButton(option);
         if (option == val)
             B->setChecked(true);
@@ -475,8 +485,7 @@ QVariant ControlManager::get_parameter_value(QString name, const QVariant& defau
     if (m_groupbox_controls.contains(name)) {
         QGroupBox* G = m_groupbox_controls[name];
         QList<QObject*> ch = G->children();
-        foreach(QObject * obj, ch)
-        {
+        foreach (QObject* obj, ch) {
             QRadioButton* R = dynamic_cast<QRadioButton*>(obj);
             if (R) {
                 if (R->isChecked())
@@ -502,8 +511,7 @@ void ControlManager::set_parameter_value(QString name, QVariant val)
     if (m_groupbox_controls.contains(name)) {
         QGroupBox* G = m_groupbox_controls[name];
         QList<QObject*> ch = G->children();
-        foreach(QObject * obj, ch)
-        {
+        foreach (QObject* obj, ch) {
             QRadioButton* R = dynamic_cast<QRadioButton*>(obj);
             if (R) {
                 if (R->text() == val) {
@@ -528,8 +536,7 @@ void ControlManager::set_parameter_choices(QString name, QStringList choices)
         QComboBox* CB = m_combobox_controls[name];
         QString txt = CB->currentText();
         CB->clear();
-        foreach(QString choice, choices)
-        {
+        foreach (QString choice, choices) {
             CB->addItem(choice);
         }
         if (txt.isEmpty()) {
@@ -568,8 +575,7 @@ QLabel* MVControlPanelPrivate::create_group_label(QString label)
 QAbstractButton* MVControlPanelPrivate::find_action_button(QString name)
 {
     QList<QAbstractButton*> buttons = q->findChildren<QAbstractButton*>("", Qt::FindChildrenRecursively);
-    foreach(QAbstractButton * B, buttons)
-    {
+    foreach (QAbstractButton* B, buttons) {
         if (B->property("action_name").toString() == name)
             return B;
     }
@@ -621,15 +627,13 @@ void ClusterVisibilityControls::slot_update_controls()
 
     QStringList tags = m_context->allClusterTags().toList();
     qSort(tags);
-    foreach(QString tag, tags)
-    {
+    foreach (QString tag, tags) {
         QRadioButton* BB = add_control(tag, tag);
         if (m_context->visibilityRule().view_tags.contains(tag)) {
             BB->setChecked(true);
         }
     }
-    foreach(QString tag, tags)
-    {
+    foreach (QString tag, tags) {
         QRadioButton* BB = add_control("!" + tag, "not " + tag);
         if (m_context->visibilityRule().view_tags_not.contains(tag)) {
             BB->setChecked(true);
@@ -663,7 +667,8 @@ void ClusterVisibilityControls::slot_controls_changed()
                 if (!tag.isEmpty()) {
                     if (tag.startsWith("!")) {
                         rule.view_tags_not.insert(tag.mid(1));
-                    } else {
+                    }
+                    else {
                         rule.view_tags.insert(tag);
                     }
                 }

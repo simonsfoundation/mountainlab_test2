@@ -9,24 +9,24 @@
 class ClusterAnnotationGuidePrivate {
 public:
     ClusterAnnotationGuide* q;
-    MVMainWindow* m_main;
     MVContext* m_context;
+    MVMainWindow *m_main_window;
 
     QWizardPage* make_intro_page();
     QWizardPage* make_noise_page();
 
     QAbstractButton* make_instructions_button(QString text, QString instructions);
-    QAbstractButton* make_user_action_button(QString text, QString action);
+    QAbstractButton* make_open_view_button(QString text, QString view_id);
+
+    void show_instructions(QString title, QString instructions);
 };
 
-ClusterAnnotationGuide::ClusterAnnotationGuide(MVContext* mvcontext, MVMainWindow* X)
+ClusterAnnotationGuide::ClusterAnnotationGuide(MVContext* mvcontext, MVMainWindow *mw)
 {
     d = new ClusterAnnotationGuidePrivate;
     d->q = this;
-    d->m_main = X;
     d->m_context = mvcontext;
-
-    connect(X, SIGNAL(destroyed(QObject*)), this, SLOT(deleteLater()));
+    d->m_main_window = mw;
 
     {
         QWizardPage* page = d->make_intro_page();
@@ -45,17 +45,15 @@ ClusterAnnotationGuide::~ClusterAnnotationGuide()
     delete d;
 }
 
-void ClusterAnnotationGuide::slot_user_action_button_clicked()
+void ClusterAnnotationGuide::slot_button_clicked()
 {
-    QString action = sender()->property("user_action").toString();
-    d->m_main->show();
-    d->m_main->applyUserAction(action);
-}
-
-void ClusterAnnotationGuide::slot_instructions_button_clicked()
-{
-    QString instructions = sender()->property("instructions").toString();
-    QMessageBox::information(this, "Instructions", instructions);
+    QString action = sender()->property("action").toString();
+    if (action == "open_view") {
+        d->m_main_window->openView(sender()->property("view-id").toString());
+    }
+    else if (action == "show_instructions") {
+        d->show_instructions(sender()->property("title").toString(), sender()->property("instructions").toString());
+    }
 }
 
 QWizardPage* ClusterAnnotationGuidePrivate::make_intro_page()
@@ -92,7 +90,7 @@ QWizardPage* ClusterAnnotationGuidePrivate::make_noise_page()
 
     FlowLayout* flayout = new FlowLayout;
     flayout->addWidget(make_instructions_button("Instructions", instructions));
-    flayout->addWidget(make_user_action_button("Amplitude Histograms", "open-amplitude-histograms"));
+    flayout->addWidget(make_open_view_button("Amplitude Histograms", "open-amplitude-histograms"));
     layout->addLayout(flayout);
 
     page->setLayout(layout);
@@ -103,15 +101,22 @@ QWizardPage* ClusterAnnotationGuidePrivate::make_noise_page()
 QAbstractButton* ClusterAnnotationGuidePrivate::make_instructions_button(QString text, QString instructions)
 {
     QPushButton* B = new QPushButton(text);
+    B->setProperty("action", "show_instructions");
     B->setProperty("instructions", instructions);
-    QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_instructions_button_clicked()));
+    QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_button_clicked()));
     return B;
 }
 
-QAbstractButton* ClusterAnnotationGuidePrivate::make_user_action_button(QString text, QString action)
+QAbstractButton* ClusterAnnotationGuidePrivate::make_open_view_button(QString text, QString view_id)
 {
     QPushButton* B = new QPushButton(text);
-    B->setProperty("user_action", action);
-    QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_user_action_button_clicked()));
+    B->setProperty("action", "open_view");
+    B->setProperty("view-id", view_id);
+    QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_button_clicked()));
     return B;
+}
+
+void ClusterAnnotationGuidePrivate::show_instructions(QString title, QString instructions)
+{
+    QMessageBox::information(q, title, instructions);
 }

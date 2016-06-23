@@ -2,7 +2,6 @@
 #define MVAMPHISTVIEW_H
 
 #include "mvabstractview.h"
-#include "mvabstractviewfactory.h"
 
 class MVAmpHistViewPrivate;
 class MVAmpHistView : public MVAbstractView {
@@ -31,18 +30,6 @@ slots:
 
 private:
     MVAmpHistViewPrivate* d;
-};
-
-class MVAmplitudeHistogramsFactory : public MVAbstractViewFactory {
-    Q_OBJECT
-public:
-    MVAmplitudeHistogramsFactory(QObject *parent = 0);
-    QString id() const Q_DECL_OVERRIDE;
-    QString name() const Q_DECL_OVERRIDE;
-    QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
-private slots:
-    void slot_amplitude_histogram_activated();
 };
 
 #endif // MVAMPHISTVIEW_H

@@ -8,7 +8,6 @@
 #include "mvclipsview.h"
 #include "taskprogress.h"
 #include <QHBoxLayout>
-#include "computationthread.h"
 #include "mountainprocessrunner.h"
 #include "msmisc.h"
 #include "mlutils.h"
@@ -20,7 +19,7 @@
 /// TODO (LOW) handle case where there are too many clips to want to download
 /// TODO: (MEDIUM) labels in clips widget
 
-class MVClipsWidgetComputer : public ComputationThread {
+class MVClipsWidgetComputer {
 public:
     //input
     DiskReadMda firings;

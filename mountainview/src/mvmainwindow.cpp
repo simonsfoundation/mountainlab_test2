@@ -1,6 +1,5 @@
 #include "mvmainwindow.h"
 #include "diskreadmda.h"
-#include "mvcrosscorrelogramswidget2.h"
 #include "mvcrosscorrelogramswidget3.h"
 #include "mvclusterdetailwidget.h"
 #include "mvclipswidget.h"
@@ -9,7 +8,6 @@
 #include "mvfiringeventview2.h"
 #include "tabber.h"
 #include "computationthread.h"
-#include "mvclipswidget.h"
 #include "taskprogressview.h"
 #include "mvcontrolpanel.h"
 #include "taskprogress.h"
@@ -19,13 +17,14 @@
 #include "mlutils.h"
 #include "mvfile.h"
 #include "mvabstractviewfactory.h"
-#include "mvamphistview.h"
 #include "mvclustercontextmenu.h"
 #include "mvamphistview2.h"
 #include "mvdiscrimhistview.h"
+
 #include "mvabstractviewfactory.h"
 
 /// TODO, get rid of computationthread
+/// TODO: (HIGH) create test dataset to be distributed
 
 #include <QHBoxLayout>
 #include <QMessageBox>
@@ -65,7 +64,6 @@ MVMainWindow* MVMainWindow::window_instance = 0;
 class MVMainWindowPrivate {
 public:
     MVMainWindow* q;
-    QList<Epoch> m_epochs; //not implemented yet -- put it in mvviewagent
     MVFile m_mv_file; //we need to keep this in case there is other data in the .json that we want to preserver
     MVViewAgent* m_view_agent; //gets passed to all the views and the control panel
 
@@ -82,8 +80,8 @@ public:
 
     void registerAllViews();
 
-    MVAbstractViewFactory* viewFactoryById(const QString &id) const;
-    MVAbstractView* openView(MVAbstractViewFactory *factory);
+    MVAbstractViewFactory* viewFactoryById(const QString& id) const;
+    MVAbstractView* openView(MVAbstractViewFactory* factory);
 
     ClusterAnnotationGuide* m_cluster_annotation_guide;
 
@@ -111,8 +109,6 @@ public:
     void export_filtered_firings();
     void export_file(QString source_path, QString dest_path, bool use_float64);
 
-    void recalculate_views(QString str);
-
     //not sure about these
     QVariant get_cluster_attribute(int k, QString attr);
     void set_cluster_attribute(int k, QString attr, QVariant val);
@@ -127,7 +123,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     d->q = this;
     d->m_viewMapper = new QSignalMapper(this);
     connect(d->m_viewMapper, SIGNAL(mapped(QObject*)),
-            this, SLOT(slot_open_view(QObject*)));
+        this, SLOT(slot_open_view(QObject*)));
 
     d->m_view_agent = view_agent;
 
@@ -141,6 +137,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     registerViewFactory(new MVSpikeSprayFactory(this));
     registerViewFactory(new MVFiringEventsFactory(this));
     registerViewFactory(new MVAmplitudeHistogramsFactory(this));
+    registerViewFactory(new MVDiscrimHistFactory(this));
 
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_view_agent, this);
     QToolBar* main_toolbar = new QToolBar;
@@ -158,12 +155,11 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
         }
     }
 
-    d->m_control_panel = new MVControlPanel(view_agent);
+    d->m_control_panel = new MVControlPanel(view_agent,this);
     //probably get rid of the following line
     connect(d->m_control_panel, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
 
     d->registerAllViews();
-
 
     QSplitter* hsplitter = new QSplitter;
     hsplitter->setOrientation(Qt::Horizontal);
@@ -237,16 +233,6 @@ void MVMainWindow::setDefaultInitialization()
     openView("open-auto-correlograms");
 }
 
-void MVMainWindow::setEpochs(const QList<Epoch>& epochs)
-{
-    d->m_epochs = epochs; //not used for now
-}
-
-void MVMainWindow::setClusterMerge(ClusterMerge CM)
-{
-    d->m_view_agent->setClusterMerge(CM);
-}
-
 void MVMainWindow::setMVFile(MVFile ff)
 {
     d->m_mv_file = ff; //we need to save the whole thing so we know what to save
@@ -254,8 +240,7 @@ void MVMainWindow::setMVFile(MVFile ff)
     d->m_view_agent->clear();
     QStringList timeseries_names = d->m_mv_file.timeseriesNames();
 
-    foreach(QString name, timeseries_names)
-    {
+    foreach (QString name, timeseries_names) {
         DiskReadMda TS(d->m_mv_file.timeseriesPathResolved(name));
         d->m_view_agent->addTimeseries(name, DiskReadMda(TS));
     }
@@ -267,7 +252,8 @@ void MVMainWindow::setMVFile(MVFile ff)
     //d->m_control_panel->setEventFilter();
     if (!d->m_mv_file.currentTimeseriesName().isEmpty()) {
         d->m_view_agent->setCurrentTimeseriesName(d->m_mv_file.currentTimeseriesName());
-    } else {
+    }
+    else {
         d->m_view_agent->setCurrentTimeseriesName(timeseries_names.value(0));
     }
 
@@ -278,8 +264,7 @@ void MVMainWindow::setMVFile(MVFile ff)
         if (ann0.contains("cluster_attributes")) {
             QJsonObject obj2 = ann0["cluster_attributes"].toObject();
             QStringList keys = obj2.keys();
-            foreach(QString key, keys)
-            {
+            foreach (QString key, keys) {
                 bool ok;
                 int num = key.toInt(&ok);
                 if (ok) {
@@ -292,7 +277,8 @@ void MVMainWindow::setMVFile(MVFile ff)
             QJsonArray CM = ann0["cluster_merge"].toArray();
             QString json = QJsonDocument(CM).toJson(QJsonDocument::Compact);
             d->m_view_agent->setClusterMerge(ClusterMerge::fromJson(json));
-        } else {
+        }
+        else {
             d->m_view_agent->setClusterMerge(ClusterMerge());
         }
     }
@@ -315,8 +301,7 @@ MVFile MVMainWindow::getMVFile()
     QJsonObject cluster_attributes;
     {
         QList<int> keys = d->m_view_agent->clusterAttributesKeys();
-        foreach(int key, keys)
-        {
+        foreach (int key, keys) {
             cluster_attributes[QString("%1").arg(key)] = d->m_view_agent->clusterAttributes(key);
         }
     }
@@ -331,59 +316,78 @@ MVFile MVMainWindow::getMVFile()
     return d->m_mv_file;
 }
 
-void MVMainWindow::registerViewFactory(MVAbstractViewFactory *f)
+void MVMainWindow::registerViewFactory(MVAbstractViewFactory* f)
 {
     // sort by group name and order
     QList<MVAbstractViewFactory*>::iterator iter
-            = qUpperBound(d->m_viewFactories.begin(), d->m_viewFactories.end(),
-                          f, [](MVAbstractViewFactory *f1, MVAbstractViewFactory *f2) {
+        = qUpperBound(d->m_viewFactories.begin(), d->m_viewFactories.end(),
+            f, [](MVAbstractViewFactory* f1, MVAbstractViewFactory* f2) {
             if (f1->group() < f2->group())
                 return true;
             if (f1->group() == f2->group() && f1->order() < f2->order())
                 return true;
             return false;
-    });
+            });
     d->m_viewFactories.insert(iter, f);
 }
 
-void MVMainWindow::unregisterViewFactory(MVAbstractViewFactory *f)
+void MVMainWindow::unregisterViewFactory(MVAbstractViewFactory* f)
 {
     d->m_viewFactories.removeOne(f);
 }
 
-const QList<MVAbstractViewFactory *> &MVMainWindow::viewFactories() const
+const QList<MVAbstractViewFactory*>& MVMainWindow::viewFactories() const
 {
     return d->m_viewFactories;
 }
 
-void MVMainWindow::applyUserAction(QString action)
-{
-    slot_control_panel_user_action(action);
-}
-
-MVMainWindow *MVMainWindow::instance()
+MVMainWindow* MVMainWindow::instance()
 {
     return window_instance;
 }
 
-TabberTabWidget *MVMainWindow::tabWidget(QWidget *w) const
+TabberTabWidget* MVMainWindow::tabWidget(QWidget* w) const
 {
     return d->tab_widget_of(w);
 }
 
-Tabber *MVMainWindow::tabber() const
+Tabber* MVMainWindow::tabber() const
 {
     return d->m_tabber;
 }
 
-void MVMainWindow::openView(const QString &id)
+void MVMainWindow::openView(const QString& id)
 {
-    MVAbstractViewFactory *f = d->viewFactoryById(id);
+    MVAbstractViewFactory* f = d->viewFactoryById(id);
     if (f)
         d->openView(f);
+    else
+        qWarning() << "Unknow view factory: " + id;
 }
 
-MVViewAgent *MVMainWindow::viewAgent() const
+void MVMainWindow::recalculateViews(RecalculateViewsMode mode)
+{
+    QList<MVAbstractView*> widgets = d->m_tabber->allWidgets();
+    foreach (MVAbstractView* VV, widgets) {
+        if (VV) {
+            bool do_it = false;
+            /// Witold, please turn this into a switch statement (and bill me)...
+            if (mode == All)
+                do_it = true;
+            else if (mode == Suggested)
+                do_it = VV->recalculateSuggested();
+            else if (mode == AllVisible)
+                do_it = VV->isVisible();
+            else if (mode == SuggestedVisible)
+                do_it = ((VV->isVisible()) && (VV->recalculateSuggested()));
+            if (do_it) {
+                VV->recalculate();
+            }
+        }
+    }
+}
+
+MVViewAgent* MVMainWindow::viewAgent() const
 {
     return d->m_view_agent;
 }
@@ -398,11 +402,14 @@ void MVMainWindow::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->key() == Qt::Key_M) {
         d->merge_selected();
-    } else if (evt->key() == Qt::Key_U) {
+    }
+    else if (evt->key() == Qt::Key_U) {
         d->unmerge_selected();
-    } else if (evt->key() == Qt::Key_T) {
+    }
+    else if (evt->key() == Qt::Key_T) {
         d->tag_selected();
-    } else
+    }
+    else
         evt->ignore();
 }
 
@@ -413,11 +420,13 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
         d->open_cluster_details();
     } else
 #endif
-        if (str == "open-auto-correlograms") {
+    if (str == "open-auto-correlograms") {
         d->open_auto_correlograms();
-    } else if (str == "open-matrix-of-cross-correlograms") {
+    }
+    else if (str == "open-matrix-of-cross-correlograms") {
         d->open_matrix_of_cross_correlograms();
-    } else if (str == "open-timeseries-data") {
+    }
+    else if (str == "open-timeseries-data") {
         d->open_timeseries();
     }
 #if 0
@@ -467,7 +476,6 @@ void MVMainWindow::slot_auto_correlogram_activated()
     d->m_tabber->switchCurrentContainer();
     d->open_cross_correlograms(d->m_view_agent->currentCluster());
 }
-
 
 void MVMainWindow::slot_amplitude_histogram_activated()
 {
@@ -519,23 +527,25 @@ void MVMainWindow::slot_cluster_annotation_guide()
     d->m_cluster_annotation_guide->raise();
 }
 
-void MVMainWindow::slot_open_view(QObject *o) {
-    MVAbstractViewFactory *factory = qobject_cast<MVAbstractViewFactory*>(o);
-    if (!factory) return;
+void MVMainWindow::slot_open_view(QObject* o)
+{
+    MVAbstractViewFactory* factory = qobject_cast<MVAbstractViewFactory*>(o);
+    if (!factory)
+        return;
     d->openView(factory);
 }
 
 void MVMainWindowPrivate::registerAllViews()
 {
     // unregister all existing views
-    QLayoutItem *item;
-    while((item = m_control_panel->viewLayout()->takeAt(0))) {
+    QLayoutItem* item;
+    while ((item = m_control_panel->viewLayout()->takeAt(0))) {
         delete item;
     }
 
     // register all views again
-    foreach(MVAbstractViewFactory *f, m_viewFactories) {
-        QToolButton *button = new QToolButton;
+    foreach (MVAbstractViewFactory* f, m_viewFactories) {
+        QToolButton* button = new QToolButton;
         QFont font = button->font();
         font.setPixelSize(14);
         button->setFont(font);
@@ -549,19 +559,21 @@ void MVMainWindowPrivate::registerAllViews()
     }
 }
 
-MVAbstractViewFactory *MVMainWindowPrivate::viewFactoryById(const QString &id) const
+MVAbstractViewFactory* MVMainWindowPrivate::viewFactoryById(const QString& id) const
 {
-    foreach(MVAbstractViewFactory *f, m_viewFactories) {
-        if (f->id() == id) return f;
+    foreach (MVAbstractViewFactory* f, m_viewFactories) {
+        if (f->id() == id)
+            return f;
     }
     return Q_NULLPTR;
 }
 
-MVAbstractView *MVMainWindowPrivate::openView(MVAbstractViewFactory *factory)
+MVAbstractView* MVMainWindowPrivate::openView(MVAbstractViewFactory* factory)
 {
-    MVAbstractView *view = factory->createView(m_view_agent);
-    if (!view) return Q_NULLPTR;
-//    set_tool_button_menu(view);
+    MVAbstractView* view = factory->createView(m_view_agent);
+    if (!view)
+        return Q_NULLPTR;
+    //    set_tool_button_menu(view);
     add_tab(view, factory->title());
     return view;
 }
@@ -599,7 +611,8 @@ void MVMainWindowPrivate::update_sizes()
         }
         if (H0 > 900) {
             tv_height = 300;
-        } else {
+        }
+        else {
             tv_height = 200;
         }
         int cp_height = H0 - tv_height;
@@ -788,7 +801,8 @@ void DownloadComputer::compute()
     if (!X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3())) {
         if (thread_interrupt_requested()) {
             task.error("Halted download: " + source_path);
-        } else {
+        }
+        else {
             task.error("Failed to readChunk from: " + source_path);
         }
         return;
@@ -797,7 +811,8 @@ void DownloadComputer::compute()
     if (use_float64) {
         task.log("Writing 64-bit to " + dest_path);
         Y.write64(dest_path);
-    } else {
+    }
+    else {
         task.log("Writing 32-bit to " + dest_path);
         Y.write32(dest_path);
     }
@@ -851,28 +866,6 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
     C->use_float64 = use_float64;
     C->setDeleteOnComplete(true);
     C->startComputation();
-}
-
-void MVMainWindowPrivate::recalculate_views(QString str)
-{
-    QList<MVAbstractView*> widgets = m_tabber->allWidgets();
-    foreach(MVAbstractView * VV, widgets)
-    {
-        if (VV) {
-            bool do_it = false;
-            if (str == "all")
-                do_it = true;
-            else if (str == "all-suggested")
-                do_it = VV->recalculateSuggested();
-            else if (str == "all-visible")
-                do_it = VV->isVisible();
-            else if (str == "all-suggested-and-visible")
-                do_it = ((VV->isVisible()) && (VV->recalculateSuggested()));
-            if (do_it) {
-                VV->recalculate();
-            }
-        }
-    }
 }
 
 QVariant MVMainWindowPrivate::get_cluster_attribute(int k, QString attr)

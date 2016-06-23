@@ -9,6 +9,8 @@
 #include "histogramview.h"
 #include "mvutils.h"
 #include "taskprogress.h"
+#include "mvmainwindow.h" //to disappear
+#include "tabber.h" //to disappear
 
 #include <QAction>
 #include <QGridLayout>
@@ -213,7 +215,8 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    } else if (options.mode == Cross_Correlograms3) {
+    }
+    else if (options.mode == Cross_Correlograms3) {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram3 CC;
@@ -221,7 +224,8 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    } else if (options.mode == Matrix_Of_Cross_Correlograms3) {
+    }
+    else if (options.mode == Matrix_Of_Cross_Correlograms3) {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram3 CC;
@@ -254,4 +258,90 @@ void MVCrossCorrelogramsWidget3Computer::compute()
         int k2 = correlograms[j].k2;
         correlograms[j].data = compute_cc_data3(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
     }
+}
+
+MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(QObject *parent)
+    : MVAbstractViewFactory(parent)
+{
+
+}
+
+QString MVAutoCorrelogramsFactory::id() const
+{
+    return QStringLiteral("open-auto-correlograms");
+}
+
+QString MVAutoCorrelogramsFactory::name() const
+{
+    return tr("Auto-Correlograms");
+}
+
+QString MVAutoCorrelogramsFactory::title() const
+{
+    return tr("Auto-Correlograms");
+}
+
+MVAbstractView *MVAutoCorrelogramsFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(agent);
+    CrossCorrelogramOptions3 opts;
+    opts.mode = All_Auto_Correlograms3;
+    X->setOptions(opts);
+    QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_auto_correlogram_activated()));
+    return X;
+}
+
+void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
+{
+    MVAbstractView *view = qobject_cast<MVAbstractView*>(sender());
+    if (!view) return;
+    MVMainWindow *mw = MVMainWindow::instance();
+    int k = mw->viewAgent()->currentCluster();
+    TabberTabWidget* TW = mw->tabWidget(view);
+    mw->tabber()->setCurrentContainer(TW);
+    mw->tabber()->switchCurrentContainer();
+    /// TODO: d->open_cross_correlograms(k);
+    /// mw->openView("cross-correlograms", k);
+}
+
+MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(QObject *parent)
+    : MVAbstractViewFactory(parent)
+{
+    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+            this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVMatrixOfCrossCorrelogramsFactory::id() const
+{
+    return QStringLiteral("open-matrix-of-cross-correlograms");
+}
+
+QString MVMatrixOfCrossCorrelogramsFactory::name() const
+{
+    return tr("Matrix of Cross-Correlograms");
+}
+
+QString MVMatrixOfCrossCorrelogramsFactory::title() const
+{
+    return tr("CC Matrix");
+}
+
+MVAbstractView *MVMatrixOfCrossCorrelogramsFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(agent);
+    QList<int> ks = agent->selectedClusters();
+    qSort(ks);
+    if (ks.isEmpty())
+        return X;
+    CrossCorrelogramOptions3 opts;
+    opts.mode = Matrix_Of_Cross_Correlograms3;
+    opts.ks = ks;
+    X->setOptions(opts);
+    return X;
+}
+
+void MVMatrixOfCrossCorrelogramsFactory::updateEnabled()
+{
+    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
 }

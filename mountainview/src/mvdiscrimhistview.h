@@ -1,6 +1,7 @@
 #ifndef MVDISCRIMHISTVIEW_H
 #define MVDISCRIMHISTVIEW_H
 
+#include "mvabstractviewfactory.h"
 #include "mvhistogramgrid.h"
 
 class MVDiscrimHistViewPrivate;
@@ -27,5 +28,16 @@ slots:
 private:
     MVDiscrimHistViewPrivate* d;
 };
+
+class MVDiscrimHistFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVDiscrimHistFactory(QObject *parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+};
+
 
 #endif // MVDISCRIMHISTVIEW_H

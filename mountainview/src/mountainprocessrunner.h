@@ -7,7 +7,9 @@
 #ifndef MOUNTAINSORTTHREAD_H
 #define MOUNTAINSORTTHREAD_H
 
-#include "computationthread.h"
+#include <QString>
+#include <QMap>
+#include <QVariant>
 
 class MountainProcessRunnerPrivate;
 class MountainProcessRunner {

@@ -178,3 +178,38 @@ void MVAmpHistView2Private::set_views()
 
     q->setHistogramViews(views); //inherited
 }
+
+MVAmplitudeHistogramsFactory::MVAmplitudeHistogramsFactory(QObject *parent)
+    : MVAbstractViewFactory(parent)
+{
+
+}
+
+QString MVAmplitudeHistogramsFactory::id() const
+{
+    return QStringLiteral("open-amplitude-histograms");
+}
+
+QString MVAmplitudeHistogramsFactory::name() const
+{
+    return tr("Amplitude Histograms");
+}
+
+QString MVAmplitudeHistogramsFactory::title() const
+{
+    return tr("Amplitudes");
+}
+
+MVAbstractView *MVAmplitudeHistogramsFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    MVAmpHistView2* X = new MVAmpHistView2(agent);
+    QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_amplitude_histogram_activated()));
+    return X;
+}
+
+void MVAmplitudeHistogramsFactory::slot_amplitude_histogram_activated()
+{
+    MVAbstractView *view = qobject_cast<MVAbstractView*>(sender());
+    if (!view) return;
+    //not sure what to do here
+}

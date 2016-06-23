@@ -245,3 +245,29 @@ void MVDiscrimHistViewPrivate::set_views()
 
     q->setHistogramViews(views); //inherited
 }
+
+MVDiscrimHistFactory::MVDiscrimHistFactory(QObject *parent) : MVAbstractViewFactory(parent) {}
+
+QString MVDiscrimHistFactory::id() const
+{
+    return QStringLiteral("open-cluster-details");
+}
+
+QString MVDiscrimHistFactory::name() const
+{
+    return tr("Discrim Histogram");
+}
+
+QString MVDiscrimHistFactory::title() const {
+    return tr("Discrim");
+}
+
+MVAbstractView *MVDiscrimHistFactory::createView(MVViewAgent *agent, QWidget *parent)
+{
+    MVDiscrimHistView* X = new MVDiscrimHistView(agent);
+    QList<int> ks = agent->selectedClusters();
+    qSort(ks);
+    X->setClusterNumbers(ks);
+    return X;
+}
+

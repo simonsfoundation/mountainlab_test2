@@ -8,6 +8,7 @@
 #define MVCONTROLPANEL_H
 
 #include "flowlayout.h"
+#include "mvmainwindow.h"
 #include "mvviewagent.h"
 
 #include <QAbstractButton>
@@ -26,7 +27,7 @@ class MVControlPanel : public QWidget {
     Q_OBJECT
 public:
     friend class MVControlPanelPrivate;
-    MVControlPanel(MVViewAgent* view_agent);
+    MVControlPanel(MVViewAgent* view_agent, MVMainWindow *main_window);
     virtual ~MVControlPanel();
 
     void setTimeseriesChoices(const QStringList& names);
@@ -50,6 +51,8 @@ slots:
     void slot_update_timeseries_box();
     void slot_control_changed();
     void slot_update_view_agent();
+    void slot_recalculate_suggested_visible();
+    void slot_recalculate_suggested();
 
 private:
     MVControlPanelPrivate* d;

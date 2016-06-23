@@ -34,8 +34,7 @@ protected:
     void setHorizontalScaleAxis(HorizontalScaleAxisData X);
     void setHistogramViews(const QList<HistogramView*> views);
     QList<HistogramView*> histogramViews();
-private
-slots:
+private slots:
     void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);
     void slot_histogram_view_right_clicked(Qt::KeyboardModifiers modifiers);
     void slot_histogram_view_activated();
