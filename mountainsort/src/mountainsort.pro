@@ -70,7 +70,9 @@ HEADERS += \
     processors/mv_compute_templates.h \
     processors/create_multiscale_timeseries_processor.h \
     processors/create_multiscale_timeseries.h \
-    processors/extract_channel_values_processor.h
+    processors/extract_channel_values_processor.h \
+    processors/mv_discrimhist_processor.h \
+    processors/mv_discrimhist.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -124,7 +126,9 @@ SOURCES += \
     processors/mv_compute_templates.cpp \
     processors/create_multiscale_timeseries_processor.cpp \
     processors/create_multiscale_timeseries.cpp \
-    processors/extract_channel_values_processor.cpp
+    processors/extract_channel_values_processor.cpp \
+    processors/mv_discrimhist_processor.cpp \
+    processors/mv_discrimhist.cpp
 SOURCES_NOCXX11 += \ #see below
     isosplit/isosplit2.cpp \
     isosplit/isocut.cpp \
