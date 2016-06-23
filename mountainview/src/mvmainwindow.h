@@ -35,6 +35,8 @@ public:
     void setMVFile(MVFile mv_file);
     MVFile getMVFile();
 
+    void applyUserAction(QString action);
+
 protected:
     void resizeEvent(QResizeEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
@@ -56,6 +58,7 @@ slots:
     //void slot_calculator_finished();
     void slot_action_move_to_other_tab_widget();
     void slot_pop_out_widget();
+    void slot_cluster_annotation_guide();
 
 private:
     MVMainWindowPrivate* d;

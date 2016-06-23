@@ -14,7 +14,7 @@ public:
     QList<double> m_second_data;
     double* m_bin_centers;
     int* m_bin_counts;
-    int *m_second_bin_counts;
+    int* m_second_bin_counts;
     int m_max_bin_count;
     bool m_update_required;
     int m_num_bins;
@@ -60,7 +60,7 @@ HistogramView::HistogramView(QWidget* parent)
     d->m_line_color = QColor(150, 150, 150);
 
     this->setMouseTracking(true);
-    this->setContextMenuPolicy(Qt::CustomContextMenu);
+    //this->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
 }
 
@@ -98,10 +98,10 @@ void HistogramView::setData(int N, double* values)
     d->m_update_required = true;
 }
 
-void HistogramView::setSecondData(const QList<double> &values)
+void HistogramView::setSecondData(const QList<double>& values)
 {
-    d->m_second_data=values;
-    d->m_update_required=true;
+    d->m_second_data = values;
+    d->m_update_required = true;
 }
 
 void HistogramView::setBins(double bin_min, double bin_max, int num_bins)
@@ -278,7 +278,10 @@ void HistogramView::paintEvent(QPaintEvent* evt)
 void HistogramView::mousePressEvent(QMouseEvent* evt)
 {
     Q_UNUSED(evt);
-    emit clicked(evt->modifiers());
+    if (evt->button() == Qt::LeftButton)
+        emit clicked(evt->modifiers());
+    else if (evt->button() == Qt::RightButton)
+        emit rightClicked(evt->modifiers());
     /*
     if ((evt->modifiers() & Qt::ControlModifier) || (evt->modifiers() & Qt::ShiftModifier)) {
         emit control_clicked();
@@ -336,18 +339,17 @@ void HistogramViewPrivate::update_bin_counts()
 {
     for (int i = 0; i < m_num_bins; i++) {
         m_bin_counts[i] = 0;
-        m_second_bin_counts[i]=0;
+        m_second_bin_counts[i] = 0;
     }
     m_max_bin_count = 0;
-    for (int pass=1; pass<=2; pass++) {
+    for (int pass = 1; pass <= 2; pass++) {
         QList<double> list;
-        if (pass==1) {
+        if (pass == 1) {
             for (int i = 0; i < m_N; i++) {
                 list << m_data[i];
             }
-        }
-        else {
-            list=m_second_data;
+        } else {
+            list = m_second_data;
         }
         qSort(list);
         if (m_num_bins < 1)
@@ -360,20 +362,18 @@ void HistogramViewPrivate::update_bin_counts()
                 jj++;
             }
             if ((val >= m_bin_centers[jj] - spacing / 2) && (val <= m_bin_centers[jj] + spacing / 2)) {
-                if (pass==1) {
+                if (pass == 1) {
                     m_bin_counts[jj]++;
-                }
-                else {
+                } else {
                     m_second_bin_counts[jj]++;
                 }
             }
         }
         for (int i = 0; i < m_num_bins; i++) {
-            if (pass==1) {
+            if (pass == 1) {
                 if (m_bin_counts[i] > m_max_bin_count)
                     m_max_bin_count = m_bin_counts[i];
-            }
-            else {
+            } else {
                 if (m_second_bin_counts[i] > m_max_bin_count)
                     m_max_bin_count = m_second_bin_counts[i];
             }
@@ -483,10 +483,11 @@ void HistogramViewPrivate::export_image()
     user_save_image(img);
 }
 
-QColor modify_color_for_second_histogram(QColor col) {
-    QColor ret=col;
-    ret.setGreen(qMin(255,ret.green()+30)); //more green
-    ret=lighten(ret,-20,-20,-20); //darker
+QColor modify_color_for_second_histogram(QColor col)
+{
+    QColor ret = col;
+    ret.setGreen(qMin(255, ret.green() + 30)); //more green
+    ret = lighten(ret, -20, -20, -20); //darker
     return ret;
 }
 
@@ -526,14 +527,16 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
         return;
     double spacing = m_bin_centers[1] - m_bin_centers[0];
 
-    for (int pass=1; pass<=2; pass++) {
-        int *bin_counts;
-        if (pass==1) bin_counts=m_bin_counts;
-        else bin_counts=m_second_bin_counts;
+    for (int pass = 1; pass <= 2; pass++) {
+        int* bin_counts;
+        if (pass == 1)
+            bin_counts = m_bin_counts;
+        else
+            bin_counts = m_second_bin_counts;
         QColor col = m_fill_color;
         QColor line_color = m_line_color;
-        if (pass==2) {
-            col=modify_color_for_second_histogram(col);
+        if (pass == 2) {
+            col = modify_color_for_second_histogram(col);
             line_color = modify_color_for_second_histogram(line_color);
         }
         for (int i = 0; i < m_num_bins; i++) {
@@ -541,7 +544,7 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
             QPointF pt2 = coord2pix(QPointF(m_bin_centers[i] + spacing / 2, bin_counts[i]), W, H);
             QRectF R = make_rect(pt1, pt2);
             if (i == m_hovered_bin_index)
-                painter.fillRect(R, lighten(col,25,25,25));
+                painter.fillRect(R, lighten(col, 25, 25, 25));
             else
                 painter.fillRect(R, col);
             painter.setPen(line_color);

@@ -50,6 +50,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent* evt);
 signals:
     void clicked(Qt::KeyboardModifiers modifiers);
+    void rightClicked(Qt::KeyboardModifiers modifiers);
     void activated();
 
     void signalExportHistogramMatrixImage();

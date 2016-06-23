@@ -37,6 +37,7 @@ protected:
 private
 slots:
     void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);
+    void slot_histogram_view_right_clicked(Qt::KeyboardModifiers modifiers);
     void slot_histogram_view_activated();
     void slot_export_image();
     void slot_cluster_attributes_changed(int cluster_number);

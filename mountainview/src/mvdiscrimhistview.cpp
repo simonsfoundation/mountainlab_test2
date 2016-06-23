@@ -116,9 +116,10 @@ void MVDiscrimHistView::onCalculationFinished()
     d->set_views();
 }
 
-QList<double> negative(const QList<double> &X) {
+QList<double> negative(const QList<double>& X)
+{
     QList<double> ret;
-    for (int i=0; i<X.count(); i++) {
+    for (int i = 0; i < X.count(); i++) {
         ret << -X[i];
     }
     return ret;

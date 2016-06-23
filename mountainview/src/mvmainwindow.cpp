@@ -48,7 +48,10 @@
 #include <QScrollArea>
 #include <QAction>
 #include <QShortcut>
+#include <QToolBar>
+#include <QToolButton>
 #include "textfile.h"
+#include "clusterannotationguide.h"
 
 /// TODO (LOW) put styles in central place?
 #define MV_STATUS_BAR_HEIGHT 30
@@ -68,6 +71,8 @@ public:
     QSplitter* m_hsplitter, *m_vsplitter;
     TabberTabWidget* m_tabs1, *m_tabs2;
     Tabber* m_tabber; //manages the views in the two tab widgets
+
+    ClusterAnnotationGuide* m_cluster_annotation_guide;
 
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
@@ -114,6 +119,22 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
 
     d->m_view_agent = view_agent;
 
+    d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_view_agent, this);
+    QToolBar* main_toolbar = new QToolBar;
+    {
+        QMenu* menu = new QMenu;
+        QToolButton* B = new QToolButton();
+        B->setIcon(QIcon(":/images/gear.png"));
+        B->setMenu(menu);
+        B->setPopupMode(QToolButton::InstantPopup);
+        main_toolbar->addWidget(B);
+        {
+            QAction* A = new QAction("Cluster annotation guide", this);
+            menu->addAction(A);
+            QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_cluster_annotation_guide()));
+        }
+    }
+
     d->m_control_panel = new MVControlPanel(view_agent);
     //probably get rid of the following line
     connect(d->m_control_panel, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
@@ -154,6 +175,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     QVBoxLayout* vlayout = new QVBoxLayout;
     vlayout->setSpacing(0);
     vlayout->setMargin(0);
+    vlayout->addWidget(main_toolbar);
     vlayout->addWidget(hsplitter);
     vlayout->addWidget(status_bar);
     this->setLayout(vlayout);
@@ -177,6 +199,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
 
 MVMainWindow::~MVMainWindow()
 {
+    delete d->m_cluster_annotation_guide;
     delete d;
 }
 
@@ -279,6 +302,11 @@ MVFile MVMainWindow::getMVFile()
     d->m_mv_file.setSampleRate(d->m_view_agent->sampleRate());
 
     return d->m_mv_file;
+}
+
+void MVMainWindow::applyUserAction(QString action)
+{
+    slot_control_panel_user_action(action);
 }
 
 void MVMainWindow::resizeEvent(QResizeEvent* evt)
@@ -420,16 +448,22 @@ void MVMainWindow::slot_pop_out_widget()
     d->m_tabber->popOutWidget(W);
 }
 
+void MVMainWindow::slot_cluster_annotation_guide()
+{
+    d->m_cluster_annotation_guide->show();
+    d->m_cluster_annotation_guide->raise();
+}
+
 void MVMainWindowPrivate::update_sizes()
 {
     float W0 = q->width();
     float H0 = q->height() - MV_STATUS_BAR_HEIGHT;
 
     int W1 = W0 / 3;
-    if (W1 < 150)
-        W1 = 150;
-    if (W1 > 600)
-        W1 = 600;
+    if (W1 < 250)
+        W1 = 250;
+    if (W1 > 800)
+        W1 = 800;
     int W2 = W0 - W1;
 
     int H1 = H0 / 2;

@@ -49,11 +49,6 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
 
     d->m_view_agent = view_agent;
 
-    QFont font = this->font();
-    font.setFamily("Arial");
-    font.setPointSize(12);
-    this->setFont(font);
-
     QVBoxLayout* layout = new QVBoxLayout;
 
     {
@@ -77,7 +72,6 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent)
         for (int i = 0; i < BB.count(); i++) {
             QToolButton* button = new QToolButton;
             QFont font = button->font();
-            font.setPointSize(14);
             button->setFont(font);
             button->setText(BB[i].label);
             button->setProperty("action_name", BB[i].name);
@@ -614,7 +608,7 @@ void ClusterVisibilityControls::slot_update_controls()
 
     {
         QRadioButton* BB = add_control("", "All");
-        if (m_context->visibilityRule().view_tags.isEmpty()) {
+        if ((m_context->visibilityRule().view_tags.isEmpty()) && (m_context->visibilityRule().view_tags_not.isEmpty())) {
             BB->setChecked(true);
         }
     }
@@ -625,6 +619,13 @@ void ClusterVisibilityControls::slot_update_controls()
     {
         QRadioButton* BB = add_control(tag, tag);
         if (m_context->visibilityRule().view_tags.contains(tag)) {
+            BB->setChecked(true);
+        }
+    }
+    foreach(QString tag, tags)
+    {
+        QRadioButton* BB = add_control("!" + tag, "not " + tag);
+        if (m_context->visibilityRule().view_tags_not.contains(tag)) {
             BB->setChecked(true);
         }
     }
@@ -647,13 +648,18 @@ void ClusterVisibilityControls::slot_controls_changed()
 {
     ClusterVisibilityRule rule = m_context->visibilityRule();
     rule.view_tags.clear();
+    rule.view_tags_not.clear();
     for (int i = 0; i < m_controls.count(); i++) {
         QRadioButton* RB = qobject_cast<QRadioButton*>(m_controls[i]);
         if (RB) {
             if (RB->isChecked()) {
                 QString tag = RB->property("tag").toString();
                 if (!tag.isEmpty()) {
-                    rule.view_tags.insert(tag);
+                    if (tag.startsWith("!")) {
+                        rule.view_tags_not.insert(tag.mid(1));
+                    } else {
+                        rule.view_tags.insert(tag);
+                    }
                 }
             }
         }

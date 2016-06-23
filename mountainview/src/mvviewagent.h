@@ -58,6 +58,7 @@ public:
     bool isVisible(const MVContext* context, int cluster_num) const;
 
     QSet<QString> view_tags;
+    QSet<QString> view_tags_not;
     bool view_merged = true;
 
 private:

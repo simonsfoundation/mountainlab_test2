@@ -247,10 +247,11 @@ QSet<QString> MVViewAgent::allClusterTags() const
     ret.insert("accepted");
     ret.insert("rejected");
     QList<int> keys = clusterAttributesKeys();
-    foreach (int key, keys) {
+    foreach(int key, keys)
+    {
         QSet<QString> tags0 = clusterTags(key);
-        foreach (QString tag, tags0)
-            ret.insert(tag);
+        foreach(QString tag, tags0)
+        ret.insert(tag);
     }
     return ret;
 }
@@ -417,16 +418,14 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        }
-        else {
+        } else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    }
-    else {
+    } else {
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
     }
@@ -473,6 +472,8 @@ bool ClusterVisibilityRule::operator==(const ClusterVisibilityRule& other) const
         return false;
     if (this->view_tags != other.view_tags)
         return false;
+    if (this->view_tags_not != other.view_tags_not)
+        return false;
     return true;
 }
 
@@ -480,6 +481,7 @@ void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
 {
     this->view_merged = other.view_merged;
     this->view_tags = other.view_tags;
+    this->view_tags_not = other.view_tags_not;
 }
 
 bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num) const
@@ -491,11 +493,17 @@ bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num)
 
     QSet<QString> tags = context->clusterTags(cluster_num);
 
-    if (view_tags.isEmpty())
+    if ((view_tags.isEmpty()) && (view_tags_not.isEmpty()))
         return true;
 
-    foreach (QString tag, tags) {
+    foreach(QString tag, tags)
+    {
         if (view_tags.contains(tag))
+            return true;
+    }
+    foreach(QString tag, view_tags_not)
+    {
+        if (!tags.contains(tag))
             return true;
     }
 

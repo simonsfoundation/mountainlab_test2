@@ -221,6 +221,13 @@ int main(int argc, char* argv[])
             window_title = raw_path;
         W->setWindowTitle(window_title);
         W->setMinimumSize(1000, 800);
+        int W0 = 1800, H0 = 1200;
+        QRect geom = QApplication::desktop()->geometry();
+        if (geom.width() - 100 < W0)
+            W0 = geom.width() - 100;
+        if (geom.height() - 100 < H0)
+            H0 = geom.height() - 100;
+        W->resize(W0, H0);
         W->show();
 
         a.processEvents();
