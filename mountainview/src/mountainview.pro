@@ -50,7 +50,6 @@ HEADERS += \
     mvfile.h \
     mvtimeseriesviewbase.h \
     mvabstractview.h \
-    mvabstractviewfactory.h \
     mvmisc.h \
     mvamphistview.h \
     tabberframe.h \
@@ -92,7 +91,6 @@ SOURCES += mountainviewmain.cpp \
     mvfile.cpp \
     mvtimeseriesviewbase.cpp \
     mvabstractview.cpp \
-    mvabstractviewfactory.cpp \
     mvmisc.cpp \
     mvamphistview.cpp \
     tabberframe.cpp \
