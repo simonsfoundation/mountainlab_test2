@@ -50,7 +50,6 @@ HEADERS += \
     mvfile.h \
     mvtimeseriesviewbase.h \
     mvabstractview.h \
-    mvabstractviewfactory.h \
     mvmisc.h \
     mvamphistview.h \
     mvdiscrimhistview.h \
@@ -94,7 +93,6 @@ SOURCES += mountainviewmain.cpp \
     mvfile.cpp \
     mvtimeseriesviewbase.cpp \
     mvabstractview.cpp \
-    mvabstractviewfactory.cpp \
     mvmisc.cpp \
     mvamphistview.cpp \
     mvdiscrimhistview.cpp \

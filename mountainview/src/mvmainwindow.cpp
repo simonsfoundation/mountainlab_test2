@@ -90,9 +90,9 @@ public:
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
 
-    MVCrossCorrelogramsWidget2* open_auto_correlograms();
-    MVCrossCorrelogramsWidget2* open_cross_correlograms(int k);
-    MVCrossCorrelogramsWidget2* open_matrix_of_cross_correlograms();
+    MVCrossCorrelogramsWidget3* open_auto_correlograms();
+    MVCrossCorrelogramsWidget3* open_cross_correlograms(int k);
+    MVCrossCorrelogramsWidget3* open_matrix_of_cross_correlograms();
 
     void open_discrim_histograms();
     /// TODO: (MEDIUM) implement find_nearby_events
@@ -419,10 +419,10 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
         d->open_matrix_of_cross_correlograms();
     } else if (str == "open-timeseries-data") {
         d->open_timeseries();
+    }
 #if 0
     } else if (str == "open-clips") {
         d->open_clips();
-#endif
     } else if (str == "open-pca-features") {
         d->open_pca_features();
     } else if (str == "open-channel-features") {
@@ -456,6 +456,7 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
     } else if (str == "recalculate-all-suggested-and-visible") {
         d->recalculate_views("all-suggested-and-visible");
     }
+#endif
 }
 
 /// TODO (LOW) figure out how to implement such functionality outside main window class
@@ -694,84 +695,6 @@ void MVMainWindowPrivate::open_clips()
 }
 #endif
 
-void MVMainWindowPrivate::open_pca_features()
-{
-    QList<int> ks = m_view_agent->selectedClusters();
-    qSort(ks);
-    if (ks.count() == 0) {
-        QMessageBox::information(q, "Unable to open clusters", "You must select at least one cluster.");
-        return;
-    }
-    MVClusterWidget* X = new MVClusterWidget(m_view_agent);
-    X->setLabelsToUse(ks);
-    X->setFeatureMode("pca");
-    add_tab(X, QString("PCA features"));
-}
-
-void MVMainWindowPrivate::open_channel_features()
-{
-    QSettings settings("SCDA", "MountainView");
-    QString str = settings.value("open_channel_features_channels", "1,2,3").toString();
-    str = QInputDialog::getText(0, "Open Channel Features", "Channels:", QLineEdit::Normal, str);
-    if (str.isEmpty())
-        return;
-    QStringList strlist = str.split(",", QString::SkipEmptyParts);
-    QList<int> channels;
-    foreach(QString a, strlist)
-    {
-        bool ok;
-        channels << a.toInt(&ok);
-        if (!ok) {
-            QMessageBox::warning(0, "Open channel features", "Invalid channels string");
-        }
-    }
-    settings.setValue("open_channel_features_channels", strlist.join(","));
-
-    QList<int> ks = m_view_agent->selectedClusters();
-    qSort(ks);
-    if (ks.count() == 0) {
-        QMessageBox::information(q, "Unable to open clusters", "You must select at least one cluster.");
-        return;
-    }
-    MVClusterWidget* X = new MVClusterWidget(m_view_agent);
-    X->setLabelsToUse(ks);
-    X->setFeatureMode("channels");
-    X->setChannels(channels);
-    add_tab(X, QString("Ch. features"));
-}
-
-void MVMainWindowPrivate::open_amplitude_histograms()
-{
-    MVAmpHistView2* X = new MVAmpHistView2(m_view_agent);
-    add_tab(X, "Amplitudes");
-    QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_amplitude_histogram_activated()));
-}
-
-void MVMainWindowPrivate::open_spike_spray()
-{
-    QList<int> ks = m_view_agent->selectedClusters();
-    qSort(ks);
-    if (ks.count() == 0) {
-        QMessageBox::information(q, "Unable to open spike spray", "You must select at least one cluster.");
-        return;
-    }
-    MVSpikeSprayView* X = new MVSpikeSprayView(m_view_agent);
-    X->setLabelsToUse(ks);
-    add_tab(X, QString("Spike Spray"));
-}
-
-void MVMainWindowPrivate::open_firing_events()
-{
-    QList<int> ks = m_view_agent->selectedClusters();
-    if (ks.count() == 0) {
-        QMessageBox::information(q, "Unable to open firing events", "You must select at least one cluster.");
-        return;
-    }
-    //MVFiringEventView* X = new MVFiringEventView;
-    MVFiringEventView2* X = new MVFiringEventView2(m_view_agent);
-    X->setLabelsToUse(ks.toSet());
-    X->setNumTimepoints(m_view_agent->currentTimeseries().N2());
-    add_tab(X, QString("Firing Events"));
 }
 
 void MVMainWindowPrivate::open_discrim_histograms()
@@ -785,10 +708,6 @@ void MVMainWindowPrivate::open_discrim_histograms()
     X->setClusterNumbers(ks);
     add_tab(X, "Discrim");
     QObject::connect(X, SIGNAL(histogramActivated()), q, SLOT(slot_discrim_histogram_activated()));
-}
-
-=======
->>>>>>> Moved more views to the new infrastructure
 /*
 void MVMainWindowPrivate::find_nearby_events()
 {
