@@ -50,14 +50,6 @@ public:
     void openView(const QString &id);
     MVViewAgent* viewAgent() const;
 
-    const QList<MVAbstractViewFactory*>& viewFactories() const;
-
-    static MVMainWindow* instance(); // helper while implementing view factories
-    TabberTabWidget* tabWidget(QWidget *w) const;
-    Tabber* tabber() const;
-    void openView(const QString &id);
-    MVViewAgent* viewAgent() const;
-
 protected:
     void resizeEvent(QResizeEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
