@@ -127,7 +127,7 @@ QList<double> negative(const QList<double>& X)
 
 void MVDiscrimHistViewComputer::compute()
 {
-    TaskProgress task(TaskProgress::Calculate, QString("Amplitude AmpHistograms"));
+    TaskProgress task(TaskProgress::Calculate, QString("Discrim Histograms"));
 
     histograms.clear();
 
@@ -153,7 +153,7 @@ void MVDiscrimHistViewComputer::compute()
     MPR.runProcess();
 
     DiskReadMda output(output_path);
-    output.setRemoteDataType("float32_q8");
+    output.setRemoteDataType("float32");
 
     QMap<QString, DiscrimHistogram*> hist_lookup;
     for (int i2 = 0; i2 < cluster_numbers.count(); i2++) {
@@ -216,7 +216,6 @@ void MVDiscrimHistViewPrivate::set_views()
     double bin_min = compute_min2(m_histograms);
     double bin_max = compute_max2(m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
-    qDebug() << "@@@@@@@@@@@@@@@@@@@@@@@" << bin_min << bin_max << m_histograms.count() << m_histograms.value(1).data1.count() << m_histograms.value(1).data2.count();
 
     int num_bins = 200; //how to choose this?
 
