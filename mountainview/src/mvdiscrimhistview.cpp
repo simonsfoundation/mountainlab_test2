@@ -138,8 +138,7 @@ void MVDiscrimHistViewComputer::compute()
     MPR.setProcessorName("mv_discrimhist");
 
     QStringList clusters_strlist;
-    foreach(int cluster, cluster_numbers)
-    {
+    foreach (int cluster, cluster_numbers) {
         clusters_strlist << QString("%1").arg(cluster);
     }
 
@@ -202,7 +201,8 @@ void MVDiscrimHistView::wheelEvent(QWheelEvent* evt)
     double zoom_factor = 1;
     if (evt->delta() > 0) {
         zoom_factor *= 1.2;
-    } else if (evt->delta() < 0) {
+    }
+    else if (evt->delta() < 0) {
         zoom_factor /= 1.2;
     }
     QList<HistogramView*> views = this->histogramViews(); //inherited
@@ -216,6 +216,7 @@ void MVDiscrimHistViewPrivate::set_views()
     double bin_min = compute_min2(m_histograms);
     double bin_max = compute_max2(m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
+    qDebug() << "@@@@@@@@@@@@@@@@@@@@@@@" << bin_min << bin_max << m_histograms.count() << m_histograms.value(1).data1.count() << m_histograms.value(1).data2.count();
 
     int num_bins = 200; //how to choose this?
 
@@ -246,23 +247,27 @@ void MVDiscrimHistViewPrivate::set_views()
     q->setHistogramViews(views); //inherited
 }
 
-MVDiscrimHistFactory::MVDiscrimHistFactory(QObject *parent) : MVAbstractViewFactory(parent) {}
+MVDiscrimHistFactory::MVDiscrimHistFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
+{
+}
 
 QString MVDiscrimHistFactory::id() const
 {
-    return QStringLiteral("open-cluster-details");
+    return QStringLiteral("open-discrim-histograms");
 }
 
 QString MVDiscrimHistFactory::name() const
 {
-    return tr("Discrim Histogram");
+    return tr("Discrim Histograms");
 }
 
-QString MVDiscrimHistFactory::title() const {
+QString MVDiscrimHistFactory::title() const
+{
     return tr("Discrim");
 }
 
-MVAbstractView *MVDiscrimHistFactory::createView(MVViewAgent *agent, QWidget *parent)
+MVAbstractView* MVDiscrimHistFactory::createView(MVViewAgent* agent, QWidget* parent)
 {
     MVDiscrimHistView* X = new MVDiscrimHistView(agent);
     QList<int> ks = agent->selectedClusters();
@@ -270,4 +275,3 @@ MVAbstractView *MVDiscrimHistFactory::createView(MVViewAgent *agent, QWidget *pa
     X->setClusterNumbers(ks);
     return X;
 }
-

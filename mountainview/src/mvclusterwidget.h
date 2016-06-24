@@ -60,11 +60,11 @@ private:
 class MVPCAFeaturesFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVPCAFeaturesFactory(QObject *parent = 0);
+    MVPCAFeaturesFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
 public slots:
     void updateEnabled();
 };
@@ -72,11 +72,11 @@ public slots:
 class MVChannelFeaturesFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVChannelFeaturesFactory(QObject *parent = 0);
+    MVChannelFeaturesFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
 public slots:
     void updateEnabled();
 };

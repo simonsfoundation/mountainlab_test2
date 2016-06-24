@@ -176,7 +176,8 @@ void MVAmpHistView::slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers)
 
     if (modifiers & Qt::ControlModifier) {
         viewAgent()->clickCluster(k, Qt::ControlModifier);
-    } else {
+    }
+    else {
         viewAgent()->clickCluster(k, Qt::NoModifier);
     }
 }
@@ -240,12 +241,14 @@ void MVAmpHistViewPrivate::do_highlighting()
         int index = HV->property("index").toInt();
         if (m_histograms.value(index).k == q->viewAgent()->currentCluster()) {
             HV->setCurrent(true);
-        } else {
+        }
+        else {
             HV->setCurrent(false);
         }
         if (selected_clusters.contains(m_histograms.value(index).k)) {
             HV->setSelected(true);
-        } else {
+        }
+        else {
             HV->setSelected(false);
         }
     }
@@ -295,7 +298,8 @@ void MVAmpHistView::wheelEvent(QWheelEvent* evt)
     double zoom_factor = 1;
     if (evt->delta() > 0) {
         zoom_factor *= 1.2;
-    } else if (evt->delta() < 0) {
+    }
+    else if (evt->delta() < 0) {
         zoom_factor /= 1.2;
     }
     for (int i = 0; i < d->m_histogram_views.count(); i++) {

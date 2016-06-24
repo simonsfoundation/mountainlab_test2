@@ -1,10 +1,9 @@
 #include "mvabstractviewfactory.h"
 
-MVAbstractViewFactory::MVAbstractViewFactory(QObject *parent)
+MVAbstractViewFactory::MVAbstractViewFactory(QObject* parent)
     : QObject(parent)
     , m_enabled(true)
 {
-
 }
 
 bool MVAbstractViewFactory::isEnabled() const
@@ -20,7 +19,8 @@ QString MVAbstractViewFactory::title() const { return name(); }
 
 void MVAbstractViewFactory::setEnabled(bool e)
 {
-    if (isEnabled() == e) return;
+    if (isEnabled() == e)
+        return;
     m_enabled = e;
     emit enabledChanged(e);
 }

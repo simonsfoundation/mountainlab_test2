@@ -27,7 +27,7 @@ class MVControlPanel : public QWidget {
     Q_OBJECT
 public:
     friend class MVControlPanelPrivate;
-    MVControlPanel(MVViewAgent* view_agent, MVMainWindow *main_window);
+    MVControlPanel(MVViewAgent* view_agent, MVMainWindow* main_window);
     virtual ~MVControlPanel();
 
     void setTimeseriesChoices(const QStringList& names);
@@ -37,13 +37,12 @@ public:
 
     QAbstractButton* findButton(const QString& name);
 
-    QLayout *viewLayout() const;
+    QLayout* viewLayout() const;
 
 signals:
     void userAction(QString name);
 
-private
-slots:
+private slots:
     void slot_update_enabled_controls();
     void slot_button_clicked();
     void slot_view_agent_option_changed(QString name);
@@ -101,8 +100,7 @@ private:
     QList<QWidget*> m_controls;
 
     QRadioButton* add_control(QString tag, QString label);
-private
-slots:
+private slots:
     void slot_controls_changed();
     void slot_update_controls();
 };

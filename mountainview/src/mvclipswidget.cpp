@@ -135,8 +135,7 @@ void MVClipsWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -206,10 +205,10 @@ void MVClipsWidgetComputer::compute()
     */
 }
 
-MVClipsFactory::MVClipsFactory(QObject *parent)
+MVClipsFactory::MVClipsFactory(QObject* parent)
 {
     connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -228,7 +227,7 @@ QString MVClipsFactory::title() const
     return tr("Clips");
 }
 
-MVAbstractView *MVClipsFactory::createView(MVViewAgent *agent, QWidget *parent)
+MVAbstractView* MVClipsFactory::createView(MVViewAgent* agent, QWidget* parent)
 {
     QList<int> ks = agent->selectedClusters();
     qSort(ks);
@@ -236,22 +235,23 @@ MVAbstractView *MVClipsFactory::createView(MVViewAgent *agent, QWidget *parent)
         QMessageBox::information(MVMainWindow::instance(), "Unable to open clips", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
-    MVClipsWidget *X = new MVClipsWidget(agent);
+    MVClipsWidget* X = new MVClipsWidget(agent);
     X->setProperty("widget_type", "clips");
     X->setLabelsToUse(ks);
     /// TODO, pass this in a method
     //X->setProperty("ks", int_list_to_string_list(ks));
     /// TODO (LOW) more descriptive tab title in case of more than one
 
-//    QString tab_title = "Clips";
-//    if (ks.count() == 1) {
-//        int kk = ks[0];
-//        tab_title = QString("Clips %1").arg(kk);
-//    }
+    //    QString tab_title = "Clips";
+    //    if (ks.count() == 1) {
+    //        int kk = ks[0];
+    //        tab_title = QString("Clips %1").arg(kk);
+    //    }
     return X;
 }
 
-int MVClipsFactory::order() const {
+int MVClipsFactory::order() const
+{
     return 0;
 }
 

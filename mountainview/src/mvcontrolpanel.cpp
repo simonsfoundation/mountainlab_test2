@@ -27,7 +27,7 @@ public:
     ControlManager m_controls;
 
     MVViewAgent* m_view_agent;
-    MVMainWindow *m_main_window;
+    MVMainWindow* m_main_window;
     FlowLayout* m_viewLayout;
     QLabel* create_group_label(QString label);
     QAbstractButton* find_action_button(QString name);
@@ -45,13 +45,13 @@ action_button_info abi(QString name, QString label)
     return ret;
 }
 
-MVControlPanel::MVControlPanel(MVViewAgent* view_agent, MVMainWindow *mw)
+MVControlPanel::MVControlPanel(MVViewAgent* view_agent, MVMainWindow* mw)
 {
     d = new MVControlPanelPrivate;
     d->q = this;
 
     d->m_view_agent = view_agent;
-    d->m_main_window= mw;
+    d->m_main_window = mw;
 
     QVBoxLayout* layout = new QVBoxLayout;
 
@@ -128,13 +128,13 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent, MVMainWindow *mw)
         {
             QToolButton* BB = new QToolButton;
             BB->setText("Recalculate Visible *");
-            QObject::connect(BB,SIGNAL(clicked(bool)),this,SLOT(slot_recalculate_suggested_visible()));
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_recalculate_suggested_visible()));
             flayout->addWidget(BB);
         }
         {
             QToolButton* BB = new QToolButton;
             BB->setText("Recalculate All *");
-            QObject::connect(BB,SIGNAL(clicked(bool)),this,SLOT(slot_recalculate_suggested()));
+            QObject::connect(BB, SIGNAL(clicked(bool)), this, SLOT(slot_recalculate_suggested()));
             flayout->addWidget(BB);
         }
         d->m_controls.add_horizontal_divider_line(layout);

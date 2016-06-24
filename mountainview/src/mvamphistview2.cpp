@@ -140,7 +140,8 @@ void MVAmpHistView2::wheelEvent(QWheelEvent* evt)
     double zoom_factor = 1;
     if (evt->delta() > 0) {
         zoom_factor *= 1.2;
-    } else if (evt->delta() < 0) {
+    }
+    else if (evt->delta() < 0) {
         zoom_factor /= 1.2;
     }
     QList<HistogramView*> views = this->histogramViews(); //inherited
@@ -179,10 +180,9 @@ void MVAmpHistView2Private::set_views()
     q->setHistogramViews(views); //inherited
 }
 
-MVAmplitudeHistogramsFactory::MVAmplitudeHistogramsFactory(QObject *parent)
+MVAmplitudeHistogramsFactory::MVAmplitudeHistogramsFactory(QObject* parent)
     : MVAbstractViewFactory(parent)
 {
-
 }
 
 QString MVAmplitudeHistogramsFactory::id() const
@@ -200,7 +200,7 @@ QString MVAmplitudeHistogramsFactory::title() const
     return tr("Amplitudes");
 }
 
-MVAbstractView *MVAmplitudeHistogramsFactory::createView(MVViewAgent *agent, QWidget *parent)
+MVAbstractView* MVAmplitudeHistogramsFactory::createView(MVViewAgent* agent, QWidget* parent)
 {
     MVAmpHistView2* X = new MVAmpHistView2(agent);
     QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_amplitude_histogram_activated()));
@@ -209,7 +209,8 @@ MVAbstractView *MVAmplitudeHistogramsFactory::createView(MVViewAgent *agent, QWi
 
 void MVAmplitudeHistogramsFactory::slot_amplitude_histogram_activated()
 {
-    MVAbstractView *view = qobject_cast<MVAbstractView*>(sender());
-    if (!view) return;
+    MVAbstractView* view = qobject_cast<MVAbstractView*>(sender());
+    if (!view)
+        return;
     //not sure what to do here
 }

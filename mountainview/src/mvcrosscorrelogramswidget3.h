@@ -68,5 +68,4 @@ private slots:
     void updateEnabled();
 };
 
-
 #endif // MVCROSSCORRELOGRAMSWIDGET3_H

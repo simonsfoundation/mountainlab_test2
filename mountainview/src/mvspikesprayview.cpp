@@ -151,7 +151,8 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         if (counts[k]) {
             alphas[k] = 255 / counts[k];
             alphas[k] = qMin(255, qMax(5, alphas[k]));
-        } else
+        }
+        else
             alphas[k] = 255;
     }
 
@@ -197,10 +198,12 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    } else {
+    }
+    else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -218,7 +221,8 @@ void MVSpikeSprayViewPrivate::render_clip(QPainter* painter, long M, long T, dou
             QPointF pt = coord2pix(m, t, val);
             if (t == 0) {
                 path.moveTo(pt);
-            } else {
+            }
+            else {
                 path.lineTo(pt);
             }
         }
@@ -258,8 +262,7 @@ void MVSpikeSprayComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -330,11 +333,11 @@ void MVSpikeSprayComputer::compute()
     }
 }
 
-MVSpikeSprayFactory::MVSpikeSprayFactory(QObject *parent)
+MVSpikeSprayFactory::MVSpikeSprayFactory(QObject* parent)
     : MVAbstractViewFactory(parent)
 {
     connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -353,7 +356,7 @@ QString MVSpikeSprayFactory::title() const
     return tr("Spike Spray");
 }
 
-MVAbstractView *MVSpikeSprayFactory::createView(MVViewAgent *agent, QWidget *parent)
+MVAbstractView* MVSpikeSprayFactory::createView(MVViewAgent* agent, QWidget* parent)
 {
     QList<int> ks = agent->selectedClusters();
     qSort(ks);

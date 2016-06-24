@@ -25,7 +25,7 @@ class MVClusterDetailWidget : public MVAbstractView {
 public:
     friend class MVClusterDetailWidgetPrivate;
     friend class ClusterView;
-    MVClusterDetailWidget(MVViewAgent* view_agent, MVAbstractViewFactory *factory = 0);
+    MVClusterDetailWidget(MVViewAgent* view_agent, MVAbstractViewFactory* factory = 0);
     virtual ~MVClusterDetailWidget();
 
     MVAbstractViewFactory* viewFactory() const Q_DECL_OVERRIDE;
@@ -50,8 +50,7 @@ protected:
 signals:
     ///A cluster has been double-clicked (or enter pressed?)
     void signalTemplateActivated();
-private
-slots:
+private slots:
     //void slot_context_menu(const QPoint& pos);
     void slot_export_image();
     void slot_toggle_stdev_shading();
@@ -67,11 +66,11 @@ private:
 class MVClusterDetailsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVClusterDetailsFactory(QObject *parent = 0);
+    MVClusterDetailsFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
     void openClipsForTemplate();
 };

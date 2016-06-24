@@ -10,7 +10,7 @@ class ClusterAnnotationGuidePrivate {
 public:
     ClusterAnnotationGuide* q;
     MVContext* m_context;
-    MVMainWindow *m_main_window;
+    MVMainWindow* m_main_window;
 
     QWizardPage* make_intro_page();
     QWizardPage* make_noise_page();
@@ -21,7 +21,7 @@ public:
     void show_instructions(QString title, QString instructions);
 };
 
-ClusterAnnotationGuide::ClusterAnnotationGuide(MVContext* mvcontext, MVMainWindow *mw)
+ClusterAnnotationGuide::ClusterAnnotationGuide(MVContext* mvcontext, MVMainWindow* mw)
 {
     d = new ClusterAnnotationGuidePrivate;
     d->q = this;

@@ -154,7 +154,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
         }
     }
 
-    d->m_control_panel = new MVControlPanel(view_agent,this);
+    d->m_control_panel = new MVControlPanel(view_agent, this);
     //probably get rid of the following line
     connect(d->m_control_panel, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
 

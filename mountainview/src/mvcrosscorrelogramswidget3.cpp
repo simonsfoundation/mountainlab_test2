@@ -259,10 +259,9 @@ void MVCrossCorrelogramsWidget3Computer::compute()
     }
 }
 
-MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(QObject *parent)
+MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(QObject* parent)
     : MVAbstractViewFactory(parent)
 {
-
 }
 
 QString MVAutoCorrelogramsFactory::id() const
@@ -280,7 +279,7 @@ QString MVAutoCorrelogramsFactory::title() const
     return tr("Auto-Correlograms");
 }
 
-MVAbstractView *MVAutoCorrelogramsFactory::createView(MVViewAgent *agent, QWidget *parent)
+MVAbstractView* MVAutoCorrelogramsFactory::createView(MVViewAgent* agent, QWidget* parent)
 {
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(agent);
     CrossCorrelogramOptions3 opts;
@@ -292,9 +291,10 @@ MVAbstractView *MVAutoCorrelogramsFactory::createView(MVViewAgent *agent, QWidge
 
 void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
 {
-    MVAbstractView *view = qobject_cast<MVAbstractView*>(sender());
-    if (!view) return;
-    MVMainWindow *mw = MVMainWindow::instance();
+    MVAbstractView* view = qobject_cast<MVAbstractView*>(sender());
+    if (!view)
+        return;
+    MVMainWindow* mw = MVMainWindow::instance();
     int k = mw->viewAgent()->currentCluster();
     TabberTabWidget* TW = mw->tabWidget(view);
     mw->tabber()->setCurrentContainer(TW);
@@ -303,11 +303,11 @@ void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
     /// mw->openView("cross-correlograms", k);
 }
 
-MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(QObject *parent)
+MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(QObject* parent)
     : MVAbstractViewFactory(parent)
 {
     connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -326,7 +326,7 @@ QString MVMatrixOfCrossCorrelogramsFactory::title() const
     return tr("CC Matrix");
 }
 
-MVAbstractView *MVMatrixOfCrossCorrelogramsFactory::createView(MVViewAgent *agent, QWidget *parent)
+MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(MVViewAgent* agent, QWidget* parent)
 {
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(agent);
     QList<int> ks = agent->selectedClusters();

@@ -217,10 +217,11 @@ void MVFiringEventViewCalculator::compute()
     task.log(QString("Found %1 events, using %2 clusters").arg(times.count()).arg(labels_to_use.count()));
 }
 
-MVFiringEventsFactory::MVFiringEventsFactory(QObject *parent)
-    : MVAbstractViewFactory(parent) {
+MVFiringEventsFactory::MVFiringEventsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
+{
     connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -239,7 +240,7 @@ QString MVFiringEventsFactory::title() const
     return tr("Firing Events");
 }
 
-MVAbstractView *MVFiringEventsFactory::createView(MVViewAgent *agent, QWidget *parent)
+MVAbstractView* MVFiringEventsFactory::createView(MVViewAgent* agent, QWidget* parent)
 {
     QList<int> ks = agent->selectedClusters();
     if (ks.isEmpty()) {

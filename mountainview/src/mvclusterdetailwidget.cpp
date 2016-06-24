@@ -147,7 +147,7 @@ public:
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
 
-MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, MVAbstractViewFactory *factory)
+MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, MVAbstractViewFactory* factory)
     : MVAbstractView(view_agent)
 {
     d = new MVClusterDetailWidgetPrivate;
@@ -224,7 +224,7 @@ MVClusterDetailWidget::~MVClusterDetailWidget()
     delete d;
 }
 
-MVAbstractViewFactory *MVClusterDetailWidget::viewFactory() const
+MVAbstractViewFactory* MVClusterDetailWidget::viewFactory() const
 {
     return d->f;
 }
@@ -1220,7 +1220,10 @@ QRectF ClusterView::rect()
     return m_rect;
 }
 
-MVClusterDetailsFactory::MVClusterDetailsFactory(QObject *parent) : MVAbstractViewFactory(parent) {}
+MVClusterDetailsFactory::MVClusterDetailsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
+{
+}
 
 QString MVClusterDetailsFactory::id() const
 {
@@ -1232,11 +1235,12 @@ QString MVClusterDetailsFactory::name() const
     return tr("Cluster Details");
 }
 
-QString MVClusterDetailsFactory::title() const {
+QString MVClusterDetailsFactory::title() const
+{
     return tr("Details");
 }
 
-MVAbstractView *MVClusterDetailsFactory::createView(MVViewAgent *agent, QWidget *parent)
+MVAbstractView* MVClusterDetailsFactory::createView(MVViewAgent* agent, QWidget* parent)
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(agent);
     connect(X, SIGNAL(signalTemplateActivated()), this, SLOT(openClipsForTemplate()));
@@ -1246,11 +1250,13 @@ MVAbstractView *MVClusterDetailsFactory::createView(MVViewAgent *agent, QWidget 
 
 void MVClusterDetailsFactory::openClipsForTemplate()
 {
-    MVAbstractView *view = qobject_cast<MVAbstractView*>(sender());
-    if (!view) return;
-    MVMainWindow *mw = MVMainWindow::instance();
+    MVAbstractView* view = qobject_cast<MVAbstractView*>(sender());
+    if (!view)
+        return;
+    MVMainWindow* mw = MVMainWindow::instance();
     int k = mw->viewAgent()->currentCluster();
-    if (k<0) return;
+    if (k < 0)
+        return;
     TabberTabWidget* TW = mw->tabWidget(view);
     mw->tabber()->setCurrentContainer(TW);
     mw->tabber()->switchCurrentContainer();

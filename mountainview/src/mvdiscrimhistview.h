@@ -22,8 +22,7 @@ public:
 
 signals:
 
-private
-slots:
+private slots:
 
 private:
     MVDiscrimHistViewPrivate* d;
@@ -32,12 +31,11 @@ private:
 class MVDiscrimHistFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVDiscrimHistFactory(QObject *parent = 0);
+    MVDiscrimHistFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
 };
-
 
 #endif // MVDISCRIMHISTVIEW_H

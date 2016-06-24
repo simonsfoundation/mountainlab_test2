@@ -10,7 +10,7 @@ class ClusterAnnotationGuide : public QWizard {
     Q_OBJECT
 public:
     friend class ClusterAnnotationGuidePrivate;
-    ClusterAnnotationGuide(MVContext* mvcontext, MVMainWindow *mw);
+    ClusterAnnotationGuide(MVContext* mvcontext, MVMainWindow* mw);
     virtual ~ClusterAnnotationGuide();
 signals:
 private slots:

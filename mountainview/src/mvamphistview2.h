@@ -20,8 +20,7 @@ public:
 
 signals:
 
-private
-slots:
+private slots:
 
 private:
     MVAmpHistView2Private* d;
@@ -30,11 +29,11 @@ private:
 class MVAmplitudeHistogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVAmplitudeHistogramsFactory(QObject *parent = 0);
+    MVAmplitudeHistogramsFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
     void slot_amplitude_histogram_activated();
 };
