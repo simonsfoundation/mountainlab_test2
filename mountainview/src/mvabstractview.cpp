@@ -45,7 +45,9 @@ MVAbstractView::MVAbstractView(MVViewAgent* view_agent)
     d->m_view_agent = view_agent;
     d->m_calculation_scheduled = false;
 
-    QObject::connect(&d->m_calculation_thread, SIGNAL(finished()), this, SLOT(slot_calculation_finished()));
+    // Very important to make this a queued connection because the subclass destructor
+    // is called before MVAbstractView constructor, and therefore the calculation thread does not get stopped before the subclass gets destructed
+    QObject::connect(&d->m_calculation_thread, SIGNAL(finished()), this, SLOT(slot_calculation_finished()),Qt::QueuedConnection);
     QObject::connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
 
     {

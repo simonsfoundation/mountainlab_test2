@@ -56,6 +56,19 @@ private slots:
     //void slot_auto_correlogram_activated();
 };
 
+/*
+class MVCrossCorrelogramsFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVCrossCorrelogramsFactory(QObject* parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
+private slots:
+};
+*/
+
 class MVMatrixOfCrossCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:

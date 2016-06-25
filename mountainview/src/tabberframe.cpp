@@ -110,8 +110,6 @@ TabberFrame::TabberFrame(MVAbstractView* view)
 
 TabberFrame::~TabberFrame()
 {
-    /// Witold, I needed to do this here because otherwise the stopCalculation is only called in the destructor of the MVAbstractView which apparently occurs *after* the destruction of the superclass, causing a crash. However, I want this to work whenever the view is destroyed, even when it is not in a frame.
-    d->m_view->stopCalculation();
     delete d;
 }
 
