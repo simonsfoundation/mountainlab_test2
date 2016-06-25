@@ -30,6 +30,7 @@ public:
 
     bool isCalculating() const;
     bool recalculateSuggested() const;
+    void stopCalculation();
 
 public
 slots:
