@@ -145,11 +145,13 @@ int main(int argc, char* argv[])
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
             return 0;
-        } else if (arg2 == "remotereadmda2") {
+        }
+        else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
             return 0;
-        } else if (arg2 == "taskprogressview") {
+        }
+        else if (arg2 == "taskprogressview") {
             MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
@@ -158,13 +160,15 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            } else {
+            }
+            else {
                 W->resize(W0, H0);
             }
             test_taskprogressview();
             qWarning() << "No such unit test: " + arg2;
             return 0;
-        } else if (arg2 == "mvtimeseriesview") {
+        }
+        else if (arg2 == "mvtimeseriesview") {
             MVTimeSeriesView::unit_test();
         }
     }
@@ -233,7 +237,8 @@ int main(int argc, char* argv[])
         a.processEvents();
         W->setMVFile(mv_file);
         W->setDefaultInitialization();
-    } else if (mode == "spikespy") {
+    }
+    else if (mode == "spikespy") {
         printf("spikespy...\n");
         QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
         QStringList firings_paths = CLP.named_parameters["firings"].toString().split(",");

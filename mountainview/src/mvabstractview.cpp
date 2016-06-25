@@ -76,7 +76,7 @@ void MVAbstractView::stopCalculation()
     d->stop_calculation();
 }
 
-MVAbstractViewFactory *MVAbstractView::viewFactory() const
+MVAbstractViewFactory* MVAbstractView::viewFactory() const
 {
     return 0;
 }
@@ -91,7 +91,7 @@ MVAbstractView::ViewFeatures MVAbstractView::viewFeatures() const
     return NoFeatures; // no features by default
 }
 
-void MVAbstractView::renderView(QPainter *painter)
+void MVAbstractView::renderView(QPainter* painter)
 {
     // do nothing in the base class
 }

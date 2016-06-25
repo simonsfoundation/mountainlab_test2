@@ -53,7 +53,7 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
-    void slot_auto_correlogram_activated();
+    //void slot_auto_correlogram_activated();
 };
 
 class MVMatrixOfCrossCorrelogramsFactory : public MVAbstractViewFactory {

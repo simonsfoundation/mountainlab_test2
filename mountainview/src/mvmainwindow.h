@@ -26,7 +26,10 @@ class Tabber;
 
 /// Witold, please help do this a better way
 enum RecalculateViewsMode {
-    All,AllVisible,Suggested,SuggestedVisible
+    All,
+    AllVisible,
+    Suggested,
+    SuggestedVisible
 };
 
 class MVMainWindowPrivate;
@@ -78,6 +81,7 @@ private slots:
     void slot_cluster_annotation_guide();
 
     void slot_open_view(QObject*);
+    void slot_open_cluster_context_menu();
 
 private:
     MVMainWindowPrivate* d;

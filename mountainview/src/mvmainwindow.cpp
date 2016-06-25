@@ -534,6 +534,14 @@ void MVMainWindow::slot_open_view(QObject* o)
     d->openView(factory);
 }
 
+void MVMainWindow::slot_open_cluster_context_menu()
+{
+    MVClusterContextMenu* menu = new MVClusterContextMenu(viewAgent(), this, viewAgent()->selectedClusters().toSet());
+    /// Witold, is this the right way to make a popup menu that gets deleted later?
+    menu->setAttribute(Qt::WA_DeleteOnClose);
+    menu->popup(QCursor::pos());
+}
+
 void MVMainWindowPrivate::registerAllViews()
 {
     // unregister all existing views
@@ -574,6 +582,10 @@ MVAbstractView* MVMainWindowPrivate::openView(MVAbstractViewFactory* factory)
         return Q_NULLPTR;
     //    set_tool_button_menu(view);
     add_tab(view, factory->title());
+
+    /// Witold, does this belong here? I am uncertain about what mvmainwindow is responsible for
+    QObject::connect(view, SIGNAL(signalClusterContextMenu()), q, SLOT(slot_open_cluster_context_menu()));
+
     return view;
 }
 
@@ -762,7 +774,7 @@ void MVMainWindowPrivate::unmerge_selected()
 
 void MVMainWindowPrivate::tag_selected()
 {
-    MVClusterContextMenu* menu = new MVClusterContextMenu(m_view_agent, m_view_agent->selectedClusters().toSet());
+    MVClusterContextMenu* menu = new MVClusterContextMenu(m_view_agent, q, m_view_agent->selectedClusters().toSet());
     menu->popup(QCursor::pos());
     menu->setAttribute(Qt::WA_DeleteOnClose);
 }

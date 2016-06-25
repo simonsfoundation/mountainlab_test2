@@ -171,8 +171,10 @@ void MVHistogramGrid::setHistogramViews(const QList<HistogramView*> views)
         HV->setProperty("col", col0);
         HV->setProperty("view_index", jj);
         connect(HV, SIGNAL(clicked(Qt::KeyboardModifiers)), this, SLOT(slot_histogram_view_clicked(Qt::KeyboardModifiers)));
-        connect(HV, SIGNAL(rightClicked(Qt::KeyboardModifiers)), this, SLOT(slot_histogram_view_right_clicked(Qt::KeyboardModifiers)));
-        connect(HV, SIGNAL(activated()), this, SLOT(slot_histogram_view_activated()));
+        //connect(HV, SIGNAL(rightClicked(Qt::KeyboardModifiers)), this, SLOT(slot_histogram_view_right_clicked(Qt::KeyboardModifiers)));
+        connect(HV, SIGNAL(rightClicked(Qt::KeyboardModifiers)), this, SIGNAL(signalClusterContextMenu()));
+        //connect(HV, SIGNAL(activated()), this, SLOT(slot_histogram_view_activated()));
+        connect(HV, SIGNAL(activated()), this, SIGNAL(signalClusterContextMenu()));
         connect(HV, SIGNAL(signalExportHistogramMatrixImage()), this, SLOT(slot_export_image()));
     }
 
@@ -208,9 +210,7 @@ void MVHistogramGrid::slot_histogram_view_clicked(Qt::KeyboardModifiers modifier
 void MVHistogramGrid::slot_histogram_view_right_clicked(Qt::KeyboardModifiers modifiers)
 {
     Q_UNUSED(modifiers)
-    MVClusterContextMenu* menu = new MVClusterContextMenu(viewAgent(), viewAgent()->selectedClusters().toSet());
-    menu->setAttribute(Qt::WA_DeleteOnClose);
-    menu->popup(QCursor::pos());
+    emit signalClusterContextMenu();
 }
 
 void MVHistogramGrid::slot_histogram_view_activated()

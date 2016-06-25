@@ -285,10 +285,11 @@ MVAbstractView* MVAutoCorrelogramsFactory::createView(MVViewAgent* agent, QWidge
     CrossCorrelogramOptions3 opts;
     opts.mode = All_Auto_Correlograms3;
     X->setOptions(opts);
-    QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_auto_correlogram_activated()));
+    //QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_auto_correlogram_activated()));
     return X;
 }
 
+/*
 void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
 {
     MVAbstractView* view = qobject_cast<MVAbstractView*>(sender());
@@ -302,6 +303,7 @@ void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
     /// TODO: d->open_cross_correlograms(k);
     /// mw->openView("cross-correlograms", k);
 }
+*/
 
 MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(QObject* parent)
     : MVAbstractViewFactory(parent)

@@ -72,7 +72,7 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
-    void openClipsForTemplate();
+    //void openClipsForTemplate();
 };
 
 #endif // MVCLUSTERDETAILWIDGET_H

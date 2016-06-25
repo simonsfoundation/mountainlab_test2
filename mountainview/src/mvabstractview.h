@@ -19,7 +19,7 @@ class MVAbstractView : public QWidget {
 public:
     enum ViewFeature {
         NoFeatures = 0x0,
-        RenderView = 0x1    // can render itself on a given painter (e.g. for export)
+        RenderView = 0x1 // can render itself on a given painter (e.g. for export)
     };
     Q_DECLARE_FLAGS(ViewFeatures, ViewFeature)
 
@@ -32,8 +32,7 @@ public:
     bool recalculateSuggested() const;
     void stopCalculation();
 
-public
-slots:
+public slots:
     void recalculate();
     void neverSuggestRecalculate();
 
@@ -41,12 +40,13 @@ slots:
     MVViewAgent* viewAgent();
 
     virtual ViewFeatures viewFeatures() const;
-    virtual void renderView(QPainter *painter); // add render opts
+    virtual void renderView(QPainter* painter); // add render opts
 
 signals:
     void calculationStarted();
     void calculationFinished();
     void recalculateSuggestedChanged();
+    void signalClusterContextMenu();
 
 protected:
     virtual void prepareCalculation() = 0;
@@ -56,8 +56,7 @@ protected:
     void recalculateOnOptionChanged(QString name, bool suggest_only = true);
     void recalculateOn(QObject*, const char* signal, bool suggest_only = true);
 
-private
-slots:
+private slots:
     void slot_do_calculation();
     void slot_calculation_finished();
     void slot_view_agent_option_changed(QString name);

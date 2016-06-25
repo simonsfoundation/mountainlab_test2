@@ -429,8 +429,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
                 viewAgent()->clickCluster(k, Qt::NoModifier);
             }
         }
-        MVClusterContextMenu* menu = new MVClusterContextMenu(viewAgent(), viewAgent()->selectedClusters().toSet());
-        menu->popup(this->mapToGlobal(pt));
+        emit signalClusterContextMenu();
     }
 }
 
@@ -1243,11 +1242,14 @@ QString MVClusterDetailsFactory::title() const
 MVAbstractView* MVClusterDetailsFactory::createView(MVViewAgent* agent, QWidget* parent)
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(agent);
-    connect(X, SIGNAL(signalTemplateActivated()), this, SLOT(openClipsForTemplate()));
+    //connect(X, SIGNAL(signalTemplateActivated()), this, SLOT(openClipsForTemplate()));
+    /// Witold, does this belong here or in the view?
+    connect(X, SIGNAL(signalTemplateActivated()), X, SIGNAL(signalClusterContextMenu()));
     X->setProperty("widget_type", "cluster_details");
     return X;
 }
 
+/*
 void MVClusterDetailsFactory::openClipsForTemplate()
 {
     MVAbstractView* view = qobject_cast<MVAbstractView*>(sender());
@@ -1262,3 +1264,4 @@ void MVClusterDetailsFactory::openClipsForTemplate()
     mw->tabber()->switchCurrentContainer();
     mw->openView("open-clips");
 }
+*/
