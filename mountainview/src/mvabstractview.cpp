@@ -71,6 +71,11 @@ bool MVAbstractView::recalculateSuggested() const
     return ((!d->m_never_suggest_recalculate) && (d->m_recalculate_suggested));
 }
 
+void MVAbstractView::stopCalculation()
+{
+    d->stop_calculation();
+}
+
 MVViewAgent* MVAbstractView::viewAgent()
 {
     return d->m_view_agent;
