@@ -34,7 +34,7 @@ public:
     QString m_current_timeseries_name;
     DiskReadMda m_firings;
     MVEventFilter m_event_filter;
-    double m_sample_rate;
+    double m_sample_rate = 0;
     QMap<QString, QVariant> m_options;
     QString m_mlproxy_url;
     QMap<QString, QColor> m_colors;
@@ -48,6 +48,9 @@ MVViewAgent::MVViewAgent()
     d->q = this;
     d->m_current_cluster = 0;
     d->m_current_timepoint = 0;
+
+    d->m_options["clip_size"] = 100;
+    d->m_options["cc_max_dt_msec"] = 100;
 
     // default colors
     d->m_colors["background"] = QColor(240, 240, 240);

@@ -22,6 +22,7 @@
 #include "taskprogress.h"
 #include "mvtimeseriesview.h" //for unit test
 
+#include <QJsonDocument>
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtConcurrentRun>
@@ -183,55 +184,57 @@ int main(int argc, char* argv[])
     QString mode = CLP.named_parameters.value("mode", "overview2").toString();
     if (mode == "overview2") {
 
+        /*
         MVFile mv_file;
         if (!mv_fname.isEmpty()) {
             mv_file.read(mv_fname);
         }
+        */
 
-        printf("overview2...\n");
-        QString raw_path = CLP.named_parameters["raw"].toString();
-        QString pre_path = CLP.named_parameters["pre"].toString();
-        QString filt_path = CLP.named_parameters["filt"].toString();
-        QString firings_path = CLP.named_parameters["firings"].toString();
-        double samplerate = CLP.named_parameters.value("samplerate", 20000).toDouble();
-        //QString epochs_path = CLP.named_parameters["epochs"].toString();
-        QString window_title = CLP.named_parameters["window_title"].toString();
-        QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
         MVViewAgent* view_agent = new MVViewAgent; //note that the view agent does not get deleted. :(
-        view_agent->setOption("clip_size", 130);
         view_agent->setChannelColors(channel_colors);
         view_agent->setClusterColors(label_colors);
-        view_agent->setSampleRate(samplerate);
         MVMainWindow* W = new MVMainWindow(view_agent);
 
-        if (!firings_path.isEmpty()) {
-            mv_file.setFiringsPath(firings_path);
-        }
-        if (samplerate) {
-            mv_file.setSampleRate(samplerate);
+        qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << CLP.named_parameters;
+        qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << CLP.named_parameters["samplerate"];
+
+        if (!mv_fname.isEmpty()) {
+            QString json = read_text_file(mv_fname);
+            QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
+            view_agent->setFromMVFileObject(obj);
         }
 
-        if (!pre_path.isEmpty()) {
-            mv_file.addTimeseriesPath("Preprocessed Data", pre_path);
+        if (CLP.named_parameters.contains("samplerate")) {
+            view_agent->setSampleRate(CLP.named_parameters.value("samplerate", 0).toDouble());
         }
-        if (!filt_path.isEmpty()) {
-            mv_file.addTimeseriesPath("Filtered Data", filt_path);
+        if (CLP.named_parameters.contains("firings")) {
+            QString firings_path = CLP.named_parameters["firings"].toString();
+            view_agent->setFirings(DiskReadMda(firings_path));
+            W->setWindowTitle(firings_path);
         }
-        if (!raw_path.isEmpty()) {
-            mv_file.addTimeseriesPath("Raw Data", raw_path);
+        if (CLP.named_parameters.contains("pre")) {
+            QString pre_path = CLP.named_parameters["pre"].toString();
+            view_agent->addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
         }
-        if (!mlproxy_url.isEmpty()) {
-            mv_file.setMlproxyUrl(mlproxy_url);
+        if (CLP.named_parameters.contains("filt")) {
+            QString filt_path = CLP.named_parameters["filt"].toString();
+            view_agent->addTimeseries("Filtered Data", DiskReadMda(filt_path));
+        }
+        if (CLP.named_parameters.contains("raw")) {
+            QString raw_path = CLP.named_parameters["raw"].toString();
+            view_agent->addTimeseries("Raw Data", DiskReadMda(raw_path));
+        }
+        if (CLP.named_parameters.contains("mlproxy_url")) {
+            QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
+            view_agent->setMLProxyUrl(mlproxy_url);
+        }
+        if (CLP.named_parameters.contains("window_title")) {
+            QString window_title = CLP.named_parameters["window_title"].toString();
+            W->setWindowTitle(window_title);
         }
 
-        if (window_title.isEmpty())
-            window_title = pre_path;
-        if (window_title.isEmpty())
-            window_title = filt_path;
-        if (window_title.isEmpty())
-            window_title = raw_path;
-        W->setWindowTitle(window_title);
-        W->setMinimumSize(1000, 800);
+        //W->setMinimumSize(1000, 800);
         int W0 = 1800, H0 = 1200;
         QRect geom = QApplication::desktop()->geometry();
         if (geom.width() - 100 < W0)
@@ -242,7 +245,7 @@ int main(int argc, char* argv[])
         W->show();
 
         a.processEvents();
-        W->setMVFile(mv_file);
+        //W->setMVFile(mv_file);
         W->setDefaultInitialization();
 
         W->addControl(new MVOpenViewsControl(view_agent, W), true);
