@@ -469,8 +469,21 @@ void MVClusterDetailWidget::contextMenuEvent(QContextMenuEvent *evt)
             viewAgent()->clickCluster(k, Qt::NoModifier);
         }
     }
-    emit signalClusterContextMenu();
-
+    QMimeData md;
+    {
+        QByteArray ba;
+        QDataStream ds(&ba, QIODevice::WriteOnly);
+        ds << viewAgent()->selectedClusters();
+        md.setData("application/x-mv-cluster", ba); // selected cluster data
+    }
+    {
+        QByteArray ba;
+        QDataStream ds(&ba, QIODevice::WriteOnly);
+        ds << (quintptr)this;
+        md.setData("application/x-mv-view", ba); // this view
+    }
+    qDebug() << Q_FUNC_INFO;
+    requestContextMenu(md, pt);
 }
 
 /*

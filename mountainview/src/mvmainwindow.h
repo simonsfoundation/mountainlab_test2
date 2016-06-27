@@ -8,6 +8,7 @@
 
 #include <QWidget>
 #include "mda.h"
+#include <QMimeData>
 #include <QTabWidget>
 #include "clustermerge.h"
 #include "mvfile.h"
@@ -32,6 +33,28 @@ enum RecalculateViewsMode {
     SuggestedVisible
 };
 
+
+/*!
+ * Context menu handler is an object that can populate context menu with
+ * context sensitive actions. QMimeData is used as a carrier for determining
+ * the context. A view can request a menu for a given context by creating
+ * a QMimeData object and adding custom MIME types as well as associating
+ * extra data with a given MIME type. Registered context menu handlers are
+ * queried with the MIME type to return a list of supported actions for that
+ * type and its data. Actions from all handlers are then assembled and
+ * shown in form of a context menu at a given position on the screen.
+ *
+ * Actions should make use of the associated data to trigger appropriate
+ * functionality.
+ */
+
+class MVAbstractContextMenuHandler {
+public:
+    virtual ~MVAbstractContextMenuHandler() {}
+    virtual bool canHandle(const QMimeData &md) const { return false; }
+    virtual QList<QAction*> actions(const QMimeData &md) = 0;
+};
+
 class MVMainWindowPrivate;
 class MVMainWindow : public QWidget {
     Q_OBJECT
@@ -47,6 +70,11 @@ public:
     void registerViewFactory(MVAbstractViewFactory* f);
     void unregisterViewFactory(MVAbstractViewFactory* f);
     const QList<MVAbstractViewFactory*>& viewFactories() const;
+
+    void registerContextMenuHandler(MVAbstractContextMenuHandler *h);
+    void unregisterContextMenuHandler(MVAbstractContextMenuHandler *h);
+    const QList<MVAbstractContextMenuHandler *> &contextMenuHandlers() const;
+
 
     /// Witold, I am going to use this sparingly, thinking it will eventually go away
     static MVMainWindow* instance(); // helper while implementing view factories
@@ -82,6 +110,7 @@ private slots:
 
     void slot_open_view(QObject*);
     void slot_open_cluster_context_menu();
+    void handleContextMenu(const QMimeData &dt, const QPoint &globalPos);
 
 private:
     MVMainWindowPrivate* d;

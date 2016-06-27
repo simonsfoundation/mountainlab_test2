@@ -60,6 +60,24 @@
 
 MVMainWindow* MVMainWindow::window_instance = 0;
 
+class DummyContextMenuHandler : public MVAbstractContextMenuHandler {
+
+
+    // MVAbstractContextMenuHandler interface
+public:
+    bool canHandle(const QMimeData &md) const Q_DECL_OVERRIDE
+    {
+        return md.hasFormat("application/x-mv-cluster");
+    }
+
+    QList<QAction *> actions(const QMimeData &md) Q_DECL_OVERRIDE
+    {
+        QList<QAction*> result;
+        result.append(new QAction("TEST", 0));
+        return result;
+    }
+};
+
 class MVMainWindowPrivate {
 public:
     MVMainWindow* q;
@@ -76,6 +94,7 @@ public:
     Tabber* m_tabber; //manages the views in the two tab widgets
     QList<MVAbstractViewFactory*> m_viewFactories;
     QSignalMapper* m_viewMapper;
+    QList<MVAbstractContextMenuHandler*> m_menuHandlers;
 
     void registerAllViews();
 
@@ -137,6 +156,8 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     registerViewFactory(new MVFiringEventsFactory(this));
     registerViewFactory(new MVAmplitudeHistogramsFactory(this));
     registerViewFactory(new MVDiscrimHistFactory(this));
+
+    registerContextMenuHandler(new DummyContextMenuHandler);
 
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_view_agent, this);
     QToolBar* main_toolbar = new QToolBar;
@@ -338,6 +359,21 @@ void MVMainWindow::unregisterViewFactory(MVAbstractViewFactory* f)
 const QList<MVAbstractViewFactory*>& MVMainWindow::viewFactories() const
 {
     return d->m_viewFactories;
+}
+
+void MVMainWindow::registerContextMenuHandler(MVAbstractContextMenuHandler *h)
+{
+    d->m_menuHandlers.append(h);
+}
+
+void MVMainWindow::unregisterContextMenuHandler(MVAbstractContextMenuHandler *h)
+{
+    d->m_menuHandlers.removeOne(h);
+}
+
+const QList<MVAbstractContextMenuHandler *>& MVMainWindow::contextMenuHandlers() const
+{
+    return d->m_menuHandlers;
 }
 
 MVMainWindow* MVMainWindow::instance()
@@ -546,6 +582,19 @@ void MVMainWindow::slot_open_cluster_context_menu()
     menu.exec(QCursor::pos());
 }
 
+void MVMainWindow::handleContextMenu(const QMimeData &dt, const QPoint &globalPos)
+{
+    QList<QAction*> actions;
+    foreach(MVAbstractContextMenuHandler *handler, contextMenuHandlers()) {
+        if (handler->canHandle(dt))
+            actions += handler->actions(dt);
+    }
+    if (actions.isEmpty()) return;
+    QMenu menu;
+    menu.addActions(actions);
+    menu.exec(globalPos);
+}
+
 void MVMainWindowPrivate::registerAllViews()
 {
     // unregister all existing views
@@ -588,8 +637,10 @@ MVAbstractView* MVMainWindowPrivate::openView(MVAbstractViewFactory* factory)
     add_tab(view, factory->title());
 
     /// Witold, does this belong here? I am uncertain about what mvmainwindow is responsible for
-    QObject::connect(view, SIGNAL(signalClusterContextMenu()), q, SLOT(slot_open_cluster_context_menu()));
+//    QObject::connect(view, SIGNAL(signalClusterContextMenu()), q, SLOT(slot_open_cluster_context_menu()));
 
+    QObject::connect(view, SIGNAL(contextMenuRequested(QMimeData,QPoint)),
+                     q, SLOT(handleContextMenu(QMimeData,QPoint)));
     return view;
 }
 

@@ -9,6 +9,7 @@
 
 #include "mvviewagent.h"
 #include "mlutils.h"
+#include <QMimeData>
 #include <QWidget>
 
 class MVAbstractViewFactory;
@@ -47,6 +48,7 @@ signals:
     void calculationFinished();
     void recalculateSuggestedChanged();
     void signalClusterContextMenu();
+    void contextMenuRequested(const QMimeData &, const QPoint &globalPos);
 
 protected:
     /*
@@ -65,6 +67,8 @@ protected:
 
     void recalculateOnOptionChanged(QString name, bool suggest_only = true);
     void recalculateOn(QObject*, const char* signal, bool suggest_only = true);
+
+    void requestContextMenu(const QMimeData &md, const QPoint &pos);
 
 private slots:
     void slot_do_calculation();
