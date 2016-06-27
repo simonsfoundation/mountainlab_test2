@@ -49,6 +49,16 @@ signals:
     void signalClusterContextMenu();
 
 protected:
+    /*
+     * prepareCalculation() and onCalculationFinished() are called in the gui thread,
+     * whereas runCalculation() is called in the worker thread.
+     * Therefore, it is important that runCalculation() does not access any
+     * variables that may be used in the gui thread. However, it is guaranteed
+     * that prepareCalculation() and onCalculationFinished() will not be called
+     * in while runCalculation() is running. The calculation should check periodically
+     * whether thread_interrupt_requested() is true. In that case, it is
+     * important to return from runCalculation() prematurely.
+     */
     virtual void prepareCalculation() = 0;
     virtual void runCalculation() = 0;
     virtual void onCalculationFinished() = 0;
