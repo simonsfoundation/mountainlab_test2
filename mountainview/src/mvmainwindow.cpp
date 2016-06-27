@@ -542,10 +542,8 @@ void MVMainWindow::slot_open_view(QObject* o)
 
 void MVMainWindow::slot_open_cluster_context_menu()
 {
-    MVClusterContextMenu* menu = new MVClusterContextMenu(viewAgent(), this, viewAgent()->selectedClusters().toSet());
-    /// Witold, is this the right way to make a popup menu that gets deleted later?
-    menu->setAttribute(Qt::WA_DeleteOnClose);
-    menu->popup(QCursor::pos());
+    MVClusterContextMenu menu(viewAgent(), this, viewAgent()->selectedClusters().toSet());
+    menu.exec(QCursor::pos());
 }
 
 void MVMainWindowPrivate::registerAllViews()
