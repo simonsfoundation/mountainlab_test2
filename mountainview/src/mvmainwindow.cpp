@@ -367,21 +367,27 @@ void MVMainWindow::openView(const QString& id)
 void MVMainWindow::recalculateViews(RecalculateViewsMode mode)
 {
     QList<MVAbstractView*> widgets = d->m_tabber->allWidgets();
+    bool do_it = false;
     foreach (MVAbstractView* VV, widgets) {
-        if (VV) {
-            bool do_it = false;
-            /// Witold, please turn this into a switch statement (and bill me)...
-            if (mode == All)
-                do_it = true;
-            else if (mode == Suggested)
-                do_it = VV->recalculateSuggested();
-            else if (mode == AllVisible)
-                do_it = VV->isVisible();
-            else if (mode == SuggestedVisible)
-                do_it = ((VV->isVisible()) && (VV->recalculateSuggested()));
-            if (do_it) {
-                VV->recalculate();
-            }
+        if (!VV) continue;
+        switch(mode) {
+        case All:
+            do_it = true;
+            break;
+        case Suggested:
+            do_it = VV->recalculateSuggested();
+            break;
+        case AllVisible:
+            do_it = VV->isVisible();
+            break;
+        case SuggestedVisible:
+            do_it = ((VV->isVisible()) && (VV->recalculateSuggested()));
+            break;
+        default:
+            do_it = false;
+        }
+        if (do_it) {
+            VV->recalculate();
         }
     }
 }
