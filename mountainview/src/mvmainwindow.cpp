@@ -591,7 +591,7 @@ MVAbstractViewFactory* MVMainWindowPrivate::viewFactoryById(const QString& id) c
 
 MVAbstractView* MVMainWindowPrivate::openView(MVAbstractViewFactory* factory)
 {
-    MVAbstractView* view = factory->createView(m_view_agent);
+    MVAbstractView* view = factory->createView();
     if (!view)
         return Q_NULLPTR;
     //    set_tool_button_menu(view);

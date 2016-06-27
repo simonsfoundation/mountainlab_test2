@@ -200,9 +200,9 @@ QString MVAmplitudeHistogramsFactory::title() const
     return tr("Amplitudes");
 }
 
-MVAbstractView* MVAmplitudeHistogramsFactory::createView(MVViewAgent* agent, QWidget* parent)
+MVAbstractView* MVAmplitudeHistogramsFactory::createView(QWidget* parent)
 {
-    MVAmpHistView2* X = new MVAmpHistView2(agent);
+    MVAmpHistView2* X = new MVAmpHistView2(mvContext());
     QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_amplitude_histogram_activated()));
     return X;
 }

@@ -298,10 +298,10 @@ QString MVTimeSeriesDataFactory::title() const
     return tr("Timeseries");
 }
 
-MVAbstractView *MVTimeSeriesDataFactory::createView(MVViewAgent *agent, QWidget *parent)
+MVAbstractView *MVTimeSeriesDataFactory::createView(QWidget *parent)
 {
-    MVTimeSeriesView2* X = new MVTimeSeriesView2(agent);
-    QList<int> ks = agent->selectedClusters();
+    MVTimeSeriesView2* X = new MVTimeSeriesView2(mvContext());
+    QList<int> ks = mvContext()->selectedClusters();
     X->setLabelsToView(ks.toSet());
     return X;
 }

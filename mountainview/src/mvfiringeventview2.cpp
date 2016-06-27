@@ -240,16 +240,16 @@ QString MVFiringEventsFactory::title() const
     return tr("Firing Events");
 }
 
-MVAbstractView* MVFiringEventsFactory::createView(MVViewAgent* agent, QWidget* parent)
+MVAbstractView* MVFiringEventsFactory::createView(QWidget* parent)
 {
-    QList<int> ks = agent->selectedClusters();
+    QList<int> ks = mvContext()->selectedClusters();
     if (ks.isEmpty()) {
         QMessageBox::information(MVMainWindow::instance(), "Unable to open firing events", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
-    MVFiringEventView2* X = new MVFiringEventView2(agent);
+    MVFiringEventView2* X = new MVFiringEventView2(mvContext());
     X->setLabelsToUse(ks.toSet());
-    X->setNumTimepoints(agent->currentTimeseries().N2());
+    X->setNumTimepoints(mvContext()->currentTimeseries().N2());
     return X;
 }
 

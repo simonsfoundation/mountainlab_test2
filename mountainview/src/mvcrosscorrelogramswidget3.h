@@ -51,7 +51,7 @@ public:
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
     //void slot_auto_correlogram_activated();
 };
@@ -64,7 +64,7 @@ public:
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
     void updateEnabled();
 };
@@ -76,7 +76,7 @@ public:
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(MVViewAgent* agent, QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
     void updateEnabled();
 };

@@ -227,15 +227,15 @@ QString MVClipsFactory::title() const
     return tr("Clips");
 }
 
-MVAbstractView* MVClipsFactory::createView(MVViewAgent* agent, QWidget* parent)
+MVAbstractView* MVClipsFactory::createView(QWidget* parent)
 {
-    QList<int> ks = agent->selectedClusters();
+    QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(MVMainWindow::instance(), "Unable to open clips", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
-    MVClipsWidget* X = new MVClipsWidget(agent);
+    MVClipsWidget* X = new MVClipsWidget(mvContext());
     X->setProperty("widget_type", "clips");
     X->setLabelsToUse(ks);
     /// TODO, pass this in a method

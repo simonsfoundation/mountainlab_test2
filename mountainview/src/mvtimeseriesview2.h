@@ -50,7 +50,7 @@ public:
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView *createView(MVViewAgent *agent, QWidget *parent) Q_DECL_OVERRIDE;
+    MVAbstractView *createView(QWidget *parent) Q_DECL_OVERRIDE;
 };
 
 #endif // MVTIMESERIESVIEW2_H

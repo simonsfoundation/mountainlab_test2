@@ -19,7 +19,7 @@ public:
     virtual QString title() const; /// TODO: move title to the view itself
     virtual int order() const { return 0; }
 
-    virtual MVAbstractView* createView(MVViewAgent* agent, QWidget* parent = 0) = 0;
+    virtual MVAbstractView* createView(QWidget* parent = 0) = 0;
 signals:
     void enabledChanged(bool);
 

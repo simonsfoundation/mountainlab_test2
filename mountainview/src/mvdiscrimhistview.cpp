@@ -270,10 +270,10 @@ QString MVDiscrimHistFactory::title() const
     return tr("Discrim");
 }
 
-MVAbstractView* MVDiscrimHistFactory::createView(MVViewAgent* agent, QWidget* parent)
+MVAbstractView* MVDiscrimHistFactory::createView(QWidget* parent)
 {
-    MVDiscrimHistView* X = new MVDiscrimHistView(agent);
-    QList<int> ks = agent->selectedClusters();
+    MVDiscrimHistView* X = new MVDiscrimHistView(mvContext());
+    QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     X->setClusterNumbers(ks);
     return X;

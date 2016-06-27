@@ -356,15 +356,15 @@ QString MVSpikeSprayFactory::title() const
     return tr("Spike Spray");
 }
 
-MVAbstractView* MVSpikeSprayFactory::createView(MVViewAgent* agent, QWidget* parent)
+MVAbstractView* MVSpikeSprayFactory::createView(QWidget* parent)
 {
-    QList<int> ks = agent->selectedClusters();
+    QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     if (ks.isEmpty()) {
         QMessageBox::information(MVMainWindow::instance(), "Unable to open spike spray", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
-    MVSpikeSprayView* X = new MVSpikeSprayView(agent);
+    MVSpikeSprayView* X = new MVSpikeSprayView(mvContext());
     X->setLabelsToUse(ks);
     return X;
 }

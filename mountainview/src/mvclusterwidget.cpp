@@ -510,15 +510,15 @@ QString MVPCAFeaturesFactory::title() const
     return tr("PCA features");
 }
 
-MVAbstractView* MVPCAFeaturesFactory::createView(MVViewAgent* agent, QWidget* parent)
+MVAbstractView* MVPCAFeaturesFactory::createView(QWidget* parent)
 {
-    QList<int> ks = agent->selectedClusters();
+    QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(MVMainWindow::instance(), "Unable to open clusters", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
-    MVClusterWidget* X = new MVClusterWidget(agent);
+    MVClusterWidget* X = new MVClusterWidget(mvContext());
     X->setLabelsToUse(ks);
     X->setFeatureMode("pca");
     return X;
@@ -552,7 +552,7 @@ QString MVChannelFeaturesFactory::title() const
     return tr("Ch. features");
 }
 
-MVAbstractView* MVChannelFeaturesFactory::createView(MVViewAgent* agent, QWidget* parent)
+MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
 {
     QSettings settings("SCDA", "MountainView");
     QString str = settings.value("open_channel_features_channels", "1,2,3").toString();
@@ -570,13 +570,13 @@ MVAbstractView* MVChannelFeaturesFactory::createView(MVViewAgent* agent, QWidget
     }
     settings.setValue("open_channel_features_channels", strlist.join(","));
 
-    QList<int> ks = agent->selectedClusters();
+    QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     if (ks.isEmpty()) {
         QMessageBox::information(MVMainWindow::instance(), "Unable to open clusters", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
-    MVClusterWidget* X = new MVClusterWidget(agent);
+    MVClusterWidget* X = new MVClusterWidget(mvContext());
     X->setLabelsToUse(ks);
     X->setFeatureMode("channels");
     X->setChannels(channels);

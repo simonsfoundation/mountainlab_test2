@@ -1239,9 +1239,9 @@ QString MVClusterDetailsFactory::title() const
     return tr("Details");
 }
 
-MVAbstractView* MVClusterDetailsFactory::createView(MVViewAgent* agent, QWidget* parent)
+MVAbstractView* MVClusterDetailsFactory::createView(QWidget* parent)
 {
-    MVClusterDetailWidget* X = new MVClusterDetailWidget(agent);
+    MVClusterDetailWidget* X = new MVClusterDetailWidget(mvContext());
     //connect(X, SIGNAL(signalTemplateActivated()), this, SLOT(openClipsForTemplate()));
     /// Witold, does this belong here or in the view?
     connect(X, SIGNAL(signalTemplateActivated()), X, SIGNAL(signalClusterContextMenu()));
