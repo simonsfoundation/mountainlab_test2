@@ -180,7 +180,7 @@ void MVAmpHistView2Private::set_views()
     q->setHistogramViews(views); //inherited
 }
 
-MVAmplitudeHistogramsFactory::MVAmplitudeHistogramsFactory(MVViewAgent *context, QObject* parent)
+MVAmplitudeHistogramsFactory::MVAmplitudeHistogramsFactory(MVViewAgent* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
 }

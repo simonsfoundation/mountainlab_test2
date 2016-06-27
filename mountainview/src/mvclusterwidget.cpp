@@ -487,7 +487,7 @@ void MVClusterWidgetComputer::compute()
     features.readChunk(data, 0, 0, features.N1(), features.N2());
 }
 
-MVPCAFeaturesFactory::MVPCAFeaturesFactory(MVViewAgent *context, QObject* parent)
+MVPCAFeaturesFactory::MVPCAFeaturesFactory(MVViewAgent* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
@@ -529,7 +529,7 @@ void MVPCAFeaturesFactory::updateEnabled()
     setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
 }
 
-MVChannelFeaturesFactory::MVChannelFeaturesFactory(MVViewAgent *context, QObject* parent)
+MVChannelFeaturesFactory::MVChannelFeaturesFactory(MVViewAgent* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),

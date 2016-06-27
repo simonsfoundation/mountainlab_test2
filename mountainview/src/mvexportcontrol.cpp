@@ -75,9 +75,9 @@ void MVExportControl::slot_export_mv_document()
     settings.setValue("default_export_dir", QFileInfo(fname).path());
     if (QFileInfo(fname).suffix() != "mv")
         fname = fname + ".mv";
-    QJsonObject obj=this->mvContext()->toMVFileObject();
-    QString json=QJsonDocument(obj).toJson();
-    if (!write_text_file(fname,json)) {
+    QJsonObject obj = this->mvContext()->toMVFileObject();
+    QString json = QJsonDocument(obj).toJson();
+    if (!write_text_file(fname, json)) {
         TaskProgress task("export mountainview document");
         task.error("Error writing .mv file: " + fname);
     }

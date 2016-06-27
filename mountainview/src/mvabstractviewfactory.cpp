@@ -1,8 +1,9 @@
 #include "mvabstractviewfactory.h"
 
-MVAbstractViewFactory::MVAbstractViewFactory(MVViewAgent *context, QObject* parent)
+MVAbstractViewFactory::MVAbstractViewFactory(MVViewAgent* context, QObject* parent)
     : QObject(parent)
-    , m_enabled(true), m_context(context)
+    , m_enabled(true)
+    , m_context(context)
 {
 }
 
@@ -25,7 +26,7 @@ void MVAbstractViewFactory::setEnabled(bool e)
     emit enabledChanged(e);
 }
 
-MVViewAgent *MVAbstractViewFactory::mvContext()
+MVViewAgent* MVAbstractViewFactory::mvContext()
 {
     return m_context;
 }

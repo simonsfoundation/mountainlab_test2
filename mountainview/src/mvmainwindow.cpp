@@ -342,7 +342,7 @@ const QList<MVAbstractViewFactory*>& MVMainWindow::viewFactories() const
     return d->m_viewFactories;
 }
 
-void MVMainWindow::addControl(MVAbstractControl *control, bool start_expanded)
+void MVMainWindow::addControl(MVAbstractControl* control, bool start_expanded)
 {
     d->m_control_panel->addControl(control, start_expanded);
 }
@@ -905,4 +905,3 @@ void MVMainWindowPrivate::set_cluster_attribute(int k, QString attr, QVariant va
     tmp[attr] = QJsonValue::fromVariant(val);
     m_view_agent->setClusterAttributes(k, tmp);
 }
-

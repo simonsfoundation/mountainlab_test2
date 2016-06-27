@@ -49,7 +49,7 @@ public:
     void unregisterViewFactory(MVAbstractViewFactory* f);
     const QList<MVAbstractViewFactory*>& viewFactories() const;
 
-    void addControl(MVAbstractControl *control, bool start_expanded);
+    void addControl(MVAbstractControl* control, bool start_expanded);
 
     /// Witold, I am going to use this sparingly, thinking it will eventually go away
     static MVMainWindow* instance(); // helper while implementing view factories

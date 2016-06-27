@@ -247,7 +247,7 @@ void MVDiscrimHistViewPrivate::set_views()
     q->setHistogramViews(views); //inherited
 }
 
-MVDiscrimHistFactory::MVDiscrimHistFactory(MVViewAgent *context, QObject* parent)
+MVDiscrimHistFactory::MVDiscrimHistFactory(MVViewAgent* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
@@ -281,5 +281,5 @@ MVAbstractView* MVDiscrimHistFactory::createView(QWidget* parent)
 
 void MVDiscrimHistFactory::updateEnabled()
 {
-    setEnabled(mvContext()->selectedClusters().count()>=2);
+    setEnabled(mvContext()->selectedClusters().count() >= 2);
 }

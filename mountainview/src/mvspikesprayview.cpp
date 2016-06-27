@@ -333,7 +333,7 @@ void MVSpikeSprayComputer::compute()
     }
 }
 
-MVSpikeSprayFactory::MVSpikeSprayFactory(MVViewAgent *context, QObject* parent)
+MVSpikeSprayFactory::MVSpikeSprayFactory(MVViewAgent* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),

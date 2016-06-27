@@ -29,8 +29,7 @@ public:
 
     void paintEvent(QPaintEvent* evt);
 signals:
-private
-slots:
+private slots:
 
 private:
     MVClipsWidgetPrivate* d;
@@ -39,12 +38,12 @@ private:
 class MVClipsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVClipsFactory(MVViewAgent *context, QObject *parent = 0);
+    MVClipsFactory(MVViewAgent* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     /// TODO: (HIGH) view does not need the context
-    MVAbstractView *createView(QWidget *parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
     int order() const Q_DECL_OVERRIDE;
 private slots:
     void updateEnabled();

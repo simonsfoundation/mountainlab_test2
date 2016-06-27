@@ -205,7 +205,8 @@ void MVClipsWidgetComputer::compute()
     */
 }
 
-MVClipsFactory::MVClipsFactory(MVViewAgent *context, QObject* parent) : MVAbstractViewFactory(context,parent)
+MVClipsFactory::MVClipsFactory(MVViewAgent* context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
         this, SLOT(updateEnabled()));

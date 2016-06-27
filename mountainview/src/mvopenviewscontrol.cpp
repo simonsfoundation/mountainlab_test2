@@ -37,7 +37,7 @@ MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
 
     d->m_flow_layout = new FlowLayout;
 
-    QList<MVAbstractViewFactory *> factories=mw->viewFactories();
+    QList<MVAbstractViewFactory*> factories = mw->viewFactories();
     foreach (MVAbstractViewFactory* f, factories) {
         QToolButton* button = new QToolButton;
         QFont font = button->font();

@@ -31,7 +31,7 @@ protected:
 
     QVariant controlValue(QString name) const;
     void setControlValue(QString name, QVariant val);
-    void setChoices(QString name,const QStringList &choices);
+    void setChoices(QString name, const QStringList& choices);
     void setControlEnabled(QString name, bool val);
 
     QWidget* createIntControl(QString name);

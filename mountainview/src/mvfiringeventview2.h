@@ -31,8 +31,7 @@ public:
     void setAmplitudeRange(MVRange range);
     void autoSetAmplitudeRange();
 
-private
-slots:
+private slots:
 
 private:
     MVFiringEventView2Private* d;
@@ -41,14 +40,13 @@ private:
 class MVFiringEventsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVFiringEventsFactory(MVViewAgent *context, QObject *parent = 0);
+    MVFiringEventsFactory(MVViewAgent* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView *createView(QWidget *parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
     void updateEnabled();
 };
-
 
 #endif // MVFiringEventView2_H
