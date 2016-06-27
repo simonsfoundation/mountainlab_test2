@@ -70,7 +70,8 @@ int FlowLayout::horizontalSpacing() const
 {
     if (m_hSpace >= 0) {
         return m_hSpace;
-    } else {
+    }
+    else {
         return smartSpacing(QStyle::PM_LayoutHorizontalSpacing);
     }
 }
@@ -79,7 +80,8 @@ int FlowLayout::verticalSpacing() const
 {
     if (m_vSpace >= 0) {
         return m_vSpace;
-    } else {
+    }
+    else {
         return smartSpacing(QStyle::PM_LayoutVerticalSpacing);
     }
 }
@@ -133,8 +135,8 @@ QSize FlowLayout::minimumSize() const
 {
     QSize size;
     QLayoutItem* item;
-    foreach(item, itemList)
-    size = size.expandedTo(item->minimumSize());
+    foreach (item, itemList)
+        size = size.expandedTo(item->minimumSize());
 
     size += QSize(2 * margin(), 2 * margin());
     return size;
@@ -150,8 +152,7 @@ int FlowLayout::doLayout(const QRect& rect, bool testOnly) const
     int lineHeight = 0;
 
     QLayoutItem* item;
-    foreach(item, itemList)
-    {
+    foreach (item, itemList) {
         QWidget* wid = item->widget();
         int spaceX = horizontalSpacing();
         if (spaceX == -1)
@@ -182,10 +183,12 @@ int FlowLayout::smartSpacing(QStyle::PixelMetric pm) const
     QObject* parent = this->parent();
     if (!parent) {
         return -1;
-    } else if (parent->isWidgetType()) {
+    }
+    else if (parent->isWidgetType()) {
         QWidget* pw = static_cast<QWidget*>(parent);
         return pw->style()->pixelMetric(pm, 0, pw);
-    } else {
+    }
+    else {
         return static_cast<QLayout*>(parent)->spacing();
     }
 }

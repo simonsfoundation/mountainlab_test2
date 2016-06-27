@@ -100,6 +100,13 @@ QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColo
 #include "mvfile.h"
 #include "spikespywidget.h"
 #include "taskprogressview.h"
+#include "mvcontrolpanel2.h"
+#include "mvabstractcontrol.h"
+#include "mvopenviewscontrol.h"
+#include "mvgeneralcontrol.h"
+#include "mveventfiltercontrol.h"
+#include "mvclustervisibilitycontrol.h"
+#include "mvexportcontrol.h"
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -237,6 +244,16 @@ int main(int argc, char* argv[])
         a.processEvents();
         W->setMVFile(mv_file);
         W->setDefaultInitialization();
+
+        MVControlPanel2* CP = new MVControlPanel2(view_agent, W);
+        CP->addControl(new MVOpenViewsControl(view_agent, W), true);
+        CP->addControl(new MVGeneralControl(view_agent, W), false);
+        CP->addControl(new MVEventFilterControl(view_agent, W), false);
+        CP->addControl(new MVClusterVisibilityControl(view_agent, W), false);
+        CP->addControl(new MVExportControl(view_agent, W), false);
+        CP->show();
+
+        return a.exec();
     }
     else if (mode == "spikespy") {
         printf("spikespy...\n");

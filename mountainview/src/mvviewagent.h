@@ -58,7 +58,8 @@ public:
     bool isVisible(const MVContext* context, int cluster_num) const;
 
     QSet<QString> view_tags;
-    QSet<QString> view_tags_not;
+    bool view_all_tagged = true;
+    bool view_all_untagged = true;
     bool view_merged = true;
 
 private:
@@ -140,6 +141,7 @@ public:
     /////////////////////////////////////////////////
     QVariant option(QString name, QVariant default_val = QVariant());
     void setOption(QString name, QVariant value);
+    void onOptionChanged(QString name, const QObject* receiver, const char* member, Qt::ConnectionType type = Qt::DirectConnection);
 
     /////////////////////////////////////////////////
     void copySettingsFrom(MVViewAgent* other);
@@ -159,6 +161,9 @@ signals:
     void currentTimeRangeChanged();
     void optionChanged(QString name);
     void clusterVisibilityChanged();
+
+private slots:
+    void slot_option_changed(QString name);
 
 private:
     MVViewAgentPrivate* d;

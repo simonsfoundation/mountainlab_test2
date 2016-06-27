@@ -5,11 +5,17 @@
 *******************************************************/
 
 #include "mvviewagent.h"
+#include <QAction>
 #include <QDebug>
 
 struct TimeseriesStruct {
     QString name;
     DiskReadMda data;
+};
+
+struct OptionChangedAction {
+    QString option_name;
+    QAction* action;
 };
 
 class MVViewAgentPrivate {
@@ -33,6 +39,7 @@ public:
     QString m_mlproxy_url;
     QMap<QString, QColor> m_colors;
     ClusterVisibilityRule m_visibility_rule;
+    QList<OptionChangedAction> m_option_changed_actions;
 };
 
 MVViewAgent::MVViewAgent()
@@ -53,6 +60,8 @@ MVViewAgent::MVViewAgent()
     d->m_colors["view_frame_selected"] = QColor(50, 20, 20);
     d->m_colors["divider_line"] = QColor(255, 100, 150);
     d->m_colors["calculation-in-progress"] = QColor(130, 130, 140, 50);
+
+    QObject::connect(this, SIGNAL(optionChanged(QString)), this, SLOT(slot_option_changed(QString)));
 }
 
 MVViewAgent::~MVViewAgent()
@@ -247,11 +256,10 @@ QSet<QString> MVViewAgent::allClusterTags() const
     ret.insert("accepted");
     ret.insert("rejected");
     QList<int> keys = clusterAttributesKeys();
-    foreach(int key, keys)
-    {
+    foreach (int key, keys) {
         QSet<QString> tags0 = clusterTags(key);
-        foreach(QString tag, tags0)
-        ret.insert(tag);
+        foreach (QString tag, tags0)
+            ret.insert(tag);
     }
     return ret;
 }
@@ -399,6 +407,16 @@ void MVViewAgent::setOption(QString name, QVariant value)
     emit optionChanged(name);
 }
 
+void MVViewAgent::onOptionChanged(QString name, const QObject* receiver, const char* member, Qt::ConnectionType type)
+{
+    QAction* action = new QAction(this);
+    connect(action, SIGNAL(triggered(bool)), receiver, member, type);
+    OptionChangedAction X;
+    X.action = action;
+    X.option_name = name;
+    d->m_option_changed_actions << X;
+}
+
 void MVViewAgent::copySettingsFrom(MVViewAgent* other)
 {
     this->setChannelColors(other->channelColors());
@@ -407,6 +425,15 @@ void MVViewAgent::copySettingsFrom(MVViewAgent* other)
     this->setMLProxyUrl(other->mlProxyUrl());
     this->setSampleRate(other->sampleRate());
     this->d->m_options = other->d->m_options;
+}
+
+void MVViewAgent::slot_option_changed(QString name)
+{
+    for (int i = 0; i < d->m_option_changed_actions.count(); i++) {
+        if (d->m_option_changed_actions[i].option_name == name) {
+            d->m_option_changed_actions[i].action->trigger();
+        }
+    }
 }
 
 void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
@@ -418,14 +445,16 @@ void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        } else {
+        }
+        else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    } else {
+    }
+    else {
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
     }
@@ -472,7 +501,9 @@ bool ClusterVisibilityRule::operator==(const ClusterVisibilityRule& other) const
         return false;
     if (this->view_tags != other.view_tags)
         return false;
-    if (this->view_tags_not != other.view_tags_not)
+    if (this->view_all_tagged != other.view_all_tagged)
+        return false;
+    if (this->view_all_untagged != other.view_all_untagged)
         return false;
     return true;
 }
@@ -481,7 +512,8 @@ void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
 {
     this->view_merged = other.view_merged;
     this->view_tags = other.view_tags;
-    this->view_tags_not = other.view_tags_not;
+    this->view_all_tagged = other.view_all_tagged;
+    this->view_all_untagged = other.view_all_untagged;
 }
 
 bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num) const
@@ -493,17 +525,13 @@ bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num)
 
     QSet<QString> tags = context->clusterTags(cluster_num);
 
-    if ((view_tags.isEmpty()) && (view_tags_not.isEmpty()))
+    if ((view_all_tagged) && (!tags.isEmpty()))
+        return true;
+    if ((view_all_untagged) && (tags.isEmpty()))
         return true;
 
-    foreach(QString tag, tags)
-    {
+    foreach (QString tag, tags) {
         if (view_tags.contains(tag))
-            return true;
-    }
-    foreach(QString tag, view_tags_not)
-    {
-        if (!tags.contains(tag))
             return true;
     }
 

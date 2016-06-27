@@ -11,7 +11,10 @@ public:
     QSet<int> m_cluster_numbers;
 
     void add_tag_options();
+    void add_merge_options();
     void add_cross_correlogram_options();
+
+    bool can_unmerge_selected_clusters();
 };
 
 MVClusterContextMenu::MVClusterContextMenu(MVContext* mvcontext, MVMainWindow* mw, const QSet<int>& cluster_numbers)
@@ -23,6 +26,8 @@ MVClusterContextMenu::MVClusterContextMenu(MVContext* mvcontext, MVMainWindow* m
     d->m_cluster_numbers = cluster_numbers;
 
     d->add_tag_options();
+    this->addSeparator();
+    d->add_merge_options();
     this->addSeparator();
     d->add_cross_correlogram_options();
 }
@@ -81,6 +86,22 @@ void MVClusterContextMenu::slot_open_cross_correlograms()
 void MVClusterContextMenu::slot_open_matrix_of_cross_correlograms()
 {
     d->m_main_window->openView("open-matrix-of-cross-correlograms");
+}
+
+void MVClusterContextMenu::slot_merge_selected_clusters()
+{
+    ClusterMerge CM = d->m_context->clusterMerge();
+    QList<int> ks = d->m_context->selectedClusters();
+    CM.merge(ks);
+    d->m_context->setClusterMerge(CM);
+}
+
+void MVClusterContextMenu::slot_unmerge_selected_clusters()
+{
+    ClusterMerge CM = d->m_context->clusterMerge();
+    QList<int> ks = d->m_context->selectedClusters();
+    CM.unmerge(ks);
+    d->m_context->setClusterMerge(CM);
 }
 
 void MVClusterContextMenuPrivate::add_tag_options()
@@ -142,6 +163,27 @@ void MVClusterContextMenuPrivate::add_tag_options()
     }
 }
 
+void MVClusterContextMenuPrivate::add_merge_options()
+{
+    QMenu* menu = q;
+    if (m_cluster_numbers.count() >= 1) {
+        {
+            QAction* A = new QAction(q);
+            A->setText("Merge selected clusters");
+            QObject::connect(A, &QAction::triggered, q, &MVClusterContextMenu::slot_merge_selected_clusters);
+            menu->addAction(A);
+            A->setEnabled(m_cluster_numbers.count() >= 2);
+        }
+        {
+            QAction* A = new QAction(q);
+            A->setText("Unmerge selected clusters");
+            QObject::connect(A, &QAction::triggered, q, &MVClusterContextMenu::slot_unmerge_selected_clusters);
+            menu->addAction(A);
+            A->setEnabled(can_unmerge_selected_clusters());
+        }
+    }
+}
+
 void MVClusterContextMenuPrivate::add_cross_correlogram_options()
 {
     QMenu* menu = q;
@@ -161,4 +203,15 @@ void MVClusterContextMenuPrivate::add_cross_correlogram_options()
             menu->addAction(A);
         }
     }
+}
+
+bool MVClusterContextMenuPrivate::can_unmerge_selected_clusters()
+{
+    ClusterMerge CM = m_context->clusterMerge();
+    QList<int> ks = m_context->selectedClusters();
+    foreach (int k, ks) {
+        if (CM.representativeLabel(k) != k)
+            return true;
+    }
+    return false;
 }

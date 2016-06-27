@@ -1,0 +1,145 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+** Created: 6/27/2016
+*******************************************************/
+
+#include "flowlayout.h"
+#include "mvexportcontrol.h"
+#include "mlutils.h"
+
+#include <QGridLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMap>
+#include <QPushButton>
+#include <QTimer>
+#include <QFileDialog>
+#include <QSettings>
+#include "taskprogress.h"
+
+class MVExportControlPrivate {
+public:
+    MVExportControl* q;
+};
+
+MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
+    : MVAbstractControl(context, mw)
+{
+    d = new MVExportControlPrivate;
+    d->q = this;
+
+    FlowLayout* flayout = new FlowLayout;
+    this->setLayout(flayout);
+    {
+        QPushButton* B = new QPushButton("Export .mv document");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_mv_document()));
+        flayout->addWidget(B);
+    }
+    {
+        QPushButton* B = new QPushButton("Export firings array");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_array()));
+        flayout->addWidget(B);
+    }
+
+    updateControls();
+}
+
+MVExportControl::~MVExportControl()
+{
+    delete d;
+}
+
+QString MVExportControl::title()
+{
+    return "Export";
+}
+
+void MVExportControl::updateContext()
+{
+}
+
+void MVExportControl::updateControls()
+{
+}
+
+void MVExportControl::slot_export_mv_document()
+{
+    QSettings settings("SCDA", "MountainView");
+    QString default_dir = settings.value("default_export_dir", "").toString();
+    QString fname = QFileDialog::getSaveFileName(this, "Export mountainview document", default_dir, "*.mv");
+    if (fname.isEmpty())
+        return;
+    settings.setValue("default_export_dir", QFileInfo(fname).path());
+    if (QFileInfo(fname).suffix() != "mv")
+        fname = fname + ".mv";
+    MVFile ff = mainWindow()->getMVFile();
+    if (!ff.write(fname)) {
+        TaskProgress task("export mountainview document");
+        task.error("Error writing .mv file: " + fname);
+    }
+}
+
+#include "computationthread.h"
+/// TODO fix the DownloadComputer2 and don't require computationthread.h
+class DownloadComputer2 : public ComputationThread {
+public:
+    //inputs
+    QString source_path;
+    QString dest_path;
+    bool use_float64;
+
+    void compute();
+};
+void DownloadComputer2::compute()
+{
+    TaskProgress task("Downlading");
+    task.setDescription(QString("Downloading %1 to %2").arg(source_path).arg(dest_path));
+    DiskReadMda X(source_path);
+    Mda Y;
+    task.setProgress(0.2);
+    task.log(QString("Reading/Downloading %1x%2x%3").arg(X.N1()).arg(X.N2()).arg(X.N3()));
+    if (!X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3())) {
+        if (thread_interrupt_requested()) {
+            task.error("Halted download: " + source_path);
+        }
+        else {
+            task.error("Failed to readChunk from: " + source_path);
+        }
+        return;
+    }
+    task.setProgress(0.8);
+    if (use_float64) {
+        task.log("Writing 64-bit to " + dest_path);
+        Y.write64(dest_path);
+    }
+    else {
+        task.log("Writing 32-bit to " + dest_path);
+        Y.write32(dest_path);
+    }
+}
+
+void export_file(QString source_path, QString dest_path, bool use_float64)
+{
+    DownloadComputer2* C = new DownloadComputer2;
+    C->source_path = source_path;
+    C->dest_path = dest_path;
+    C->use_float64 = use_float64;
+    C->setDeleteOnComplete(true);
+    C->startComputation();
+}
+
+void MVExportControl::slot_export_firings_array()
+{
+    QSettings settings("SCDA", "MountainView");
+    QString default_dir = settings.value("default_export_dir", "").toString();
+    QString fname = QFileDialog::getSaveFileName(this, "Export original firings", default_dir, "*.mda");
+    if (fname.isEmpty())
+        return;
+    settings.setValue("default_export_dir", QFileInfo(fname).path());
+    if (QFileInfo(fname).suffix() != "mda")
+        fname = fname + ".mda";
+
+    DiskReadMda firings = mvContext()->firings();
+    export_file(firings.makePath(), fname, true);
+}

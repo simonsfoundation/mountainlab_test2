@@ -19,6 +19,8 @@ private slots:
     void slot_clear_tags();
     void slot_open_cross_correlograms();
     void slot_open_matrix_of_cross_correlograms();
+    void slot_merge_selected_clusters();
+    void slot_unmerge_selected_clusters();
 
 private:
     MVClusterContextMenuPrivate* d;

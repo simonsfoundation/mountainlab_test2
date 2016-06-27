@@ -88,6 +88,7 @@ private:
     QMap<QString, QPushButton*> m_buttons;
 };
 
+/*
 class ClusterVisibilityControls : public QObject {
     Q_OBJECT
 public:
@@ -104,5 +105,6 @@ private slots:
     void slot_controls_changed();
     void slot_update_controls();
 };
+*/
 
 #endif // MVCONTROLPANEL_H

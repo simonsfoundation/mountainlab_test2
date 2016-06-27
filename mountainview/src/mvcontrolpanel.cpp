@@ -178,9 +178,9 @@ MVControlPanel::MVControlPanel(MVViewAgent* view_agent, MVMainWindow* mw)
 
         d->m_controls.add_check_box(G, "view_merged", "View merged", true);
 
-        FlowLayout* flayout = new FlowLayout;
-        new ClusterVisibilityControls(view_agent, flayout);
-        layout->addLayout(flayout);
+        //FlowLayout* flayout = new FlowLayout;
+        //new ClusterVisibilityControls(view_agent, flayout);
+        //layout->addLayout(flayout);
 
         d->m_controls.add_horizontal_divider_line(layout);
     }
@@ -338,11 +338,13 @@ void MVControlPanel::slot_update_view_agent()
         d->m_view_agent->setEventFilter(filter);
     }
 
+    /*
     {
         ClusterVisibilityRule rule = d->m_view_agent->visibilityRule();
         rule.view_merged = d->m_controls.get_parameter_value("view_merged").toBool();
         d->m_view_agent->setVisibilityRule(rule);
     }
+    */
 }
 
 void MVControlPanel::slot_recalculate_suggested_visible()
@@ -600,6 +602,7 @@ QJsonObject MVEventFilter::toJsonObject() const
     return obj;
 }
 
+/*
 ClusterVisibilityControls::ClusterVisibilityControls(MVContext* mvcontext, FlowLayout* flayout)
 {
     m_context = mvcontext;
@@ -618,12 +621,14 @@ void ClusterVisibilityControls::slot_update_controls()
     qDeleteAll(m_controls);
     m_controls.clear();
 
+
     {
         QRadioButton* BB = add_control("", "All");
         if ((m_context->visibilityRule().view_tags.isEmpty()) && (m_context->visibilityRule().view_tags_not.isEmpty())) {
             BB->setChecked(true);
         }
     }
+
 
     QStringList tags = m_context->allClusterTags().toList();
     qSort(tags);
@@ -633,12 +638,14 @@ void ClusterVisibilityControls::slot_update_controls()
             BB->setChecked(true);
         }
     }
+
     foreach (QString tag, tags) {
         QRadioButton* BB = add_control("!" + tag, "not " + tag);
         if (m_context->visibilityRule().view_tags_not.contains(tag)) {
             BB->setChecked(true);
         }
     }
+
     slot_controls_changed();
 }
 
@@ -653,12 +660,14 @@ QRadioButton* ClusterVisibilityControls::add_control(QString tag, QString label)
 
     return W;
 }
+*/
 
+/*
 void ClusterVisibilityControls::slot_controls_changed()
 {
     ClusterVisibilityRule rule = m_context->visibilityRule();
     rule.view_tags.clear();
-    rule.view_tags_not.clear();
+    //rule.view_tags_not.clear();
     for (int i = 0; i < m_controls.count(); i++) {
         QRadioButton* RB = qobject_cast<QRadioButton*>(m_controls[i]);
         if (RB) {
@@ -666,7 +675,7 @@ void ClusterVisibilityControls::slot_controls_changed()
                 QString tag = RB->property("tag").toString();
                 if (!tag.isEmpty()) {
                     if (tag.startsWith("!")) {
-                        rule.view_tags_not.insert(tag.mid(1));
+                        //rule.view_tags_not.insert(tag.mid(1));
                     }
                     else {
                         rule.view_tags.insert(tag);
@@ -677,3 +686,4 @@ void ClusterVisibilityControls::slot_controls_changed()
     }
     m_context->setVisibilityRule(rule);
 }
+*/

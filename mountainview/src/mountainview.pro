@@ -59,7 +59,15 @@ HEADERS += \
     mvcrosscorrelogramswidget3.h \
     mvamphistview2.h \
     mvabstractviewfactory.h \
-    clusterannotationguide.h
+    clusterannotationguide.h \
+    mvabstractcontrol.h \
+    mvcontrolpanel2.h \
+    mvgeneralcontrol.h \
+    mveventfiltercontrol.h \
+    mvopenviewscontrol.h \
+    mvclustervisibilitycontrol.h \
+    mvexportcontrol.h
+
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvutils.cpp \
@@ -102,7 +110,14 @@ SOURCES += mountainviewmain.cpp \
     mvcrosscorrelogramswidget3.cpp \
     mvamphistview2.cpp \
     mvabstractviewfactory.cpp \
-    clusterannotationguide.cpp
+    clusterannotationguide.cpp \
+    mvabstractcontrol.cpp \
+    mvcontrolpanel2.cpp \
+    mvgeneralcontrol.cpp \
+    mveventfiltercontrol.cpp \
+    mvopenviewscontrol.cpp \
+    mvclustervisibilitycontrol.cpp \
+    mvexportcontrol.cpp
 
 #HEADERS += sstimeserieswidget.h \
 #    sstimeseriesview.h \
@@ -168,7 +183,14 @@ VPATH += ../../common
 HEADERS += mlutils.h
 SOURCES += mlutils.cpp
 
-RESOURCES += mountainview.qrc
+INCLUDEPATH += ./3rdparty/qaccordion/include
+VPATH += ./3rdparty/qaccordion/include
+VPATH += ./3rdparty/qaccordion/src
+HEADERS += qAccordion/qaccordion.h qAccordion/contentpane.h qAccordion/clickableframe.h
+SOURCES += qaccordion.cpp contentpane.cpp clickableframe.cpp
+
+RESOURCES += mountainview.qrc \
+    3rdparty/qaccordion/icons/qaccordionicons.qrc
 
 #LAPACK
 #On Ubuntu: sudo apt-get install liblapacke-dev
