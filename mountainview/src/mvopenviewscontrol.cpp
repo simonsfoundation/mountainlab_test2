@@ -8,6 +8,7 @@
 #include "mvabstractview.h"
 #include "mvabstractviewfactory.h"
 #include "mvopenviewscontrol.h"
+#include "mvmainwindow.h"
 
 #include <QGridLayout>
 #include <QLabel>

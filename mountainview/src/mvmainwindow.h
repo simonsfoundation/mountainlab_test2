@@ -13,6 +13,7 @@
 #include "mvfile.h"
 #include "mvutils.h"
 #include "mvviewagent.h"
+#include "mvabstractcontrol.h"
 
 class MVAbstractViewFactory;
 class TabberTabWidget;
@@ -48,6 +49,8 @@ public:
     void unregisterViewFactory(MVAbstractViewFactory* f);
     const QList<MVAbstractViewFactory*>& viewFactories() const;
 
+    void addControl(MVAbstractControl *control, bool start_expanded);
+
     /// Witold, I am going to use this sparingly, thinking it will eventually go away
     static MVMainWindow* instance(); // helper while implementing view factories
 
@@ -69,12 +72,12 @@ signals:
 public slots:
 
 private slots:
-    void slot_control_panel_user_action(QString str);
-    void slot_auto_correlogram_activated();
-    void slot_amplitude_histogram_activated();
+    //void slot_control_panel_user_action(QString str);
+    //void slot_auto_correlogram_activated();
+    //void slot_amplitude_histogram_activated();
     //void slot_templates_clicked();
     //void slot_cross_correlogram_computer_finished();
-    void slot_update_buttons();
+    //void slot_update_buttons();
     //void slot_calculator_finished();
     void slot_action_move_to_other_tab_widget();
     void slot_pop_out_widget();

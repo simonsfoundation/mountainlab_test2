@@ -7,6 +7,7 @@
 #ifndef CLUSTERMERGE
 #define CLUSTERMERGE
 
+#include <QJsonObject>
 #include <QMap>
 #include <QSet>
 
@@ -29,6 +30,8 @@ public:
     int representativeLabel(int label) const;
     QList<int> representativeLabels() const;
     QList<int> getMergeGroup(int label) const;
+    void setFromJsonObject(QJsonObject obj);
+    QJsonObject toJsonObject() const;
     QString toJson() const;
     QMap<int, int> labelMap(int K) const;
 

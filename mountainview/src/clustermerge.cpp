@@ -160,6 +160,40 @@ QList<int> ClusterMerge::getMergeGroup(int label) const
     return ret;
 }
 
+void ClusterMerge::setFromJsonObject(QJsonObject obj)
+{
+    d->m_merge_pairs.clear();
+
+    QJsonArray merge_groups = obj["merge_groups"].toArray();
+
+    for (int i = 0; i < merge_groups.count(); i++) {
+        QJsonArray Y = merge_groups[i].toArray();
+        QList<int> grp;
+        for (int j = 0; j < Y.count(); j++) {
+            grp << Y[j].toInt();
+        }
+        this->merge(grp);
+    }
+}
+
+QJsonObject ClusterMerge::toJsonObject() const
+{
+    QJsonArray X;
+    QList<int> rep_labels = this->representativeLabels();
+    for (int i = 0; i < rep_labels.count(); i++) {
+        QList<int> grp = this->getMergeGroup(rep_labels[i]);
+        if (grp.count() > 1) {
+            QJsonArray Y;
+            for (int j = 0; j < grp.count(); j++)
+                Y.append(grp[j]);
+            X.append(Y);
+        }
+    }
+    QJsonObject ret;
+    ret["merge_groups"] = X;
+    return ret;
+}
+
 QString ClusterMerge::toJson() const
 {
     QJsonArray X;

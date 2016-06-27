@@ -277,8 +277,8 @@ void MVTimeSeriesView2Calculator::compute()
     num_channels = timeseries.N1();
 }
 
-MVTimeSeriesDataFactory::MVTimeSeriesDataFactory(QObject *parent)
-    : MVAbstractViewFactory(parent)
+MVTimeSeriesDataFactory::MVTimeSeriesDataFactory(MVViewAgent *context, QObject *parent)
+    : MVAbstractViewFactory(context, parent)
 {
 
 }

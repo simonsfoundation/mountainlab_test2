@@ -245,13 +245,11 @@ int main(int argc, char* argv[])
         W->setMVFile(mv_file);
         W->setDefaultInitialization();
 
-        MVControlPanel2* CP = new MVControlPanel2(view_agent, W);
-        CP->addControl(new MVOpenViewsControl(view_agent, W), true);
-        CP->addControl(new MVGeneralControl(view_agent, W), false);
-        CP->addControl(new MVEventFilterControl(view_agent, W), false);
-        CP->addControl(new MVClusterVisibilityControl(view_agent, W), false);
-        CP->addControl(new MVExportControl(view_agent, W), false);
-        CP->show();
+        W->addControl(new MVOpenViewsControl(view_agent, W), true);
+        W->addControl(new MVGeneralControl(view_agent, W), false);
+        W->addControl(new MVEventFilterControl(view_agent, W), false);
+        W->addControl(new MVClusterVisibilityControl(view_agent, W), false);
+        W->addControl(new MVExportControl(view_agent, W), false);
 
         return a.exec();
     }

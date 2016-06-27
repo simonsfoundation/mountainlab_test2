@@ -8,7 +8,7 @@
 #include "mvfiringeventview2.h"
 #include "tabber.h"
 #include "taskprogressview.h"
-#include "mvcontrolpanel.h"
+#include "mvcontrolpanel2.h"
 #include "taskprogress.h"
 #include "mvviewagent.h"
 #include "mvstatusbar.h"
@@ -68,7 +68,7 @@ public:
 
     //these widgets go on the left
     QSplitter* m_left_splitter;
-    MVControlPanel* m_control_panel;
+    MVControlPanel2* m_control_panel;
     TaskProgressView* m_task_progress_view;
 
     QSplitter* m_hsplitter, *m_vsplitter;
@@ -111,7 +111,6 @@ public:
     //not sure about these
     QVariant get_cluster_attribute(int k, QString attr);
     void set_cluster_attribute(int k, QString attr, QVariant val);
-    void set_button_enabled(QString name, bool val);
 };
 
 MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
@@ -126,17 +125,18 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
 
     d->m_view_agent = view_agent;
 
-    registerViewFactory(new MVClusterDetailsFactory(this));
-    registerViewFactory(new MVAutoCorrelogramsFactory(this));
-    registerViewFactory(new MVMatrixOfCrossCorrelogramsFactory(this));
-    registerViewFactory(new MVTimeSeriesDataFactory(this));
-    registerViewFactory(new MVClipsFactory(this));
-    registerViewFactory(new MVPCAFeaturesFactory(this));
-    registerViewFactory(new MVChannelFeaturesFactory(this));
-    registerViewFactory(new MVSpikeSprayFactory(this));
-    registerViewFactory(new MVFiringEventsFactory(this));
-    registerViewFactory(new MVAmplitudeHistogramsFactory(this));
-    registerViewFactory(new MVDiscrimHistFactory(this));
+    registerViewFactory(new MVClusterDetailsFactory(view_agent, this));
+    registerViewFactory(new MVAutoCorrelogramsFactory(view_agent, this));
+    registerViewFactory(new MVCrossCorrelogramsFactory(view_agent, this));
+    registerViewFactory(new MVMatrixOfCrossCorrelogramsFactory(view_agent, this));
+    registerViewFactory(new MVTimeSeriesDataFactory(view_agent, this));
+    registerViewFactory(new MVClipsFactory(view_agent, this));
+    registerViewFactory(new MVPCAFeaturesFactory(view_agent, this));
+    registerViewFactory(new MVChannelFeaturesFactory(view_agent, this));
+    registerViewFactory(new MVSpikeSprayFactory(view_agent, this));
+    registerViewFactory(new MVFiringEventsFactory(view_agent, this));
+    registerViewFactory(new MVAmplitudeHistogramsFactory(view_agent, this));
+    registerViewFactory(new MVDiscrimHistFactory(view_agent, this));
 
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_view_agent, this);
     QToolBar* main_toolbar = new QToolBar;
@@ -154,9 +154,9 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
         }
     }
 
-    d->m_control_panel = new MVControlPanel(view_agent, this);
+    d->m_control_panel = new MVControlPanel2(view_agent, this);
     //probably get rid of the following line
-    connect(d->m_control_panel, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
+    //connect(d->m_control_panel, SIGNAL(userAction(QString)), this, SLOT(slot_control_panel_user_action(QString)));
 
     d->registerAllViews();
 
@@ -205,6 +205,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     fnt.setPointSize(12);
     this->setFont(fnt);
 
+    /*
     //update which buttons are enabled/disabled
     slot_update_buttons();
     connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_buttons()));
@@ -213,6 +214,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     connect(view_agent, SIGNAL(currentEventChanged()), this, SLOT(slot_update_buttons()));
     connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(slot_update_buttons()));
     connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_buttons()));
+    */
 
     QShortcut* closeWindowShortcut = new QShortcut(QKeySequence("Ctrl+W"), this, SLOT(close()));
     Q_UNUSED(closeWindowShortcut)
@@ -340,6 +342,11 @@ const QList<MVAbstractViewFactory*>& MVMainWindow::viewFactories() const
     return d->m_viewFactories;
 }
 
+void MVMainWindow::addControl(MVAbstractControl *control, bool start_expanded)
+{
+    d->m_control_panel->addControl(control, start_expanded);
+}
+
 MVMainWindow* MVMainWindow::instance()
 {
     return window_instance;
@@ -412,6 +419,7 @@ void MVMainWindow::keyPressEvent(QKeyEvent* evt)
         evt->ignore();
 }
 
+/*
 void MVMainWindow::slot_control_panel_user_action(QString str)
 {
 #if 0
@@ -466,8 +474,9 @@ void MVMainWindow::slot_control_panel_user_action(QString str)
     }
 #endif
 }
+*/
 
-/// TODO (LOW) figure out how to implement such functionality outside main window class
+/*
 void MVMainWindow::slot_auto_correlogram_activated()
 {
     TabberTabWidget* TW = d->tab_widget_of((QWidget*)sender());
@@ -480,7 +489,9 @@ void MVMainWindow::slot_amplitude_histogram_activated()
 {
     //not sure what to do here
 }
+*/
 
+/*
 void MVMainWindow::slot_update_buttons()
 {
     bool something_selected = (!d->m_view_agent->selectedClusters().isEmpty());
@@ -496,6 +507,7 @@ void MVMainWindow::slot_update_buttons()
     d->set_button_enabled("export_original_firings", true);
     d->set_button_enabled("export_filtered_firings", true);
 }
+*/
 
 /// TODO (MEDIUM) this functionality should be moved to tabber
 void MVMainWindow::slot_action_move_to_other_tab_widget()
@@ -545,6 +557,7 @@ void MVMainWindow::slot_open_cluster_context_menu()
 void MVMainWindowPrivate::registerAllViews()
 {
     // unregister all existing views
+    /*
     QLayoutItem* item;
     while ((item = m_control_panel->viewLayout()->takeAt(0))) {
         delete item;
@@ -564,6 +577,7 @@ void MVMainWindowPrivate::registerAllViews()
         QObject::connect(button, SIGNAL(clicked()), m_viewMapper, SLOT(map()));
         QObject::connect(f, SIGNAL(enabledChanged(bool)), button, SLOT(setEnabled(bool)));
     }
+    */
 }
 
 MVAbstractViewFactory* MVMainWindowPrivate::viewFactoryById(const QString& id) const
@@ -892,9 +906,3 @@ void MVMainWindowPrivate::set_cluster_attribute(int k, QString attr, QVariant va
     m_view_agent->setClusterAttributes(k, tmp);
 }
 
-void MVMainWindowPrivate::set_button_enabled(QString name, bool val)
-{
-    QAbstractButton* B = m_control_panel->findButton(name);
-    if (B)
-        B->setEnabled(val);
-}

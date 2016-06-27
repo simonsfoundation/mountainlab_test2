@@ -6,6 +6,7 @@
 #include "msmisc.h"
 #include "histogramview.h"
 #include <QWheelEvent>
+#include "mvmainwindow.h"
 
 /// TODO zoom in/out icons
 
@@ -246,9 +247,12 @@ void MVDiscrimHistViewPrivate::set_views()
     q->setHistogramViews(views); //inherited
 }
 
-MVDiscrimHistFactory::MVDiscrimHistFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVDiscrimHistFactory::MVDiscrimHistFactory(MVViewAgent *context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
 {
+    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+        this, SLOT(updateEnabled()));
+    updateEnabled();
 }
 
 QString MVDiscrimHistFactory::id() const
@@ -273,4 +277,9 @@ MVAbstractView* MVDiscrimHistFactory::createView(MVViewAgent* agent, QWidget* pa
     qSort(ks);
     X->setClusterNumbers(ks);
     return X;
+}
+
+void MVDiscrimHistFactory::updateEnabled()
+{
+    setEnabled(mvContext()->selectedClusters().count()>=2);
 }

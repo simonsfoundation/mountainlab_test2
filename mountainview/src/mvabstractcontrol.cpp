@@ -8,6 +8,7 @@
 
 #include <QComboBox>
 #include <QLineEdit>
+#include <QSet>
 
 class MVAbstractControlPrivate {
 public:

@@ -1219,8 +1219,8 @@ QRectF ClusterView::rect()
     return m_rect;
 }
 
-MVClusterDetailsFactory::MVClusterDetailsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVClusterDetailsFactory::MVClusterDetailsFactory(MVViewAgent *context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
 {
 }
 

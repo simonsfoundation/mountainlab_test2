@@ -78,6 +78,82 @@ void MVViewAgent::clear()
     d->m_options.clear();
 }
 
+QJsonObject cluster_attributes_to_object(const QMap<int, QJsonObject>& map)
+{
+    QJsonObject X;
+    QList<int> keys = map.keys();
+    foreach (int key, keys) {
+        X[QString("%1").arg(key)] = map[key];
+    }
+    return X;
+}
+
+QMap<int, QJsonObject> object_to_cluster_attributes(QJsonObject X)
+{
+    QMap<int, QJsonObject> ret;
+    QStringList keys = X.keys();
+    foreach (QString key, keys) {
+        ret[key.toInt()] = X[key].toObject();
+    }
+    return ret;
+}
+
+QJsonObject timeseries_map_to_object(const QMap<QString, TimeseriesStruct>& TT)
+{
+    QJsonObject ret;
+    QStringList keys = TT.keys();
+    foreach (QString key, keys) {
+        QJsonObject obj;
+        obj["data"] = TT[key].data.makePath();
+        obj["name"] = TT[key].name;
+        ret[key] = obj;
+    }
+    return ret;
+}
+
+QMap<QString, TimeseriesStruct> object_to_timeseries_map(QJsonObject X)
+{
+    QMap<QString, TimeseriesStruct> ret;
+    QStringList keys = X.keys();
+    foreach (QString key, keys) {
+        QJsonObject obj = X[key].toObject();
+        TimeseriesStruct A;
+        A.data = DiskReadMda(obj["data"].toString());
+        A.name = obj["name"].toString();
+        ret[key] = A;
+    }
+    return ret;
+}
+
+QJsonObject MVViewAgent::toMVFileObject() const
+{
+    QJsonObject X;
+    X["cluster_merge"] = d->m_cluster_merge.toJsonObject();
+    X["cluster_attributes"] = cluster_attributes_to_object(d->m_cluster_attributes);
+    X["timeseries"] = timeseries_map_to_object(d->m_timeseries);
+    X["current_timeseries_name"] = d->m_current_timeseries_name;
+    X["firings"] = d->m_firings.makePath();
+    X["event_filter"] = d->m_event_filter.toJsonObject();
+    X["samplerate"] = d->m_sample_rate;
+    X["options"] = QJsonObject::fromVariantMap(d->m_options);
+    X["mlproxy_url"] = d->m_mlproxy_url;
+    return X;
+}
+
+void MVViewAgent::setFromMVFileObject(QJsonObject X)
+{
+    this->clear();
+    d->m_cluster_merge.setFromJsonObject(X["cluster_merge"].toObject());
+    d->m_cluster_attributes = object_to_cluster_attributes(X["cluster_attributes"].toObject());
+    d->m_timeseries = object_to_timeseries_map(X["timeseries"].toObject());
+    d->m_current_timeseries_name = X["current_timeseries_name"].toString();
+    d->m_firings = DiskReadMda(X["firings"].toString());
+    d->m_event_filter = MVEventFilter::fromJsonObject(X["event_filter"].toObject());
+    d->m_sample_rate = X["samplerate"].toDouble();
+    d->m_options = X["options"].toObject().toVariantMap();
+    d->m_mlproxy_url = X["mlproxy_url"].toString();
+}
+
 MVEvent MVViewAgent::currentEvent() const
 {
     return d->m_current_event;

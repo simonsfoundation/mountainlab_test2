@@ -11,8 +11,8 @@
 #include <QComboBox>
 
 #include "mvviewagent.h"
-#include "mvmainwindow.h"
 
+class MVMainWindow;
 class MVAbstractControlPrivate;
 class MVAbstractControl : public QWidget {
 public:

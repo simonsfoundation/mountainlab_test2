@@ -9,7 +9,7 @@ class MVAbstractView;
 class MVAbstractViewFactory : public QObject {
     Q_OBJECT
 public:
-    explicit MVAbstractViewFactory(QObject* parent = 0);
+    explicit MVAbstractViewFactory(MVViewAgent *context, QObject* parent = 0);
     bool isEnabled() const;
 
     virtual QString id() const = 0;
@@ -25,9 +25,11 @@ signals:
 
 protected:
     void setEnabled(bool e);
+    MVViewAgent *mvContext();
 
 private:
     bool m_enabled;
+    MVViewAgent *m_context;
 };
 
 #endif // MVABSTRACTVIEWFACTORY_H

@@ -41,7 +41,7 @@ private:
 class MVFiringEventsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVFiringEventsFactory(QObject *parent = 0);
+    MVFiringEventsFactory(MVViewAgent *context, QObject *parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

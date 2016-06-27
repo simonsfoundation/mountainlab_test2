@@ -217,10 +217,10 @@ void MVFiringEventViewCalculator::compute()
     task.log(QString("Found %1 events, using %2 clusters").arg(times.count()).arg(labels_to_use.count()));
 }
 
-MVFiringEventsFactory::MVFiringEventsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVFiringEventsFactory::MVFiringEventsFactory(MVViewAgent *context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
 {
-    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+    connect(context, SIGNAL(selectedClustersChanged()),
         this, SLOT(updateEnabled()));
     updateEnabled();
 }

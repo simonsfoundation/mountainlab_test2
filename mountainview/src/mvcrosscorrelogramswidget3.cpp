@@ -259,8 +259,8 @@ void MVCrossCorrelogramsWidget3Computer::compute()
     }
 }
 
-MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(MVViewAgent* context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
 {
 }
 
@@ -305,8 +305,51 @@ void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
 }
 */
 
-MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVViewAgent* context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
+{
+    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+        this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVCrossCorrelogramsFactory::id() const
+{
+    return QStringLiteral("open-cross-correlograms");
+}
+
+QString MVCrossCorrelogramsFactory::name() const
+{
+    return tr("Cross-Correlograms");
+}
+
+QString MVCrossCorrelogramsFactory::title() const
+{
+    return tr("Cross-Correlograms");
+}
+
+MVAbstractView* MVCrossCorrelogramsFactory::createView(MVViewAgent* agent, QWidget* parent)
+{
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(agent);
+    QList<int> ks = agent->selectedClusters();
+    if (ks.count() != 1)
+        return X;
+
+    CrossCorrelogramOptions3 opts;
+    opts.mode = Cross_Correlograms3;
+    opts.ks = ks;
+
+    X->setOptions(opts);
+    return X;
+}
+
+void MVCrossCorrelogramsFactory::updateEnabled()
+{
+    setEnabled(MVMainWindow::instance()->viewAgent()->selectedClusters().count() == 1);
+}
+
+MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(MVViewAgent* context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
 {
     connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
         this, SLOT(updateEnabled()));

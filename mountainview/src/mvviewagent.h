@@ -77,6 +77,8 @@ public:
     virtual ~MVViewAgent();
 
     void clear();
+    void setFromMVFileObject(QJsonObject obj);
+    QJsonObject toMVFileObject() const;
 
     /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;

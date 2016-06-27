@@ -9,6 +9,7 @@
 
 #include <QPushButton>
 //#include
+#include "mvmainwindow.h"
 
 class MVControlPanel2Private {
 public:
@@ -27,6 +28,7 @@ MVControlPanel2::MVControlPanel2(MVContext* context, MVMainWindow* mw)
     d->m_main_window = mw;
 
     QHBoxLayout* top_layout = new QHBoxLayout;
+    top_layout->setSpacing(20); top_layout->setMargin(20);
     {
         QPushButton* B = new QPushButton("Recalc Visible");
         top_layout->addWidget(B);
