@@ -35,11 +35,11 @@ MVStatusBar::MVStatusBar()
     hlayout2->addWidget(&d->m_bytes_allocated_label);
     hlayout2->addStretch();
 
-    QVBoxLayout *layout=new QVBoxLayout;
+    QVBoxLayout* layout = new QVBoxLayout;
     layout->setSpacing(0);
     layout->setMargin(0);
-    layout->addLayout(hlayout1,1);
-    layout->addLayout(hlayout2,1);
+    layout->addLayout(hlayout1, 1);
+    layout->addLayout(hlayout2, 1);
     layout->setAlignment(Qt::AlignLeft);
     setLayout(layout);
 
@@ -83,8 +83,8 @@ void MVStatusBar::slot_update_quantities()
         d->m_remote_processing_time_label.setText(txt);
     }
     {
-        double using_bytes=d->m_tp_agent->getQuantity("bytes_allocated")-d->m_tp_agent->getQuantity("bytes_freed");
-        double bytes_read=d->m_tp_agent->getQuantity("bytes_read");
+        double using_bytes = d->m_tp_agent->getQuantity("bytes_allocated") - d->m_tp_agent->getQuantity("bytes_freed");
+        double bytes_read = d->m_tp_agent->getQuantity("bytes_read");
         QString txt = QString("%1 RAM | %2 Read").arg(format_num_bytes(using_bytes)).arg(format_num_bytes(bytes_read));
         d->m_bytes_allocated_label.setText(txt);
     }
@@ -94,14 +94,14 @@ void MVStatusBar::slot_update_tasks()
 {
     d->update_font();
     {
-//        QString txt = QString("%1 tasks running |").arg(d->m_tp_agent->activeTasks().count());
-//        d->m_tasks_running_label.setText(txt);
+        //        QString txt = QString("%1 tasks running |").arg(d->m_tp_agent->activeTasks().count());
+        //        d->m_tasks_running_label.setText(txt);
     }
 }
 
 void MVStatusBarPrivate::update_font()
 {
     QFont fnt = q->font();
-    fnt.setPixelSize(qMax(9, q->height()/2 - 4));
+    fnt.setPixelSize(qMax(9, q->height() / 2 - 4));
     q->setFont(fnt);
 }

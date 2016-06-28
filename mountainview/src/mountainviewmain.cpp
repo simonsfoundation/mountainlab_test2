@@ -210,17 +210,20 @@ int main(int argc, char* argv[])
             view_agent->setFirings(DiskReadMda(firings_path));
             W->setWindowTitle(firings_path);
         }
-        if (CLP.named_parameters.contains("pre")) {
-            QString pre_path = CLP.named_parameters["pre"].toString();
-            view_agent->addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
+        if (CLP.named_parameters.contains("raw")) {
+            QString raw_path = CLP.named_parameters["raw"].toString();
+            view_agent->addTimeseries("Raw Data", DiskReadMda(raw_path));
+            view_agent->setCurrentTimeseriesName("Raw Data");
         }
         if (CLP.named_parameters.contains("filt")) {
             QString filt_path = CLP.named_parameters["filt"].toString();
             view_agent->addTimeseries("Filtered Data", DiskReadMda(filt_path));
+            view_agent->setCurrentTimeseriesName("Filtered Data");
         }
-        if (CLP.named_parameters.contains("raw")) {
-            QString raw_path = CLP.named_parameters["raw"].toString();
-            view_agent->addTimeseries("Raw Data", DiskReadMda(raw_path));
+        if (CLP.named_parameters.contains("pre")) {
+            QString pre_path = CLP.named_parameters["pre"].toString();
+            view_agent->addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
+            view_agent->setCurrentTimeseriesName("Preprocessed Data");
         }
         if (CLP.named_parameters.contains("mlproxy_url")) {
             QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();

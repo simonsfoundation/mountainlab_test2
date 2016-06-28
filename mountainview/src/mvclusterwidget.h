@@ -52,6 +52,7 @@ private slots:
     void slot_view_active_cluster_number_toggled();
     void slot_show_clip_view_toggled(bool val);
     void slot_show_view_toggled(bool val);
+    void slot_clips_view_thread_finished();
 
 private:
     MVClusterWidgetPrivate* d;

@@ -60,6 +60,7 @@ public:
     void compute_data_trans();
     void update_grid();
     void coord2gridindex(double x0, double y0, double& i1, double& i2);
+    QPointF gridindex2coord(double& x0, double& y0, double i1, double i2);
     QPointF pixel2coord(QPointF pix);
     QPointF coord2pixel(QPointF coord);
     QColor get_time_color(double pct);
@@ -346,7 +347,7 @@ void MVClusterView::mousePressEvent(QMouseEvent* evt)
 void MVClusterView::mouseReleaseEvent(QMouseEvent* evt)
 {
     Q_UNUSED(evt)
-    if ((evt->button() == Qt::LeftButton)||(evt->button() == Qt::RightButton)) {
+    if ((evt->button() == Qt::LeftButton) || (evt->button() == Qt::RightButton)) {
         d->m_anchor_point = QPointF(-1, -1);
         if (evt->pos() != d->m_last_mouse_release_point)
             d->m_closest_inds_to_exclude.clear();
@@ -763,36 +764,56 @@ void MVClusterViewPrivate::coord2gridindex(double x0, double y0, double& i1, dou
     i2 = N2mid + y0 / delta2;
 }
 
+QPointF MVClusterViewPrivate::gridindex2coord(double& x0, double& y0, double i1, double i2)
+{
+    int N1 = m_grid_N1;
+    int N2 = m_grid_N2;
+    int N1mid = (N1 + 1) / 2 - 1;
+    int N2mid = (N2 + 1) / 2 - 1;
+    double delta1 = 2.0 / N1;
+    double delta2 = 2.0 / N2;
+    x0 = (i1 - N1mid) * delta1;
+    y0 = (i2 - N2mid) * delta2;
+    return QPointF(x0, y0);
+}
+
 QPointF MVClusterViewPrivate::pixel2coord(QPointF pt)
 {
     int N1 = m_grid_N1;
     int N2 = m_grid_N2;
+    double pctx = (pt.x() - m_image_target.x()) / (m_image_target.width());
+    double pcty = (pt.y() - m_image_target.y()) / (m_image_target.height());
+    double grid_i1 = pctx * N1;
+    double grid_i2 = pcty * N2;
+    double xx, yy;
+    gridindex2coord(xx, yy, grid_i1, grid_i2);
+    return QPointF(xx, yy);
+
+    /*
     double delta1 = 2.0 / N1;
     double delta2 = 2.0 / N2;
     int N1mid = (N1 + 1) / 2 - 1;
     int N2mid = (N2 + 1) / 2 - 1;
-    double pctx = (pt.x() - m_image_target.x()) / (m_image_target.width());
-    double pcty = (pt.y() - m_image_target.y()) / (m_image_target.height());
+
     double xx = (-N1mid + pctx * N1) * delta1;
     double yy = (-N2mid + (1 - pcty) * N2) * delta2;
     return QPointF(xx, yy);
+    */
 }
 
 QPointF MVClusterViewPrivate::coord2pixel(QPointF coord)
 {
     int N1 = m_grid_N1;
     int N2 = m_grid_N2;
-    double delta1 = 2.0 / N1;
-    double delta2 = 2.0 / N2;
-    int N1mid = (N1 + 1) / 2 - 1;
-    int N2mid = (N2 + 1) / 2 - 1;
-    double xx = coord.x();
-    double yy = coord.y();
-    double pctx = (xx / delta1 + N1mid) / N1;
-    double pcty = 1 - ((yy / delta2 + N2mid) / N2);
-    double pt_x = pctx * m_image_target.width() + m_image_target.x();
-    double pt_y = pcty * m_image_target.height() + m_image_target.y();
-    return QPointF(pt_x, pt_y);
+
+    double grid_i1;
+    double grid_i2;
+    coord2gridindex(coord.x(), coord.y(), grid_i1, grid_i2);
+    double pctx = grid_i1 / N1;
+    double pcty = grid_i2 / N2;
+    double px = m_image_target.x() + pctx * m_image_target.width();
+    double py = m_image_target.y() + pcty * m_image_target.height();
+    return QPointF(px, py);
 }
 
 QColor MVClusterViewPrivate::get_time_color(double pct)

@@ -134,6 +134,17 @@ QDateTime RemoteReadMda::fileLastModified() const
     return d->m_info.file_last_modified;
 }
 
+QString format_num(double num_entries)
+{
+    if (num_entries <= 500)
+        return QString("%1").arg(num_entries);
+    if (num_entries < 1000 * 1e3)
+        return QString("%1K").arg(num_entries / 1e3, 0, 'f', 2);
+    if (num_entries < 1000 * 1e6)
+        return QString("%1M").arg(num_entries / 1e6, 0, 'f', 2);
+    return QString("%1G").arg(num_entries / 1e9, 0, 'f', 2);
+}
+
 bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
 {
     if (d->m_download_failed) {
@@ -147,7 +158,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     //}
     //read a chunk of the remote array considered as a 1D array
 
-    TaskProgress task(TaskProgress::Download, QString("Downloading %4 (%1x%2x%3)").arg(N1()).arg(N2()).arg(N3()).arg(d->m_remote_datatype));
+    TaskProgress task(TaskProgress::Download, QString("Downloading %1 numbers - %2 (%3x%4x%5)").arg(format_num(size)).arg(d->m_remote_datatype).arg(N1()).arg(N2()).arg(N3()));
     task.log(this->makePath());
 
     X.allocate(size, 1); //allocate the output array

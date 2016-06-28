@@ -24,12 +24,13 @@ public:
     virtual ~MVClipsView();
 
     void setClips(const DiskReadMda& clips);
-/// TODO: (MEDIUM) in mvclipsview implement times/labels for purpose of current event and labeling
-//void setTimes(const QList<double>& times);
-//void setLabels(const QList<int>& labels);
+    /// TODO: (MEDIUM) in mvclipsview implement times/labels for purpose of current event and labeling
+    //void setTimes(const QList<double>& times);
+    //void setLabels(const QList<int>& labels);
+protected:
+    void paintEvent(QPaintEvent* evt);
 signals:
-private
-slots:
+private slots:
 
 private:
     MVClipsViewPrivate* d;

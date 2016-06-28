@@ -10,6 +10,7 @@
 #include "mvclipsview.h"
 #include "msmisc.h"
 #include <QSettings>
+#include <QThread>
 #include <math.h>
 #include "mountainprocessrunner.h"
 
@@ -38,6 +39,19 @@ public:
     void compute();
 };
 
+class ClipsViewThread : public QThread {
+public:
+    //input
+    DiskReadMda timeseries;
+    QList<double> times;
+    int clip_size;
+
+    //output
+    DiskReadMda clips;
+
+    void run();
+};
+
 class MVClusterWidgetPrivate {
 public:
     MVClusterWidget* q;
@@ -50,6 +64,7 @@ public:
     MVClusterWidgetComputer m_computer;
     QString m_feature_mode;
     QList<int> m_channels;
+    ClipsViewThread m_clips_view_thread;
 
     void connect_view(MVClusterView* V);
     void update_clips_view();
@@ -141,6 +156,7 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     vlayout->addWidget(d->m_clips_view);
     d->m_info_bar = new QLabel;
     d->m_info_bar->setFixedHeight(20);
+    d->m_info_bar->setText("info bar");
     vlayout->addWidget(d->m_info_bar);
 
     QSizePolicy clips_size_policy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -168,6 +184,8 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     this->recalculateOnOptionChanged("clip_size");
 
     connect(view_agent, SIGNAL(currentEventChanged()), this, SLOT(slot_current_event_changed()));
+
+    connect(&d->m_clips_view_thread, SIGNAL(finished()), this, SLOT(slot_clips_view_thread_finished()));
 }
 
 MVClusterWidget::~MVClusterWidget()
@@ -323,6 +341,16 @@ void MVClusterWidget::slot_show_view_toggled(bool val)
     d->set_data_on_visible_views();
 }
 
+void MVClusterWidget::slot_clips_view_thread_finished()
+{
+    if (d->m_clips_view_thread.isRunning()) {
+        //we want to be careful
+        qWarning() << "m_clips_view_thread is running even though we are in its finished slot!!!!!!!!!";
+        return;
+    }
+    d->m_clips_view->setClips(d->m_clips_view_thread.clips);
+}
+
 void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 {
     QObject::connect(V, SIGNAL(currentEventChanged()), q, SLOT(slot_view_current_event_changed()));
@@ -333,27 +361,30 @@ void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 void MVClusterWidgetPrivate::update_clips_view()
 {
     /// TODO: (HIGH) -- restore functionality in MVClusterWidget, click on current point
-    QMessageBox::information(q, "Feature disabled", "This feature has been temporarily disabled. Normally you would see the current clip on the left.");
-    /*
-    MVEvent evt = q->currentEvent();
+    //QMessageBox::information(q, "Feature disabled", "This feature has been temporarily disabled. Normally you would see the current clip on the left.");
+
+    MVEvent evt = q->viewAgent()->currentEvent();
     QString info_txt;
     if (evt.time >= 0) {
         QList<double> times;
         times << evt.time;
-        long hold_size = m_timeseries.downloadChunkSize();
-        m_timeseries.setDownloadChunkSize(m_clip_size * m_timeseries.N1() * 5); //don't create chunks that are too big -- no need to download too much since we only want one clip
-        Mda clip0 = extract_clips(m_timeseries, times, m_clip_size);
-        m_timeseries.setDownloadChunkSize(hold_size); //now put it back
-        double ppp = m_outlier_scores.value(current_event_index());
-        if (ppp) {
-            info_txt = QString("Outlier score: %1").arg(ppp);
+
+        m_clips_view->setClips(Mda());
+        if (m_clips_view_thread.isRunning()) {
+            m_clips_view_thread.requestInterruption();
+            m_clips_view_thread.wait();
         }
-        m_clips_view->setClips(clip0);
-    } else {
+
+        m_clips_view_thread.timeseries = q->viewAgent()->currentTimeseries();
+        m_clips_view_thread.clip_size = q->viewAgent()->option("clip_size").toInt();
+        m_clips_view_thread.times = times;
+
+        m_clips_view_thread.start();
+    }
+    else {
         m_clips_view->setClips(Mda());
     }
-    m_info_bar->setText(info_txt);
-    */
+    //m_info_bar->setText(info_txt);
 }
 
 int MVClusterWidgetPrivate::current_event_index()
@@ -586,4 +617,13 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
 void MVChannelFeaturesFactory::updateEnabled()
 {
     setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
+}
+
+#include "extract_clips.h"
+void ClipsViewThread::run()
+{
+    timeseries.setRemoteDataType("float32");
+    //use a small chunk size so we don't end up downloading too much extra
+    timeseries.setDownloadChunkSize(clip_size * timeseries.N1() * 4 * 3);
+    clips = extract_clips(timeseries, times, clip_size);
 }
