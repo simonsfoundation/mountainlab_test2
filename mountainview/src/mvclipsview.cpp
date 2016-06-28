@@ -59,9 +59,6 @@ void MVClipsView::paintEvent(QPaintEvent* evt)
     Q_UNUSED(evt)
     QPainter painter(this);
 
-    QString txt = QString("%1x%2x%3").arg(d->m_clips.N1()).arg(d->m_clips.N2()).arg(d->m_clips.N3());
-    painter.drawText(QRectF(0, 0, width(), height()), txt);
-
     int M = d->m_clips.N1();
     int T = d->m_clips.N2();
     long L = d->m_clips.N3();

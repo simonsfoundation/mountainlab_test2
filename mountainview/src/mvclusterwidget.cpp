@@ -156,7 +156,6 @@ MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
     vlayout->addWidget(d->m_clips_view);
     d->m_info_bar = new QLabel;
     d->m_info_bar->setFixedHeight(20);
-    d->m_info_bar->setText("info bar");
     vlayout->addWidget(d->m_info_bar);
 
     QSizePolicy clips_size_policy(QSizePolicy::Expanding, QSizePolicy::Preferred);
