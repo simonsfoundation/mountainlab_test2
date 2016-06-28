@@ -196,9 +196,6 @@ int main(int argc, char* argv[])
         view_agent->setClusterColors(label_colors);
         MVMainWindow* W = new MVMainWindow(view_agent);
 
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << CLP.named_parameters;
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << CLP.named_parameters["samplerate"];
-
         if (!mv_fname.isEmpty()) {
             QString json = read_text_file(mv_fname);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
