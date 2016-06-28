@@ -59,7 +59,9 @@ HEADERS += \
     mvcrosscorrelogramswidget3.h \
     mvamphistview2.h \
     mvabstractviewfactory.h \
-    clusterannotationguide.h
+    clusterannotationguide.h \
+    mvabstractcontextmenuhandler.h \
+    mvclustercontextmenuhandler.h
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
     mvutils.cpp \
@@ -102,7 +104,9 @@ SOURCES += mountainviewmain.cpp \
     mvcrosscorrelogramswidget3.cpp \
     mvamphistview2.cpp \
     mvabstractviewfactory.cpp \
-    clusterannotationguide.cpp
+    clusterannotationguide.cpp \
+    mvabstractcontextmenuhandler.cpp \
+    mvclustercontextmenuhandler.cpp
 
 #HEADERS += sstimeserieswidget.h \
 #    sstimeseriesview.h \

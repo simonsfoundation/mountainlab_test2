@@ -21,6 +21,8 @@
 #include "mvdiscrimhistview.h"
 
 #include "mvabstractviewfactory.h"
+#include "mvabstractcontextmenuhandler.h"
+#include "mvclustercontextmenuhandler.h"
 
 /// TODO, get rid of computationthread
 /// TODO: (HIGH) create test dataset to be distributed
@@ -157,7 +159,7 @@ MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
     registerViewFactory(new MVAmplitudeHistogramsFactory(this));
     registerViewFactory(new MVDiscrimHistFactory(this));
 
-    registerContextMenuHandler(new DummyContextMenuHandler);
+    registerContextMenuHandler(new MVClusterContextMenuHandler(this));
 
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_view_agent, this);
     QToolBar* main_toolbar = new QToolBar;
@@ -593,6 +595,11 @@ void MVMainWindow::handleContextMenu(const QMimeData &dt, const QPoint &globalPo
     QMenu menu;
     menu.addActions(actions);
     menu.exec(globalPos);
+
+    // delete orphan actions
+    foreach(QAction *a, menu.actions()) {
+        if (!a->parent()) a->deleteLater();
+    }
 }
 
 void MVMainWindowPrivate::registerAllViews()
