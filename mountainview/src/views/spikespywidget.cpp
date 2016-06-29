@@ -5,7 +5,7 @@
 *******************************************************/
 
 #include "mvmainwindow.h"
-#include "mvtimeseriesview.h"
+#include "mvtimeseriesview2.h"
 #include "spikespywidget.h"
 #include "taskprogressview.h"
 #include "mvviewagent.h"
@@ -17,7 +17,7 @@ class SpikeSpyWidgetPrivate {
 public:
     SpikeSpyWidget* q;
     QList<SpikeSpyViewData> m_datas;
-    QList<MVTimeSeriesView*> m_views;
+    QList<MVTimeSeriesView2*> m_views;
     MVViewAgent* m_view_agent;
     int m_current_view_index;
 
@@ -76,7 +76,9 @@ SpikeSpyWidget::~SpikeSpyWidget()
 
 void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
 {
-    MVTimeSeriesView* W = new MVTimeSeriesView(d->m_view_agent);
+    MVTimeSeriesView2* W = new MVTimeSeriesView2(d->m_view_agent);
+    /// TODO restore functionality of spikespywidget
+    /*
     W->setTimeseries(data.timeseries);
     QVector<double> times;
     QVector<int> labels;
@@ -88,6 +90,7 @@ void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
     d->m_splitter->addWidget(W);
     d->m_views << W;
     d->m_datas << data;
+    */
 
     connect(W, SIGNAL(clicked()), this, SLOT(slot_view_clicked()));
 
@@ -107,6 +110,8 @@ void SpikeSpyWidget::slot_open_mountainview()
         return;
     SpikeSpyViewData data = d->m_datas[current_view_index];
 
+    /// TODO restore functionality of spikespywidget
+    /*
     MVMainWindow* W = new MVMainWindow(d->m_view_agent);
     MVFile ff;
     ff.addTimeseriesPath("Timeseries", data.timeseries.makePath());
@@ -115,6 +120,7 @@ void SpikeSpyWidget::slot_open_mountainview()
     W->setDefaultInitialization();
     W->show();
     W->setGeometry(this->geometry().adjusted(50, 50, 50, 50));
+    */
 }
 
 void SpikeSpyWidget::slot_view_clicked()

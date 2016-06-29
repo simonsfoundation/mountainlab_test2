@@ -11,7 +11,7 @@
 #include <QMimeData>
 #include <QTabWidget>
 #include "clustermerge.h"
-#include "mvfile.h"
+//#include "mvfile.h"
 #include "mvutils.h"
 #include "mvviewagent.h"
 #include "mvabstractcontrol.h"
@@ -44,8 +44,8 @@ public:
     virtual ~MVMainWindow();
     void setDefaultInitialization();
 
-    void setMVFile(MVFile mv_file);
-    MVFile getMVFile();
+    //void setMVFile(MVFile mv_file);
+    //MVFile getMVFile();
 
     void registerViewFactory(MVAbstractViewFactory* f);
     void unregisterViewFactory(MVAbstractViewFactory* f);

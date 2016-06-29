@@ -1,4 +1,4 @@
-QT += core gui script network
+QT += core gui network
 
 DEFINES += USE_NETWORK
 CONFIG += c++11
@@ -17,129 +17,70 @@ MOC_DIR=../build
 TARGET = mountainview
 TEMPLATE = app
 
+SOURCES += mountainviewmain.cpp
+
+INCLUDEPATH += core
+VPATH += core
 HEADERS += \
-    histogramview.h \
-    mvutils.h \
-    mvmainwindow.h \
-    correlationmatrixview.h \
-    mvclusterdetailwidget.h \
-    mvclipsview.h \
-    mvclusterview.h \
-    mvclusterwidget.h \
-    mvfiringeventview.h \
-    mvfiringeventview2.h \
-    tabber.h \
-    imagesavedialog.h \
-    closemehandler.h \
-    computationthread.h \
-    mvcrosscorrelogramswidget2.h \
-    mountainprocessrunner.h \
-    mvclipswidget.h \
-    taskprogressview.h \
-    mvcontrolpanel.h \
-    flowlayout.h \
-    clustermerge.h \
-    mvviewagent.h \
-    mvstatusbar.h \
-    mvtimeseriesview.h \
-    mvtimeseriesview2.h \
-    multiscaletimeseries.h \
-    mvtimeseriesrendermanager.h \
-    spikespywidget.h \
-    mvspikesprayview.h \
-    mvfile.h \
-    mvtimeseriesviewbase.h \
-    mvabstractview.h \
-    mvmisc.h \
-    mvamphistview.h \
-    mvdiscrimhistview.h \
-    tabberframe.h \
-    mvclustercontextmenu.h \
-    mvhistogramgrid.h \
-    mvcrosscorrelogramswidget3.h \
-    mvamphistview2.h \
-    mvabstractviewfactory.h \
-    clusterannotationguide.h \
-    mvabstractcontextmenuhandler.h \
-    mvclustercontextmenuhandler.h \
-    mvabstractcontrol.h \
-    mvcontrolpanel2.h \
-    mvgeneralcontrol.h \
-    mveventfiltercontrol.h \
-    mvopenviewscontrol.h \
-    mvclustervisibilitycontrol.h \
-    mvexportcontrol.h \
+closemehandler.h flowlayout.h imagesavedialog.h \
+mountainprocessrunner.h mvabstractcontextmenuhandler.h \
+mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
+mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
+mvviewagent.h tabber.h tabberframe.h
+SOURCES += \
+closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
+mountainprocessrunner.cpp mvabstractcontextmenuhandler.cpp \
+mvabstractcontrol.cpp mvabstractview.cpp mvabstractviewfactory.cpp \
+mvcontrolpanel2.cpp mvmainwindow.cpp mvstatusbar.cpp \
+mvviewagent.cpp tabber.cpp tabberframe.cpp
+# to remove
+HEADERS += computationthread.h
+SOURCES += computationthread.cpp
 
+INCLUDEPATH += misc
+VPATH += misc
+HEADERS += \
+clustermerge.h multiscaletimeseries.h \
+mvmisc.h mvutils.h
+SOURCES += \
+clustermerge.cpp multiscaletimeseries.cpp \
+mvmisc.cpp mvutils.cpp
 
-SOURCES += mountainviewmain.cpp \
-    histogramview.cpp \
-    mvutils.cpp \
-    mvmainwindow.cpp \
-    correlationmatrixview.cpp \
-    mvclusterdetailwidget.cpp \
-    mvclipsview.cpp \
-    mvclusterview.cpp \
-    mvclusterwidget.cpp \
-    mvfiringeventview.cpp \
-    mvfiringeventview2.cpp \
-    tabber.cpp \
-    imagesavedialog.cpp \
-    closemehandler.cpp \
-    computationthread.cpp \
-    mvcrosscorrelogramswidget2.cpp \
-    mountainprocessrunner.cpp \
-    mvclipswidget.cpp \
-    taskprogressview.cpp \
-    mvcontrolpanel.cpp \
-    flowlayout.cpp \
-    clustermerge.cpp \
-    mvviewagent.cpp \
-    mvstatusbar.cpp \
-    mvtimeseriesview.cpp \
-    mvtimeseriesview2.cpp \
-    multiscaletimeseries.cpp \
-    mvtimeseriesrendermanager.cpp \
-    spikespywidget.cpp \
-    mvspikesprayview.cpp \
-    mvfile.cpp \
-    mvtimeseriesviewbase.cpp \
-    mvabstractview.cpp \
-    mvmisc.cpp \
-    mvamphistview.cpp \
-    mvdiscrimhistview.cpp \
-    tabberframe.cpp \
-    mvclustercontextmenu.cpp \
-    mvhistogramgrid.cpp \
-    mvcrosscorrelogramswidget3.cpp \
-    mvamphistview2.cpp \
-    mvabstractviewfactory.cpp \
-    clusterannotationguide.cpp \
-    mvabstractcontextmenuhandler.cpp \
-    mvclustercontextmenuhandler.cpp \
-    mvabstractcontrol.cpp \
-    mvcontrolpanel2.cpp \
-    mvgeneralcontrol.cpp \
-    mveventfiltercontrol.cpp \
-    mvopenviewscontrol.cpp \
-    mvclustervisibilitycontrol.cpp \
-    mvexportcontrol.cpp
+INCLUDEPATH += views
+VPATH += views
+HEADERS += \
+correlationmatrixview.h histogramview.h mvamphistview2.h \
+mvclipsview.h mvclipswidget.h mvclusterdetailwidget.h \
+mvclusterview.h mvclusterwidget.h mvcrosscorrelogramswidget3.h \
+mvdiscrimhistview.h mvfiringeventview2.h mvhistogramgrid.h \
+mvspikesprayview.h mvtimeseriesrendermanager.h mvtimeseriesview2.h \
+mvtimeseriesviewbase.h spikespywidget.h taskprogressview.h
+SOURCES += \
+correlationmatrixview.cpp histogramview.cpp mvamphistview2.cpp \
+mvclipsview.cpp mvclipswidget.cpp mvclusterdetailwidget.cpp \
+mvclusterview.cpp mvclusterwidget.cpp mvcrosscorrelogramswidget3.cpp \
+mvdiscrimhistview.cpp mvfiringeventview2.cpp mvhistogramgrid.cpp \
+mvspikesprayview.cpp mvtimeseriesrendermanager.cpp mvtimeseriesview2.cpp \
+mvtimeseriesviewbase.cpp spikespywidget.cpp taskprogressview.cpp
 
-#HEADERS += sstimeserieswidget.h \
-#    sstimeseriesview.h \
-#    sstimeseriesplot.h \
-#    ssabstractview.h \
-#    ssabstractplot.h \
-#    sslabelsmodel.h \
-#    sslabelsmodel1.h \
-#    sscommon.h plotarea.h
+INCLUDEPATH += controlwidgets
+VPATH += controlwidgets
+HEADERS += \
+mvclustervisibilitycontrol.h mveventfiltercontrol.h \
+mvexportcontrol.h mvgeneralcontrol.h mvopenviewscontrol.h
+SOURCES += \
+mvclustervisibilitycontrol.cpp mveventfiltercontrol.cpp \
+mvexportcontrol.cpp mvgeneralcontrol.cpp mvopenviewscontrol.cpp
 
-#SOURCES += sstimeserieswidget.cpp \
-#    sstimeseriesview.cpp \
-#    sstimeseriesplot.cpp \
-#    ssabstractview.cpp \
-#    ssabstractplot.cpp \
-#    sslabelsmodel1.cpp \
-#    sscommon.cpp plotarea.cpp
+INCLUDEPATH += guides
+VPATH += guides
+HEADERS += clusterannotationguide.h
+SOURCES += clusterannotationguide.cpp
+
+INCLUDEPATH += contextmenuhandlers
+VPATH += contextmenuhandlers
+HEADERS += mvclustercontextmenuhandler.h
+SOURCES += mvclustercontextmenuhandler.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams
@@ -197,13 +138,7 @@ SOURCES += qaccordion.cpp contentpane.cpp clickableframe.cpp
 RESOURCES += mountainview.qrc \
     3rdparty/qaccordion/icons/qaccordionicons.qrc
 
-#LAPACK
-#On Ubuntu: sudo apt-get install liblapacke-dev
-#On CentOS: sudo yum install lapack-devel.i686
-#INCLUDEPATH += /usr/include/lapacke #this was needed on CentOS
-#DEFINES += USE_LAPACK
-#LIBS += -llapack -llapacke
-
+#TODO: Do we need openmp for mountainview?
 #OPENMP
 !macx {
   QMAKE_LFLAGS += -fopenmp
@@ -211,10 +146,3 @@ RESOURCES += mountainview.qrc \
 }
 #-std=c++11   # AHB removed since not in GNU gcc 4.6.3
 
-DISTFILES += \
-    ../../server/mountainviewserver/mountainviewserver.py \
-    ../../server/mscmdserver/mscmdserver.py \
-    ../../server/mdaserver/mdaserver.py \
-    ../../server/mountainviewserver/mountainviewserver.example.cfg \
-    ../../server/mdaserver/mdaserver.example.cfg \
-    ../../server/mscmdserver/mscmdserver.example.cfg

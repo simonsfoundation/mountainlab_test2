@@ -20,7 +20,7 @@
 #include "closemehandler.h"
 #include "remotereadmda.h"
 #include "taskprogress.h"
-#include "mvtimeseriesview.h" //for unit test
+//#include "mvtimeseriesview.h" //for unit test
 
 #include <QJsonDocument>
 #include <QRunnable>
@@ -98,7 +98,7 @@ QList<QColor> generate_colors_ahb();
 QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColors);
 
 #include "multiscaletimeseries.h"
-#include "mvfile.h"
+//#include "mvfile.h"
 #include "spikespywidget.h"
 #include "taskprogressview.h"
 #include "mvcontrolpanel2.h"
@@ -176,9 +176,9 @@ int main(int argc, char* argv[])
             qWarning() << "No such unit test: " + arg2;
             return 0;
         }
-        else if (arg2 == "mvtimeseriesview") {
-            MVTimeSeriesView::unit_test();
-        }
+        //else if (arg2 == "mvtimeseriesview") {
+        //    MVTimeSeriesView::unit_test();
+        //}
     }
 
     QString mode = CLP.named_parameters.value("mode", "overview2").toString();

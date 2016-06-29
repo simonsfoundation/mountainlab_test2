@@ -14,9 +14,9 @@
 #include "mvstatusbar.h"
 #include "mvtimeseriesview2.h"
 #include "mlutils.h"
-#include "mvfile.h"
+//#include "mvfile.h"
 #include "mvabstractviewfactory.h"
-#include "mvclustercontextmenu.h"
+//#include "mvclustercontextmenu.h"
 #include "mvamphistview2.h"
 #include "mvdiscrimhistview.h"
 
@@ -54,6 +54,7 @@
 #include <QShortcut>
 #include <QToolBar>
 #include <QToolButton>
+#include <QMenu>
 #include "textfile.h"
 #include "clusterannotationguide.h"
 
@@ -82,7 +83,7 @@ public:
 class MVMainWindowPrivate {
 public:
     MVMainWindow* q;
-    MVFile m_mv_file; //we need to keep this in case there is other data in the .json that we want to preserver
+    //MVFile m_mv_file; //we need to keep this in case there is other data in the .json that we want to preserver
     MVViewAgent* m_view_agent; //gets passed to all the views and the control panel
 
     //these widgets go on the left
@@ -123,10 +124,10 @@ public:
 
     TabberTabWidget* tab_widget_of(QWidget* W);
 
-    void export_mountainview_document();
-    void export_original_firings();
-    void export_filtered_firings();
-    void export_file(QString source_path, QString dest_path, bool use_float64);
+    //void export_mountainview_document();
+    //void export_original_firings();
+    //void export_filtered_firings();
+    //void export_file(QString source_path, QString dest_path, bool use_float64);
 
     //not sure about these
     QVariant get_cluster_attribute(int k, QString attr);
@@ -256,6 +257,7 @@ void MVMainWindow::setDefaultInitialization()
     openView("open-auto-correlograms");
 }
 
+/*
 void MVMainWindow::setMVFile(MVFile ff)
 {
     d->m_mv_file = ff; //we need to save the whole thing so we know what to save
@@ -310,7 +312,9 @@ void MVMainWindow::setMVFile(MVFile ff)
     d->m_view_agent->setSampleRate(ff.sampleRate());
     d->m_view_agent->setMLProxyUrl(ff.mlproxyUrl());
 }
+*/
 
+/*
 MVFile MVMainWindow::getMVFile()
 {
     /// TODO (LOW) improve relationship between mvfile and view agent
@@ -338,6 +342,7 @@ MVFile MVMainWindow::getMVFile()
 
     return d->m_mv_file;
 }
+*/
 
 void MVMainWindow::registerViewFactory(MVAbstractViewFactory* f)
 {
@@ -583,10 +588,11 @@ void MVMainWindow::slot_open_view(QObject* o)
     d->openView(factory);
 }
 
+/// TODO get rid of slot_open_cluster_context_menu()
 void MVMainWindow::slot_open_cluster_context_menu()
 {
-    MVClusterContextMenu menu(viewAgent(), this, viewAgent()->selectedClusters().toSet());
-    menu.exec(QCursor::pos());
+    //MVClusterContextMenu menu(viewAgent(), this, viewAgent()->selectedClusters().toSet());
+    //menu.exec(QCursor::pos());
 }
 
 void MVMainWindow::handleContextMenu(const QMimeData& dt, const QPoint& globalPos)
@@ -842,11 +848,12 @@ void MVMainWindowPrivate::unmerge_selected()
     m_view_agent->setClusterMerge(CM);
 }
 
+/// TODO get rid of tag_selected()
 void MVMainWindowPrivate::tag_selected()
 {
-    MVClusterContextMenu* menu = new MVClusterContextMenu(m_view_agent, q, m_view_agent->selectedClusters().toSet());
-    menu->popup(QCursor::pos());
-    menu->setAttribute(Qt::WA_DeleteOnClose);
+    //MVClusterContextMenu* menu = new MVClusterContextMenu(m_view_agent, q, m_view_agent->selectedClusters().toSet());
+    //menu->popup(QCursor::pos());
+    //menu->setAttribute(Qt::WA_DeleteOnClose);
 }
 
 TabberTabWidget* MVMainWindowPrivate::tab_widget_of(QWidget* W)
@@ -900,6 +907,7 @@ void DownloadComputer::compute()
     }
 }
 
+/*
 void MVMainWindowPrivate::export_mountainview_document()
 {
     QString default_dir = "";
@@ -939,7 +947,9 @@ void MVMainWindowPrivate::export_filtered_firings()
         export_file(firings.makePath(), fname, true);
     }
 }
+*/
 
+/*
 void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bool use_float64)
 {
     DownloadComputer* C = new DownloadComputer;
@@ -949,6 +959,7 @@ void MVMainWindowPrivate::export_file(QString source_path, QString dest_path, bo
     C->setDeleteOnComplete(true);
     C->startComputation();
 }
+*/
 
 QVariant MVMainWindowPrivate::get_cluster_attribute(int k, QString attr)
 {

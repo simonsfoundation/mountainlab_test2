@@ -616,3 +616,21 @@ bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num)
 
     return false;
 }
+
+MVEventFilter MVEventFilter::fromJsonObject(QJsonObject obj)
+{
+    MVEventFilter ret;
+    ret.use_event_filter = obj["use_event_filter"].toBool();
+    ret.min_detectability_score = obj["min_detectability_score"].toDouble();
+    ret.max_outlier_score = obj["max_outlier_score"].toDouble();
+    return ret;
+}
+
+QJsonObject MVEventFilter::toJsonObject() const
+{
+    QJsonObject obj;
+    obj["use_event_filter"] = this->use_event_filter;
+    obj["min_detectability_score"] = this->min_detectability_score;
+    obj["max_outlier_score"] = this->max_outlier_score;
+    return obj;
+}
