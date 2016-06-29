@@ -8,6 +8,7 @@
 
 #include <QWidget>
 #include "mda.h"
+#include <QMimeData>
 #include <QTabWidget>
 #include "clustermerge.h"
 #include "mvfile.h"
@@ -18,6 +19,7 @@
 class MVAbstractViewFactory;
 class TabberTabWidget;
 class Tabber;
+class MVAbstractContextMenuHandler;
 
 /** \class MVMainWindow
  *  \brief The main window (for now) showing an overview of the results of sorting by providing a number of interactive and synchronized views.
@@ -32,6 +34,7 @@ enum RecalculateViewsMode {
     Suggested,
     SuggestedVisible
 };
+
 
 class MVMainWindowPrivate;
 class MVMainWindow : public QWidget {
@@ -48,6 +51,10 @@ public:
     void registerViewFactory(MVAbstractViewFactory* f);
     void unregisterViewFactory(MVAbstractViewFactory* f);
     const QList<MVAbstractViewFactory*>& viewFactories() const;
+
+    void registerContextMenuHandler(MVAbstractContextMenuHandler *h);
+    void unregisterContextMenuHandler(MVAbstractContextMenuHandler *h);
+    const QList<MVAbstractContextMenuHandler *> &contextMenuHandlers() const;
 
     void addControl(MVAbstractControl* control, bool start_expanded);
 
@@ -85,6 +92,7 @@ private slots:
 
     void slot_open_view(QObject*);
     void slot_open_cluster_context_menu();
+    void handleContextMenu(const QMimeData &dt, const QPoint &globalPos);
 
 private:
     MVMainWindowPrivate* d;

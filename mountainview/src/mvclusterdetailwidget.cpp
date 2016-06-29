@@ -422,6 +422,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
         }
     }
 
+    /*
     if (evt->button() == Qt::RightButton) {
         if (view_index >= 0) {
             int k = d->m_views[view_index]->k();
@@ -431,6 +432,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
         }
         emit signalClusterContextMenu();
     }
+    */
 }
 
 void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
@@ -466,6 +468,34 @@ void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
     else
         factor = 1 / 1.1;
     d->zoom(factor);
+}
+
+void MVClusterDetailWidget::contextMenuEvent(QContextMenuEvent *evt)
+{
+    QPoint pt = evt->pos();
+
+    int view_index = d->find_view_index_at(pt);
+    if (view_index >= 0) {
+        int k = d->m_views[view_index]->k();
+        if (!viewAgent()->selectedClusters().contains(k)) {
+            viewAgent()->clickCluster(k, Qt::NoModifier);
+        }
+    }
+    QMimeData md;
+    {
+        QByteArray ba;
+        QDataStream ds(&ba, QIODevice::WriteOnly);
+        ds << viewAgent()->selectedClusters();
+        md.setData("application/x-mv-cluster", ba); // selected cluster data
+    }
+    {
+        QByteArray ba;
+        QDataStream ds(&ba, QIODevice::WriteOnly);
+        ds << (quintptr)this;
+        md.setData("application/x-mv-view", ba); // this view
+    }
+    qDebug() << Q_FUNC_INFO;
+    requestContextMenu(md, pt);
 }
 
 /*

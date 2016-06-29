@@ -60,13 +60,16 @@ HEADERS += \
     mvamphistview2.h \
     mvabstractviewfactory.h \
     clusterannotationguide.h \
+    mvabstractcontextmenuhandler.h \
+    mvclustercontextmenuhandler.h \
     mvabstractcontrol.h \
     mvcontrolpanel2.h \
     mvgeneralcontrol.h \
     mveventfiltercontrol.h \
     mvopenviewscontrol.h \
     mvclustervisibilitycontrol.h \
-    mvexportcontrol.h
+    mvexportcontrol.h \
+
 
 SOURCES += mountainviewmain.cpp \
     histogramview.cpp \
@@ -111,6 +114,8 @@ SOURCES += mountainviewmain.cpp \
     mvamphistview2.cpp \
     mvabstractviewfactory.cpp \
     clusterannotationguide.cpp \
+    mvabstractcontextmenuhandler.cpp \
+    mvclustercontextmenuhandler.cpp \
     mvabstractcontrol.cpp \
     mvcontrolpanel2.cpp \
     mvgeneralcontrol.cpp \

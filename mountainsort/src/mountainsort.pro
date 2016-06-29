@@ -16,6 +16,8 @@ QMAKE_POST_LINK += cp $$PWD/../bin/mountainsort $$PWD/../../mountainprocess/proc
 
 INCLUDEPATH += utils core processors mda unit_tests 3rdparty isosplit ../../common/cachemanager
 
+DEFINES += MOUNTAINSORT_VERSION="0.0.1"
+
 HEADERS += \
     core/msprocessmanager.h \
     core/mountainsort_version.h \
@@ -177,9 +179,6 @@ DEPENDPATH += ../../common
 VPATH += ../../common
 HEADERS += mlutils.h
 SOURCES += mlutils.cpp
-
-DISTFILES += \
-    ../version.txt
 
 #some sources need to be compiled without -std=c++11 flag.
 #It would be nice to use something like CXXFLAGS_NOCXX11=$(CXXFLAGS), but doesn't seem to work
