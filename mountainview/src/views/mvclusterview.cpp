@@ -12,8 +12,6 @@
 #include "mvcontext.h"
 #include <QMenu>
 
-/// TODO: (HIGH) Panning in cluster view -- feature request on forum
-
 class MVClusterViewPrivate : public QObject {
     Q_OBJECT
 public:

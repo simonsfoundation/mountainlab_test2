@@ -36,7 +36,6 @@
 /// TODO (LOW) electrode view... (firetrack)
 /// TODO (LOW) 3D feature plot scale density -- log scale?
 /// TODO: (0.9.1) Go to timepoint
-/// TODO: (0.9.1) cluster view, when hover over legend item, highlight cluster in white
 
 class TaskProgressViewThread : public QRunnable {
 public:
@@ -88,8 +87,6 @@ void test_taskprogressview()
 /// TODO (LOW) auto correlograms for selected clusters
 /// TODO (LOW) figure out what to do when #channels and/or #clusters is huge
 /// TODO: (0.9.1) make sure to handle merging with other views, such as clips etc. Make elegant way
-/// TODO: (0.9.1) firing events view, show two clusters with different colors
-/// TODO: (0.9.1) 1D histograms showing cutoffs (for identifying noise clusters at a glance)
 /// TODO: (HIGH) annotate axes as microvolts whenever relevant
 /// TODO: (HIGH) option to use pre-processed data for PCA
 

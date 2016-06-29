@@ -42,7 +42,6 @@ public:
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    /// TODO: (HIGH) view does not need the context
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
     int order() const Q_DECL_OVERRIDE;
 private slots:
