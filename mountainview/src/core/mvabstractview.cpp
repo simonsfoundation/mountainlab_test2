@@ -11,6 +11,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QToolButton>
+#include <QContextMenuEvent>
 
 class CalculationThread : public QThread {
 public:
@@ -119,6 +120,25 @@ void MVAbstractView::recalculateOn(QObject* obj, const char* signal, bool sugges
 void MVAbstractView::requestContextMenu(const QMimeData& md, const QPoint& pos)
 {
     emit contextMenuRequested(md, mapToGlobal(pos));
+}
+
+void MVAbstractView::prepareMimeData(QMimeData &mimeData, const QPoint &pos)
+{
+    Q_UNUSED(pos)
+    // add info about the view itself
+    QByteArray ba;
+    QDataStream ds(&ba, QIODevice::WriteOnly);
+    ds << (quintptr) this;
+    mimeData.setData("application/x-mv-view", ba); // this view
+}
+
+void MVAbstractView::contextMenuEvent(QContextMenuEvent *evt)
+{
+    QPoint pt = evt->pos();
+    QMimeData mimeData;
+    prepareMimeData(mimeData, pt);
+    if (!mimeData.formats().isEmpty())
+        requestContextMenu(mimeData, pt);
 }
 
 void MVAbstractView::recalculate()

@@ -318,8 +318,7 @@ void HistogramView::leaveEvent(QEvent* evt)
 
 void HistogramView::mouseDoubleClickEvent(QMouseEvent* evt)
 {
-    Q_UNUSED(evt)
-    emit activated();
+    emit activated(evt->pos());
 }
 
 void HistogramView::slot_context_menu(const QPoint& pos)

@@ -16,6 +16,7 @@
 #include <QSettings>
 #include <QImageWriter>
 #include "extract_clips.h"
+#include <QApplication>
 #include <QFileDialog>
 #include <QJsonArray>
 #include <QMenu>
@@ -143,7 +144,6 @@ public:
     void export_image();
     void toggle_stdev_shading();
     void shift_select_clusters_between(int k1, int k2);
-    void context_menu(QPoint pt);
 
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
@@ -421,18 +421,6 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
             }
         }
     }
-
-    /*
-    if (evt->button() == Qt::RightButton) {
-        if (view_index >= 0) {
-            int k = d->m_views[view_index]->k();
-            if (!mvContext()->selectedClusters().contains(k)) {
-                mvContext()->clickCluster(k, Qt::NoModifier);
-            }
-        }
-        emit signalClusterContextMenu();
-    }
-    */
 }
 
 void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
@@ -456,7 +444,16 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
 void MVClusterDetailWidget::mouseDoubleClickEvent(QMouseEvent* evt)
 {
     Q_UNUSED(evt);
-    d->context_menu(evt->pos());
+#if 0
+    QMimeData md;
+    prepareMimeData(md, evt->pos());
+    if (!md.formats().isEmpty())
+        requestContextMenu(md, evt->pos());
+#else
+    // send yourself a context menu request
+    QContextMenuEvent e(QContextMenuEvent::Mouse, evt->pos());
+    QCoreApplication::sendEvent(this, &e);
+#endif
 }
 
 void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
@@ -470,11 +467,9 @@ void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
     d->zoom(factor);
 }
 
-void MVClusterDetailWidget::contextMenuEvent(QContextMenuEvent* evt)
+void MVClusterDetailWidget::prepareMimeData(QMimeData &mimeData, const QPoint &pos)
 {
-    QPoint pt = evt->pos();
-
-    int view_index = d->find_view_index_at(pt);
+    int view_index = d->find_view_index_at(pos);
     if (view_index >= 0) {
         int k = d->m_views[view_index]->k();
         if (!mvContext()->selectedClusters().contains(k)) {
@@ -482,7 +477,12 @@ void MVClusterDetailWidget::contextMenuEvent(QContextMenuEvent* evt)
         }
     }
 
-    d->context_menu(evt->pos());
+    QByteArray ba;
+    QDataStream ds(&ba, QIODevice::WriteOnly);
+    ds << mvContext()->selectedClusters();
+    mimeData.setData("application/x-mv-cluster", ba); // selected cluster data
+
+    MVAbstractView::prepareMimeData(mimeData, pos); // call base class implementation
 }
 
 /*
@@ -944,24 +944,6 @@ void MVClusterDetailWidgetPrivate::shift_select_clusters_between(int k1, int k2)
         selected_clusters.insert(m_views[ind2]->k());
     }
     q->mvContext()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
-}
-
-void MVClusterDetailWidgetPrivate::context_menu(QPoint pt)
-{
-    QMimeData md;
-    {
-        QByteArray ba;
-        QDataStream ds(&ba, QIODevice::WriteOnly);
-        ds << q->mvContext()->selectedClusters();
-        md.setData("application/x-mv-cluster", ba); // selected cluster data
-    }
-    {
-        QByteArray ba;
-        QDataStream ds(&ba, QIODevice::WriteOnly);
-        ds << (quintptr) this;
-        md.setData("application/x-mv-view", ba); // this view
-    }
-    q->requestContextMenu(md, pt);
 }
 
 ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterData main_CD)

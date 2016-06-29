@@ -51,7 +51,7 @@ protected:
 signals:
     void clicked(Qt::KeyboardModifiers modifiers);
     void rightClicked(Qt::KeyboardModifiers modifiers);
-    void activated();
+    void activated(const QPoint &);
 
     void signalExportHistogramMatrixImage();
 

@@ -10,6 +10,7 @@
 #include "taskprogress.h"
 
 #include <QAction>
+#include <QCoreApplication>
 #include <QGridLayout>
 #include <QKeyEvent>
 #include <QList>
@@ -168,10 +169,8 @@ void MVHistogramGrid::setHistogramViews(const QList<HistogramView*> views)
         HV->setProperty("col", col0);
         HV->setProperty("view_index", jj);
         connect(HV, SIGNAL(clicked(Qt::KeyboardModifiers)), this, SLOT(slot_histogram_view_clicked(Qt::KeyboardModifiers)));
-        //connect(HV, SIGNAL(rightClicked(Qt::KeyboardModifiers)), this, SLOT(slot_histogram_view_right_clicked(Qt::KeyboardModifiers)));
-        connect(HV, SIGNAL(rightClicked(Qt::KeyboardModifiers)), this, SLOT(slot_context_menu()));
         //connect(HV, SIGNAL(activated()), this, SLOT(slot_histogram_view_activated()));
-        connect(HV, SIGNAL(activated()), this, SLOT(slot_context_menu()));
+        connect(HV, SIGNAL(activated(QPoint)), this, SLOT(slot_context_menu(QPoint)));
         connect(HV, SIGNAL(signalExportHistogramMatrixImage()), this, SLOT(slot_export_image()));
     }
 
@@ -188,6 +187,15 @@ void MVHistogramGrid::setHistogramViews(const QList<HistogramView*> views)
 QList<HistogramView*> MVHistogramGrid::histogramViews()
 {
     return d->m_histogram_views;
+}
+
+void MVHistogramGrid::prepareMimeData(QMimeData &mimeData, const QPoint &pos)
+{
+    QByteArray ba;
+    QDataStream ds(&ba, QIODevice::WriteOnly);
+    ds << mvContext()->selectedClusters();
+    mimeData.setData("application/x-mv-cluster", ba); // selected cluster data
+    MVAbstractView::prepareMimeData(mimeData, pos);
 }
 
 void MVHistogramGrid::slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers)
@@ -223,25 +231,17 @@ void MVHistogramGrid::slot_update_highlighting()
     d->do_highlighting();
 }
 
-void MVHistogramGrid::slot_context_menu()
+void MVHistogramGrid::slot_context_menu(const QPoint &pt)
 {
-    //this seems a bit circular
-    QPoint pt = this->mapFromGlobal(QCursor::pos());
+    // IMO this code doesn't work correctly as the "activated" signal
+    // doesn't "select" the HV thus we're being triggered over a widget
+    // that is different than the selected HV
 
-    QMimeData md;
-    {
-        QByteArray ba;
-        QDataStream ds(&ba, QIODevice::WriteOnly);
-        ds << mvContext()->selectedClusters();
-        md.setData("application/x-mv-cluster", ba); // selected cluster data
-    }
-    {
-        QByteArray ba;
-        QDataStream ds(&ba, QIODevice::WriteOnly);
-        ds << (quintptr) this;
-        md.setData("application/x-mv-view", ba); // this view
-    }
-    this->requestContextMenu(md, pt);
+    HistogramView* HV = qobject_cast<HistogramView*>(sender());
+    if (!HV) return;
+    // send yourself a context menu request
+    QContextMenuEvent e(QContextMenuEvent::Mouse, mapFromGlobal(HV->mapToGlobal(pt)));
+    QCoreApplication::sendEvent(this, &e);
 }
 
 void MVHistogramGridPrivate::do_highlighting()
