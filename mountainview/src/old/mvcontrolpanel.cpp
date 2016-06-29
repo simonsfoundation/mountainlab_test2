@@ -26,7 +26,7 @@ public:
     MVControlPanel* q;
     ControlManager m_controls;
 
-    MVContext* m_view_agent;
+    MVContext* m_context;
     MVMainWindow* m_main_window;
     FlowLayout* m_viewLayout;
     QLabel* create_group_label(QString label);
@@ -45,12 +45,12 @@ action_button_info abi(QString name, QString label)
     return ret;
 }
 
-MVControlPanel::MVControlPanel(MVContext* view_agent, MVMainWindow* mw)
+MVControlPanel::MVControlPanel(MVContext* context, MVMainWindow* mw)
 {
     d = new MVControlPanelPrivate;
     d->q = this;
 
-    d->m_view_agent = view_agent;
+    d->m_context = context;
     d->m_main_window = mw;
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -120,8 +120,8 @@ MVControlPanel::MVControlPanel(MVContext* view_agent, MVMainWindow* mw)
         layout->addLayout(G);
 
         d->m_controls.add_combo_box(G, "timeseries", "Use timeseries:")->setToolTip("Set the timeseries used for display");
-        d->m_controls.add_float_box(G, "cc_max_dt_msec", "Max. dt (ms)", d->m_view_agent->option("cc_max_dt_msec").toFloat(), 1, 1e6)->setToolTip("Maximum dt for display of cross-correlograms");
-        d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", d->m_view_agent->option("clip_size").toInt(), 1, 1e5)->setToolTip("Set clips size used for display");
+        d->m_controls.add_float_box(G, "cc_max_dt_msec", "Max. dt (ms)", d->m_context->option("cc_max_dt_msec").toFloat(), 1, 1e6)->setToolTip("Maximum dt for display of cross-correlograms");
+        d->m_controls.add_int_box(G, "clip_size", "Clip size (timepoints)", d->m_context->option("clip_size").toInt(), 1, 1e5)->setToolTip("Set clips size used for display");
 
         FlowLayout* flayout = new FlowLayout;
         layout->addLayout(flayout);
@@ -179,7 +179,7 @@ MVControlPanel::MVControlPanel(MVContext* view_agent, MVMainWindow* mw)
         d->m_controls.add_check_box(G, "view_merged", "View merged", true);
 
         //FlowLayout* flayout = new FlowLayout;
-        //new ClusterVisibilityControls(view_agent, flayout);
+        //new ClusterVisibilityControls(context, flayout);
         //layout->addLayout(flayout);
 
         d->m_controls.add_horizontal_divider_line(layout);
@@ -238,10 +238,10 @@ MVControlPanel::MVControlPanel(MVContext* view_agent, MVMainWindow* mw)
         d->m_controls.add_horizontal_divider_line(layout);
     }
 
-    QObject::connect(d->m_view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
-    QObject::connect(d->m_view_agent, SIGNAL(eventFilterChanged()), this, SLOT(slot_view_agent_event_filter_changed()));
-    QObject::connect(d->m_view_agent, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_update_timeseries_box()));
-    QObject::connect(d->m_view_agent, SIGNAL(timeseriesNamesChanged()), this, SLOT(slot_update_timeseries_box()));
+    QObject::connect(d->m_context, SIGNAL(optionChanged(QString)), this, SLOT(slot_context_option_changed(QString)));
+    QObject::connect(d->m_context, SIGNAL(eventFilterChanged()), this, SLOT(slot_context_event_filter_changed()));
+    QObject::connect(d->m_context, SIGNAL(currentTimeseriesChanged()), this, SLOT(slot_update_timeseries_box()));
+    QObject::connect(d->m_context, SIGNAL(timeseriesNamesChanged()), this, SLOT(slot_update_timeseries_box()));
 
     slot_update_enabled_controls();
 
@@ -297,14 +297,14 @@ void MVControlPanel::slot_button_clicked()
     }
 }
 
-void MVControlPanel::slot_view_agent_option_changed(QString name)
+void MVControlPanel::slot_context_option_changed(QString name)
 {
-    d->m_controls.set_parameter_value(name, d->m_view_agent->option(name));
+    d->m_controls.set_parameter_value(name, d->m_context->option(name));
 }
 
-void MVControlPanel::slot_view_agent_event_filter_changed()
+void MVControlPanel::slot_context_event_filter_changed()
 {
-    MVEventFilter X = d->m_view_agent->eventFilter();
+    MVEventFilter X = d->m_context->eventFilter();
     d->m_controls.set_parameter_value("use_event_filter", X.use_event_filter);
     d->m_controls.set_parameter_value("max_outlier_score", X.max_outlier_score);
     d->m_controls.set_parameter_value("min_detectability_score", X.min_detectability_score);
@@ -312,22 +312,22 @@ void MVControlPanel::slot_view_agent_event_filter_changed()
 
 void MVControlPanel::slot_update_timeseries_box()
 {
-    QStringList names = d->m_view_agent->timeseriesNames();
+    QStringList names = d->m_context->timeseriesNames();
     d->m_controls.set_parameter_choices("timeseries", names);
-    d->m_controls.set_parameter_value("timeseries", d->m_view_agent->currentTimeseriesName());
+    d->m_controls.set_parameter_value("timeseries", d->m_context->currentTimeseriesName());
 }
 
 void MVControlPanel::slot_control_changed()
 {
-    QTimer::singleShot(500, this, SLOT(slot_update_view_agent()));
+    QTimer::singleShot(500, this, SLOT(slot_update_context()));
 }
 
-void MVControlPanel::slot_update_view_agent()
+void MVControlPanel::slot_update_context()
 {
     {
-        d->m_view_agent->setOption("clip_size", d->m_controls.get_parameter_value("clip_size"));
-        d->m_view_agent->setOption("cc_max_dt_msec", d->m_controls.get_parameter_value("cc_max_dt_msec"));
-        d->m_view_agent->setCurrentTimeseriesName(d->m_controls.get_parameter_value("timeseries").toString());
+        d->m_context->setOption("clip_size", d->m_controls.get_parameter_value("clip_size"));
+        d->m_context->setOption("cc_max_dt_msec", d->m_controls.get_parameter_value("cc_max_dt_msec"));
+        d->m_context->setCurrentTimeseriesName(d->m_controls.get_parameter_value("timeseries").toString());
     }
 
     {
@@ -335,14 +335,14 @@ void MVControlPanel::slot_update_view_agent()
         filter.use_event_filter = d->m_controls.get_parameter_value("use_event_filter").toBool();
         filter.max_outlier_score = d->m_controls.get_parameter_value("max_outlier_score").toDouble();
         filter.min_detectability_score = d->m_controls.get_parameter_value("min_detectability_score").toDouble();
-        d->m_view_agent->setEventFilter(filter);
+        d->m_context->setEventFilter(filter);
     }
 
     /*
     {
-        ClusterVisibilityRule rule = d->m_view_agent->visibilityRule();
+        ClusterVisibilityRule rule = d->m_context->visibilityRule();
         rule.view_merged = d->m_controls.get_parameter_value("view_merged").toBool();
-        d->m_view_agent->setVisibilityRule(rule);
+        d->m_context->setVisibilityRule(rule);
     }
     */
 }

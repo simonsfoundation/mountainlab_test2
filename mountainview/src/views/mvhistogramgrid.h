@@ -20,7 +20,7 @@ class MVHistogramGrid : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVHistogramGridPrivate;
-    MVHistogramGrid(MVContext* view_agent);
+    MVHistogramGrid(MVContext* context);
     virtual ~MVHistogramGrid();
 
     QImage renderImage(int W = 0, int H = 0);

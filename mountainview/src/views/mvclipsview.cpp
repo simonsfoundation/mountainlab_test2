@@ -22,7 +22,7 @@ public:
     DiskReadMda m_clips;
     //QList<double> m_times;
     //QList<int> m_labels;
-    MVContext* m_view_agent;
+    MVContext* m_context;
     double m_clip_index_offset = 0;
     double m_pct_space_per_clip = 1;
     double m_vert_scale_factor = 1;
@@ -32,12 +32,12 @@ public:
     void auto_set_pct_space_per_clip();
 };
 
-MVClipsView::MVClipsView(MVContext* view_agent)
+MVClipsView::MVClipsView(MVContext* context)
 {
     d = new MVClipsViewPrivate;
     d->q = this;
 
-    d->m_view_agent = view_agent;
+    d->m_context = context;
 }
 
 MVClipsView::~MVClipsView()
@@ -65,7 +65,7 @@ void MVClipsView::paintEvent(QPaintEvent* evt)
 
     for (long i = 0; i < L; i++) {
         for (int m = 0; m < M; m++) {
-            QColor col = d->m_view_agent->channelColor(m + 1);
+            QColor col = d->m_context->channelColor(m + 1);
             painter.setPen(QPen(QBrush(col), 3));
             QPainterPath path;
             for (int t = 0; t < T; t++) {

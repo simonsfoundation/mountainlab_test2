@@ -18,7 +18,7 @@ public:
     SpikeSpyWidget* q;
     QList<SpikeSpyViewData> m_datas;
     QList<MVTimeSeriesView2*> m_views;
-    MVContext* m_view_agent;
+    MVContext* m_context;
     int m_current_view_index;
 
     QSplitter* m_splitter;
@@ -29,11 +29,11 @@ public:
     void update_activated();
 };
 
-SpikeSpyWidget::SpikeSpyWidget(MVContext* view_agent)
+SpikeSpyWidget::SpikeSpyWidget(MVContext* context)
 {
     d = new SpikeSpyWidgetPrivate;
     d->q = this;
-    d->m_view_agent = view_agent;
+    d->m_context = context;
     d->m_current_view_index = 0;
 
     d->m_splitter = new QSplitter(Qt::Vertical);
@@ -76,7 +76,7 @@ SpikeSpyWidget::~SpikeSpyWidget()
 
 void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
 {
-    MVTimeSeriesView2* W = new MVTimeSeriesView2(d->m_view_agent);
+    MVTimeSeriesView2* W = new MVTimeSeriesView2(d->m_context);
     /// TODO restore functionality of spikespywidget
     /*
     W->setTimeseries(data.timeseries);
@@ -112,7 +112,7 @@ void SpikeSpyWidget::slot_open_mountainview()
 
     /// TODO restore functionality of spikespywidget
     /*
-    MVMainWindow* W = new MVMainWindow(d->m_view_agent);
+    MVMainWindow* W = new MVMainWindow(d->m_context);
     MVFile ff;
     ff.addTimeseriesPath("Timeseries", data.timeseries.makePath());
     ff.setFiringsPath(data.firings.makePath());

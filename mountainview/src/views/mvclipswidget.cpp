@@ -43,18 +43,18 @@ public:
     QList<int> m_labels_to_use;
     //MVClipsView* m_view;
     MVTimeSeriesView2* m_view;
-    MVContext m_view_view_agent;
+    MVContext m_view_context;
     MVClipsWidgetComputer m_computer;
 };
 
-MVClipsWidget::MVClipsWidget(MVContext* view_agent)
-    : MVAbstractView(view_agent)
+MVClipsWidget::MVClipsWidget(MVContext* context)
+    : MVAbstractView(context)
 {
     d = new MVClipsWidgetPrivate;
     d->q = this;
 
-    //d->m_view = new MVClipsView(view_agent);
-    d->m_view = new MVTimeSeriesView2(&d->m_view_view_agent);
+    //d->m_view = new MVClipsView(context);
+    d->m_view = new MVTimeSeriesView2(&d->m_view_context);
     mvtsv_prefs p = d->m_view->prefs();
     p.show_current_timepoint = false;
     p.show_time_axis = false;
@@ -66,8 +66,8 @@ MVClipsWidget::MVClipsWidget(MVContext* view_agent)
     hlayout->addWidget(d->m_view);
     this->setLayout(hlayout);
 
-    this->recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
-    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
+    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOnOptionChanged("clip_size");
 
     recalculate();
@@ -80,12 +80,12 @@ MVClipsWidget::~MVClipsWidget()
 
 void MVClipsWidget::prepareCalculation()
 {
-    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
-    d->m_computer.filter = viewAgent()->eventFilter();
-    d->m_computer.firings = viewAgent()->firings();
-    d->m_computer.timeseries = viewAgent()->currentTimeseries();
+    d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
+    d->m_computer.filter = mvContext()->eventFilter();
+    d->m_computer.firings = mvContext()->firings();
+    d->m_computer.timeseries = mvContext()->currentTimeseries();
     d->m_computer.labels_to_use = d->m_labels_to_use;
-    d->m_computer.clip_size = viewAgent()->option("clip_size").toInt();
+    d->m_computer.clip_size = mvContext()->option("clip_size").toInt();
 }
 
 void MVClipsWidget::runCalculation()
@@ -98,10 +98,10 @@ void MVClipsWidget::onCalculationFinished()
     TaskProgress task("MVClipsWidget::onCalculationFinished");
     task.log(QString("%1x%2x%3").arg(d->m_computer.clips.N1()).arg(d->m_computer.clips.N2()).arg(d->m_computer.clips.N3()));
     DiskReadMda clips = d->m_computer.clips.reshaped(d->m_computer.clips.N1(), d->m_computer.clips.N2() * d->m_computer.clips.N3());
-    d->m_view_view_agent.copySettingsFrom(viewAgent());
-    d->m_view_view_agent.addTimeseries("clips", clips);
-    d->m_view_view_agent.setCurrentTimeseriesName("clips");
-    d->m_view_view_agent.setCurrentTimeRange(MVRange(0, clips.N2() - 1));
+    d->m_view_context.copySettingsFrom(mvContext());
+    d->m_view_context.addTimeseries("clips", clips);
+    d->m_view_context.setCurrentTimeseriesName("clips");
+    d->m_view_context.setCurrentTimeRange(MVRange(0, clips.N2() - 1));
     d->m_view->recalculate();
 }
 
@@ -116,7 +116,7 @@ void MVClipsWidget::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     if (isCalculating()) {
         //show that something is computing
-        painter.fillRect(QRectF(0, 0, width(), height()), viewAgent()->color("calculation-in-progress"));
+        painter.fillRect(QRectF(0, 0, width(), height()), mvContext()->color("calculation-in-progress"));
     }
 
     QWidget::paintEvent(evt);

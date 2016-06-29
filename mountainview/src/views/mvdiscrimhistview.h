@@ -9,7 +9,7 @@ class MVDiscrimHistView : public MVHistogramGrid {
     Q_OBJECT
 public:
     friend class MVDiscrimHistViewPrivate;
-    MVDiscrimHistView(MVContext* view_agent);
+    MVDiscrimHistView(MVContext* context);
     virtual ~MVDiscrimHistView();
 
     void setClusterNumbers(const QList<int>& cluster_numbers);

@@ -9,7 +9,7 @@ class MVAmpHistView2 : public MVHistogramGrid {
     Q_OBJECT
 public:
     friend class MVAmpHistView2Private;
-    MVAmpHistView2(MVContext* view_agent);
+    MVAmpHistView2(MVContext* context);
     virtual ~MVAmpHistView2();
 
     void prepareCalculation() Q_DECL_OVERRIDE;

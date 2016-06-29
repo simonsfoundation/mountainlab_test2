@@ -38,7 +38,7 @@ public:
 class MVSpikeSprayViewPrivate {
 public:
     MVSpikeSprayView* q;
-    MVContext* m_view_agent;
+    MVContext* m_context;
     QList<int> m_labels_to_use;
 
     double m_amplitude_factor;
@@ -53,18 +53,18 @@ public:
     QPointF coord2pix(int m, double t, double val);
 };
 
-MVSpikeSprayView::MVSpikeSprayView(MVContext* view_agent)
-    : MVAbstractView(view_agent)
+MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
+    : MVAbstractView(context)
 {
     d = new MVSpikeSprayViewPrivate;
     d->q = this;
-    d->m_view_agent = view_agent;
+    d->m_context = context;
     d->m_amplitude_factor = 0;
     d->m_num_channels = 1;
 
     recalculateOnOptionChanged("clip_size");
-    recalculateOn(viewAgent(), SIGNAL(timeseriesNamesChanged()));
-    recalculateOn(viewAgent(), SIGNAL(filteredFiringsChanged()));
+    recalculateOn(mvContext(), SIGNAL(timeseriesNamesChanged()));
+    recalculateOn(mvContext(), SIGNAL(filteredFiringsChanged()));
 
     /// TODO (LOW) should we put this in the abstract view?
     this->setFocusPolicy(Qt::StrongFocus);
@@ -83,14 +83,14 @@ void MVSpikeSprayView::setLabelsToUse(const QList<int>& labels)
 
 void MVSpikeSprayView::prepareCalculation()
 {
-    d->m_num_channels = d->m_view_agent->currentTimeseries().N1(); //important for rendering
+    d->m_num_channels = d->m_context->currentTimeseries().N1(); //important for rendering
     d->m_labels_to_render.clear();
-    d->m_computer.mlproxy_url = d->m_view_agent->mlProxyUrl();
-    d->m_computer.timeseries = d->m_view_agent->currentTimeseries();
-    d->m_computer.firings = d->m_view_agent->firings();
-    d->m_computer.filter = d->m_view_agent->eventFilter();
+    d->m_computer.mlproxy_url = d->m_context->mlProxyUrl();
+    d->m_computer.timeseries = d->m_context->currentTimeseries();
+    d->m_computer.firings = d->m_context->firings();
+    d->m_computer.filter = d->m_context->eventFilter();
     d->m_computer.labels_to_use = d->m_labels_to_use;
-    d->m_computer.clip_size = d->m_view_agent->option("clip_size").toInt();
+    d->m_computer.clip_size = d->m_context->option("clip_size").toInt();
 }
 
 void MVSpikeSprayView::runCalculation()
@@ -116,7 +116,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         QFont font = painter.font();
         font.setPointSize(20);
         painter.setFont(font);
-        painter.fillRect(QRectF(0, 0, width(), height()), viewAgent()->color("calculation-in-progress"));
+        painter.fillRect(QRectF(0, 0, width(), height()), mvContext()->color("calculation-in-progress"));
         painter.drawText(QRectF(0, 0, width(), height()), Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
         return;
     }
@@ -232,13 +232,13 @@ void MVSpikeSprayViewPrivate::render_clip(QPainter* painter, long M, long T, dou
 
 QColor MVSpikeSprayViewPrivate::get_label_color(int label)
 {
-    return m_view_agent->clusterColor(label);
+    return m_context->clusterColor(label);
 }
 
 QPointF MVSpikeSprayViewPrivate::coord2pix(int m, double t, double val)
 {
     long M = m_num_channels;
-    int clip_size = m_view_agent->option("clip_size").toInt();
+    int clip_size = m_context->option("clip_size").toInt();
     double margin_left = 20, margin_right = 20;
     double margin_top = 20, margin_bottom = 20;
     double max_width = 300;

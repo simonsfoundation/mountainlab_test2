@@ -29,7 +29,7 @@ class MVCrossCorrelogramsWidget3 : public MVHistogramGrid {
     Q_OBJECT
 public:
     friend class MVCrossCorrelogramsWidget3Private;
-    MVCrossCorrelogramsWidget3(MVContext* view_agent);
+    MVCrossCorrelogramsWidget3(MVContext* context);
     virtual ~MVCrossCorrelogramsWidget3();
 
     void prepareCalculation() Q_DECL_OVERRIDE;

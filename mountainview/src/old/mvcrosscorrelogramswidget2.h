@@ -35,7 +35,7 @@ class MVCrossCorrelogramsWidget2 : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVCrossCorrelogramsWidget2Private;
-    MVCrossCorrelogramsWidget2(MVContext* view_agent);
+    MVCrossCorrelogramsWidget2(MVContext* context);
     virtual ~MVCrossCorrelogramsWidget2();
 
     void prepareCalculation() Q_DECL_OVERRIDE;

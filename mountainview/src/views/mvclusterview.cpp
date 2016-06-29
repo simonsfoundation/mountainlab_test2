@@ -26,7 +26,7 @@ public:
     int m_current_event_index;
     int m_mode;
     //FilterInfo m_filter_info;
-    MVContext* m_view_agent;
+    MVContext* m_context;
 
     QImage m_grid_image;
     QRectF m_image_target;
@@ -75,12 +75,12 @@ public slots:
 };
 #include "mvclusterview.moc"
 
-MVClusterView::MVClusterView(MVContext* view_agent, QWidget* parent)
+MVClusterView::MVClusterView(MVContext* context, QWidget* parent)
     : QWidget(parent)
 {
     d = new MVClusterViewPrivate;
     d->q = this;
-    d->m_view_agent = view_agent;
+    d->m_context = context;
     d->m_grid_N1 = d->m_grid_N2 = 300;
     d->m_grid_update_needed = false;
     d->m_data_proj_needed = true;
@@ -730,7 +730,7 @@ void MVClusterViewPrivate::update_grid()
                 }
                 else if (m_mode == MVCV_MODE_LABEL_COLORS) {
                     if (val > 0) {
-                        QColor CC = m_view_agent->clusterColor((int)val);
+                        QColor CC = m_context->clusterColor((int)val);
                         if (val == hovered_cluster_number)
                             CC = Qt::white;
                         m_grid_image.setPixel(i1, i2, CC.rgb());
@@ -889,7 +889,7 @@ void MVClusterViewPrivate::do_paint(QPainter& painter, int W, int H)
     //legend
     if (this->m_mode == MVCV_MODE_LABEL_COLORS) {
         this->m_legend.setParentWindowSize(q->size());
-        this->m_legend.setClusterColors(m_view_agent->clusterColors());
+        this->m_legend.setClusterColors(m_context->clusterColors());
         this->m_legend.draw(&painter);
     }
 }

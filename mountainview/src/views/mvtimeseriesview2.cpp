@@ -56,8 +56,8 @@ public:
     double ypix2val(int m, double ypix);
 };
 
-MVTimeSeriesView2::MVTimeSeriesView2(MVContext* view_agent)
-    : MVTimeSeriesViewBase(view_agent)
+MVTimeSeriesView2::MVTimeSeriesView2(MVContext* context)
+    : MVTimeSeriesViewBase(context)
 {
     d = new MVTimeSeriesView2Private;
     d->q = this;
@@ -82,7 +82,7 @@ MVTimeSeriesView2::MVTimeSeriesView2(MVContext* view_agent)
     }
 
     QObject::connect(&d->m_render_manager, SIGNAL(updated()), this, SLOT(update()));
-    this->recalculateOn(viewAgent(), SIGNAL(currentTimeseriesChanged()));
+    this->recalculateOn(mvContext(), SIGNAL(currentTimeseriesChanged()));
 
     this->recalculate();
 }
@@ -95,8 +95,8 @@ MVTimeSeriesView2::~MVTimeSeriesView2()
 void MVTimeSeriesView2::prepareCalculation()
 {
     d->m_layout_needed = true;
-    d->m_calculator.timeseries = viewAgent()->currentTimeseries();
-    d->m_calculator.mlproxy_url = viewAgent()->mlProxyUrl();
+    d->m_calculator.timeseries = mvContext()->currentTimeseries();
+    d->m_calculator.mlproxy_url = mvContext()->mlProxyUrl();
 
     MVTimeSeriesViewBase::prepareCalculation();
 }
@@ -111,7 +111,7 @@ void MVTimeSeriesView2::runCalculation()
 void MVTimeSeriesView2::onCalculationFinished()
 {
     d->m_msts = d->m_calculator.msts;
-    d->m_render_manager.setChannelColors(viewAgent()->channelColors());
+    d->m_render_manager.setChannelColors(mvContext()->channelColors());
     d->m_render_manager.setMultiScaleTimeSeries(d->m_msts);
     d->m_num_channels = d->m_calculator.num_channels;
 
@@ -168,7 +168,7 @@ void MVTimeSeriesView2::paintContent(QPainter* painter)
     double WW = this->contentGeometry().width();
     double HH = this->contentGeometry().height();
     QImage img;
-    img = d->m_render_manager.getImage(viewAgent()->currentTimeRange().min, viewAgent()->currentTimeRange().max, d->m_amplitude_factor, WW, HH);
+    img = d->m_render_manager.getImage(mvContext()->currentTimeRange().min, mvContext()->currentTimeRange().max, d->m_amplitude_factor, WW, HH);
     painter->drawImage(this->contentGeometry().left(), this->contentGeometry().top(), img);
 
     // Channel labels

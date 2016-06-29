@@ -22,7 +22,7 @@ class SpikeSpyWidget : public QWidget {
     Q_OBJECT
 public:
     friend class SpikeSpyWidgetPrivate;
-    SpikeSpyWidget(MVContext* view_agent);
+    SpikeSpyWidget(MVContext* context);
     virtual ~SpikeSpyWidget();
     void addView(const SpikeSpyViewData& data);
 

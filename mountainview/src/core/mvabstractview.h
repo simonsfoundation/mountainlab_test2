@@ -26,7 +26,7 @@ public:
 
     friend class MVAbstractViewPrivate;
     friend class CalculationThread;
-    MVAbstractView(MVContext* view_agent);
+    MVAbstractView(MVContext* context);
     virtual ~MVAbstractView();
 
     bool isCalculating() const;
@@ -38,7 +38,7 @@ public slots:
     void neverSuggestRecalculate();
 
     virtual MVAbstractViewFactory* viewFactory() const;
-    MVContext* viewAgent();
+    MVContext* mvContext();
 
     virtual ViewFeatures viewFeatures() const;
     virtual void renderView(QPainter* painter); // add render opts
@@ -73,7 +73,7 @@ protected:
 private slots:
     void slot_do_calculation();
     void slot_calculation_finished();
-    void slot_view_agent_option_changed(QString name);
+    void slot_context_option_changed(QString name);
     void slot_suggest_recalculate();
 
 private:

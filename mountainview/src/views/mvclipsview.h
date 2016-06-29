@@ -20,7 +20,7 @@ class MVClipsView : public QWidget {
     Q_OBJECT
 public:
     friend class MVClipsViewPrivate;
-    MVClipsView(MVContext* view_agent);
+    MVClipsView(MVContext* context);
     virtual ~MVClipsView();
 
     void setClips(const DiskReadMda& clips);

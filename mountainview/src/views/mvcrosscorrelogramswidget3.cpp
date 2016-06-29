@@ -54,15 +54,15 @@ public:
     CrossCorrelogramOptions3 m_options;
 };
 
-MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* view_agent)
-    : MVHistogramGrid(view_agent)
+MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* context)
+    : MVHistogramGrid(context)
 {
     d = new MVCrossCorrelogramsWidget3Private;
     d->q = this;
 
-    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
-    this->recalculateOn(view_agent, SIGNAL(clusterMergeChanged()), false);
-    this->recalculateOn(view_agent, SIGNAL(clusterVisibilityChanged()), false);
+    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
+    this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOnOptionChanged("cc_max_dt_msec");
 
     this->recalculate();
@@ -75,12 +75,12 @@ MVCrossCorrelogramsWidget3::~MVCrossCorrelogramsWidget3()
 
 void MVCrossCorrelogramsWidget3::prepareCalculation()
 {
-    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
-    d->m_computer.firings = viewAgent()->firings();
-    d->m_computer.event_filter = viewAgent()->eventFilter();
+    d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
+    d->m_computer.firings = mvContext()->firings();
+    d->m_computer.event_filter = mvContext()->eventFilter();
     d->m_computer.options = d->m_options;
-    d->m_computer.max_dt = viewAgent()->option("cc_max_dt_msec", 100).toDouble() / 1000 * viewAgent()->sampleRate();
-    d->m_computer.cluster_merge = viewAgent()->clusterMerge();
+    d->m_computer.max_dt = mvContext()->option("cc_max_dt_msec", 100).toDouble() / 1000 * mvContext()->sampleRate();
+    d->m_computer.cluster_merge = mvContext()->clusterMerge();
 }
 
 void MVCrossCorrelogramsWidget3::runCalculation()
@@ -114,7 +114,7 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
         num_bins = 100;
     if (num_bins > 2000)
         num_bins = 2000;
-    double sample_freq = viewAgent()->sampleRate();
+    double sample_freq = mvContext()->sampleRate();
     double time_width = (bin_max - bin_min) / sample_freq * 1000;
     HorizontalScaleAxisData X;
     X.use_it = true;
@@ -125,10 +125,10 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
     for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
         int k1 = d->m_correlograms[ii].k1;
         int k2 = d->m_correlograms[ii].k2;
-        if ((viewAgent()->clusterIsVisible(k1)) && (viewAgent()->clusterIsVisible(k2))) {
+        if ((mvContext()->clusterIsVisible(k1)) && (mvContext()->clusterIsVisible(k2))) {
             HistogramView* HV = new HistogramView;
             HV->setData(d->m_correlograms[ii].data);
-            HV->setColors(viewAgent()->colors());
+            HV->setColors(mvContext()->colors());
             HV->setBins(bin_min, bin_max, num_bins);
             QString title0 = QString("%1/%2").arg(d->m_correlograms[ii].k1).arg(d->m_correlograms[ii].k2);
             HV->setTitle(title0);
@@ -296,7 +296,7 @@ void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
     if (!view)
         return;
     MVMainWindow* mw = MVMainWindow::instance();
-    int k = mw->viewAgent()->currentCluster();
+    int k = mw->mvContext()->currentCluster();
     TabberTabWidget* TW = mw->tabWidget(view);
     mw->tabber()->setCurrentContainer(TW);
     mw->tabber()->switchCurrentContainer();

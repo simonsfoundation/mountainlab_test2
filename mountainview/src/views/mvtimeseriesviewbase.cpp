@@ -86,8 +86,8 @@ public:
     void update_cursor();
 };
 
-MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* view_agent)
-    : MVAbstractView(view_agent)
+MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* context)
+    : MVAbstractView(context)
 {
     d = new MVTimeSeriesViewBasePrivate;
     d->q = this;
@@ -113,11 +113,11 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* view_agent)
         connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_zoom_out()));
     }
 
-    QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
-    QObject::connect(view_agent, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
-    QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
+    QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
+    QObject::connect(context, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
+    QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
 
-    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
 
     this->setFocusPolicy(Qt::StrongFocus);
 }
@@ -129,8 +129,8 @@ MVTimeSeriesViewBase::~MVTimeSeriesViewBase()
 
 void MVTimeSeriesViewBase::prepareCalculation()
 {
-    d->m_calculator.firings = viewAgent()->firings();
-    d->m_calculator.filter = viewAgent()->eventFilter();
+    d->m_calculator.firings = mvContext()->firings();
+    d->m_calculator.filter = mvContext()->eventFilter();
     d->m_calculator.labels_to_use = d->m_labels_to_view;
 }
 
@@ -197,12 +197,12 @@ void MVTimeSeriesViewBase::resizeEvent(QResizeEvent* evt)
 
 void MVTimeSeriesViewBase::setTimeRange(MVRange range)
 {
-    viewAgent()->setCurrentTimeRange(range);
+    mvContext()->setCurrentTimeRange(range);
 }
 
 MVRange MVTimeSeriesViewBase::timeRange()
 {
-    return viewAgent()->currentTimeRange();
+    return mvContext()->currentTimeRange();
 }
 
 void MVTimeSeriesViewBase::setSelectedTimeRange(MVRange range)
@@ -253,8 +253,8 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
     double W0 = this->width();
     double H0 = this->height();
 
-    double view_t1 = viewAgent()->currentTimeRange().min;
-    double view_t2 = viewAgent()->currentTimeRange().max;
+    double view_t1 = mvContext()->currentTimeRange().min;
+    double view_t2 = mvContext()->currentTimeRange().max;
 
     // Event markers
     if (d->m_prefs.markers_visible) {
@@ -292,12 +292,12 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
     {
         QString str;
         if (d->m_prefs.show_current_timepoint) {
-            double samplerate = viewAgent()->sampleRate();
+            double samplerate = mvContext()->sampleRate();
             if (samplerate) {
-                str = QString("%1 (tp: %2)").arg(d->format_time(viewAgent()->currentTimepoint())).arg((long)viewAgent()->currentTimepoint());
+                str = QString("%1 (tp: %2)").arg(d->format_time(mvContext()->currentTimepoint())).arg((long)mvContext()->currentTimepoint());
             }
             else {
-                str = QString("Sample rate is null (tp: %2)").arg((long)viewAgent()->currentTimepoint());
+                str = QString("Sample rate is null (tp: %2)").arg((long)mvContext()->currentTimepoint());
             }
         }
         d->paint_status_string(&painter, W0, H0, str);
@@ -324,7 +324,7 @@ void MVTimeSeriesViewBase::mouseReleaseEvent(QMouseEvent* evt)
     if (evt->button() == Qt::LeftButton) {
         if (!d->m_left_click_dragging) {
             double t0 = d->xpix2time(evt->pos().x());
-            viewAgent()->setCurrentTimepoint(t0);
+            mvContext()->setCurrentTimepoint(t0);
         }
         d->m_left_click_dragging = false;
     }
@@ -357,10 +357,10 @@ void MVTimeSeriesViewBase::wheelEvent(QWheelEvent* evt)
     int delta = evt->delta();
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
-            d->zoom_out(viewAgent()->currentTimepoint());
+            d->zoom_out(mvContext()->currentTimepoint());
         }
         else if (delta > 0) {
-            d->zoom_in(viewAgent()->currentTimepoint());
+            d->zoom_in(mvContext()->currentTimepoint());
         }
     }
     else {
@@ -382,28 +382,28 @@ void MVTimeSeriesViewBase::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Left) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
-        viewAgent()->setCurrentTimepoint(viewAgent()->currentTimepoint() - range / 10);
+        mvContext()->setCurrentTimepoint(mvContext()->currentTimepoint() - range / 10);
         d->scroll_to_current_timepoint();
     }
     else if (evt->key() == Qt::Key_Right) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
-        viewAgent()->setCurrentTimepoint(viewAgent()->currentTimepoint() + range / 10);
+        mvContext()->setCurrentTimepoint(mvContext()->currentTimepoint() + range / 10);
         d->scroll_to_current_timepoint();
     }
     else if (evt->key() == Qt::Key_Home) {
-        viewAgent()->setCurrentTimepoint(0);
+        mvContext()->setCurrentTimepoint(0);
         d->scroll_to_current_timepoint();
     }
     else if (evt->key() == Qt::Key_End) {
-        viewAgent()->setCurrentTimepoint(d->m_num_timepoints - 1);
+        mvContext()->setCurrentTimepoint(d->m_num_timepoints - 1);
         d->scroll_to_current_timepoint();
     }
     else if (evt->key() == Qt::Key_Equal) {
-        d->zoom_in(viewAgent()->currentTimepoint());
+        d->zoom_in(mvContext()->currentTimepoint());
     }
     else if (evt->key() == Qt::Key_Minus) {
-        d->zoom_out(viewAgent()->currentTimepoint());
+        d->zoom_out(mvContext()->currentTimepoint());
     }
     else {
         QWidget::keyPressEvent(evt);
@@ -417,12 +417,12 @@ void MVTimeSeriesViewBase::slot_scroll_to_current_timepoint()
 
 void MVTimeSeriesViewBase::slot_zoom_in()
 {
-    d->zoom_in(viewAgent()->currentTimepoint());
+    d->zoom_in(mvContext()->currentTimepoint());
 }
 
 void MVTimeSeriesViewBase::slot_zoom_out()
 {
-    d->zoom_out(viewAgent()->currentTimepoint());
+    d->zoom_out(mvContext()->currentTimepoint());
 }
 
 void MVTimeSeriesViewBasePrivate::paint_cursor(QPainter* painter, double W, double H)
@@ -434,7 +434,7 @@ void MVTimeSeriesViewBasePrivate::paint_cursor(QPainter* painter, double W, doub
     double mbottom = m_prefs.mbottom;
 
     if (m_selected_t_range.min < 0) {
-        double x0 = time2xpix(q->viewAgent()->currentTimepoint());
+        double x0 = time2xpix(q->mvContext()->currentTimepoint());
         QPointF p0(x0, mtop);
         QPointF p1(x0, H - mbottom);
 
@@ -566,11 +566,11 @@ void MVTimeSeriesViewBasePrivate::paint_message_at_top(QPainter* painter, QStrin
 
 void MVTimeSeriesViewBasePrivate::paint_time_axis(QPainter* painter, double W, double H)
 {
-    double samplerate = q->viewAgent()->sampleRate();
+    double samplerate = q->mvContext()->sampleRate();
     long min_pixel_spacing_between_ticks = 30;
 
-    double view_t1 = q->viewAgent()->currentTimeRange().min;
-    double view_t2 = q->viewAgent()->currentTimeRange().max;
+    double view_t1 = q->mvContext()->currentTimeRange().min;
+    double view_t2 = q->mvContext()->currentTimeRange().max;
 
     QColor axis_color = m_prefs.colors.axis_color;
 
@@ -612,8 +612,8 @@ void MVTimeSeriesViewBasePrivate::paint_time_axis_unit(QPainter* painter, double
 {
     Q_UNUSED(W)
 
-    double view_t1 = q->viewAgent()->currentTimeRange().min;
-    double view_t2 = q->viewAgent()->currentTimeRange().max;
+    double view_t1 = q->mvContext()->currentTimeRange().min;
+    double view_t2 = q->mvContext()->currentTimeRange().max;
 
     double pixel_interval = W / (view_t2 - view_t1) * TS.timepoint_interval;
 
@@ -668,8 +668,8 @@ void MVTimeSeriesViewBasePrivate::paint_status_string(QPainter* painter, double 
 double MVTimeSeriesViewBasePrivate::time2xpix(double t)
 {
 
-    double view_t1 = q->viewAgent()->currentTimeRange().min;
-    double view_t2 = q->viewAgent()->currentTimeRange().max;
+    double view_t1 = q->mvContext()->currentTimeRange().min;
+    double view_t2 = q->mvContext()->currentTimeRange().max;
 
     if (view_t2 <= view_t1)
         return 0;
@@ -681,8 +681,8 @@ double MVTimeSeriesViewBasePrivate::time2xpix(double t)
 
 double MVTimeSeriesViewBasePrivate::xpix2time(double xpix)
 {
-    double view_t1 = q->viewAgent()->currentTimeRange().min;
-    double view_t2 = q->viewAgent()->currentTimeRange().max;
+    double view_t1 = q->mvContext()->currentTimeRange().min;
+    double view_t2 = q->mvContext()->currentTimeRange().max;
 
     double xpct = 0;
     if (content_geometry().width()) {
@@ -717,7 +717,7 @@ void MVTimeSeriesViewBasePrivate::zoom_in(double about_time, double frac)
 
 void MVTimeSeriesViewBasePrivate::scroll_to_current_timepoint()
 {
-    double t = q->viewAgent()->currentTimepoint();
+    double t = q->mvContext()->currentTimepoint();
     MVRange trange = q->timeRange();
     if ((trange.min < t) && (t < trange.max))
         return;
@@ -732,7 +732,7 @@ void MVTimeSeriesViewBasePrivate::scroll_to_current_timepoint()
 
 QString MVTimeSeriesViewBasePrivate::format_time(double tp)
 {
-    double samplerate = q->viewAgent()->sampleRate();
+    double samplerate = q->mvContext()->sampleRate();
     double sec = tp / samplerate;
     long day = (long)floor(sec / (24 * 60 * 60));
     sec -= day * 24 * 60 * 60;

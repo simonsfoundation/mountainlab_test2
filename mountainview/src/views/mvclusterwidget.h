@@ -24,7 +24,7 @@ class MVClusterWidget : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVClusterWidgetPrivate;
-    MVClusterWidget(MVContext* view_agent);
+    MVClusterWidget(MVContext* context);
     virtual ~MVClusterWidget();
 
     void prepareCalculation() Q_DECL_OVERRIDE;

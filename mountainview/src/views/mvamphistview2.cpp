@@ -37,15 +37,15 @@ public:
     void set_views();
 };
 
-MVAmpHistView2::MVAmpHistView2(MVContext* view_agent)
-    : MVHistogramGrid(view_agent)
+MVAmpHistView2::MVAmpHistView2(MVContext* context)
+    : MVHistogramGrid(context)
 {
     d = new MVAmpHistView2Private;
     d->q = this;
 
-    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
-    this->recalculateOn(view_agent, SIGNAL(clusterMergeChanged()), false);
-    this->recalculateOn(view_agent, SIGNAL(clusterVisibilityChanged()), false);
+    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
+    this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
 
     this->recalculate();
 }
@@ -57,9 +57,9 @@ MVAmpHistView2::~MVAmpHistView2()
 
 void MVAmpHistView2::prepareCalculation()
 {
-    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
-    d->m_computer.firings = viewAgent()->firings();
-    d->m_computer.event_filter = viewAgent()->eventFilter();
+    d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
+    d->m_computer.firings = mvContext()->firings();
+    d->m_computer.event_filter = mvContext()->eventFilter();
 }
 
 void MVAmpHistView2::runCalculation()
@@ -161,10 +161,10 @@ void MVAmpHistView2Private::set_views()
     QList<HistogramView*> views;
     for (int ii = 0; ii < m_histograms.count(); ii++) {
         int k0 = m_histograms[ii].k;
-        if (q->viewAgent()->clusterIsVisible(k0)) {
+        if (q->mvContext()->clusterIsVisible(k0)) {
             HistogramView* HV = new HistogramView;
             HV->setData(m_histograms[ii].data);
-            HV->setColors(q->viewAgent()->colors());
+            HV->setColors(q->mvContext()->colors());
             //HV->autoSetBins(50);
             HV->setBins(bin_min, bin_max, num_bins);
             QString title0 = QString("%1").arg(m_histograms[ii].k);

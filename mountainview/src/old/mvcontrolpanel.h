@@ -27,7 +27,7 @@ class MVControlPanel : public QWidget {
     Q_OBJECT
 public:
     friend class MVControlPanelPrivate;
-    MVControlPanel(MVContext* view_agent, MVMainWindow* main_window);
+    MVControlPanel(MVContext* context, MVMainWindow* main_window);
     virtual ~MVControlPanel();
 
     void setTimeseriesChoices(const QStringList& names);
@@ -45,11 +45,11 @@ signals:
 private slots:
     void slot_update_enabled_controls();
     void slot_button_clicked();
-    void slot_view_agent_option_changed(QString name);
-    void slot_view_agent_event_filter_changed();
+    void slot_context_option_changed(QString name);
+    void slot_context_event_filter_changed();
     void slot_update_timeseries_box();
     void slot_control_changed();
-    void slot_update_view_agent();
+    void slot_update_context();
     void slot_recalculate_suggested_visible();
     void slot_recalculate_suggested();
 

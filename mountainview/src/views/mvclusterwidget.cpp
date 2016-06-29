@@ -72,32 +72,32 @@ public:
     void set_data_on_visible_views();
 };
 
-MVClusterWidget::MVClusterWidget(MVContext* view_agent)
-    : MVAbstractView(view_agent)
+MVClusterWidget::MVClusterWidget(MVContext* context)
+    : MVAbstractView(context)
 {
     d = new MVClusterWidgetPrivate;
     d->q = this;
 
-    d->m_clips_view = new MVClipsView(view_agent);
+    d->m_clips_view = new MVClipsView(context);
 
     {
-        MVClusterView* X = new MVClusterView(view_agent);
+        MVClusterView* X = new MVClusterView(context);
         X->setMode(MVCV_MODE_HEAT_DENSITY);
         d->m_views << X;
     }
     {
-        MVClusterView* X = new MVClusterView(view_agent);
+        MVClusterView* X = new MVClusterView(context);
         X->setMode(MVCV_MODE_LABEL_COLORS);
         d->m_views << X;
     }
     {
-        MVClusterView* X = new MVClusterView(view_agent);
+        MVClusterView* X = new MVClusterView(context);
         X->setMode(MVCV_MODE_TIME_COLORS);
         X->setVisible(false);
         d->m_views << X;
     }
     {
-        MVClusterView* X = new MVClusterView(view_agent);
+        MVClusterView* X = new MVClusterView(context);
         X->setMode(MVCV_MODE_AMPLITUDE_COLORS);
         X->setVisible(false);
         d->m_views << X;
@@ -178,11 +178,11 @@ MVClusterWidget::MVClusterWidget(MVContext* view_agent)
         d->connect_view(V);
     }
 
-    this->recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
-    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
+    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOnOptionChanged("clip_size");
 
-    connect(view_agent, SIGNAL(currentEventChanged()), this, SLOT(slot_current_event_changed()));
+    connect(context, SIGNAL(currentEventChanged()), this, SLOT(slot_current_event_changed()));
 
     connect(&d->m_clips_view_thread, SIGNAL(finished()), this, SLOT(slot_clips_view_thread_finished()));
 }
@@ -194,11 +194,11 @@ MVClusterWidget::~MVClusterWidget()
 
 void MVClusterWidget::prepareCalculation()
 {
-    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
-    d->m_computer.filter = viewAgent()->eventFilter();
-    d->m_computer.timeseries = viewAgent()->currentTimeseries();
-    d->m_computer.firings = viewAgent()->firings();
-    d->m_computer.clip_size = viewAgent()->option("clip_size").toInt();
+    d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
+    d->m_computer.filter = mvContext()->eventFilter();
+    d->m_computer.timeseries = mvContext()->currentTimeseries();
+    d->m_computer.firings = mvContext()->firings();
+    d->m_computer.clip_size = mvContext()->option("clip_size").toInt();
     d->m_computer.labels_to_use = d->m_labels_to_use;
     d->m_computer.features_mode = d->m_feature_mode;
     d->m_computer.channels = d->m_channels;
@@ -271,7 +271,7 @@ void MVClusterWidget::setScores(const QList<double>& detectability_scores, const
 void MVClusterWidget::slot_current_event_changed()
 {
     foreach (MVClusterView* V, d->m_views) {
-        V->setCurrentEvent(viewAgent()->currentEvent());
+        V->setCurrentEvent(mvContext()->currentEvent());
     }
     d->update_clips_view();
 }
@@ -304,7 +304,7 @@ void MVClusterWidget::setTransformation(const AffineTransformation& T)
 void MVClusterWidget::slot_view_current_event_changed()
 {
     MVClusterView* V0 = (MVClusterView*)sender();
-    viewAgent()->setCurrentEvent(V0->currentEvent());
+    mvContext()->setCurrentEvent(V0->currentEvent());
 }
 
 void MVClusterWidget::slot_view_transformation_changed()
@@ -362,7 +362,7 @@ void MVClusterWidgetPrivate::update_clips_view()
     /// TODO: (HIGH) -- restore functionality in MVClusterWidget, click on current point
     //QMessageBox::information(q, "Feature disabled", "This feature has been temporarily disabled. Normally you would see the current clip on the left.");
 
-    MVEvent evt = q->viewAgent()->currentEvent();
+    MVEvent evt = q->mvContext()->currentEvent();
     QString info_txt;
     if (evt.time >= 0) {
         QList<double> times;
@@ -374,8 +374,8 @@ void MVClusterWidgetPrivate::update_clips_view()
             m_clips_view_thread.wait();
         }
 
-        m_clips_view_thread.timeseries = q->viewAgent()->currentTimeseries();
-        m_clips_view_thread.clip_size = q->viewAgent()->option("clip_size").toInt();
+        m_clips_view_thread.timeseries = q->mvContext()->currentTimeseries();
+        m_clips_view_thread.clip_size = q->mvContext()->option("clip_size").toInt();
         m_clips_view_thread.times = times;
 
         m_clips_view_thread.start();

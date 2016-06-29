@@ -16,7 +16,7 @@ class MVTimeSeriesView : public QWidget {
     Q_OBJECT
 public:
     friend class MVTimeSeriesViewPrivate;
-    MVTimeSeriesView(MVContext* view_agent);
+    MVTimeSeriesView(MVContext* context);
     virtual ~MVTimeSeriesView();
 
     void setSampleRate(double samplerate);

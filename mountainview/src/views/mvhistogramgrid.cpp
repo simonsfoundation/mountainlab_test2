@@ -43,16 +43,16 @@ protected:
     void paintEvent(QPaintEvent* evt);
 };
 
-MVHistogramGrid::MVHistogramGrid(MVContext* view_agent)
-    : MVAbstractView(view_agent)
+MVHistogramGrid::MVHistogramGrid(MVContext* context)
+    : MVAbstractView(context)
 {
     d = new MVHistogramGridPrivate;
     d->q = this;
     d->m_num_columns = -1;
 
-    QObject::connect(view_agent, SIGNAL(clusterAttributesChanged(int)), this, SLOT(slot_cluster_attributes_changed(int)));
-    QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting()));
-    QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
+    QObject::connect(context, SIGNAL(clusterAttributesChanged(int)), this, SLOT(slot_cluster_attributes_changed(int)));
+    QObject::connect(context, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting()));
+    QObject::connect(context, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
 
     QGridLayout* GL = new QGridLayout;
     GL->setHorizontalSpacing(12);
@@ -121,7 +121,7 @@ void MVHistogramGrid::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     if (isCalculating()) {
         //show that something is computing
-        painter.fillRect(QRectF(0, 0, width(), height()), viewAgent()->color("calculation-in-progress"));
+        painter.fillRect(QRectF(0, 0, width(), height()), mvContext()->color("calculation-in-progress"));
     }
 }
 
@@ -132,7 +132,7 @@ void MVHistogramGrid::keyPressEvent(QKeyEvent* evt)
         for (int i = 0; i < d->m_histogram_views.count(); i++) {
             ks << d->m_histogram_views[i]->property("k").toInt();
         }
-        viewAgent()->setSelectedClusters(ks);
+        mvContext()->setSelectedClusters(ks);
     }
     else {
         QWidget::keyPressEvent(evt);
@@ -197,14 +197,14 @@ void MVHistogramGrid::slot_histogram_view_clicked(Qt::KeyboardModifiers modifier
     int k = sender()->property("k").toInt();
 
     if (modifiers & Qt::ControlModifier) {
-        viewAgent()->clickCluster(k, Qt::ControlModifier);
+        mvContext()->clickCluster(k, Qt::ControlModifier);
     }
     else if (modifiers & Qt::ShiftModifier) {
-        int k0 = viewAgent()->currentCluster();
+        int k0 = mvContext()->currentCluster();
         d->shift_select_clusters_between(k0, k);
     }
     else {
-        viewAgent()->clickCluster(k, Qt::NoModifier);
+        mvContext()->clickCluster(k, Qt::NoModifier);
     }
 }
 
@@ -237,7 +237,7 @@ void MVHistogramGrid::slot_context_menu()
     {
         QByteArray ba;
         QDataStream ds(&ba, QIODevice::WriteOnly);
-        ds << viewAgent()->selectedClusters();
+        ds << mvContext()->selectedClusters();
         md.setData("application/x-mv-cluster", ba); // selected cluster data
     }
     {
@@ -251,11 +251,11 @@ void MVHistogramGrid::slot_context_menu()
 
 void MVHistogramGridPrivate::do_highlighting()
 {
-    QList<int> selected_clusters = q->viewAgent()->selectedClusters();
+    QList<int> selected_clusters = q->mvContext()->selectedClusters();
     for (int i = 0; i < m_histogram_views.count(); i++) {
         HistogramView* HV = m_histogram_views[i];
         int k = HV->property("k").toInt();
-        if (k == q->viewAgent()->currentCluster()) {
+        if (k == q->mvContext()->currentCluster()) {
             HV->setCurrent(true);
         }
         else {
@@ -272,7 +272,7 @@ void MVHistogramGridPrivate::do_highlighting()
 
 void MVHistogramGridPrivate::shift_select_clusters_between(int kA, int kB)
 {
-    QSet<int> selected_clusters = q->viewAgent()->selectedClusters().toSet();
+    QSet<int> selected_clusters = q->mvContext()->selectedClusters().toSet();
     int ind1 = find_view_index_for_k(kA);
     int ind2 = find_view_index_for_k(kB);
     if ((ind1 >= 0) && (ind2 >= 0)) {
@@ -286,7 +286,7 @@ void MVHistogramGridPrivate::shift_select_clusters_between(int kA, int kB)
     else if (ind2 >= 0) {
         selected_clusters.insert(m_histogram_views[ind2]->property("k2").toInt());
     }
-    q->viewAgent()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
+    q->mvContext()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
 }
 
 int MVHistogramGridPrivate::find_view_index_for_k(int k)

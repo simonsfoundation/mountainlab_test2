@@ -21,7 +21,7 @@ public:
 class MVAbstractViewPrivate {
 public:
     MVAbstractView* q;
-    MVContext* m_view_agent;
+    MVContext* m_context;
     QSet<QString> m_recalculate_on_option_names;
     QSet<QString> m_suggest_recalculate_on_option_names;
     bool m_calculation_scheduled;
@@ -35,20 +35,20 @@ public:
     void set_recalculate_suggested(bool val);
 };
 
-MVAbstractView::MVAbstractView(MVContext* view_agent)
+MVAbstractView::MVAbstractView(MVContext* context)
 {
     d = new MVAbstractViewPrivate;
     d->q = this;
     d->m_calculation_thread.q = this;
     d->m_recalculate_suggested = false;
 
-    d->m_view_agent = view_agent;
+    d->m_context = context;
     d->m_calculation_scheduled = false;
 
     // Very important to make this a queued connection because the subclass destructor
     // is called before MVAbstractView constructor, and therefore the calculation thread does not get stopped before the subclass gets destructed
     QObject::connect(&d->m_calculation_thread, SIGNAL(finished()), this, SLOT(slot_calculation_finished()), Qt::QueuedConnection);
-    QObject::connect(view_agent, SIGNAL(optionChanged(QString)), this, SLOT(slot_view_agent_option_changed(QString)));
+    QObject::connect(context, SIGNAL(optionChanged(QString)), this, SLOT(slot_context_option_changed(QString)));
 
     {
         QAction* a = new QAction(QIcon(":/image/gear.png"), "Force recalculate", this);
@@ -83,9 +83,9 @@ MVAbstractViewFactory* MVAbstractView::viewFactory() const
     return 0;
 }
 
-MVContext* MVAbstractView::viewAgent()
+MVContext* MVAbstractView::mvContext()
 {
-    return d->m_view_agent;
+    return d->m_context;
 }
 
 MVAbstractView::ViewFeatures MVAbstractView::viewFeatures() const
@@ -153,7 +153,7 @@ void MVAbstractView::slot_calculation_finished()
     d->set_recalculate_suggested(false);
 }
 
-void MVAbstractView::slot_view_agent_option_changed(QString name)
+void MVAbstractView::slot_context_option_changed(QString name)
 {
     if (d->m_recalculate_on_option_names.contains(name)) {
         recalculate();

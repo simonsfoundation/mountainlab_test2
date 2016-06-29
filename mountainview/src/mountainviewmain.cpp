@@ -191,43 +191,43 @@ int main(int argc, char* argv[])
         }
         */
 
-        MVContext* view_agent = new MVContext; //note that the view agent does not get deleted. :(
-        view_agent->setChannelColors(channel_colors);
-        view_agent->setClusterColors(label_colors);
-        MVMainWindow* W = new MVMainWindow(view_agent);
+        MVContext* context = new MVContext; //note that the view agent does not get deleted. :(
+        context->setChannelColors(channel_colors);
+        context->setClusterColors(label_colors);
+        MVMainWindow* W = new MVMainWindow(context);
 
         if (!mv_fname.isEmpty()) {
             QString json = read_text_file(mv_fname);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
-            view_agent->setFromMVFileObject(obj);
+            context->setFromMVFileObject(obj);
         }
 
         if (CLP.named_parameters.contains("samplerate")) {
-            view_agent->setSampleRate(CLP.named_parameters.value("samplerate", 0).toDouble());
+            context->setSampleRate(CLP.named_parameters.value("samplerate", 0).toDouble());
         }
         if (CLP.named_parameters.contains("firings")) {
             QString firings_path = CLP.named_parameters["firings"].toString();
-            view_agent->setFirings(DiskReadMda(firings_path));
+            context->setFirings(DiskReadMda(firings_path));
             W->setWindowTitle(firings_path);
         }
         if (CLP.named_parameters.contains("raw")) {
             QString raw_path = CLP.named_parameters["raw"].toString();
-            view_agent->addTimeseries("Raw Data", DiskReadMda(raw_path));
-            view_agent->setCurrentTimeseriesName("Raw Data");
+            context->addTimeseries("Raw Data", DiskReadMda(raw_path));
+            context->setCurrentTimeseriesName("Raw Data");
         }
         if (CLP.named_parameters.contains("filt")) {
             QString filt_path = CLP.named_parameters["filt"].toString();
-            view_agent->addTimeseries("Filtered Data", DiskReadMda(filt_path));
-            view_agent->setCurrentTimeseriesName("Filtered Data");
+            context->addTimeseries("Filtered Data", DiskReadMda(filt_path));
+            context->setCurrentTimeseriesName("Filtered Data");
         }
         if (CLP.named_parameters.contains("pre")) {
             QString pre_path = CLP.named_parameters["pre"].toString();
-            view_agent->addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
-            view_agent->setCurrentTimeseriesName("Preprocessed Data");
+            context->addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
+            context->setCurrentTimeseriesName("Preprocessed Data");
         }
         if (CLP.named_parameters.contains("mlproxy_url")) {
             QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
-            view_agent->setMLProxyUrl(mlproxy_url);
+            context->setMLProxyUrl(mlproxy_url);
         }
         if (CLP.named_parameters.contains("window_title")) {
             QString window_title = CLP.named_parameters["window_title"].toString();
@@ -248,11 +248,11 @@ int main(int argc, char* argv[])
         //W->setMVFile(mv_file);
         W->setDefaultInitialization();
 
-        W->addControl(new MVOpenViewsControl(view_agent, W), true);
-        W->addControl(new MVGeneralControl(view_agent, W), false);
-        W->addControl(new MVEventFilterControl(view_agent, W), false);
-        W->addControl(new MVClusterVisibilityControl(view_agent, W), false);
-        W->addControl(new MVExportControl(view_agent, W), false);
+        W->addControl(new MVOpenViewsControl(context, W), true);
+        W->addControl(new MVGeneralControl(context, W), false);
+        W->addControl(new MVEventFilterControl(context, W), false);
+        W->addControl(new MVClusterVisibilityControl(context, W), false);
+        W->addControl(new MVExportControl(context, W), false);
 
         return a.exec();
     }
@@ -262,11 +262,11 @@ int main(int argc, char* argv[])
         QStringList firings_paths = CLP.named_parameters["firings"].toString().split(",");
         double samplerate = CLP.named_parameters["samplerate"].toDouble();
 
-        MVContext* view_agent = new MVContext(); //note that the view agent will not get deleted. :(
-        view_agent->setChannelColors(channel_colors);
-        view_agent->setClusterColors(label_colors);
-        view_agent->setSampleRate(samplerate);
-        SpikeSpyWidget* W = new SpikeSpyWidget(view_agent);
+        MVContext* context = new MVContext(); //note that the view agent will not get deleted. :(
+        context->setChannelColors(channel_colors);
+        context->setClusterColors(label_colors);
+        context->setSampleRate(samplerate);
+        SpikeSpyWidget* W = new SpikeSpyWidget(context);
 
         for (int i = 0; i < timeseries_paths.count(); i++) {
             QString tsp = timeseries_paths.value(i);

@@ -18,7 +18,7 @@ class MVClipsWidget : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVClipsWidgetPrivate;
-    MVClipsWidget(MVContext* view_agent);
+    MVClipsWidget(MVContext* context);
     virtual ~MVClipsWidget();
 
     void prepareCalculation() Q_DECL_OVERRIDE;

@@ -8,7 +8,7 @@ class MVAmpHistView : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVAmpHistViewPrivate;
-    MVAmpHistView(MVContext* view_agent);
+    MVAmpHistView(MVContext* context);
     virtual ~MVAmpHistView();
 
     void prepareCalculation() Q_DECL_OVERRIDE;

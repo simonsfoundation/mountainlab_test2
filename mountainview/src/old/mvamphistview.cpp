@@ -41,18 +41,18 @@ public:
     void do_highlighting();
 };
 
-MVAmpHistView::MVAmpHistView(MVContext* view_agent)
-    : MVAbstractView(view_agent)
+MVAmpHistView::MVAmpHistView(MVContext* context)
+    : MVAbstractView(context)
 {
     d = new MVAmpHistViewPrivate;
     d->q = this;
 
-    QObject::connect(view_agent, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting()));
-    QObject::connect(view_agent, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
+    QObject::connect(context, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting()));
+    QObject::connect(context, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
 
-    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
-    this->recalculateOn(view_agent, SIGNAL(clusterMergeChanged()), false);
-    this->recalculateOn(view_agent, SIGNAL(clusterVisibilityChanged()), false);
+    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
+    this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
 
     QGridLayout* GL = new QGridLayout;
     GL->setHorizontalSpacing(20);
@@ -73,9 +73,9 @@ MVAmpHistView::~MVAmpHistView()
 
 void MVAmpHistView::prepareCalculation()
 {
-    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
-    d->m_computer.firings = viewAgent()->firings();
-    d->m_computer.event_filter = viewAgent()->eventFilter();
+    d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
+    d->m_computer.firings = mvContext()->firings();
+    d->m_computer.event_filter = mvContext()->eventFilter();
 }
 
 void MVAmpHistView::runCalculation()
@@ -129,7 +129,7 @@ void MVAmpHistView::onCalculationFinished()
     QList<int> inds_to_use;
     for (int ii = 0; ii < d->m_histograms.count(); ii++) {
         int k0 = d->m_histograms[ii].k;
-        if (viewAgent()->clusterIsVisible(k0)) {
+        if (mvContext()->clusterIsVisible(k0)) {
             inds_to_use << ii;
         }
     }
@@ -144,7 +144,7 @@ void MVAmpHistView::onCalculationFinished()
         int ii = inds_to_use[jj];
         HistogramView* HV = new HistogramView;
         HV->setData(d->m_histograms[ii].data);
-        HV->setColors(viewAgent()->colors());
+        HV->setColors(mvContext()->colors());
         //HV->autoSetBins(50);
         HV->setBins(bin_min, bin_max, num_bins);
         QString title0 = QString("%1").arg(d->m_histograms[ii].k);
@@ -175,10 +175,10 @@ void MVAmpHistView::slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers)
     int k = d->m_histograms.value(index).k;
 
     if (modifiers & Qt::ControlModifier) {
-        viewAgent()->clickCluster(k, Qt::ControlModifier);
+        mvContext()->clickCluster(k, Qt::ControlModifier);
     }
     else {
-        viewAgent()->clickCluster(k, Qt::NoModifier);
+        mvContext()->clickCluster(k, Qt::NoModifier);
     }
 }
 
@@ -235,11 +235,11 @@ void MVAmpHistViewComputer::compute()
 
 void MVAmpHistViewPrivate::do_highlighting()
 {
-    QList<int> selected_clusters = q->viewAgent()->selectedClusters();
+    QList<int> selected_clusters = q->mvContext()->selectedClusters();
     for (int i = 0; i < m_histogram_views.count(); i++) {
         HistogramView* HV = m_histogram_views[i];
         int index = HV->property("index").toInt();
-        if (m_histograms.value(index).k == q->viewAgent()->currentCluster()) {
+        if (m_histograms.value(index).k == q->mvContext()->currentCluster()) {
             HV->setCurrent(true);
         }
         else {

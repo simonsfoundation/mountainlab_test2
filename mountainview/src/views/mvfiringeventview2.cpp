@@ -47,8 +47,8 @@ public:
     double ypix2val(double ypix);
 };
 
-MVFiringEventView2::MVFiringEventView2(MVContext* view_agent)
-    : MVTimeSeriesViewBase(view_agent)
+MVFiringEventView2::MVFiringEventView2(MVContext* context)
+    : MVTimeSeriesViewBase(context)
 {
     d = new MVFiringEventView2Private;
     d->q = this;
@@ -63,7 +63,7 @@ MVFiringEventView2::MVFiringEventView2(MVContext* view_agent)
     p.colors.background_color = Qt::black;
     this->setPrefs(p);
 
-    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
 
     this->recalculate();
 }
@@ -76,8 +76,8 @@ MVFiringEventView2::~MVFiringEventView2()
 void MVFiringEventView2::prepareCalculation()
 {
     d->m_calculator.labels_to_use = d->m_labels_to_use;
-    d->m_calculator.firings = viewAgent()->firings();
-    d->m_calculator.filter = viewAgent()->eventFilter();
+    d->m_calculator.firings = mvContext()->firings();
+    d->m_calculator.filter = mvContext()->eventFilter();
 }
 
 void MVFiringEventView2::runCalculation()
@@ -121,7 +121,7 @@ void MVFiringEventView2::paintContent(QPainter* painter)
     for (long i = 0; i < d->m_times0.count(); i++) {
         double t0 = d->m_times0.value(i);
         int k0 = d->m_labels0.value(i);
-        QColor col = viewAgent()->clusterColor(k0);
+        QColor col = mvContext()->clusterColor(k0);
         col.setAlpha((int)(alpha_pct * 255));
         QPen pen = painter->pen();
         pen.setColor(col);
@@ -162,7 +162,7 @@ void MVFiringEventView2::paintContent(QPainter* painter)
             QRectF rect(0, y0, width() - margin, text_height);
             QString str = QString("%1").arg(list[i]);
             QPen pen = painter->pen();
-            pen.setColor(viewAgent()->clusterColor(list[i]));
+            pen.setColor(mvContext()->clusterColor(list[i]));
             painter->setPen(pen);
             painter->drawText(rect, Qt::AlignRight, str);
             y0 += text_height + spacing;

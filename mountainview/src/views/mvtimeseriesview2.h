@@ -17,7 +17,7 @@ class MVTimeSeriesView2 : public MVTimeSeriesViewBase {
     Q_OBJECT
 public:
     friend class MVTimeSeriesView2Private;
-    MVTimeSeriesView2(MVContext* view_agent);
+    MVTimeSeriesView2(MVContext* context);
     virtual ~MVTimeSeriesView2();
 
     void prepareCalculation() Q_DECL_OVERRIDE;

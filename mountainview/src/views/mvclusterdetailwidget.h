@@ -25,7 +25,7 @@ class MVClusterDetailWidget : public MVAbstractView {
 public:
     friend class MVClusterDetailWidgetPrivate;
     friend class ClusterView;
-    MVClusterDetailWidget(MVContext* view_agent, MVAbstractViewFactory* factory = 0);
+    MVClusterDetailWidget(MVContext* context, MVAbstractViewFactory* factory = 0);
     virtual ~MVClusterDetailWidget();
 
     MVAbstractViewFactory* viewFactory() const Q_DECL_OVERRIDE;

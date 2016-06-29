@@ -36,7 +36,7 @@ class MVTimeSeriesViewBase : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVTimeSeriesViewBasePrivate;
-    MVTimeSeriesViewBase(MVContext* view_agent);
+    MVTimeSeriesViewBase(MVContext* context);
     virtual ~MVTimeSeriesViewBase();
 
     virtual void prepareCalculation() Q_DECL_OVERRIDE;

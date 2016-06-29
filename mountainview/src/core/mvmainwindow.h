@@ -33,7 +33,7 @@ class MVMainWindow : public QWidget {
     Q_OBJECT
 public:
     friend class MVMainWindowPrivate;
-    MVMainWindow(MVContext* view_agent, QWidget* parent = 0);
+    MVMainWindow(MVContext* context, QWidget* parent = 0);
     virtual ~MVMainWindow();
     void setDefaultInitialization();
 

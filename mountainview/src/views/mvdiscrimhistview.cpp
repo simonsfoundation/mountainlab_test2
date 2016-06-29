@@ -44,16 +44,16 @@ public:
     void set_views();
 };
 
-MVDiscrimHistView::MVDiscrimHistView(MVContext* view_agent)
-    : MVHistogramGrid(view_agent)
+MVDiscrimHistView::MVDiscrimHistView(MVContext* context)
+    : MVHistogramGrid(context)
 {
     d = new MVDiscrimHistViewPrivate;
     d->q = this;
 
-    this->recalculateOn(view_agent, SIGNAL(currentTimeseriesChanged()));
-    this->recalculateOn(view_agent, SIGNAL(filteredFiringsChanged()));
-    this->recalculateOn(view_agent, SIGNAL(clusterMergeChanged()), false);
-    this->recalculateOn(view_agent, SIGNAL(clusterVisibilityChanged()), false);
+    this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
+    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
+    this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
 
     this->recalculate();
 }
@@ -70,10 +70,10 @@ void MVDiscrimHistView::setClusterNumbers(const QList<int>& cluster_numbers)
 
 void MVDiscrimHistView::prepareCalculation()
 {
-    d->m_computer.mlproxy_url = viewAgent()->mlProxyUrl();
-    d->m_computer.timeseries = viewAgent()->currentTimeseries();
-    d->m_computer.firings = viewAgent()->firings();
-    d->m_computer.event_filter = viewAgent()->eventFilter();
+    d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
+    d->m_computer.timeseries = mvContext()->currentTimeseries();
+    d->m_computer.firings = mvContext()->firings();
+    d->m_computer.event_filter = mvContext()->eventFilter();
     d->m_computer.cluster_numbers = d->m_cluster_numbers;
 }
 
@@ -224,14 +224,14 @@ void MVDiscrimHistViewPrivate::set_views()
     for (int ii = 0; ii < m_histograms.count(); ii++) {
         int k1 = m_histograms[ii].k1;
         int k2 = m_histograms[ii].k2;
-        //if (q->viewAgent()->clusterIsVisible(k1)) {
+        //if (q->mvContext()->clusterIsVisible(k1)) {
         {
             HistogramView* HV = new HistogramView;
             QList<double> tmp = m_histograms[ii].data1;
             tmp.append(m_histograms[ii].data2);
             HV->setData(tmp);
             HV->setSecondData(m_histograms[ii].data2);
-            HV->setColors(q->viewAgent()->colors());
+            HV->setColors(q->mvContext()->colors());
             //HV->autoSetBins(50);
             HV->setBins(bin_min, bin_max, num_bins);
             QString title0 = QString("%1/%2").arg(k1).arg(k2);

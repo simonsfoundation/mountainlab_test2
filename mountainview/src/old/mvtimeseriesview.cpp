@@ -88,7 +88,7 @@ public:
     QList<mvtsv_channel> m_channels;
     MVRange m_selected_t_range;
     bool m_activated;
-    MVContext* m_view_agent;
+    MVContext* m_context;
 
     bool m_layout_needed;
 
@@ -119,7 +119,7 @@ public:
     void update_cursor();
 };
 
-MVTimeSeriesView::MVTimeSeriesView(MVContext* view_agent)
+MVTimeSeriesView::MVTimeSeriesView(MVContext* context)
 {
     d = new MVTimeSeriesViewPrivate;
     d->q = this;
@@ -133,10 +133,10 @@ MVTimeSeriesView::MVTimeSeriesView(MVContext* view_agent)
     d->m_render_manager.setMultiScaleTimeSeries(d->m_msts);
     d->m_samplerate = 0;
 
-    d->m_view_agent = view_agent;
-    QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
-    QObject::connect(view_agent, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
-    QObject::connect(view_agent, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
+    d->m_context = context;
+    QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
+    QObject::connect(context, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
+    QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
 
     this->setFocusPolicy(Qt::StrongFocus);
 
@@ -179,7 +179,7 @@ void MVTimeSeriesView::setTimesLabels(const QVector<double>& times, const QVecto
 
 MVRange MVTimeSeriesView::timeRange() const
 {
-    return d->m_view_agent->currentTimeRange();
+    return d->m_context->currentTimeRange();
 }
 
 double MVTimeSeriesView::amplitudeFactor() const
@@ -209,12 +209,12 @@ void MVTimeSeriesView::setTimeRange(MVRange range)
     if ((range.min < 0) || (range.max >= d->m_timeseries.N2())) {
         range = MVRange(0, d->m_timeseries.N2() - 1);
     }
-    d->m_view_agent->setCurrentTimeRange(range);
+    d->m_context->setCurrentTimeRange(range);
 }
 
 void MVTimeSeriesView::setCurrentTimepoint(double t)
 {
-    d->m_view_agent->setCurrentTimepoint(t);
+    d->m_context->setCurrentTimepoint(t);
     update();
 }
 
@@ -288,7 +288,7 @@ void MVTimeSeriesView::setActivated(bool val)
 
 double MVTimeSeriesView::currentTimepoint() const
 {
-    return d->m_view_agent->currentTimepoint();
+    return d->m_context->currentTimepoint();
 }
 
 void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
@@ -326,8 +326,8 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
         }
     }
 
-    double view_t1 = d->m_view_agent->currentTimeRange().min;
-    double view_t2 = d->m_view_agent->currentTimeRange().max;
+    double view_t1 = d->m_context->currentTimeRange().min;
+    double view_t2 = d->m_context->currentTimeRange().max;
 
     // Event markers
     QVector<double> times0;
@@ -356,7 +356,7 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
 
     double WW = W0 - mleft - mright;
     double HH = H0 - mtop - mbottom;
-    d->m_render_manager.setChannelColors(d->m_view_agent->channelColors());
+    d->m_render_manager.setChannelColors(d->m_context->channelColors());
     QImage img = d->m_render_manager.getImage(view_t1, view_t2, d->m_amplitude_factor, WW, HH);
     painter.drawImage(mleft, mtop, img);
 
@@ -370,10 +370,10 @@ void MVTimeSeriesView::paintEvent(QPaintEvent* evt)
     {
         QString str;
         if (d->m_samplerate) {
-            str = QString("%1 (tp: %2)").arg(d->format_time(d->m_view_agent->currentTimepoint())).arg((long)d->m_view_agent->currentTimepoint());
+            str = QString("%1 (tp: %2)").arg(d->format_time(d->m_context->currentTimepoint())).arg((long)d->m_context->currentTimepoint());
         }
         else {
-            str = QString("Sample rate is null (tp: %2)").arg((long)d->m_view_agent->currentTimepoint());
+            str = QString("Sample rate is null (tp: %2)").arg((long)d->m_context->currentTimepoint());
         }
         d->paint_status_string(&painter, W0, H0, str);
     }
@@ -578,8 +578,8 @@ void MVTimeSeriesViewPrivate::paint_cursor(QPainter* painter, double W, double H
     double mbottom = m_prefs.mbottom;
 
     if (m_selected_t_range.min < 0) {
-        QPointF p0 = coord2pix(mvtsv_coord(0, m_view_agent->currentTimepoint(), 0));
-        QPointF p1 = coord2pix(mvtsv_coord(0, m_view_agent->currentTimepoint(), 0));
+        QPointF p0 = coord2pix(mvtsv_coord(0, m_context->currentTimepoint(), 0));
+        QPointF p1 = coord2pix(mvtsv_coord(0, m_context->currentTimepoint(), 0));
         p0.setY(mtop);
         p1.setY(H - mbottom);
 
@@ -713,8 +713,8 @@ void MVTimeSeriesViewPrivate::paint_time_axis(QPainter* painter, double W, doubl
     double samplerate = m_samplerate;
     long min_pixel_spacing_between_ticks = 30;
 
-    double view_t1 = m_view_agent->currentTimeRange().min;
-    double view_t2 = m_view_agent->currentTimeRange().max;
+    double view_t1 = m_context->currentTimeRange().min;
+    double view_t2 = m_context->currentTimeRange().max;
 
     QPen pen = painter->pen();
     pen.setColor(Qt::black);
@@ -754,8 +754,8 @@ void MVTimeSeriesViewPrivate::paint_time_axis_unit(QPainter* painter, double W, 
 {
     Q_UNUSED(W)
 
-    double view_t1 = m_view_agent->currentTimeRange().min;
-    double view_t2 = m_view_agent->currentTimeRange().max;
+    double view_t1 = m_context->currentTimeRange().min;
+    double view_t2 = m_context->currentTimeRange().max;
 
     double pixel_interval = W / (view_t2 - view_t1) * TS.timepoint_interval;
 
@@ -827,8 +827,8 @@ QPointF MVTimeSeriesViewPrivate::coord2pix(mvtsv_coord C)
     if (C.channel >= m_channels.count())
         return QPointF(0, 0);
 
-    double view_t1 = m_view_agent->currentTimeRange().min;
-    double view_t2 = m_view_agent->currentTimeRange().max;
+    double view_t1 = m_context->currentTimeRange().min;
+    double view_t2 = m_context->currentTimeRange().max;
 
     if (view_t2 <= view_t1)
         return QPointF(0, 0);
@@ -846,8 +846,8 @@ mvtsv_coord MVTimeSeriesViewPrivate::pix2coord(long channel, QPointF pix)
     if (channel >= m_channels.count())
         return mvtsv_coord(0, 0, 0);
 
-    double view_t1 = m_view_agent->currentTimeRange().min;
-    double view_t2 = m_view_agent->currentTimeRange().max;
+    double view_t1 = m_context->currentTimeRange().min;
+    double view_t2 = m_context->currentTimeRange().max;
 
     mvtsv_channel* CH = &m_channels[channel];
 
