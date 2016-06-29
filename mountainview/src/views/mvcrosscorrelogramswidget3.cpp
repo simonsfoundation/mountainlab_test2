@@ -308,7 +308,7 @@ void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
 MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
-    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+    connect(MVMainWindow::instance()->mvContext(), SIGNAL(selectedClustersChanged()),
         this, SLOT(updateEnabled()));
     updateEnabled();
 }
@@ -345,13 +345,13 @@ MVAbstractView* MVCrossCorrelogramsFactory::createView(QWidget* parent)
 
 void MVCrossCorrelogramsFactory::updateEnabled()
 {
-    setEnabled(MVMainWindow::instance()->viewAgent()->selectedClusters().count() == 1);
+    setEnabled(MVMainWindow::instance()->mvContext()->selectedClusters().count() == 1);
 }
 
 MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
-    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+    connect(MVMainWindow::instance()->mvContext(), SIGNAL(selectedClustersChanged()),
         this, SLOT(updateEnabled()));
     updateEnabled();
 }
@@ -387,5 +387,5 @@ MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(QWidget* parent)
 
 void MVMatrixOfCrossCorrelogramsFactory::updateEnabled()
 {
-    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
+    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty());
 }

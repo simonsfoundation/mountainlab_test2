@@ -258,5 +258,5 @@ int MVClipsFactory::order() const
 
 void MVClipsFactory::updateEnabled()
 {
-    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
+    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty());
 }

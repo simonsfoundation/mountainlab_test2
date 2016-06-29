@@ -258,5 +258,5 @@ void MVFiringEventsFactory::updateEnabled()
     //bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
     /// TODO: (0.9.1) restore this has_peaks without accessing m_firings in gui thread
     bool has_peaks = true;
-    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty() && has_peaks);
+    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty() && has_peaks);
 }

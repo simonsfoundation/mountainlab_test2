@@ -250,7 +250,7 @@ void MVDiscrimHistViewPrivate::set_views()
 MVDiscrimHistFactory::MVDiscrimHistFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
-    connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
+    connect(MVMainWindow::instance()->mvContext(), SIGNAL(selectedClustersChanged()),
         this, SLOT(updateEnabled()));
     updateEnabled();
 }

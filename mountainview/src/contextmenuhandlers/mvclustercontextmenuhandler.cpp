@@ -22,7 +22,7 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
     ds >> clusters;
     QList<QAction*> actions;
 
-    MVContext* context = MVMainWindow::instance()->viewAgent();
+    MVContext* context = MVMainWindow::instance()->mvContext();
 
     //TAGS
     {
@@ -143,9 +143,9 @@ QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) cons
     connect(mapper, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
         [clusters](const QString& tag) {
         foreach(int cluster, clusters) {
-            QSet<QString> clTags = MVMainWindow::instance()->viewAgent()->clusterTags(cluster);
+            QSet<QString> clTags = MVMainWindow::instance()->mvContext()->clusterTags(cluster);
             clTags.insert(tag);
-            MVMainWindow::instance()->viewAgent()->setClusterTags(cluster, clTags);
+            MVMainWindow::instance()->mvContext()->setClusterTags(cluster, clTags);
         }
         });
 
@@ -156,7 +156,7 @@ QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) c
 {
     QSet<QString> tags_set;
     foreach (int cluster_number, clusters) {
-        QJsonObject attributes = MVMainWindow::instance()->viewAgent()->clusterAttributes(cluster_number);
+        QJsonObject attributes = MVMainWindow::instance()->mvContext()->clusterAttributes(cluster_number);
         QJsonArray tags = attributes["tags"].toArray();
         for (int i = 0; i < tags.count(); i++) {
             tags_set.insert(tags[i].toString());
@@ -177,9 +177,9 @@ QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) c
     connect(mapper, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
         [clusters](const QString& tag) {
         foreach(int cluster, clusters) {
-            QSet<QString> clTags = MVMainWindow::instance()->viewAgent()->clusterTags(cluster);
+            QSet<QString> clTags = MVMainWindow::instance()->mvContext()->clusterTags(cluster);
             clTags.remove(tag);
-            MVMainWindow::instance()->viewAgent()->setClusterTags(cluster, clTags);
+            MVMainWindow::instance()->mvContext()->setClusterTags(cluster, clTags);
         }
         });
     M->setEnabled(!tags_list.isEmpty());

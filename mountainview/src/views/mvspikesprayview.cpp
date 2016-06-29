@@ -371,5 +371,5 @@ MVAbstractView* MVSpikeSprayFactory::createView(QWidget* parent)
 
 void MVSpikeSprayFactory::updateEnabled()
 {
-    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
+    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty());
 }

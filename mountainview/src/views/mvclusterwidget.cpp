@@ -556,7 +556,7 @@ MVAbstractView* MVPCAFeaturesFactory::createView(QWidget* parent)
 
 void MVPCAFeaturesFactory::updateEnabled()
 {
-    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
+    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty());
 }
 
 MVChannelFeaturesFactory::MVChannelFeaturesFactory(MVContext* context, QObject* parent)
@@ -615,7 +615,7 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
 
 void MVChannelFeaturesFactory::updateEnabled()
 {
-    setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
+    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty());
 }
 
 #include "extract_clips.h"
