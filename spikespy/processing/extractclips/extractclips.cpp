@@ -22,7 +22,7 @@ int extractclips(FILE *infile,FILE *infile_TL,FILE *outfile,FILE *outfile_TL,FIL
 		labels_str=params["labels"].toString().split(",");
 	}
 
-	QList<int> labels;
+	QVector<int> labels;
 	bool all_labels=false;
 	for (int ii=0; ii<labels_str.count(); ii++) {
 		if (labels_str[ii]=="all") all_labels=true;
@@ -73,7 +73,7 @@ int extractclips(FILE *infile,FILE *infile_TL,FILE *outfile,FILE *outfile_TL,FIL
 			}
 		}
 	}
-	QList<int> time_labels_keys=time_labels.keys();
+    QList<int> time_labels_keys=time_labels.keys();
 	free(buffer_TL);
 
 	printf("...\n");
@@ -123,8 +123,8 @@ int extractclips(FILE *infile,FILE *infile_TL,FILE *outfile,FILE *outfile_TL,FIL
 	printf("Found %d critical times\n",critical_times.count());
 
 	//find the clip intervals
-	QList<int> clip_t1,clip_t2;
-	QList<int> critical_times_list=critical_times.toList();
+	QVector<int> clip_t1,clip_t2;
+    QList<int> critical_times_list=critical_times.toList();
 	qSort(critical_times_list);
 	for (int iii=0; iii<critical_times_list.count(); iii++) {
 		int t=critical_times_list[iii];

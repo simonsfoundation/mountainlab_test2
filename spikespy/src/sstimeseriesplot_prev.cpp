@@ -24,15 +24,15 @@ public:
 	int m_control_panel_height;
 	int m_bar_width;
 
-	QList<double> m_minvals;
-	QList<double> m_maxvals;
+	QVector<double> m_minvals;
+	QVector<double> m_maxvals;
 	PlotArea m_plot_area;
-	QList<double> m_yrange_minvals,m_yrange_maxvals;
-	QList<double> m_plot_offsets;
-	QList<double> m_plot_minvals;
-	QList<double> m_plot_maxvals;
-	QList<double> m_plot_y1;
-	QList<double> m_plot_y2;
+	QVector<double> m_yrange_minvals,m_yrange_maxvals;
+	QVector<double> m_plot_offsets;
+	QVector<double> m_plot_minvals;
+	QVector<double> m_plot_maxvals;
+	QVector<double> m_plot_y1;
+	QVector<double> m_plot_y2;
 	QList<QColor> m_channel_colors;
 	QStringList m_channel_labels;
 	QList<QColor> m_label_colors;

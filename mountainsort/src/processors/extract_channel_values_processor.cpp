@@ -36,7 +36,7 @@ bool extract_channel_values_Processor::run(const QMap<QString, QVariant>& params
     QString firings_path = params["firings"].toString();
     QString values_path = params["values"].toString();
     QStringList channels_strlist = params["channels"].toString().split(",");
-    QList<int> channels;
+    QVector<int> channels;
     for (int i = 0; i < channels_strlist.count(); i++) {
         channels << channels_strlist[i].toInt();
     }

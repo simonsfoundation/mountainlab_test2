@@ -16,7 +16,7 @@
 #include "msprefs.h"
 #include "omp.h"
 
-QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList<int>& labels, const fit_stage_opts& opts);
+QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVector<int>& labels, const fit_stage_opts& opts);
 
 bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts)
 {
@@ -41,8 +41,8 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     Mda templates = compute_templates_0(X, firings_split, T); //MxNxK
 
     long L = firings.N2();
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
     for (long j = 0; j < L; j++) {
         times << firings.value(1, j);
         labels << (int)firings_split.value(2, j);
@@ -66,8 +66,8 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
             QMap<QString, long> elapsed_times_local;
             Mda chunk;
             Mda local_templates;
-            QList<double> local_times;
-            QList<int> local_labels;
+            QVector<double> local_times;
+            QVector<int> local_labels;
             QList<long> local_inds;
             fit_stage_opts local_opts;
 #pragma omp critical(lock1)
@@ -145,7 +145,7 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     return true;
 }
 
-QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList<int>& labels, const fit_stage_opts& opts)
+QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVector<int>& labels, const fit_stage_opts& opts)
 {
     int M = X.N1();
     int T = opts.clip_size;
@@ -153,25 +153,25 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList
     long L = times.count();
     int K = compute_max(labels);
 
-    QList<double> template_norms;
+    QVector<double> template_norms;
     template_norms << 0;
     for (int k = 1; k <= K; k++) {
         template_norms << compute_norm(M * T, templates.dataPtr(0, 0, k - 1));
     }
 
     bool something_changed = true;
-    QList<int> all_to_use;
+    QVector<int> all_to_use;
     for (long i = 0; i < L; i++)
         all_to_use << 0;
     int num_passes = 0;
     //while ((something_changed)&&(num_passes<2)) {
     while (something_changed) {
         num_passes++;
-        QList<double> scores_to_try;
-        QList<double> times_to_try;
-        QList<int> labels_to_try;
+        QVector<double> scores_to_try;
+        QVector<double> times_to_try;
+        QVector<int> labels_to_try;
         QList<long> inds_to_try; //indices of the events to try on this pass
-        //QList<double> template_norms_to_try;
+        //QVector<double> template_norms_to_try;
         for (long i = 0; i < L; i++) {
             if (all_to_use[i] == 0) {
                 double t0 = times[i];
@@ -200,7 +200,7 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QList<double>& times, QList
                 }
             }
         }
-        QList<int> to_use = find_events_to_use(times_to_try, scores_to_try, opts);
+        QVector<int> to_use = find_events_to_use(times_to_try, scores_to_try, opts);
 
         something_changed = false;
         long num_added = 0;

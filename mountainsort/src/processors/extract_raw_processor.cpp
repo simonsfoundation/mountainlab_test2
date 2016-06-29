@@ -40,10 +40,10 @@ bool extract_raw_Processor::check(const QMap<QString, QVariant>& params)
     return true;
 }
 
-QList<int> str_to_intlist(QString str)
+QVector<int> str_to_intlist(QString str)
 {
     QStringList list = str.split(",");
-    QList<int> ret;
+    QVector<int> ret;
     for (int i = 0; i < list.count(); i++) {
         QString val = list[i].trimmed();
         if (!val.isEmpty())
@@ -59,7 +59,7 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
     long t1 = params.value("t1", "-1").toLongLong();
     long t2 = params.value("t2", "-1").toLongLong();
     QString channels_str = params["channels"].toString();
-    QList<int> channels = str_to_intlist(channels_str);
+    QVector<int> channels = str_to_intlist(channels_str);
 
     DiskReadMda X(timeseries_path);
     long M = X.N1();

@@ -20,22 +20,19 @@
 #include "closemehandler.h"
 #include "remotereadmda.h"
 #include "taskprogress.h"
-#include "mvtimeseriesview.h" //for unit test
+//#include "mvtimeseriesview.h" //for unit test
 
+#include <QJsonDocument>
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtConcurrentRun>
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
-/// TODO (MED) update docs
-/// TODO (MED) event filter to be computed on client
-/// TODO (MED) blobs for populations
-/// TODO (LOW) Resort by populations, ampl, etc
-/// TODO (LOW) time scale bar for clip view
+/// TODO: (HIGH) blobs for populations
+/// TODO: (HIGH) Resort by populations, ampl, etc
+/// TODO: (MEDIUM) time scale bar for clip view
 /// TODO (LOW) electrode view... (firetrack)
-/// TODO (LOW) 3D feature plot scale density -- log scale?
 /// TODO: (0.9.1) Go to timepoint
-/// TODO: (0.9.1) cluster view, when hover over legend item, highlight cluster in white
 
 class TaskProgressViewThread : public QRunnable {
 public:
@@ -83,12 +80,10 @@ void test_taskprogressview()
 
 //void run_export_instructions(MVMainWindow* W, const QStringList& instructions);
 
-/// TODO (LOW) provide mountainview usage information
-/// TODO (LOW) auto correlograms for selected clusters
+/// TODO: (MEDIUM) provide mountainview usage information
+/// TODO: (MEDIUM) auto correlograms for selected clusters
 /// TODO (LOW) figure out what to do when #channels and/or #clusters is huge
 /// TODO: (0.9.1) make sure to handle merging with other views, such as clips etc. Make elegant way
-/// TODO: (0.9.1) firing events view, show two clusters with different colors
-/// TODO: (0.9.1) 1D histograms showing cutoffs (for identifying noise clusters at a glance)
 /// TODO: (HIGH) annotate axes as microvolts whenever relevant
 /// TODO: (HIGH) option to use pre-processed data for PCA
 
@@ -97,9 +92,16 @@ QList<QColor> generate_colors_ahb();
 QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColors);
 
 #include "multiscaletimeseries.h"
-#include "mvfile.h"
+//#include "mvfile.h"
 #include "spikespywidget.h"
 #include "taskprogressview.h"
+#include "mvcontrolpanel2.h"
+#include "mvabstractcontrol.h"
+#include "mvopenviewscontrol.h"
+#include "mvgeneralcontrol.h"
+#include "mveventfiltercontrol.h"
+#include "mvclustervisibilitycontrol.h"
+#include "mvexportcontrol.h"
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -145,12 +147,14 @@ int main(int argc, char* argv[])
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
             return 0;
-        } else if (arg2 == "remotereadmda2") {
+        }
+        else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
             return 0;
-        } else if (arg2 == "taskprogressview") {
-            MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
+        }
+        else if (arg2 == "taskprogressview") {
+            MVMainWindow* W = new MVMainWindow(new MVContext); //not that the view agent does not get deleted. :(
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
             int W0 = 1400, H0 = 1000;
@@ -158,69 +162,73 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            } else {
+            }
+            else {
                 W->resize(W0, H0);
             }
             test_taskprogressview();
             qWarning() << "No such unit test: " + arg2;
             return 0;
-        } else if (arg2 == "mvtimeseriesview") {
-            MVTimeSeriesView::unit_test();
         }
+        //else if (arg2 == "mvtimeseriesview") {
+        //    MVTimeSeriesView::unit_test();
+        //}
     }
 
     QString mode = CLP.named_parameters.value("mode", "overview2").toString();
     if (mode == "overview2") {
 
+        /*
         MVFile mv_file;
         if (!mv_fname.isEmpty()) {
             mv_file.read(mv_fname);
         }
+        */
 
-        printf("overview2...\n");
-        QString raw_path = CLP.named_parameters["raw"].toString();
-        QString pre_path = CLP.named_parameters["pre"].toString();
-        QString filt_path = CLP.named_parameters["filt"].toString();
-        QString firings_path = CLP.named_parameters["firings"].toString();
-        double samplerate = CLP.named_parameters.value("samplerate", 20000).toDouble();
-        //QString epochs_path = CLP.named_parameters["epochs"].toString();
-        QString window_title = CLP.named_parameters["window_title"].toString();
-        QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
-        MVViewAgent* view_agent = new MVViewAgent; //note that the view agent does not get deleted. :(
-        view_agent->setOption("clip_size", 130);
-        view_agent->setChannelColors(channel_colors);
-        view_agent->setClusterColors(label_colors);
-        view_agent->setSampleRate(samplerate);
-        MVMainWindow* W = new MVMainWindow(view_agent);
+        MVContext* context = new MVContext; //note that the view agent does not get deleted. :(
+        context->setChannelColors(channel_colors);
+        context->setClusterColors(label_colors);
+        MVMainWindow* W = new MVMainWindow(context);
 
-        if (!firings_path.isEmpty()) {
-            mv_file.setFiringsPath(firings_path);
-        }
-        if (samplerate) {
-            mv_file.setSampleRate(samplerate);
+        if (!mv_fname.isEmpty()) {
+            QString json = read_text_file(mv_fname);
+            QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
+            context->setFromMVFileObject(obj);
         }
 
-        if (!pre_path.isEmpty()) {
-            mv_file.addTimeseriesPath("Preprocessed Data", pre_path);
+        if (CLP.named_parameters.contains("samplerate")) {
+            context->setSampleRate(CLP.named_parameters.value("samplerate", 0).toDouble());
         }
-        if (!filt_path.isEmpty()) {
-            mv_file.addTimeseriesPath("Filtered Data", filt_path);
+        if (CLP.named_parameters.contains("firings")) {
+            QString firings_path = CLP.named_parameters["firings"].toString();
+            context->setFirings(DiskReadMda(firings_path));
+            W->setWindowTitle(firings_path);
         }
-        if (!raw_path.isEmpty()) {
-            mv_file.addTimeseriesPath("Raw Data", raw_path);
+        if (CLP.named_parameters.contains("raw")) {
+            QString raw_path = CLP.named_parameters["raw"].toString();
+            context->addTimeseries("Raw Data", DiskReadMda(raw_path));
+            context->setCurrentTimeseriesName("Raw Data");
         }
-        if (!mlproxy_url.isEmpty()) {
-            mv_file.setMlproxyUrl(mlproxy_url);
+        if (CLP.named_parameters.contains("filt")) {
+            QString filt_path = CLP.named_parameters["filt"].toString();
+            context->addTimeseries("Filtered Data", DiskReadMda(filt_path));
+            context->setCurrentTimeseriesName("Filtered Data");
+        }
+        if (CLP.named_parameters.contains("pre")) {
+            QString pre_path = CLP.named_parameters["pre"].toString();
+            context->addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
+            context->setCurrentTimeseriesName("Preprocessed Data");
+        }
+        if (CLP.named_parameters.contains("mlproxy_url")) {
+            QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
+            context->setMLProxyUrl(mlproxy_url);
+        }
+        if (CLP.named_parameters.contains("window_title")) {
+            QString window_title = CLP.named_parameters["window_title"].toString();
+            W->setWindowTitle(window_title);
         }
 
-        if (window_title.isEmpty())
-            window_title = pre_path;
-        if (window_title.isEmpty())
-            window_title = filt_path;
-        if (window_title.isEmpty())
-            window_title = raw_path;
-        W->setWindowTitle(window_title);
-        W->setMinimumSize(1000, 800);
+        //W->setMinimumSize(1000, 800);
         int W0 = 1800, H0 = 1200;
         QRect geom = QApplication::desktop()->geometry();
         if (geom.width() - 100 < W0)
@@ -231,19 +239,28 @@ int main(int argc, char* argv[])
         W->show();
 
         a.processEvents();
-        W->setMVFile(mv_file);
+        //W->setMVFile(mv_file);
         W->setDefaultInitialization();
-    } else if (mode == "spikespy") {
+
+        W->addControl(new MVOpenViewsControl(context, W), true);
+        W->addControl(new MVGeneralControl(context, W), false);
+        W->addControl(new MVEventFilterControl(context, W), false);
+        W->addControl(new MVClusterVisibilityControl(context, W), false);
+        W->addControl(new MVExportControl(context, W), false);
+
+        return a.exec();
+    }
+    else if (mode == "spikespy") {
         printf("spikespy...\n");
         QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
         QStringList firings_paths = CLP.named_parameters["firings"].toString().split(",");
         double samplerate = CLP.named_parameters["samplerate"].toDouble();
 
-        MVViewAgent* view_agent = new MVViewAgent(); //note that the view agent will not get deleted. :(
-        view_agent->setChannelColors(channel_colors);
-        view_agent->setClusterColors(label_colors);
-        view_agent->setSampleRate(samplerate);
-        SpikeSpyWidget* W = new SpikeSpyWidget(view_agent);
+        MVContext* context = new MVContext(); //note that the view agent will not get deleted. :(
+        context->setChannelColors(channel_colors);
+        context->setClusterColors(label_colors);
+        context->setSampleRate(samplerate);
+        SpikeSpyWidget* W = new SpikeSpyWidget(context);
 
         for (int i = 0; i < timeseries_paths.count(); i++) {
             QString tsp = timeseries_paths.value(i);

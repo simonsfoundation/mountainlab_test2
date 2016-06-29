@@ -19,8 +19,8 @@ bool detect(const QString& timeseries_path, const QString& detect_path, const De
         overlap_size = 0;
     }
 
-    QList<int> channels;
-    QList<double> times;
+    QVector<int> channels;
+    QVector<double> times;
     int Tmid = (int)((opts.clip_size + 1) / 2) - 1;
     {
 
@@ -35,13 +35,13 @@ bool detect(const QString& timeseries_path, const QString& detect_path, const De
                 X.readChunk(chunk, 0, timepoint - overlap_size, M, chunk_size + 2 * overlap_size);
             }
 
-            QList<double> times1;
-            QList<int> channels1;
+            QVector<double> times1;
+            QVector<int> channels1;
             int m_begin = 0, m_end = M - 1;
             if (!opts.individual_channels)
                 m_end = 0;
             for (int m = m_begin; m <= m_end; m++) {
-                QList<double> vals;
+                QVector<double> vals;
                 if (opts.individual_channels) {
                     for (int j = 0; j < chunk.N2(); j++) {
                         double tmp = chunk.value(m, j);
@@ -67,7 +67,7 @@ bool detect(const QString& timeseries_path, const QString& detect_path, const De
                         vals << maxval;
                     }
                 }
-                QList<double> times0 = do_detect(vals, opts.detect_interval, opts.detect_threshold);
+                QVector<double> times0 = do_detect(vals, opts.detect_interval, opts.detect_threshold);
 
                 for (int i = 0; i < times0.count(); i++) {
                     double time0 = times0[i] + timepoint - overlap_size;
@@ -104,10 +104,10 @@ bool detect(const QString& timeseries_path, const QString& detect_path, const De
     return true;
 }
 
-QList<double> do_detect(const QList<double>& vals, int detect_interval, double detect_threshold)
+QVector<double> do_detect(const QVector<double>& vals, int detect_interval, double detect_threshold)
 {
     int N = vals.count();
-    QList<int> to_use;
+    QVector<int> to_use;
     for (int n = 0; n < N; n++)
         to_use << 0;
     int last_best_ind = 0;
@@ -132,7 +132,7 @@ QList<double> do_detect(const QList<double>& vals, int detect_interval, double d
             }
         }
     }
-    QList<double> times;
+    QVector<double> times;
     for (int n = 0; n < N; n++) {
         if (to_use[n]) {
             times << n;

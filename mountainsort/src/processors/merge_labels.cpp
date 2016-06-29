@@ -18,8 +18,8 @@ bool merge_labels(QString timeseries_path, QString firings_path, QString firings
     DiskReadMda X(timeseries_path);
     DiskReadMda F(firings_path);
 
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
     for (long i=0; i<F.N2(); i++) {
         times << F.value(1,i);
         labels << (int)F.value(2,i);

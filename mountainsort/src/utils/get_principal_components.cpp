@@ -171,7 +171,7 @@ void get_pca_features(int M,int N,int ncomp,double *features,double *data) {
 		qWarning() << "Error in LAPACKE_dsyev" << info;
 	}
 
-	QList<double> eigenvalues;
+	QVector<double> eigenvalues;
 	for (int i=0; i<M; i++) eigenvalues << B[i];
 	QList<long> sort_inds_1=get_sort_indices(eigenvalues);
 	QList<long> sort_inds; for (int i=M-1; i>=0; i--) sort_inds << sort_inds_1[i];
@@ -216,7 +216,7 @@ void get_pca_features(int M,int N,int ncomp,double *features,double *data) {
 	}
 
 	EigenSolver<MatrixXd> eigen_solver(XXt);
-	QList<double> eigenvalues;
+	QVector<double> eigenvalues;
 	for (int i=0; i<M; i++) eigenvalues << eigen_solver.eigenvalues().data()[i].real();
 	QList<long> sort_inds_1=get_sort_indices(eigenvalues);
 	QList<long> sort_inds; for (int i=M-1; i>=0; i--) sort_inds << sort_inds_1[i];

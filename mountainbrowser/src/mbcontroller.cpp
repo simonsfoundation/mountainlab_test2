@@ -90,6 +90,12 @@ void MBController::openSortingResult(QString json)
         args << "--mlproxy_url=" + d->m_mlproxy_url;
         args << "--mode=overview2"
              << "--pre=" + pre << "--filt=" + filt << "--raw=" + raw << "--firings=" + firings << "--window_title=" + firings;
+        double samplerate = E.json["samplerate"].toDouble();
+        if (!samplerate) {
+            qWarning() << "Sample rate defaulting to 30000 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::";
+            samplerate = 30000;
+        }
+        args << QString("--samplerate=%1").arg(samplerate);
         QString mv_exe = mountainlabBasePath() + "/mountainview/bin/mountainview";
         QProcess* process = new QProcess;
         process->setProcessChannelMode(QProcess::MergedChannels);

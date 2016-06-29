@@ -74,7 +74,7 @@ double compute_dot_product(long N, double* v1, double* v2)
 
 void get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size)
 {
-    QList<double> times1, times2;
+    QVector<double> times1, times2;
     for (long i = 0; i < firings.N2(); i++) {
         int label = (int)firings.value(2, i);
         if (label == k1) {

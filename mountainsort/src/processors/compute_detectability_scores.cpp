@@ -30,8 +30,8 @@ bool compute_detectability_scores(QString timeseries_path, QString firings_path,
     //prepare the channels, labels, times, and allocate the scores
     printf("Preparing data arrays\n");
     QList<long> channels, labels;
-    QList<double> times;
-    QList<double> scores;
+    QVector<double> times;
+    QVector<double> scores;
     for (int i = 0; i < L; i++) {
         channels << (int)firings.get(0, i) - 1; //convert to zero-based indexing
         times << firings.get(1, i) - 1; //convert to zero-based indexing
@@ -62,7 +62,7 @@ bool compute_detectability_scores(QString timeseries_path, QString firings_path,
 #pragma omp critical
             {
                 printf("k=%d/%d\n", k, K);
-                QList<double> times_k;
+                QVector<double> times_k;
                 for (long i = 0; i < inds_k.count(); i++) {
                     times_k << times[inds_k[i]];
                 }
@@ -96,7 +96,7 @@ bool compute_detectability_scores(QString timeseries_path, QString firings_path,
     int num_subclusters = subclusters.count();
 
     //normalize by setting slope of peak vs score equal to 1
-    QList<double> subcluster_abs_peaks, subcluster_scores;
+    QVector<double> subcluster_abs_peaks, subcluster_scores;
     for (int ii = 0; ii < num_subclusters; ii++) {
         subcluster_abs_peaks << fabs(subclusters[ii].peak);
         subcluster_scores << subclusters[ii].detectability_score;
@@ -163,7 +163,7 @@ Mda get_subclips(Mda& clips, const QList<long>& inds)
     return ret;
 }
 
-QList<Shell> define_shells(const QList<double>& peaks, const Define_Shells_Opts& opts)
+QList<Shell> define_shells(const QVector<double>& peaks, const Define_Shells_Opts& opts)
 {
     QList<Shell> shells;
     if (peaks.count() == 0)
@@ -178,10 +178,10 @@ QList<Shell> define_shells(const QList<double>& peaks, const Define_Shells_Opts&
             else
                 inds_pos << i;
         }
-        QList<double> neg_peaks_neg;
+        QVector<double> neg_peaks_neg;
         for (int i = 0; i < inds_neg.count(); i++)
             neg_peaks_neg << -peaks[inds_neg[i]];
-        QList<double> peaks_pos;
+        QVector<double> peaks_pos;
         for (int i = 0; i < inds_pos.count(); i++)
             peaks_pos << peaks[inds_pos[i]];
         QList<Shell> shells_neg = define_shells(neg_peaks_neg, opts);
@@ -242,9 +242,9 @@ QList<Shell> define_shells(const QList<double>& peaks, const Define_Shells_Opts&
     return shells;
 }
 
-QList<double> randsample_with_replacement(long N, long K)
+QVector<double> randsample_with_replacement(long N, long K)
 {
-    QList<double> ret;
+    QVector<double> ret;
     for (int i = 0; i < K; i++) {
         ret << qrand() % N;
     }
@@ -264,11 +264,11 @@ Mda estimate_noise_shape(DiskReadMda& X, int T, int ch)
     int N = X.N2();
     int Tmid = (int)((T + 1) / 2) - 1;
     int num_rand_times = 10000;
-    QList<double> rand_times = randsample_with_replacement(N - 2 * T, num_rand_times);
+    QVector<double> rand_times = randsample_with_replacement(N - 2 * T, num_rand_times);
     for (int i = 0; i < rand_times.count(); i++)
         rand_times[i] += T;
     Mda rand_clips = extract_clips(X, rand_times, T);
-    QList<double> peaks;
+    QVector<double> peaks;
     for (int i = 0; i < rand_times.count(); i++) {
         peaks << rand_clips.get(ch, Tmid, i);
     }
@@ -390,7 +390,7 @@ Mda compute_geometric_median_template(Mda& clips)
     Mda FFmm;
     FFmm.allocate(num_features, 1);
     compute_geometric_median(num_features, L, FFmm.dataPtr(), FF.dataPtr());
-    QList<double> dists;
+    QVector<double> dists;
     for (int i = 0; i < L; i++) {
         double tmp = 0;
         for (int a = 0; a < num_features; a++) {
@@ -400,7 +400,7 @@ Mda compute_geometric_median_template(Mda& clips)
         tmp = sqrt(tmp);
         dists << tmp;
     }
-    QList<double> sorted_dists = dists;
+    QVector<double> sorted_dists = dists;
     qSort(sorted_dists);
     double dist_cutoff = sorted_dists[(int)(sorted_dists.count() * 0.3)];
     QList<long> inds;
@@ -438,7 +438,7 @@ QList<Subcluster> compute_subcluster_detectability_scores(Mda& noise_shape, Mda&
     int Tmid = (int)((T + 1) / 2) - 1;
 
     //get the list of peaks
-    QList<double> peaks;
+    QVector<double> peaks;
     for (int i = 0; i < L; i++) {
         peaks << clips.get(channel, Tmid, i);
     }
@@ -469,7 +469,7 @@ QList<Subcluster> compute_subcluster_detectability_scores(Mda& noise_shape, Mda&
     return subclusters;
 }
 
-double compute_slope(const QList<double>& X, const QList<double>& Y)
+double compute_slope(const QVector<double>& X, const QVector<double>& Y)
 {
     if (X.count() == 0)
         return 0;

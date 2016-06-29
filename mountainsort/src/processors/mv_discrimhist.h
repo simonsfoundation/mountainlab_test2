@@ -3,9 +3,10 @@
 
 #include <QList>
 #include <QString>
+#include <QVector>
 
 struct mv_discrimhist_opts {
-    QList<int> clusters;
+    QVector<int> clusters;
     /// TODO clip_size is hard-coded here
     int clip_size = 80;
 };

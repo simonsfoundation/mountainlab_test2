@@ -1,0 +1,85 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+*******************************************************/
+
+#ifndef MVCLUSTERWIDGET_H
+#define MVCLUSTERWIDGET_H
+
+#include <QWidget>
+#include "mvutils.h"
+#include "affinetransformation.h"
+#include "mvclusterview.h" //for FilterInfo
+#include "mvabstractview.h"
+#include "mvabstractviewfactory.h"
+#include "mvmainwindow.h"
+
+/** \class MVClusterWidget
+ *  \brief Presents one or more cluster views and a synchronized clip view
+ *
+ */
+
+class MVClusterWidgetPrivate;
+class MVClusterWidget : public MVAbstractView {
+    Q_OBJECT
+public:
+    friend class MVClusterWidgetPrivate;
+    MVClusterWidget(MVContext* context);
+    virtual ~MVClusterWidget();
+
+    void prepareCalculation() Q_DECL_OVERRIDE;
+    void runCalculation() Q_DECL_OVERRIDE;
+    void onCalculationFinished() Q_DECL_OVERRIDE;
+
+    void setLabelsToUse(const QList<int>& labels);
+    void setFeatureMode(QString mode); //"pca", "channels"
+    void setChannels(QVector<int> channels); //relevant for "channels" mode
+
+    void setTransformation(const AffineTransformation& T);
+
+private:
+    void setData(const Mda& X);
+    void setTimes(const QVector<double>& times);
+    void setLabels(const QVector<int>& labels);
+    void setAmplitudes(const QVector<double>& amps);
+    void setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores);
+
+signals:
+private slots:
+    void slot_current_event_changed();
+    void slot_view_current_event_changed();
+    void slot_view_transformation_changed();
+    void slot_view_active_cluster_number_toggled();
+    void slot_show_clip_view_toggled(bool val);
+    void slot_show_view_toggled(bool val);
+    void slot_clips_view_thread_finished();
+
+private:
+    MVClusterWidgetPrivate* d;
+};
+
+class MVPCAFeaturesFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVPCAFeaturesFactory(MVContext* context, QObject* parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+public slots:
+    void updateEnabled();
+};
+
+class MVChannelFeaturesFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVChannelFeaturesFactory(MVContext* context, QObject* parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+public slots:
+    void updateEnabled();
+};
+
+#endif // MVCLUSTERWIDGET_H

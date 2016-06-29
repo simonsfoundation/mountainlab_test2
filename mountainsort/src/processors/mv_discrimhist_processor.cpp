@@ -36,7 +36,7 @@ bool mv_discrimhist_Processor::run(const QMap<QString, QVariant>& params)
     QString firings_path = params["firings"].toString();
     QString output_path = params["output"].toString();
     QStringList clusters_strlist = params["clusters"].toString().split(",", QString::SkipEmptyParts);
-    QList<int> clusters;
+    QVector<int> clusters;
     foreach(QString cluster_str, clusters_strlist)
     {
         clusters << cluster_str.trimmed().toInt();

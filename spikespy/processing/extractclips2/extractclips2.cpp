@@ -16,7 +16,7 @@ int extractclips2(
 {
 	int clipsize=params["clipsize"].toInt();
 	QStringList labels_str=params["labels"].toStringList();
-	QList<int> labels;
+	QVector<int> labels;
 	for (int ii=0; ii<labels_str.count(); ii++) {
 		int label=labels_str[ii].toInt();
 		if (label<0) {
@@ -89,8 +89,8 @@ int extractclips2(
 	printf("Found %d critical times\n",critical_times.count());
 
 	//find the clip intervals
-	QList<int> clip_t1,clip_t2;
-	QList<int> critical_times_list=critical_times.toList();
+	QVector<int> clip_t1,clip_t2;
+    QList<int> critical_times_list=critical_times.toList();
 	qSort(critical_times_list);
 	for (int iii=0; iii<critical_times_list.count(); iii++) {
 		int t=critical_times_list[iii];

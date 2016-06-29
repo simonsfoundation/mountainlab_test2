@@ -127,7 +127,7 @@ bool curl_is_installed()
     return (exit_code == 0);
 }
 
-/// TODO (MEDIUM) handle local cache for http_get_text in a better way
+/// TODO: (MEDIUM) handle memory cache for http_get_text in a better way
 static QMap<QString, QString> s_http_get_text_curl_cache;
 
 QString http_get_text_curl(const QString& url)

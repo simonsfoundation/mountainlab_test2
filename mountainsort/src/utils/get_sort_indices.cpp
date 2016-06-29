@@ -1,5 +1,7 @@
 #include "get_sort_indices.h"
 
+#include <QVector>
+
 
 struct special_comparer_struct {
 	double val;
@@ -32,7 +34,7 @@ QList<long> get_sort_indices(const QList<long> &X) {
 	return ret;
 }
 
-QList<long> get_sort_indices(const QList<double> &X) {
+QList<long> get_sort_indices(const QVector<double> &X) {
 	QList<special_comparer_struct> list;
 	for (long i=0; i<X.count(); i++) {
 		special_comparer_struct tmp;

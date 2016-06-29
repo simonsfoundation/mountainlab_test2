@@ -6,7 +6,7 @@
 #endif
 #include "get_principal_components.h"
 
-Mda extract_clips(const DiskReadMda& X, const QList<double>& times, int clip_size)
+Mda extract_clips(const DiskReadMda& X, const QVector<double>& times, int clip_size)
 {
     int M = X.N1();
     int N = X.N2();
@@ -30,7 +30,7 @@ Mda extract_clips(const DiskReadMda& X, const QList<double>& times, int clip_siz
     return clips;
 }
 
-Mda extract_clips(const DiskReadMda& X, const QList<double>& times, const QList<int>& channels, int clip_size)
+Mda extract_clips(const DiskReadMda& X, const QVector<double>& times, const QVector<int>& channels, int clip_size)
 {
     int M = X.N1();
     int N = X.N2();
@@ -59,7 +59,7 @@ bool extract_clips(const QString& timeseries_path, const QString& firings_path, 
 {
     DiskReadMda X(timeseries_path);
     DiskReadMda F(firings_path);
-    QList<double> times;
+    QVector<double> times;
     for (long j = 0; j < F.N2(); j++) {
         times << F.value(1, j);
     }
@@ -72,7 +72,7 @@ bool extract_clips_features(const QString& timeseries_path, const QString& firin
 {
     DiskReadMda X(timeseries_path);
     DiskReadMda F(firings_path);
-    QList<double> times;
+    QVector<double> times;
     for (long j = 0; j < F.N2(); j++) {
         times << F.value(1, j);
     }

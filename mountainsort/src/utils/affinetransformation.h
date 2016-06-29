@@ -33,6 +33,8 @@ public:
     void rotateY(double theta, bool left = true);
     void rotateZ(double theta, bool left = true);
 
+    void translate(double x, double y, double z, bool left = true);
+
     void scale(double sx, double sy, double sz, bool left = true);
     void getMatrixData(double* data);
 

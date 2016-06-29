@@ -11,10 +11,10 @@
 #include "compute_templates_0.h"
 #include "get_sort_indices.h"
 
-QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display);
-QList<double> compute_peaks_v2(Mda& clips, long ch);
-QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, const QList<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor);
-QList<long> get_sort_indices(const QList<int>& channels, const QList<double>& template_peaks);
+QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display);
+QVector<double> compute_peaks_v2(Mda& clips, long ch);
+QVector<int> consolidate_labels_v2(DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor);
+QList<long> get_sort_indices(const QVector<int>& channels, const QVector<double>& template_peaks);
 
 bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_path, const QString& adjacency_matrix_path, const QString& output_firings_path, const Branch_Cluster_V2_Opts& opts)
 {
@@ -54,10 +54,10 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
 #pragma omp parallel for
     for (long m = 0; m < M; m++) {
         Mda clips;
-        QList<double> times;
+        QVector<double> times;
 #pragma omp critical
         {
-            QList<int> neighborhood;
+            QVector<int> neighborhood;
             neighborhood << m;
             for (long a = 0; a < M; a++)
                 if ((AM.value(m, a)) && (a != m))
@@ -70,11 +70,11 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
             qDebug() << "Extracting clips. #times=" << times.count();
             clips = extract_clips(X, times, neighborhood, opts.clip_size);
         }
-        QList<int> labels = do_branch_cluster_v2(clips, opts, m);
+        QVector<int> labels = do_branch_cluster_v2(clips, opts, m);
 #pragma omp critical
         {
             labels = consolidate_labels_v2(X, times, labels, m, opts.clip_size, opts.detect_interval, opts.consolidation_factor);
-            QList<double> peaks = compute_peaks_v2(clips, 0);
+            QVector<double> peaks = compute_peaks_v2(clips, 0);
 
             for (long i = 0; i < times.count(); i++) {
                 if (labels[i]) {
@@ -102,13 +102,13 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
     long K;
     {
         printf("Reordering labels...\n");
-        QList<int> labels;
+        QVector<int> labels;
         for (long i = 0; i < L; i++) {
             long k = (int)firings.value(2, i);
             labels << k;
         }
         K = compute_max(labels);
-        QList<int> channels;
+        QVector<int> channels;
         for (long k = 0; k < K; k++)
             channels << 0;
         for (long i = 0; i < L; i++) {
@@ -120,7 +120,7 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
         long T_for_peaks = 3;
         long Tmid_for_peaks = (int)((T_for_peaks + 1) / 2) - 1;
         Mda templates = compute_templates_0(X, firings, T_for_peaks); //MxTxK
-        QList<double> template_peaks;
+        QVector<double> template_peaks;
         for (long k = 0; k < K; k++) {
             if (channels[k] >= 1) {
                 template_peaks << templates.value(channels[k] - 1, Tmid_for_peaks, k);
@@ -174,7 +174,7 @@ struct template_comparer {
     }
 };
 
-QList<long> get_sort_indices(const QList<int>& channels, const QList<double>& template_peaks)
+QList<long> get_sort_indices(const QVector<int>& channels, const QVector<double>& template_peaks)
 {
     QList<template_comparer_struct> list;
     for (long i = 0; i < channels.count(); i++) {
@@ -192,28 +192,28 @@ QList<long> get_sort_indices(const QList<int>& channels, const QList<double>& te
     return ret;
 }
 
-QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, const QList<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor)
+QVector<int> consolidate_labels_v2(DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor)
 {
     printf("Consolidation factor = %g\n", consolidation_factor);
     long M = X.N1();
     long T = clip_size;
     long K = compute_max(labels);
     long Tmid = (int)((T + 1) / 2) - 1;
-    QList<int> all_channels;
+    QVector<int> all_channels;
     for (long m = 0; m < M; m++)
         all_channels << m;
     long label_mapping[K + 1];
     label_mapping[0] = 0;
     long kk = 1;
     for (long k = 1; k <= K; k++) {
-        QList<double> times_k;
+        QVector<double> times_k;
         for (long i = 0; i < times.count(); i++) {
             if (labels[i] == k)
                 times_k << times[i];
         }
         Mda clips_k = extract_clips(X, times_k, all_channels, clip_size);
         Mda template_k = compute_mean_clip(clips_k);
-        QList<double> energies;
+        QVector<double> energies;
         for (long m = 0; m < M; m++)
             energies << 0;
         double max_energy = 0;
@@ -248,7 +248,7 @@ QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, con
         else
             label_mapping[k] = 0;
     }
-    QList<int> ret;
+    QVector<int> ret;
     for (long i = 0; i < labels.count(); i++) {
         ret << label_mapping[labels[i]];
     }
@@ -256,33 +256,33 @@ QList<int> consolidate_labels_v2(DiskReadMda& X, const QList<double>& times, con
     return ret;
 }
 
-QList<double> compute_peaks_v2(Mda& clips, long ch)
+QVector<double> compute_peaks_v2(Mda& clips, long ch)
 {
     long T = clips.N2();
     long L = clips.N3();
     long t0 = (T + 1) / 2 - 1;
-    QList<double> ret;
+    QVector<double> ret;
     for (long i = 0; i < L; i++) {
         ret << clips.value(ch, t0, i);
     }
     return ret;
 }
 
-QList<double> compute_abs_peaks_v2(Mda& clips, long ch)
+QVector<double> compute_abs_peaks_v2(Mda& clips, long ch)
 {
     long T = clips.N2();
     long L = clips.N3();
     long t0 = (T + 1) / 2 - 1;
-    QList<double> ret;
+    QVector<double> ret;
     for (long i = 0; i < L; i++) {
         ret << fabs(clips.value(ch, t0, i));
     }
     return ret;
 }
 
-QList<int> find_peaks_below_threshold_v2(QList<double>& peaks, double threshold)
+QVector<int> find_peaks_below_threshold_v2(QVector<double>& peaks, double threshold)
 {
-    QList<int> ret;
+    QVector<int> ret;
     for (long i = 0; i < peaks.count(); i++) {
         if (peaks[i] < threshold)
             ret << i;
@@ -290,9 +290,9 @@ QList<int> find_peaks_below_threshold_v2(QList<double>& peaks, double threshold)
     return ret;
 }
 
-QList<int> find_peaks_above_threshold_v2(QList<double>& peaks, double threshold)
+QVector<int> find_peaks_above_threshold_v2(QVector<double>& peaks, double threshold)
 {
-    QList<int> ret;
+    QVector<int> ret;
     for (long i = 0; i < peaks.count(); i++) {
         if (peaks[i] >= threshold)
             ret << i;
@@ -304,7 +304,7 @@ void normalize_features_v2(Mda& F)
 {
     long M = F.N1();
     long N = F.N2();
-    QList<double> norms;
+    QVector<double> norms;
     long aa = 0;
     for (long i = 0; i < N; i++) {
         double sumsqr = 0;
@@ -327,7 +327,7 @@ void normalize_features_v2(Mda& F)
     }
 }
 
-QList<int> do_cluster_with_normalized_features(Mda& clips, const Branch_Cluster_V2_Opts& opts)
+QVector<int> do_cluster_with_normalized_features(Mda& clips, const Branch_Cluster_V2_Opts& opts)
 {
     long M = clips.N1();
     long T = clips.N2();
@@ -340,7 +340,7 @@ QList<int> do_cluster_with_normalized_features(Mda& clips, const Branch_Cluster_
     return isosplit2(FF);
 }
 
-QList<int> do_cluster_without_normalized_features(Mda& clips, const Branch_Cluster_V2_Opts& opts)
+QVector<int> do_cluster_without_normalized_features(Mda& clips, const Branch_Cluster_V2_Opts& opts)
 {
     QTime timer;
     timer.start();
@@ -352,18 +352,18 @@ QList<int> do_cluster_without_normalized_features(Mda& clips, const Branch_Clust
     FF.allocate(nF, L);
     get_pca_features(M * T, L, nF, FF.dataPtr(), clips.dataPtr(), opts.num_pca_representatives);
     //normalize_features(FF);
-    QList<int> ret = isosplit2(FF);
+    QVector<int> ret = isosplit2(FF);
     return ret;
 }
 
-QList<double> compute_dists_from_template(Mda& clips, Mda& template0)
+QVector<double> compute_dists_from_template(Mda& clips, Mda& template0)
 {
     long M = clips.N1();
     long T = clips.N2();
     long L = clips.N3();
     double* ptr1 = clips.dataPtr();
     double* ptr2 = template0.dataPtr();
-    QList<double> ret;
+    QVector<double> ret;
     long aaa = 0;
     for (long i = 0; i < L; i++) {
         long bbb = 0;
@@ -381,21 +381,21 @@ QList<double> compute_dists_from_template(Mda& clips, Mda& template0)
     return ret;
 }
 
-QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display)
+QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display)
 {
     printf("do_branch_cluster_v2 %ldx%ldx%ld (channel %ld)\n", clips.N1(), clips.N2(), clips.N3(), channel_for_display + 1);
     long M = clips.N1();
     long T = clips.N2();
     long L = clips.N3();
-    QList<double> peaks = compute_peaks_v2(clips, 0);
-    QList<double> abs_peaks = compute_abs_peaks_v2(clips, 0);
+    QVector<double> peaks = compute_peaks_v2(clips, 0);
+    QVector<double> abs_peaks = compute_abs_peaks_v2(clips, 0);
 
     //In the case we have both positive and negative peaks, just split into two tasks!
     double min0 = compute_min(peaks);
     double max0 = compute_max(peaks);
     if ((min0 < 0) && (max0 >= 0)) {
         //find the event inds corresponding to negative and positive peaks
-        QList<int> inds_neg, inds_pos;
+        QVector<int> inds_neg, inds_pos;
         for (long i = 0; i < L; i++) {
             if (peaks[i] < 0)
                 inds_neg << i;
@@ -409,13 +409,13 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
 
         //cluster the negatives and positives separately
         printf("Channel %ld: NEGATIVES (%d)\n", channel_for_display + 1, inds_neg.count());
-        QList<int> labels_neg = do_branch_cluster_v2(clips_neg, opts, channel_for_display);
+        QVector<int> labels_neg = do_branch_cluster_v2(clips_neg, opts, channel_for_display);
         printf("Channel %ld: POSITIVES (%d)\n", channel_for_display + 1, inds_pos.count());
-        QList<int> labels_pos = do_branch_cluster_v2(clips_pos, opts, channel_for_display);
+        QVector<int> labels_pos = do_branch_cluster_v2(clips_pos, opts, channel_for_display);
 
         //Combine them together
         long K_neg = compute_max(labels_neg);
-        QList<int> labels;
+        QVector<int> labels;
         for (long i = 0; i < L; i++)
             labels << 0;
         for (long i = 0; i < inds_neg.count(); i++) {
@@ -431,28 +431,28 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
     }
 
     //First we simply cluster all of the events
-    //QList<int> labels0=do_cluster_with_normalized_features(clips,opts);
+    //QVector<int> labels0=do_cluster_with_normalized_features(clips,opts);
     QTime timer;
     timer.start();
-    QList<int> labels0 = do_cluster_without_normalized_features(clips, opts);
+    QVector<int> labels0 = do_cluster_without_normalized_features(clips, opts);
     long K0 = compute_max(labels0);
 
     if (K0 > 1) {
         //if we found more than one cluster, then we should divide and conquer
         //we apply the same procedure to each cluster and then combine all of the clusters together.
         printf("Channel %ld: K=%ld\n", channel_for_display + 1, K0);
-        QList<int> labels;
+        QVector<int> labels;
         for (long i = 0; i < L; i++)
             labels << 0;
         long kk_offset = 0;
         for (long k = 1; k <= K0; k++) {
-            QList<int> inds_k;
+            QVector<int> inds_k;
             for (long a = 0; a < L; a++) {
                 if (labels0[a] == k)
                     inds_k << a;
             }
             Mda clips_k = grab_clips_subset(clips, inds_k);
-            QList<int> labels_k = do_branch_cluster_v2(clips_k, opts, channel_for_display);
+            QVector<int> labels_k = do_branch_cluster_v2(clips_k, opts, channel_for_display);
             for (long a = 0; a < inds_k.count(); a++) {
                 labels[inds_k[a]] = labels_k[a] + kk_offset;
             }
@@ -468,7 +468,7 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
 
         //increase abs_peak_threshold by opts.shell_increment until we have at least opts.min_shell_size below and above the threshold
         while (true) {
-            QList<int> inds_below = find_peaks_below_threshold_v2(abs_peaks, abs_peak_threshold);
+            QVector<int> inds_below = find_peaks_below_threshold_v2(abs_peaks, abs_peak_threshold);
             if ((inds_below.count() >= opts.min_shell_size) && (L - inds_below.count() >= opts.min_shell_size)) {
                 break;
             }
@@ -479,24 +479,24 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
         }
         if (abs_peak_threshold > max_abs_peak) {
             //we couldn't split it. So fine, we'll just say there is only one cluster
-            QList<int> labels;
+            QVector<int> labels;
             for (long i = 0; i < L; i++)
                 labels << 1;
             return labels;
         }
         else {
             //we now split things into two categories based on abs_peak_threshold
-            QList<int> inds_below = find_peaks_below_threshold_v2(abs_peaks, abs_peak_threshold);
-            QList<int> inds_above = find_peaks_above_threshold_v2(abs_peaks, abs_peak_threshold);
+            QVector<int> inds_below = find_peaks_below_threshold_v2(abs_peaks, abs_peak_threshold);
+            QVector<int> inds_above = find_peaks_above_threshold_v2(abs_peaks, abs_peak_threshold);
             Mda clips_above = grab_clips_subset(clips, inds_above);
 
             //Apply the procedure to the events above the threshold
-            QList<int> labels_above = do_branch_cluster_v2(clips_above, opts, channel_for_display);
+            QVector<int> labels_above = do_branch_cluster_v2(clips_above, opts, channel_for_display);
             long K_above = compute_max(labels_above);
 
             if (K_above <= 1) {
                 //there is really only one cluster
-                QList<int> labels;
+                QVector<int> labels;
                 for (long i = 0; i < L; i++)
                     labels << 1;
                 return labels;
@@ -504,12 +504,12 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
             else {
                 //there is more than one cluster. Let's divide up the based on the nearest
                 //let's consider only the next shell above
-                QList<double> abs_peaks_above;
+                QVector<double> abs_peaks_above;
                 for (long i = 0; i < inds_above.count(); i++)
                     abs_peaks_above << abs_peaks[inds_above[i]];
-                QList<int> inds_next_shell = find_peaks_below_threshold_v2(abs_peaks_above, abs_peak_threshold + opts.shell_increment);
+                QVector<int> inds_next_shell = find_peaks_below_threshold_v2(abs_peaks_above, abs_peak_threshold + opts.shell_increment);
                 Mda clips_next_shell = grab_clips_subset(clips_above, inds_next_shell);
-                QList<int> labels_next_shell;
+                QVector<int> labels_next_shell;
                 for (long i = 0; i < inds_next_shell.count(); i++)
                     labels_next_shell << labels_above[inds_next_shell[i]];
 
@@ -517,7 +517,7 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
                 Mda centroids;
                 centroids.allocate(M, T, K_above);
                 for (long kk = 1; kk <= K_above; kk++) {
-                    QList<int> inds_kk;
+                    QVector<int> inds_kk;
                     for (long i = 0; i < labels_next_shell.count(); i++) {
                         if (labels_next_shell[i] == kk)
                             inds_kk << i;
@@ -532,7 +532,7 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
                 }
 
                 //set the labels for all of the inds above
-                QList<int> labels;
+                QVector<int> labels;
                 for (long i = 0; i < L; i++)
                     labels << 0;
                 for (long i = 0; i < inds_above.count(); i++) {
@@ -544,10 +544,10 @@ QList<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, 
                 Mda distances;
                 distances.allocate(inds_below.count(), K_above);
                 for (long k = 1; k <= K_above; k++) {
-                    QList<int> tmp;
+                    QVector<int> tmp;
                     tmp << k - 1;
                     Mda centroid0 = grab_clips_subset(centroids, tmp);
-                    QList<double> dists = compute_dists_from_template(clips_below, centroid0);
+                    QVector<double> dists = compute_dists_from_template(clips_below, centroid0);
                     for (long i = 0; i < inds_below.count(); i++) {
                         distances.setValue(dists[i], i, k - 1);
                     }

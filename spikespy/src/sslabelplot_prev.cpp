@@ -14,7 +14,7 @@ public:
 	int m_max_label;
 
 	PlotArea m_plot_area;
-	QList<double> m_plot_offsets;
+	QVector<double> m_plot_offsets;
 	QList<QColor> m_label_colors;
 	QPixmap m_image;
 	bool m_image_needs_update;
@@ -184,7 +184,7 @@ void SSLabelPlotPrivate::setup_plot_area() {
 	}
 	q->setYRange(vec2(0, offset-0.5));
 	if (q->channelFlip()) {
-		QList<double> tmp=m_plot_offsets;
+		QVector<double> tmp=m_plot_offsets;
 		for (int i=0; i<tmp.count(); i++) {
 			m_plot_offsets[i]=tmp[tmp.count()-1-i];
 		}
@@ -215,7 +215,7 @@ void SSLabelPlotPrivate::setup_plot_area() {
 
 	for (int ii = 0; ii < m_max_label; ii++) {
 
-		QList<int> T;
+		QVector<int> T;
 		for (int j=0; j<K; j++) {
 			int t0=(int)TL.value(0,j);
 			int l0=(int)TL.value(1,j);

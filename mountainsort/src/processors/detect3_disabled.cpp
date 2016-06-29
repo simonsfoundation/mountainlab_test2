@@ -14,8 +14,8 @@
 #include "msmisc.h"
 #include <math.h>
 
-QList<double> do_detect3(const QList<double> &vals,int detect_interval,double detect_threshold,int sign);
-void adjust_detect_times(const QList<double> &vals,QList<double> &times,int beta);
+QVector<double> do_detect3(const QVector<double> &vals,int detect_interval,double detect_threshold,int sign);
+void adjust_detect_times(const QVector<double> &vals,QVector<double> &times,int beta);
 
 bool detect3(const QString &timeseries_path,const QString &detect_path,const Detect3_Opts &opts) {
 	DiskReadMda X(timeseries_path);
@@ -26,8 +26,8 @@ bool detect3(const QString &timeseries_path,const QString &detect_path,const Det
 	long overlap_size=PROCESSING_CHUNK_OVERLAP_SIZE;
 	if (N<PROCESSING_CHUNK_SIZE) {chunk_size=N; overlap_size=0;}
 
-	QList<int> channels;
-	QList<double> times;
+	QVector<int> channels;
+	QVector<double> times;
 	int Tmid=(int)((opts.clip_size+1)/2)-1;
 	{
 
@@ -41,14 +41,14 @@ bool detect3(const QString &timeseries_path,const QString &detect_path,const Det
 				X.readChunk(chunk,0,timepoint-overlap_size,M,chunk_size+2*overlap_size);
 			}
 
-			QList<double> times1;
-			QList<int> channels1;
+			QVector<double> times1;
+			QVector<int> channels1;
 			for (int m=0; m<M; m++) {
-				QList<double> vals;
+				QVector<double> vals;
 				for (int j=0; j<chunk.N2(); j++) {
 					vals << chunk.value(m,j);
 				}
-				QList<double> times0=do_detect(vals,opts.detect_interval,opts.detect_threshold,opts.sign);
+				QVector<double> times0=do_detect(vals,opts.detect_interval,opts.detect_threshold,opts.sign);
 				adjust_detect_times(vals,times0,opts.beta);
 
 				for (int i=0; i<times0.count(); i++) {
@@ -94,7 +94,7 @@ double eval_kernel(double t,int Tf) {
 	return sin(M_PI*t)/(M_PI*t)*cos_term*cos_term;
 }
 
-void adjust_detect_times(const QList<double> &vals,QList<double> &times,int beta) {
+void adjust_detect_times(const QVector<double> &vals,QVector<double> &times,int beta) {
 	int Tf=5;
 	Mda kernel(beta,Tf*2+1);
 	for (int t=-Tf; t<=Tf; t++) {

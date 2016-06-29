@@ -9,8 +9,8 @@ bool mv_compute_templates(const QString& timeseries_path, const QString& firings
 {
     DiskReadMda X(timeseries_path);
     DiskReadMda firings(firings_path);
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
     for (long i = 0; i < firings.N2(); i++) {
         times << firings.value(1, i);
         labels << (int)firings.value(2, i);
