@@ -545,7 +545,7 @@ MVAbstractView* MVPCAFeaturesFactory::createView(QWidget* parent)
     QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
-        QMessageBox::information(MVMainWindow::instance(), "Unable to open clusters", "You must select at least one cluster.");
+        QMessageBox::information(0, "Unable to open clusters", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
     MVClusterWidget* X = new MVClusterWidget(mvContext());
@@ -556,7 +556,7 @@ MVAbstractView* MVPCAFeaturesFactory::createView(QWidget* parent)
 
 void MVPCAFeaturesFactory::updateEnabled()
 {
-    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty());
+    setEnabled(!mvContext()->selectedClusters().isEmpty());
 }
 
 MVChannelFeaturesFactory::MVChannelFeaturesFactory(MVContext* context, QObject* parent)
@@ -595,7 +595,7 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
         bool ok;
         channels << a.toInt(&ok);
         if (!ok) {
-            QMessageBox::warning(MVMainWindow::instance(), "Open channel features", "Invalid channels string");
+            QMessageBox::warning(0, "Open channel features", "Invalid channels string");
         }
     }
     settings.setValue("open_channel_features_channels", strlist.join(","));
@@ -603,7 +603,7 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
     QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     if (ks.isEmpty()) {
-        QMessageBox::information(MVMainWindow::instance(), "Unable to open clusters", "You must select at least one cluster.");
+        QMessageBox::warning(0, "Unable to open clusters", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
     MVClusterWidget* X = new MVClusterWidget(mvContext());
@@ -615,7 +615,7 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
 
 void MVChannelFeaturesFactory::updateEnabled()
 {
-    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty());
+    setEnabled(!mvContext()->selectedClusters().isEmpty());
 }
 
 #include "extract_clips.h"

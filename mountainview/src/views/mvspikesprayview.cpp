@@ -361,7 +361,7 @@ MVAbstractView* MVSpikeSprayFactory::createView(QWidget* parent)
     QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     if (ks.isEmpty()) {
-        QMessageBox::information(MVMainWindow::instance(), "Unable to open spike spray", "You must select at least one cluster.");
+        QMessageBox::warning(0, "Unable to open spike spray", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
     MVSpikeSprayView* X = new MVSpikeSprayView(mvContext());
@@ -371,5 +371,5 @@ MVAbstractView* MVSpikeSprayFactory::createView(QWidget* parent)
 
 void MVSpikeSprayFactory::updateEnabled()
 {
-    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty());
+    setEnabled(!mvContext()->selectedClusters().isEmpty());
 }

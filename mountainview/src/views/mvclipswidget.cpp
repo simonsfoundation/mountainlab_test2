@@ -233,7 +233,7 @@ MVAbstractView* MVClipsFactory::createView(QWidget* parent)
     QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
-        QMessageBox::information(MVMainWindow::instance(), "Unable to open clips", "You must select at least one cluster.");
+        QMessageBox::information(0, "Unable to open clips", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
     MVClipsWidget* X = new MVClipsWidget(mvContext());
@@ -258,5 +258,5 @@ int MVClipsFactory::order() const
 
 void MVClipsFactory::updateEnabled()
 {
-    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty());
+    setEnabled(!mvContext()->selectedClusters().isEmpty());
 }

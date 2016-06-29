@@ -5,8 +5,9 @@
 #include <QSet>
 #include <QSignalMapper>
 
-MVClusterContextMenuHandler::MVClusterContextMenuHandler(QObject* parent)
+MVClusterContextMenuHandler::MVClusterContextMenuHandler(MVContext* context, MVMainWindow *mw, QObject* parent)
     : QObject(parent)
+    , MVAbstractContextMenuHandler(context, mw)
 {
 }
 
@@ -22,7 +23,8 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
     ds >> clusters;
     QList<QAction*> actions;
 
-    MVContext* context = MVMainWindow::instance()->mvContext();
+    MVContext* context = this->mvContext();
+    MVMainWindow *mw = this->mainWindow();
 
     //TAGS
     {
@@ -83,8 +85,8 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
             QAction* action = new QAction("Open cross-correlograms associated with this cluster", 0);
             action->setEnabled(clusters.count() == 1);
             action->setData(clusters.values().first());
-            connect(action, &QAction::triggered, []() {
-                MVMainWindow::instance()->openView("open-cross-correlograms");
+            connect(action, &QAction::triggered, [mw]() {
+                mw->openView("open-cross-correlograms");
             });
             actions << action;
         }
@@ -95,8 +97,8 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
             foreach (int c, clusters)
                 clusterList << c;
             action->setData(clusterList);
-            connect(action, &QAction::triggered, []() {
-                MVMainWindow::instance()->openView("open-matrix-of-cross-correlograms");
+            connect(action, &QAction::triggered, [mw]() {
+                mw->openView("open-matrix-of-cross-correlograms");
             });
             actions << action;
         }
@@ -107,8 +109,8 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         QAction* action = new QAction("Open discrimination histograms for these clusters", 0);
         action->setEnabled(clusters.count() >= 2);
         action->setData(clusters.values().first());
-        connect(action, &QAction::triggered, []() {
-            MVMainWindow::instance()->openView("open-discrim-histograms");
+        connect(action, &QAction::triggered, [mw]() {
+            mw->openView("open-discrim-histograms");
         });
         actions << action;
     }
@@ -130,6 +132,8 @@ bool MVClusterContextMenuHandler::can_unmerge_selected_clusters(MVContext* conte
 
 QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) const
 {
+    MVContext *context=mvContext();
+
     QMenu* M = new QMenu;
     M->setTitle("Add tag");
     QSignalMapper* mapper = new QSignalMapper(M);
@@ -140,12 +144,13 @@ QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) cons
         mapper->setMapping(a, tag);
         connect(a, SIGNAL(triggered()), mapper, SLOT(map()));
     }
+    /// Witold, I am a bit nervous about passing the context pointer into the lambda function below
     connect(mapper, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
-        [clusters](const QString& tag) {
+        [clusters,context](const QString& tag) {
         foreach(int cluster, clusters) {
-            QSet<QString> clTags = MVMainWindow::instance()->mvContext()->clusterTags(cluster);
+            QSet<QString> clTags = context->clusterTags(cluster);
             clTags.insert(tag);
-            MVMainWindow::instance()->mvContext()->setClusterTags(cluster, clTags);
+            context->setClusterTags(cluster, clTags);
         }
         });
 
@@ -154,9 +159,11 @@ QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) cons
 
 QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) const
 {
+    MVContext *context=mvContext();
+
     QSet<QString> tags_set;
     foreach (int cluster_number, clusters) {
-        QJsonObject attributes = MVMainWindow::instance()->mvContext()->clusterAttributes(cluster_number);
+        QJsonObject attributes = mvContext()->clusterAttributes(cluster_number);
         QJsonArray tags = attributes["tags"].toArray();
         for (int i = 0; i < tags.count(); i++) {
             tags_set.insert(tags[i].toString());
@@ -175,11 +182,11 @@ QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) c
         connect(a, SIGNAL(triggered()), mapper, SLOT(map()));
     }
     connect(mapper, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
-        [clusters](const QString& tag) {
+        [clusters,context](const QString& tag) {
         foreach(int cluster, clusters) {
-            QSet<QString> clTags = MVMainWindow::instance()->mvContext()->clusterTags(cluster);
+            QSet<QString> clTags = context->clusterTags(cluster);
             clTags.remove(tag);
-            MVMainWindow::instance()->mvContext()->setClusterTags(cluster, clTags);
+            context->setClusterTags(cluster, clTags);
         }
         });
     M->setEnabled(!tags_list.isEmpty());

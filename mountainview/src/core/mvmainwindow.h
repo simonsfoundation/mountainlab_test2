@@ -47,9 +47,6 @@ public:
 
     void addControl(MVAbstractControl* control, bool start_expanded);
 
-    /// Witold, I am going to use this sparingly, thinking it will eventually go away
-    static MVMainWindow* instance(); // helper while implementing view factories
-
     MVContext* mvContext() const;
 
 public slots:
@@ -75,8 +72,6 @@ private slots:
 
 private:
     MVMainWindowPrivate* d;
-    /// TODO window_instance goes away
-    static MVMainWindow* window_instance;
 };
 
 #endif // MVMAINWINDOW_H

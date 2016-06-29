@@ -59,8 +59,6 @@
 /// TODO (LOW) put styles in central place?
 #define MV_STATUS_BAR_HEIGHT 30
 
-MVMainWindow* MVMainWindow::window_instance = 0;
-
 class DummyContextMenuHandler : public MVAbstractContextMenuHandler {
 
     // MVAbstractContextMenuHandler interface
@@ -118,7 +116,6 @@ public:
 MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     : QWidget(parent)
 {
-    window_instance = this;
     d = new MVMainWindowPrivate;
     d->q = this;
     d->m_viewMapper = new QSignalMapper(this);
@@ -140,7 +137,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     registerViewFactory(new MVAmplitudeHistogramsFactory(context, this));
     registerViewFactory(new MVDiscrimHistFactory(context, this));
 
-    registerContextMenuHandler(new MVClusterContextMenuHandler(this));
+    registerContextMenuHandler(new MVClusterContextMenuHandler(context, this));
 
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_context, this);
     QToolBar* main_toolbar = new QToolBar;
@@ -213,7 +210,6 @@ MVMainWindow::~MVMainWindow()
 {
     delete d->m_cluster_annotation_guide;
     delete d;
-    window_instance = 0;
 }
 
 void MVMainWindow::setDefaultInitialization()
@@ -266,11 +262,6 @@ const QList<MVAbstractContextMenuHandler*>& MVMainWindow::contextMenuHandlers() 
 void MVMainWindow::addControl(MVAbstractControl* control, bool start_expanded)
 {
     d->m_control_panel->addControl(control, start_expanded);
-}
-
-MVMainWindow* MVMainWindow::instance()
-{
-    return window_instance;
 }
 
 void MVMainWindow::openView(const QString& id)

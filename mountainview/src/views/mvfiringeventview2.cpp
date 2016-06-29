@@ -244,7 +244,7 @@ MVAbstractView* MVFiringEventsFactory::createView(QWidget* parent)
 {
     QList<int> ks = mvContext()->selectedClusters();
     if (ks.isEmpty()) {
-        QMessageBox::information(MVMainWindow::instance(), "Unable to open firing events", "You must select at least one cluster.");
+        QMessageBox::warning(0, "Unable to open firing events", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
     MVFiringEventView2* X = new MVFiringEventView2(mvContext());
@@ -258,5 +258,5 @@ void MVFiringEventsFactory::updateEnabled()
     //bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
     /// TODO: (0.9.1) restore this has_peaks without accessing m_firings in gui thread
     bool has_peaks = true;
-    setEnabled(!MVMainWindow::instance()->mvContext()->selectedClusters().isEmpty() && has_peaks);
+    setEnabled(!mvContext()->selectedClusters().isEmpty() && has_peaks);
 }
