@@ -114,7 +114,7 @@ void MVAbstractView::recalculateOn(QObject* obj, const char* signal, bool sugges
         QObject::connect(obj, signal, this, SLOT(recalculate()));
 }
 
-void MVAbstractView::requestContextMenu(const QMimeData &md, const QPoint &pos)
+void MVAbstractView::requestContextMenu(const QMimeData& md, const QPoint& pos)
 {
     emit contextMenuRequested(md, mapToGlobal(pos));
 }

@@ -470,7 +470,7 @@ void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
     d->zoom(factor);
 }
 
-void MVClusterDetailWidget::contextMenuEvent(QContextMenuEvent *evt)
+void MVClusterDetailWidget::contextMenuEvent(QContextMenuEvent* evt)
 {
     QPoint pt = evt->pos();
 
@@ -491,7 +491,7 @@ void MVClusterDetailWidget::contextMenuEvent(QContextMenuEvent *evt)
     {
         QByteArray ba;
         QDataStream ds(&ba, QIODevice::WriteOnly);
-        ds << (quintptr)this;
+        ds << (quintptr) this;
         md.setData("application/x-mv-view", ba); // this view
     }
     qDebug() << Q_FUNC_INFO;

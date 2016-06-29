@@ -49,7 +49,8 @@ DiskReadMda compute_filtered_firings_locally(const DiskReadMda& firings, const M
                     if (firings0.value(4, i) <= max_outlier_score) {
                         inds << i;
                     }
-                } else {
+                }
+                else {
                     inds << i;
                 }
             }
@@ -63,7 +64,8 @@ DiskReadMda compute_filtered_firings_locally(const DiskReadMda& firings, const M
             }
         }
         return firings_out;
-    } else {
+    }
+    else {
         return firings0;
     }
 }

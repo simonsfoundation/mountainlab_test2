@@ -37,8 +37,7 @@ protected:
 
 private:
     void run();
-private
-slots:
+private slots:
     void slot_start();
 
 private:

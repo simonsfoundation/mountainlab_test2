@@ -64,15 +64,14 @@ MVMainWindow* MVMainWindow::window_instance = 0;
 
 class DummyContextMenuHandler : public MVAbstractContextMenuHandler {
 
-
     // MVAbstractContextMenuHandler interface
 public:
-    bool canHandle(const QMimeData &md) const Q_DECL_OVERRIDE
+    bool canHandle(const QMimeData& md) const Q_DECL_OVERRIDE
     {
         return md.hasFormat("application/x-mv-cluster");
     }
 
-    QList<QAction *> actions(const QMimeData &md) Q_DECL_OVERRIDE
+    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE
     {
         QList<QAction*> result;
         result.append(new QAction("TEST", 0));
@@ -365,17 +364,17 @@ const QList<MVAbstractViewFactory*>& MVMainWindow::viewFactories() const
     return d->m_viewFactories;
 }
 
-void MVMainWindow::registerContextMenuHandler(MVAbstractContextMenuHandler *h)
+void MVMainWindow::registerContextMenuHandler(MVAbstractContextMenuHandler* h)
 {
     d->m_menuHandlers.append(h);
 }
 
-void MVMainWindow::unregisterContextMenuHandler(MVAbstractContextMenuHandler *h)
+void MVMainWindow::unregisterContextMenuHandler(MVAbstractContextMenuHandler* h)
 {
     d->m_menuHandlers.removeOne(h);
 }
 
-const QList<MVAbstractContextMenuHandler *>& MVMainWindow::contextMenuHandlers() const
+const QList<MVAbstractContextMenuHandler*>& MVMainWindow::contextMenuHandlers() const
 {
     return d->m_menuHandlers;
 }
@@ -590,21 +589,23 @@ void MVMainWindow::slot_open_cluster_context_menu()
     menu.exec(QCursor::pos());
 }
 
-void MVMainWindow::handleContextMenu(const QMimeData &dt, const QPoint &globalPos)
+void MVMainWindow::handleContextMenu(const QMimeData& dt, const QPoint& globalPos)
 {
     QList<QAction*> actions;
-    foreach(MVAbstractContextMenuHandler *handler, contextMenuHandlers()) {
+    foreach (MVAbstractContextMenuHandler* handler, contextMenuHandlers()) {
         if (handler->canHandle(dt))
             actions += handler->actions(dt);
     }
-    if (actions.isEmpty()) return;
+    if (actions.isEmpty())
+        return;
     QMenu menu;
     menu.addActions(actions);
     menu.exec(globalPos);
 
     // delete orphan actions
-    foreach(QAction *a, menu.actions()) {
-        if (!a->parent()) a->deleteLater();
+    foreach (QAction* a, menu.actions()) {
+        if (!a->parent())
+            a->deleteLater();
     }
 }
 
@@ -652,8 +653,8 @@ MVAbstractView* MVMainWindowPrivate::openView(MVAbstractViewFactory* factory)
     add_tab(view, factory->title());
 
     /// Witold, does this belong here? I am uncertain about what mvmainwindow is responsible for
-    QObject::connect(view, SIGNAL(contextMenuRequested(QMimeData,QPoint)),
-                     q, SLOT(handleContextMenu(QMimeData,QPoint)));
+    QObject::connect(view, SIGNAL(contextMenuRequested(QMimeData, QPoint)),
+        q, SLOT(handleContextMenu(QMimeData, QPoint)));
 
     return view;
 }

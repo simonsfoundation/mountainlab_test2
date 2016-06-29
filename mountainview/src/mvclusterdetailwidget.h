@@ -47,7 +47,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* evt);
     void mouseDoubleClickEvent(QMouseEvent* evt);
     void wheelEvent(QWheelEvent* evt);
-    void contextMenuEvent(QContextMenuEvent *evt);
+    void contextMenuEvent(QContextMenuEvent* evt);
 signals:
     ///A cluster has been double-clicked (or enter pressed?)
     void signalTemplateActivated();

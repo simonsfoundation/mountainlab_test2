@@ -10,8 +10,7 @@ public:
     friend class MVStatusBarPrivate;
     MVStatusBar();
     virtual ~MVStatusBar();
-private
-slots:
+private slots:
     void slot_update_quantities();
     void slot_update_tasks();
 

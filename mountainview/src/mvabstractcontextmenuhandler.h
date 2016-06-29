@@ -22,8 +22,7 @@ class QAction;
 class MVAbstractContextMenuHandler {
 public:
     virtual ~MVAbstractContextMenuHandler() {}
-    virtual bool canHandle(const QMimeData &md) const { return false; }
-    virtual QList<QAction*> actions(const QMimeData &md) = 0;
+    virtual bool canHandle(const QMimeData& md) const { return false; }
+    virtual QList<QAction*> actions(const QMimeData& md) = 0;
 };
 #endif // MVABSTRACTCONTEXTMENUHANDLER_H
-

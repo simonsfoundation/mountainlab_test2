@@ -5,22 +5,23 @@
 #include <QSet>
 #include <QSignalMapper>
 
-MVClusterContextMenuHandler::MVClusterContextMenuHandler(QObject *parent)
+MVClusterContextMenuHandler::MVClusterContextMenuHandler(QObject* parent)
     : QObject(parent)
 {
-
 }
 
-bool MVClusterContextMenuHandler::canHandle(const QMimeData &md) const {
+bool MVClusterContextMenuHandler::canHandle(const QMimeData& md) const
+{
     return md.hasFormat("application/x-mv-cluster");
 }
 
-QList<QAction *> MVClusterContextMenuHandler::actions(const QMimeData &md) {
+QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
+{
     QSet<int> clusters;
     QDataStream ds(md.data("application/x-mv-cluster"));
     ds >> clusters;
     QList<QAction*> actions;
-    QAction *action = 0;
+    QAction* action = 0;
     actions << addTagMenu(clusters);
     actions << removeTagMenu(clusters);
     action = new QAction("Clear tags", 0);
@@ -41,10 +42,12 @@ QList<QAction *> MVClusterContextMenuHandler::actions(const QMimeData &md) {
             MVMainWindow::instance()->openView("open-cross-correlograms");
         });
         actions << action;
-    } else {
+    }
+    else {
         action = new QAction("Open matrix of cross-correlograms", 0);
         QVariantList clusterList;
-        foreach(int c, clusters) clusterList << c;
+        foreach (int c, clusters)
+            clusterList << c;
         action->setData(clusterList);
         connect(action, &QAction::triggered, []() {
             MVMainWindow::instance()->openView("open-matrix-of-cross-correlograms");
@@ -54,31 +57,31 @@ QList<QAction *> MVClusterContextMenuHandler::actions(const QMimeData &md) {
     return actions;
 }
 
-QAction *MVClusterContextMenuHandler::addTagMenu(const QSet<int> &clusters) const
+QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) const
 {
-    QMenu *M = new QMenu;
+    QMenu* M = new QMenu;
     M->setTitle("Add tag");
-    QSignalMapper *mapper = new QSignalMapper(M);
-    foreach(const QString &tag, validTags()) {
-        QAction *a = new QAction(tag, M);
+    QSignalMapper* mapper = new QSignalMapper(M);
+    foreach (const QString& tag, validTags()) {
+        QAction* a = new QAction(tag, M);
         a->setData(tag);
         M->addAction(a);
         mapper->setMapping(a, tag);
         connect(a, SIGNAL(triggered()), mapper, SLOT(map()));
     }
-    connect(mapper, static_cast<void(QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
-            [clusters](const QString &tag) {
+    connect(mapper, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
+        [clusters](const QString& tag) {
         foreach(int cluster, clusters) {
             QSet<QString> clTags = MVMainWindow::instance()->viewAgent()->clusterTags(cluster);
             clTags.insert(tag);
             MVMainWindow::instance()->viewAgent()->setClusterTags(cluster, clTags);
         }
-    });
+        });
 
     return M->menuAction();
 }
 
-QAction *MVClusterContextMenuHandler::removeTagMenu(const QSet<int> &clusters) const
+QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) const
 {
     QSet<QString> tags_set;
     foreach (int cluster_number, clusters) {
@@ -90,24 +93,24 @@ QAction *MVClusterContextMenuHandler::removeTagMenu(const QSet<int> &clusters) c
     }
     QStringList tags_list = tags_set.toList();
     qSort(tags_list);
-    QMenu *M = new QMenu;
+    QMenu* M = new QMenu;
     M->setTitle("Remove tag");
-    QSignalMapper *mapper = new QSignalMapper(M);
-    foreach(const QString &tag, tags_list) {
-        QAction *a = new QAction(tag, M);
+    QSignalMapper* mapper = new QSignalMapper(M);
+    foreach (const QString& tag, tags_list) {
+        QAction* a = new QAction(tag, M);
         a->setData(tag);
         M->addAction(a);
         mapper->setMapping(a, tag);
         connect(a, SIGNAL(triggered()), mapper, SLOT(map()));
     }
-    connect(mapper, static_cast<void(QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
-            [clusters](const QString &tag) {
+    connect(mapper, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
+        [clusters](const QString& tag) {
         foreach(int cluster, clusters) {
             QSet<QString> clTags = MVMainWindow::instance()->viewAgent()->clusterTags(cluster);
             clTags.remove(tag);
             MVMainWindow::instance()->viewAgent()->setClusterTags(cluster, clTags);
         }
-    });
+        });
     M->setEnabled(!tags_list.isEmpty());
     return M->menuAction();
 }
@@ -121,6 +124,3 @@ QStringList MVClusterContextMenuHandler::validTags() const
                          << "mua"
                          << "artifact";
 }
-
-
-

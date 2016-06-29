@@ -19,7 +19,7 @@
 #define PANEL_HEIGHT_PER_CHANNEL 30
 #define MIN_PANEL_HEIGHT 600
 #define MAX_PANEL_HEIGHT 1800
-#define PANEL_HEIGHT(M) (long) qMin(MAX_PANEL_HEIGHT * 1.0, qMax(MIN_PANEL_HEIGHT * 1.0, PANEL_HEIGHT_PER_CHANNEL* M * 1.0))
+#define PANEL_HEIGHT(M) (long) qMin(MAX_PANEL_HEIGHT * 1.0, qMax(MIN_PANEL_HEIGHT * 1.0, PANEL_HEIGHT_PER_CHANNEL * M * 1.0))
 
 #define MAX_NUM_IMAGE_PIXELS 50 * 1e6
 
@@ -153,15 +153,15 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
             double a2 = ((iii + 1) * panel_num_points * ds_factor - t1) * 1.0 / (t2 - t1) * W;
             if (a2 - a1 < 4000) { //this avoids running out of memory
                 painter.drawImage(a1, 0, p.image.scaled(a2 - a1, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-            } else {
+            }
+            else {
                 painter.fillRect(a1, 0, a2 - a1, H, Qt::lightGray);
             }
         }
     }
 
     //stop the threads that aren't needed
-    foreach(QString code, d->m_queued_or_running_panel_codes)
-    {
+    foreach (QString code, d->m_queued_or_running_panel_codes) {
         if (!panel_codes_needed.contains(code)) {
             d->stop_compute_panel(code);
         }
@@ -199,7 +199,8 @@ void MVTimeSeriesRenderManager::slot_thread_finished()
         d->m_image_panels[code].max_data = thread->max_data;
         d->m_total_num_image_pixels += thread->image.width() * thread->image.height();
         emit updated();
-    } else {
+    }
+    else {
     }
 
     thread->deleteLater();
@@ -237,8 +238,7 @@ ImagePanel* MVTimeSeriesRenderManagerPrivate::closest_ancestor_panel(ImagePanel 
 {
     QList<ImagePanel*> candidates;
     QStringList keys = m_image_panels.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ImagePanel* pp = &m_image_panels[key];
         if (pp->amp_factor == p.amp_factor) {
             double t1 = p.index * p.ds_factor * p.panel_num_points;
@@ -266,8 +266,7 @@ ImagePanel* MVTimeSeriesRenderManagerPrivate::closest_ancestor_panel(ImagePanel 
 void MVTimeSeriesRenderManagerPrivate::cleanup_images(double t1, double t2, double amp_factor)
 {
     QStringList keys = m_image_panels.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ImagePanel* P = &m_image_panels[key];
         double s1 = P->index * P->ds_factor * P->panel_num_points;
         double s2 = (P->index + 1) * P->ds_factor * P->panel_num_points;
@@ -356,7 +355,8 @@ void MVTimeSeriesRenderManagerThread::run()
             if (ii == t1) {
                 first = pt_min;
                 path.moveTo(pt_min);
-            } else
+            }
+            else
                 path.lineTo(pt_min);
         }
         if (ds_factor > 1) {
@@ -369,7 +369,8 @@ void MVTimeSeriesRenderManagerThread::run()
             }
             path.lineTo(first);
             painter.fillPath(path, painter.pen().color());
-        } else {
+        }
+        else {
             painter.drawPath(path);
         }
 
@@ -397,8 +398,7 @@ ThreadManager::~ThreadManager()
 {
     m_queued_threads.clear();
     QStringList keys = m_running_threads.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         this->stop(key);
     }
     while (!m_running_threads.isEmpty()) {
@@ -427,8 +427,7 @@ void ThreadManager::stop(QString id)
 void ThreadManager::clear()
 {
     QStringList keys = m_running_threads.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         this->stop(key);
     }
     m_running_threads.clear();
@@ -460,7 +459,8 @@ ImagePanel MVTimeSeriesRenderManagerPrivate::render_panel(ImagePanel p)
     QString code = p.make_code();
     if (m_image_panels.contains(code)) {
         return m_image_panels[code];
-    } else {
+    }
+    else {
         ImagePanel* p2 = closest_ancestor_panel(p);
         if (p2) {
             double s1 = p2->ds_factor * p2->index * p2->panel_num_points;
@@ -476,7 +476,8 @@ ImagePanel MVTimeSeriesRenderManagerPrivate::render_panel(ImagePanel p)
             QColor col(255, 0, 0, 6);
             painter.fillRect(0, 0, p.image.width(), p.image.height(), col);
             return p;
-        } else {
+        }
+        else {
             p.image = QImage(100, 100, QImage::Format_ARGB32);
             QColor col(0, 0, 0, 10);
             p.image.fill(col);

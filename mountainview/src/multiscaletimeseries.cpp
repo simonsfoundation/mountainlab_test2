@@ -191,7 +191,8 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         if (t1 >= 0) {
             min.setChunk(min0, 0, 0);
             max.setChunk(max0, 0, 0);
-        } else {
+        }
+        else {
             min.setChunk(min0, 0, -t1);
             max.setChunk(max0, 0, -t1);
         }

@@ -50,8 +50,7 @@ public:
 signals:
     void clicked();
 
-private
-slots:
+private slots:
     void slot_scroll_to_current_timepoint();
 
 private:
