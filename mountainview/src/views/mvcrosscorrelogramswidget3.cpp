@@ -20,8 +20,6 @@
 #include "msmisc.h"
 #include "mvmisc.h"
 
-/// TODO: (MEDIUM) make abstract histogram view that encompasses both cross-correlograms and amplitude histograms
-
 struct Correlogram3 {
     int k1 = 0, k2 = 0;
     QVector<double> data;
@@ -288,22 +286,6 @@ MVAbstractView* MVAutoCorrelogramsFactory::createView(QWidget* parent)
     //QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_auto_correlogram_activated()));
     return X;
 }
-
-/*
-void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
-{
-    MVAbstractView* view = qobject_cast<MVAbstractView*>(sender());
-    if (!view)
-        return;
-    MVMainWindow* mw = MVMainWindow::instance();
-    int k = mw->mvContext()->currentCluster();
-    TabberTabWidget* TW = mw->tabWidget(view);
-    mw->tabber()->setCurrentContainer(TW);
-    mw->tabber()->switchCurrentContainer();
-    /// TODO: d->open_cross_correlograms(k);
-    /// mw->openView("cross-correlograms", k);
-}
-*/
 
 MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)

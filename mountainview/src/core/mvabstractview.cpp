@@ -55,6 +55,8 @@ MVAbstractView::MVAbstractView(MVContext* context)
         this->addAction(a);
         connect(a, SIGNAL(triggered(bool)), this, SLOT(recalculate()));
     }
+
+    this->setFocusPolicy(Qt::StrongFocus);
 }
 
 MVAbstractView::~MVAbstractView()

@@ -61,8 +61,6 @@ MVHistogramGrid::MVHistogramGrid(MVContext* context)
     this->setLayout(GL);
     d->m_grid_layout = GL;
 
-    this->setFocusPolicy(Qt::StrongFocus);
-
     {
         QAction* a = new QAction("Export image", this);
         this->addAction(a);

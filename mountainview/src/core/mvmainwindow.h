@@ -64,7 +64,7 @@ public slots:
 private slots:
     void slot_action_move_to_other_tab_widget();
     void slot_pop_out_widget();
-    /// TODO cluster annotation guide doesn't belong in main window
+    /// TODO: (HIGH) cluster annotation guide doesn't belong in main window
     void slot_cluster_annotation_guide();
 
     void slot_open_view(QObject*);

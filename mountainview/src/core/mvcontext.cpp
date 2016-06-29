@@ -360,7 +360,7 @@ void MVContext::setClusterAttributes(int num, const QJsonObject& obj)
         return;
     d->m_cluster_attributes[num] = obj;
     emit this->clusterAttributesChanged(num);
-    /// TODO (LOW) only emit this if there really was a change
+    /// TODO: (HIGH) only emit this if there really was a change
     emit this->clusterVisibilityChanged();
 }
 

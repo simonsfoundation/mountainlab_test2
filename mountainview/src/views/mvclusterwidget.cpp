@@ -14,7 +14,7 @@
 #include <math.h>
 #include "mountainprocessrunner.h"
 
-/// TODO (MEDIUM) control brightness in 3D density view
+/// TODO: (MEDIUM) control brightness in 3D density view
 
 class MVClusterWidgetComputer {
 public:

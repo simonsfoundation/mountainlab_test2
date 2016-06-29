@@ -15,8 +15,8 @@
 #include "mlutils.h"
 #include "msmisc.h"
 
-/// TODO (LOW) spike spray should respond to mouse wheel and show current position with marker
-/// TODO (LOW) much more responsive rendering of spike spray
+/// TODO: (MEDIUM) spike spray should respond to mouse wheel and show current position with marker
+/// TODO: (MEDIUM) much more responsive rendering of spike spray
 
 class MVSpikeSprayComputer {
 public:
@@ -65,9 +65,6 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     recalculateOnOptionChanged("clip_size");
     recalculateOn(mvContext(), SIGNAL(timeseriesNamesChanged()));
     recalculateOn(mvContext(), SIGNAL(filteredFiringsChanged()));
-
-    /// TODO (LOW) should we put this in the abstract view?
-    this->setFocusPolicy(Qt::StrongFocus);
 }
 
 MVSpikeSprayView::~MVSpikeSprayView()

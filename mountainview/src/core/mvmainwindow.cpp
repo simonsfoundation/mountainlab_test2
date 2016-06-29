@@ -105,11 +105,6 @@ public:
     MVCrossCorrelogramsWidget3* open_cross_correlograms(int k);
     MVCrossCorrelogramsWidget3* open_matrix_of_cross_correlograms();
 
-    void open_discrim_histograms();
-    /// TODO: (MEDIUM) implement find_nearby_events
-
-    void open_timeseries();
-
     TabberTabWidget* tab_widget_of(QWidget* W);
 };
 
@@ -325,7 +320,7 @@ void MVMainWindow::keyPressEvent(QKeyEvent* evt)
     evt->ignore();
 }
 
-/// TODO (MEDIUM) this functionality should be moved to tabber
+/// TODO: (MEDIUM) this functionality should be moved to tabber
 void MVMainWindow::slot_action_move_to_other_tab_widget()
 {
     QAction* a = qobject_cast<QAction*>(sender());

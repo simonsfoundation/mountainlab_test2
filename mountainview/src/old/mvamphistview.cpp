@@ -61,8 +61,6 @@ MVAmpHistView::MVAmpHistView(MVContext* context)
     this->setLayout(GL);
     d->m_grid_layout = GL;
 
-    this->setFocusPolicy(Qt::StrongFocus);
-
     this->recalculate();
 }
 

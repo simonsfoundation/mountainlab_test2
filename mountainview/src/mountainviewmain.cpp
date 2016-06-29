@@ -28,13 +28,10 @@
 #include <QtConcurrentRun>
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
-/// TODO (MED) update docs
-/// TODO (MED) event filter to be computed on client
-/// TODO (MED) blobs for populations
-/// TODO (LOW) Resort by populations, ampl, etc
-/// TODO (LOW) time scale bar for clip view
+/// TODO: (HIGH) blobs for populations
+/// TODO: (HIGH) Resort by populations, ampl, etc
+/// TODO: (MEDIUM) time scale bar for clip view
 /// TODO (LOW) electrode view... (firetrack)
-/// TODO (LOW) 3D feature plot scale density -- log scale?
 /// TODO: (0.9.1) Go to timepoint
 
 class TaskProgressViewThread : public QRunnable {
@@ -83,8 +80,8 @@ void test_taskprogressview()
 
 //void run_export_instructions(MVMainWindow* W, const QStringList& instructions);
 
-/// TODO (LOW) provide mountainview usage information
-/// TODO (LOW) auto correlograms for selected clusters
+/// TODO: (MEDIUM) provide mountainview usage information
+/// TODO: (MEDIUM) auto correlograms for selected clusters
 /// TODO (LOW) figure out what to do when #channels and/or #clusters is huge
 /// TODO: (0.9.1) make sure to handle merging with other views, such as clips etc. Make elegant way
 /// TODO: (HIGH) annotate axes as microvolts whenever relevant

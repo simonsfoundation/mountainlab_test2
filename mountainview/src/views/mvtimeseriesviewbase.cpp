@@ -118,8 +118,6 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* context)
     QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
 
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
-
-    this->setFocusPolicy(Qt::StrongFocus);
 }
 
 MVTimeSeriesViewBase::~MVTimeSeriesViewBase()

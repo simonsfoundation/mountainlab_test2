@@ -174,7 +174,6 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewF
     recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
     recalculateOnOptionChanged("clip_size");
 
-    this->setFocusPolicy(Qt::StrongFocus);
     this->setMouseTracking(true);
 
     {
