@@ -21,40 +21,99 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
     QDataStream ds(md.data("application/x-mv-cluster"));
     ds >> clusters;
     QList<QAction*> actions;
-    QAction* action = 0;
-    actions << addTagMenu(clusters);
-    actions << removeTagMenu(clusters);
-    action = new QAction("Clear tags", 0);
-    connect(action, &QAction::triggered, [clusters]() {
-        foreach (int cluster_number, clusters) {
-            MVMainWindow::instance()->viewAgent()->setClusterTags(cluster_number, QSet<QString>());
-        }
-    });
-    actions << action;
 
-    action = new QAction(0);
-    action->setSeparator(true);
-    actions << action;
-    if (clusters.size() == 1) {
-        action = new QAction("Open cross-correlograms associated with this cluster", 0);
-        action->setData(clusters.values().first());
-        connect(action, &QAction::triggered, []() {
-            MVMainWindow::instance()->openView("open-cross-correlograms");
+    MVContext* context = MVMainWindow::instance()->viewAgent();
+
+    //TAGS
+    {
+        actions << addTagMenu(clusters);
+        actions << removeTagMenu(clusters);
+        QAction* action = new QAction("Clear tags", 0);
+        connect(action, &QAction::triggered, [clusters, context]() {
+            foreach (int cluster_number, clusters) {
+                context->setClusterTags(cluster_number, QSet<QString>());
+            }
         });
         actions << action;
     }
-    else {
-        action = new QAction("Open matrix of cross-correlograms", 0);
-        QVariantList clusterList;
-        foreach (int c, clusters)
-            clusterList << c;
-        action->setData(clusterList);
-        connect(action, &QAction::triggered, []() {
-            MVMainWindow::instance()->openView("open-matrix-of-cross-correlograms");
-        });
+
+    //Separator
+    {
+        QAction* action = new QAction(0);
+        action->setSeparator(true);
         actions << action;
+    }
+
+    //MERGE
+    {
+        if (clusters.count() >= 1) {
+            {
+                QAction* A = new QAction(0);
+                A->setText("Merge selected clusters");
+                QObject::connect(A, &QAction::triggered, [clusters, context]() {
+                    ClusterMerge CM = context->clusterMerge();
+                    CM.merge(clusters);
+                    context->setClusterMerge(CM);
+                });
+                actions << A;
+                A->setEnabled(clusters.count() >= 2);
+            }
+            {
+                QAction* A = new QAction(0);
+                A->setText("Unmerge selected clusters");
+                QObject::connect(A, &QAction::triggered, [clusters, context]() {
+                    ClusterMerge CM = context->clusterMerge();
+                    CM.unmerge(clusters);
+                    context->setClusterMerge(CM);
+                });
+                actions << A;
+                A->setEnabled(can_unmerge_selected_clusters(context, clusters));
+            }
+        }
+    }
+
+    //Separator
+    {
+        QAction* action = new QAction(0);
+        action->setSeparator(true);
+        actions << action;
+    }
+
+    //CROSS-CORRELOGRAMS
+    {
+        if (clusters.size() == 1) {
+            QAction* action = new QAction("Open cross-correlograms associated with this cluster", 0);
+            action->setData(clusters.values().first());
+            connect(action, &QAction::triggered, []() {
+                MVMainWindow::instance()->openView("open-cross-correlograms");
+            });
+            actions << action;
+        }
+        else {
+            QAction* action = new QAction("Open matrix of cross-correlograms", 0);
+            QVariantList clusterList;
+            foreach (int c, clusters)
+                clusterList << c;
+            action->setData(clusterList);
+            connect(action, &QAction::triggered, []() {
+                MVMainWindow::instance()->openView("open-matrix-of-cross-correlograms");
+            });
+            actions << action;
+        }
     }
     return actions;
+}
+
+bool MVClusterContextMenuHandler::can_unmerge_selected_clusters(MVContext* context, const QSet<int>& clusters)
+{
+    ClusterMerge CM = context->clusterMerge();
+    foreach (int k, clusters) {
+        if (CM.representativeLabel(k) != k)
+            return true;
+        if (CM.getMergeGroup(k).count() > 1)
+            return true;
+    }
+    return false;
 }
 
 QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) const

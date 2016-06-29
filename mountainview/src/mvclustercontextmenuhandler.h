@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "mvabstractcontextmenuhandler.h"
+#include "mvviewagent.h"
 
 class MVClusterContextMenuHandler : public QObject, public MVAbstractContextMenuHandler {
 public:
@@ -15,6 +16,7 @@ private:
     QAction* addTagMenu(const QSet<int>& clusters) const;
     QAction* removeTagMenu(const QSet<int>& clusters) const;
     QStringList validTags() const;
+    bool can_unmerge_selected_clusters(MVContext* context, const QSet<int>& clusters);
 };
 
 #endif // MVCLUSTERCONTEXTMENUHANDLER_H
