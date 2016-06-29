@@ -204,10 +204,10 @@ bool ScriptController::runPipeline(const QString& json)
     //run the processing in parallel
     bool done = false;
     while (!done) {
-        QList<int> node_indices_ready_to_be_run;
-        QList<int> node_indices_not_ready_to_be_run;
-        QList<int> node_indices_running;
-        QList<int> node_indices_completed;
+        QVector<int> node_indices_ready_to_be_run;
+        QVector<int> node_indices_not_ready_to_be_run;
+        QVector<int> node_indices_running;
+        QVector<int> node_indices_completed;
         for (int i = 0; i < nodes.count(); i++) {
             if (nodes[i].completed) {
                 node_indices_completed << i;

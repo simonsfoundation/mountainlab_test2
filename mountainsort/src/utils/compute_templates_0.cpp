@@ -10,8 +10,8 @@
 
 Mda compute_templates_0(DiskReadMda& X, Mda& firings, int clip_size)
 {
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
     long L = firings.N2();
     for (long i = 0; i < L; i++) {
         times << firings.value(1, i);
@@ -20,7 +20,7 @@ Mda compute_templates_0(DiskReadMda& X, Mda& firings, int clip_size)
     return compute_templates_0(X, times, labels, clip_size);
 }
 
-Mda compute_templates_0(DiskReadMda& X, const QList<double>& times, const QList<int>& labels, int clip_size)
+Mda compute_templates_0(DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, int clip_size)
 {
     int M = X.N1();
     int T = clip_size;
@@ -61,7 +61,7 @@ Mda compute_templates_0(DiskReadMda& X, const QList<double>& times, const QList<
     return templates;
 }
 
-void compute_templates_stdevs(Mda& templates, Mda& stdevs, DiskReadMda& X, const QList<double>& times, const QList<int>& labels, int clip_size)
+void compute_templates_stdevs(Mda& templates, Mda& stdevs, DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, int clip_size)
 {
     int M = X.N1();
     int T = clip_size;

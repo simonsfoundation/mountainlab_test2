@@ -3,7 +3,7 @@
 #include <QSet>
 #include <QMap>
 
-QList<int> indexlist(const QList<int> &T2,int t1,int offset,int &ptr2);
+QVector<int> indexlist(const QVector<int> &T2,int t1,int offset,int &ptr2);
 Mda confusion_matrix_2(const char *firings1_path, const char *firings2_path, int max_matching_offset,QMap<int,int> &map12);
 
 bool confusion_matrix(const char *firings1_path, const char *firings2_path, const char *output_path, int max_matching_offset)
@@ -42,8 +42,8 @@ Mda confusion_matrix_2(const char *firings1_path, const char *firings2_path, int
 	DiskReadMda C1; C1.setPath(firings1_path);
 	DiskReadMda C2; C2.setPath(firings2_path);
 
-	QList<int> T1,L1;
-	QList<int> T2,L2;
+	QVector<int> T1,L1;
+	QVector<int> T2,L2;
 
 	for (int ii=0; ii<C1.N2(); ii++) {
 		T1 << C1.value(1,ii);
@@ -77,9 +77,9 @@ Mda confusion_matrix_2(const char *firings1_path, const char *firings2_path, int
 			int ptr2=0; //moving index to sorted T2 list
 			for (int ii1=0; ii1<T1.count(); ii1++) {
 				//find indices of C2 which should be paired with the event at ii1
-				QList<int> ii2_list=indexlist(T2,T1[ii1],offset,ptr2);
+				QVector<int> ii2_list=indexlist(T2,T1[ii1],offset,ptr2);
 				//only use those that haven't been removed!
-				QList<int> ii2_list_b;
+				QVector<int> ii2_list_b;
 				for (int j=0; j<ii2_list.count(); j++) {
 					if (!inds2_to_remove.contains(ii2_list[j])) {
 						if (pass==1) {
@@ -104,7 +104,7 @@ Mda confusion_matrix_2(const char *firings1_path, const char *firings2_path, int
 				}
 			}
 			//now remove the events that were marked above
-			QList<int> new_T1,new_L1;
+			QVector<int> new_T1,new_L1;
 			for (int i=0; i<T1.count(); i++) {
 				if (!inds1_to_remove.contains(i)) {
 					new_T1 << T1[i];
@@ -114,7 +114,7 @@ Mda confusion_matrix_2(const char *firings1_path, const char *firings2_path, int
 			T1=new_T1;
 			L1=new_L1;
 
-			QList<int> new_T2,new_L2;
+			QVector<int> new_T2,new_L2;
 			for (int i=0; i<T2.count(); i++) {
 				if (!inds2_to_remove.contains(i)) {
 					new_T2 << T2[i];
@@ -145,7 +145,7 @@ Mda confusion_matrix_2(const char *firings1_path, const char *firings2_path, int
 	return output;
 }
 
-QList<int> indexlist(const QList<int> &T2,int t1,int offset,int &ptr2) {
+QVector<int> indexlist(const QVector<int> &T2,int t1,int offset,int &ptr2) {
 	// find T1 such that abs(T1-t1)<off, where t1 is a scalar. Update ptr2 which gives the rough
 	// center value of this index.
 	int N=T2.count();
@@ -153,7 +153,7 @@ QList<int> indexlist(const QList<int> &T2,int t1,int offset,int &ptr2) {
 	while ((T2.value(i)>=t1-offset)&&(i>=0)) i--; // go down until T2's too early
 	int j = ptr2;
 	while ((T2.value(j)<=t1+offset)&&(j< N)) j++; // go up until T2's too late
-	QList<int> ret;
+	QVector<int> ret;
 	for (int ii=i; ii<=j; ii++) {
 		int t2val=T2.value(ii);
 		if ((ii>=0)&&(ii<N)&&(t1-offset<=t2val)&&(t2val<=t1+offset))

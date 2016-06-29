@@ -26,24 +26,6 @@
 
 #include "textfile.h"
 
-double compute_min(const QList<double>& X)
-{
-    double ret = X.value(0);
-    for (int i = 0; i < X.count(); i++)
-        if (X[i] < ret)
-            ret = X[i];
-    return ret;
-}
-
-double compute_max(const QList<double>& X)
-{
-    double ret = X.value(0);
-    for (int i = 0; i < X.count(); i++)
-        if (X[i] > ret)
-            ret = X[i];
-    return ret;
-}
-
 double compute_min(const QVector<double>& X)
 {
     double ret = X.value(0);
@@ -62,7 +44,7 @@ double compute_max(const QVector<double>& X)
     return ret;
 }
 
-int compute_max(const QList<int>& X)
+int compute_max(const QVector<int>& X)
 {
     int ret = X.value(0);
     for (int i = 0; i < X.count(); i++)
@@ -126,7 +108,7 @@ double compute_mean(long N, double* X)
     return sum;
 }
 
-double compute_mean(const QList<double>& X)
+double compute_mean(const QVector<double>& X)
 {
     double sum = 0;
     for (int i = 0; i < X.count(); i++)
@@ -136,7 +118,7 @@ double compute_mean(const QList<double>& X)
     return sum;
 }
 
-double compute_stdev(const QList<double>& X)
+double compute_stdev(const QVector<double>& X)
 {
     double sumsqr = 0;
     for (int i = 0; i < X.count(); i++)
@@ -150,7 +132,7 @@ double compute_stdev(const QList<double>& X)
     } else
         return 0;
 }
-Mda grab_clips_subset(Mda& clips, const QList<int>& inds)
+Mda grab_clips_subset(Mda& clips, const QVector<int>& inds)
 {
     int M = clips.N1();
     int T = clips.N2();

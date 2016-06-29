@@ -46,11 +46,11 @@ public:
     virtual ~MVClusterView();
     void setData(const Mda& X);
     bool hasData();
-    void setTimes(const QList<double>& times);
-    void setLabels(const QList<int>& labels);
-    void setAmplitudes(const QList<double>& amps);
+    void setTimes(const QVector<double>& times);
+    void setLabels(const QVector<int>& labels);
+    void setAmplitudes(const QVector<double>& amps);
 
-    void setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores);
+    void setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores);
 
     void setMode(int mode);
     void setCurrentEvent(MVEvent evt, bool do_emit = false);
@@ -87,7 +87,7 @@ private:
 class MVClusterLegend {
 public:
     void setClusterColors(const QList<QColor>& colors);
-    void setClusterNumbers(const QList<int>& numbers);
+    void setClusterNumbers(const QVector<int>& numbers);
     void setParentWindowSize(QSize size);
     void draw(QPainter* painter);
     int clusterNumberAt(QPointF pos) const;
@@ -100,7 +100,7 @@ public:
 
 private:
     QList<QColor> m_cluster_colors;
-    QList<int> m_cluster_numbers;
+    QVector<int> m_cluster_numbers;
     QSize m_parent_window_size;
     QList<QRectF> m_cluster_number_rects;
     int m_hovered_cluster_number = -1;

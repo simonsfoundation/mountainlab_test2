@@ -11,7 +11,7 @@ public:
 	Array2D m_weights;
 	int m_component_count;
 	int m_num_iterations;
-	QList<double> m_energies;
+	QVector<double> m_energies;
 };
 
 PCASolver::PCASolver() 
@@ -179,7 +179,7 @@ const Array2D &PCASolver::coefficients() const {
 void PCASolver::setNumIterations(int val) {
 	d->m_num_iterations=val;
 }
-QList<double> PCASolver::energies() const {
+QVector<double> PCASolver::energies() const {
 	return d->m_energies;
 }
 void PCASolver::setWeights(const QList<float> &W) {

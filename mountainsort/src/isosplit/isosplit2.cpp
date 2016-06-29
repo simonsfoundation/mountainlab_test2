@@ -6,16 +6,16 @@
 #include <QDebug>
 #include "lapacke.h"
 
-QList<int> do_kmeans(Mda &X,int K);
+QVector<int> do_kmeans(Mda &X,int K);
 bool eigenvalue_decomposition_sym_isosplit(Mda &U, Mda &S,Mda &X);
 
 struct AttemptedComparisons {
-    QList<double> centers1,centers2;
-    QList<int> counts1,counts2;
+    QVector<double> centers1,centers2;
+    QVector<int> counts1,counts2;
 };
 
 
-QList<long> find_inds(const QList<int> &labels,int k) {
+QList<long> find_inds(const QVector<int> &labels,int k) {
     QList<long> ret;
     for (int i=0; i<labels.count(); i++) {
         if (labels[i]==k) ret << i;
@@ -62,10 +62,10 @@ void geometric_median(int M,int N,double *ret,double *X) {
     }
 }
 
-QList<double> compute_centroid(Mda &X) {
+QVector<double> compute_centroid(Mda &X) {
     int M=X.N1();
     int N=X.N2();
-    QList<double> ret;
+    QVector<double> ret;
     for (int i=0; i<M; i++) ret << 0;
     for (int n=0; n<N; n++) {
         for (int m=0; m<M; m++) {
@@ -77,11 +77,11 @@ QList<double> compute_centroid(Mda &X) {
 }
 
 
-QList<double> compute_center(Mda &X,const QList<long> &inds) {
+QVector<double> compute_center(Mda &X,const QList<long> &inds) {
     int M=X.N1();
     int NN=inds.count();
     if (NN==0) {
-        QList<double> ret; for (int i=0; i<M; i++) ret << 0;
+        QVector<double> ret; for (int i=0; i<M; i++) ret << 0;
         return ret;
     }
     double *XX=(double *)malloc(sizeof(double)*M*NN);
@@ -94,20 +94,20 @@ QList<double> compute_center(Mda &X,const QList<long> &inds) {
     }
     double *result=(double *)malloc(sizeof(double)*M);
     geometric_median(M,NN,result,XX);
-    QList<double> ret; for (int m=0; m<M; m++) ret << result[m];
+    QVector<double> ret; for (int m=0; m<M; m++) ret << result[m];
     free(result);
     free(XX);
     return ret;
 }
 
-Mda compute_centers(Mda &X,const QList<int> &labels,int K) {
+Mda compute_centers(Mda &X,const QVector<int> &labels,int K) {
     int M=X.N1();
     //int N=X.N2();
     Mda ret;
     ret.allocate(M,K);
     for (int k=0; k<K; k++) {
         QList<long> inds=find_inds(labels,k);
-        QList<double> ctr=compute_center(X,inds);
+        QVector<double> ctr=compute_center(X,inds);
         for (int m=0; m<M; m++) ret.setValue(ctr[m],m,k);
     }
     return ret;
@@ -151,7 +151,7 @@ bool was_already_attempted(int M,AttemptedComparisons &attempted_comparisons,dou
 }
 
 void find_next_comparison(int M,int K,int &k1,int &k2,bool *active_labels,double *Cptr,int *counts,AttemptedComparisons &attempted_comparisons,double repeat_tolerance) {
-    QList<int> active_inds;
+    QVector<int> active_inds;
     for (int k=0; k<K; k++) if (active_labels[k]) active_inds << k;
     if (active_inds.count()==0) {
         k1=-1; k2=-1;
@@ -250,8 +250,8 @@ void whiten_two_clusters(double *V,Mda &X1,Mda &X2) {
     int N2=X2.N2();
     int N=N1+N2;
 
-    QList<double> center1=compute_centroid(X1);
-    QList<double> center2=compute_centroid(X2);
+    QVector<double> center1=compute_centroid(X1);
+    QVector<double> center2=compute_centroid(X2);
 
     if (M<N) { //otherwise there are too few points to whiten
 
@@ -282,13 +282,13 @@ void whiten_two_clusters(double *V,Mda &X1,Mda &X2) {
     }
 }
 
-QList<int> test_redistribute(bool &do_merge,Mda &Y1,Mda &Y2,double isocut_threshold) {
+QVector<int> test_redistribute(bool &do_merge,Mda &Y1,Mda &Y2,double isocut_threshold) {
     Mda X1; X1=Y1;
     Mda X2; X2=Y2;
     int M=X1.N1();
     int N1=X1.N2();
     int N2=X2.N2();
-    QList<int> ret; for (int i=0; i<N1+N2; i++) ret << 1;
+    QVector<int> ret; for (int i=0; i<N1+N2; i++) ret << 1;
     do_merge=true;
     double V[M];
     whiten_two_clusters(V,X1,X2);
@@ -307,7 +307,7 @@ QList<int> test_redistribute(bool &do_merge,Mda &Y1,Mda &Y2,double isocut_thresh
     }
 
     //project onto line connecting the centers
-    QList<double> XX;
+    QVector<double> XX;
     for (int i=0; i<N1; i++) {
         double val=0;
         for (int m=0; m<M; m++) val+=X1.value(m,i)*V[m];
@@ -319,7 +319,7 @@ QList<int> test_redistribute(bool &do_merge,Mda &Y1,Mda &Y2,double isocut_thresh
         XX << val;
     }
 
-    QList<double> XXs=XX;
+    QVector<double> XXs=XX;
     qSort(XXs);
     double *XXX=(double *)malloc(sizeof(double)*(N1+N2));
     for (int i=0; i<N1+N2; i++) XXX[i]=XXs[i];
@@ -338,7 +338,7 @@ QList<int> test_redistribute(bool &do_merge,Mda &Y1,Mda &Y2,double isocut_thresh
     return ret;
 }
 
-QList<int> test_redistribute(bool &do_merge,Mda &X,const QList<long> &inds1,const QList<long> &inds2,double isocut_threshold) {
+QVector<int> test_redistribute(bool &do_merge,Mda &X,const QList<long> &inds1,const QList<long> &inds2,double isocut_threshold) {
     int M=X.N1();
     Mda X1;
     X1.allocate(M,inds1.count());
@@ -357,20 +357,20 @@ QList<int> test_redistribute(bool &do_merge,Mda &X,const QList<long> &inds1,cons
     return test_redistribute(do_merge,X1,X2,isocut_threshold);
 }
 
-int compute_max_00(const QList<int> &X) {
+int compute_max_00(const QVector<int> &X) {
     int ret=X.value(0);
     for (int i=0; i<X.count(); i++) if (X[i]>ret) ret=X[i];
     return ret;
 }
 
 
-QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
+QVector<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
 {
     double repeat_tolerance=0.2;
 
     int M=X.N1();
     int N=X.N2();
-    QList<int> labels=do_kmeans(X,K_init);
+    QVector<int> labels=do_kmeans(X,K_init);
 
     bool active_labels[K_init];
     for (int ii=0; ii<K_init; ii++) active_labels[ii]=true;
@@ -387,7 +387,7 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
     while ((true)&&(num_iterations<max_iterations)) {
         num_iterations++;
         if (verbose) printf("isosplit2: iteration %d\n",num_iterations);
-        QList<int> old_labels=labels;
+        QVector<int> old_labels=labels;
         int k1,k2;
         find_next_comparison(M,K_init,k1,k2,active_labels,Cptr,counts,attempted_comparisons,repeat_tolerance);
         if (k1<0) break;
@@ -411,14 +411,14 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
 
         bool do_merge;
 
-        QList<int> labels0=test_redistribute(do_merge,X,inds1,inds2,isocut_threshold);
+        QVector<int> labels0=test_redistribute(do_merge,X,inds1,inds2,isocut_threshold);
         int max_label=compute_max_00(labels0);
         if ((do_merge)||(max_label==1)) {
             if (verbose) printf("merging size=%d.\n",inds12.count());
             for (int i=0; i<N; i++) {
                 if (labels[i]==k2) labels[i]=k1;
             }
-            QList<double> ctr=compute_center(X,inds12);
+            QVector<double> ctr=compute_center(X,inds12);
             for (int m=0; m<M; m++) {
                 centers.setValue(ctr[m],m,k1);
             }
@@ -442,13 +442,13 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
             }
             if (verbose) printf("redistributing sizes=(%d,%d).\n",indsA.count(),indsB.count());
             {
-                QList<double> ctr=compute_center(X,indsA);
+                QVector<double> ctr=compute_center(X,indsA);
                 for (int m=0; m<M; m++) {
                     centers.setValue(ctr[m],m,k1);
                 }
             }
             {
-                QList<double> ctr=compute_center(X,indsB);
+                QVector<double> ctr=compute_center(X,indsB);
                 for (int m=0; m<M; m++) {
                     centers.setValue(ctr[m],m,k2);
                 }
@@ -466,7 +466,7 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
             labels_map[j]=kk; kk++;
         }
     }
-    QList<int> ret;
+    QVector<int> ret;
     for (int i=0; i<N; i++) {
         ret << labels_map[labels[i]];
     }
@@ -474,8 +474,8 @@ QList<int> isosplit2(Mda &X, float isocut_threshold, int K_init,bool verbose)
 }
 
 //choose K distinct (sorted) integers between 0 and N-1. If K>N then it will repeat the last integer a suitable number of times
-QList<int> choose_random_indices(int N,int K) {;
-    QList<int> ret;
+QVector<int> choose_random_indices(int N,int K) {;
+    QVector<int> ret;
     if (K>=N) {
         for (int i=0; i<N; i++) ret << i;
         while (ret.count()<K) ret << N-1;
@@ -486,23 +486,23 @@ QList<int> choose_random_indices(int N,int K) {;
         int ind=(qrand()%N);
         theset.insert(ind);
     }
-    ret=theset.toList();
+    ret=theset.toList().toVector();
     qSort(ret);
     return ret;
 }
 
 //do k-means with K clusters -- X is MxN representing N points in M-dimensional space. Returns a labels vector of size N.
-QList<int> do_kmeans(Mda &X,int K) {
+QVector<int> do_kmeans(Mda &X,int K) {
     int M=X.N1();
     int N=X.N2();
-    if (N==0) return QList<int>(); //added 4/8/16 to prevent crash
+    if (N==0) return QVector<int>(); //added 4/8/16 to prevent crash
     double *Xptr=X.dataPtr();
     Mda centroids_mda; centroids_mda.allocate(M,K); double *centroids=centroids_mda.dataPtr();
-    QList<int> labels; for (int i=0; i<N; i++) labels << -1;
+    QVector<int> labels; for (int i=0; i<N; i++) labels << -1;
     int *counts=(int *)malloc(sizeof(int)*K);
 
     //initialize the centroids
-    QList<int> initial=choose_random_indices(N,K);
+    QVector<int> initial=choose_random_indices(N,K);
     for (int j=0; j<K; j++) {
         int ind=initial[j];
         int jj=ind*M;
@@ -628,7 +628,7 @@ void test_isosplit2_routines()
             }
         }
 
-        QList<int> labels=isosplit2(X,1.5,30,false);
+        QVector<int> labels=isosplit2(X,1.5,30,false);
         printf("Labels:\n");
         for (int i=0; i<labels.count(); i++) {
             printf("%d ",labels[i]);

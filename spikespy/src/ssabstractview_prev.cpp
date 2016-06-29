@@ -331,9 +331,9 @@ void SSAbstractView::on_replot_needed()
 }
 
 struct TickLocations {
-	QList<double> major_locations;
+	QVector<double> major_locations;
 	QList<QString> major_labels;
-	QList<double> minor_locations;
+	QVector<double> minor_locations;
 	QList<QString> minor_labels;
 };
 
@@ -539,7 +539,7 @@ void SSAbstractViewUnderlayPainter::draw_time_axis(QPainter *painter) {
 	painter->drawLine(pix1.x,y0,pix2.x,y0);
 
 	for (int aa=1; aa<=2; aa++) { //minor/major
-		QList<double> locations0=locations.major_locations;
+		QVector<double> locations0=locations.major_locations;
 		QList<QString> labels0=locations.major_labels;
 		int ticklen=5;
 		if (aa==2) {

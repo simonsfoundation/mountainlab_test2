@@ -31,8 +31,8 @@ public:
 
     //output
     DiskReadMda clips;
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
 
     void compute();
 };

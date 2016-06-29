@@ -130,7 +130,7 @@ void run_unit_test_whiten() {
 void run_unit_test_isosplit() {
     QString path0=cfp(qApp->applicationDirPath()+"/../test_data");
 	Mda X; X.read(path0+"/isosplit_unit_test_X.mda");
-	QList<int> labels=isosplit2(X,1.5,30,true);
+	QVector<int> labels=isosplit2(X,1.5,30,true);
 	Mda L; L.allocate(1,labels.count());
 	for (int i=0; i<labels.count(); i++) L.set(labels[i],i);
 	L.write32(path0+"/isosplit_unit_test_L.mda");

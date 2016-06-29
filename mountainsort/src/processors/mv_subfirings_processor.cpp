@@ -54,7 +54,7 @@ QList<bool> evenly_distributed_to_use(long num,long num_to_use) {
     return ret;
 }
 
-bool mv_subfirings(QString firings_path, QString firings_out_path, QList<int> labels, int max_per_label)
+bool mv_subfirings(QString firings_path, QString firings_out_path, QVector<int> labels, int max_per_label)
 {
     QMap<int, long> counts;
     DiskReadMda F(firings_path);
@@ -110,7 +110,7 @@ bool mv_subfirings_Processor::run(const QMap<QString, QVariant>& params)
     QString firings_path = params["firings"].toString();
     QString firings_out_path = params["firings_out"].toString();
     QStringList labels0 = params["labels"].toString().trimmed().split(",");
-    QList<int> labels;
+    QVector<int> labels;
     foreach (QString label, labels0) {
         labels << label.trimmed().toInt();
     }

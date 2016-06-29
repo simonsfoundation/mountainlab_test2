@@ -42,7 +42,7 @@ bool geom2adj_Processor::run(const QMap<QString, QVariant> &params)
     QString output=params["output"].toString();
     double radius=params["radius"].toDouble();
     QString channels_str = params["channels"].toString();
-    QList<int> channels = str_to_intlist(channels_str);
+    QVector<int> channels = str_to_intlist(channels_str);
 
     Mda X(input);
     Mda Y;

@@ -26,15 +26,15 @@ public:
     int clip_size;
     QList<int> labels_to_use;
     QString features_mode; //"pca" or "channels"
-    QList<int> channels; //in case of feature_mode=="channels"
+    QVector<int> channels; //in case of feature_mode=="channels"
 
     //output
     Mda data;
-    QList<double> times;
-    QList<int> labels;
-    QList<double> amplitudes;
-    QList<double> detectability_scores;
-    QList<double> outlier_scores;
+    QVector<double> times;
+    QVector<int> labels;
+    QVector<double> amplitudes;
+    QVector<double> detectability_scores;
+    QVector<double> outlier_scores;
 
     void compute();
 };
@@ -43,7 +43,7 @@ class ClipsViewThread : public QThread {
 public:
     //input
     DiskReadMda timeseries;
-    QList<double> times;
+    QVector<double> times;
     int clip_size;
 
     //output
@@ -60,10 +60,10 @@ public:
     QLabel* m_info_bar;
     Mda m_data;
     QList<int> m_labels_to_use;
-    QList<double> m_outlier_scores;
+    QVector<double> m_outlier_scores;
     MVClusterWidgetComputer m_computer;
     QString m_feature_mode;
-    QList<int> m_channels;
+    QVector<int> m_channels;
     ClipsViewThread m_clips_view_thread;
 
     void connect_view(MVClusterView* V);
@@ -240,28 +240,28 @@ void MVClusterWidget::setData(const Mda& X)
     d->set_data_on_visible_views();
 }
 
-void MVClusterWidget::setTimes(const QList<double>& times)
+void MVClusterWidget::setTimes(const QVector<double>& times)
 {
     foreach (MVClusterView* V, d->m_views) {
         V->setTimes(times);
     }
 }
 
-void MVClusterWidget::setLabels(const QList<int>& labels)
+void MVClusterWidget::setLabels(const QVector<int>& labels)
 {
     foreach (MVClusterView* V, d->m_views) {
         V->setLabels(labels);
     }
 }
 
-void MVClusterWidget::setAmplitudes(const QList<double>& amps)
+void MVClusterWidget::setAmplitudes(const QVector<double>& amps)
 {
     foreach (MVClusterView* V, d->m_views) {
         V->setAmplitudes(amps);
     }
 }
 
-void MVClusterWidget::setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores)
+void MVClusterWidget::setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores)
 {
     foreach (MVClusterView* V, d->m_views) {
         V->setScores(detectability_scores, outlier_scores);
@@ -288,7 +288,7 @@ void MVClusterWidget::setFeatureMode(QString mode)
     this->recalculate();
 }
 
-void MVClusterWidget::setChannels(QList<int> channels)
+void MVClusterWidget::setChannels(QVector<int> channels)
 {
     d->m_channels = channels;
     this->recalculate();
@@ -365,7 +365,7 @@ void MVClusterWidgetPrivate::update_clips_view()
     MVEvent evt = q->mvContext()->currentEvent();
     QString info_txt;
     if (evt.time >= 0) {
-        QList<double> times;
+        QVector<double> times;
         times << evt.time;
 
         m_clips_view->setClips(Mda());
@@ -590,7 +590,7 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
     if (str.isEmpty())
         return Q_NULLPTR;
     QStringList strlist = str.split(",", QString::SkipEmptyParts);
-    QList<int> channels;
+    QVector<int> channels;
     foreach (QString a, strlist) {
         bool ok;
         channels << a.toInt(&ok);

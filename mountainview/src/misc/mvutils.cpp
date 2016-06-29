@@ -133,7 +133,7 @@ void draw_axis(QPainter* painter, draw_axis_opts opts)
 
     if (opts.maxval <= opts.minval)
         return;
-    QList<double> possible_tick_intervals;
+    QVector<double> possible_tick_intervals;
     for (double x = 0.00001; x <= 10000; x *= 10) {
         possible_tick_intervals << x << x * 2 << x * 5;
     }

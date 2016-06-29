@@ -10,7 +10,7 @@
 
 struct AmpHistogram {
     int k;
-    QList<double> data;
+    QVector<double> data;
 };
 
 class MVAmpHistView2Computer {
@@ -71,7 +71,7 @@ double compute_min2(const QList<AmpHistogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<double> tmp = data0[i].data;
+        QVector<double> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] < ret)
                 ret = tmp[j];
@@ -84,7 +84,7 @@ double compute_max2(const QList<AmpHistogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<double> tmp = data0[i].data;
+        QVector<double> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] > ret)
                 ret = tmp[j];
@@ -108,8 +108,8 @@ void MVAmpHistView2Computer::compute()
 
     firings = compute_filtered_firings_locally(firings, event_filter);
 
-    QList<int> labels;
-    QList<double> amplitudes;
+    QVector<int> labels;
+    QVector<double> amplitudes;
     long L = firings.N2();
 
     task.setProgress(0.2);

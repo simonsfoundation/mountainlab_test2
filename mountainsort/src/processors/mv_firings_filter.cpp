@@ -10,7 +10,7 @@
 #include "msmisc.h"
 #include <math.h>
 
-void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<double>& clip_peaks, double shell_increment, int min_shell_count);
+void define_shells(QVector<double>& shell_mins, QVector<double>& shell_maxs, QVector<double>& clip_peaks, double shell_increment, int min_shell_count);
 
 bool mv_firings_filter(const QString& firings_path, const QString& firings_out_path, const QString& original_cluster_numbers_path, const mv_firings_filter_opts& opts)
 {
@@ -22,8 +22,8 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
     Mda original_cluster_numbers;
     Mda firings_split;
 
-    QList<int> labels;
-    QList<double> peaks;
+    QVector<int> labels;
+    QVector<double> peaks;
     for (int n = 0; n < firings_original.N2(); n++) {
         float peak = firings_original.value(3, n);
         labels << (int)firings_original.value(2, n);
@@ -33,17 +33,17 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
     int K = compute_max(labels);
 
     if (opts.use_shell_split) {
-        QList<int> nums;
+        QVector<int> nums;
         QList<float> mins;
         QList<float> maxs;
         for (int k = 1; k <= K; k++) {
-            QList<double> peaks_k;
+            QVector<double> peaks_k;
             for (int n = 0; n < labels.count(); n++) {
                 if (labels[n] == k) {
                     peaks_k << peaks[n];
                 }
             }
-            QList<double> shell_mins, shell_maxs;
+            QVector<double> shell_mins, shell_maxs;
             shell_mins.clear();
             shell_maxs.clear();
             define_shells(shell_mins, shell_maxs, peaks_k, shell_width, min_per_shell);
@@ -92,7 +92,7 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
         double min_detectablity_score = opts.min_detectability_score;
         double max_outlier_score = opts.max_outlier_score;
 
-        QList<int> inds;
+        QVector<int> inds;
         for (int i = 0; i < firings_split.N2(); i++) {
             if (fabs(firings_split.value(3, i)) >= min_amplitude) {
                 if (fabs(firings_split.value(5, i)) >= min_detectablity_score) {
@@ -122,12 +122,12 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
     return true;
 }
 
-void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<double>& clip_peaks, double shell_increment, int min_shell_count)
+void define_shells(QVector<double>& shell_mins, QVector<double>& shell_maxs, QVector<double>& clip_peaks, double shell_increment, int min_shell_count)
 {
     //positives
     double max_clip_peaks = compute_max(clip_peaks);
-    QList<double> shell_mins_pos;
-    QList<double> shell_maxs_pos;
+    QVector<double> shell_mins_pos;
+    QVector<double> shell_maxs_pos;
     {
         int num_bins = 1;
         while (shell_increment * num_bins <= max_clip_peaks)
@@ -178,8 +178,8 @@ void define_shells(QList<double>& shell_mins, QList<double>& shell_maxs, QList<d
 
     //negatives
     double min_clip_peaks = compute_min(clip_peaks);
-    QList<double> shell_mins_neg;
-    QList<double> shell_maxs_neg;
+    QVector<double> shell_mins_neg;
+    QVector<double> shell_maxs_neg;
     {
         int num_bins = 1;
         while (shell_increment * num_bins <= -min_clip_peaks)

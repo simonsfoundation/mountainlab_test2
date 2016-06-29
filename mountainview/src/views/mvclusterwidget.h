@@ -33,16 +33,16 @@ public:
 
     void setLabelsToUse(const QList<int>& labels);
     void setFeatureMode(QString mode); //"pca", "channels"
-    void setChannels(QList<int> channels); //relevant for "channels" mode
+    void setChannels(QVector<int> channels); //relevant for "channels" mode
 
     void setTransformation(const AffineTransformation& T);
 
 private:
     void setData(const Mda& X);
-    void setTimes(const QList<double>& times);
-    void setLabels(const QList<int>& labels);
-    void setAmplitudes(const QList<double>& amps);
-    void setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores);
+    void setTimes(const QVector<double>& times);
+    void setLabels(const QVector<int>& labels);
+    void setAmplitudes(const QVector<double>& amps);
+    void setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores);
 
 signals:
 private slots:

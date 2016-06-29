@@ -11,7 +11,7 @@ public:
     /// TODO (LOW) we should be using QVector<double> instead of ridiculous malloc's
     int m_N;
     double* m_data;
-    QList<double> m_second_data;
+    QVector<double> m_second_data;
     double* m_bin_centers;
     int* m_bin_counts;
     int* m_second_bin_counts;
@@ -77,7 +77,7 @@ HistogramView::~HistogramView()
     delete d;
 }
 
-void HistogramView::setData(const QList<double>& values)
+void HistogramView::setData(const QVector<double>& values)
 {
     double* tmp = (double*)malloc(sizeof(double) * values.count());
     for (int i = 0; i < values.count(); i++) {
@@ -98,7 +98,7 @@ void HistogramView::setData(int N, double* values)
     d->m_update_required = true;
 }
 
-void HistogramView::setSecondData(const QList<double>& values)
+void HistogramView::setSecondData(const QVector<double>& values)
 {
     d->m_second_data = values;
     d->m_update_required = true;
@@ -344,7 +344,7 @@ void HistogramViewPrivate::update_bin_counts()
     }
     m_max_bin_count = 0;
     for (int pass = 1; pass <= 2; pass++) {
-        QList<double> list;
+        QVector<double> list;
         if (pass == 1) {
             for (int i = 0; i < m_N; i++) {
                 list << m_data[i];

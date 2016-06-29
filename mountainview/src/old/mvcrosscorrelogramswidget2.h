@@ -27,7 +27,7 @@ struct CrossCorrelogramOptions {
     }
 
     CrossCorrelogramMode mode;
-    QList<int> ks;
+    QVector<int> ks;
 };
 
 class MVCrossCorrelogramsWidget2Private;
@@ -47,10 +47,10 @@ public:
     int currentLabel2();
     void setCurrentLabel1(int k);
     void setCurrentLabel2(int k);
-    QList<int> selectedLabels1();
-    QList<int> selectedLabels2();
-    void setSelectedLabels1(const QList<int>& L);
-    void setSelectedLabels2(const QList<int>& L);
+    QVector<int> selectedLabels1();
+    QVector<int> selectedLabels2();
+    void setSelectedLabels1(const QVector<int>& L);
+    void setSelectedLabels2(const QVector<int>& L);
     QImage renderImage(int W = 0, int H = 0);
 
     void paintEvent(QPaintEvent* evt);

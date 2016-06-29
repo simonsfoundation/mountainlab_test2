@@ -28,7 +28,7 @@ bool get_pca_features(long M, long N, int num_features, double *features_out, do
     Mda U;
     Mda S;
     eigenvalue_decomposition_sym(U,S,XXt);
-    QList<double> eigenvals;
+    QVector<double> eigenvals;
     for (int i=0; i<S.totalSize(); i++) eigenvals << S.get(i);
     QList<long> inds=get_sort_indices(eigenvals);
 
@@ -77,7 +77,7 @@ bool pca_denoise(long M, long N, int num_features, double *X_out, double *X_in, 
     Mda U;
     Mda S;
     eigenvalue_decomposition_sym(U,S,XXt);
-    QList<double> eigenvals;
+    QVector<double> eigenvals;
     for (int i=0; i<S.totalSize(); i++) eigenvals << S.get(i);
     QList<long> inds=get_sort_indices(eigenvals);
 

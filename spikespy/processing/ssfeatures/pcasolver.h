@@ -16,7 +16,7 @@ public:
 	const Array2D &components() const;
 	const Array2D &coefficients() const;
 	void setNumIterations(int val=10);
-	QList<double> energies() const;
+	QVector<double> energies() const;
 	bool solve();
 private:
 	PCASolverPrivate *d;

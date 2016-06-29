@@ -11,7 +11,7 @@
 
 struct Histogram {
     int k;
-    QList<double> data;
+    QVector<double> data;
 };
 
 class MVAmpHistViewComputer {
@@ -87,7 +87,7 @@ double compute_min2(const QList<Histogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<double> tmp = data0[i].data;
+        QVector<double> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] < ret)
                 ret = tmp[j];
@@ -100,7 +100,7 @@ double compute_max2(const QList<Histogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<double> tmp = data0[i].data;
+        QVector<double> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] > ret)
                 ret = tmp[j];
@@ -126,7 +126,7 @@ void MVAmpHistView::onCalculationFinished()
 
     int num_bins = 200; //how to choose this?
 
-    QList<int> inds_to_use;
+    QVector<int> inds_to_use;
     for (int ii = 0; ii < d->m_histograms.count(); ii++) {
         int k0 = d->m_histograms[ii].k;
         if (mvContext()->clusterIsVisible(k0)) {
@@ -206,8 +206,8 @@ void MVAmpHistViewComputer::compute()
 
     firings = compute_filtered_firings_locally(firings, event_filter);
 
-    QList<int> labels;
-    QList<double> amplitudes;
+    QVector<int> labels;
+    QVector<double> amplitudes;
     long L = firings.N2();
 
     task.setProgress(0.2);
@@ -235,7 +235,7 @@ void MVAmpHistViewComputer::compute()
 
 void MVAmpHistViewPrivate::do_highlighting()
 {
-    QList<int> selected_clusters = q->mvContext()->selectedClusters();
+    QVector<int> selected_clusters = q->mvContext()->selectedClusters();
     for (int i = 0; i < m_histogram_views.count(); i++) {
         HistogramView* HV = m_histogram_views[i];
         int index = HV->property("index").toInt();

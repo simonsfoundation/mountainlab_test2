@@ -16,8 +16,8 @@ bool remove_duplicate_clusters(const QString &timeseries_path,const QString &fir
     int T=opts.clip_size;
     int Tmid=(int)((T+1)/2)-1;
 
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
 
 	int L=F.N2();
     int K=0;
@@ -25,7 +25,7 @@ bool remove_duplicate_clusters(const QString &timeseries_path,const QString &fir
 		int label0=(int)F.value(2,ii);
 		if (label0>K) K=label0;
 	}
-    QList<int> cluster_channels;
+    QVector<int> cluster_channels;
     for (int k=0; k<K; k++) cluster_channels << 0;
     for (long i=0; i<L; i++) {
         int k=(int)F.value(2,i);
@@ -35,7 +35,7 @@ bool remove_duplicate_clusters(const QString &timeseries_path,const QString &fir
         }
     }
 
-    QList<int> clusters_to_use;
+    QVector<int> clusters_to_use;
     for (int k=0; k<K; k++) clusters_to_use << 1;
 
     printf("Computing templates...\n");

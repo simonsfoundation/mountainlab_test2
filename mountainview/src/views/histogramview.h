@@ -21,9 +21,9 @@ public:
     explicit HistogramView(QWidget* parent = 0);
     virtual ~HistogramView();
 
-    void setData(const QList<double>& values); // The data to view
+    void setData(const QVector<double>& values); // The data to view
     void setData(int N, double* values); // Alternative specification
-    void setSecondData(const QList<double>& values);
+    void setSecondData(const QVector<double>& values);
     void setBins(double bin_min, double bin_max, int num_bins); //Set evenly spaced bins
     void autoSetBins(int num_bins); // auto set evenly spaced bins based on range of data (call setData first)
     void setFillColor(const QColor& col); // The color for filling the histogram bars

@@ -91,7 +91,7 @@ void MVClusterContextMenu::slot_open_matrix_of_cross_correlograms()
 void MVClusterContextMenu::slot_merge_selected_clusters()
 {
     ClusterMerge CM = d->m_context->clusterMerge();
-    QList<int> ks = d->m_context->selectedClusters();
+    QVector<int> ks = d->m_context->selectedClusters();
     CM.merge(ks);
     d->m_context->setClusterMerge(CM);
 }
@@ -99,7 +99,7 @@ void MVClusterContextMenu::slot_merge_selected_clusters()
 void MVClusterContextMenu::slot_unmerge_selected_clusters()
 {
     ClusterMerge CM = d->m_context->clusterMerge();
-    QList<int> ks = d->m_context->selectedClusters();
+    QVector<int> ks = d->m_context->selectedClusters();
     CM.unmerge(ks);
     d->m_context->setClusterMerge(CM);
 }
@@ -208,7 +208,7 @@ void MVClusterContextMenuPrivate::add_cross_correlogram_options()
 bool MVClusterContextMenuPrivate::can_unmerge_selected_clusters()
 {
     ClusterMerge CM = m_context->clusterMerge();
-    QList<int> ks = m_context->selectedClusters();
+    QVector<int> ks = m_context->selectedClusters();
     foreach (int k, ks) {
         if (CM.representativeLabel(k) != k)
             return true;

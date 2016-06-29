@@ -29,7 +29,7 @@ struct Correlogram {
     }
 
     int k1, k2;
-    QList<double> data;
+    QVector<double> data;
 };
 
 class MVCrossCorrelogramsWidget2Computer {
@@ -144,7 +144,7 @@ double compute_max2(const QList<Correlogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<double> tmp = data0[i].data;
+        QVector<double> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] > ret)
                 ret = tmp[j];
@@ -176,7 +176,7 @@ void MVCrossCorrelogramsWidget2::onCalculationFinished()
         num_bins = 2000;
     double time_width = (bin_max - bin_min) / sample_freq * 1000;
 
-    QList<int> inds_to_use;
+    QVector<int> inds_to_use;
     for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
         int k1 = d->m_correlograms[ii].k1;
         int k2 = d->m_correlograms[ii].k2;
@@ -292,7 +292,7 @@ void MVCrossCorrelogramsWidget2::paintEvent(QPaintEvent* evt)
 void MVCrossCorrelogramsWidget2::keyPressEvent(QKeyEvent* evt)
 {
     if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
-        QList<int> ks;
+        QVector<int> ks;
         for (int i = 0; i < d->m_histogram_views.count(); i++) {
             ks << d->m_histogram_views[i]->property("k2").toInt();
         }
@@ -375,11 +375,11 @@ void MVCrossCorrelogramsWidget2::slot_update_highlighting()
     d->do_highlighting();
 }
 
-QList<double> compute_cc_data(const QList<double>& times1_in, const QList<double>& times2_in, int max_dt, bool exclude_matches)
+QVector<double> compute_cc_data(const QVector<double>& times1_in, const QVector<double>& times2_in, int max_dt, bool exclude_matches)
 {
-    QList<double> ret;
-    QList<double> times1 = times1_in;
-    QList<double> times2 = times2_in;
+    QVector<double> ret;
+    QVector<double> times1 = times1_in;
+    QVector<double> times2 = times2_in;
     qSort(times1);
     qSort(times2);
 
@@ -404,8 +404,8 @@ QList<double> compute_cc_data(const QList<double>& times1_in, const QList<double
     return ret;
 }
 
-typedef QList<double> DoubleList;
-typedef QList<int> IntList;
+typedef QVector<double> DoubleList;
+typedef QVector<int> IntList;
 void MVCrossCorrelogramsWidget2Computer::compute()
 {
     TaskProgress task(TaskProgress::Calculate, QString("Cross Correlograms (%1)").arg(options.mode));
@@ -414,8 +414,8 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
     firings = compute_filtered_firings_locally(firings, event_filter);
 
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
     long L = firings.N2();
 
     //assemble the times and labels arrays
@@ -489,7 +489,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
 
 void MVCrossCorrelogramsWidget2Private::do_highlighting()
 {
-    QList<int> selected_clusters = q->mvContext()->selectedClusters();
+    QVector<int> selected_clusters = q->mvContext()->selectedClusters();
     for (int i = 0; i < m_histogram_views.count(); i++) {
         HistogramView* HV = m_histogram_views[i];
         int index = HV->property("index").toInt();
@@ -524,7 +524,7 @@ void MVCrossCorrelogramsWidget2Private::shift_select_clusters_between(int kA, in
     else if (ind2 >= 0) {
         selected_clusters.insert(m_histogram_views[ind2]->property("k2").toInt());
     }
-    q->mvContext()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
+    q->mvContext()->setSelectedClusters(QVector<int>::fromSet(selected_clusters));
 }
 
 int MVCrossCorrelogramsWidget2Private::find_view_index_for_k2(int k2)

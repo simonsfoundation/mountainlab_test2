@@ -12,7 +12,7 @@
 
 struct DiscrimHistogram {
     int k1, k2;
-    QList<double> data1, data2;
+    QVector<double> data1, data2;
 };
 
 class MVDiscrimHistViewComputer {
@@ -86,7 +86,7 @@ double compute_min2(const QList<DiscrimHistogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<double> tmp = data0[i].data1;
+        QVector<double> tmp = data0[i].data1;
         tmp.append(data0[i].data2);
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] < ret)
@@ -100,7 +100,7 @@ double compute_max2(const QList<DiscrimHistogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<double> tmp = data0[i].data1;
+        QVector<double> tmp = data0[i].data1;
         tmp.append(data0[i].data2);
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] > ret)
@@ -117,9 +117,9 @@ void MVDiscrimHistView::onCalculationFinished()
     d->set_views();
 }
 
-QList<double> negative(const QList<double>& X)
+QVector<double> negative(const QVector<double>& X)
 {
-    QList<double> ret;
+    QVector<double> ret;
     for (int i = 0; i < X.count(); i++) {
         ret << -X[i];
     }
@@ -227,7 +227,7 @@ void MVDiscrimHistViewPrivate::set_views()
         //if (q->mvContext()->clusterIsVisible(k1)) {
         {
             HistogramView* HV = new HistogramView;
-            QList<double> tmp = m_histograms[ii].data1;
+            QVector<double> tmp = m_histograms[ii].data1;
             tmp.append(m_histograms[ii].data2);
             HV->setData(tmp);
             HV->setSecondData(m_histograms[ii].data2);

@@ -44,7 +44,7 @@ bool mask_out_artifacts(const QString& timeseries_path, const QString& timeserie
     for (long i = 0; i < use_it.totalSize(); i++)
         use_it.set(1, i);
     for (int m = 0; m < M; m++) {
-        QList<double> vals;
+        QVector<double> vals;
         for (long i = 0; i < norms.N2(); i++) {
             vals << norms.get(m, i);
         }

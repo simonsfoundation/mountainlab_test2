@@ -17,9 +17,9 @@ public:
     MVFiringEventView* q;
 
     //set by user
-    QList<double> m_times;
-    QList<int> m_labels;
-    QList<double> m_amplitudes;
+    QVector<double> m_times;
+    QVector<int> m_labels;
+    QVector<double> m_amplitudes;
     double m_samplerate;
     QList<Epoch> m_epochs;
 
@@ -225,11 +225,11 @@ void MVFiringEventView::slot_update()
     long num_bins=d->m_event_counts.N2();
     Mda data; data.allocate(Kv,num_bins);
     for (int k=0; k<Kv; k++) {
-        QList<double> rates;
+        QVector<double> rates;
         for (int i=0; i<num_bins; i++) {
             rates << d->m_event_counts.value(k,i)/d->m_window_width_sec;
         }
-        QList<double> rates_smoothed=do_smoothing(rates,d->m_smoothing_kernel_size/d->m_window_width_sec);
+        QVector<double> rates_smoothed=do_smoothing(rates,d->m_smoothing_kernel_size/d->m_window_width_sec);
         for (int i=0; i<rates_smoothed.count(); i++) {
             double val=0;
             if (rates_smoothed[i]) val=log(rates_smoothed[i]);

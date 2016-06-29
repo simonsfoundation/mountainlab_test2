@@ -31,8 +31,8 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     Mda firings_split = split_into_shells(firings, define_shells_opts);
     //Mda firings_split = firings;
 
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
     for (long i = 0; i < L; i++) {
         times << firings_split.value(1, i);
         labels << (int)firings_split.value(2, i);
@@ -42,14 +42,14 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     DiskReadMda X0(timeseries_path);
     Mda templates = compute_templates_0(X0, firings_split, T); //MxNxK
 
-    QList<double> template_norms;
+    QVector<double> template_norms;
     template_norms << 0;
     for (int k = 1; k <= K; k++) {
         template_norms << compute_norm(M * T, templates.dataPtr(0, 0, k - 1));
     }
 
     bool something_changed = true;
-    QList<int> all_to_use;
+    QVector<int> all_to_use;
     for (long i = 0; i < L; i++)
         all_to_use << 0;
     int num_passes = 0;
@@ -57,11 +57,11 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     while (something_changed) {
         num_passes++;
         printf("pass %d... ", num_passes);
-        QList<double> scores_to_try;
-        QList<double> times_to_try;
-        QList<int> labels_to_try;
+        QVector<double> scores_to_try;
+        QVector<double> times_to_try;
+        QVector<int> labels_to_try;
         QList<long> inds_to_try; //indices of the events to try on this pass
-        //QList<double> template_norms_to_try;
+        //QVector<double> template_norms_to_try;
         for (long i = 0; i < L; i++) {
             if (all_to_use[i] == 0) {
                 double t0 = times[i];
@@ -88,7 +88,7 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
                 }
             }
         }
-        QList<int> to_use = find_events_to_use(times_to_try, scores_to_try, opts);
+        QVector<int> to_use = find_events_to_use(times_to_try, scores_to_try, opts);
 
         {
             X.write32(QString("/tmp/debug-X-%1.mda").arg(num_passes));
@@ -156,9 +156,9 @@ double compute_score(long N, double* X, double* template0)
     return norm1 * norm1 - norm2 * norm2;
 }
 
-QList<int> find_events_to_use(const QList<double>& times, const QList<double>& scores, const fit_stage_opts& opts)
+QVector<int> find_events_to_use(const QVector<double>& times, const QVector<double>& scores, const fit_stage_opts& opts)
 {
-    QList<int> to_use;
+    QVector<int> to_use;
     long L = times.count();
     for (long i = 0; i < L; i++)
         to_use << 0;
@@ -212,7 +212,7 @@ Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts)
     int k2 = 1;
     for (int k = 1; k <= K; k++) {
         QList<long> inds_k = find_label_inds(labels, k);
-        QList<double> peaks;
+        QVector<double> peaks;
         for (long j = 0; j < inds_k.count(); j++) {
             peaks << firings.value(3, inds_k[j]);
         }
@@ -235,7 +235,7 @@ Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts)
 
 Mda sort_firings_by_time(const Mda& firings)
 {
-    QList<double> times;
+    QVector<double> times;
     for (long i = 0; i < firings.N2(); i++) {
         times << firings.value(1, i);
     }

@@ -11,10 +11,10 @@
 #include <math.h>
 #include "get_pca_features.h"
 
-QList<double> adjust_times_2(Mda &clips,const QList<double> &times,const adjust_times_opts &opts);
-double get_best_offset(const QList<double> &vals,const adjust_times_opts &opts,Mda &upsampling_kernel);
+QVector<double> adjust_times_2(Mda &clips,const QVector<double> &times,const adjust_times_opts &opts);
+double get_best_offset(const QVector<double> &vals,const adjust_times_opts &opts,Mda &upsampling_kernel);
 Mda compute_upsampling_kernel(const adjust_times_opts &opts);
-QList<double> upsample(const QList<double> &vals,int upsampling_factor,Mda &kernel);
+QVector<double> upsample(const QVector<double> &vals,int upsampling_factor,Mda &kernel);
 Mda pca_denoise(Mda &clips,int num_features,int jiggle);
 
 bool adjust_times(const QString &timeseries_path, const QString &detect_path, const QString &detect_out_path, const adjust_times_opts &opts)
@@ -22,7 +22,7 @@ bool adjust_times(const QString &timeseries_path, const QString &detect_path, co
     int clip_size=20;
     DiskReadMda TS(timeseries_path);
     Mda Detect; Detect.read(detect_path);
-    QList<double> times_out;
+    QVector<double> times_out;
     for (long i=0; i<Detect.N2(); i++) times_out << 0;
     int max_channel=0;
     for (long i=0; i<Detect.N2(); i++) {
@@ -32,7 +32,7 @@ bool adjust_times(const QString &timeseries_path, const QString &detect_path, co
     int M=max_channel;
     for (int m=0; m<=M; m++) {
         QList<long> inds;
-        QList<double> times;
+        QVector<double> times;
         for (long i=0; i<Detect.N2(); i++) {
             int ch=(int)Detect.value(0,i);
             if (ch==m) {
@@ -46,13 +46,13 @@ bool adjust_times(const QString &timeseries_path, const QString &detect_path, co
                 clips=extract_clips(TS,times,clip_size);
             }
             else {
-                QList<int> channels; channels << m-1; //convert to 1-based indexing
+                QVector<int> channels; channels << m-1; //convert to 1-based indexing
                 clips=extract_clips(TS,times,channels,clip_size);
             }
             if (opts.num_pca_denoise_components) {
                 clips=pca_denoise(clips,opts.num_pca_denoise_components,opts.pca_denoise_jiggle);
             }
-            QList<double> times2=adjust_times_2(clips,times,opts);
+            QVector<double> times2=adjust_times_2(clips,times,opts);
             for (long i=0; i<inds.count(); i++) {
                 times_out[inds[i]]=times2[i];
             }
@@ -90,12 +90,12 @@ Mda pca_denoise(Mda &clips,int num_features,int jiggle) {
     return ret;
 }
 
-QList<double> adjust_times_2(Mda &clips,const QList<double> &times,const adjust_times_opts &opts) {
+QVector<double> adjust_times_2(Mda &clips,const QVector<double> &times,const adjust_times_opts &opts) {
     int M=clips.N1();
     int T=clips.N2();
     long L=clips.N3();
     int Tmid=(int)((T+1)/2)-1;
-    QList<double> times_out=times;
+    QVector<double> times_out=times;
     if (times.count()!=L) {
         qWarning() << "Unexpected problem in" << __FUNCTION__;
         return times_out;
@@ -113,7 +113,7 @@ QList<double> adjust_times_2(Mda &clips,const QList<double> &times,const adjust_
                 best_chan=m;
             }
         }
-        QList<double> vals;
+        QVector<double> vals;
         for (int t=0; t<T; t++) {
             vals << clips.value(best_chan,t,i);
         }
@@ -123,10 +123,10 @@ QList<double> adjust_times_2(Mda &clips,const QList<double> &times,const adjust_
     return times_out;
 }
 
-double get_best_offset(const QList<double> &vals,const adjust_times_opts &opts,Mda &upsampling_kernel) {
+double get_best_offset(const QVector<double> &vals,const adjust_times_opts &opts,Mda &upsampling_kernel) {
     int T=vals.count();
     int Tmid=(int)((T+1)/2)-1;
-    QList<double> vals2=upsample(vals,opts.upsampling_factor,upsampling_kernel);
+    QVector<double> vals2=upsample(vals,opts.upsampling_factor,upsampling_kernel);
     int Tmid2=Tmid*opts.upsampling_factor;
     double best_val=0;
     int best_dt=0;
@@ -164,9 +164,9 @@ Mda compute_upsampling_kernel(const adjust_times_opts &opts) {
     return ret;
 }
 
-QList<double> upsample(const QList<double> &vals,int upsampling_factor,Mda &kernel) {
+QVector<double> upsample(const QVector<double> &vals,int upsampling_factor,Mda &kernel) {
     int Tf=(kernel.N2()-1)/2;
-    QList<double> ret;
+    QVector<double> ret;
     for (int j=0; j<vals.count(); j++) {
         for (int i=0; i<upsampling_factor; i++) {
             double tmp=0;

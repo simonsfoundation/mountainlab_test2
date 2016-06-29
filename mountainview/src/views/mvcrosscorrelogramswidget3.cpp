@@ -24,7 +24,7 @@
 
 struct Correlogram3 {
     int k1 = 0, k2 = 0;
-    QList<double> data;
+    QVector<double> data;
 };
 
 class MVCrossCorrelogramsWidget3Computer {
@@ -92,7 +92,7 @@ double compute_max2(const QList<Correlogram3>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
-        QList<double> tmp = data0[i].data;
+        QVector<double> tmp = data0[i].data;
         for (int j = 0; j < tmp.count(); j++) {
             if (tmp[j] > ret)
                 ret = tmp[j];
@@ -147,11 +147,11 @@ void MVCrossCorrelogramsWidget3::setOptions(CrossCorrelogramOptions3 opts)
     this->recalculate();
 }
 
-QList<double> compute_cc_data3(const QList<double>& times1_in, const QList<double>& times2_in, int max_dt, bool exclude_matches)
+QVector<double> compute_cc_data3(const QVector<double>& times1_in, const QVector<double>& times2_in, int max_dt, bool exclude_matches)
 {
-    QList<double> ret;
-    QList<double> times1 = times1_in;
-    QList<double> times2 = times2_in;
+    QVector<double> ret;
+    QVector<double> times1 = times1_in;
+    QVector<double> times2 = times2_in;
     qSort(times1);
     qSort(times2);
 
@@ -176,8 +176,8 @@ QList<double> compute_cc_data3(const QList<double>& times1_in, const QList<doubl
     return ret;
 }
 
-typedef QList<double> DoubleList;
-typedef QList<int> IntList;
+typedef QVector<double> DoubleList;
+typedef QVector<int> IntList;
 void MVCrossCorrelogramsWidget3Computer::compute()
 {
     TaskProgress task(TaskProgress::Calculate, QString("Cross Correlograms (%1)").arg(options.mode));
@@ -186,8 +186,8 @@ void MVCrossCorrelogramsWidget3Computer::compute()
 
     firings = compute_filtered_firings_locally(firings, event_filter);
 
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
     long L = firings.N2();
 
     //assemble the times and labels arrays

@@ -12,10 +12,10 @@
 #include "isosplit2.h"
 #include <math.h>
 
-void compute_merge_score(double& score0, double& best_dt0, Mda& template1, Mda& template2, QList<double>& times1, QList<double>& times2, double peakchan1, double peakchan2, const merge_across_channels_opts& opts);
+void compute_merge_score(double& score0, double& best_dt0, Mda& template1, Mda& template2, QVector<double>& times1, QVector<double>& times2, double peakchan1, double peakchan2, const merge_across_channels_opts& opts);
 void make_reflexive_and_transitive(Mda& S, Mda& best_dt);
 Mda remove_redundant_events(Mda& firings, int maxdt);
-QList<int> remove_unused_labels(const QList<int>& labels);
+QVector<int> remove_unused_labels(const QVector<int>& labels);
 
 bool merge_across_channels(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const merge_across_channels_opts& opts)
 {
@@ -31,9 +31,9 @@ bool merge_across_channels(const QString& timeseries_path, const QString& firing
     long L = firings.N2();
 
     //setup arrays for peakchans, times, labels
-    QList<int> peakchans;
-    QList<double> times;
-    QList<int> labels;
+    QVector<int> peakchans;
+    QVector<double> times;
+    QVector<int> labels;
     for (long j = 0; j < L; j++) {
         peakchans << (int)firings.value(0, j);
         times << firings.value(1, j);
@@ -58,7 +58,7 @@ bool merge_across_channels(const QString& timeseries_path, const QString& firing
                 int peakchan1 = peakchans[inds1[0]];
                 int peakchan2 = peakchans[inds2[0]];
                 double score0, best_dt0;
-                QList<double> times1, times2;
+                QVector<double> times1, times2;
                 for (long a = 0; a < inds1.count(); a++)
                     times1 << times[inds1[a]];
                 for (long a = 0; a < inds2.count(); a++)
@@ -76,8 +76,8 @@ bool merge_across_channels(const QString& timeseries_path, const QString& firing
     make_reflexive_and_transitive(S, best_dt);
 
     //now we merge based on the above scores
-    QList<int> new_labels = labels;
-    QList<double> new_times = times;
+    QVector<int> new_labels = labels;
+    QVector<double> new_times = times;
     for (int k1 = 1; k1 <= K; k1++) {
         for (int k2 = 1; k2 <= K; k2++) {
             if (S.value(k1 - 1, k2 - 1)) {
@@ -146,15 +146,15 @@ void make_reflexive_and_transitive(Mda& S, Mda& best_dt)
 }
 
 //////Oh boy, very important, check sign!!!!!!!!!!!
-QList<double> compute_cross_correlogram(const QList<double>& times1_in, const QList<double>& times2_in, int bin_min, int bin_max)
+QVector<double> compute_cross_correlogram(const QVector<double>& times1_in, const QVector<double>& times2_in, int bin_min, int bin_max)
 {
-    QList<double> times1 = times1_in;
-    QList<double> times2 = times2_in;
+    QVector<double> times1 = times1_in;
+    QVector<double> times2 = times2_in;
 
     qSort(times1);
     qSort(times2);
 
-    QList<double> ret;
+    QVector<double> ret;
     for (int i = bin_min; i <= bin_max; i++)
         ret << 0;
 
@@ -177,7 +177,7 @@ QList<double> compute_cross_correlogram(const QList<double>& times1_in, const QL
 
 double max_absolute_value_on_channel(Mda& template1, int channel)
 {
-    QList<double> vals;
+    QVector<double> vals;
     for (int i = 0; i < template1.N2(); i++) {
         vals << qAbs(template1.value(channel - 1, i));
     }
@@ -221,7 +221,7 @@ double compute_sliding_noncentered_correlation(Mda &template1,Mda &template2) {
     return best;
 }
 
-double compute_sum(const QList<double>& X)
+double compute_sum(const QVector<double>& X)
 {
     double ret = 0;
     for (long i = 0; i < X.count(); i++)
@@ -229,7 +229,7 @@ double compute_sum(const QList<double>& X)
     return ret;
 }
 
-void compute_merge_score(double& score0, double& best_dt0, Mda& template1, Mda& template2, QList<double>& times1, QList<double>& times2, double peakchan1, double peakchan2, const merge_across_channels_opts& opts)
+void compute_merge_score(double& score0, double& best_dt0, Mda& template1, Mda& template2, QVector<double>& times1, QVector<double>& times2, double peakchan1, double peakchan2, const merge_across_channels_opts& opts)
 {
     //values to return if no merge
     score0 = 0;
@@ -255,7 +255,7 @@ void compute_merge_score(double& score0, double& best_dt0, Mda& template1, Mda& 
     }
 
     //compute firing cross-correlogram
-    QList<double> bin_counts = compute_cross_correlogram(times1, times2, -opts.max_dt, opts.max_dt);
+    QVector<double> bin_counts = compute_cross_correlogram(times1, times2, -opts.max_dt, opts.max_dt);
     double sum_bin_counts = compute_sum(bin_counts);
     if (!sum_bin_counts)
         return;
@@ -284,8 +284,8 @@ void compute_merge_score(double& score0, double& best_dt0, Mda& template1, Mda& 
 
 Mda remove_redundant_events(Mda& firings, int maxdt)
 {
-    QList<double> times;
-    QList<int> labels;
+    QVector<double> times;
+    QVector<int> labels;
 
     long L = firings.N2();
     for (long i = 0; i < L; i++) {
@@ -294,12 +294,12 @@ Mda remove_redundant_events(Mda& firings, int maxdt)
     }
     int K = compute_max(labels);
 
-    QList<int> to_use;
+    QVector<int> to_use;
     for (long i = 0; i < L; i++)
         to_use << 1;
     for (int k = 1; k <= K; k++) {
         QList<long> inds_k = find_inds(labels, k);
-        QList<double> times_k;
+        QVector<double> times_k;
         for (long i = 0; i < inds_k.count(); i++)
             times_k << times[inds_k[i]];
         //the bad indices are those whose times occur too close to the previous times
@@ -325,10 +325,10 @@ Mda remove_redundant_events(Mda& firings, int maxdt)
     return firings_out;
 }
 
-QList<int> remove_unused_labels(const QList<int>& labels)
+QVector<int> remove_unused_labels(const QVector<int>& labels)
 {
     int K = compute_max(labels);
-    QList<int> used_labels;
+    QVector<int> used_labels;
     for (int k = 1; k <= K; k++)
         used_labels << 0;
     for (long i = 0; i < labels.count(); i++) {
@@ -336,17 +336,17 @@ QList<int> remove_unused_labels(const QList<int>& labels)
             used_labels[labels[i] - 1] = 1;
         }
     }
-    QList<int> used_label_numbers;
+    QVector<int> used_label_numbers;
     for (int k = 1; k <= K; k++) {
         if (used_labels[k - 1])
             used_label_numbers << k;
     }
-    QList<int> label_map;
+    QVector<int> label_map;
     for (int k = 0; k <= K; k++)
         label_map << 0;
     for (int j = 0; j < used_label_numbers.count(); j++)
         label_map[used_label_numbers[j]] = j + 1;
-    QList<int> labels_out;
+    QVector<int> labels_out;
     for (long i = 0; i < labels.count(); i++) {
         labels_out << label_map[labels[i]];
     }

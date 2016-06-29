@@ -1,6 +1,7 @@
 #include "affinetransformation.h"
 
 #include <QList>
+#include <QVector>
 #include <math.h>
 
 struct matrix44 {
@@ -150,7 +151,7 @@ bool AffineTransformation::equals(const AffineTransformation& other)
     return true;
 }
 
-QList<double> invert33(QList<double>& data33)
+QVector<double> invert33(QVector<double>& data33)
 {
     double X1[3][3];
     double X2[3][3];
@@ -188,7 +189,7 @@ QList<double> invert33(QList<double>& data33)
                 X2[i][j] /= det;
     }
 
-    QList<double> ret;
+    QVector<double> ret;
     for (int j = 0; j < 3; j++)
         for (int i = 0; i < 3; i++) {
             ret << X2[i][j];
@@ -200,7 +201,7 @@ AffineTransformation AffineTransformation::inverse() const
 {
     AffineTransformation T;
 
-    QList<double> data33;
+    QVector<double> data33;
     for (int j = 0; j < 3; j++)
         for (int i = 0; i < 3; i++)
             data33 << d->m_matrix.d[i][j];
@@ -220,7 +221,7 @@ AffineTransformation AffineTransformation::inverse() const
     tmp[3][1] = 0;
     tmp[3][2] = 0;
     tmp[3][3] = 1;
-    QList<double> data44;
+    QVector<double> data44;
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 4; j++) {
             T.d->m_matrix.d[i][j] = tmp[i][j];

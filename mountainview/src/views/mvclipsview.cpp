@@ -20,8 +20,8 @@ public:
     MVClipsView* q;
 
     DiskReadMda m_clips;
-    //QList<double> m_times;
-    //QList<int> m_labels;
+    //QVector<double> m_times;
+    //QVector<int> m_labels;
     MVContext* m_context;
     double m_clip_index_offset = 0;
     double m_pct_space_per_clip = 1;
@@ -83,12 +83,12 @@ void MVClipsView::paintEvent(QPaintEvent* evt)
 }
 
 /*
-void MVClipsView::setTimes(const QList<double>& times)
+void MVClipsView::setTimes(const QVector<double>& times)
 {
     d->m_times = times;
 }
 
-void MVClipsView::setLabels(const QList<int>& labels)
+void MVClipsView::setLabels(const QVector<int>& labels)
 {
     d->m_labels = labels;
 }

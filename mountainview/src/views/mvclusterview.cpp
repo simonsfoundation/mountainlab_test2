@@ -41,15 +41,15 @@ public:
     AffineTransformation m_anchor_transformation;
     bool m_moved_from_anchor;
     bool m_left_button_anchor;
-    QList<double> m_times;
+    QVector<double> m_times;
     double m_max_time;
-    QList<double> m_amplitudes; //absolute amplitudes, actually
-    QList<double> m_detectability_scores, m_outlier_scores;
+    QVector<double> m_amplitudes; //absolute amplitudes, actually
+    QVector<double> m_detectability_scores, m_outlier_scores;
     double m_max_amplitude;
-    QList<int> m_labels;
+    QVector<int> m_labels;
     QSet<int> m_closest_inds_to_exclude;
     bool m_emit_transformation_changed_scheduled;
-    QList<int> m_cluster_numbers;
+    QVector<int> m_cluster_numbers;
 
     MVClusterLegend m_legend;
 
@@ -121,7 +121,7 @@ bool MVClusterView::hasData()
     return (d->m_data.totalSize() > 1);
 }
 
-void MVClusterView::setTimes(const QList<double>& times)
+void MVClusterView::setTimes(const QVector<double>& times)
 {
     d->m_times = times;
     d->m_max_time = compute_max(times);
@@ -129,29 +129,29 @@ void MVClusterView::setTimes(const QList<double>& times)
     update();
 }
 
-void MVClusterView::setLabels(const QList<int>& labels)
+void MVClusterView::setLabels(const QVector<int>& labels)
 {
     d->m_labels = labels;
 
-    QList<int> list;
+    QVector<int> list;
     for (long i = 0; i < d->m_labels.count(); i++) {
         const int value = d->m_labels.at(i);
-        QList<int>::iterator iter = qLowerBound(list.begin(), list.end(), value);
+        QVector<int>::iterator iter = qLowerBound(list.begin(), list.end(), value);
         if (iter == list.end() || *iter != value) {
             list.insert(iter, value);
         }
     }
     d->m_cluster_numbers = list;
     d->m_legend.setClusterNumbers(list);
-    d->m_legend.setActiveClusterNumbers(list.toSet());
+    d->m_legend.setActiveClusterNumbers(list.toList().toSet());
 
     d->m_grid_update_needed = true;
     update();
 }
 
-void MVClusterView::setAmplitudes(const QList<double>& amps)
+void MVClusterView::setAmplitudes(const QVector<double>& amps)
 {
-    QList<double> tmp;
+    QVector<double> tmp;
     for (int i = 0; i < amps.count(); i++)
         tmp << fabs(amps[i]);
     d->m_amplitudes = tmp;
@@ -160,7 +160,7 @@ void MVClusterView::setAmplitudes(const QList<double>& amps)
     update();
 }
 
-void MVClusterView::setScores(const QList<double>& detectability_scores, const QList<double>& outlier_scores)
+void MVClusterView::setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores)
 {
     d->m_detectability_scores = detectability_scores;
     d->m_outlier_scores = outlier_scores;
@@ -521,10 +521,10 @@ void MVClusterViewPrivate::update_grid()
             max_abs_val = cur_abs_val;
     }
 
-    QList<double> x0s, y0s, z0s;
-    QList<int> label0s;
-    QList<double> time0s;
-    QList<double> amp0s;
+    QVector<double> x0s, y0s, z0s;
+    QVector<int> label0s;
+    QVector<double> time0s;
+    QVector<double> amp0s;
     for (int j = 0; j < m_data_trans.N2(); j++) {
         int label0 = m_labels.value(j);
         if (active_cluster_numbers.contains(label0)) {
@@ -905,7 +905,7 @@ void MVClusterLegend::setClusterColors(const QList<QColor>& colors)
     m_cluster_colors = colors;
 }
 
-void MVClusterLegend::setClusterNumbers(const QList<int>& numbers)
+void MVClusterLegend::setClusterNumbers(const QVector<int>& numbers)
 {
     m_cluster_numbers = numbers;
 }

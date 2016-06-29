@@ -38,13 +38,13 @@ struct ClusterData {
     int channel;
     Mda template0;
     Mda stdev0;
-    QList<int> inds;
-    QList<double> times;
-    QList<double> peaks;
+    QVector<int> inds;
+    QVector<double> times;
+    QVector<double> peaks;
 };
 
 struct ChannelSpacingInfo {
-    QList<double> channel_locations;
+    QVector<double> channel_locations;
     double channel_location_spacing;
     double vert_scaling_factor;
 };
@@ -1123,9 +1123,9 @@ void MVClusterDetailWidgetCalculator::compute()
     int L = firings.N2();
     int T = clip_size;
 
-    QList<double> times;
-    QList<int> channels, labels;
-    QList<double> peaks;
+    QVector<double> times;
+    QVector<int> channels, labels;
+    QVector<double> peaks;
 
     task.log("Setting up times/channels/labels/peaks");
     task.setProgress(0.2);

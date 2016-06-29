@@ -9,9 +9,9 @@
 #include "mda.h"
 #include <QList>
 
-QList<int> isosplit2(Mda &X,float isocut_threshold=1.5,int K_init=30,bool verbose=false);
+QVector<int> isosplit2(Mda &X,float isocut_threshold=1.5,int K_init=30,bool verbose=false);
 void test_isosplit2_routines();
 
-QList<long> find_inds(const QList<int> &labels,int k);
+QList<long> find_inds(const QVector<int> &labels,int k);
 
 #endif

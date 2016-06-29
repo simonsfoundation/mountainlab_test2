@@ -30,7 +30,7 @@ public:
 
     //output
     Mda clips_to_render;
-    QList<int> labels_to_render;
+    QVector<int> labels_to_render;
 
     void compute();
 };
@@ -45,7 +45,7 @@ public:
     int m_num_channels;
 
     Mda m_clips_to_render;
-    QList<int> m_labels_to_render;
+    QVector<int> m_labels_to_render;
     MVSpikeSprayComputer m_computer;
 
     void render_clip(QPainter* painter, long M, long T, double* ptr, QColor col);
