@@ -28,7 +28,6 @@ public:
     void paintEvent(QPaintEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
 signals:
-    void histogramActivated();
 
 protected:
     void setHorizontalScaleAxis(HorizontalScaleAxisData X);
@@ -36,11 +35,10 @@ protected:
     QList<HistogramView*> histogramViews();
 private slots:
     void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);
-    void slot_histogram_view_right_clicked(Qt::KeyboardModifiers modifiers);
-    void slot_histogram_view_activated();
     void slot_export_image();
     void slot_cluster_attributes_changed(int cluster_number);
     void slot_update_highlighting();
+    void slot_context_menu();
 
 private:
     MVHistogramGridPrivate* d;

@@ -172,9 +172,9 @@ void MVHistogramGrid::setHistogramViews(const QList<HistogramView*> views)
         HV->setProperty("view_index", jj);
         connect(HV, SIGNAL(clicked(Qt::KeyboardModifiers)), this, SLOT(slot_histogram_view_clicked(Qt::KeyboardModifiers)));
         //connect(HV, SIGNAL(rightClicked(Qt::KeyboardModifiers)), this, SLOT(slot_histogram_view_right_clicked(Qt::KeyboardModifiers)));
-        connect(HV, SIGNAL(rightClicked(Qt::KeyboardModifiers)), this, SIGNAL(signalClusterContextMenu()));
+        connect(HV, SIGNAL(rightClicked(Qt::KeyboardModifiers)), this, SLOT(slot_context_menu()));
         //connect(HV, SIGNAL(activated()), this, SLOT(slot_histogram_view_activated()));
-        connect(HV, SIGNAL(activated()), this, SIGNAL(signalClusterContextMenu()));
+        connect(HV, SIGNAL(activated()), this, SLOT(slot_context_menu()));
         connect(HV, SIGNAL(signalExportHistogramMatrixImage()), this, SLOT(slot_export_image()));
     }
 
@@ -184,6 +184,8 @@ void MVHistogramGrid::setHistogramViews(const QList<HistogramView*> views)
         d->m_child_widgets << HSA;
         GL->addWidget(HSA, num_rows, 0);
     }
+
+    d->do_highlighting();
 }
 
 QList<HistogramView*> MVHistogramGrid::histogramViews()
@@ -207,17 +209,6 @@ void MVHistogramGrid::slot_histogram_view_clicked(Qt::KeyboardModifiers modifier
     }
 }
 
-void MVHistogramGrid::slot_histogram_view_right_clicked(Qt::KeyboardModifiers modifiers)
-{
-    Q_UNUSED(modifiers)
-    emit signalClusterContextMenu();
-}
-
-void MVHistogramGrid::slot_histogram_view_activated()
-{
-    emit histogramActivated();
-}
-
 void MVHistogramGrid::slot_export_image()
 {
     QImage img = this->renderImage();
@@ -233,6 +224,31 @@ void MVHistogramGrid::slot_cluster_attributes_changed(int cluster_number)
 void MVHistogramGrid::slot_update_highlighting()
 {
     d->do_highlighting();
+}
+
+void MVHistogramGrid::slot_context_menu()
+{
+    //this seems a bit circular
+    QPoint pt = this->mapFromGlobal(QCursor::pos());
+
+    /// Witold, I am repeating this identical code from the cluster detail view....
+    // I am not sure this is the right way to go.
+    // In this case, there is no reason to pass the mime data because the info is available in the MVContext, which is passed to the context menu handler.
+    QMimeData md;
+    {
+        QByteArray ba;
+        QDataStream ds(&ba, QIODevice::WriteOnly);
+        ds << viewAgent()->selectedClusters();
+        md.setData("application/x-mv-cluster", ba); // selected cluster data
+    }
+    {
+        QByteArray ba;
+        QDataStream ds(&ba, QIODevice::WriteOnly);
+        ds << (quintptr) this;
+        md.setData("application/x-mv-view", ba); // this view
+    }
+    qDebug() << Q_FUNC_INFO;
+    this->requestContextMenu(md, pt);
 }
 
 void MVHistogramGridPrivate::do_highlighting()
