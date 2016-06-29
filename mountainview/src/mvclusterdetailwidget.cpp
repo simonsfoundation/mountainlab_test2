@@ -962,7 +962,6 @@ void MVClusterDetailWidgetPrivate::context_menu(QPoint pt)
         ds << (quintptr) this;
         md.setData("application/x-mv-view", ba); // this view
     }
-    qDebug() << Q_FUNC_INFO;
     q->requestContextMenu(md, pt);
 }
 

@@ -247,7 +247,6 @@ void MVHistogramGrid::slot_context_menu()
         ds << (quintptr) this;
         md.setData("application/x-mv-view", ba); // this view
     }
-    qDebug() << Q_FUNC_INFO;
     this->requestContextMenu(md, pt);
 }
 

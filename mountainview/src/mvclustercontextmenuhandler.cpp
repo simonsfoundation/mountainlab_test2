@@ -46,29 +46,27 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
 
     //MERGE
     {
-        if (clusters.count() >= 1) {
-            {
-                QAction* A = new QAction(0);
-                A->setText("Merge selected clusters");
-                QObject::connect(A, &QAction::triggered, [clusters, context]() {
-                    ClusterMerge CM = context->clusterMerge();
-                    CM.merge(clusters);
-                    context->setClusterMerge(CM);
-                });
-                actions << A;
-                A->setEnabled(clusters.count() >= 2);
-            }
-            {
-                QAction* A = new QAction(0);
-                A->setText("Unmerge selected clusters");
-                QObject::connect(A, &QAction::triggered, [clusters, context]() {
-                    ClusterMerge CM = context->clusterMerge();
-                    CM.unmerge(clusters);
-                    context->setClusterMerge(CM);
-                });
-                actions << A;
-                A->setEnabled(can_unmerge_selected_clusters(context, clusters));
-            }
+        {
+            QAction* A = new QAction(0);
+            A->setEnabled(clusters.count() >= 2);
+            A->setText("Merge selected clusters");
+            QObject::connect(A, &QAction::triggered, [clusters, context]() {
+                ClusterMerge CM = context->clusterMerge();
+                CM.merge(clusters);
+                context->setClusterMerge(CM);
+            });
+            actions << A;
+        }
+        {
+            QAction* A = new QAction(0);
+            A->setEnabled(can_unmerge_selected_clusters(context, clusters));
+            A->setText("Unmerge selected clusters");
+            QObject::connect(A, &QAction::triggered, [clusters, context]() {
+                ClusterMerge CM = context->clusterMerge();
+                CM.unmerge(clusters);
+                context->setClusterMerge(CM);
+            });
+            actions << A;
         }
     }
 
@@ -81,16 +79,18 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
 
     //CROSS-CORRELOGRAMS
     {
-        if (clusters.size() == 1) {
+        {
             QAction* action = new QAction("Open cross-correlograms associated with this cluster", 0);
+            action->setEnabled(clusters.count() == 1);
             action->setData(clusters.values().first());
             connect(action, &QAction::triggered, []() {
                 MVMainWindow::instance()->openView("open-cross-correlograms");
             });
             actions << action;
         }
-        else {
+        {
             QAction* action = new QAction("Open matrix of cross-correlograms", 0);
+            action->setEnabled(clusters.count() >= 2);
             QVariantList clusterList;
             foreach (int c, clusters)
                 clusterList << c;
@@ -101,6 +101,18 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
             actions << action;
         }
     }
+
+    //DISCRIMINATION HISTOGRAMS
+    {
+        QAction* action = new QAction("Open discrimination histograms for these clusters", 0);
+        action->setEnabled(clusters.count() >= 2);
+        action->setData(clusters.values().first());
+        connect(action, &QAction::triggered, []() {
+            MVMainWindow::instance()->openView("open-discrim-histograms");
+        });
+        actions << action;
+    }
+
     return actions;
 }
 
