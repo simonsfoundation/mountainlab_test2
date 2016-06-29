@@ -52,7 +52,6 @@ QString MBController::mlProxyUrl()
 
 QString MBController::getJson(QString url_or_path)
 {
-    /// Witold it would be great if we could return a javascript object directly here, rather than the json text
     if (url_or_path.startsWith("http")) {
         return http_get_text(url_or_path);
     }

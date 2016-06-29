@@ -228,9 +228,6 @@ void MVHistogramGrid::slot_context_menu()
     //this seems a bit circular
     QPoint pt = this->mapFromGlobal(QCursor::pos());
 
-    /// Witold, I am repeating this identical code from the cluster detail view....
-    // I am not sure this is the right way to go.
-    // In this case, there is no reason to pass the mime data because the info is available in the MVContext, which is passed to the context menu handler.
     QMimeData md;
     {
         QByteArray ba;

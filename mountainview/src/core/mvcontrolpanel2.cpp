@@ -78,10 +78,10 @@ void MVControlPanel2::addControl(MVAbstractControl* mvcontrol, bool start_open)
 
 void MVControlPanel2::slot_recalc_visible()
 {
-    d->m_main_window->recalculateViews(SuggestedVisible);
+    d->m_main_window->recalculateViews(MVMainWindow::SuggestedVisible);
 }
 
 void MVControlPanel2::slot_recalc_all()
 {
-    d->m_main_window->recalculateViews(Suggested);
+    d->m_main_window->recalculateViews(MVMainWindow::Suggested);
 }

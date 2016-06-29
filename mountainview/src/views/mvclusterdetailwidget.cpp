@@ -1278,9 +1278,8 @@ MVAbstractView* MVClusterDetailsFactory::createView(QWidget* parent)
 {
     MVClusterDetailWidget* X = new MVClusterDetailWidget(mvContext());
     //connect(X, SIGNAL(signalTemplateActivated()), this, SLOT(openClipsForTemplate()));
-    /// Witold, does this belong here or in the view?
-    connect(X, SIGNAL(signalTemplateActivated()), X, SIGNAL(signalClusterContextMenu()));
-    X->setProperty("widget_type", "cluster_details");
+    //connect(X, SIGNAL(signalTemplateActivated()), X, SIGNAL(signalClusterContextMenu()));
+    //X->setProperty("widget_type", "cluster_details");
     return X;
 }
 

@@ -50,7 +50,7 @@ protected:
     void contextMenuEvent(QContextMenuEvent* evt);
 signals:
     ///A cluster has been double-clicked (or enter pressed?)
-    void signalTemplateActivated();
+    //void signalTemplateActivated();
 private slots:
     //void slot_context_menu(const QPoint& pos);
     void slot_export_image();

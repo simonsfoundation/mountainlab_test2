@@ -400,7 +400,6 @@ MVAbstractView* MVMainWindowPrivate::openView(MVAbstractViewFactory* factory)
     //    set_tool_button_menu(view);
     add_tab(view, factory->title());
 
-    /// Witold, does this belong here? I am uncertain about what mvmainwindow is responsible for
     QObject::connect(view, SIGNAL(contextMenuRequested(QMimeData, QPoint)),
         q, SLOT(handleContextMenu(QMimeData, QPoint)));
 

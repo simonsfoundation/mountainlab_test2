@@ -20,18 +20,20 @@ class TabberTabWidget;
 class Tabber;
 class MVAbstractContextMenuHandler;
 
-/// Witold, please help do this a better way
-enum RecalculateViewsMode {
-    All,
-    AllVisible,
-    Suggested,
-    SuggestedVisible
-};
-
 class MVMainWindowPrivate;
 class MVMainWindow : public QWidget {
     Q_OBJECT
 public:
+
+    //Witold, is this the right place to put it?
+    enum RecalculateViewsMode {
+        All,
+        AllVisible,
+        Suggested,
+        SuggestedVisible
+    };
+
+
     friend class MVMainWindowPrivate;
     MVMainWindow(MVContext* context, QWidget* parent = 0);
     virtual ~MVMainWindow();
