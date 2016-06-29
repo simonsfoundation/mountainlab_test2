@@ -26,13 +26,13 @@ closemehandler.h flowlayout.h imagesavedialog.h \
 mountainprocessrunner.h mvabstractcontextmenuhandler.h \
 mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
 mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
-mvcontext.h tabber.h tabberframe.h
+mvcontext.h tabber.h tabberframe.h taskprogressview.h
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
 mountainprocessrunner.cpp mvabstractcontextmenuhandler.cpp \
 mvabstractcontrol.cpp mvabstractview.cpp mvabstractviewfactory.cpp \
 mvcontrolpanel2.cpp mvmainwindow.cpp mvstatusbar.cpp \
-mvcontext.cpp tabber.cpp tabberframe.cpp
+mvcontext.cpp tabber.cpp tabberframe.cpp taskprogressview.cpp
 # to remove
 HEADERS += computationthread.h
 SOURCES += computationthread.cpp
@@ -54,14 +54,14 @@ mvclipsview.h mvclipswidget.h mvclusterdetailwidget.h \
 mvclusterview.h mvclusterwidget.h mvcrosscorrelogramswidget3.h \
 mvdiscrimhistview.h mvfiringeventview2.h mvhistogramgrid.h \
 mvspikesprayview.h mvtimeseriesrendermanager.h mvtimeseriesview2.h \
-mvtimeseriesviewbase.h spikespywidget.h taskprogressview.h
+mvtimeseriesviewbase.h spikespywidget.h
 SOURCES += \
 correlationmatrixview.cpp histogramview.cpp mvamphistview2.cpp \
 mvclipsview.cpp mvclipswidget.cpp mvclusterdetailwidget.cpp \
 mvclusterview.cpp mvclusterwidget.cpp mvcrosscorrelogramswidget3.cpp \
 mvdiscrimhistview.cpp mvfiringeventview2.cpp mvhistogramgrid.cpp \
 mvspikesprayview.cpp mvtimeseriesrendermanager.cpp mvtimeseriesview2.cpp \
-mvtimeseriesviewbase.cpp spikespywidget.cpp taskprogressview.cpp
+mvtimeseriesviewbase.cpp spikespywidget.cpp
 
 INCLUDEPATH += controlwidgets
 VPATH += controlwidgets
