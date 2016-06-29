@@ -143,6 +143,7 @@ public:
     void export_image();
     void toggle_stdev_shading();
     void shift_select_clusters_between(int k1, int k2);
+    void context_menu(QPoint pt);
 
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
@@ -456,7 +457,7 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
 void MVClusterDetailWidget::mouseDoubleClickEvent(QMouseEvent* evt)
 {
     Q_UNUSED(evt);
-    emit this->signalTemplateActivated();
+    d->context_menu(evt->pos());
 }
 
 void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
@@ -481,21 +482,8 @@ void MVClusterDetailWidget::contextMenuEvent(QContextMenuEvent* evt)
             viewAgent()->clickCluster(k, Qt::NoModifier);
         }
     }
-    QMimeData md;
-    {
-        QByteArray ba;
-        QDataStream ds(&ba, QIODevice::WriteOnly);
-        ds << viewAgent()->selectedClusters();
-        md.setData("application/x-mv-cluster", ba); // selected cluster data
-    }
-    {
-        QByteArray ba;
-        QDataStream ds(&ba, QIODevice::WriteOnly);
-        ds << (quintptr) this;
-        md.setData("application/x-mv-view", ba); // this view
-    }
-    qDebug() << Q_FUNC_INFO;
-    requestContextMenu(md, pt);
+
+    d->context_menu(evt->pos());
 }
 
 /*
@@ -957,6 +945,25 @@ void MVClusterDetailWidgetPrivate::shift_select_clusters_between(int k1, int k2)
         selected_clusters.insert(m_views[ind2]->k());
     }
     q->viewAgent()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
+}
+
+void MVClusterDetailWidgetPrivate::context_menu(QPoint pt)
+{
+    QMimeData md;
+    {
+        QByteArray ba;
+        QDataStream ds(&ba, QIODevice::WriteOnly);
+        ds << q->viewAgent()->selectedClusters();
+        md.setData("application/x-mv-cluster", ba); // selected cluster data
+    }
+    {
+        QByteArray ba;
+        QDataStream ds(&ba, QIODevice::WriteOnly);
+        ds << (quintptr) this;
+        md.setData("application/x-mv-view", ba); // this view
+    }
+    qDebug() << Q_FUNC_INFO;
+    q->requestContextMenu(md, pt);
 }
 
 ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterData main_CD)
