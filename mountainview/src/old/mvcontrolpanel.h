@@ -9,7 +9,7 @@
 
 #include "flowlayout.h"
 #include "mvmainwindow.h"
-#include "mvviewagent.h"
+#include "mvcontext.h"
 
 #include <QAbstractButton>
 #include <QCheckBox>
@@ -27,7 +27,7 @@ class MVControlPanel : public QWidget {
     Q_OBJECT
 public:
     friend class MVControlPanelPrivate;
-    MVControlPanel(MVViewAgent* view_agent, MVMainWindow* main_window);
+    MVControlPanel(MVContext* view_agent, MVMainWindow* main_window);
     virtual ~MVControlPanel();
 
     void setTimeseriesChoices(const QStringList& names);

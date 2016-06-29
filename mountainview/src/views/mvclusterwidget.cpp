@@ -72,7 +72,7 @@ public:
     void set_data_on_visible_views();
 };
 
-MVClusterWidget::MVClusterWidget(MVViewAgent* view_agent)
+MVClusterWidget::MVClusterWidget(MVContext* view_agent)
     : MVAbstractView(view_agent)
 {
     d = new MVClusterWidgetPrivate;
@@ -517,7 +517,7 @@ void MVClusterWidgetComputer::compute()
     features.readChunk(data, 0, 0, features.N1(), features.N2());
 }
 
-MVPCAFeaturesFactory::MVPCAFeaturesFactory(MVViewAgent* context, QObject* parent)
+MVPCAFeaturesFactory::MVPCAFeaturesFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
@@ -559,7 +559,7 @@ void MVPCAFeaturesFactory::updateEnabled()
     setEnabled(!MVMainWindow::instance()->viewAgent()->selectedClusters().isEmpty());
 }
 
-MVChannelFeaturesFactory::MVChannelFeaturesFactory(MVViewAgent* context, QObject* parent)
+MVChannelFeaturesFactory::MVChannelFeaturesFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),

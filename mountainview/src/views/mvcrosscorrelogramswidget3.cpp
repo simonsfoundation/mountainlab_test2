@@ -54,7 +54,7 @@ public:
     CrossCorrelogramOptions3 m_options;
 };
 
-MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVViewAgent* view_agent)
+MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* view_agent)
     : MVHistogramGrid(view_agent)
 {
     d = new MVCrossCorrelogramsWidget3Private;
@@ -259,7 +259,7 @@ void MVCrossCorrelogramsWidget3Computer::compute()
     }
 }
 
-MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(MVViewAgent* context, QObject* parent)
+MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
 }
@@ -305,7 +305,7 @@ void MVAutoCorrelogramsFactory::slot_auto_correlogram_activated()
 }
 */
 
-MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVViewAgent* context, QObject* parent)
+MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),
@@ -348,7 +348,7 @@ void MVCrossCorrelogramsFactory::updateEnabled()
     setEnabled(MVMainWindow::instance()->viewAgent()->selectedClusters().count() == 1);
 }
 
-MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(MVViewAgent* context, QObject* parent)
+MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),

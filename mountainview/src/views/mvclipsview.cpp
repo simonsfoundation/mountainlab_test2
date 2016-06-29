@@ -22,7 +22,7 @@ public:
     DiskReadMda m_clips;
     //QList<double> m_times;
     //QList<int> m_labels;
-    MVViewAgent* m_view_agent;
+    MVContext* m_view_agent;
     double m_clip_index_offset = 0;
     double m_pct_space_per_clip = 1;
     double m_vert_scale_factor = 1;
@@ -32,7 +32,7 @@ public:
     void auto_set_pct_space_per_clip();
 };
 
-MVClipsView::MVClipsView(MVViewAgent* view_agent)
+MVClipsView::MVClipsView(MVContext* view_agent)
 {
     d = new MVClipsViewPrivate;
     d->q = this;

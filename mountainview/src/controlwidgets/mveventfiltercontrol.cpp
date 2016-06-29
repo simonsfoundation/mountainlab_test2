@@ -5,7 +5,7 @@
 *******************************************************/
 
 #include "mveventfiltercontrol.h"
-#include "mvviewagent.h"
+#include "mvcontext.h"
 
 #include <QGridLayout>
 #include <QLabel>

@@ -8,7 +8,6 @@
 #include "histogramview.h"
 #include "mvutils.h"
 #include "taskprogress.h"
-#include "mvclustercontextmenu.h"
 
 #include <QAction>
 #include <QGridLayout>
@@ -44,7 +43,7 @@ protected:
     void paintEvent(QPaintEvent* evt);
 };
 
-MVHistogramGrid::MVHistogramGrid(MVViewAgent* view_agent)
+MVHistogramGrid::MVHistogramGrid(MVContext* view_agent)
     : MVAbstractView(view_agent)
 {
     d = new MVHistogramGridPrivate;

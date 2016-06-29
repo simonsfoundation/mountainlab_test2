@@ -4,8 +4,8 @@
 ** Created: 5/23/2016
 *******************************************************/
 
-#ifndef MVVIEWAGENT_H
-#define MVVIEWAGENT_H
+#ifndef MVCONTEXT_H
+#define MVCONTEXT_H
 
 #include "clustermerge.h"
 
@@ -14,9 +14,7 @@
 #include <QObject>
 #include "mvutils.h"
 
-/// TODO: (MEDIUM) rename MVViewAgent to MVContext throughout -- for now we use typedef
-class MVViewAgent;
-typedef MVViewAgent MVContext;
+class MVContext;
 
 struct MVRange {
     MVRange(double min0 = 0, double max0 = 1)
@@ -68,13 +66,13 @@ private:
 
 #include "mvmisc.h"
 
-class MVViewAgentPrivate;
-class MVViewAgent : public QObject {
+class MVContextPrivate;
+class MVContext : public QObject {
     Q_OBJECT
 public:
-    friend class MVViewAgentPrivate;
-    MVViewAgent();
-    virtual ~MVViewAgent();
+    friend class MVContextPrivate;
+    MVContext();
+    virtual ~MVContext();
 
     void clear();
     void setFromMVFileObject(QJsonObject obj);
@@ -146,7 +144,7 @@ public:
     void onOptionChanged(QString name, const QObject* receiver, const char* member, Qt::ConnectionType type = Qt::DirectConnection);
 
     /////////////////////////////////////////////////
-    void copySettingsFrom(MVViewAgent* other);
+    void copySettingsFrom(MVContext* other);
 
 signals:
     void currentTimeseriesChanged();
@@ -168,7 +166,7 @@ private slots:
     void slot_option_changed(QString name);
 
 private:
-    MVViewAgentPrivate* d;
+    MVContextPrivate* d;
 };
 
-#endif // MVVIEWAGENT_H
+#endif // MVCONTEXT_H

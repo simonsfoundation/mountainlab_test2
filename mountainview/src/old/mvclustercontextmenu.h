@@ -3,7 +3,7 @@
 
 #include <QMenu>
 #include "mvmainwindow.h"
-#include "mvviewagent.h"
+#include "mvcontext.h"
 
 class MVClusterContextMenuPrivate;
 class MVClusterContextMenu : public QMenu {

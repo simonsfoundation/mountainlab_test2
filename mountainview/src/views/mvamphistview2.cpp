@@ -37,7 +37,7 @@ public:
     void set_views();
 };
 
-MVAmpHistView2::MVAmpHistView2(MVViewAgent* view_agent)
+MVAmpHistView2::MVAmpHistView2(MVContext* view_agent)
     : MVHistogramGrid(view_agent)
 {
     d = new MVAmpHistView2Private;
@@ -180,7 +180,7 @@ void MVAmpHistView2Private::set_views()
     q->setHistogramViews(views); //inherited
 }
 
-MVAmplitudeHistogramsFactory::MVAmplitudeHistogramsFactory(MVViewAgent* context, QObject* parent)
+MVAmplitudeHistogramsFactory::MVAmplitudeHistogramsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
 }

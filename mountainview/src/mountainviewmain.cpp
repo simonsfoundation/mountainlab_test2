@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
             return 0;
         }
         else if (arg2 == "taskprogressview") {
-            MVMainWindow* W = new MVMainWindow(new MVViewAgent); //not that the view agent does not get deleted. :(
+            MVMainWindow* W = new MVMainWindow(new MVContext); //not that the view agent does not get deleted. :(
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
             int W0 = 1400, H0 = 1000;
@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
         }
         */
 
-        MVViewAgent* view_agent = new MVViewAgent; //note that the view agent does not get deleted. :(
+        MVContext* view_agent = new MVContext; //note that the view agent does not get deleted. :(
         view_agent->setChannelColors(channel_colors);
         view_agent->setClusterColors(label_colors);
         MVMainWindow* W = new MVMainWindow(view_agent);
@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
         QStringList firings_paths = CLP.named_parameters["firings"].toString().split(",");
         double samplerate = CLP.named_parameters["samplerate"].toDouble();
 
-        MVViewAgent* view_agent = new MVViewAgent(); //note that the view agent will not get deleted. :(
+        MVContext* view_agent = new MVContext(); //note that the view agent will not get deleted. :(
         view_agent->setChannelColors(channel_colors);
         view_agent->setClusterColors(label_colors);
         view_agent->setSampleRate(samplerate);

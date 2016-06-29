@@ -10,7 +10,7 @@
 #include "taskprogressview.h"
 #include "mvcontrolpanel2.h"
 #include "taskprogress.h"
-#include "mvviewagent.h"
+#include "mvcontext.h"
 #include "mvstatusbar.h"
 #include "mvtimeseriesview2.h"
 #include "mlutils.h"
@@ -84,7 +84,7 @@ class MVMainWindowPrivate {
 public:
     MVMainWindow* q;
     //MVFile m_mv_file; //we need to keep this in case there is other data in the .json that we want to preserver
-    MVViewAgent* m_view_agent; //gets passed to all the views and the control panel
+    MVContext* m_view_agent; //gets passed to all the views and the control panel
 
     //these widgets go on the left
     QSplitter* m_left_splitter;
@@ -134,7 +134,7 @@ public:
     void set_cluster_attribute(int k, QString attr, QVariant val);
 };
 
-MVMainWindow::MVMainWindow(MVViewAgent* view_agent, QWidget* parent)
+MVMainWindow::MVMainWindow(MVContext* view_agent, QWidget* parent)
     : QWidget(parent)
 {
     window_instance = this;
@@ -435,7 +435,7 @@ void MVMainWindow::recalculateViews(RecalculateViewsMode mode)
     }
 }
 
-MVViewAgent* MVMainWindow::viewAgent() const
+MVContext* MVMainWindow::viewAgent() const
 {
     return d->m_view_agent;
 }

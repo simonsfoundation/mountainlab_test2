@@ -8,7 +8,7 @@
 #include "mvtimeseriesview2.h"
 #include "spikespywidget.h"
 #include "taskprogressview.h"
-#include "mvviewagent.h"
+#include "mvcontext.h"
 #include <QHBoxLayout>
 #include <QSplitter>
 #include <QMenuBar>
@@ -18,7 +18,7 @@ public:
     SpikeSpyWidget* q;
     QList<SpikeSpyViewData> m_datas;
     QList<MVTimeSeriesView2*> m_views;
-    MVViewAgent* m_view_agent;
+    MVContext* m_view_agent;
     int m_current_view_index;
 
     QSplitter* m_splitter;
@@ -29,7 +29,7 @@ public:
     void update_activated();
 };
 
-SpikeSpyWidget::SpikeSpyWidget(MVViewAgent* view_agent)
+SpikeSpyWidget::SpikeSpyWidget(MVContext* view_agent)
 {
     d = new SpikeSpyWidgetPrivate;
     d->q = this;

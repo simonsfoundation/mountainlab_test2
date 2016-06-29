@@ -4,7 +4,7 @@
 ** Created: 5/23/2016
 *******************************************************/
 
-#include "mvviewagent.h"
+#include "mvcontext.h"
 #include <QAction>
 #include <QDebug>
 
@@ -18,9 +18,9 @@ struct OptionChangedAction {
     QAction* action;
 };
 
-class MVViewAgentPrivate {
+class MVContextPrivate {
 public:
-    MVViewAgent* q;
+    MVContext* q;
     ClusterMerge m_cluster_merge;
     QMap<int, QJsonObject> m_cluster_attributes;
     MVEvent m_current_event;
@@ -42,9 +42,9 @@ public:
     QList<OptionChangedAction> m_option_changed_actions;
 };
 
-MVViewAgent::MVViewAgent()
+MVContext::MVContext()
 {
-    d = new MVViewAgentPrivate;
+    d = new MVContextPrivate;
     d->q = this;
     d->m_current_cluster = 0;
     d->m_current_timepoint = 0;
@@ -67,12 +67,12 @@ MVViewAgent::MVViewAgent()
     QObject::connect(this, SIGNAL(optionChanged(QString)), this, SLOT(slot_option_changed(QString)));
 }
 
-MVViewAgent::~MVViewAgent()
+MVContext::~MVContext()
 {
     delete d;
 }
 
-void MVViewAgent::clear()
+void MVContext::clear()
 {
     d->m_cluster_merge.clear();
     d->m_cluster_attributes.clear();
@@ -128,7 +128,7 @@ QMap<QString, TimeseriesStruct> object_to_timeseries_map(QJsonObject X)
     return ret;
 }
 
-QJsonObject MVViewAgent::toMVFileObject() const
+QJsonObject MVContext::toMVFileObject() const
 {
     QJsonObject X;
     X["cluster_merge"] = d->m_cluster_merge.toJsonObject();
@@ -143,7 +143,7 @@ QJsonObject MVViewAgent::toMVFileObject() const
     return X;
 }
 
-void MVViewAgent::setFromMVFileObject(QJsonObject X)
+void MVContext::setFromMVFileObject(QJsonObject X)
 {
     this->clear();
     d->m_cluster_merge.setFromJsonObject(X["cluster_merge"].toObject());
@@ -157,52 +157,52 @@ void MVViewAgent::setFromMVFileObject(QJsonObject X)
     d->m_mlproxy_url = X["mlproxy_url"].toString();
 }
 
-MVEvent MVViewAgent::currentEvent() const
+MVEvent MVContext::currentEvent() const
 {
     return d->m_current_event;
 }
 
-int MVViewAgent::currentCluster() const
+int MVContext::currentCluster() const
 {
     return d->m_current_cluster;
 }
 
-QList<int> MVViewAgent::selectedClusters() const
+QList<int> MVContext::selectedClusters() const
 {
     return d->m_selected_clusters;
 }
 
-double MVViewAgent::currentTimepoint() const
+double MVContext::currentTimepoint() const
 {
     return d->m_current_timepoint;
 }
 
-MVRange MVViewAgent::currentTimeRange() const
+MVRange MVContext::currentTimeRange() const
 {
     return d->m_current_time_range;
 }
 
-QList<QColor> MVViewAgent::channelColors() const
+QList<QColor> MVContext::channelColors() const
 {
     return d->m_channel_colors;
 }
 
-QList<QColor> MVViewAgent::clusterColors() const
+QList<QColor> MVContext::clusterColors() const
 {
     return d->m_cluster_colors;
 }
 
-DiskReadMda MVViewAgent::currentTimeseries()
+DiskReadMda MVContext::currentTimeseries()
 {
     return d->m_timeseries.value(d->m_current_timeseries_name).data;
 }
 
-QString MVViewAgent::currentTimeseriesName()
+QString MVContext::currentTimeseriesName()
 {
     return d->m_current_timeseries_name;
 }
 
-QColor MVViewAgent::clusterColor(int k) const
+QColor MVContext::clusterColor(int k) const
 {
     if (k <= 0)
         return Qt::black;
@@ -211,7 +211,7 @@ QColor MVViewAgent::clusterColor(int k) const
     return d->m_cluster_colors[(k - 1) % d->m_cluster_colors.count()];
 }
 
-QColor MVViewAgent::channelColor(int m) const
+QColor MVContext::channelColor(int m) const
 {
     if (m < 0)
         return Qt::black;
@@ -220,22 +220,22 @@ QColor MVViewAgent::channelColor(int m) const
     return d->m_channel_colors[m % d->m_channel_colors.count()];
 }
 
-QColor MVViewAgent::color(QString name, QColor default_color) const
+QColor MVContext::color(QString name, QColor default_color) const
 {
     return d->m_colors.value(name, default_color);
 }
 
-QMap<QString, QColor> MVViewAgent::colors() const
+QMap<QString, QColor> MVContext::colors() const
 {
     return d->m_colors;
 }
 
-QStringList MVViewAgent::timeseriesNames() const
+QStringList MVContext::timeseriesNames() const
 {
     return d->m_timeseries.keys();
 }
 
-void MVViewAgent::addTimeseries(QString name, DiskReadMda timeseries)
+void MVContext::addTimeseries(QString name, DiskReadMda timeseries)
 {
     TimeseriesStruct X;
     X.data = timeseries;
@@ -246,22 +246,22 @@ void MVViewAgent::addTimeseries(QString name, DiskReadMda timeseries)
         emit this->currentTimeseriesChanged();
 }
 
-DiskReadMda MVViewAgent::firings()
+DiskReadMda MVContext::firings()
 {
     return d->m_firings;
 }
 
-double MVViewAgent::sampleRate() const
+double MVContext::sampleRate() const
 {
     return d->m_sample_rate;
 }
 
-QVariant MVViewAgent::option(QString name, QVariant default_val)
+QVariant MVContext::option(QString name, QVariant default_val)
 {
     return d->m_options.value(name, default_val);
 }
 
-void MVViewAgent::setCurrentTimeseriesName(QString name)
+void MVContext::setCurrentTimeseriesName(QString name)
 {
     if (d->m_current_timeseries_name == name)
         return;
@@ -269,19 +269,19 @@ void MVViewAgent::setCurrentTimeseriesName(QString name)
     emit this->currentTimeseriesChanged();
 }
 
-void MVViewAgent::setFirings(const DiskReadMda& F)
+void MVContext::setFirings(const DiskReadMda& F)
 {
     d->m_firings = F;
     emit firingsChanged();
     emit filteredFiringsChanged();
 }
 
-MVEventFilter MVViewAgent::eventFilter()
+MVEventFilter MVContext::eventFilter()
 {
     return d->m_event_filter;
 }
 
-void MVViewAgent::setEventFilter(const MVEventFilter& EF)
+void MVContext::setEventFilter(const MVEventFilter& EF)
 {
     if (d->m_event_filter == EF)
         return;
@@ -294,42 +294,42 @@ void MVViewAgent::setEventFilter(const MVEventFilter& EF)
     emit filteredFiringsChanged();
 }
 
-void MVViewAgent::setSampleRate(double sample_rate)
+void MVContext::setSampleRate(double sample_rate)
 {
     d->m_sample_rate = sample_rate;
 }
 
-QString MVViewAgent::mlProxyUrl() const
+QString MVContext::mlProxyUrl() const
 {
     return d->m_mlproxy_url;
 }
 
-void MVViewAgent::setMLProxyUrl(QString url)
+void MVContext::setMLProxyUrl(QString url)
 {
     d->m_mlproxy_url = url;
 }
 
-ClusterMerge MVViewAgent::clusterMerge() const
+ClusterMerge MVContext::clusterMerge() const
 {
     return d->m_cluster_merge;
 }
 
-QJsonObject MVViewAgent::clusterAttributes(int num) const
+QJsonObject MVContext::clusterAttributes(int num) const
 {
     return d->m_cluster_attributes.value(num);
 }
 
-QList<int> MVViewAgent::clusterAttributesKeys() const
+QList<int> MVContext::clusterAttributesKeys() const
 {
     return d->m_cluster_attributes.keys();
 }
 
-QSet<QString> MVViewAgent::clusterTags(int num) const
+QSet<QString> MVContext::clusterTags(int num) const
 {
     return jsonarray2stringset(clusterAttributes(num)["tags"].toArray());
 }
 
-QSet<QString> MVViewAgent::allClusterTags() const
+QSet<QString> MVContext::allClusterTags() const
 {
     QSet<QString> ret;
     ret.insert("accepted");
@@ -343,7 +343,7 @@ QSet<QString> MVViewAgent::allClusterTags() const
     return ret;
 }
 
-void MVViewAgent::setClusterMerge(const ClusterMerge& CM)
+void MVContext::setClusterMerge(const ClusterMerge& CM)
 {
     if (d->m_cluster_merge == CM)
         return;
@@ -354,7 +354,7 @@ void MVViewAgent::setClusterMerge(const ClusterMerge& CM)
     }
 }
 
-void MVViewAgent::setClusterAttributes(int num, const QJsonObject& obj)
+void MVContext::setClusterAttributes(int num, const QJsonObject& obj)
 {
     if (d->m_cluster_attributes.value(num) == obj)
         return;
@@ -364,19 +364,19 @@ void MVViewAgent::setClusterAttributes(int num, const QJsonObject& obj)
     emit this->clusterVisibilityChanged();
 }
 
-void MVViewAgent::setClusterTags(int num, const QSet<QString>& tags)
+void MVContext::setClusterTags(int num, const QSet<QString>& tags)
 {
     QJsonObject obj = clusterAttributes(num);
     obj["tags"] = stringset2jsonarray(tags);
     setClusterAttributes(num, obj);
 }
 
-ClusterVisibilityRule MVViewAgent::visibilityRule() const
+ClusterVisibilityRule MVContext::visibilityRule() const
 {
     return d->m_visibility_rule;
 }
 
-QList<int> MVViewAgent::visibleClusters(int K) const
+QList<int> MVContext::visibleClusters(int K) const
 {
     QList<int> ret;
     for (int k = 1; k <= K; k++) {
@@ -387,12 +387,12 @@ QList<int> MVViewAgent::visibleClusters(int K) const
     return ret;
 }
 
-bool MVViewAgent::clusterIsVisible(int k) const
+bool MVContext::clusterIsVisible(int k) const
 {
     return d->m_visibility_rule.isVisible(this, k);
 }
 
-void MVViewAgent::setVisibilityRule(const ClusterVisibilityRule& rule)
+void MVContext::setVisibilityRule(const ClusterVisibilityRule& rule)
 {
     if (d->m_visibility_rule == rule)
         return;
@@ -400,7 +400,7 @@ void MVViewAgent::setVisibilityRule(const ClusterVisibilityRule& rule)
     emit this->clusterVisibilityChanged();
 }
 
-void MVViewAgent::setCurrentEvent(const MVEvent& evt)
+void MVContext::setCurrentEvent(const MVEvent& evt)
 {
     if (evt == d->m_current_event)
         return;
@@ -409,7 +409,7 @@ void MVViewAgent::setCurrentEvent(const MVEvent& evt)
     this->setCurrentTimepoint(evt.time);
 }
 
-void MVViewAgent::setCurrentCluster(int k)
+void MVContext::setCurrentCluster(int k)
 {
     if (k == d->m_current_cluster)
         return;
@@ -423,7 +423,7 @@ void MVViewAgent::setCurrentCluster(int k)
     emit currentClusterChanged();
 }
 
-void MVViewAgent::setSelectedClusters(const QList<int>& ks)
+void MVContext::setSelectedClusters(const QList<int>& ks)
 {
     QList<int> ks2 = QList<int>::fromSet(ks.toSet()); //remove duplicates and -1
     ks2.removeAll(-1);
@@ -437,7 +437,7 @@ void MVViewAgent::setSelectedClusters(const QList<int>& ks)
     emit selectedClustersChanged();
 }
 
-void MVViewAgent::setCurrentTimepoint(double tp)
+void MVContext::setCurrentTimepoint(double tp)
 {
     if (d->m_current_timepoint == tp)
         return;
@@ -445,7 +445,7 @@ void MVViewAgent::setCurrentTimepoint(double tp)
     emit currentTimepointChanged();
 }
 
-void MVViewAgent::setCurrentTimeRange(const MVRange& range_in)
+void MVContext::setCurrentTimeRange(const MVRange& range_in)
 {
     MVRange range = range_in;
     if (range.min < 0) {
@@ -463,22 +463,22 @@ void MVViewAgent::setCurrentTimeRange(const MVRange& range_in)
     emit currentTimeRangeChanged();
 }
 
-void MVViewAgent::setClusterColors(const QList<QColor>& colors)
+void MVContext::setClusterColors(const QList<QColor>& colors)
 {
     d->m_cluster_colors = colors;
 }
 
-void MVViewAgent::setChannelColors(const QList<QColor>& colors)
+void MVContext::setChannelColors(const QList<QColor>& colors)
 {
     d->m_channel_colors = colors;
 }
 
-void MVViewAgent::setColors(const QMap<QString, QColor>& colors)
+void MVContext::setColors(const QMap<QString, QColor>& colors)
 {
     d->m_colors = colors;
 }
 
-void MVViewAgent::setOption(QString name, QVariant value)
+void MVContext::setOption(QString name, QVariant value)
 {
     if (d->m_options[name] == value)
         return;
@@ -486,7 +486,7 @@ void MVViewAgent::setOption(QString name, QVariant value)
     emit optionChanged(name);
 }
 
-void MVViewAgent::onOptionChanged(QString name, const QObject* receiver, const char* member, Qt::ConnectionType type)
+void MVContext::onOptionChanged(QString name, const QObject* receiver, const char* member, Qt::ConnectionType type)
 {
     QAction* action = new QAction(this);
     connect(action, SIGNAL(triggered(bool)), receiver, member, type);
@@ -496,7 +496,7 @@ void MVViewAgent::onOptionChanged(QString name, const QObject* receiver, const c
     d->m_option_changed_actions << X;
 }
 
-void MVViewAgent::copySettingsFrom(MVViewAgent* other)
+void MVContext::copySettingsFrom(MVContext* other)
 {
     this->setChannelColors(other->channelColors());
     this->setClusterColors(other->clusterColors());
@@ -506,7 +506,7 @@ void MVViewAgent::copySettingsFrom(MVViewAgent* other)
     this->d->m_options = other->d->m_options;
 }
 
-void MVViewAgent::slot_option_changed(QString name)
+void MVContext::slot_option_changed(QString name)
 {
     for (int i = 0; i < d->m_option_changed_actions.count(); i++) {
         if (d->m_option_changed_actions[i].option_name == name) {
@@ -515,7 +515,7 @@ void MVViewAgent::slot_option_changed(QString name)
     }
 }
 
-void MVViewAgent::clickCluster(int k, Qt::KeyboardModifiers modifiers)
+void MVContext::clickCluster(int k, Qt::KeyboardModifiers modifiers)
 {
     if (modifiers & Qt::ControlModifier) {
         if (k < 0)

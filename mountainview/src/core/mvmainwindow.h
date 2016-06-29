@@ -13,7 +13,7 @@
 #include "clustermerge.h"
 //#include "mvfile.h"
 #include "mvutils.h"
-#include "mvviewagent.h"
+#include "mvcontext.h"
 #include "mvabstractcontrol.h"
 
 class MVAbstractViewFactory;
@@ -40,7 +40,7 @@ class MVMainWindow : public QWidget {
     Q_OBJECT
 public:
     friend class MVMainWindowPrivate;
-    MVMainWindow(MVViewAgent* view_agent, QWidget* parent = 0);
+    MVMainWindow(MVContext* view_agent, QWidget* parent = 0);
     virtual ~MVMainWindow();
     void setDefaultInitialization();
 
@@ -63,7 +63,7 @@ public:
     TabberTabWidget* tabWidget(QWidget* w) const; //should disappear
     Tabber* tabber() const; //should disappear
 
-    MVViewAgent* viewAgent() const;
+    MVContext* viewAgent() const;
 
 public slots:
     void openView(const QString& id);

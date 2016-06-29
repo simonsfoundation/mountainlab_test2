@@ -67,7 +67,7 @@ public:
     void shift_select_clusters_between(int kA, int kB);
 };
 
-MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVViewAgent* view_agent)
+MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVContext* view_agent)
     : MVAbstractView(view_agent)
 {
     d = new MVCrossCorrelogramsWidget2Private;

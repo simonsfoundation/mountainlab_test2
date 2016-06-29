@@ -17,7 +17,7 @@ class MVTimeSeriesView2 : public MVTimeSeriesViewBase {
     Q_OBJECT
 public:
     friend class MVTimeSeriesView2Private;
-    MVTimeSeriesView2(MVViewAgent* view_agent);
+    MVTimeSeriesView2(MVContext* view_agent);
     virtual ~MVTimeSeriesView2();
 
     void prepareCalculation() Q_DECL_OVERRIDE;
@@ -46,7 +46,7 @@ private:
 class MVTimeSeriesDataFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVTimeSeriesDataFactory(MVViewAgent* context, QObject* parent = 0);
+    MVTimeSeriesDataFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

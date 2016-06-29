@@ -47,7 +47,7 @@ public:
     double ypix2val(double ypix);
 };
 
-MVFiringEventView2::MVFiringEventView2(MVViewAgent* view_agent)
+MVFiringEventView2::MVFiringEventView2(MVContext* view_agent)
     : MVTimeSeriesViewBase(view_agent)
 {
     d = new MVFiringEventView2Private;
@@ -217,7 +217,7 @@ void MVFiringEventViewCalculator::compute()
     task.log(QString("Found %1 events, using %2 clusters").arg(times.count()).arg(labels_to_use.count()));
 }
 
-MVFiringEventsFactory::MVFiringEventsFactory(MVViewAgent* context, QObject* parent)
+MVFiringEventsFactory::MVFiringEventsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),

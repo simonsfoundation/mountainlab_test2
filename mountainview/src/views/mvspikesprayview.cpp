@@ -38,7 +38,7 @@ public:
 class MVSpikeSprayViewPrivate {
 public:
     MVSpikeSprayView* q;
-    MVViewAgent* m_view_agent;
+    MVContext* m_view_agent;
     QList<int> m_labels_to_use;
 
     double m_amplitude_factor;
@@ -53,7 +53,7 @@ public:
     QPointF coord2pix(int m, double t, double val);
 };
 
-MVSpikeSprayView::MVSpikeSprayView(MVViewAgent* view_agent)
+MVSpikeSprayView::MVSpikeSprayView(MVContext* view_agent)
     : MVAbstractView(view_agent)
 {
     d = new MVSpikeSprayViewPrivate;
@@ -333,7 +333,7 @@ void MVSpikeSprayComputer::compute()
     }
 }
 
-MVSpikeSprayFactory::MVSpikeSprayFactory(MVViewAgent* context, QObject* parent)
+MVSpikeSprayFactory::MVSpikeSprayFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),

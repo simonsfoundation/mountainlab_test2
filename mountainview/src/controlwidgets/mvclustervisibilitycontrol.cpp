@@ -5,7 +5,7 @@
 *******************************************************/
 
 #include "mvclustervisibilitycontrol.h"
-#include "mvviewagent.h"
+#include "mvcontext.h"
 
 #include <QGridLayout>
 #include <QLabel>

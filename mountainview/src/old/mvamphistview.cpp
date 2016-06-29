@@ -41,7 +41,7 @@ public:
     void do_highlighting();
 };
 
-MVAmpHistView::MVAmpHistView(MVViewAgent* view_agent)
+MVAmpHistView::MVAmpHistView(MVContext* view_agent)
     : MVAbstractView(view_agent)
 {
     d = new MVAmpHistViewPrivate;

@@ -21,7 +21,7 @@ public:
 class MVAbstractViewPrivate {
 public:
     MVAbstractView* q;
-    MVViewAgent* m_view_agent;
+    MVContext* m_view_agent;
     QSet<QString> m_recalculate_on_option_names;
     QSet<QString> m_suggest_recalculate_on_option_names;
     bool m_calculation_scheduled;
@@ -35,7 +35,7 @@ public:
     void set_recalculate_suggested(bool val);
 };
 
-MVAbstractView::MVAbstractView(MVViewAgent* view_agent)
+MVAbstractView::MVAbstractView(MVContext* view_agent)
 {
     d = new MVAbstractViewPrivate;
     d->q = this;
@@ -83,7 +83,7 @@ MVAbstractViewFactory* MVAbstractView::viewFactory() const
     return 0;
 }
 
-MVViewAgent* MVAbstractView::viewAgent()
+MVContext* MVAbstractView::viewAgent()
 {
     return d->m_view_agent;
 }

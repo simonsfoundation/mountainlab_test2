@@ -88,7 +88,7 @@ public:
     QList<mvtsv_channel> m_channels;
     MVRange m_selected_t_range;
     bool m_activated;
-    MVViewAgent* m_view_agent;
+    MVContext* m_view_agent;
 
     bool m_layout_needed;
 
@@ -119,7 +119,7 @@ public:
     void update_cursor();
 };
 
-MVTimeSeriesView::MVTimeSeriesView(MVViewAgent* view_agent)
+MVTimeSeriesView::MVTimeSeriesView(MVContext* view_agent)
 {
     d = new MVTimeSeriesViewPrivate;
     d->q = this;
@@ -535,7 +535,7 @@ void MVTimeSeriesView::unit_test()
     DiskReadMda X0("http://datalaboratory.org:8020/mdaserver/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
     //DiskReadMda X0("/home/magland/sorting_results/axellab/datafile001_datafile002_66_mn_butter_500-6000_trimmin80/pre2.mda");
 
-    MVTimeSeriesView* W = new MVTimeSeriesView(new MVViewAgent); //note that the view agent does not get deleted. :(
+    MVTimeSeriesView* W = new MVTimeSeriesView(new MVContext); //note that the view agent does not get deleted. :(
     W->setTimeseries(X0);
     W->setMLProxyUrl(proxy_url);
     //W->setTimeRange(MVRange(0, X0.N2()-1));

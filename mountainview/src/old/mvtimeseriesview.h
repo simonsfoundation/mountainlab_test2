@@ -9,14 +9,14 @@
 
 #include <QWidget>
 #include <diskreadmda.h>
-#include "mvviewagent.h"
+#include "mvcontext.h"
 
 class MVTimeSeriesViewPrivate;
 class MVTimeSeriesView : public QWidget {
     Q_OBJECT
 public:
     friend class MVTimeSeriesViewPrivate;
-    MVTimeSeriesView(MVViewAgent* view_agent);
+    MVTimeSeriesView(MVContext* view_agent);
     virtual ~MVTimeSeriesView();
 
     void setSampleRate(double samplerate);

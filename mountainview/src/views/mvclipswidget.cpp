@@ -43,11 +43,11 @@ public:
     QList<int> m_labels_to_use;
     //MVClipsView* m_view;
     MVTimeSeriesView2* m_view;
-    MVViewAgent m_view_view_agent;
+    MVContext m_view_view_agent;
     MVClipsWidgetComputer m_computer;
 };
 
-MVClipsWidget::MVClipsWidget(MVViewAgent* view_agent)
+MVClipsWidget::MVClipsWidget(MVContext* view_agent)
     : MVAbstractView(view_agent)
 {
     d = new MVClipsWidgetPrivate;
@@ -205,7 +205,7 @@ void MVClipsWidgetComputer::compute()
     */
 }
 
-MVClipsFactory::MVClipsFactory(MVViewAgent* context, QObject* parent)
+MVClipsFactory::MVClipsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),

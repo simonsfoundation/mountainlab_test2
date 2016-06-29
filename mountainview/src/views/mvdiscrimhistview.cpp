@@ -44,7 +44,7 @@ public:
     void set_views();
 };
 
-MVDiscrimHistView::MVDiscrimHistView(MVViewAgent* view_agent)
+MVDiscrimHistView::MVDiscrimHistView(MVContext* view_agent)
     : MVHistogramGrid(view_agent)
 {
     d = new MVDiscrimHistViewPrivate;
@@ -247,7 +247,7 @@ void MVDiscrimHistViewPrivate::set_views()
     q->setHistogramViews(views); //inherited
 }
 
-MVDiscrimHistFactory::MVDiscrimHistFactory(MVViewAgent* context, QObject* parent)
+MVDiscrimHistFactory::MVDiscrimHistFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(MVMainWindow::instance()->viewAgent(), SIGNAL(selectedClustersChanged()),

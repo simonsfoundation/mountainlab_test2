@@ -19,7 +19,7 @@ class MVSpikeSprayView : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVSpikeSprayViewPrivate;
-    MVSpikeSprayView(MVViewAgent* view_agent);
+    MVSpikeSprayView(MVContext* view_agent);
     virtual ~MVSpikeSprayView();
     void setLabelsToUse(const QList<int>& labels);
 
@@ -38,7 +38,7 @@ private:
 class MVSpikeSprayFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVSpikeSprayFactory(MVViewAgent* context, QObject* parent = 0);
+    MVSpikeSprayFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

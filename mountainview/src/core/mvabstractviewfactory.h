@@ -2,14 +2,12 @@
 #define MVABSTRACTVIEWFACTORY_H
 
 #include <QWidget>
-
-class MVViewAgent;
-class MVAbstractView;
+#include "mvabstractview.h"
 
 class MVAbstractViewFactory : public QObject {
     Q_OBJECT
 public:
-    explicit MVAbstractViewFactory(MVViewAgent* context, QObject* parent = 0);
+    explicit MVAbstractViewFactory(MVContext* context, QObject* parent = 0);
     bool isEnabled() const;
 
     virtual QString id() const = 0;
@@ -25,11 +23,11 @@ signals:
 
 protected:
     void setEnabled(bool e);
-    MVViewAgent* mvContext();
+    MVContext* mvContext();
 
 private:
     bool m_enabled;
-    MVViewAgent* m_context;
+    MVContext* m_context;
 };
 
 #endif // MVABSTRACTVIEWFACTORY_H

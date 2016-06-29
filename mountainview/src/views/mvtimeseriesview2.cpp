@@ -56,7 +56,7 @@ public:
     double ypix2val(int m, double ypix);
 };
 
-MVTimeSeriesView2::MVTimeSeriesView2(MVViewAgent* view_agent)
+MVTimeSeriesView2::MVTimeSeriesView2(MVContext* view_agent)
     : MVTimeSeriesViewBase(view_agent)
 {
     d = new MVTimeSeriesView2Private;
@@ -277,7 +277,7 @@ void MVTimeSeriesView2Calculator::compute()
     num_channels = timeseries.N1();
 }
 
-MVTimeSeriesDataFactory::MVTimeSeriesDataFactory(MVViewAgent* context, QObject* parent)
+MVTimeSeriesDataFactory::MVTimeSeriesDataFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
 }

@@ -6,7 +6,7 @@
 #ifndef HISTOGRAMVIEW_H
 #define HISTOGRAMVIEW_H
 
-#include "mvviewagent.h"
+#include "mvcontext.h"
 
 #include <QWidget>
 

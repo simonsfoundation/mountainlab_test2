@@ -26,7 +26,7 @@ public:
     MVControlPanel* q;
     ControlManager m_controls;
 
-    MVViewAgent* m_view_agent;
+    MVContext* m_view_agent;
     MVMainWindow* m_main_window;
     FlowLayout* m_viewLayout;
     QLabel* create_group_label(QString label);
@@ -45,7 +45,7 @@ action_button_info abi(QString name, QString label)
     return ret;
 }
 
-MVControlPanel::MVControlPanel(MVViewAgent* view_agent, MVMainWindow* mw)
+MVControlPanel::MVControlPanel(MVContext* view_agent, MVMainWindow* mw)
 {
     d = new MVControlPanelPrivate;
     d->q = this;

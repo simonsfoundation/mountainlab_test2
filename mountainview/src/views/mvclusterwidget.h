@@ -24,7 +24,7 @@ class MVClusterWidget : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVClusterWidgetPrivate;
-    MVClusterWidget(MVViewAgent* view_agent);
+    MVClusterWidget(MVContext* view_agent);
     virtual ~MVClusterWidget();
 
     void prepareCalculation() Q_DECL_OVERRIDE;
@@ -61,7 +61,7 @@ private:
 class MVPCAFeaturesFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVPCAFeaturesFactory(MVViewAgent* context, QObject* parent = 0);
+    MVPCAFeaturesFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
@@ -73,7 +73,7 @@ public slots:
 class MVChannelFeaturesFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVChannelFeaturesFactory(MVViewAgent* context, QObject* parent = 0);
+    MVChannelFeaturesFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

@@ -148,7 +148,7 @@ public:
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
 
-MVClusterDetailWidget::MVClusterDetailWidget(MVViewAgent* view_agent, MVAbstractViewFactory* factory)
+MVClusterDetailWidget::MVClusterDetailWidget(MVContext* view_agent, MVAbstractViewFactory* factory)
     : MVAbstractView(view_agent)
 {
     d = new MVClusterDetailWidgetPrivate;
@@ -1255,7 +1255,7 @@ QRectF ClusterView::rect()
     return m_rect;
 }
 
-MVClusterDetailsFactory::MVClusterDetailsFactory(MVViewAgent* context, QObject* parent)
+MVClusterDetailsFactory::MVClusterDetailsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
 }

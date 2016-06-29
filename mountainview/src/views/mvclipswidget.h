@@ -18,7 +18,7 @@ class MVClipsWidget : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVClipsWidgetPrivate;
-    MVClipsWidget(MVViewAgent* view_agent);
+    MVClipsWidget(MVContext* view_agent);
     virtual ~MVClipsWidget();
 
     void prepareCalculation() Q_DECL_OVERRIDE;
@@ -38,7 +38,7 @@ private:
 class MVClipsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVClipsFactory(MVViewAgent* context, QObject* parent = 0);
+    MVClipsFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

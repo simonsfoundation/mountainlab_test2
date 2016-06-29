@@ -26,13 +26,13 @@ closemehandler.h flowlayout.h imagesavedialog.h \
 mountainprocessrunner.h mvabstractcontextmenuhandler.h \
 mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
 mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
-mvviewagent.h tabber.h tabberframe.h
+mvcontext.h tabber.h tabberframe.h
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
 mountainprocessrunner.cpp mvabstractcontextmenuhandler.cpp \
 mvabstractcontrol.cpp mvabstractview.cpp mvabstractviewfactory.cpp \
 mvcontrolpanel2.cpp mvmainwindow.cpp mvstatusbar.cpp \
-mvviewagent.cpp tabber.cpp tabberframe.cpp
+mvcontext.cpp tabber.cpp tabberframe.cpp
 # to remove
 HEADERS += computationthread.h
 SOURCES += computationthread.cpp

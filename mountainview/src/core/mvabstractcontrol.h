@@ -10,7 +10,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 
-#include "mvviewagent.h"
+#include "mvcontext.h"
 
 class MVMainWindow;
 class MVAbstractControlPrivate;

@@ -86,7 +86,7 @@ public:
     void update_cursor();
 };
 
-MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVViewAgent* view_agent)
+MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* view_agent)
     : MVAbstractView(view_agent)
 {
     d = new MVTimeSeriesViewBasePrivate;

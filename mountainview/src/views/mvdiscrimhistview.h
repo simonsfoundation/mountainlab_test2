@@ -9,7 +9,7 @@ class MVDiscrimHistView : public MVHistogramGrid {
     Q_OBJECT
 public:
     friend class MVDiscrimHistViewPrivate;
-    MVDiscrimHistView(MVViewAgent* view_agent);
+    MVDiscrimHistView(MVContext* view_agent);
     virtual ~MVDiscrimHistView();
 
     void setClusterNumbers(const QList<int>& cluster_numbers);
@@ -31,7 +31,7 @@ private:
 class MVDiscrimHistFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVDiscrimHistFactory(MVViewAgent* context, QObject* parent = 0);
+    MVDiscrimHistFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

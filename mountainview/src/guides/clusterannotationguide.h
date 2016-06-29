@@ -2,7 +2,7 @@
 #define CLUSTERANNOTATIONGUIDE_H
 
 #include <QWizard>
-#include "mvviewagent.h"
+#include "mvcontext.h"
 #include "mvmainwindow.h"
 
 class ClusterAnnotationGuidePrivate;

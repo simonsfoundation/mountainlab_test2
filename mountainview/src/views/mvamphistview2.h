@@ -9,7 +9,7 @@ class MVAmpHistView2 : public MVHistogramGrid {
     Q_OBJECT
 public:
     friend class MVAmpHistView2Private;
-    MVAmpHistView2(MVViewAgent* view_agent);
+    MVAmpHistView2(MVContext* view_agent);
     virtual ~MVAmpHistView2();
 
     void prepareCalculation() Q_DECL_OVERRIDE;
@@ -29,7 +29,7 @@ private:
 class MVAmplitudeHistogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVAmplitudeHistogramsFactory(MVViewAgent* context, QObject* parent = 0);
+    MVAmplitudeHistogramsFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

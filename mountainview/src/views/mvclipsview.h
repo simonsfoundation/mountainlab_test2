@@ -7,7 +7,7 @@
 #define MVCLIPSVIEW_H
 
 #include "mvutils.h"
-#include "mvviewagent.h"
+#include "mvcontext.h"
 
 #include <QWidget>
 
@@ -20,7 +20,7 @@ class MVClipsView : public QWidget {
     Q_OBJECT
 public:
     friend class MVClipsViewPrivate;
-    MVClipsView(MVViewAgent* view_agent);
+    MVClipsView(MVContext* view_agent);
     virtual ~MVClipsView();
 
     void setClips(const DiskReadMda& clips);

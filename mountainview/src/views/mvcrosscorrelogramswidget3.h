@@ -29,7 +29,7 @@ class MVCrossCorrelogramsWidget3 : public MVHistogramGrid {
     Q_OBJECT
 public:
     friend class MVCrossCorrelogramsWidget3Private;
-    MVCrossCorrelogramsWidget3(MVViewAgent* view_agent);
+    MVCrossCorrelogramsWidget3(MVContext* view_agent);
     virtual ~MVCrossCorrelogramsWidget3();
 
     void prepareCalculation() Q_DECL_OVERRIDE;
@@ -47,7 +47,7 @@ private:
 class MVAutoCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVAutoCorrelogramsFactory(MVViewAgent* context, QObject* parent = 0);
+    MVAutoCorrelogramsFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
@@ -59,7 +59,7 @@ private slots:
 class MVCrossCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVCrossCorrelogramsFactory(MVViewAgent* context, QObject* parent = 0);
+    MVCrossCorrelogramsFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
@@ -71,7 +71,7 @@ private slots:
 class MVMatrixOfCrossCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVMatrixOfCrossCorrelogramsFactory(MVViewAgent* context, QObject* parent = 0);
+    MVMatrixOfCrossCorrelogramsFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

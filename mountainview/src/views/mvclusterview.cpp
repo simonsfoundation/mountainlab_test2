@@ -9,7 +9,7 @@
 #include <math.h>
 #include "mvutils.h"
 #include "msmisc.h"
-#include "mvviewagent.h"
+#include "mvcontext.h"
 #include <QMenu>
 
 /// TODO: (HIGH) Panning in cluster view -- feature request on forum
@@ -26,7 +26,7 @@ public:
     int m_current_event_index;
     int m_mode;
     //FilterInfo m_filter_info;
-    MVViewAgent* m_view_agent;
+    MVContext* m_view_agent;
 
     QImage m_grid_image;
     QRectF m_image_target;
@@ -75,7 +75,7 @@ public slots:
 };
 #include "mvclusterview.moc"
 
-MVClusterView::MVClusterView(MVViewAgent* view_agent, QWidget* parent)
+MVClusterView::MVClusterView(MVContext* view_agent, QWidget* parent)
     : QWidget(parent)
 {
     d = new MVClusterViewPrivate;
