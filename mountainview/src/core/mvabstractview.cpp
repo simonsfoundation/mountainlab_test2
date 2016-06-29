@@ -149,11 +149,6 @@ void MVAbstractView::slot_do_calculation()
 
 void MVAbstractView::slot_calculation_finished()
 {
-    if (d->m_calculation_thread.isInterruptionRequested()) {
-        qWarning() << "Calculation interrupted";
-        emit this->calculationFinished();
-        return;
-    }
     this->onCalculationFinished();
     this->update();
     emit this->calculationFinished();
