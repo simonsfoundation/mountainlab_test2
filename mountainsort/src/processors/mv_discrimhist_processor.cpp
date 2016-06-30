@@ -16,6 +16,7 @@ mv_discrimhist_Processor::mv_discrimhist_Processor()
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("output");
     this->setRequiredParameters("clusters");
+    this->setOptionalParameters("clip_size");
 }
 
 mv_discrimhist_Processor::~mv_discrimhist_Processor()
@@ -36,6 +37,7 @@ bool mv_discrimhist_Processor::run(const QMap<QString, QVariant>& params)
     QString firings_path = params["firings"].toString();
     QString output_path = params["output"].toString();
     QStringList clusters_strlist = params["clusters"].toString().split(",", QString::SkipEmptyParts);
+    int clip_size = params["clip_size"].toInt();
     QVector<int> clusters;
     foreach(QString cluster_str, clusters_strlist)
     {
@@ -44,5 +46,6 @@ bool mv_discrimhist_Processor::run(const QMap<QString, QVariant>& params)
 
     mv_discrimhist_opts opts;
     opts.clusters = clusters;
+    opts.clip_size = clip_size;
     return mv_discrimhist(timeseries_path, firings_path, output_path, opts);
 }

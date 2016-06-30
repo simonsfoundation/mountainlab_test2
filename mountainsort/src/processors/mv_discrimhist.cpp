@@ -19,6 +19,8 @@ bool mv_discrimhist(QString timeseries_path, QString firings_path, QString outpu
     DiskReadMda firings(firings_path);
 
     QList<discrimhist_data> datas;
+    if (opts.clip_size <= 0)
+        opts.clip_size = 80;
     for (int i1 = 0; i1 < opts.clusters.count(); i1++) {
         for (int i2 = i1 + 1; i2 < opts.clusters.count(); i2++) {
             int k1 = opts.clusters[i1];
