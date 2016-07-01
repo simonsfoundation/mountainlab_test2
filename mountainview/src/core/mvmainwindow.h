@@ -24,7 +24,6 @@ class MVMainWindowPrivate;
 class MVMainWindow : public QWidget {
     Q_OBJECT
 public:
-
     //Witold, is this the right place to put it?
     enum RecalculateViewsMode {
         All,
@@ -32,7 +31,6 @@ public:
         Suggested,
         SuggestedVisible
     };
-
 
     friend class MVMainWindowPrivate;
     MVMainWindow(MVContext* context, QWidget* parent = 0);
@@ -57,7 +55,6 @@ public slots:
 
 protected:
     void resizeEvent(QResizeEvent* evt);
-    void keyPressEvent(QKeyEvent* evt);
 
 signals:
 

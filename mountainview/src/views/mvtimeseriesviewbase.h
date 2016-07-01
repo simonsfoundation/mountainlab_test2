@@ -68,7 +68,7 @@ protected:
     void wheelEvent(QWheelEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
 
-// I wanted to make this protected, but ran into some trouble
+    // I wanted to make this protected, but ran into some trouble
 public:
     QRectF contentGeometry();
     double time2xpix(double t) const;

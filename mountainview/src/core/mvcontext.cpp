@@ -27,7 +27,7 @@ public:
     int m_current_cluster;
     QList<int> m_selected_clusters;
     double m_current_timepoint;
-    MVRange m_current_time_range=MVRange(0,0); //(0,0) triggers automatic calculation
+    MVRange m_current_time_range = MVRange(0, 0); //(0,0) triggers automatic calculation
     QList<QColor> m_cluster_colors;
     QList<QColor> m_channel_colors;
     QMap<QString, TimeseriesStruct> m_timeseries;
@@ -179,8 +179,8 @@ double MVContext::currentTimepoint() const
 
 MVRange MVContext::currentTimeRange() const
 {
-    if ((d->m_current_time_range.min<=0)&&(d->m_current_time_range.max<=0)) {
-        return MVRange(0,qMax(0L,this->currentTimeseries().N2()-1));
+    if ((d->m_current_time_range.min <= 0) && (d->m_current_time_range.max <= 0)) {
+        return MVRange(0, qMax(0L, this->currentTimeseries().N2() - 1));
     }
     return d->m_current_time_range;
 }
@@ -442,6 +442,10 @@ void MVContext::setSelectedClusters(const QList<int>& ks)
 
 void MVContext::setCurrentTimepoint(double tp)
 {
+    if (tp < 0)
+        tp = 0;
+    if (tp >= this->currentTimeseries().N2())
+        tp = this->currentTimeseries().N2() - 1;
     if (d->m_current_timepoint == tp)
         return;
     d->m_current_timepoint = tp;
@@ -451,14 +455,18 @@ void MVContext::setCurrentTimepoint(double tp)
 void MVContext::setCurrentTimeRange(const MVRange& range_in)
 {
     MVRange range = range_in;
+    if (range.max >= this->currentTimeseries().N2()) {
+        range = range + (this->currentTimeseries().N2() - 1 - range.max);
+    }
     if (range.min < 0) {
         range = range + (0 - range.min);
     }
-    if (range.max >= this->currentTimeseries().N2()) {
-        range.max = this->currentTimeseries().N2() - 1;
-    }
     if (range.max - range.min < 30) { //don't allow range to be too small
         range.max = range.min + 30;
+    }
+    if ((range.max >= this->currentTimeseries().N2()) && (range.min == 0)) { //second condition important
+        //don't allow it to extend too far
+        range.max = this->currentTimeseries().N2() - 1;
     }
     if (d->m_current_time_range == range)
         return;

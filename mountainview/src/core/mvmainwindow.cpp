@@ -308,24 +308,14 @@ void MVMainWindow::resizeEvent(QResizeEvent* evt)
     d->update_sizes();
 }
 
+/*
 void MVMainWindow::keyPressEvent(QKeyEvent* evt)
 {
     /// TODO restore keypress M,U,T functionality
-    /*
-    if (evt->key() == Qt::Key_M) {
-        d->merge_selected();
-    }
-    else if (evt->key() == Qt::Key_U) {
-        d->unmerge_selected();
-    }
-    else if (evt->key() == Qt::Key_T) {
-        d->tag_selected();
-    }
-    else
-    */
 
-    evt->ignore();
+    QWidget::keyPressEvent(evt);
 }
+*/
 
 /// TODO: (MEDIUM) this functionality should be moved to tabber
 void MVMainWindow::slot_action_move_to_other_tab_widget()
