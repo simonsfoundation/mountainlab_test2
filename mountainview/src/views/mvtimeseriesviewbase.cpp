@@ -334,7 +334,6 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
 
 void MVTimeSeriesViewBase::mousePressEvent(QMouseEvent* evt)
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (evt->button() == Qt::LeftButton) {
         d->m_left_click_anchor_pix = evt->pos();
         d->m_left_click_anchor_t_range = this->timeRange();
@@ -347,12 +346,10 @@ void MVTimeSeriesViewBase::mousePressEvent(QMouseEvent* evt)
 
 void MVTimeSeriesViewBase::mouseReleaseEvent(QMouseEvent* evt)
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_left_click_anchor_pix = QPointF(-1, -1);
     if (evt->button() == Qt::LeftButton) {
         if (!d->m_left_click_dragging) {
             double t0 = d->xpix2time(evt->pos().x());
-            qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << t0;
             mvContext()->setCurrentTimepoint(t0);
         }
         d->m_left_click_dragging = false;
@@ -623,13 +620,11 @@ QRectF MVTimeSeriesViewBasePrivate::content_geometry()
 
 void MVTimeSeriesViewBasePrivate::zoom_out(double about_time, double frac)
 {
-    printf("%.14f %.14f\n", q->timeRange().min, q->timeRange().max);
     double about_xpix = time2xpix(about_time);
     q->setTimeRange(q->timeRange() * (1 / frac));
     double new_time = xpix2time(about_xpix);
     double dt = about_time - new_time;
     q->setTimeRange(q->timeRange() + (dt));
-    printf("%.14f %.14f %.14f\n", q->timeRange().min, q->timeRange().max, 1 / frac);
 }
 
 void MVTimeSeriesViewBasePrivate::zoom_in(double about_time, double frac)
