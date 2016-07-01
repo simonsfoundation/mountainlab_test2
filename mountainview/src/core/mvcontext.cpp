@@ -461,8 +461,8 @@ void MVContext::setCurrentTimeRange(const MVRange& range_in)
     if (range.min < 0) {
         range = range + (0 - range.min);
     }
-    if (range.max - range.min < 30) { //don't allow range to be too small
-        range.max = range.min + 30;
+    if (range.max - range.min < 150) { //don't allow range to be too small
+        range.max = range.min + 150;
     }
     if ((range.max >= this->currentTimeseries().N2()) && (range.min == 0)) { //second condition important
         //don't allow it to extend too far

@@ -151,11 +151,15 @@ QImage MVTimeSeriesRenderManager::getImage(double t1, double t2, double amp_fact
         if (p.image.width()) {
             double a1 = (iii * panel_num_points * ds_factor - t1) * 1.0 / (t2 - t1) * W;
             double a2 = ((iii + 1) * panel_num_points * ds_factor - t1) * 1.0 / (t2 - t1) * W;
-            if (a2 - a1 < 4000) { //this avoids running out of memory
+            if (a2 - a1 < 4000) { //we avoid running out of memory
                 painter.drawImage(a1, 0, p.image.scaled(a2 - a1, H, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
             }
             else {
-                painter.fillRect(a1, 0, a2 - a1, H, Qt::lightGray);
+                QRectF rect(0, 0, ret.width(), ret.height());
+                painter.fillRect(rect, Qt::lightGray);
+                QString txt = "Image stretched too far.";
+                painter.setPen(Qt::black);
+                painter.drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, txt);
             }
         }
     }
