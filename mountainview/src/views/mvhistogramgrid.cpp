@@ -189,7 +189,7 @@ QList<HistogramView*> MVHistogramGrid::histogramViews()
     return d->m_histogram_views;
 }
 
-void MVHistogramGrid::prepareMimeData(QMimeData &mimeData, const QPoint &pos)
+void MVHistogramGrid::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
 {
     QByteArray ba;
     QDataStream ds(&ba, QIODevice::WriteOnly);
@@ -231,14 +231,15 @@ void MVHistogramGrid::slot_update_highlighting()
     d->do_highlighting();
 }
 
-void MVHistogramGrid::slot_context_menu(const QPoint &pt)
+void MVHistogramGrid::slot_context_menu(const QPoint& pt)
 {
     // IMO this code doesn't work correctly as the "activated" signal
     // doesn't "select" the HV thus we're being triggered over a widget
     // that is different than the selected HV
 
     HistogramView* HV = qobject_cast<HistogramView*>(sender());
-    if (!HV) return;
+    if (!HV)
+        return;
     // send yourself a context menu request
     QContextMenuEvent e(QContextMenuEvent::Mouse, mapFromGlobal(HV->mapToGlobal(pt)));
     QCoreApplication::sendEvent(this, &e);

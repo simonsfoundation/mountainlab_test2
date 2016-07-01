@@ -26,7 +26,9 @@ closemehandler.h flowlayout.h imagesavedialog.h \
 mountainprocessrunner.h mvabstractcontextmenuhandler.h \
 mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
 mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
-mvcontext.h tabber.h tabberframe.h taskprogressview.h
+mvcontext.h tabber.h tabberframe.h taskprogressview.h \
+    misc/paintlayer.h \
+    misc/paintlayerstack.h
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
 mountainprocessrunner.cpp mvabstractcontextmenuhandler.cpp \
@@ -41,10 +43,10 @@ INCLUDEPATH += misc
 VPATH += misc
 HEADERS += \
 clustermerge.h multiscaletimeseries.h \
-mvmisc.h mvutils.h
+mvmisc.h mvutils.h paintlayer.h paintlayerstack.h
 SOURCES += \
 clustermerge.cpp multiscaletimeseries.cpp \
-mvmisc.cpp mvutils.cpp
+mvmisc.cpp mvutils.cpp paintlayer.cpp paintlayerstack.cpp
 
 INCLUDEPATH += views
 VPATH += views

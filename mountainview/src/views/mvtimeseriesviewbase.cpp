@@ -5,6 +5,7 @@
 *******************************************************/
 
 #include "mvtimeseriesviewbase.h"
+#include "paintlayerstack.h"
 #include <math.h>
 
 #include <QAction>
@@ -44,6 +45,71 @@ public:
     void compute();
 };
 
+class EventMarkerLayer : public PaintLayer {
+public:
+    EventMarkerLayer(MVTimeSeriesViewBase* q0, MVTimeSeriesViewBasePrivate* d0)
+    {
+        q = q0;
+        d = d0;
+    }
+
+    void paint(QPainter* painter) Q_DECL_OVERRIDE;
+
+    MVTimeSeriesViewBase* q;
+    MVTimeSeriesViewBasePrivate* d;
+    void paint_markers(QPainter* painter, const QVector<double>& t0, const QVector<int>& labels, double W, double H);
+    void paint_message_at_top(QPainter* painter, QString msg, double W, double H);
+};
+
+class CursorLayer : public PaintLayer {
+public:
+    CursorLayer(MVTimeSeriesViewBase* q0, MVTimeSeriesViewBasePrivate* d0)
+    {
+        q = q0;
+        d = d0;
+    }
+
+    void paint(QPainter* painter) Q_DECL_OVERRIDE;
+
+    MVTimeSeriesViewBase* q;
+    MVTimeSeriesViewBasePrivate* d;
+
+    void paint_cursor(QPainter* painter, int W, int H);
+};
+
+class TimeAxisLayer : public PaintLayer {
+public:
+    TimeAxisLayer(MVTimeSeriesViewBase* q0, MVTimeSeriesViewBasePrivate* d0)
+    {
+        q = q0;
+        d = d0;
+    }
+
+    void paint(QPainter* painter) Q_DECL_OVERRIDE;
+
+    MVTimeSeriesViewBase* q;
+    MVTimeSeriesViewBasePrivate* d;
+
+    void paint_time_axis(QPainter* painter, double W, double H);
+    void paint_time_axis_unit(QPainter* painter, double W, double H, TickStruct TS);
+};
+
+class StatusLayer : public PaintLayer {
+public:
+    StatusLayer(MVTimeSeriesViewBase* q0, MVTimeSeriesViewBasePrivate* d0)
+    {
+        q = q0;
+        d = d0;
+    }
+
+    void paint(QPainter* painter) Q_DECL_OVERRIDE;
+
+    MVTimeSeriesViewBase* q;
+    MVTimeSeriesViewBasePrivate* d;
+
+    void paint_status_string(QPainter* painter, double W, double H, QString str);
+};
+
 class MVTimeSeriesViewBasePrivate {
 public:
     MVTimeSeriesViewBase* q;
@@ -53,6 +119,7 @@ public:
 
     QSet<int> m_labels_to_view;
 
+    PaintLayerStack m_paint_layer_stack;
     mvtsvb_calculator m_calculator;
 
     mvtsv_prefs m_prefs;
@@ -66,13 +133,6 @@ public:
     double m_left_click_anchor_time;
     MVRange m_left_click_anchor_t_range;
     bool m_left_click_dragging;
-
-    void paint_cursor(QPainter* painter, double W, double H);
-    void paint_markers(QPainter* painter, const QVector<double>& t0, const QVector<int>& labels, double W, double H);
-    void paint_message_at_top(QPainter* painter, QString msg, double W, double H);
-    void paint_time_axis(QPainter* painter, double W, double H);
-    void paint_time_axis_unit(QPainter* painter, double W, double H, TickStruct TS);
-    void paint_status_string(QPainter* painter, double W, double H, QString str);
 
     double time2xpix(double t);
     double xpix2time(double xpix);
@@ -98,6 +158,12 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* context)
     this->setMouseTracking(true);
     d->m_num_timepoints = 1;
 
+    /// TODO put the background color as a layer -- make a backgroundcolor layer
+    d->m_paint_layer_stack.addLayer(new EventMarkerLayer(this, d));
+    d->m_paint_layer_stack.addLayer(new CursorLayer(this, d));
+    d->m_paint_layer_stack.addLayer(new TimeAxisLayer(this, d));
+    d->m_paint_layer_stack.addLayer(new StatusLayer(this, d));
+
     {
         QAction* a = new QAction(QIcon(":/images/zoom-in.png"), "Zoom In", this);
         a->setProperty("action_type", "toolbar");
@@ -114,8 +180,8 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* context)
     }
 
     QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
-    QObject::connect(context, SIGNAL(currentTimeRangeChanged()), this, SLOT(slot_refresh_content()));
     QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
+    QObject::connect(context, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
 
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
 }
@@ -190,6 +256,7 @@ double MVTimeSeriesViewBase::xpix2time(double x) const
 
 void MVTimeSeriesViewBase::resizeEvent(QResizeEvent* evt)
 {
+    d->m_paint_layer_stack.setWindowSize(this->size());
     QWidget::resizeEvent(evt);
 }
 
@@ -243,63 +310,12 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
+    /// TODO make background layer
     mvtsv_colors colors = d->m_prefs.colors;
-
     QColor back_col = colors.background_color;
     painter.fillRect(0, 0, width(), height(), back_col);
 
-    double W0 = this->width();
-    double H0 = this->height();
-
-    double view_t1 = mvContext()->currentTimeRange().min;
-    double view_t2 = mvContext()->currentTimeRange().max;
-
-    // Event markers
-    if (d->m_prefs.markers_visible) {
-        QVector<double> times0;
-        QVector<int> labels0;
-        for (long i = 0; i < d->m_times.count(); i++) {
-            double t0 = d->m_times[i];
-            int l0 = d->m_labels[i];
-            if ((view_t1 <= t0) && (t0 <= view_t2)) {
-                times0 << t0;
-                labels0 << l0;
-            }
-        }
-
-        double min_avg_pixels_per_marker = 10; //probably add this to prefs
-        if ((times0.count()) && (W0 / times0.count() >= min_avg_pixels_per_marker)) {
-            d->paint_markers(&painter, times0, labels0, W0, H0);
-        }
-        else {
-            if (times0.count()) {
-                d->paint_message_at_top(&painter, "Zoom in to view markers", W0, H0);
-            }
-        }
-    }
-
-    // Cursor
-    d->paint_cursor(&painter, W0, H0);
-
-    // Time axis
-    if (d->m_prefs.show_time_axis) {
-        d->paint_time_axis(&painter, W0, H0);
-    }
-
-    // Status
-    {
-        QString str;
-        if (d->m_prefs.show_current_timepoint) {
-            double samplerate = mvContext()->sampleRate();
-            if (samplerate) {
-                str = QString("%1 (tp: %2)").arg(d->format_time(mvContext()->currentTimepoint())).arg((long)mvContext()->currentTimepoint());
-            }
-            else {
-                str = QString("Sample rate is null (tp: %2)").arg((long)mvContext()->currentTimepoint());
-            }
-        }
-        d->paint_status_string(&painter, W0, H0, str);
-    }
+    d->m_paint_layer_stack.paint(&painter);
 
     paintContent(&painter);
 }
@@ -423,64 +439,6 @@ void MVTimeSeriesViewBase::slot_zoom_out()
     d->zoom_out(mvContext()->currentTimepoint());
 }
 
-void MVTimeSeriesViewBasePrivate::paint_cursor(QPainter* painter, double W, double H)
-{
-    Q_UNUSED(W)
-    Q_UNUSED(H)
-
-    double mtop = m_prefs.mtop;
-    double mbottom = m_prefs.mbottom;
-
-    if (m_selected_t_range.min < 0) {
-        double x0 = time2xpix(q->mvContext()->currentTimepoint());
-        QPointF p0(x0, mtop);
-        QPointF p1(x0, H - mbottom);
-
-        for (int pass = 1; pass <= 2; pass++) {
-            QPainterPath path;
-            QPointF pp = p0;
-            int sign = -1;
-            if (pass == 2) {
-                pp = p1;
-                sign = 1;
-            }
-            path.moveTo(pp.x(), pp.y() - 10 * sign);
-            path.lineTo(pp.x() - 8, pp.y() - 2 * sign);
-            path.lineTo(pp.x() + 8, pp.y() - 2 * sign);
-            path.lineTo(pp.x(), pp.y() - 10 * sign);
-            QColor col = QColor(50, 50, 220);
-            painter->fillPath(path, QBrush(col));
-        }
-
-        QPainterPath path2;
-        path2.moveTo(p0.x(), p0.y() + 10);
-        path2.lineTo(p1.x(), p1.y() - 10);
-        painter->setPen(QPen(QBrush(QColor(50, 50, 220, 60)), 0));
-        painter->drawPath(path2);
-
-        //painter->setPen(QPen(QBrush(QColor(50,50,220,180)),1));
-        //painter->drawPath(path2);
-    }
-
-    if (m_selected_t_range.min >= 0) {
-        double x0 = time2xpix(m_selected_t_range.min);
-        QPointF p0(x0, mtop);
-        QPointF p1(x0, H - mbottom);
-
-        QPainterPath path;
-        path.moveTo(p0.x(), p0.y());
-        path.lineTo(p1.x(), p0.y());
-        path.lineTo(p1.x(), p1.y());
-        path.lineTo(p0.x(), p1.y());
-        path.lineTo(p0.x(), p0.y());
-
-        int pen_width = 6;
-        QColor pen_color = QColor(150, 150, 150);
-        painter->setPen(QPen(QBrush(pen_color), pen_width));
-        painter->drawPath(path);
-    }
-}
-
 struct MarkerRecord {
     double xpix;
     int label;
@@ -504,80 +462,30 @@ void sort_by_xpix2(QList<MarkerRecord>& records)
     qSort(records.begin(), records.end(), MarkerRecord_comparer());
 }
 
-void MVTimeSeriesViewBasePrivate::paint_markers(QPainter* painter, const QVector<double>& times, const QVector<int>& labels, double W, double H)
+void TimeAxisLayer::paint(QPainter *painter)
 {
-    Q_UNUSED(W)
-    double mtop = m_prefs.mtop;
-    double mbottom = m_prefs.mbottom;
-
-    mvtsv_colors colors = m_prefs.colors;
-
-    QList<MarkerRecord> marker_recs;
-
-    int min_dist = 20;
-
-    for (long i = 0; i < times.count(); i++) {
-        double t0 = times[i];
-        int l0 = labels[i];
-        double x0 = time2xpix(t0);
-        MarkerRecord MR;
-        MR.xpix = x0;
-        MR.label = l0;
-        MR.level = 0;
-        marker_recs << MR;
-    }
-    sort_by_xpix2(marker_recs);
-    for (long i = 1; i < marker_recs.count(); i++) {
-        if (marker_recs[i - 1].xpix + min_dist >= marker_recs[i].xpix) {
-            marker_recs[i].level = (marker_recs[i - 1].level + 1) % m_prefs.num_label_levels;
-        }
-    }
-    QPen pen = painter->pen();
-    pen.setColor(colors.marker_color);
-    painter->setPen(pen);
-    QFont font = painter->font();
-    font.setPixelSize(m_prefs.label_font_height);
-    painter->setFont(font);
-    for (long i = 0; i < marker_recs.count(); i++) {
-        MarkerRecord MR = marker_recs[i];
-        QPointF p0(MR.xpix, mtop);
-        QPointF p1(MR.xpix, H - mbottom);
-        painter->drawLine(p0, p1);
-        QRectF rect(MR.xpix - 30, mtop - 3 - m_prefs.label_font_height * (MR.level + 1), 60, m_prefs.label_font_height);
-        painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, QString("%1").arg(MR.label));
-    }
+    paint_time_axis(painter,windowSize().width(),windowSize().height());
 }
 
-void MVTimeSeriesViewBasePrivate::paint_message_at_top(QPainter* painter, QString msg, double W, double H)
+void TimeAxisLayer::paint_time_axis(QPainter* painter, double W, double H)
 {
-    Q_UNUSED(H)
-    QPen pen = painter->pen();
-    pen.setColor(m_prefs.colors.marker_color);
-    painter->setPen(pen);
-    QFont font = painter->font();
-    font.setPixelSize(m_prefs.label_font_height);
-    painter->setFont(font);
+    if (!d->m_prefs.show_time_axis)
+        return;
 
-    QRectF rect(0, 0, W, m_prefs.mtop);
-    painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, msg);
-}
-
-void MVTimeSeriesViewBasePrivate::paint_time_axis(QPainter* painter, double W, double H)
-{
     double samplerate = q->mvContext()->sampleRate();
     long min_pixel_spacing_between_ticks = 30;
 
     double view_t1 = q->mvContext()->currentTimeRange().min;
     double view_t2 = q->mvContext()->currentTimeRange().max;
 
-    QColor axis_color = m_prefs.colors.axis_color;
+    QColor axis_color = d->m_prefs.colors.axis_color;
 
     QPen pen = painter->pen();
     pen.setColor(axis_color);
     painter->setPen(pen);
 
-    QPointF pt1(m_prefs.mleft, H - m_prefs.mbottom);
-    QPointF pt2(W - m_prefs.mright, H - m_prefs.mbottom);
+    QPointF pt1(d->m_prefs.mleft, H - d->m_prefs.mbottom);
+    QPointF pt2(W - d->m_prefs.mright, H - d->m_prefs.mbottom);
     painter->drawLine(pt1, pt2);
 
     QList<TickStruct> structs;
@@ -606,7 +514,7 @@ void MVTimeSeriesViewBasePrivate::paint_time_axis(QPainter* painter, double W, d
 }
 
 /// TODO, change W,H to size throughout
-void MVTimeSeriesViewBasePrivate::paint_time_axis_unit(QPainter* painter, double W, double H, TickStruct TS)
+void TimeAxisLayer::paint_time_axis_unit(QPainter* painter, double W, double H, TickStruct TS)
 {
     Q_UNUSED(W)
 
@@ -619,9 +527,9 @@ void MVTimeSeriesViewBasePrivate::paint_time_axis_unit(QPainter* painter, double
         long i1 = (long)ceil(view_t1 / TS.timepoint_interval);
         long i2 = (long)floor(view_t2 / TS.timepoint_interval);
         for (long i = i1; i <= i2; i++) {
-            double x0 = time2xpix(i * TS.timepoint_interval);
-            QPointF p1(x0, H - m_prefs.mbottom);
-            QPointF p2(x0, H - m_prefs.mbottom + TS.tick_height);
+            double x0 = d->time2xpix(i * TS.timepoint_interval);
+            QPointF p1(x0, H - d->m_prefs.mbottom);
+            QPointF p2(x0, H - d->m_prefs.mbottom + TS.tick_height);
             painter->drawLine(p1, p2);
         }
     }
@@ -631,10 +539,10 @@ void MVTimeSeriesViewBasePrivate::paint_time_axis_unit(QPainter* painter, double
         if (j1 < 1)
             j1 = 1;
         long j2 = j1 + TS.timepoint_interval;
-        double x1 = time2xpix(j1);
-        double x2 = time2xpix(j2);
-        QPointF p1(x1, H - m_prefs.mbottom + TS.tick_height);
-        QPointF p2(x2, H - m_prefs.mbottom + TS.tick_height);
+        double x1 = d->time2xpix(j1);
+        double x2 = d->time2xpix(j2);
+        QPointF p1(x1, H - d->m_prefs.mbottom + TS.tick_height);
+        QPointF p2(x2, H - d->m_prefs.mbottom + TS.tick_height);
 
         painter->drawLine(p1, p2);
 
@@ -646,9 +554,9 @@ void MVTimeSeriesViewBasePrivate::paint_time_axis_unit(QPainter* painter, double
     }
 }
 
-void MVTimeSeriesViewBasePrivate::paint_status_string(QPainter* painter, double W, double H, QString str)
+void StatusLayer::paint_status_string(QPainter* painter, double W, double H, QString str)
 {
-    QColor text_col = m_prefs.colors.text_color;
+    QColor text_col = d->m_prefs.colors.text_color;
 
     double status_height = 12;
     double voffset = 4;
@@ -659,7 +567,7 @@ void MVTimeSeriesViewBasePrivate::paint_status_string(QPainter* painter, double 
     pen.setColor(text_col);
     painter->setPen(pen);
 
-    QRectF rect(m_prefs.mleft, H - voffset - status_height, W - m_prefs.mleft - m_prefs.mright, status_height);
+    QRectF rect(d->m_prefs.mleft, H - voffset - status_height, W - d->m_prefs.mleft - d->m_prefs.mright, status_height);
     painter->drawText(rect, Qt::AlignLeft | Qt::AlignVCenter, str);
 }
 
@@ -779,4 +687,173 @@ void mvtsvb_calculator::compute()
             labels << label0;
         }
     }
+}
+
+void EventMarkerLayer::paint(QPainter* painter)
+{
+    double W0 = windowSize().width();
+    double H0 = windowSize().height();
+
+    double view_t1 = q->mvContext()->currentTimeRange().min;
+    double view_t2 = q->mvContext()->currentTimeRange().max;
+
+    if (d->m_prefs.markers_visible) {
+        QVector<double> times0;
+        QVector<int> labels0;
+        for (long i = 0; i < d->m_times.count(); i++) {
+            double t0 = d->m_times[i];
+            int l0 = d->m_labels[i];
+            if ((view_t1 <= t0) && (t0 <= view_t2)) {
+                times0 << t0;
+                labels0 << l0;
+            }
+        }
+
+        double min_avg_pixels_per_marker = 10; //probably add this to prefs
+        if ((times0.count()) && (W0 / times0.count() >= min_avg_pixels_per_marker)) {
+            paint_markers(painter, times0, labels0, W0, H0);
+        }
+        else {
+            if (times0.count()) {
+                paint_message_at_top(painter, "Zoom in to view markers", W0, H0);
+            }
+        }
+    }
+}
+
+void EventMarkerLayer::paint_markers(QPainter* painter, const QVector<double>& times, const QVector<int>& labels, double W, double H)
+{
+    Q_UNUSED(W)
+    double mtop = d->m_prefs.mtop;
+    double mbottom = d->m_prefs.mbottom;
+
+    mvtsv_colors colors = d->m_prefs.colors;
+
+    QList<MarkerRecord> marker_recs;
+
+    int min_dist = 20;
+
+    for (long i = 0; i < times.count(); i++) {
+        double t0 = times[i];
+        int l0 = labels[i];
+        double x0 = d->time2xpix(t0);
+        MarkerRecord MR;
+        MR.xpix = x0;
+        MR.label = l0;
+        MR.level = 0;
+        marker_recs << MR;
+    }
+    sort_by_xpix2(marker_recs);
+    for (long i = 1; i < marker_recs.count(); i++) {
+        if (marker_recs[i - 1].xpix + min_dist >= marker_recs[i].xpix) {
+            marker_recs[i].level = (marker_recs[i - 1].level + 1) % d->m_prefs.num_label_levels;
+        }
+    }
+    QPen pen = painter->pen();
+    pen.setColor(colors.marker_color);
+    painter->setPen(pen);
+    QFont font = painter->font();
+    font.setPixelSize(d->m_prefs.label_font_height);
+    painter->setFont(font);
+    for (long i = 0; i < marker_recs.count(); i++) {
+        MarkerRecord MR = marker_recs[i];
+        QPointF p0(MR.xpix, mtop);
+        QPointF p1(MR.xpix, H - mbottom);
+        painter->drawLine(p0, p1);
+        QRectF rect(MR.xpix - 30, mtop - 3 - d->m_prefs.label_font_height * (MR.level + 1), 60, d->m_prefs.label_font_height);
+        painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, QString("%1").arg(MR.label));
+    }
+}
+
+void EventMarkerLayer::paint_message_at_top(QPainter* painter, QString msg, double W, double H)
+{
+    Q_UNUSED(H)
+    QPen pen = painter->pen();
+    pen.setColor(d->m_prefs.colors.marker_color);
+    painter->setPen(pen);
+    QFont font = painter->font();
+    font.setPixelSize(d->m_prefs.label_font_height);
+    painter->setFont(font);
+
+    QRectF rect(0, 0, W, d->m_prefs.mtop);
+    painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, msg);
+}
+
+void CursorLayer::paint(QPainter* painter)
+{
+    paint_cursor(painter, windowSize().width(), windowSize().height());
+}
+
+void CursorLayer::paint_cursor(QPainter* painter, int W, int H)
+{
+    Q_UNUSED(W)
+    Q_UNUSED(H)
+
+    double mtop = d->m_prefs.mtop;
+    double mbottom = d->m_prefs.mbottom;
+
+    if (d->m_selected_t_range.min < 0) {
+        double x0 = d->time2xpix(q->mvContext()->currentTimepoint());
+        QPointF p0(x0, mtop);
+        QPointF p1(x0, H - mbottom);
+
+        for (int pass = 1; pass <= 2; pass++) {
+            QPainterPath path;
+            QPointF pp = p0;
+            int sign = -1;
+            if (pass == 2) {
+                pp = p1;
+                sign = 1;
+            }
+            path.moveTo(pp.x(), pp.y() - 10 * sign);
+            path.lineTo(pp.x() - 8, pp.y() - 2 * sign);
+            path.lineTo(pp.x() + 8, pp.y() - 2 * sign);
+            path.lineTo(pp.x(), pp.y() - 10 * sign);
+            QColor col = QColor(50, 50, 220);
+            painter->fillPath(path, QBrush(col));
+        }
+
+        QPainterPath path2;
+        path2.moveTo(p0.x(), p0.y() + 10);
+        path2.lineTo(p1.x(), p1.y() - 10);
+        painter->setPen(QPen(QBrush(QColor(50, 50, 220, 60)), 0));
+        painter->drawPath(path2);
+
+        //painter->setPen(QPen(QBrush(QColor(50,50,220,180)),1));
+        //painter->drawPath(path2);
+    }
+
+    if (d->m_selected_t_range.min >= 0) {
+        double x0 = d->time2xpix(d->m_selected_t_range.min);
+        QPointF p0(x0, mtop);
+        QPointF p1(x0, H - mbottom);
+
+        QPainterPath path;
+        path.moveTo(p0.x(), p0.y());
+        path.lineTo(p1.x(), p0.y());
+        path.lineTo(p1.x(), p1.y());
+        path.lineTo(p0.x(), p1.y());
+        path.lineTo(p0.x(), p0.y());
+
+        int pen_width = 6;
+        QColor pen_color = QColor(150, 150, 150);
+        painter->setPen(QPen(QBrush(pen_color), pen_width));
+        painter->drawPath(path);
+    }
+}
+
+
+void StatusLayer::paint(QPainter *painter)
+{
+    QString str;
+    if (d->m_prefs.show_current_timepoint) {
+        double samplerate = q->mvContext()->sampleRate();
+        if (samplerate) {
+            str = QString("%1 (tp: %2)").arg(d->format_time(q->mvContext()->currentTimepoint())).arg((long)q->mvContext()->currentTimepoint());
+        }
+        else {
+            str = QString("Sample rate is null (tp: %2)").arg((long)q->mvContext()->currentTimepoint());
+        }
+    }
+    paint_status_string(painter,windowSize().width(),windowSize().height(),str);
 }
