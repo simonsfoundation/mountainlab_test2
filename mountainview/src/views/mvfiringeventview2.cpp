@@ -103,9 +103,9 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
     d->m_content_layer = new FiringEventContentLayer;
 
     d->m_axis_layer = new FiringEventAxisLayer;
+    d->m_paint_layer_stack.addLayer(d->m_content_layer);
     d->m_paint_layer_stack.addLayer(d->m_axis_layer);
     d->m_paint_layer_stack.addLayer(d->m_legend);
-    d->m_paint_layer_stack.addLayer(d->m_content_layer);
     connect(&d->m_paint_layer_stack, SIGNAL(repaintNeeded()), this, SLOT(update()));
 
     d->m_amplitude_range = MVRange(0, 1);
@@ -182,7 +182,9 @@ void MVFiringEventView2::autoSetAmplitudeRange()
 
 void MVFiringEventView2::mouseMoveEvent(QMouseEvent* evt)
 {
-    d->m_legend->mouseMoveEvent(evt);
+    d->m_paint_layer_stack.mouseMoveEvent(evt);
+    if (evt->isAccepted())
+        return;
     MVTimeSeriesViewBase::mouseMoveEvent(evt);
     /*
     int k=d->m_legend.clusterNumberAt(evt->pos());
@@ -195,7 +197,9 @@ void MVFiringEventView2::mouseMoveEvent(QMouseEvent* evt)
 
 void MVFiringEventView2::mouseReleaseEvent(QMouseEvent* evt)
 {
-    d->m_legend->mouseReleaseEvent(evt);
+    d->m_paint_layer_stack.mouseReleaseEvent(evt);
+    if (evt->isAccepted())
+        return;
     /*
     int k=d->m_legend.clusterNumberAt(evt->pos());
     if (k>0) {

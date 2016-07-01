@@ -46,6 +46,7 @@ void PaintLayerStack::paint(QPainter* painter)
 
 void PaintLayerStack::mousePressEvent(QMouseEvent* evt)
 {
+    evt->setAccepted(false);
     for (int i = d->m_layers.count() - 1; i >= 0; i--) {
         if (evt->isAccepted())
             break;
@@ -55,6 +56,7 @@ void PaintLayerStack::mousePressEvent(QMouseEvent* evt)
 
 void PaintLayerStack::mouseReleaseEvent(QMouseEvent* evt)
 {
+    evt->setAccepted(false);
     for (int i = d->m_layers.count() - 1; i >= 0; i--) {
         if (evt->isAccepted())
             break;
@@ -64,6 +66,7 @@ void PaintLayerStack::mouseReleaseEvent(QMouseEvent* evt)
 
 void PaintLayerStack::mouseMoveEvent(QMouseEvent* evt)
 {
+    evt->setAccepted(false);
     for (int i = d->m_layers.count() - 1; i >= 0; i--) {
         if (evt->isAccepted())
             break;
