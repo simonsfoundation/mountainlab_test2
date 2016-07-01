@@ -27,7 +27,7 @@ public:
     int m_current_cluster;
     QList<int> m_selected_clusters;
     double m_current_timepoint;
-    MVRange m_current_time_range;
+    MVRange m_current_time_range=MVRange(0,0); //(0,0) triggers automatic calculation
     QList<QColor> m_cluster_colors;
     QList<QColor> m_channel_colors;
     QMap<QString, TimeseriesStruct> m_timeseries;
@@ -179,6 +179,9 @@ double MVContext::currentTimepoint() const
 
 MVRange MVContext::currentTimeRange() const
 {
+    if ((d->m_current_time_range.min<=0)&&(d->m_current_time_range.max<=0)) {
+        return MVRange(0,qMax(0L,this->currentTimeseries().N2()-1));
+    }
     return d->m_current_time_range;
 }
 
@@ -192,12 +195,12 @@ QList<QColor> MVContext::clusterColors() const
     return d->m_cluster_colors;
 }
 
-DiskReadMda MVContext::currentTimeseries()
+DiskReadMda MVContext::currentTimeseries() const
 {
     return d->m_timeseries.value(d->m_current_timeseries_name).data;
 }
 
-QString MVContext::currentTimeseriesName()
+QString MVContext::currentTimeseriesName() const
 {
     return d->m_current_timeseries_name;
 }

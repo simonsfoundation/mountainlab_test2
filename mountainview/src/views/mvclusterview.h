@@ -87,7 +87,7 @@ private:
 class MVClusterLegend {
 public:
     void setClusterColors(const QList<QColor>& colors);
-    void setClusterNumbers(const QVector<int>& numbers);
+    void setClusterNumbers(const QList<int>& numbers);
     void setParentWindowSize(QSize size);
     void draw(QPainter* painter);
     int clusterNumberAt(QPointF pos) const;
@@ -100,7 +100,7 @@ public:
 
 private:
     QList<QColor> m_cluster_colors;
-    QVector<int> m_cluster_numbers;
+    QList<int> m_cluster_numbers;
     QSize m_parent_window_size;
     QList<QRectF> m_cluster_number_rects;
     int m_hovered_cluster_number = -1;

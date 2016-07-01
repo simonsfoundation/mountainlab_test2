@@ -47,7 +47,7 @@ public:
     QVector<int> m_labels;
     QSet<int> m_closest_inds_to_exclude;
     bool m_emit_transformation_changed_scheduled;
-    QVector<int> m_cluster_numbers;
+    QList<int> m_cluster_numbers;
 
     MVClusterLegend m_legend;
 
@@ -131,17 +131,17 @@ void MVClusterView::setLabels(const QVector<int>& labels)
 {
     d->m_labels = labels;
 
-    QVector<int> list;
+    QList<int> list;
     for (long i = 0; i < d->m_labels.count(); i++) {
         const int value = d->m_labels.at(i);
-        QVector<int>::iterator iter = qLowerBound(list.begin(), list.end(), value);
+        QList<int>::iterator iter = qLowerBound(list.begin(), list.end(), value);
         if (iter == list.end() || *iter != value) {
             list.insert(iter, value);
         }
     }
     d->m_cluster_numbers = list;
     d->m_legend.setClusterNumbers(list);
-    d->m_legend.setActiveClusterNumbers(list.toList().toSet());
+    d->m_legend.setActiveClusterNumbers(list.toSet());
 
     d->m_grid_update_needed = true;
     update();
@@ -903,7 +903,7 @@ void MVClusterLegend::setClusterColors(const QList<QColor>& colors)
     m_cluster_colors = colors;
 }
 
-void MVClusterLegend::setClusterNumbers(const QVector<int>& numbers)
+void MVClusterLegend::setClusterNumbers(const QList<int>& numbers)
 {
     m_cluster_numbers = numbers;
 }

@@ -114,7 +114,7 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* context)
     }
 
     QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
-    QObject::connect(context, SIGNAL(currentTimeRangeChanged()), this, SLOT(update()));
+    QObject::connect(context, SIGNAL(currentTimeRangeChanged()), this, SLOT(slot_refresh_content()));
     QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));
 
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
@@ -190,6 +190,8 @@ double MVTimeSeriesViewBase::xpix2time(double x) const
 
 void MVTimeSeriesViewBase::resizeEvent(QResizeEvent* evt)
 {
+    /// TODO: (NOW) finish implementing paint content only when needed
+    d->m_content_paint_required=true;
     QWidget::resizeEvent(evt);
 }
 

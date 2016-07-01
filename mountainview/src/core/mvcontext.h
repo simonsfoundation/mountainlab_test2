@@ -119,8 +119,8 @@ public:
     void setColors(const QMap<QString, QColor>& colors);
 
     /////////////////////////////////////////////////
-    DiskReadMda currentTimeseries();
-    QString currentTimeseriesName();
+    DiskReadMda currentTimeseries() const;
+    QString currentTimeseriesName() const;
     QStringList timeseriesNames() const;
     void addTimeseries(QString name, DiskReadMda timeseries);
     void setCurrentTimeseriesName(QString name);

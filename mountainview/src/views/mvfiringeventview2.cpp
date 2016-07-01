@@ -12,6 +12,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <taskprogress.h>
+#include "mvclusterview.h" //for MVClusterLegend
 
 /// TODO: (MEDIUM) control brightness in firing event view
 
@@ -41,6 +42,8 @@ public:
     QVector<int> m_labels0;
     QVector<double> m_amplitudes0;
 
+    MVClusterLegend m_legend;
+
     MVFiringEventViewCalculator m_calculator;
 
     double val2ypix(double val);
@@ -52,6 +55,10 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
 {
     d = new MVFiringEventView2Private;
     d->q = this;
+
+    this->setMouseTracking(true);
+
+    d->m_legend.setClusterColors(context->clusterColors());
 
     d->m_amplitude_range = MVRange(0, 1);
     this->setMarkersVisible(false);
@@ -97,6 +104,7 @@ void MVFiringEventView2::onCalculationFinished()
 void MVFiringEventView2::setLabelsToUse(const QSet<int>& labels_to_use)
 {
     d->m_labels_to_use = labels_to_use;
+    d->m_legend.setClusterNumbers(d->m_labels_to_use.toList());
     this->recalculate();
 }
 
@@ -113,6 +121,27 @@ void MVFiringEventView2::autoSetAmplitudeRange()
     double min0 = compute_min(d->m_amplitudes0);
     double max0 = compute_max(d->m_amplitudes0);
     setAmplitudeRange(MVRange(qMin(0.0, min0), qMax(0.0, max0)));
+}
+
+void MVFiringEventView2::mouseMoveEvent(QMouseEvent *evt)
+{
+    int k=d->m_legend.clusterNumberAt(evt->pos());
+    if (d->m_legend.hoveredClusterNumber()!=k) {
+        d->m_legend.setHoveredClusterNumber(k);
+        update();
+    }
+}
+
+void MVFiringEventView2::mouseReleaseEvent(QMouseEvent *evt)
+{
+    int k=d->m_legend.clusterNumberAt(evt->pos());
+    if (k>0) {
+        /// TODO (LOW) make the legend more like a widget, responding to mouse clicks and movements on its own, and emitting signals
+        d->m_legend.toggleActiveClusterNumber(k);
+        evt->ignore();
+        update();
+    }
+    MVTimeSeriesViewBase::mouseReleaseEvent(evt);
 }
 
 void MVFiringEventView2::paintContent(QPainter* painter)
@@ -146,7 +175,9 @@ void MVFiringEventView2::paintContent(QPainter* painter)
     }
 
     //legend
-    /// TODO: (HIGH) use the MVClusterLegend instead!
+    d->m_legend.setParentWindowSize(this->size());
+    d->m_legend.draw(painter);
+    /*
     {
         double spacing = 6;
         double margin = 10;
@@ -168,6 +199,7 @@ void MVFiringEventView2::paintContent(QPainter* painter)
             y0 += text_height + spacing;
         }
     }
+    */
 }
 
 double MVFiringEventView2Private::val2ypix(double val)

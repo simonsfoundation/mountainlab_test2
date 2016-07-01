@@ -31,6 +31,10 @@ public:
     void setAmplitudeRange(MVRange range);
     void autoSetAmplitudeRange();
 
+protected:
+    void mouseMoveEvent(QMouseEvent *evt);
+    void mouseReleaseEvent(QMouseEvent *evt);
+
 private slots:
 
 private:
