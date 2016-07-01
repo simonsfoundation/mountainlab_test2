@@ -7,8 +7,7 @@
 
 struct mv_discrimhist_opts {
     QVector<int> clusters;
-    /// TODO clip_size is hard-coded here
-    int clip_size = 80;
+    int clip_size;
 };
 
 bool mv_discrimhist(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_opts opts);
