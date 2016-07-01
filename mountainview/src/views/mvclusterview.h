@@ -11,6 +11,7 @@
 #include "mvutils.h"
 #include "affinetransformation.h"
 #include "mvcontext.h"
+#include "paintlayer.h"
 
 #define MVCV_MODE_HEAT_DENSITY 1
 #define MVCV_MODE_LABEL_COLORS 2
@@ -68,10 +69,12 @@ public:
 signals:
     void currentEventChanged();
     void transformationChanged();
-    void activeClusterNumberToggled();
+    void activeClusterNumbersChanged();
 
 private slots:
     void slot_context_menu(const QPoint& pos);
+    void slot_active_cluster_numbers_changed();
+    void slot_hovered_cluster_number_changed();
 
 protected:
     void paintEvent(QPaintEvent* evt);
@@ -79,34 +82,10 @@ protected:
     void mousePressEvent(QMouseEvent* evt);
     void mouseReleaseEvent(QMouseEvent* evt);
     void wheelEvent(QWheelEvent* evt);
+    void resizeEvent(QResizeEvent* evt);
 
 private:
     MVClusterViewPrivate* d;
-};
-
-class MVClusterLegend {
-public:
-    void setClusterColors(const QList<QColor>& colors);
-    void setClusterNumbers(const QList<int>& numbers);
-    void setParentWindowSize(QSize size);
-    void draw(QPainter* painter);
-    int clusterNumberAt(QPointF pos) const;
-
-    int hoveredClusterNumber() const;
-    void setHoveredClusterNumber(int num);
-    QSet<int> activeClusterNumbers() const;
-    void setActiveClusterNumbers(const QSet<int>& A);
-    void toggleActiveClusterNumber(int num);
-
-private:
-    QList<QColor> m_cluster_colors;
-    QList<int> m_cluster_numbers;
-    QSize m_parent_window_size;
-    QList<QRectF> m_cluster_number_rects;
-    int m_hovered_cluster_number = -1;
-    QSet<int> m_active_cluster_numbers;
-
-    QColor cluster_color(int k) const;
 };
 
 #endif // MVCLUSTERVIEW_H

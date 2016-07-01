@@ -34,22 +34,11 @@ void PaintLayerStack::addLayer(PaintLayer* layer)
 
     layer->setWindowSize(this->windowSize());
 
-    QObject::connect(layer, SIGNAL(signalUpdateNeeded()), this, SLOT(update()));
-}
-
-void PaintLayerStack::runUpdate()
-{
-    for (int i = 0; i < d->m_layers.count(); i++) {
-        if (d->m_layers[i]->updateNeeded()) {
-            d->m_layers[i]->runUpdate();
-        }
-    }
-    this->setUpdateNeeded(false);
+    QObject::connect(layer, SIGNAL(repaintNeeded()), this, SIGNAL(repaintNeeded()));
 }
 
 void PaintLayerStack::paint(QPainter* painter)
 {
-    this->runUpdate();
     for (int i = 0; i < d->m_layers.count(); i++) {
         d->m_layers[i]->paint(painter);
     }
@@ -84,7 +73,7 @@ void PaintLayerStack::mouseMoveEvent(QMouseEvent* evt)
 
 void PaintLayerStack::setWindowSize(QSize size)
 {
-    for (int i=0; i<d->m_layers.count(); i++) {
+    for (int i = 0; i < d->m_layers.count(); i++) {
         d->m_layers[i]->setWindowSize(size);
     }
     PaintLayer::setWindowSize(size);

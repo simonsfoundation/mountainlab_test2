@@ -110,6 +110,20 @@ public:
     void paint_status_string(QPainter* painter, double W, double H, QString str);
 };
 
+class TimeSeriesContentLayer : public PaintLayer {
+public:
+    TimeSeriesContentLayer(MVTimeSeriesViewBase* q0, MVTimeSeriesViewBasePrivate* d0)
+    {
+        q = q0;
+        d = d0;
+    }
+
+    void paint(QPainter* painter) Q_DECL_OVERRIDE;
+
+    MVTimeSeriesViewBase* q;
+    MVTimeSeriesViewBasePrivate* d;
+};
+
 class MVTimeSeriesViewBasePrivate {
 public:
     MVTimeSeriesViewBase* q;
@@ -158,11 +172,11 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* context)
     this->setMouseTracking(true);
     d->m_num_timepoints = 1;
 
-    /// TODO put the background color as a layer -- make a backgroundcolor layer
     d->m_paint_layer_stack.addLayer(new EventMarkerLayer(this, d));
     d->m_paint_layer_stack.addLayer(new CursorLayer(this, d));
     d->m_paint_layer_stack.addLayer(new TimeAxisLayer(this, d));
     d->m_paint_layer_stack.addLayer(new StatusLayer(this, d));
+    d->m_paint_layer_stack.addLayer(new TimeSeriesContentLayer(this, d));
 
     {
         QAction* a = new QAction(QIcon(":/images/zoom-in.png"), "Zoom In", this);
@@ -316,8 +330,6 @@ void MVTimeSeriesViewBase::paintEvent(QPaintEvent* evt)
     painter.fillRect(0, 0, width(), height(), back_col);
 
     d->m_paint_layer_stack.paint(&painter);
-
-    paintContent(&painter);
 }
 
 void MVTimeSeriesViewBase::mousePressEvent(QMouseEvent* evt)
@@ -462,9 +474,9 @@ void sort_by_xpix2(QList<MarkerRecord>& records)
     qSort(records.begin(), records.end(), MarkerRecord_comparer());
 }
 
-void TimeAxisLayer::paint(QPainter *painter)
+void TimeAxisLayer::paint(QPainter* painter)
 {
-    paint_time_axis(painter,windowSize().width(),windowSize().height());
+    paint_time_axis(painter, windowSize().width(), windowSize().height());
 }
 
 void TimeAxisLayer::paint_time_axis(QPainter* painter, double W, double H)
@@ -573,7 +585,6 @@ void StatusLayer::paint_status_string(QPainter* painter, double W, double H, QSt
 
 double MVTimeSeriesViewBasePrivate::time2xpix(double t)
 {
-
     double view_t1 = q->mvContext()->currentTimeRange().min;
     double view_t2 = q->mvContext()->currentTimeRange().max;
 
@@ -842,8 +853,7 @@ void CursorLayer::paint_cursor(QPainter* painter, int W, int H)
     }
 }
 
-
-void StatusLayer::paint(QPainter *painter)
+void StatusLayer::paint(QPainter* painter)
 {
     QString str;
     if (d->m_prefs.show_current_timepoint) {
@@ -855,5 +865,10 @@ void StatusLayer::paint(QPainter *painter)
             str = QString("Sample rate is null (tp: %2)").arg((long)q->mvContext()->currentTimepoint());
         }
     }
-    paint_status_string(painter,windowSize().width(),windowSize().height(),str);
+    paint_status_string(painter, windowSize().width(), windowSize().height(), str);
+}
+
+void TimeSeriesContentLayer::paint(QPainter* painter)
+{
+    q->paintContent(painter);
 }

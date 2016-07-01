@@ -12,7 +12,8 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <taskprogress.h>
-#include "mvclusterview.h" //for MVClusterLegend
+#include "mvclusterlegend.h"
+#include "paintlayerstack.h"
 
 /// TODO: (MEDIUM) control brightness in firing event view
 
@@ -31,6 +32,14 @@ public:
     void compute();
 };
 
+class FiringEventAxisLayer : public PaintLayer {
+public:
+    void paint(QPainter* painter) Q_DECL_OVERRIDE;
+
+    QRectF content_geometry;
+    MVRange amplitude_range;
+};
+
 class MVFiringEventView2Private {
 public:
     MVFiringEventView2* q;
@@ -42,9 +51,12 @@ public:
     QVector<int> m_labels0;
     QVector<double> m_amplitudes0;
 
-    MVClusterLegend m_legend;
+    MVClusterLegend* m_legend;
 
     MVFiringEventViewCalculator m_calculator;
+
+    PaintLayerStack m_paint_layer_stack;
+    FiringEventAxisLayer* m_axis_layer;
 
     double val2ypix(double val);
     double ypix2val(double ypix);
@@ -58,7 +70,13 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
 
     this->setMouseTracking(true);
 
-    d->m_legend.setClusterColors(context->clusterColors());
+    d->m_legend = new MVClusterLegend;
+    d->m_legend->setClusterColors(context->clusterColors());
+
+    d->m_axis_layer = new FiringEventAxisLayer;
+    d->m_paint_layer_stack.addLayer(d->m_axis_layer);
+    d->m_paint_layer_stack.addLayer(d->m_legend);
+    connect(&d->m_paint_layer_stack, SIGNAL(repaintNeeded()), this, SLOT(update()));
 
     d->m_amplitude_range = MVRange(0, 1);
     this->setMarkersVisible(false);
@@ -104,13 +122,14 @@ void MVFiringEventView2::onCalculationFinished()
 void MVFiringEventView2::setLabelsToUse(const QSet<int>& labels_to_use)
 {
     d->m_labels_to_use = labels_to_use;
-    d->m_legend.setClusterNumbers(d->m_labels_to_use.toList());
+    d->m_legend->setClusterNumbers(d->m_labels_to_use.toList());
     this->recalculate();
 }
 
 void MVFiringEventView2::setAmplitudeRange(MVRange range)
 {
     d->m_amplitude_range = range;
+    d->m_axis_layer->amplitude_range = range;
     update();
 }
 
@@ -123,17 +142,22 @@ void MVFiringEventView2::autoSetAmplitudeRange()
     setAmplitudeRange(MVRange(qMin(0.0, min0), qMax(0.0, max0)));
 }
 
-void MVFiringEventView2::mouseMoveEvent(QMouseEvent *evt)
+void MVFiringEventView2::mouseMoveEvent(QMouseEvent* evt)
 {
+    d->m_legend->mouseMoveEvent(evt);
+    /*
     int k=d->m_legend.clusterNumberAt(evt->pos());
     if (d->m_legend.hoveredClusterNumber()!=k) {
         d->m_legend.setHoveredClusterNumber(k);
         update();
     }
+    */
 }
 
-void MVFiringEventView2::mouseReleaseEvent(QMouseEvent *evt)
+void MVFiringEventView2::mouseReleaseEvent(QMouseEvent* evt)
 {
+    d->m_legend->mouseReleaseEvent(evt);
+    /*
     int k=d->m_legend.clusterNumberAt(evt->pos());
     if (k>0) {
         /// TODO (LOW) make the legend more like a widget, responding to mouse clicks and movements on its own, and emitting signals
@@ -141,7 +165,15 @@ void MVFiringEventView2::mouseReleaseEvent(QMouseEvent *evt)
         evt->ignore();
         update();
     }
+    */
     MVTimeSeriesViewBase::mouseReleaseEvent(evt);
+}
+
+void MVFiringEventView2::resizeEvent(QResizeEvent* evt)
+{
+    d->m_axis_layer->content_geometry = this->contentGeometry();
+    d->m_paint_layer_stack.setWindowSize(this->size());
+    MVTimeSeriesViewBase::resizeEvent(evt);
 }
 
 void MVFiringEventView2::paintContent(QPainter* painter)
@@ -161,22 +193,11 @@ void MVFiringEventView2::paintContent(QPainter* painter)
         painter->drawEllipse(xpix, ypix, 3, 3);
     }
 
-    //axis
-    {
-        draw_axis_opts opts;
-        opts.minval = d->m_amplitude_range.min;
-        opts.maxval = d->m_amplitude_range.max;
-        opts.orientation = Qt::Vertical;
-        opts.pt1 = contentGeometry().bottomLeft() + QPointF(-3, 0);
-        opts.pt2 = contentGeometry().topLeft() + QPointF(-3, 0);
-        opts.tick_length = 5;
-        opts.color = Qt::white;
-        draw_axis(painter, opts);
-    }
+    d->m_paint_layer_stack.paint(painter);
 
     //legend
-    d->m_legend.setParentWindowSize(this->size());
-    d->m_legend.draw(painter);
+    //d->m_legend.setParentWindowSize(this->size());
+    //d->m_legend.draw(painter);
     /*
     {
         double spacing = 6;
@@ -291,4 +312,17 @@ void MVFiringEventsFactory::updateEnabled()
     /// TODO: (0.9.1) restore this has_peaks without accessing m_firings in gui thread
     bool has_peaks = true;
     setEnabled(!mvContext()->selectedClusters().isEmpty() && has_peaks);
+}
+
+void FiringEventAxisLayer::paint(QPainter* painter)
+{
+    draw_axis_opts opts;
+    opts.minval = amplitude_range.min;
+    opts.maxval = amplitude_range.max;
+    opts.orientation = Qt::Vertical;
+    opts.pt1 = content_geometry.bottomLeft() + QPointF(-3, 0);
+    opts.pt2 = content_geometry.topLeft() + QPointF(-3, 0);
+    opts.tick_length = 5;
+    opts.color = Qt::white;
+    draw_axis(painter, opts);
 }

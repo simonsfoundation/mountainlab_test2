@@ -1,4 +1,5 @@
 #include "mvclusterview.h"
+#include "mvclusterlegend.h"
 #include <QImage>
 #include <QColor>
 #include <QPainter>
@@ -94,6 +95,12 @@ MVClusterView::MVClusterView(MVContext* context, QWidget* parent)
     d->m_max_time = 1;
     d->m_max_amplitude = 1;
     this->setMouseTracking(true);
+
+    d->m_legend.setClusterColors(context->clusterColors());
+
+    connect(&d->m_legend, SIGNAL(activeClusterNumbersChanged()), this, SLOT(slot_active_cluster_numbers_changed()));
+    connect(&d->m_legend, SIGNAL(hoveredClusterNumberChanged()), this, SLOT(slot_hovered_cluster_number_changed()));
+    connect(&d->m_legend, SIGNAL(repaintNeeded()), this, SLOT(update()));
 
     //this->setContextMenuPolicy(Qt::CustomContextMenu);
     //connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slot_context_menu(QPoint)));
@@ -224,11 +231,14 @@ QSet<int> MVClusterView::activeClusterNumbers() const
 
 void MVClusterView::setActiveClusterNumbers(const QSet<int>& A)
 {
+    d->m_legend.setActiveClusterNumbers(A);
+    /*
     if (A != d->m_legend.activeClusterNumbers()) {
         d->m_legend.setActiveClusterNumbers(A);
         d->m_grid_update_needed = true;
         update();
     }
+    */
 }
 
 /*
@@ -262,6 +272,20 @@ void MVClusterView::slot_context_menu(const QPoint& pos)
     QAction* selected = M.exec(this->mapToGlobal(pos));
     if (selected == export_image) {
         d->export_image();
+    }
+}
+
+void MVClusterView::slot_active_cluster_numbers_changed()
+{
+    d->m_grid_update_needed = true;
+    update();
+}
+
+void MVClusterView::slot_hovered_cluster_number_changed()
+{
+    if (d->m_mode == MVCV_MODE_LABEL_COLORS) {
+        d->m_grid_update_needed = true;
+        update();
     }
 }
 
@@ -322,12 +346,15 @@ void MVClusterView::mouseMoveEvent(QMouseEvent* evt)
         }
     }
     else {
+        d->m_legend.mouseMoveEvent(evt);
+        /*
         int hovered_cluster_number = d->m_legend.clusterNumberAt(pt);
         if ((hovered_cluster_number != d->m_legend.hoveredClusterNumber())) {
             d->m_legend.setHoveredClusterNumber(hovered_cluster_number);
             d->m_grid_update_needed = true;
             update();
         }
+        */
     }
 }
 
@@ -350,14 +377,9 @@ void MVClusterView::mouseReleaseEvent(QMouseEvent* evt)
         if (evt->pos() != d->m_last_mouse_release_point)
             d->m_closest_inds_to_exclude.clear();
         if (!d->m_moved_from_anchor) {
-            int cluster_number_at_pos = d->m_legend.clusterNumberAt(evt->pos());
-            if (cluster_number_at_pos >= 0) {
-                d->m_legend.toggleActiveClusterNumber(cluster_number_at_pos);
-                d->m_grid_update_needed = true;
-                update();
-                emit this->activeClusterNumberToggled();
+            d->m_legend.mouseReleaseEvent(evt);
+            if (evt->isAccepted())
                 return;
-            }
             QPointF coord = d->pixel2coord(evt->pos());
             int ind = d->find_closest_event_index(coord.x(), coord.y(), d->m_closest_inds_to_exclude);
             if (ind >= 0)
@@ -385,6 +407,12 @@ void MVClusterView::wheelEvent(QWheelEvent* evt)
         d->schedule_emit_transformation_changed();
         update();
     }
+}
+
+void MVClusterView::resizeEvent(QResizeEvent* evt)
+{
+    d->m_legend.setWindowSize(this->size());
+    QWidget::resizeEvent(evt);
 }
 
 void MVClusterViewPrivate::slot_emit_transformation_changed()
@@ -455,7 +483,6 @@ QColor make_color(double r, double g, double b)
 
 void MVClusterViewPrivate::update_grid()
 {
-
     int hovered_cluster_number = m_legend.hoveredClusterNumber();
     QSet<int> active_cluster_numbers = m_legend.activeClusterNumbers();
 
@@ -886,9 +913,12 @@ void MVClusterViewPrivate::do_paint(QPainter& painter, int W, int H)
 
     //legend
     if (this->m_mode == MVCV_MODE_LABEL_COLORS) {
+        this->m_legend.paint(&painter);
+        /*
         this->m_legend.setParentWindowSize(q->size());
         this->m_legend.setClusterColors(m_context->clusterColors());
         this->m_legend.draw(&painter);
+        */
     }
 }
 
@@ -898,6 +928,7 @@ void MVClusterViewPrivate::export_image()
     user_save_image(img);
 }
 
+/*
 void MVClusterLegend::setClusterColors(const QList<QColor>& colors)
 {
     m_cluster_colors = colors;
@@ -996,6 +1027,7 @@ int MVClusterLegend::clusterNumberAt(QPointF pos) const
     }
     return -1;
 }
+*/
 
 /*
 bool MVClusterViewPrivate::exclude_based_on_filter(long ind)

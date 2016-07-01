@@ -273,8 +273,9 @@ void MVMainWindow::recalculateViews(RecalculateViewsMode mode)
     QList<MVAbstractView*> widgets = d->m_tabber->allWidgets();
     bool do_it = false;
     foreach (MVAbstractView* VV, widgets) {
-        if (!VV) continue;
-        switch(mode) {
+        if (!VV)
+            continue;
+        switch (mode) {
         case All:
             do_it = true;
             break;

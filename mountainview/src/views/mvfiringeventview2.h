@@ -32,8 +32,9 @@ public:
     void autoSetAmplitudeRange();
 
 protected:
-    void mouseMoveEvent(QMouseEvent *evt);
-    void mouseReleaseEvent(QMouseEvent *evt);
+    void mouseMoveEvent(QMouseEvent* evt);
+    void mouseReleaseEvent(QMouseEvent* evt);
+    void resizeEvent(QResizeEvent* evt);
 
 private slots:
 

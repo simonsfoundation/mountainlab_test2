@@ -17,7 +17,8 @@ MOC_DIR=../build
 TARGET = mountainview
 TEMPLATE = app
 
-SOURCES += mountainviewmain.cpp
+SOURCES += mountainviewmain.cpp \
+    views/mvclusterlegend.cpp
 
 INCLUDEPATH += core
 VPATH += core
@@ -28,7 +29,8 @@ mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
 mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
 mvcontext.h tabber.h tabberframe.h taskprogressview.h \
     misc/paintlayer.h \
-    misc/paintlayerstack.h
+    misc/paintlayerstack.h \
+    views/mvclusterlegend.h
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
 mountainprocessrunner.cpp mvabstractcontextmenuhandler.cpp \

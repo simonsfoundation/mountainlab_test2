@@ -11,6 +11,7 @@
 
 class PaintLayerStackPrivate;
 class PaintLayerStack : public PaintLayer {
+    Q_OBJECT
 public:
     friend class PaintLayerStackPrivate;
     PaintLayerStack(QObject* parent = 0);
@@ -18,12 +19,13 @@ public:
 
     void addLayer(PaintLayer* layer);
 
-    virtual void runUpdate() Q_DECL_OVERRIDE;
     virtual void paint(QPainter* painter) Q_DECL_OVERRIDE;
     virtual void mousePressEvent(QMouseEvent* evt) Q_DECL_OVERRIDE;
     virtual void mouseReleaseEvent(QMouseEvent* evt) Q_DECL_OVERRIDE;
     virtual void mouseMoveEvent(QMouseEvent* evt) Q_DECL_OVERRIDE;
     virtual void setWindowSize(QSize size) Q_DECL_OVERRIDE;
+
+private slots:
 
 private:
     PaintLayerStackPrivate* d;

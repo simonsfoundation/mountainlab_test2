@@ -18,7 +18,6 @@ public:
     PaintLayer(QObject* parent = 0);
     virtual ~PaintLayer();
 
-    virtual void runUpdate() {}
     virtual void paint(QPainter* painter) = 0;
     virtual void mousePressEvent(QMouseEvent* evt) { Q_UNUSED(evt) }
     virtual void mouseReleaseEvent(QMouseEvent* evt) { Q_UNUSED(evt) }
@@ -26,15 +25,13 @@ public:
 
     //used by the subclass
     QSize windowSize() const;
-    void setUpdateNeeded(bool val);
 
     //used by the widget/paintlayerstack
     virtual void setWindowSize(QSize size);
-    bool updateNeeded() const;
 
 signals:
-    void signalWindowSizeChanged();
-    void signalUpdateNeeded();
+    void windowSizeChanged();
+    void repaintNeeded();
 
 private:
     PaintLayerPrivate* d;
