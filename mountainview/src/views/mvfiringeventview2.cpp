@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QThread>
 #include <taskprogress.h>
 #include "mvclusterlegend.h"
 #include "paintlayerstack.h"
@@ -40,6 +41,31 @@ public:
     MVRange amplitude_range;
 };
 
+class FiringEventContentLayer;
+class FiringEventImageCalculator : public QThread {
+public:
+    void run();
+
+    /// TODO only calculate the image in the content geometry rect so that we don't need things like window_size and the image may be safely resized on resizing the window
+
+    //input
+    QList<QColor> cluster_colors;
+    QRectF content_geometry;
+    QSize window_size;
+    QVector<double> times;
+    QVector<int> labels;
+    QVector<double> amplitudes;
+    MVRange time_range;
+    MVRange amplitude_range;
+
+    //output
+    QImage image;
+
+    QColor cluster_color(int k);
+    double time2xpix(double t);
+    double val2ypix(double val);
+};
+
 class MVFiringEventView2Private {
 public:
     MVFiringEventView2* q;
@@ -51,6 +77,7 @@ public:
     QVector<int> m_labels0;
     QVector<double> m_amplitudes0;
 
+    FiringEventContentLayer* m_content_layer;
     MVClusterLegend* m_legend;
 
     MVFiringEventViewCalculator m_calculator;
@@ -73,9 +100,12 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
     d->m_legend = new MVClusterLegend;
     d->m_legend->setClusterColors(context->clusterColors());
 
+    d->m_content_layer = new FiringEventContentLayer;
+
     d->m_axis_layer = new FiringEventAxisLayer;
     d->m_paint_layer_stack.addLayer(d->m_axis_layer);
     d->m_paint_layer_stack.addLayer(d->m_legend);
+    d->m_paint_layer_stack.addLayer(d->m_content_layer);
     connect(&d->m_paint_layer_stack, SIGNAL(repaintNeeded()), this, SLOT(update()));
 
     d->m_amplitude_range = MVRange(0, 1);
@@ -88,8 +118,9 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
     p.colors.background_color = Qt::black;
     this->setPrefs(p);
 
-    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    connect(context, SIGNAL(currentTimeRangeChanged()), SLOT(slot_update_image()));
 
+    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculate();
 }
 
@@ -112,9 +143,12 @@ void MVFiringEventView2::runCalculation()
 
 void MVFiringEventView2::onCalculationFinished()
 {
+    // I think we can remove the following 3 lines and the corresponding members, not sure
     d->m_labels0 = d->m_calculator.labels;
     d->m_times0 = d->m_calculator.times;
     d->m_amplitudes0 = d->m_calculator.amplitudes;
+
+    slot_update_image();
     /// TODO: (MEDIUM) only do this if user has specified that it should be auto calculated (should be default)
     this->autoSetAmplitudeRange();
 }
@@ -128,9 +162,13 @@ void MVFiringEventView2::setLabelsToUse(const QSet<int>& labels_to_use)
 
 void MVFiringEventView2::setAmplitudeRange(MVRange range)
 {
+    if (d->m_amplitude_range == range)
+        return;
     d->m_amplitude_range = range;
     d->m_axis_layer->amplitude_range = range;
     update();
+
+    slot_update_image(); //because amplitude range has changed
 }
 
 #include "msmisc.h"
@@ -145,6 +183,7 @@ void MVFiringEventView2::autoSetAmplitudeRange()
 void MVFiringEventView2::mouseMoveEvent(QMouseEvent* evt)
 {
     d->m_legend->mouseMoveEvent(evt);
+    MVTimeSeriesViewBase::mouseMoveEvent(evt);
     /*
     int k=d->m_legend.clusterNumberAt(evt->pos());
     if (d->m_legend.hoveredClusterNumber()!=k) {
@@ -173,26 +212,27 @@ void MVFiringEventView2::resizeEvent(QResizeEvent* evt)
 {
     d->m_axis_layer->content_geometry = this->contentGeometry();
     d->m_paint_layer_stack.setWindowSize(this->size());
+    slot_update_image();
     MVTimeSeriesViewBase::resizeEvent(evt);
+}
+
+void MVFiringEventView2::slot_update_image()
+{
+    d->m_content_layer->calculator->requestInterruption();
+    d->m_content_layer->calculator->wait();
+    d->m_content_layer->calculator->cluster_colors = this->mvContext()->clusterColors();
+    d->m_content_layer->calculator->times = d->m_calculator.times;
+    d->m_content_layer->calculator->labels = d->m_calculator.labels;
+    d->m_content_layer->calculator->amplitudes = d->m_calculator.amplitudes;
+    d->m_content_layer->calculator->content_geometry = this->contentGeometry();
+    d->m_content_layer->calculator->window_size = this->size();
+    d->m_content_layer->calculator->time_range = this->mvContext()->currentTimeRange();
+    d->m_content_layer->calculator->amplitude_range = this->d->m_amplitude_range;
+    d->m_content_layer->calculator->start();
 }
 
 void MVFiringEventView2::paintContent(QPainter* painter)
 {
-    double alpha_pct = 0.7;
-    for (long i = 0; i < d->m_times0.count(); i++) {
-        double t0 = d->m_times0.value(i);
-        int k0 = d->m_labels0.value(i);
-        QColor col = mvContext()->clusterColor(k0);
-        col.setAlpha((int)(alpha_pct * 255));
-        QPen pen = painter->pen();
-        pen.setColor(col);
-        painter->setPen(pen);
-        double amp0 = d->m_amplitudes0.value(i);
-        double xpix = this->time2xpix(t0);
-        double ypix = d->val2ypix(amp0);
-        painter->drawEllipse(xpix, ypix, 3, 3);
-    }
-
     d->m_paint_layer_stack.paint(painter);
 
     //legend
@@ -325,4 +365,102 @@ void FiringEventAxisLayer::paint(QPainter* painter)
     opts.tick_length = 5;
     opts.color = Qt::white;
     draw_axis(painter, opts);
+}
+
+FiringEventContentLayer::FiringEventContentLayer()
+{
+    calculator = new FiringEventImageCalculator;
+    connect(calculator, SIGNAL(finished()), this, SLOT(slot_calculator_finished()));
+}
+
+FiringEventContentLayer::~FiringEventContentLayer()
+{
+    calculator->requestInterruption();
+    calculator->wait();
+    delete calculator;
+}
+
+void FiringEventContentLayer::paint(QPainter* painter)
+{
+    painter->drawImage(0, 0, output_image);
+}
+
+void FiringEventContentLayer::setWindowSize(QSize size)
+{
+    PaintLayer::setWindowSize(size);
+}
+
+void FiringEventContentLayer::updateImage()
+{
+    calculator->requestInterruption();
+    calculator->wait();
+    calculator->start();
+}
+
+void FiringEventContentLayer::slot_calculator_finished()
+{
+    if (this->calculator->isRunning()) {
+        // Calculator still running even though we are in slot_caculator_finished (think about how this happens)
+        return;
+    }
+    if (this->calculator->isInterruptionRequested())
+        return;
+    this->output_image = this->calculator->image;
+    emit repaintNeeded();
+}
+
+void FiringEventImageCalculator::run()
+{
+    image = QImage(window_size, QImage::Format_ARGB32);
+    QColor transparent(0, 0, 0, 0);
+    image.fill(transparent);
+    QPainter painter(&image);
+    double alpha_pct = 0.7;
+    for (long i = 0; i < times.count(); i++) {
+        if (this->isInterruptionRequested())
+            return;
+        double t0 = times.value(i);
+        int k0 = labels.value(i);
+        QColor col = cluster_color(k0);
+        col.setAlpha((int)(alpha_pct * 255));
+        QPen pen = painter.pen();
+        pen.setColor(col);
+        painter.setPen(pen);
+        double amp0 = amplitudes.value(i);
+        double xpix = time2xpix(t0);
+        double ypix = val2ypix(amp0);
+        painter.drawEllipse(xpix, ypix, 3, 3);
+    }
+}
+
+QColor FiringEventImageCalculator::cluster_color(int k)
+{
+    if (k <= 0)
+        return Qt::white;
+    if (cluster_colors.isEmpty())
+        return Qt::white;
+    return cluster_colors[(k - 1) % cluster_colors.count()];
+}
+
+/// TODO do not duplicate code in time2xpix and val2ypix, but beware of calculator thread
+double FiringEventImageCalculator::time2xpix(double t)
+{
+    double view_t1 = time_range.min;
+    double view_t2 = time_range.max;
+
+    if (view_t2 <= view_t1)
+        return 0;
+
+    double xpct = (t - view_t1) / (view_t2 - view_t1);
+    double px = content_geometry.x() + xpct * content_geometry.width();
+    return px;
+}
+
+double FiringEventImageCalculator::val2ypix(double val)
+{
+    if (amplitude_range.min >= amplitude_range.max)
+        return 0;
+    double pcty = (val - amplitude_range.min) / (amplitude_range.max - amplitude_range.min);
+
+    return content_geometry.top() + (1 - pcty) * content_geometry.height();
 }

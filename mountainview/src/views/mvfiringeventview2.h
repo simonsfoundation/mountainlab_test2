@@ -9,6 +9,7 @@
 
 #include <QWidget>
 #include <diskreadmda.h>
+#include <paintlayer.h>
 #include "mvabstractviewfactory.h"
 #include "mvtimeseriesviewbase.h"
 
@@ -37,6 +38,7 @@ protected:
     void resizeEvent(QResizeEvent* evt);
 
 private slots:
+    void slot_update_image();
 
 private:
     MVFiringEventView2Private* d;
@@ -52,6 +54,26 @@ public:
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
     void updateEnabled();
+};
+
+class FiringEventImageCalculator;
+class FiringEventContentLayer : public PaintLayer {
+    Q_OBJECT
+public:
+    FiringEventContentLayer();
+    virtual ~FiringEventContentLayer();
+
+    void paint(QPainter* painter) Q_DECL_OVERRIDE;
+    void setWindowSize(QSize size) Q_DECL_OVERRIDE;
+
+    FiringEventImageCalculator* calculator;
+
+    void updateImage();
+
+    QImage output_image;
+
+private slots:
+    void slot_calculator_finished();
 };
 
 #endif // MVFiringEventView2_H

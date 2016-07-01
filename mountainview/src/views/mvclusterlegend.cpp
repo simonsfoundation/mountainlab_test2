@@ -9,7 +9,7 @@
 
 class MVClusterLegendPrivate {
 public:
-    MVClusterLegend *q;
+    MVClusterLegend* q;
 
     QList<QColor> m_cluster_colors;
     QList<int> m_cluster_numbers;
@@ -24,8 +24,8 @@ public:
 
 MVClusterLegend::MVClusterLegend()
 {
-    d=new MVClusterLegendPrivate;
-    d->q=this;
+    d = new MVClusterLegendPrivate;
+    d->q = this;
 }
 
 MVClusterLegend::~MVClusterLegend()
@@ -33,9 +33,8 @@ MVClusterLegend::~MVClusterLegend()
     delete d;
 }
 
-void MVClusterLegend::paint(QPainter *painter)
+void MVClusterLegend::paint(QPainter* painter)
 {
-    qDebug() << "++++++++" << d->m_cluster_colors;
     double spacing = 6;
     double margin = 10;
     double W = windowSize().width();
@@ -72,16 +71,16 @@ void MVClusterLegend::paint(QPainter *painter)
     }
 }
 
-void MVClusterLegend::mousePressEvent(QMouseEvent *evt)
+void MVClusterLegend::mousePressEvent(QMouseEvent* evt)
 {
     Q_UNUSED(evt)
 }
 
-void MVClusterLegend::mouseReleaseEvent(QMouseEvent *evt)
+void MVClusterLegend::mouseReleaseEvent(QMouseEvent* evt)
 {
     int cluster_number_at_pos = d->cluster_number_at(evt->pos());
     if (cluster_number_at_pos >= 0) {
-        QSet<int> tmp=d->m_active_cluster_numbers;
+        QSet<int> tmp = d->m_active_cluster_numbers;
         if (tmp.contains(cluster_number_at_pos))
             tmp.remove(cluster_number_at_pos);
         else
@@ -91,29 +90,30 @@ void MVClusterLegend::mouseReleaseEvent(QMouseEvent *evt)
     }
 }
 
-void MVClusterLegend::mouseMoveEvent(QMouseEvent *evt)
+void MVClusterLegend::mouseMoveEvent(QMouseEvent* evt)
 {
-    QPoint pt=evt->pos();
+    QPoint pt = evt->pos();
     int hovered_cluster_number = d->cluster_number_at(pt);
     if ((hovered_cluster_number != d->m_hovered_cluster_number)) {
-        qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
-        d->m_hovered_cluster_number=hovered_cluster_number;
+        d->m_hovered_cluster_number = hovered_cluster_number;
         emit hoveredClusterNumberChanged();
         emit repaintNeeded();
     }
 }
 
-void MVClusterLegend::setClusterColors(const QList<QColor> &colors)
+void MVClusterLegend::setClusterColors(const QList<QColor>& colors)
 {
-    if (d->m_cluster_colors==colors) return;
-    d->m_cluster_colors=colors;
+    if (d->m_cluster_colors == colors)
+        return;
+    d->m_cluster_colors = colors;
     emit repaintNeeded();
 }
 
-void MVClusterLegend::setClusterNumbers(const QList<int> &numbers)
+void MVClusterLegend::setClusterNumbers(const QList<int>& numbers)
 {
-    if (d->m_cluster_numbers==numbers) return;
-    d->m_cluster_numbers=numbers;
+    if (d->m_cluster_numbers == numbers)
+        return;
+    d->m_cluster_numbers = numbers;
     this->setActiveClusterNumbers(numbers.toSet());
     emit repaintNeeded();
 }
@@ -128,10 +128,11 @@ QSet<int> MVClusterLegend::activeClusterNumbers() const
     return d->m_active_cluster_numbers;
 }
 
-void MVClusterLegend::setActiveClusterNumbers(const QSet<int> &active_numbers)
+void MVClusterLegend::setActiveClusterNumbers(const QSet<int>& active_numbers)
 {
-    if (d->m_active_cluster_numbers==active_numbers) return;
-    d->m_active_cluster_numbers=active_numbers;
+    if (d->m_active_cluster_numbers == active_numbers)
+        return;
+    d->m_active_cluster_numbers = active_numbers;
     emit repaintNeeded();
     emit activeClusterNumbersChanged();
 }
