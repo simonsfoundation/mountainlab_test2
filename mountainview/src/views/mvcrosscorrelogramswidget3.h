@@ -15,6 +15,7 @@
 enum CrossCorrelogramMode3 {
     Undefined3,
     All_Auto_Correlograms3,
+    Selected_Auto_Correlograms3,
     Cross_Correlograms3,
     Matrix_Of_Cross_Correlograms3
 };
@@ -53,7 +54,18 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
-    //void slot_auto_correlogram_activated();
+};
+
+class MVSelectedAutoCorrelogramsFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVSelectedAutoCorrelogramsFactory(MVContext* context, QObject* parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+private slots:
+    void updateEnabled();
 };
 
 class MVCrossCorrelogramsFactory : public MVAbstractViewFactory {

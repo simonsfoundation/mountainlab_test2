@@ -26,6 +26,12 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
     MVContext* context = this->mvContext();
     MVMainWindow* mw = this->mainWindow();
 
+    QVariantList clusterList;
+    foreach (int c, clusters)
+        clusterList << c;
+
+    int first_cluster=clusters.values().first();
+
     //TAGS
     {
         actions << addTagMenu(clusters);
@@ -82,10 +88,20 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
     //CROSS-CORRELOGRAMS
     {
         {
+            QAction* action = new QAction("Auto-correlograms", 0);
+            action->setToolTip("Open auto-correlograms for these clusters");
+            action->setEnabled(clusters.count() >= 1);
+            action->setData(first_cluster);
+            connect(action, &QAction::triggered, [mw]() {
+                mw->openView("open-selected-auto-correlograms");
+            });
+            actions << action;
+        }
+        {
             QAction* action = new QAction("Cross-correlograms", 0);
             action->setToolTip("Open cross-correlograms associated with this cluster");
             action->setEnabled(clusters.count() == 1);
-            action->setData(clusters.values().first());
+            action->setData(first_cluster);
             connect(action, &QAction::triggered, [mw]() {
                 mw->openView("open-cross-correlograms");
             });
@@ -94,9 +110,6 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         {
             QAction* action = new QAction("Matrix of cross-correlograms", 0);
             action->setEnabled(clusters.count() >= 2);
-            QVariantList clusterList;
-            foreach (int c, clusters)
-                clusterList << c;
             action->setData(clusterList);
             connect(action, &QAction::triggered, [mw]() {
                 mw->openView("open-matrix-of-cross-correlograms");
@@ -105,12 +118,19 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         }
     }
 
+    //Separator
+    {
+        QAction* action = new QAction(0);
+        action->setSeparator(true);
+        actions << action;
+    }
+
     //DISCRIMINATION HISTOGRAMS
     {
         QAction* action = new QAction("Discrim Hist", 0);
         action->setToolTip("Open discrimination histograms for these clusters");
         action->setEnabled(clusters.count() >= 2);
-        action->setData(clusters.values().first());
+
         connect(action, &QAction::triggered, [mw]() {
             mw->openView("open-discrim-histograms");
         });
@@ -122,7 +142,7 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         QAction* action = new QAction("Spike spray", 0);
         action->setToolTip("Open spike spray for these clusters");
         action->setEnabled(clusters.count() >= 1);
-        action->setData(clusters.values().first());
+        action->setData(clusterList);
         connect(action, &QAction::triggered, [mw]() {
             mw->openView("open-spike-spray");
         });
@@ -134,9 +154,9 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         QAction* action = new QAction("Clips", 0);
         action->setToolTip("View all spike clips for these clusters");
         action->setEnabled(clusters.count() >= 1);
-        action->setData(clusters.values().first());
+        action->setData(clusterList);
         connect(action, &QAction::triggered, [mw]() {
-            mw->openView("open-spike-spray");
+            mw->openView("open-clips");
         });
         actions << action;
     }

@@ -213,6 +213,15 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             this->correlograms << CC;
         }
     }
+    else if (options.mode == Selected_Auto_Correlograms3) {
+        for (int i = 0; i < options.ks.count(); i++) {
+            int k = options.ks[i];
+            Correlogram3 CC;
+            CC.k1 = k;
+            CC.k2 = k;
+            this->correlograms << CC;
+        }
+    }
     else if (options.mode == Cross_Correlograms3) {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
@@ -269,12 +278,12 @@ QString MVAutoCorrelogramsFactory::id() const
 
 QString MVAutoCorrelogramsFactory::name() const
 {
-    return tr("Auto-Correlograms");
+    return tr("All auto-correlograms");
 }
 
 QString MVAutoCorrelogramsFactory::title() const
 {
-    return tr("Auto-Correlograms");
+    return tr("All auto-Correlograms");
 }
 
 MVAbstractView* MVAutoCorrelogramsFactory::createView(QWidget* parent)
@@ -283,8 +292,49 @@ MVAbstractView* MVAutoCorrelogramsFactory::createView(QWidget* parent)
     CrossCorrelogramOptions3 opts;
     opts.mode = All_Auto_Correlograms3;
     X->setOptions(opts);
-    //QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_auto_correlogram_activated()));
     return X;
+}
+
+MVSelectedAutoCorrelogramsFactory::MVSelectedAutoCorrelogramsFactory(MVContext* context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
+{
+    connect(mvContext(), SIGNAL(selectedClustersChanged()),
+        this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVSelectedAutoCorrelogramsFactory::id() const
+{
+    return QStringLiteral("open-selected-auto-correlograms");
+}
+
+QString MVSelectedAutoCorrelogramsFactory::name() const
+{
+    return tr("Selected auto-correlograms");
+}
+
+QString MVSelectedAutoCorrelogramsFactory::title() const
+{
+    return tr("Selected auto-correlograms");
+}
+
+MVAbstractView* MVSelectedAutoCorrelogramsFactory::createView(QWidget* parent)
+{
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
+    QList<int> ks = mvContext()->selectedClusters();
+    qSort(ks);
+    if (ks.isEmpty())
+        return X;
+    CrossCorrelogramOptions3 opts;
+    opts.mode = Selected_Auto_Correlograms3;
+    opts.ks = ks;
+    X->setOptions(opts);
+    return X;
+}
+
+void MVSelectedAutoCorrelogramsFactory::updateEnabled()
+{
+    setEnabled(mvContext()->selectedClusters().count() >= 1);
 }
 
 MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVContext* context, QObject* parent)
