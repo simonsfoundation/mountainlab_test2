@@ -209,15 +209,15 @@ int main(int argc, char* argv[])
             context->addTimeseries("Raw Data", DiskReadMda(raw_path));
             context->setCurrentTimeseriesName("Raw Data");
         }
-        if (CLP.named_parameters.contains("filt")) {
-            QString filt_path = CLP.named_parameters["filt"].toString();
-            context->addTimeseries("Filtered Data", DiskReadMda(filt_path));
-            context->setCurrentTimeseriesName("Filtered Data");
-        }
         if (CLP.named_parameters.contains("pre")) {
             QString pre_path = CLP.named_parameters["pre"].toString();
             context->addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
             context->setCurrentTimeseriesName("Preprocessed Data");
+        }
+        if (CLP.named_parameters.contains("filt")) {
+            QString filt_path = CLP.named_parameters["filt"].toString();
+            context->addTimeseries("Filtered Data", DiskReadMda(filt_path));
+            context->setCurrentTimeseriesName("Filtered Data");
         }
         if (CLP.named_parameters.contains("mlproxy_url")) {
             QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
