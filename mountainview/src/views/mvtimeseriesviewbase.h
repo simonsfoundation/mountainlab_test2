@@ -53,6 +53,8 @@ public:
     void setMarkersVisible(bool val);
     void setMargins(double mleft, double mright, double mtop, double mbottom);
 
+    void setClipSize(int clip_size); //for when viewing clips
+
     void setTimeRange(MVRange range);
     MVRange timeRange();
     void setSelectedTimeRange(MVRange range);

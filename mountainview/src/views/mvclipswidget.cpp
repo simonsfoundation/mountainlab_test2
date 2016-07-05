@@ -102,6 +102,7 @@ void MVClipsWidget::onCalculationFinished()
     d->m_view_context.addTimeseries("clips", clips);
     d->m_view_context.setCurrentTimeseriesName("clips");
     d->m_view_context.setCurrentTimeRange(MVRange(0, clips.N2() - 1));
+    d->m_view->setClipSize(d->m_computer.clips.N2());
     d->m_view->recalculate();
 }
 

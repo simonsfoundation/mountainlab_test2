@@ -58,6 +58,7 @@ public:
     MVTimeSeriesViewBase* q;
     MVTimeSeriesViewBasePrivate* d;
     void paint_markers(QPainter* painter, const QVector<double>& t0, const QVector<int>& labels, double W, double H);
+    void paint_clip_dividers(QPainter* painter, const QVector<double>& times, double W, double H);
     void paint_message_at_top(QPainter* painter, QString msg, double W, double H);
 };
 
@@ -147,6 +148,8 @@ public:
     double m_left_click_anchor_time;
     MVRange m_left_click_anchor_t_range;
     bool m_left_click_dragging;
+
+    int m_clip_size = 0;
 
     double time2xpix(double t);
     double xpix2time(double xpix);
@@ -314,6 +317,12 @@ void MVTimeSeriesViewBase::setMargins(double mleft, double mright, double mtop, 
     d->m_prefs.mright = mright;
     d->m_prefs.mtop = mtop;
     d->m_prefs.mbottom = mbottom;
+    update();
+}
+
+void MVTimeSeriesViewBase::setClipSize(int clip_size)
+{
+    d->m_clip_size = clip_size;
     update();
 }
 
@@ -730,6 +739,18 @@ void EventMarkerLayer::paint(QPainter* painter)
             }
         }
     }
+
+    if (d->m_clip_size) {
+        long i1 = view_t1 / d->m_clip_size;
+        long i2 = view_t2 / d->m_clip_size;
+        if (i2 - i1 + 1 < 1000) {
+            QVector<double> times0;
+            for (long i = i1; i <= i2; i++) {
+                times0 << i * d->m_clip_size;
+            }
+            paint_clip_dividers(painter, times0, W0, H0);
+        }
+    }
 }
 
 void EventMarkerLayer::paint_markers(QPainter* painter, const QVector<double>& times, const QVector<int>& labels, double W, double H)
@@ -773,6 +794,36 @@ void EventMarkerLayer::paint_markers(QPainter* painter, const QVector<double>& t
         painter->drawLine(p0, p1);
         QRectF rect(MR.xpix - 30, mtop - 3 - d->m_prefs.label_font_height * (MR.level + 1), 60, d->m_prefs.label_font_height);
         painter->drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, QString("%1").arg(MR.label));
+    }
+}
+
+void EventMarkerLayer::paint_clip_dividers(QPainter* painter, const QVector<double>& times, double W, double H)
+{
+    Q_UNUSED(W)
+    double mtop = d->m_prefs.mtop;
+    double mbottom = d->m_prefs.mbottom;
+
+    mvtsv_colors colors = d->m_prefs.colors;
+
+    QList<MarkerRecord> marker_recs;
+
+    for (long i = 0; i < times.count(); i++) {
+        double t0 = times[i];
+        double x0 = d->time2xpix(t0);
+        MarkerRecord MR;
+        MR.xpix = x0;
+        MR.label = 0;
+        MR.level = 0;
+        marker_recs << MR;
+    }
+    QPen pen = painter->pen();
+    pen.setColor(Qt::gray);
+    painter->setPen(pen);
+    for (long i = 0; i < marker_recs.count(); i++) {
+        MarkerRecord MR = marker_recs[i];
+        QPointF p0(MR.xpix, mtop);
+        QPointF p1(MR.xpix, H - mbottom);
+        painter->drawLine(p0, p1);
     }
 }
 
