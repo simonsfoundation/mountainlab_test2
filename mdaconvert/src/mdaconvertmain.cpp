@@ -24,8 +24,6 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    qDebug() << params.named_parameters;
-
     mdaconvert_opts opts;
 
     opts.input_path = params.unnamed_parameters[0];
@@ -53,7 +51,7 @@ int main(int argc, char* argv[])
         opts.dims << str.toLong();
     }
 
-    qDebug() << QString("Converting %1 to %2").arg(opts.input_path).arg(opts.output_path);
+    printf("Converting %s --> %s\n",opts.input_path.toLatin1().data(),opts.output_path.toLatin1().data());
     if (!mdaconvert(opts)) {
         return -1;
     }

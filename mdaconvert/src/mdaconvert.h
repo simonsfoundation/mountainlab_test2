@@ -19,6 +19,8 @@ struct mdaconvert_opts {
     QString output_format; // mda, raw, ...
 
     QList<long> dims;
+
+    bool check_input_file_size = true;
 };
 bool mdaconvert(const mdaconvert_opts& opts);
 

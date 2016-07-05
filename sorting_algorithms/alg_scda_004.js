@@ -16,18 +16,26 @@ function run_algorithm(params) {
 	params.freq_max=params.freq_max||10000;
 	params.num_fea=params.num_fea||10;
 	params.adj_radius=params.adj_radius||0;
+	params.channels=params.channels||'';
+	params.timerange=params.timerange||[-1,-1];
 	
 	var raw=params.raw;
 	var geom=params.geom;
 	var outpath=params.outpath;
 
 	var o_geom2adj={
+		channels:params.channels,
 		radius:params.adj_radius
 	};
+	var o_extract_raw={
+		t1:params.timerange[0],
+		t2:params.timerange[1],
+		channels:params.channels	
+	};
 	var o_filter={
-		samplerate:samplerate,
-		freq_min:freq_min,
-		freq_max:freq_max
+		samplerate:params.samplerate,
+		freq_min:params.freq_min,
+		freq_max:params.freq_max
 	};
 	var o_mask_out_artifacts={
 		threshold:3,

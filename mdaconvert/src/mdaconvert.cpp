@@ -9,6 +9,7 @@
 
 #include <QFile>
 #include <QFileInfo>
+#include <QTime>
 #include <stdio.h>
 
 int get_mda_dtype(QString format);
@@ -36,6 +37,8 @@ int get_num_bytes_per_entry(int dtype);
 
 bool mdaconvert(const mdaconvert_opts& opts)
 {
+    QList<long> opts_dims = opts.dims;
+
     //default inputs in case input format is mda or not
     if (opts.input_format == "mda") {
         if (!opts.input_dtype.isEmpty()) {
@@ -92,15 +95,25 @@ bool mdaconvert(const mdaconvert_opts& opts)
     }
     else {
         D.HH_in.data_type = get_mda_dtype(opts.input_dtype);
-        D.HH_in.num_dims = opts.dims.count();
-        for (int i = 0; i < D.HH_in.num_dims; i++) {
-            D.HH_in.dims[i] = opts.dims[i];
-        }
         D.HH_in.header_size = 0;
         D.HH_in.num_bytes_per_entry = get_num_bytes_per_entry(D.HH_in.data_type);
         if (!D.HH_in.num_bytes_per_entry) {
             qWarning() << "Unable to determine input number of bytes per entry.";
             return false;
+        }
+        if (opts_dims.value(opts_dims.count() - 1) == 0) {
+            //auto-determine final dimension
+            long size0 = QFileInfo(opts.input_path).size();
+            long tmp = size0 / D.HH_in.num_bytes_per_entry;
+            for (int j = 0; j < opts_dims.count() - 1; j++) {
+                tmp /= opts_dims[j];
+            }
+            printf("Auto-setting final dimension to %ld\n", tmp);
+            opts_dims[opts_dims.count() - 1] = tmp;
+        }
+        D.HH_in.num_dims = opts_dims.count();
+        for (int i = 0; i < D.HH_in.num_dims; i++) {
+            D.HH_in.dims[i] = opts_dims[i];
         }
     }
 
@@ -144,14 +157,38 @@ bool mdaconvert(const mdaconvert_opts& opts)
     }
 
     //check input file size
-    long expected_input_file_size = D.HH_in.num_bytes_per_entry * dim_prod + D.HH_in.header_size;
-    long actual_input_file_size = QFileInfo(opts.input_path).size();
-    if (actual_input_file_size != expected_input_file_size) {
-        qWarning() << QString("Unexpected input file size: Expected/Actual=%1/%2 bytes").arg(expected_input_file_size).arg(actual_input_file_size);
-        return false;
+    if (opts.check_input_file_size) {
+        long expected_input_file_size = D.HH_in.num_bytes_per_entry * dim_prod + D.HH_in.header_size;
+        long actual_input_file_size = QFileInfo(opts.input_path).size();
+        if (actual_input_file_size != expected_input_file_size) {
+            qWarning() << QString("Unexpected input file size: Expected/Actual=%1/%2 bytes").arg(expected_input_file_size).arg(actual_input_file_size);
+            return false;
+        }
     }
 
-    return copy_data(D, dim_prod);
+    bool ret = true;
+    long chunk_size = 1e7;
+    QTime timer;
+    timer.start();
+    for (long ii = 0; ii < dim_prod; ii += chunk_size) {
+        if (timer.elapsed() > 1000) {
+            int pct = (int)((ii * 1.0 / dim_prod) * 100);
+            printf("%d%%\n", pct);
+            timer.restart();
+        }
+        long NN = qMin(chunk_size, dim_prod - ii);
+        if (!copy_data(D, NN)) {
+            ret = false;
+            break;
+        }
+    }
+
+    if (!ret) {
+        fclose(D.outf);
+        D.outf = 0;
+        QFile::remove(opts.output_path);
+    }
+    return false;
 }
 
 bool copy_data(working_data& D, long N)
