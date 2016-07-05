@@ -467,7 +467,7 @@ void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
     d->zoom(factor);
 }
 
-void MVClusterDetailWidget::prepareMimeData(QMimeData &mimeData, const QPoint &pos)
+void MVClusterDetailWidget::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
 {
     int view_index = d->find_view_index_at(pos);
     if (view_index >= 0) {

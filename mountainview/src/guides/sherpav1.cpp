@@ -119,7 +119,7 @@ QAbstractButton* SherpaV1Private::make_open_view_button(QString text, QString vi
     QPushButton* B = new QPushButton(text);
     B->setProperty("action", "open_view");
     B->setProperty("view-id", view_id);
-    B->setProperty("container-name",container_name);
+    B->setProperty("container-name", container_name);
     QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_button_clicked()));
     return B;
 }
