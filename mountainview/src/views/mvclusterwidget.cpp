@@ -178,6 +178,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
         d->connect_view(V);
     }
 
+    this->recalculateOn(context, SIGNAL(clusterMergeChanged()));
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOnOptionChanged("clip_size");
@@ -211,8 +212,11 @@ void MVClusterWidget::runCalculation()
 
 void MVClusterWidget::onCalculationFinished()
 {
+    QVector<int> merged_labels = d->m_computer.labels;
+    merged_labels = this->mvContext()->clusterMerge().mapLabels(merged_labels);
+
     this->setTimes(d->m_computer.times);
-    this->setLabels(d->m_computer.labels);
+    this->setLabels(merged_labels);
     this->setAmplitudes(d->m_computer.amplitudes);
     this->setScores(d->m_computer.detectability_scores, d->m_computer.outlier_scores);
     this->setData(d->m_computer.data);
