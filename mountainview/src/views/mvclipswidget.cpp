@@ -14,6 +14,7 @@
 #include "mvtimeseriesview2.h"
 #include "mvmainwindow.h"
 #include <QMessageBox>
+#include "actionfactory.h"
 
 /// TODO: (HIGH) merge should apply to all widgets
 /// TODO (LOW) handle case where there are too many clips to want to download
@@ -59,6 +60,9 @@ MVClipsWidget::MVClipsWidget(MVContext* context)
     p.show_current_timepoint = false;
     p.show_time_axis = false;
     d->m_view->setPrefs(p);
+
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, d->m_view, SLOT(slot_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, d->m_view, SLOT(slot_zoom_out()));
 
     QHBoxLayout* hlayout = new QHBoxLayout;
     hlayout->setMargin(0);

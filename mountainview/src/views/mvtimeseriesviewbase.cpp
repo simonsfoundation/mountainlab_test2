@@ -6,9 +6,9 @@
 
 #include "mvtimeseriesviewbase.h"
 #include "paintlayerstack.h"
+#include "actionfactory.h"
 #include <math.h>
 
-#include <QAction>
 #include <QIcon>
 #include <QImageWriter>
 #include <QMouseEvent>
@@ -181,20 +181,8 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* context)
     d->m_paint_layer_stack.addLayer(new StatusLayer(this, d));
     d->m_paint_layer_stack.addLayer(new TimeSeriesContentLayer(this, d));
 
-    {
-        QAction* a = new QAction(QIcon(":/images/zoom-in.png"), "Zoom In", this);
-        a->setProperty("action_type", "toolbar");
-        a->setToolTip("Zoom in. Alternatively, use the mouse wheel.");
-        this->addAction(a);
-        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_zoom_in()));
-    }
-    {
-        QAction* a = new QAction(QIcon(":/images/zoom-out.png"), "Zoom Out", this);
-        a->setProperty("action_type", "toolbar");
-        a->setToolTip("Zoom out. Alternatively, use the mouse wheel.");
-        this->addAction(a);
-        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_zoom_out()));
-    }
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, SLOT(slot_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, SLOT(slot_zoom_out()));
 
     QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(update()));
     QObject::connect(context, SIGNAL(currentTimepointChanged()), this, SLOT(slot_scroll_to_current_timepoint()));

@@ -3,6 +3,7 @@
 #include "mvmainwindow.h"
 #include "tabber.h"
 #include "taskprogress.h"
+#include "actionfactory.h"
 
 #include <QPainter>
 #include "mvutils.h"
@@ -186,34 +187,10 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewF
         this->addAction(a);
         connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_toggle_stdev_shading()));
     }
-    {
-        QAction* a = new QAction(QIcon(":/images/zoom-in.png"), "Zoom In", this);
-        a->setProperty("action_type", "toolbar");
-        a->setToolTip("Zoom in. Alternatively, use the mouse wheel.");
-        this->addAction(a);
-        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_zoom_in()));
-    }
-    {
-        QAction* a = new QAction(QIcon(":/images/zoom-out.png"), "Zoom Out", this);
-        a->setProperty("action_type", "toolbar");
-        a->setToolTip("Zoom out. Alternatively, use the mouse wheel.");
-        this->addAction(a);
-        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_zoom_out()));
-    }
-    {
-        QAction* a = new QAction(QIcon(":/images/vertical-zoom-in.png"), "Vertical Zoom In", this);
-        a->setProperty("action_type", "toolbar");
-        a->setToolTip("Vertical zoom in. Alternatively, use the UP arrow.");
-        this->addAction(a);
-        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_vertical_zoom_in()));
-    }
-    {
-        QAction* a = new QAction(QIcon(":/images/vertical-zoom-out.png"), "Vertical Zoom Out", this);
-        a->setProperty("action_type", "toolbar");
-        a->setToolTip("Vertical zoom out. Alternatively, use the DOWN arrow.");
-        this->addAction(a);
-        connect(a, SIGNAL(triggered(bool)), this, SLOT(slot_vertical_zoom_out()));
-    }
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, SLOT(slot_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, SLOT(slot_zoom_out()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInVertical, this, SLOT(slot_vertical_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutVertical, this, SLOT(slot_vertical_zoom_out()));
 
     recalculate();
 }
