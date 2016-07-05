@@ -40,7 +40,7 @@ SherpaV1::SherpaV1(MVContext* mvcontext, MVMainWindow* mw)
     this->addPage(d->make_page_2());
     this->addPage(d->make_page_3());
 
-    this->resize(500, 600);
+    this->resize(800, 600);
 
     this->setWindowTitle("Sherpa Version 1");
 }
@@ -102,7 +102,21 @@ QWizardPage* SherpaV1Private::make_page_2()
 
 QWizardPage* SherpaV1Private::make_page_3()
 {
-    return new QWizardPage;
+    QWizardPage* page = new QWizardPage;
+    page->setTitle("Auto-Correlograms");
+
+    QLabel* label = new QLabel(read_text_file(":/guides/sherpav1/page_3.txt"));
+    label->setWordWrap(true);
+
+    QVBoxLayout* layout = new QVBoxLayout;
+    layout->addWidget(label);
+    page->setLayout(layout);
+
+    FlowLayout* flayout = new FlowLayout;
+    flayout->addWidget(make_open_view_button("Auto-correlograms", "open-auto-correlograms", "south"));
+    layout->addLayout(flayout);
+
+    return page;
 }
 
 QAbstractButton* SherpaV1Private::make_instructions_button(QString text, QString instructions)

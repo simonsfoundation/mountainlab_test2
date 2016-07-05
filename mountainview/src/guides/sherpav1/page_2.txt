@@ -2,11 +2,8 @@ Every detected event ends up in a cluster. As such, some clusters have a large p
 
 Click on "Event Filter" in the left panel. For outlier score, we suggest a value of 3. For detectability score, we suggest a value of 6. See the manuscript for details on these metrics. 
 
+Click on the checkbox to enable the event filter. Then use the "Recalc" button to recalculate the views. 
+     
+Some clusters may have disappeared, now containing 0 spikes. Reject these clusters by selecting all of them —> Right click —> Add Tag —> rejected.
 
-      
-               - Outliers: Outlier filter, we suggest a value of 3 [see figure X, text X for explanation of outlier score calculation]
-               - Noise events: Detectability score, we suggest a value of 6 [see figure X, text X for explanation of detectability score calculation]
-     **Some clusters may have disappeared, now containing 0 spikes
-          -Reject these clusters by selecting all of them —> Right click —> Add Tag —> rejected
-          -Move on to Auto-Correlograms(3).
-     - Hide/show differently labeled cluster groupings using the cluster visibility options on left side
+You can hide/show differently labeled cluster groupings using the cluster visibility options on the control panel.
