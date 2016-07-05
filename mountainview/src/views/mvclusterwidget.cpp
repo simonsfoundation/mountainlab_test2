@@ -546,7 +546,7 @@ QString MVPCAFeaturesFactory::title() const
 
 MVAbstractView* MVPCAFeaturesFactory::createView(QWidget* parent)
 {
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(0, "Unable to open clusters", "You must select at least one cluster.");
@@ -604,7 +604,7 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
     }
     settings.setValue("open_channel_features_channels", strlist.join(","));
 
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     qSort(ks);
     if (ks.isEmpty()) {
         QMessageBox::warning(0, "Unable to open clusters", "You must select at least one cluster.");

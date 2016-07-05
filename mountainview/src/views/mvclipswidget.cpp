@@ -235,7 +235,7 @@ QString MVClipsFactory::title() const
 
 MVAbstractView* MVClipsFactory::createView(QWidget* parent)
 {
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(0, "Unable to open clips", "You must select at least one cluster.");

@@ -360,7 +360,7 @@ QString MVSpikeSprayFactory::title() const
 
 MVAbstractView* MVSpikeSprayFactory::createView(QWidget* parent)
 {
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     qSort(ks);
     if (ks.isEmpty()) {
         QMessageBox::warning(0, "Unable to open spike spray", "You must select at least one cluster.");

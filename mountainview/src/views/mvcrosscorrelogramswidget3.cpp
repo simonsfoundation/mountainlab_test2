@@ -321,7 +321,7 @@ QString MVSelectedAutoCorrelogramsFactory::title() const
 MVAbstractView* MVSelectedAutoCorrelogramsFactory::createView(QWidget* parent)
 {
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     qSort(ks);
     if (ks.isEmpty())
         return X;
@@ -363,7 +363,7 @@ QString MVCrossCorrelogramsFactory::title() const
 MVAbstractView* MVCrossCorrelogramsFactory::createView(QWidget* parent)
 {
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.count() != 1)
         return X;
 
@@ -406,7 +406,7 @@ QString MVMatrixOfCrossCorrelogramsFactory::title() const
 MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(QWidget* parent)
 {
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     qSort(ks);
     if (ks.isEmpty())
         return X;

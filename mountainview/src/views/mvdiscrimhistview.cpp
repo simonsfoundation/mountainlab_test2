@@ -273,7 +273,7 @@ QString MVDiscrimHistFactory::title() const
 MVAbstractView* MVDiscrimHistFactory::createView(QWidget* parent)
 {
     MVDiscrimHistView* X = new MVDiscrimHistView(mvContext());
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     qSort(ks);
     X->setClusterNumbers(ks);
     return X;

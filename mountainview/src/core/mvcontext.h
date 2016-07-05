@@ -98,6 +98,7 @@ public:
     MVEvent currentEvent() const;
     int currentCluster() const;
     QList<int> selectedClusters() const;
+    QList<int> selectedClustersIncludingMerges() const;
     double currentTimepoint() const;
     MVRange currentTimeRange() const;
     void setCurrentEvent(const MVEvent& evt);

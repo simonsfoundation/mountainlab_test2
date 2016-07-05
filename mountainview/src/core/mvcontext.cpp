@@ -172,6 +172,21 @@ QList<int> MVContext::selectedClusters() const
     return d->m_selected_clusters;
 }
 
+QList<int> MVContext::selectedClustersIncludingMerges() const
+{
+    QList<int> X = this->selectedClusters();
+    QSet<int> Y;
+    foreach (int k, X) {
+        QList<int> list = d->m_cluster_merge.getMergeGroup(k);
+        foreach (int a, list) {
+            Y.insert(a);
+        }
+    }
+    QList<int> ret = Y.toList();
+    qSort(ret);
+    return ret;
+}
+
 double MVContext::currentTimepoint() const
 {
     return d->m_current_timepoint;

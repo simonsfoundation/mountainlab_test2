@@ -120,6 +120,7 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
 
     connect(context, SIGNAL(currentTimeRangeChanged()), SLOT(slot_update_image()));
 
+    this->recalculateOn(context, SIGNAL(clusterMergeChanged()));
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculate();
 }
@@ -143,10 +144,21 @@ void MVFiringEventView2::runCalculation()
 
 void MVFiringEventView2::onCalculationFinished()
 {
-    // I think we can remove the following 3 lines and the corresponding members, not sure
     d->m_labels0 = d->m_calculator.labels;
     d->m_times0 = d->m_calculator.times;
     d->m_amplitudes0 = d->m_calculator.amplitudes;
+
+    d->m_labels0 = this->mvContext()->clusterMerge().mapLabels(d->m_labels0);
+
+    {
+        QSet<int> X;
+        foreach (int k, d->m_labels_to_use) {
+            X.insert(this->mvContext()->clusterMerge().representativeLabel(k));
+        }
+        QList<int> list = X.toList();
+        qSort(list);
+        d->m_legend->setClusterNumbers(list);
+    }
 
     slot_update_image();
     /// TODO: (MEDIUM) only do this if user has specified that it should be auto calculated (should be default)
@@ -156,7 +168,6 @@ void MVFiringEventView2::onCalculationFinished()
 void MVFiringEventView2::setLabelsToUse(const QSet<int>& labels_to_use)
 {
     d->m_labels_to_use = labels_to_use;
-    d->m_legend->setClusterNumbers(d->m_labels_to_use.toList());
     this->recalculate();
 }
 
@@ -225,9 +236,9 @@ void MVFiringEventView2::slot_update_image()
     d->m_content_layer->calculator->requestInterruption();
     d->m_content_layer->calculator->wait();
     d->m_content_layer->calculator->cluster_colors = this->mvContext()->clusterColors();
-    d->m_content_layer->calculator->times = d->m_calculator.times;
-    d->m_content_layer->calculator->labels = d->m_calculator.labels;
-    d->m_content_layer->calculator->amplitudes = d->m_calculator.amplitudes;
+    d->m_content_layer->calculator->times = d->m_times0;
+    d->m_content_layer->calculator->labels = d->m_labels0;
+    d->m_content_layer->calculator->amplitudes = d->m_amplitudes0;
     d->m_content_layer->calculator->content_geometry = this->contentGeometry();
     d->m_content_layer->calculator->window_size = this->size();
     d->m_content_layer->calculator->time_range = this->mvContext()->currentTimeRange();
@@ -339,7 +350,7 @@ QString MVFiringEventsFactory::title() const
 
 MVAbstractView* MVFiringEventsFactory::createView(QWidget* parent)
 {
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty()) {
         QMessageBox::warning(0, "Unable to open firing events", "You must select at least one cluster.");
         return Q_NULLPTR;
