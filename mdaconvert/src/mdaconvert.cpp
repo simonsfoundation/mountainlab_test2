@@ -43,7 +43,6 @@ bool mdaconvert(const mdaconvert_opts& opts)
             return -1;
         }
         if (!opts.dims.isEmpty()) {
-            qDebug() << opts.dims;
             qWarning() << "dims should not be specified for input type mda";
             return -1;
         }
@@ -92,7 +91,6 @@ bool mdaconvert(const mdaconvert_opts& opts)
         }
     }
     else {
-        qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
         D.HH_in.data_type = get_mda_dtype(opts.input_dtype);
         D.HH_in.num_dims = opts.dims.count();
         for (int i = 0; i < D.HH_in.num_dims; i++) {
@@ -146,7 +144,6 @@ bool mdaconvert(const mdaconvert_opts& opts)
     }
 
     //check input file size
-    qDebug() << "SSSSSSSSSSSSSSS" << D.HH_out.num_bytes_per_entry << dim_prod;
     long expected_input_file_size = D.HH_in.num_bytes_per_entry * dim_prod + D.HH_in.header_size;
     long actual_input_file_size = QFileInfo(opts.input_path).size();
     if (actual_input_file_size != expected_input_file_size) {
