@@ -5,7 +5,7 @@
 #include <QSet>
 #include <QSignalMapper>
 
-MVClusterContextMenuHandler::MVClusterContextMenuHandler(MVContext* context, MVMainWindow *mw, QObject* parent)
+MVClusterContextMenuHandler::MVClusterContextMenuHandler(MVContext* context, MVMainWindow* mw, QObject* parent)
     : QObject(parent)
     , MVAbstractContextMenuHandler(context, mw)
 {
@@ -24,7 +24,7 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
     QList<QAction*> actions;
 
     MVContext* context = this->mvContext();
-    MVMainWindow *mw = this->mainWindow();
+    MVMainWindow* mw = this->mainWindow();
 
     //TAGS
     {
@@ -51,7 +51,7 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         {
             QAction* A = new QAction(0);
             A->setEnabled(clusters.count() >= 2);
-            A->setText("Merge selected clusters");
+            A->setText("Merge selected");
             QObject::connect(A, &QAction::triggered, [clusters, context]() {
                 ClusterMerge CM = context->clusterMerge();
                 CM.merge(clusters);
@@ -62,7 +62,7 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         {
             QAction* A = new QAction(0);
             A->setEnabled(can_unmerge_selected_clusters(context, clusters));
-            A->setText("Unmerge selected clusters");
+            A->setText("Unmerge selected");
             QObject::connect(A, &QAction::triggered, [clusters, context]() {
                 ClusterMerge CM = context->clusterMerge();
                 CM.unmerge(clusters);
@@ -82,7 +82,8 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
     //CROSS-CORRELOGRAMS
     {
         {
-            QAction* action = new QAction("Open cross-correlograms associated with this cluster", 0);
+            QAction* action = new QAction("Cross-correlograms", 0);
+            action->setToolTip("Open cross-correlograms associated with this cluster");
             action->setEnabled(clusters.count() == 1);
             action->setData(clusters.values().first());
             connect(action, &QAction::triggered, [mw]() {
@@ -91,7 +92,7 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
             actions << action;
         }
         {
-            QAction* action = new QAction("Open matrix of cross-correlograms", 0);
+            QAction* action = new QAction("Matrix of cross-correlograms", 0);
             action->setEnabled(clusters.count() >= 2);
             QVariantList clusterList;
             foreach (int c, clusters)
@@ -106,11 +107,36 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
 
     //DISCRIMINATION HISTOGRAMS
     {
-        QAction* action = new QAction("Open discrimination histograms for these clusters", 0);
+        QAction* action = new QAction("Discrim Hist", 0);
+        action->setToolTip("Open discrimination histograms for these clusters");
         action->setEnabled(clusters.count() >= 2);
         action->setData(clusters.values().first());
         connect(action, &QAction::triggered, [mw]() {
             mw->openView("open-discrim-histograms");
+        });
+        actions << action;
+    }
+
+    //SPIKE SPRAY
+    {
+        QAction* action = new QAction("Spike spray", 0);
+        action->setToolTip("Open spike spray for these clusters");
+        action->setEnabled(clusters.count() >= 1);
+        action->setData(clusters.values().first());
+        connect(action, &QAction::triggered, [mw]() {
+            mw->openView("open-spike-spray");
+        });
+        actions << action;
+    }
+
+    //SPIKE SPRAY
+    {
+        QAction* action = new QAction("Clips", 0);
+        action->setToolTip("View all spike clips for these clusters");
+        action->setEnabled(clusters.count() >= 1);
+        action->setData(clusters.values().first());
+        connect(action, &QAction::triggered, [mw]() {
+            mw->openView("open-spike-spray");
         });
         actions << action;
     }
@@ -132,7 +158,7 @@ bool MVClusterContextMenuHandler::can_unmerge_selected_clusters(MVContext* conte
 
 QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) const
 {
-    MVContext *context=mvContext();
+    MVContext* context = mvContext();
 
     QMenu* M = new QMenu;
     M->setTitle("Add tag");
@@ -146,7 +172,7 @@ QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) cons
     }
     /// Witold, I am a bit nervous about passing the context pointer into the lambda function below
     connect(mapper, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
-        [clusters,context](const QString& tag) {
+        [clusters, context](const QString& tag) {
         foreach(int cluster, clusters) {
             QSet<QString> clTags = context->clusterTags(cluster);
             clTags.insert(tag);
@@ -159,7 +185,7 @@ QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) cons
 
 QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) const
 {
-    MVContext *context=mvContext();
+    MVContext* context = mvContext();
 
     QSet<QString> tags_set;
     foreach (int cluster_number, clusters) {
@@ -182,7 +208,7 @@ QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) c
         connect(a, SIGNAL(triggered()), mapper, SLOT(map()));
     }
     connect(mapper, static_cast<void (QSignalMapper::*)(const QString&)>(&QSignalMapper::mapped),
-        [clusters,context](const QString& tag) {
+        [clusters, context](const QString& tag) {
         foreach(int cluster, clusters) {
             QSet<QString> clTags = context->clusterTags(cluster);
             clTags.remove(tag);
