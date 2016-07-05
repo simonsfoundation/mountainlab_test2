@@ -5,11 +5,10 @@
         "shell_increment":3,
         "min_shell_size":150,
         "samplerate":30000,
-        "sign":-1,
+        "sign":0,
         "freq_min":300,
         "freq_max":10000,
         "num_fea":10,
-        "channels":"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16",
         "adj_radius":2
 }
 
