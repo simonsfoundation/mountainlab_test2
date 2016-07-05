@@ -19,6 +19,7 @@ TEMPLATE = app
 
 SOURCES += mountainviewmain.cpp \
     views/mvclusterlegend.cpp \
+    core/actionfactory.cpp \
     guides/sherpav1.cpp
 
 INCLUDEPATH += core
@@ -32,6 +33,7 @@ mvcontext.h tabber.h tabberframe.h taskprogressview.h \
     misc/paintlayer.h \
     misc/paintlayerstack.h \
     views/mvclusterlegend.h \
+    core/actionfactory.h \
     guides/sherpav1.h
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
