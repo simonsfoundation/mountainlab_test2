@@ -26,10 +26,10 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
     MVContext* context = this->mvContext();
     MVMainWindow* mw = this->mainWindow();
 
+    /// Witold, is there a reason that the clusterList is being added as data to some of the actions below? If not, let's remove this.
     QVariantList clusterList;
     foreach (int c, clusters)
         clusterList << c;
-
     int first_cluster=clusters.values().first();
 
     //TAGS
