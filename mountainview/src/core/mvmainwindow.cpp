@@ -17,6 +17,7 @@
 #include "mvabstractviewfactory.h"
 #include "mvamphistview2.h"
 #include "mvdiscrimhistview.h"
+#include "sherpav1.h"
 
 #include "mvabstractviewfactory.h"
 #include "mvabstractcontextmenuhandler.h"
@@ -97,6 +98,7 @@ public:
     MVAbstractView* openView(MVAbstractViewFactory* factory);
 
     ClusterAnnotationGuide* m_cluster_annotation_guide;
+    SherpaV1* m_sherpa_v1;
 
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
@@ -134,15 +136,22 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
 
     registerContextMenuHandler(new MVClusterContextMenuHandler(context, this));
 
-    d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_context, this);
     QToolBar* main_toolbar = new QToolBar;
+    d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_context, this);
+    d->m_sherpa_v1 = new SherpaV1(d->m_context, this);
     {
         QMenu* menu = new QMenu;
         QToolButton* B = new QToolButton();
-        B->setIcon(QIcon(":/images/gear.png"));
+        //B->setIcon(QIcon(":/images/gear.png"));
+        B->setText("Guides");
         B->setMenu(menu);
         B->setPopupMode(QToolButton::InstantPopup);
         main_toolbar->addWidget(B);
+        {
+            QAction* A = new QAction("Sherpa version 1", this);
+            menu->addAction(A);
+            QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_sherpa_v1()));
+        }
         {
             QAction* A = new QAction("Cluster annotation guide", this);
             menu->addAction(A);
@@ -259,6 +268,11 @@ void MVMainWindow::addControl(MVAbstractControl* control, bool start_expanded)
     d->m_control_panel->addControl(control, start_expanded);
 }
 
+void MVMainWindow::setCurrentContainerName(const QString& name)
+{
+    d->m_tabber->setCurrentContainerName(name);
+}
+
 void MVMainWindow::openView(const QString& id)
 {
     MVAbstractViewFactory* f = d->viewFactoryById(id);
@@ -300,6 +314,11 @@ void MVMainWindow::recalculateViews(RecalculateViewsMode mode)
 MVContext* MVMainWindow::mvContext() const
 {
     return d->m_context;
+}
+
+void MVMainWindow::closeAllViews()
+{
+    qDeleteAll(d->m_tabber->allWidgets());
 }
 
 void MVMainWindow::resizeEvent(QResizeEvent* evt)
@@ -344,6 +363,13 @@ void MVMainWindow::slot_cluster_annotation_guide()
 {
     d->m_cluster_annotation_guide->show();
     d->m_cluster_annotation_guide->raise();
+}
+
+void MVMainWindow::slot_sherpa_v1()
+{
+    this->closeAllViews();
+    d->m_sherpa_v1->show();
+    d->m_sherpa_v1->raise();
 }
 
 void MVMainWindow::slot_open_view(QObject* o)

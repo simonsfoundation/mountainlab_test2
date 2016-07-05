@@ -18,7 +18,8 @@ TARGET = mountainview
 TEMPLATE = app
 
 SOURCES += mountainviewmain.cpp \
-    views/mvclusterlegend.cpp
+    views/mvclusterlegend.cpp \
+    guides/sherpav1.cpp
 
 INCLUDEPATH += core
 VPATH += core
@@ -30,7 +31,8 @@ mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
 mvcontext.h tabber.h tabberframe.h taskprogressview.h \
     misc/paintlayer.h \
     misc/paintlayerstack.h \
-    views/mvclusterlegend.h
+    views/mvclusterlegend.h \
+    guides/sherpav1.h
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
 mountainprocessrunner.cpp mvabstractcontextmenuhandler.cpp \

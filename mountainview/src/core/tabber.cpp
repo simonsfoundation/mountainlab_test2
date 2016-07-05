@@ -275,6 +275,13 @@ void TabberPrivate::remove_widget(MVAbstractView* W)
 {
     for (int i = 0; i < m_widgets.count(); i++) {
         if (m_widgets[i].widget == W) {
+            TabberWidget* X = &m_widgets[i];
+            if (m_tab_widgets.value(X->current_container_name)) {
+                int index = find_widget_index_in_container(X->current_container_name, X->widget);
+                if (index >= 0) {
+                    m_tab_widgets[X->current_container_name]->removeTab(index);
+                }
+            }
             m_widgets.removeAt(i);
             return;
         }

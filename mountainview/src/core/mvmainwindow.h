@@ -47,9 +47,12 @@ public:
 
     void addControl(MVAbstractControl* control, bool start_expanded);
 
+    void setCurrentContainerName(const QString& name);
+
     MVContext* mvContext() const;
 
 public slots:
+    void closeAllViews();
     void openView(const QString& id);
     void recalculateViews(RecalculateViewsMode mode);
 
@@ -65,6 +68,7 @@ private slots:
     void slot_pop_out_widget();
     /// TODO: (HIGH) cluster annotation guide doesn't belong in main window
     void slot_cluster_annotation_guide();
+    void slot_sherpa_v1();
 
     void slot_open_view(QObject*);
     void handleContextMenu(const QMimeData& dt, const QPoint& globalPos);

@@ -14,5 +14,6 @@
         <file>images/vertical-zoom-out.png</file>
         <file>images/move-up.png</file>
         <file>images/move-down.png</file>
+        <file>guides/sherpav1/page_1.txt</file>
     </qresource>
 </RCC>

@@ -23,6 +23,8 @@ DiskReadMda compute_filtered_firings_remotely(QString mlproxy_url, const DiskRea
     X.setMLProxyUrl(mlproxy_url);
 
     QString firings_out_path = X.makeOutputFilePath("firings_out");
+    /// TODO: (HIGH) don't fail if we don't specify all the output paths
+    X.makeOutputFilePath("original_cluster_numbers"); //was missing
 
     X.runProcess();
     DiskReadMda ret(firings_out_path);
