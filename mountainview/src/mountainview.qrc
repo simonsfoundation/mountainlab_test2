@@ -15,5 +15,6 @@
         <file>images/move-up.png</file>
         <file>images/move-down.png</file>
         <file>guides/sherpav1/page_1.txt</file>
+        <file>guides/sherpav1/page_2.txt</file>
     </qresource>
 </RCC>
