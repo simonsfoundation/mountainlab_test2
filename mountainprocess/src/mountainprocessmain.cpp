@@ -99,12 +99,12 @@ int main(int argc, char* argv[])
             return -1; //load the processor plugins etc
         QStringList pnames = PM->processorNames();
         qSort(pnames);
-        foreach(QString pname, pnames)
-        {
+	foreach (QString pname, pnames) {
             printf("%s\n", pname.toLatin1().data());
         }
         return 0;
-    } else if (arg1 == "run-process") { //Run a process synchronously
+    }
+    else if (arg1 == "run-process") { //Run a process synchronously
         if (!initialize_process_manager(config_fname, config))
             return -1; //load the processor plugins etc
         QString output_fname = CLP.named_parameters.value("~process_output").toString(); //maybe the user specified where output is to be reported
@@ -117,13 +117,15 @@ int main(int argc, char* argv[])
 
         if (PM->processAlreadyCompleted(processor_name, process_parameters)) { //do we have a record of this procesor already completing? If so, we save a lot of time by not re-running
             printf("Process already completed: %s\n", processor_name.toLatin1().data());
-        } else {
+	}
+	else {
             QString id;
 
             if (!PM->checkParameters(processor_name, process_parameters)) { //check to see that all our parameters are in order for the given processor
                 error_message = "Problem checking process: " + processor_name;
                 ret = -1;
-            } else {
+	    }
+	    else {
                 id = PM->startProcess(processor_name, process_parameters); //start the process and retrieve a unique id
                 if (id.isEmpty()) {
                     error_message = "Problem starting process: " + processor_name;
@@ -170,7 +172,8 @@ int main(int argc, char* argv[])
         }
 
         return ret; //returns exit code 0 if okay
-    } else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued (unless --_nodaemon is specified), but the script will wait for them to complete)
+    }
+    else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued (unless --_nodaemon is specified), but the script will wait for them to complete)
         if (!initialize_process_manager(config_fname, config))
             return -1;
 
@@ -193,8 +196,7 @@ int main(int argc, char* argv[])
             }
         }
         QStringList keys0 = CLP.named_parameters.keys();
-        foreach(QString key0, keys0)
-        {
+	foreach (QString key0, keys0) {
             params[key0] = CLP.named_parameters[key0];
         }
         remove_system_parameters(params);
@@ -220,7 +222,8 @@ int main(int argc, char* argv[])
         }
 
         return ret;
-    } else if (arg1 == "daemon-start") {
+    }
+    else if (arg1 == "daemon-start") {
         if (!initialize_process_manager(config_fname, config))
             return -1;
         TempFileCleaner cleaner;
@@ -277,31 +280,37 @@ int main(int argc, char* argv[])
         QString json = QJsonDocument(state).toJson();
         printf("%s", json.toLatin1().data());
         return 0;
-    } else if (arg1 == "clear-processing") {
+    }
+    else if (arg1 == "clear-processing") {
         MPDaemonInterface X;
         X.clearProcessing();
         return 0;
-    } else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
+    }
+    else if (arg1 == "queue-script") { //Queue a script -- to be executed when resources are available
         if (queue_pript(ScriptType, CLP))
             return 0;
         else
             return -1;
-    } else if (arg1 == "queue-process") {
+    }
+    else if (arg1 == "queue-process") {
         if (queue_pript(ProcessType, CLP))
             return 0;
         else
             return -1;
-    } else if (arg1 == "get-script") {
+    }
+    else if (arg1 == "get-script") {
         if (!log_path.isEmpty()) {
             QString str = read_text_file(log_path + "/scripts/" + CLP.named_parameters["id"].toString() + ".json");
             printf("%s", str.toLatin1().data());
         }
-    } else if (arg1 == "get-process") {
+    }
+    else if (arg1 == "get-process") {
         if (!log_path.isEmpty()) {
             QString str = read_text_file(log_path + "/processes/" + CLP.named_parameters["id"].toString() + ".json");
             printf("%s", str.toLatin1().data());
         }
-    } else {
+    }
+    else {
         print_usage(); //print usage information
         return -1;
     }
@@ -329,8 +338,7 @@ bool initialize_process_manager(QString config_fname, QJsonObject config)
      * Load the processors
      */
     ProcessManager* PM = ProcessManager::globalInstance();
-    foreach(QString processor_path, processor_paths)
-    {
+    foreach (QString processor_path, processor_paths) {
         QString p0 = processor_path;
         if (QFileInfo(p0).isRelative()) {
             p0 = cfp(QFileInfo(config_fname).path() + "/" + p0);
@@ -357,8 +365,7 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
         return false;
     }
     QStringList keys = obj.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         params[key] = obj[key].toVariant();
     }
     return true;
@@ -384,8 +391,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
     Controller.setServerBasePath(opts.server_base_path);
     QJSValue MP = engine.newQObject(&Controller);
     engine.globalObject().setProperty("MP", MP);
-    foreach(QString fname, script_fnames)
-    {
+    foreach (QString fname, script_fnames) {
         QJSValue result = engine.evaluate(read_text_file(fname), fname);
         if (result.isError()) {
             display_error(result);
@@ -426,8 +432,7 @@ void print_usage()
 void remove_system_parameters(QVariantMap& params)
 {
     QStringList keys = params.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         if (key.startsWith("~")) {
             params.remove(key);
         }
@@ -456,14 +461,14 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
             }
         }
         QStringList pkeys = CLP.named_parameters.keys();
-        foreach(QString pkey, pkeys)
-        {
+	foreach (QString pkey, pkeys) {
             params[pkey] = CLP.named_parameters[pkey];
         }
         remove_system_parameters(params);
         PP.parameters = params;
         PP.prtype = ScriptType;
-    } else {
+    }
+    else {
         PP.parameters = CLP.named_parameters;
         PP.prtype = ProcessType;
         remove_system_parameters(PP.parameters);
@@ -474,7 +479,8 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
 
     if (prtype == ScriptType) {
         PP.output_fname = CLP.named_parameters["~script_output"].toString();
-    } else {
+    }
+    else {
         PP.output_fname = CLP.named_parameters["~process_output"].toString();
     }
     if (PP.output_fname.isEmpty()) {
@@ -498,7 +504,8 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
             qWarning() << "Error queueing script";
             return false;
         }
-    } else {
+    }
+    else {
         if (!X.queueProcess(PP)) { //queue the process
             qWarning() << "Error queueing process";
             return false;
@@ -517,7 +524,8 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
         if (!success) {
             if (prtype == ScriptType) {
                 qWarning() << "Error in script " + PP.id + ": " + results_obj["error"].toString();
-            } else {
+	    }
+	    else {
                 qWarning() << "Error in process " + PP.processor_name + " " + PP.id + ": " + results_obj["error"].toString();
             }
             return false;

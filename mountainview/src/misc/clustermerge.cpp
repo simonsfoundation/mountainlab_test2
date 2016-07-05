@@ -219,6 +219,16 @@ QMap<int, int> ClusterMerge::labelMap(int K) const
     return ret;
 }
 
+QVector<int> ClusterMerge::mapLabels(const QVector<int>& labels) const
+{
+    QMap<int, int> map = this->labelMap(compute_max(labels));
+    QVector<int> ret = labels;
+    for (long i = 0; i < ret.count(); i++) {
+        ret[i] = map[ret[i]];
+    }
+    return ret;
+}
+
 QString ClusterMerge::clusterLabelText(int label)
 {
     QList<int> grp = this->getMergeGroup(label);

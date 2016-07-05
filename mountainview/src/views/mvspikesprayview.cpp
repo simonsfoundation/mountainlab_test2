@@ -63,6 +63,7 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     d->m_num_channels = 1;
 
     recalculateOnOptionChanged("clip_size");
+    recalculateOn(mvContext(), SIGNAL(clusterMergeChanged()));
     recalculateOn(mvContext(), SIGNAL(timeseriesNamesChanged()));
     recalculateOn(mvContext(), SIGNAL(filteredFiringsChanged()));
 }
@@ -99,6 +100,7 @@ void MVSpikeSprayView::onCalculationFinished()
 {
     d->m_clips_to_render = d->m_computer.clips_to_render;
     d->m_labels_to_render = d->m_computer.labels_to_render;
+    d->m_labels_to_render = d->m_context->clusterMerge().mapLabels(d->m_labels_to_render);
     update();
 }
 
@@ -254,6 +256,8 @@ void MVSpikeSprayComputer::compute()
 {
     TaskProgress task("Spike spray computer");
 
+    labels_to_render.clear();
+
     firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
 
     QString firings_out_path;
@@ -324,6 +328,7 @@ void MVSpikeSprayComputer::compute()
     Mda firings0;
     firings2.readChunk(firings0, 0, 0, firings2.N1(), firings2.N2());
     task.setProgress(0.9);
+    labels_to_render.clear();
     for (long i = 0; i < firings0.N2(); i++) {
         int label0 = (int)firings0.value(2, i);
         labels_to_render << label0;

@@ -34,6 +34,7 @@ public:
     QJsonObject toJsonObject() const;
     QString toJson() const;
     QMap<int, int> labelMap(int K) const;
+    QVector<int> mapLabels(const QVector<int>& labels) const;
 
     QString clusterLabelText(int label);
 

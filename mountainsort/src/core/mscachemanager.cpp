@@ -11,7 +11,7 @@
 #include <QDateTime>
 #include <QThread>
 
-#define DEFAULT_LOCAL_BASE_PATH QDir::tempPath()+"/mountainlab"
+#define DEFAULT_LOCAL_BASE_PATH QDir::tempPath() + "/mountainlab"
 
 class MSCacheManagerPrivate {
 public:
@@ -31,7 +31,6 @@ MSCacheManager::~MSCacheManager()
 {
     delete d;
 }
-
 
 void MSCacheManager::setLocalBasePath(const QString& path)
 {
@@ -54,11 +53,12 @@ void MSCacheManager::setLocalBasePath(const QString& path)
 QString MSCacheManager::makeRemoteFile(const QString& remote_url, const QString& file_name_in, MSCacheManager::Duration duration)
 {
     if (remote_url.isEmpty()) {
-        return makeLocalFile(file_name_in,duration);
+	return makeLocalFile(file_name_in, duration);
     }
 
-    QString file_name=file_name_in;
-    if (file_name.isEmpty()) file_name=d->create_random_file_name();
+    QString file_name = file_name_in;
+    if (file_name.isEmpty())
+	file_name = d->create_random_file_name();
     QString str;
     if (duration == ShortTerm)
         str = "tmp_short_term";
@@ -73,8 +73,9 @@ QString MSCacheManager::makeRemoteFile(const QString& remote_url, const QString&
 
 QString MSCacheManager::makeLocalFile(const QString& file_name_in, MSCacheManager::Duration duration)
 {
-    QString file_name=file_name_in;
-    if (file_name.isEmpty()) file_name=d->create_random_file_name();
+    QString file_name = file_name_in;
+    if (file_name.isEmpty())
+	file_name = d->create_random_file_name();
     if (d->m_local_base_path.isEmpty()) {
         this->setLocalBasePath(DEFAULT_LOCAL_BASE_PATH);
     }
@@ -87,7 +88,7 @@ QString MSCacheManager::makeLocalFile(const QString& file_name_in, MSCacheManage
         qWarning() << "Unexpected problem" << __FUNCTION__ << __FILE__ << __LINE__;
         return "";
     }
-    QString ret=QString("%1/%2/%3").arg(d->m_local_base_path).arg(str).arg(file_name);
+    QString ret = QString("%1/%2/%3").arg(d->m_local_base_path).arg(str).arg(file_name);
     return ret;
 }
 
@@ -95,15 +96,15 @@ void MSCacheManager::cleanUp()
 {
 }
 
-Q_GLOBAL_STATIC(MSCacheManager,theInstance)
-MSCacheManager *MSCacheManager::globalInstance()
+Q_GLOBAL_STATIC(MSCacheManager, theInstance)
+MSCacheManager* MSCacheManager::globalInstance()
 {
     return theInstance;
 }
 
 void MSCacheManager::slot_remove_on_delete()
 {
-    QString fname=sender()->property("MSCacheManager_file_to_remove").toString();
+    QString fname = sender()->property("MSCacheManager_file_to_remove").toString();
     if (!fname.isEmpty()) {
         if (!QFile::remove(fname)) {
             qWarning() << "Unable to remove local cached file:" << fname;
@@ -117,8 +118,8 @@ void MSCacheManager::slot_remove_on_delete()
 QString MSCacheManagerPrivate::create_random_file_name()
 {
 
-    long num1=QDateTime::currentMSecsSinceEpoch();
-    long num2=(long)QThread::currentThreadId();
-    long num3=qrand();
+    long num1 = QDateTime::currentMSecsSinceEpoch();
+    long num2 = (long)QThread::currentThreadId();
+    long num3 = qrand();
     return QString("ms.%1.%2.%3.tmp").arg(num1).arg(num2).arg(num3);
 }
