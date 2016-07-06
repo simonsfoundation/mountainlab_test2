@@ -8,8 +8,6 @@
 #include <QWheelEvent>
 #include "mvmainwindow.h"
 
-/// TODO zoom in/out icons
-
 struct DiscrimHistogram {
     int k1, k2;
     QVector<double> data1, data2;

@@ -83,7 +83,6 @@ void test_taskprogressview()
 /// TODO: (MEDIUM) provide mountainview usage information
 /// TODO: (MEDIUM) auto correlograms for selected clusters
 /// TODO (LOW) figure out what to do when #channels and/or #clusters is huge
-/// TODO: (0.9.1) make sure to handle merging with other views, such as clips etc. Make elegant way
 /// TODO: (HIGH) annotate axes as microvolts whenever relevant
 /// TODO: (HIGH) option to use pre-processed data for PCA
 
