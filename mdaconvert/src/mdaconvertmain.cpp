@@ -4,8 +4,8 @@
 ** Created: 7/4/2016
 *******************************************************/
 
-#include "commandlineparams.h"
 #include "mdaconvert.h"
+#include "mlcommon.h"
 
 #include <QFile>
 
@@ -17,7 +17,7 @@ QString get_default_format(QString path);
 
 int main(int argc, char* argv[])
 {
-    CLParams params = commandlineparams(argc, argv);
+    CLParams params(argc, argv);
 
     if (params.unnamed_parameters.count() != 2) {
         print_usage();
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         opts.dims << str.toLong();
     }
 
-    printf("Converting %s --> %s\n",opts.input_path.toLatin1().data(),opts.output_path.toLatin1().data());
+    printf("Converting %s --> %s\n", opts.input_path.toLatin1().data(), opts.output_path.toLatin1().data());
     if (!mdaconvert(opts)) {
         return -1;
     }
