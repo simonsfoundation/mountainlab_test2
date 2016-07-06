@@ -14,6 +14,7 @@
 #include "mvutils.h"
 #include "mvcontext.h"
 #include "mvabstractcontrol.h"
+#include "mvabstractview.h"
 
 class MVAbstractViewFactory;
 class TabberTabWidget;
@@ -49,7 +50,12 @@ public:
 
     void setCurrentContainerName(const QString& name);
 
+    QList<MVAbstractView*> allViews();
+
     MVContext* mvContext() const;
+
+signals:
+    void viewsChanged();
 
 public slots:
     void closeAllViews();

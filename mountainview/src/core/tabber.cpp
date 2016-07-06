@@ -77,6 +77,8 @@ void Tabber::addWidget(const QString& container_name, const QString& label, MVAb
     connect(X.frame, SIGNAL(signalMoveToOtherContainer()), this, SLOT(slot_move_to_other_container()));
     connect(X.frame, SIGNAL(signalPopOut()), this, SLOT(slot_pop_out()));
     connect(X.frame, SIGNAL(signalPopIn()), this, SLOT(slot_pop_in()));
+
+    emit widgetsChanged();
 }
 
 void Tabber::addWidget(TabberTabWidget* TW, const QString& label, MVAbstractView* W)
@@ -276,6 +278,7 @@ void TabberPrivate::remove_widget(MVAbstractView* W)
     for (int i = 0; i < m_widgets.count(); i++) {
         if (m_widgets[i].widget == W) {
             m_widgets.removeAt(i);
+            emit q->widgetsChanged();
             return;
         }
     }

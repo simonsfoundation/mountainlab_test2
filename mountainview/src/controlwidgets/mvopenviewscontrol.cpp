@@ -23,6 +23,8 @@ public:
     MVOpenViewsControl* q;
     FlowLayout* m_flow_layout;
     QSignalMapper* m_viewMapper;
+
+    QAbstractButton* m_close_all_button;
 };
 
 MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
@@ -52,7 +54,20 @@ MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
         QObject::connect(f, SIGNAL(enabledChanged(bool)), button, SLOT(setEnabled(bool)));
     }
 
+    {
+        QToolButton* button = new QToolButton;
+        QFont font = button->font();
+        font.setPixelSize(14);
+        button->setFont(font);
+        button->setText("Close All");
+        d->m_flow_layout->addWidget(button);
+        QObject::connect(button, SIGNAL(clicked()), mw, SLOT(closeAllViews()));
+        d->m_close_all_button = button;
+    }
     this->setLayout(d->m_flow_layout);
+
+    QObject::connect(mw, SIGNAL(viewsChanged()), this, SLOT(updateControls()));
+    updateControls();
 }
 
 MVOpenViewsControl::~MVOpenViewsControl()
@@ -71,6 +86,7 @@ void MVOpenViewsControl::updateContext()
 
 void MVOpenViewsControl::updateControls()
 {
+    d->m_close_all_button->setEnabled(!this->mainWindow()->allViews().isEmpty());
 }
 
 void MVOpenViewsControl::slot_open_view(QObject* obj)

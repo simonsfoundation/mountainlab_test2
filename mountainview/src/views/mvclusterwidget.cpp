@@ -364,9 +364,6 @@ void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 
 void MVClusterWidgetPrivate::update_clips_view()
 {
-    /// TODO: (HIGH) -- restore functionality in MVClusterWidget, click on current point
-    //QMessageBox::information(q, "Feature disabled", "This feature has been temporarily disabled. Normally you would see the current clip on the left.");
-
     MVEvent evt = q->mvContext()->currentEvent();
     QString info_txt;
     if (evt.time >= 0) {

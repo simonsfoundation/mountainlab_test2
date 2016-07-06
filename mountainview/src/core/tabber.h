@@ -38,6 +38,8 @@ public:
 
     void moveWidgetToOtherContainer(MVAbstractView* W);
     void popOutWidget(MVAbstractView* W);
+signals:
+    void widgetsChanged();
 private slots:
     void slot_tab_close_requested(int index);
     void slot_tab_bar_double_clicked(int index);

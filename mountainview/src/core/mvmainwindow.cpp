@@ -188,6 +188,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     d->m_tabber = new Tabber;
     d->m_tabs2 = d->m_tabber->createTabWidget("south");
     d->m_tabs1 = d->m_tabber->createTabWidget("north");
+    QObject::connect(d->m_tabber, SIGNAL(widgetsChanged()), this, SIGNAL(viewsChanged()));
 
     vsplitter->addWidget(d->m_tabs1);
     vsplitter->addWidget(d->m_tabs2);
@@ -272,6 +273,11 @@ void MVMainWindow::addControl(MVAbstractControl* control, bool start_expanded)
 void MVMainWindow::setCurrentContainerName(const QString& name)
 {
     d->m_tabber->setCurrentContainerName(name);
+}
+
+QList<MVAbstractView*> MVMainWindow::allViews()
+{
+    return d->m_tabber->allWidgets();
 }
 
 void MVMainWindow::openView(const QString& id)
