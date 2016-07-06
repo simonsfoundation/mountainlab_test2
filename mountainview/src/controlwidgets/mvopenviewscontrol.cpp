@@ -35,12 +35,13 @@ MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
 
     d->m_viewMapper = new QSignalMapper(this);
     connect(d->m_viewMapper, SIGNAL(mapped(QObject*)),
-        this, SLOT(slot_open_view(QObject*)));
+            this, SLOT(slot_open_view(QObject*)));
 
     d->m_flow_layout = new FlowLayout;
 
     QList<MVAbstractViewFactory*> factories = mw->viewFactories();
-    foreach (MVAbstractViewFactory* f, factories) {
+    foreach(MVAbstractViewFactory * f, factories)
+    {
         QToolButton* button = new QToolButton;
         QFont font = button->font();
         font.setPixelSize(14);

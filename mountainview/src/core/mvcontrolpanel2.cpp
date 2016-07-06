@@ -70,6 +70,7 @@ void MVControlPanel2::addControl(MVAbstractControl* mvcontrol, bool start_open)
     frame_layout->addWidget(mvcontrol);
     frame->setLayout(frame_layout);
     ContentPane* CP = new ContentPane(mvcontrol->title(), frame);
+    CP->setMaximumHeight(1000);
     d->m_accordion->addContentPane(CP);
     if (start_open) {
         CP->openContentPane();
