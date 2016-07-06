@@ -127,6 +127,7 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
 
 MVFiringEventView2::~MVFiringEventView2()
 {
+    this->stopCalculation();
     delete d;
 }
 

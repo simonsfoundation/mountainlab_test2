@@ -60,6 +60,7 @@ MVDiscrimHistView::MVDiscrimHistView(MVContext* context)
 
 MVDiscrimHistView::~MVDiscrimHistView()
 {
+    this->stopCalculation();
     delete d;
 }
 

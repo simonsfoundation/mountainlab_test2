@@ -52,6 +52,7 @@ MVAmpHistView2::MVAmpHistView2(MVContext* context)
 
 MVAmpHistView2::~MVAmpHistView2()
 {
+    this->stopCalculation();
     delete d;
 }
 

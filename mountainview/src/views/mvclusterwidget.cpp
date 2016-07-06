@@ -190,6 +190,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
 
 MVClusterWidget::~MVClusterWidget()
 {
+    this->stopCalculation();
     delete d;
 }
 

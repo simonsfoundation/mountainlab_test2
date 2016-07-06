@@ -71,6 +71,7 @@ MVHistogramGrid::MVHistogramGrid(MVContext* context)
 
 MVHistogramGrid::~MVHistogramGrid()
 {
+    this->stopCalculation();
     delete d;
 }
 

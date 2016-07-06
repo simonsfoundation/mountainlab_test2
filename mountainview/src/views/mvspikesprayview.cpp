@@ -70,6 +70,7 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
 
 MVSpikeSprayView::~MVSpikeSprayView()
 {
+    this->stopCalculation();
     delete d;
 }
 

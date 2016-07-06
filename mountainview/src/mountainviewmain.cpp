@@ -238,15 +238,15 @@ int main(int argc, char* argv[])
         W->resize(W0, H0);
         W->show();
 
-        a.processEvents();
-        //W->setMVFile(mv_file);
-        W->setDefaultInitialization();
-
         W->addControl(new MVOpenViewsControl(context, W), true);
         W->addControl(new MVGeneralControl(context, W), false);
         W->addControl(new MVEventFilterControl(context, W), false);
         W->addControl(new MVClusterVisibilityControl(context, W), false);
         W->addControl(new MVExportControl(context, W), false);
+
+        a.processEvents();
+
+        W->setDefaultInitialization();
 
         return a.exec();
     }

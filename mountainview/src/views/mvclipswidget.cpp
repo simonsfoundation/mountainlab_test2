@@ -79,6 +79,7 @@ MVClipsWidget::MVClipsWidget(MVContext* context)
 
 MVClipsWidget::~MVClipsWidget()
 {
+    this->stopCalculation();
     delete d;
 }
 

@@ -193,6 +193,7 @@ MVTimeSeriesViewBase::MVTimeSeriesViewBase(MVContext* context)
 
 MVTimeSeriesViewBase::~MVTimeSeriesViewBase()
 {
+    this->stopCalculation();
     delete d;
 }
 

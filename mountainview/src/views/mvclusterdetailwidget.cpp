@@ -197,6 +197,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewF
 
 MVClusterDetailWidget::~MVClusterDetailWidget()
 {
+    this->stopCalculation();
     qDeleteAll(d->m_views);
     delete d;
 }

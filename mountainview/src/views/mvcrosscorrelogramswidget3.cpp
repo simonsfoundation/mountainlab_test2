@@ -68,6 +68,7 @@ MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* context)
 
 MVCrossCorrelogramsWidget3::~MVCrossCorrelogramsWidget3()
 {
+    this->stopCalculation();
     delete d;
 }
 
