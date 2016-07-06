@@ -54,11 +54,16 @@ public:
     void operator=(const ClusterVisibilityRule& other);
     bool operator==(const ClusterVisibilityRule& other) const;
     bool isVisible(const MVContext* context, int cluster_num) const;
+    QJsonObject toJsonObject() const;
+    static ClusterVisibilityRule fromJsonObject(const QJsonObject& X);
 
     QSet<QString> view_tags;
     bool view_all_tagged = true;
     bool view_all_untagged = true;
     bool view_merged = true;
+
+    bool use_subset = false;
+    QSet<int> subset;
 
 private:
     void copy_from(const ClusterVisibilityRule& other);
@@ -163,7 +168,8 @@ signals:
     void optionChanged(QString name);
     void clusterVisibilityChanged();
 
-private slots:
+private
+slots:
     void slot_option_changed(QString name);
 
 private:

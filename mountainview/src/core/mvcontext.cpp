@@ -40,6 +40,7 @@ public:
     QMap<QString, QColor> m_colors;
     ClusterVisibilityRule m_visibility_rule;
     QList<OptionChangedAction> m_option_changed_actions;
+    QJsonObject m_original_object;
 };
 
 MVContext::MVContext()
@@ -85,7 +86,8 @@ QJsonObject cluster_attributes_to_object(const QMap<int, QJsonObject>& map)
 {
     QJsonObject X;
     QList<int> keys = map.keys();
-    foreach (int key, keys) {
+    foreach(int key, keys)
+    {
         X[QString("%1").arg(key)] = map[key];
     }
     return X;
@@ -95,7 +97,8 @@ QMap<int, QJsonObject> object_to_cluster_attributes(QJsonObject X)
 {
     QMap<int, QJsonObject> ret;
     QStringList keys = X.keys();
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         ret[key.toInt()] = X[key].toObject();
     }
     return ret;
@@ -105,7 +108,8 @@ QJsonObject timeseries_map_to_object(const QMap<QString, TimeseriesStruct>& TT)
 {
     QJsonObject ret;
     QStringList keys = TT.keys();
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         QJsonObject obj;
         obj["data"] = TT[key].data.makePath();
         obj["name"] = TT[key].name;
@@ -118,7 +122,8 @@ QMap<QString, TimeseriesStruct> object_to_timeseries_map(QJsonObject X)
 {
     QMap<QString, TimeseriesStruct> ret;
     QStringList keys = X.keys();
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         QJsonObject obj = X[key].toObject();
         TimeseriesStruct A;
         A.data = DiskReadMda(obj["data"].toString());
@@ -130,7 +135,7 @@ QMap<QString, TimeseriesStruct> object_to_timeseries_map(QJsonObject X)
 
 QJsonObject MVContext::toMVFileObject() const
 {
-    QJsonObject X;
+    QJsonObject X = d->m_original_object;
     X["cluster_merge"] = d->m_cluster_merge.toJsonObject();
     X["cluster_attributes"] = cluster_attributes_to_object(d->m_cluster_attributes);
     X["timeseries"] = timeseries_map_to_object(d->m_timeseries);
@@ -140,21 +145,30 @@ QJsonObject MVContext::toMVFileObject() const
     X["samplerate"] = d->m_sample_rate;
     X["options"] = QJsonObject::fromVariantMap(d->m_options);
     X["mlproxy_url"] = d->m_mlproxy_url;
+    X["visibility_rule"] = d->m_visibility_rule.toJsonObject();
     return X;
 }
 
 void MVContext::setFromMVFileObject(QJsonObject X)
 {
     this->clear();
+    d->m_original_object = X; // to preserve unused fields
     d->m_cluster_merge.setFromJsonObject(X["cluster_merge"].toObject());
     d->m_cluster_attributes = object_to_cluster_attributes(X["cluster_attributes"].toObject());
     d->m_timeseries = object_to_timeseries_map(X["timeseries"].toObject());
     d->m_current_timeseries_name = X["current_timeseries_name"].toString();
     d->m_firings = DiskReadMda(X["firings"].toString());
-    d->m_event_filter = MVEventFilter::fromJsonObject(X["event_filter"].toObject());
+    if (X.contains("event_filter")) {
+        d->m_event_filter = MVEventFilter::fromJsonObject(X["event_filter"].toObject());
+    }
     d->m_sample_rate = X["samplerate"].toDouble();
-    d->m_options = X["options"].toObject().toVariantMap();
+    if (X.contains("options")) {
+        d->m_options = X["options"].toObject().toVariantMap();
+    }
     d->m_mlproxy_url = X["mlproxy_url"].toString();
+    if (X.contains("visibility_rule")) {
+        d->m_visibility_rule = ClusterVisibilityRule::fromJsonObject(X["visibility_rule"].toObject());
+    }
 }
 
 MVEvent MVContext::currentEvent() const
@@ -176,9 +190,11 @@ QList<int> MVContext::selectedClustersIncludingMerges() const
 {
     QList<int> X = this->selectedClusters();
     QSet<int> Y;
-    foreach (int k, X) {
+    foreach(int k, X)
+    {
         QList<int> list = d->m_cluster_merge.getMergeGroup(k);
-        foreach (int a, list) {
+        foreach(int a, list)
+        {
             Y.insert(a);
         }
     }
@@ -353,10 +369,11 @@ QSet<QString> MVContext::allClusterTags() const
     ret.insert("accepted");
     ret.insert("rejected");
     QList<int> keys = clusterAttributesKeys();
-    foreach (int key, keys) {
+    foreach(int key, keys)
+    {
         QSet<QString> tags0 = clusterTags(key);
-        foreach (QString tag, tags0)
-            ret.insert(tag);
+        foreach(QString tag, tags0)
+        ret.insert(tag);
     }
     return ret;
 }
@@ -550,16 +567,14 @@ void MVContext::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        }
-        else {
+        } else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    }
-    else {
+    } else {
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
     }
@@ -610,6 +625,10 @@ bool ClusterVisibilityRule::operator==(const ClusterVisibilityRule& other) const
         return false;
     if (this->view_all_untagged != other.view_all_untagged)
         return false;
+    if (this->use_subset != other.use_subset)
+        return false;
+    if (this->subset != other.subset)
+        return false;
     return true;
 }
 
@@ -619,12 +638,20 @@ void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
     this->view_tags = other.view_tags;
     this->view_all_tagged = other.view_all_tagged;
     this->view_all_untagged = other.view_all_untagged;
+
+    this->use_subset = other.use_subset;
+    this->subset = other.subset;
 }
 
 bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num) const
 {
     if (!this->view_merged) {
         if (context->clusterMerge().representativeLabel(cluster_num) != cluster_num)
+            return false;
+    }
+
+    if (this->use_subset) {
+        if (!subset.contains(cluster_num))
             return false;
     }
 
@@ -635,12 +662,75 @@ bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num)
     if ((view_all_untagged) && (tags.isEmpty()))
         return true;
 
-    foreach (QString tag, tags) {
+    foreach(QString tag, tags)
+    {
         if (view_tags.contains(tag))
             return true;
     }
 
     return false;
+}
+
+QJsonArray intlist_to_json_array(const QList<int>& X)
+{
+    QJsonArray ret;
+    foreach(int x, X)
+    {
+        ret.push_back(x);
+    }
+    return ret;
+}
+
+QList<int> json_array_to_intlist(const QJsonArray& X)
+{
+    QList<int> ret;
+    for (int i = 0; i < X.count(); i++) {
+        ret << X[i].toInt();
+    }
+    return ret;
+}
+
+QJsonArray strlist_to_json_array(const QList<QString>& X)
+{
+    QJsonArray ret;
+    foreach(QString x, X)
+    {
+        ret.push_back(x);
+    }
+    return ret;
+}
+
+QList<QString> json_array_to_strlist(const QJsonArray& X)
+{
+    QList<QString> ret;
+    for (int i = 0; i < X.count(); i++) {
+        ret << X[i].toString();
+    }
+    return ret;
+}
+
+QJsonObject ClusterVisibilityRule::toJsonObject() const
+{
+    QJsonObject obj;
+    obj["view_all_tagged"] = this->view_all_tagged;
+    obj["view_all_untagged"] = this->view_all_untagged;
+    obj["view_merged"] = this->view_merged;
+    obj["view_tags"] = strlist_to_json_array(this->view_tags.toList());
+    obj["use_subset"] = this->use_subset;
+    obj["subset"] = intlist_to_json_array(this->subset.toList());
+    return obj;
+}
+
+ClusterVisibilityRule ClusterVisibilityRule::fromJsonObject(const QJsonObject& X)
+{
+    ClusterVisibilityRule ret;
+    ret.view_all_tagged = X["view_all_tagged"].toBool();
+    ret.view_all_untagged = X["view_all_untagged"].toBool();
+    ret.view_merged = X["view_merged"].toBool();
+    ret.view_tags = QSet<QString>::fromList(json_array_to_strlist(X["view_tags"].toArray()));
+    ret.use_subset = X["use_subset"].toBool();
+    ret.subset = QSet<int>::fromList(json_array_to_intlist(X["subset"].toArray()));
+    return ret;
 }
 
 MVEventFilter MVEventFilter::fromJsonObject(QJsonObject obj)
