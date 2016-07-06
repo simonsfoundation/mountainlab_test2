@@ -141,8 +141,7 @@ void MVAmpHistView2::wheelEvent(QWheelEvent* evt)
     double zoom_factor = 1;
     if (evt->delta() > 0) {
         zoom_factor *= 1.2;
-    }
-    else if (evt->delta() < 0) {
+    } else if (evt->delta() < 0) {
         zoom_factor /= 1.2;
     }
     QList<HistogramView*> views = this->histogramViews(); //inherited

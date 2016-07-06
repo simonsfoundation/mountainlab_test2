@@ -1,5 +1,5 @@
 #include "mountainprocessrunner.h"
-#include "mvdiscrimhistview.h"
+#include "mvdiscrimhistview_sherpa.h"
 
 #include <QGridLayout>
 #include <taskprogress.h>
@@ -13,14 +13,14 @@ struct DiscrimHistogram {
     QVector<double> data1, data2;
 };
 
-class MVDiscrimHistViewComputer {
+class MVDiscrimHistViewSherpaComputer {
 public:
     //input
     QString mlproxy_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
     MVEventFilter event_filter;
-    QList<int> cluster_numbers;
+    int num_histograms;
 
     //output
     QList<DiscrimHistogram> histograms;
@@ -28,13 +28,13 @@ public:
     void compute();
 };
 
-class MVDiscrimHistViewPrivate {
+class MVDiscrimHistViewSherpaPrivate {
 public:
-    MVDiscrimHistView* q;
+    MVDiscrimHistViewSherpa* q;
 
-    QList<int> m_cluster_numbers;
+    int m_num_histograms = 20;
 
-    MVDiscrimHistViewComputer m_computer;
+    MVDiscrimHistViewSherpaComputer m_computer;
     QList<DiscrimHistogram> m_histograms;
 
     double m_zoom_factor = 1;
@@ -42,10 +42,10 @@ public:
     void set_views();
 };
 
-MVDiscrimHistView::MVDiscrimHistView(MVContext* context)
+MVDiscrimHistViewSherpa::MVDiscrimHistViewSherpa(MVContext* context)
     : MVHistogramGrid(context)
 {
-    d = new MVDiscrimHistViewPrivate;
+    d = new MVDiscrimHistViewSherpaPrivate;
     d->q = this;
 
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
@@ -56,32 +56,32 @@ MVDiscrimHistView::MVDiscrimHistView(MVContext* context)
     this->recalculate();
 }
 
-MVDiscrimHistView::~MVDiscrimHistView()
+MVDiscrimHistViewSherpa::~MVDiscrimHistViewSherpa()
 {
     this->stopCalculation();
     delete d;
 }
 
-void MVDiscrimHistView::setClusterNumbers(const QList<int>& cluster_numbers)
+void MVDiscrimHistViewSherpa::setNumHistograms(int num)
 {
-    d->m_cluster_numbers = cluster_numbers;
+    d->m_num_histograms = num;
 }
 
-void MVDiscrimHistView::prepareCalculation()
+void MVDiscrimHistViewSherpa::prepareCalculation()
 {
     d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
     d->m_computer.timeseries = mvContext()->currentTimeseries();
     d->m_computer.firings = mvContext()->firings();
     d->m_computer.event_filter = mvContext()->eventFilter();
-    d->m_computer.cluster_numbers = d->m_cluster_numbers;
+    d->m_computer.num_histograms = d->m_num_histograms;
 }
 
-void MVDiscrimHistView::runCalculation()
+void MVDiscrimHistViewSherpa::runCalculation()
 {
     d->m_computer.compute();
 }
 
-double compute_min2(const QList<DiscrimHistogram>& data0)
+double compute_min3(const QList<DiscrimHistogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
@@ -95,7 +95,7 @@ double compute_min2(const QList<DiscrimHistogram>& data0)
     return ret;
 }
 
-double compute_max2(const QList<DiscrimHistogram>& data0)
+double compute_max3(const QList<DiscrimHistogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
@@ -109,23 +109,14 @@ double compute_max2(const QList<DiscrimHistogram>& data0)
     return ret;
 }
 
-void MVDiscrimHistView::onCalculationFinished()
+void MVDiscrimHistViewSherpa::onCalculationFinished()
 {
     d->m_histograms = d->m_computer.histograms;
 
     d->set_views();
 }
 
-QVector<double> negative(const QVector<double>& X)
-{
-    QVector<double> ret;
-    for (int i = 0; i < X.count(); i++) {
-        ret << -X[i];
-    }
-    return ret;
-}
-
-void MVDiscrimHistViewComputer::compute()
+void MVDiscrimHistViewSherpaComputer::compute()
 {
     TaskProgress task(TaskProgress::Calculate, QString("Discrim Histograms"));
 
@@ -135,18 +126,12 @@ void MVDiscrimHistViewComputer::compute()
 
     MountainProcessRunner MPR;
     MPR.setMLProxyUrl(mlproxy_url);
-    MPR.setProcessorName("mv_discrimhist");
-
-    QStringList clusters_strlist;
-    foreach(int cluster, cluster_numbers)
-    {
-        clusters_strlist << QString("%1").arg(cluster);
-    }
+    MPR.setProcessorName("mv_discrimhist_sherpa");
 
     QMap<QString, QVariant> params;
     params["timeseries"] = timeseries.makePath();
     params["firings"] = firings.makePath();
-    params["clusters"] = clusters_strlist.join(",");
+    params["num_histograms"] = num_histograms;
     MPR.setInputParameters(params);
 
     QString output_path = MPR.makeOutputFilePath("output");
@@ -157,15 +142,6 @@ void MVDiscrimHistViewComputer::compute()
     output.setRemoteDataType("float32");
 
     QMap<QString, DiscrimHistogram*> hist_lookup;
-    for (int i2 = 0; i2 < cluster_numbers.count(); i2++) {
-        for (int i1 = 0; i1 < cluster_numbers.count(); i1++) {
-            DiscrimHistogram H;
-            H.k1 = cluster_numbers[i1];
-            H.k2 = cluster_numbers[i2];
-            this->histograms << H;
-            hist_lookup[QString("%1:%2").arg(H.k1).arg(H.k2)] = &this->histograms[this->histograms.count() - 1];
-        }
-    }
 
     long LL = output.N2();
     for (long i = 0; i < LL; i++) {
@@ -173,31 +149,27 @@ void MVDiscrimHistViewComputer::compute()
         int k2 = output.value(1, i);
         int k0 = output.value(2, i);
         double val = output.value(3, i);
-        DiscrimHistogram* HH = hist_lookup[QString("%1:%2").arg(k1).arg(k2)];
-        if (HH) {
+        QString code = QString("%1:%2").arg(k1).arg(k2);
+        DiscrimHistogram* HH = hist_lookup.value(code);
+        if (!HH) {
+            DiscrimHistogram H;
+            this->histograms << H;
+            DiscrimHistogram* ptr = &this->histograms[this->histograms.count() - 1];
+            ptr->k1 = k1;
+            ptr->k2 = k2;
+            hist_lookup[code] = ptr;
+            HH = hist_lookup.value(code);
+        }
+        {
             if (k0 == k1)
                 HH->data1 << val;
             else
                 HH->data2 << val;
         }
     }
-
-    //copy by symmetry to missing histograms
-    for (int i2 = 0; i2 < cluster_numbers.count(); i2++) {
-        for (int i1 = 0; i1 < cluster_numbers.count(); i1++) {
-            int k1 = cluster_numbers[i1];
-            int k2 = cluster_numbers[i2];
-            DiscrimHistogram* HH1 = hist_lookup[QString("%1:%2").arg(k1).arg(k2)];
-            DiscrimHistogram* HH2 = hist_lookup[QString("%2:%1").arg(k1).arg(k2)];
-            if (HH1->data1.isEmpty())
-                HH1->data1 = negative(HH2->data2);
-            if (HH1->data2.isEmpty())
-                HH1->data2 = negative(HH2->data1);
-        }
-    }
 }
 
-void MVDiscrimHistView::wheelEvent(QWheelEvent* evt)
+void MVDiscrimHistViewSherpa::wheelEvent(QWheelEvent* evt)
 {
     double zoom_factor = 1;
     if (evt->delta() > 0) {
@@ -211,10 +183,10 @@ void MVDiscrimHistView::wheelEvent(QWheelEvent* evt)
     }
 }
 
-void MVDiscrimHistViewPrivate::set_views()
+void MVDiscrimHistViewSherpaPrivate::set_views()
 {
-    double bin_min = compute_min2(m_histograms);
-    double bin_max = compute_max2(m_histograms);
+    double bin_min = compute_min3(m_histograms);
+    double bin_max = compute_max3(m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
 
     int num_bins = 200; //how to choose this?
@@ -247,7 +219,7 @@ void MVDiscrimHistViewPrivate::set_views()
     q->setHistogramViews(views); //inherited
 }
 
-MVDiscrimHistFactory::MVDiscrimHistFactory(MVContext* context, QObject* parent)
+MVDiscrimHistSherpaFactory::MVDiscrimHistSherpaFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
@@ -255,33 +227,30 @@ MVDiscrimHistFactory::MVDiscrimHistFactory(MVContext* context, QObject* parent)
     updateEnabled();
 }
 
-QString MVDiscrimHistFactory::id() const
+QString MVDiscrimHistSherpaFactory::id() const
 {
-    return QStringLiteral("open-discrim-histograms");
+    return QStringLiteral("open-discrim-histograms-sherpa");
 }
 
-QString MVDiscrimHistFactory::name() const
+QString MVDiscrimHistSherpaFactory::name() const
 {
-    return tr("Discrim Histograms");
+    return tr("Discrim Histograms Sherpa");
 }
 
-QString MVDiscrimHistFactory::title() const
+QString MVDiscrimHistSherpaFactory::title() const
 {
     return tr("Discrim");
 }
 
-MVAbstractView* MVDiscrimHistFactory::createView(QWidget* parent)
+MVAbstractView* MVDiscrimHistSherpaFactory::createView(QWidget* parent)
 {
-    MVDiscrimHistView* X = new MVDiscrimHistView(mvContext());
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
-    if (ks.isEmpty())
-        ks = mvContext()->visibilityRule().subset.toList();
-    qSort(ks);
-    X->setClusterNumbers(ks);
+    MVDiscrimHistViewSherpa* X = new MVDiscrimHistViewSherpa(mvContext());
+    X->setNumHistograms(50);
     return X;
 }
 
-void MVDiscrimHistFactory::updateEnabled()
+void MVDiscrimHistSherpaFactory::updateEnabled()
 {
-    setEnabled(mvContext()->selectedClusters().count() >= 2);
+    setEnabled(true);
+    //setEnabled(mvContext()->selectedClusters().count() >= 2);
 }

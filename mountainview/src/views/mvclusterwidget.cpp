@@ -169,12 +169,14 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
     QSizePolicy view_size_policy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     view_size_policy.setHorizontalStretch(1);
 
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setSizePolicy(view_size_policy);
         hlayout->addWidget(V);
     }
 
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         d->connect_view(V);
     }
 
@@ -226,7 +228,8 @@ void MVClusterWidget::onCalculationFinished()
 void MVClusterWidget::setData(const Mda& X)
 {
     d->m_data = X;
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setData(Mda());
     }
     double max_abs_val = 0;
@@ -247,35 +250,40 @@ void MVClusterWidget::setData(const Mda& X)
 
 void MVClusterWidget::setTimes(const QVector<double>& times)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setTimes(times);
     }
 }
 
 void MVClusterWidget::setLabels(const QVector<int>& labels)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setLabels(labels);
     }
 }
 
 void MVClusterWidget::setAmplitudes(const QVector<double>& amps)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setAmplitudes(amps);
     }
 }
 
 void MVClusterWidget::setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setScores(detectability_scores, outlier_scores);
     }
 }
 
 void MVClusterWidget::slot_current_event_changed()
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setCurrentEvent(mvContext()->currentEvent());
     }
     d->update_clips_view();
@@ -301,7 +309,8 @@ void MVClusterWidget::setChannels(QVector<int> channels)
 
 void MVClusterWidget::setTransformation(const AffineTransformation& T)
 {
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setTransformation(T);
     }
 }
@@ -316,17 +325,19 @@ void MVClusterWidget::slot_view_transformation_changed()
 {
     MVClusterView* V0 = (MVClusterView*)sender();
     AffineTransformation T = V0->transformation();
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setTransformation(T);
     }
 }
 
-void MVClusterWidget::slot_view_active_cluster_number_toggled()
+void MVClusterWidget::slot_view_active_cluster_numbers_changed()
 {
     /// TODO (LOW) replace all these casts with qobject_cast's
     MVClusterView* V0 = (MVClusterView*)sender();
     QSet<int> active_cluster_numbers = V0->activeClusterNumbers();
-    foreach (MVClusterView* V, d->m_views) {
+    foreach(MVClusterView * V, d->m_views)
+    {
         V->setActiveClusterNumbers(active_cluster_numbers);
     }
 }
@@ -359,7 +370,7 @@ void MVClusterWidgetPrivate::connect_view(MVClusterView* V)
 {
     QObject::connect(V, SIGNAL(currentEventChanged()), q, SLOT(slot_view_current_event_changed()));
     QObject::connect(V, SIGNAL(transformationChanged()), q, SLOT(slot_view_transformation_changed()));
-    QObject::connect(V, SIGNAL(activeClusterNumberToggled()), q, SLOT(slot_view_active_cluster_number_toggled()));
+    QObject::connect(V, SIGNAL(activeClusterNumbersChanged()), q, SLOT(slot_view_active_cluster_numbers_changed()));
 }
 
 void MVClusterWidgetPrivate::update_clips_view()
@@ -381,8 +392,7 @@ void MVClusterWidgetPrivate::update_clips_view()
         m_clips_view_thread.times = times;
 
         m_clips_view_thread.start();
-    }
-    else {
+    } else {
         m_clips_view->setClips(Mda());
     }
     //m_info_bar->setText(info_txt);
@@ -397,7 +407,8 @@ int MVClusterWidgetPrivate::current_event_index()
 
 void MVClusterWidgetPrivate::set_data_on_visible_views()
 {
-    foreach (MVClusterView* V, m_views) {
+    foreach(MVClusterView * V, m_views)
+    {
         if (V->isVisible()) {
             V->setData(m_data);
         }
@@ -414,7 +425,8 @@ void MVClusterWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach (int x, labels_to_use) {
+        foreach(int x, labels_to_use)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -464,14 +476,14 @@ void MVClusterWidgetComputer::compute()
         if (thread_interrupt_requested()) {
             return;
         }
-    }
-    else if (features_mode == "channels") {
+    } else if (features_mode == "channels") {
         MountainProcessRunner MT;
         QString processor_name = "extract_channel_values";
         MT.setProcessorName(processor_name);
 
         QStringList channels_strlist;
-        foreach (int ch, channels) {
+        foreach(int ch, channels)
+        {
             channels_strlist << QString("%1").arg(ch);
         }
 
@@ -489,8 +501,7 @@ void MVClusterWidgetComputer::compute()
         if (thread_interrupt_requested()) {
             return;
         }
-    }
-    else {
+    } else {
         TaskProgress err("Computing features");
         err.error("Unrecognized features mode: " + features_mode);
         return;
@@ -523,7 +534,7 @@ MVPCAFeaturesFactory::MVPCAFeaturesFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -567,7 +578,7 @@ MVChannelFeaturesFactory::MVChannelFeaturesFactory(MVContext* context, QObject* 
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -595,7 +606,8 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
         return Q_NULLPTR;
     QStringList strlist = str.split(",", QString::SkipEmptyParts);
     QVector<int> channels;
-    foreach (QString a, strlist) {
+    foreach(QString a, strlist)
+    {
         bool ok;
         channels << a.toInt(&ok);
         if (!ok) {

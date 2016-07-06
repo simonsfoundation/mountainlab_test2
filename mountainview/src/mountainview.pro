@@ -62,14 +62,14 @@ mvclipsview.h mvclipswidget.h mvclusterdetailwidget.h \
 mvclusterview.h mvclusterwidget.h mvcrosscorrelogramswidget3.h \
 mvdiscrimhistview.h mvfiringeventview2.h mvhistogramgrid.h \
 mvspikesprayview.h mvtimeseriesrendermanager.h mvtimeseriesview2.h \
-mvtimeseriesviewbase.h spikespywidget.h
+mvtimeseriesviewbase.h spikespywidget.h mvdiscrimhistview_sherpa.h
 SOURCES += \
 correlationmatrixview.cpp histogramview.cpp mvamphistview2.cpp \
 mvclipsview.cpp mvclipswidget.cpp mvclusterdetailwidget.cpp \
 mvclusterview.cpp mvclusterwidget.cpp mvcrosscorrelogramswidget3.cpp \
 mvdiscrimhistview.cpp mvfiringeventview2.cpp mvhistogramgrid.cpp \
 mvspikesprayview.cpp mvtimeseriesrendermanager.cpp mvtimeseriesview2.cpp \
-mvtimeseriesviewbase.cpp spikespywidget.cpp
+mvtimeseriesviewbase.cpp spikespywidget.cpp mvdiscrimhistview_sherpa.cpp
 
 INCLUDEPATH += controlwidgets
 VPATH += controlwidgets

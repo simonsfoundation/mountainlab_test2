@@ -131,9 +131,12 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
             HV->setBins(bin_min, bin_max, num_bins);
             QString title0 = QString("%1/%2").arg(d->m_correlograms[ii].k1).arg(d->m_correlograms[ii].k2);
             HV->setTitle(title0);
-            HV->setProperty("k1", d->m_correlograms[ii].k1);
-            HV->setProperty("k2", d->m_correlograms[ii].k2);
-            HV->setProperty("k", d->m_correlograms[ii].k2);
+            if (d->m_correlograms[ii].k1 == d->m_correlograms[ii].k2) {
+                HV->setProperty("k", d->m_correlograms[ii].k1);
+            } else {
+                HV->setProperty("k1", d->m_correlograms[ii].k1);
+                HV->setProperty("k2", d->m_correlograms[ii].k2);
+            }
             histogram_views << HV;
         }
     }
@@ -213,8 +216,7 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == Selected_Auto_Correlograms3) {
+    } else if (options.mode == Selected_Auto_Correlograms3) {
         for (int i = 0; i < options.ks.count(); i++) {
             int k = options.ks[i];
             Correlogram3 CC;
@@ -222,8 +224,7 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == Cross_Correlograms3) {
+    } else if (options.mode == Cross_Correlograms3) {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram3 CC;
@@ -231,8 +232,7 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    }
-    else if (options.mode == Matrix_Of_Cross_Correlograms3) {
+    } else if (options.mode == Matrix_Of_Cross_Correlograms3) {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram3 CC;
@@ -300,7 +300,7 @@ MVSelectedAutoCorrelogramsFactory::MVSelectedAutoCorrelogramsFactory(MVContext* 
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -344,7 +344,7 @@ MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVContext* context, QObje
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -387,7 +387,7 @@ MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(MVContext
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 

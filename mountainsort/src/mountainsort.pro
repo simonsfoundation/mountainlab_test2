@@ -74,7 +74,9 @@ HEADERS += \
     processors/create_multiscale_timeseries.h \
     processors/extract_channel_values_processor.h \
     processors/mv_discrimhist_processor.h \
-    processors/mv_discrimhist.h
+    processors/mv_discrimhist.h \
+    processors/mv_discrimhist_sherpa_processor.h \
+    processors/mv_discrimhist_sherpa.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -130,13 +132,13 @@ SOURCES += \
     processors/create_multiscale_timeseries.cpp \
     processors/extract_channel_values_processor.cpp \
     processors/mv_discrimhist_processor.cpp \
-    processors/mv_discrimhist.cpp
+    processors/mv_discrimhist.cpp \
+    processors/mv_discrimhist_sherpa_processor.cpp \
+    processors/mv_discrimhist_sherpa.cpp
 SOURCES_NOCXX11 += \ #see below
     isosplit/isosplit2.cpp \
     isosplit/isocut.cpp \
-    isosplit/jisotonic.cpp \
-
-
+    isosplit/jisotonic.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

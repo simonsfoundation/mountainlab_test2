@@ -33,13 +33,14 @@ protected:
     void setHorizontalScaleAxis(HorizontalScaleAxisData X);
     void setHistogramViews(const QList<HistogramView*> views);
     QList<HistogramView*> histogramViews();
-    void prepareMimeData(QMimeData &mimeData, const QPoint &pos);
-private slots:
+    void prepareMimeData(QMimeData& mimeData, const QPoint& pos);
+private
+slots:
     void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);
     void slot_export_image();
     void slot_cluster_attributes_changed(int cluster_number);
     void slot_update_highlighting();
-    void slot_context_menu(const QPoint &pt);
+    void slot_context_menu(const QPoint& pt);
 
 private:
     MVHistogramGridPrivate* d;

@@ -382,12 +382,10 @@ void MVTimeSeriesViewBase::wheelEvent(QWheelEvent* evt)
     if (!(evt->modifiers() & Qt::ControlModifier)) {
         if (delta < 0) {
             d->zoom_out(mvContext()->currentTimepoint());
-        }
-        else if (delta > 0) {
+        } else if (delta > 0) {
             d->zoom_in(mvContext()->currentTimepoint());
         }
-    }
-    else {
+    } else {
         //This used to allow zooming at hover position -- probably not needed
         /*
         float frac = 1;
@@ -408,28 +406,22 @@ void MVTimeSeriesViewBase::keyPressEvent(QKeyEvent* evt)
         double range = trange.max - trange.min;
         mvContext()->setCurrentTimepoint(mvContext()->currentTimepoint() - range / 10);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_Right) {
+    } else if (evt->key() == Qt::Key_Right) {
         MVRange trange = this->timeRange();
         double range = trange.max - trange.min;
         mvContext()->setCurrentTimepoint(mvContext()->currentTimepoint() + range / 10);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_Home) {
+    } else if (evt->key() == Qt::Key_Home) {
         mvContext()->setCurrentTimepoint(0);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_End) {
+    } else if (evt->key() == Qt::Key_End) {
         mvContext()->setCurrentTimepoint(d->m_num_timepoints - 1);
         d->scroll_to_current_timepoint();
-    }
-    else if (evt->key() == Qt::Key_Equal) {
+    } else if (evt->key() == Qt::Key_Equal) {
         d->zoom_in(mvContext()->currentTimepoint());
-    }
-    else if (evt->key() == Qt::Key_Minus) {
+    } else if (evt->key() == Qt::Key_Minus) {
         d->zoom_out(mvContext()->currentTimepoint());
-    }
-    else {
+    } else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -639,8 +631,7 @@ void MVTimeSeriesViewBasePrivate::scroll_to_current_timepoint()
     double range = trange.max - trange.min;
     if (t < trange.min) {
         q->setTimeRange(trange + (t - trange.min - range / 10));
-    }
-    else {
+    } else {
         q->setTimeRange(trange + (t - trange.max + range / 10));
     }
 }
@@ -672,8 +663,7 @@ void MVTimeSeriesViewBasePrivate::update_cursor()
 {
     if (m_left_click_dragging) {
         q->setCursor(Qt::OpenHandCursor);
-    }
-    else {
+    } else {
         q->setCursor(Qt::ArrowCursor);
     }
 }
@@ -721,8 +711,7 @@ void EventMarkerLayer::paint(QPainter* painter)
         double min_avg_pixels_per_marker = 10; //probably add this to prefs
         if ((times0.count()) && (W0 / times0.count() >= min_avg_pixels_per_marker)) {
             paint_markers(painter, times0, labels0, W0, H0);
-        }
-        else {
+        } else {
             if (times0.count()) {
                 paint_message_at_top(painter, "Zoom in to view markers", W0, H0);
             }
@@ -735,7 +724,7 @@ void EventMarkerLayer::paint(QPainter* painter)
         if (i2 - i1 + 1 < 1000) {
             QVector<double> times0;
             for (long i = i1; i <= i2; i++) {
-                times0 << i * d->m_clip_size;
+                times0 << i* d->m_clip_size;
             }
             paint_clip_dividers(painter, times0, W0, H0);
         }
@@ -900,8 +889,7 @@ void StatusLayer::paint(QPainter* painter)
         double samplerate = q->mvContext()->sampleRate();
         if (samplerate) {
             str = QString("%1 (tp: %2)").arg(d->format_time(q->mvContext()->currentTimepoint())).arg((long)q->mvContext()->currentTimepoint());
-        }
-        else {
+        } else {
             str = QString("Sample rate is null (tp: %2)").arg((long)q->mvContext()->currentTimepoint());
         }
     }

@@ -1,18 +1,18 @@
-#ifndef MVDISCRIMHISTVIEW_H
-#define MVDISCRIMHISTVIEW_H
+#ifndef MVDISCRIMHISTVIEW_SHERPA_H
+#define MVDISCRIMHISTVIEW_SHERPA_H
 
 #include "mvabstractviewfactory.h"
 #include "mvhistogramgrid.h"
 
-class MVDiscrimHistViewPrivate;
-class MVDiscrimHistView : public MVHistogramGrid {
+class MVDiscrimHistViewSherpaPrivate;
+class MVDiscrimHistViewSherpa : public MVHistogramGrid {
     Q_OBJECT
 public:
-    friend class MVDiscrimHistViewPrivate;
-    MVDiscrimHistView(MVContext* context);
-    virtual ~MVDiscrimHistView();
+    friend class MVDiscrimHistViewSherpaPrivate;
+    MVDiscrimHistViewSherpa(MVContext* context);
+    virtual ~MVDiscrimHistViewSherpa();
 
-    void setClusterNumbers(const QList<int>& cluster_numbers);
+    void setNumHistograms(int num);
 
     void prepareCalculation() Q_DECL_OVERRIDE;
     void runCalculation() Q_DECL_OVERRIDE;
@@ -26,13 +26,13 @@ private
 slots:
 
 private:
-    MVDiscrimHistViewPrivate* d;
+    MVDiscrimHistViewSherpaPrivate* d;
 };
 
-class MVDiscrimHistFactory : public MVAbstractViewFactory {
+class MVDiscrimHistSherpaFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVDiscrimHistFactory(MVContext* context, QObject* parent = 0);
+    MVDiscrimHistSherpaFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
@@ -42,4 +42,4 @@ slots:
     void updateEnabled();
 };
 
-#endif // MVDISCRIMHISTVIEW_H
+#endif // MVDISCRIMHISTVIEW_SHERPA_H

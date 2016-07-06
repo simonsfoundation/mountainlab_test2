@@ -45,11 +45,12 @@ private:
     void setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores);
 
 signals:
-private slots:
+private
+slots:
     void slot_current_event_changed();
     void slot_view_current_event_changed();
     void slot_view_transformation_changed();
-    void slot_view_active_cluster_number_toggled();
+    void slot_view_active_cluster_numbers_changed();
     void slot_show_clip_view_toggled(bool val);
     void slot_show_view_toggled(bool val);
     void slot_clips_view_thread_finished();
@@ -66,7 +67,8 @@ public:
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
-public slots:
+public
+slots:
     void updateEnabled();
 };
 
@@ -78,7 +80,8 @@ public:
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
-public slots:
+public
+slots:
     void updateEnabled();
 };
 

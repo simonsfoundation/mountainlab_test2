@@ -55,6 +55,7 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QMenu>
+#include <mvdiscrimhistview_sherpa.h>
 #include "textfile.h"
 #include "clusterannotationguide.h"
 
@@ -135,6 +136,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     registerViewFactory(new MVFiringEventsFactory(context, this));
     registerViewFactory(new MVAmplitudeHistogramsFactory(context, this));
     registerViewFactory(new MVDiscrimHistFactory(context, this));
+    registerViewFactory(new MVDiscrimHistSherpaFactory(context, this));
 
     registerContextMenuHandler(new MVClusterContextMenuHandler(context, this));
 
