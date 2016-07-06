@@ -89,6 +89,7 @@ MVTimeSeriesView2::MVTimeSeriesView2(MVContext* context)
 
 MVTimeSeriesView2::~MVTimeSeriesView2()
 {
+    this->stopCalculation(); //this is needed because of deletion of the multi-scale timeseries
     delete d;
 }
 

@@ -122,7 +122,7 @@ void MVAbstractView::requestContextMenu(const QMimeData& md, const QPoint& pos)
     emit contextMenuRequested(md, mapToGlobal(pos));
 }
 
-void MVAbstractView::prepareMimeData(QMimeData &mimeData, const QPoint &pos)
+void MVAbstractView::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
 {
     Q_UNUSED(pos)
     // add info about the view itself
@@ -132,7 +132,7 @@ void MVAbstractView::prepareMimeData(QMimeData &mimeData, const QPoint &pos)
     mimeData.setData("application/x-mv-view", ba); // this view
 }
 
-void MVAbstractView::contextMenuEvent(QContextMenuEvent *evt)
+void MVAbstractView::contextMenuEvent(QContextMenuEvent* evt)
 {
     QPoint pt = evt->pos();
     QMimeData mimeData;

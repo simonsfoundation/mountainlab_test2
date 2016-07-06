@@ -106,6 +106,9 @@ void MultiScaleTimeSeries::initialize()
         task.log("Running process");
     }
     MPR.runProcess();
+    if (thread_interrupt_requested()) {
+        return;
+    }
     {
         d->m_multiscale_data.setPath(path_out);
         task.log(d->m_data.makePath());
