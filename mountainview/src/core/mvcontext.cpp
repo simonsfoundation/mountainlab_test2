@@ -411,6 +411,23 @@ ClusterVisibilityRule MVContext::visibilityRule() const
     return d->m_visibility_rule;
 }
 
+QList<int> MVContext::visibleClustersIncludingMerges(int K) const
+{
+    QList<int> X = this->visibleClusters(K);
+    QSet<int> Y;
+    foreach(int k, X)
+    {
+        QList<int> list = d->m_cluster_merge.getMergeGroup(k);
+        foreach(int a, list)
+        {
+            Y.insert(a);
+        }
+    }
+    QList<int> ret = Y.toList();
+    qSort(ret);
+    return ret;
+}
+
 QList<int> MVContext::visibleClusters(int K) const
 {
     QList<int> ret;

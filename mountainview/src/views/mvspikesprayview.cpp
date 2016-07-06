@@ -362,6 +362,8 @@ QString MVSpikeSprayFactory::title() const
 MVAbstractView* MVSpikeSprayFactory::createView(QWidget* parent)
 {
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    if (ks.isEmpty())
+        ks = mvContext()->visibilityRule().subset.toList();
     qSort(ks);
     if (ks.isEmpty()) {
         QMessageBox::warning(0, "Unable to open spike spray", "You must select at least one cluster.");

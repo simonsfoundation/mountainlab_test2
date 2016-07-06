@@ -95,7 +95,8 @@ public:
 
     /////////////////////////////////////////////////
     ClusterVisibilityRule visibilityRule() const;
-    QList<int> visibleClusters(int K) const;
+    QList<int> visibleClusters(int Kmax) const;
+    QList<int> visibleClustersIncludingMerges(int Kmax) const;
     bool clusterIsVisible(int k) const;
     void setVisibilityRule(const ClusterVisibilityRule& rule);
 
