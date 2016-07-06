@@ -171,7 +171,7 @@ void MountainProcessRunner::runProcess()
             QString val = d->m_parameters[key].toString();
             task.log(QString("%1 = %2").arg(key).arg(val));
             if (val.startsWith("http")) {
-                task.error("Executing locally, but parameter starts with http. Probably mmlproxy url has not been set.");
+                task.error("Executing locally, but parameter starts with http. Probably mlproxy url has not been set.");
                 return;
             }
         }

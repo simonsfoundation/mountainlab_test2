@@ -106,6 +106,8 @@ TabberFrame::TabberFrame(MVAbstractView* view)
 
     QObject::connect(view, SIGNAL(recalculateSuggestedChanged()), this, SLOT(slot_update_action_visibility()));
     d->update_action_visibility();
+
+    QObject::connect(view, SIGNAL(destroyed(QObject*)),this,SLOT(deleteLater()));
 }
 
 TabberFrame::~TabberFrame()
