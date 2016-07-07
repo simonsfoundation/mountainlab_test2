@@ -135,7 +135,7 @@ void MVHistogramGrid::keyPressEvent(QKeyEvent* evt)
             for (int i = 0; i < d->m_histogram_views.count(); i++) {
                 int k1 = d->m_histogram_views[i]->property("k1").toInt();
                 int k2 = d->m_histogram_views[i]->property("k2").toInt();
-                pairs.insert(ClusterPair(k1,k2));
+                pairs.insert(ClusterPair(k1, k2));
             }
             mvContext()->setSelectedClusterPairs(pairs);
         }

@@ -142,6 +142,14 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
 
 void MVCrossCorrelogramsWidget3::setOptions(CrossCorrelogramOptions3 opts)
 {
+    if (opts.mode == All_Auto_Correlograms3)
+        this->setPairMode(false);
+    else if (opts.mode == Selected_Auto_Correlograms3)
+        this->setPairMode(false);
+    else if (opts.mode == Cross_Correlograms3)
+        this->setPairMode(true);
+    else if (opts.mode == Matrix_Of_Cross_Correlograms3)
+        this->setPairMode(true);
     d->m_options = opts;
     this->recalculate();
 }
@@ -213,7 +221,8 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    } else if (options.mode == Selected_Auto_Correlograms3) {
+    }
+    else if (options.mode == Selected_Auto_Correlograms3) {
         for (int i = 0; i < options.ks.count(); i++) {
             int k = options.ks[i];
             Correlogram3 CC;
@@ -221,7 +230,8 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    } else if (options.mode == Cross_Correlograms3) {
+    }
+    else if (options.mode == Cross_Correlograms3) {
         int k0 = options.ks.value(0);
         for (int k = 1; k <= K; k++) {
             Correlogram3 CC;
@@ -229,7 +239,8 @@ void MVCrossCorrelogramsWidget3Computer::compute()
             CC.k2 = k;
             this->correlograms << CC;
         }
-    } else if (options.mode == Matrix_Of_Cross_Correlograms3) {
+    }
+    else if (options.mode == Matrix_Of_Cross_Correlograms3) {
         for (int i = 0; i < options.ks.count(); i++) {
             for (int j = 0; j < options.ks.count(); j++) {
                 Correlogram3 CC;
@@ -297,7 +308,7 @@ MVSelectedAutoCorrelogramsFactory::MVSelectedAutoCorrelogramsFactory(MVContext* 
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -341,7 +352,7 @@ MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVContext* context, QObje
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -384,7 +395,7 @@ MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(MVContext
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
