@@ -30,7 +30,7 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
     QVariantList clusterList;
     foreach (int c, clusters)
         clusterList << c;
-    int first_cluster=clusters.values().first();
+    int first_cluster = clusters.values().first();
 
     //TAGS
     {
@@ -242,13 +242,13 @@ QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) c
 QStringList MVClusterContextMenuHandler::validTags() const
 {
     /// TODO (LOW) these go in a configuration file
-    QSet<QString> set=this->mvContext()->allClusterTags();
+    QSet<QString> set = this->mvContext()->allClusterTags();
     set << "accepted"
         << "rejected"
         << "noise"
         << "mua"
         << "artifact";
-    QStringList ret=set.toList();
+    QStringList ret = set.toList();
     qSort(ret);
     return ret;
 }

@@ -354,7 +354,7 @@ MVAbstractView* MVFiringEventsFactory::createView(QWidget* parent)
     Q_UNUSED(parent)
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())
-        ks = mvContext()->visibilityRule().subset.toList();
+        ks = mvContext()->clusterVisibilityRule().subset.toList();
     if (ks.isEmpty()) {
         QMessageBox::warning(0, "Unable to open firing events", "You must select at least one cluster.");
         return Q_NULLPTR;

@@ -481,7 +481,7 @@ void MVContext::setClusterPairTags(const ClusterPair& pair, const QSet<QString>&
     setClusterPairAttributes(pair, obj);
 }
 
-ClusterVisibilityRule MVContext::visibilityRule() const
+ClusterVisibilityRule MVContext::clusterVisibilityRule() const
 {
     return d->m_visibility_rule;
 }
@@ -517,7 +517,7 @@ bool MVContext::clusterIsVisible(int k) const
     return d->m_visibility_rule.isVisible(this, k);
 }
 
-void MVContext::setVisibilityRule(const ClusterVisibilityRule& rule)
+void MVContext::setClusterVisibilityRule(const ClusterVisibilityRule& rule)
 {
     if (d->m_visibility_rule == rule)
         return;

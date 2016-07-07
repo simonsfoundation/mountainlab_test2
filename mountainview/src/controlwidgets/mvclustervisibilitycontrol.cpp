@@ -18,7 +18,8 @@
 class MVClusterVisibilityControlPrivate {
 public:
     MVClusterVisibilityControl* q;
-    FlowLayout* m_flow_layout;
+    FlowLayout* m_cluster_tag_flow_layout;
+    FlowLayout* m_cluster_pair_tag_flow_layout;
     QWidgetList m_all_widgets;
     QCheckBox* m_subset_checkbox;
     QLineEdit* m_subset_line_edit;
@@ -30,7 +31,8 @@ MVClusterVisibilityControl::MVClusterVisibilityControl(MVContext* context, MVMai
     d = new MVClusterVisibilityControlPrivate;
     d->q = this;
 
-    d->m_flow_layout = new FlowLayout;
+    d->m_cluster_tag_flow_layout = new FlowLayout;
+    d->m_cluster_pair_tag_flow_layout = new FlowLayout;
 
     QHBoxLayout* subset_layout = new QHBoxLayout;
     {
@@ -48,7 +50,8 @@ MVClusterVisibilityControl::MVClusterVisibilityControl(MVContext* context, MVMai
     }
 
     QVBoxLayout* vlayout = new QVBoxLayout;
-    vlayout->addLayout(d->m_flow_layout);
+    vlayout->addLayout(d->m_cluster_tag_flow_layout);
+    vlayout->addLayout(d->m_cluster_pair_tag_flow_layout);
     vlayout->addLayout(subset_layout);
 
     this->setLayout(vlayout);
@@ -72,8 +75,7 @@ QSet<int> subset_str_to_set(const QString& txt)
 {
     QStringList list = txt.split(",", QString::SkipEmptyParts);
     QSet<int> ret;
-    foreach(QString str, list)
-    {
+    foreach (QString str, list) {
         ret.insert(str.trimmed().toInt());
     }
     return ret;
@@ -81,15 +83,14 @@ QSet<int> subset_str_to_set(const QString& txt)
 
 void MVClusterVisibilityControl::updateContext()
 {
-    ClusterVisibilityRule rule = mvContext()->visibilityRule();
+    ClusterVisibilityRule rule = mvContext()->clusterVisibilityRule();
 
     rule.view_all_tagged = this->controlValue("all_tagged").toBool();
     rule.view_all_untagged = this->controlValue("all_untagged").toBool();
 
     rule.view_tags.clear();
     QStringList tags = mvContext()->allClusterTags().toList();
-    foreach(QString tag, tags)
-    {
+    foreach (QString tag, tags) {
         if (this->controlValue("tag-" + tag).toBool()) {
             rule.view_tags << tag;
         }
@@ -100,12 +101,12 @@ void MVClusterVisibilityControl::updateContext()
         rule.subset = subset_str_to_set(d->m_subset_line_edit->text());
     }
 
-    mvContext()->setVisibilityRule(rule);
+    mvContext()->setClusterVisibilityRule(rule);
 }
 
 void MVClusterVisibilityControl::updateControls()
 {
-    ClusterVisibilityRule rule = mvContext()->visibilityRule();
+    ClusterVisibilityRule rule = mvContext()->clusterVisibilityRule();
 
     QStringList tags = mvContext()->allClusterTags().toList();
     qSort(tags);
@@ -115,24 +116,23 @@ void MVClusterVisibilityControl::updateControls()
 
     {
         QCheckBox* CB = this->createCheckBoxControl("all_tagged");
-        CB->setText("All tagged");
+        CB->setText("All tagged clusters");
         CB->setChecked(rule.view_all_tagged);
-        d->m_flow_layout->addWidget(CB);
+        d->m_cluster_tag_flow_layout->addWidget(CB);
         d->m_all_widgets << CB;
     }
     {
         QCheckBox* CB = this->createCheckBoxControl("all_untagged");
         CB->setText("All untagged");
         CB->setChecked(rule.view_all_untagged);
-        d->m_flow_layout->addWidget(CB);
+        d->m_cluster_tag_flow_layout->addWidget(CB);
         d->m_all_widgets << CB;
     }
-    foreach(QString tag, tags)
-    {
+    foreach (QString tag, tags) {
         QCheckBox* CB = this->createCheckBoxControl("tag-" + tag);
         CB->setText(tag);
         CB->setChecked(rule.view_tags.contains(tag));
-        d->m_flow_layout->addWidget(CB);
+        d->m_cluster_tag_flow_layout->addWidget(CB);
         d->m_all_widgets << CB;
         if (rule.view_all_tagged)
             CB->setEnabled(false);
@@ -144,8 +144,7 @@ void MVClusterVisibilityControl::updateControls()
             QList<int> list = rule.subset.toList();
             qSort(list);
             QStringList list2;
-            foreach(int k, list)
-            {
+            foreach (int k, list) {
                 list2 << QString("%1").arg(k);
             }
             d->m_subset_line_edit->setText(list2.join(","));

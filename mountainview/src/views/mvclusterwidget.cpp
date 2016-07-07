@@ -547,7 +547,7 @@ MVAbstractView* MVPCAFeaturesFactory::createView(QWidget* parent)
     Q_UNUSED(parent)
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())
-        ks = mvContext()->visibilityRule().subset.toList();
+        ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(0, "Unable to open clusters", "You must select at least one cluster.");
@@ -608,7 +608,7 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
 
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())
-        ks = mvContext()->visibilityRule().subset.toList();
+        ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);
     if (ks.isEmpty()) {
         QMessageBox::warning(0, "Unable to open clusters", "You must select at least one cluster.");

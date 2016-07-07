@@ -274,7 +274,7 @@ MVAbstractView* MVDiscrimHistFactory::createView(QWidget* parent)
     MVDiscrimHistView* X = new MVDiscrimHistView(mvContext());
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())
-        ks = mvContext()->visibilityRule().subset.toList();
+        ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);
     X->setClusterNumbers(ks);
     return X;

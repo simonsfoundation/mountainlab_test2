@@ -335,7 +335,7 @@ MVAbstractView* MVSelectedAutoCorrelogramsFactory::createView(QWidget* parent)
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())
-        ks = mvContext()->visibilityRule().subset.toList();
+        ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);
     if (ks.isEmpty())
         return X;
@@ -424,7 +424,7 @@ MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(QWidget* parent)
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())
-        ks = mvContext()->visibilityRule().subset.toList();
+        ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);
     if (ks.isEmpty())
         return X;

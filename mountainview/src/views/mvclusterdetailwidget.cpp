@@ -806,7 +806,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     QList<int> selected_clusters = q->mvContext()->selectedClusters();
     for (int i = 0; i < cluster_data_merged.count(); i++) {
         ClusterData CD = cluster_data_merged[i];
-        if (q->mvContext()->visibilityRule().isVisible(q->mvContext(), CD.k)) {
+        if (q->mvContext()->clusterVisibilityRule().isVisible(q->mvContext(), CD.k)) {
             ClusterView* V = new ClusterView(q, this);
             V->setStdevShading(m_stdev_shading);
             V->setHighlighted(CD.k == q->mvContext()->currentCluster());

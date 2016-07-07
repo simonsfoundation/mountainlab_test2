@@ -16,7 +16,8 @@ bool MVClusterPairContextMenuHandler::canHandle(const QMimeData& md) const
     return md.hasFormat("application/x-mv-cluster-pairs");
 }
 
-QSet<ClusterPair> string_list_to_cluster_pair_set(QStringList list) {
+QSet<ClusterPair> string_list_to_cluster_pair_set(QStringList list)
+{
     QSet<ClusterPair> ret;
     foreach (QString str, list) {
         ret.insert(ClusterPair::fromString(str));
@@ -29,7 +30,7 @@ QList<QAction*> MVClusterPairContextMenuHandler::actions(const QMimeData& md)
     QStringList clusters_strlist;
     QDataStream ds(md.data("application/x-mv-cluster-pairs"));
     ds >> clusters_strlist;
-    QSet<ClusterPair> cluster_pairs=string_list_to_cluster_pair_set(clusters_strlist);
+    QSet<ClusterPair> cluster_pairs = string_list_to_cluster_pair_set(clusters_strlist);
     QList<QAction*> actions;
 
     MVContext* context = this->mvContext();
@@ -141,10 +142,10 @@ QAction* MVClusterPairContextMenuHandler::removeTagMenu(const QSet<ClusterPair>&
 
 QStringList MVClusterPairContextMenuHandler::validTags() const
 {
-    QSet<QString> set=this->mvContext()->allClusterPairTags();
+    QSet<QString> set = this->mvContext()->allClusterPairTags();
     /// TODO (LOW) these go in a configuration file
     set << "to_merge";
-    QStringList ret=set.toList();
+    QStringList ret = set.toList();
     qSort(ret);
     return ret;
 }

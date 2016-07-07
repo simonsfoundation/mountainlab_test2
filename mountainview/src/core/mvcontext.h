@@ -119,11 +119,11 @@ public:
     void setClusterPairTags(const ClusterPair& pair, const QSet<QString>& tags); //part of attributes
 
     /////////////////////////////////////////////////
-    ClusterVisibilityRule visibilityRule() const;
+    ClusterVisibilityRule clusterVisibilityRule() const;
     QList<int> visibleClusters(int Kmax) const;
     QList<int> visibleClustersIncludingMerges(int Kmax) const;
     bool clusterIsVisible(int k) const;
-    void setVisibilityRule(const ClusterVisibilityRule& rule);
+    void setClusterVisibilityRule(const ClusterVisibilityRule& rule);
 
     /////////////////////////////////////////////////
     MVEvent currentEvent() const;

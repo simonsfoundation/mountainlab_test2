@@ -35,8 +35,8 @@ public:
     bool m_cluster_channel_matrix_computed = false;
     DiskReadMda m_cluster_channel_matrix;
     QLineEdit* m_channel_edit; //this goes in separate class for page 4
-    QAbstractButton *m_prev_channel_button;
-    QAbstractButton *m_next_channel_button;
+    QAbstractButton* m_prev_channel_button;
+    QAbstractButton* m_next_channel_button;
 
     void show_instructions(QString title, QString instructions);
     void compute_cluster_channel_matrix();
@@ -71,7 +71,8 @@ void SherpaV1::slot_button_clicked()
     if (action == "open_view") {
         d->m_main_window->setCurrentContainerName(sender()->property("container-name").toString());
         d->m_main_window->openView(sender()->property("view-id").toString());
-    } else if (action == "show_instructions") {
+    }
+    else if (action == "show_instructions") {
         d->show_instructions(sender()->property("title").toString(), sender()->property("instructions").toString());
     }
 }
@@ -106,12 +107,12 @@ void SherpaV1::slot_next_channel(int offset)
         return;
     }
     int ch = d->m_channel_edit->text().toInt();
-    ch+=offset;
+    ch += offset;
     d->m_channel_edit->setText(QString("%1").arg(ch));
-    ClusterVisibilityRule rule = d->m_context->visibilityRule();
+    ClusterVisibilityRule rule = d->m_context->clusterVisibilityRule();
     rule.use_subset = true;
     rule.subset = find_clusters_to_use(ch - 1, d->m_cluster_channel_matrix);
-    d->m_context->setVisibilityRule(rule);
+    d->m_context->setClusterVisibilityRule(rule);
     /// TODO: change QList<int> to QSet<int> whereever appropriate
     d->m_context->setSelectedClusters(QList<int>());
 
@@ -199,13 +200,13 @@ QWizardPage* SherpaV1Private::make_page_4()
             QPushButton* B = new QPushButton("Prev channel");
             QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_previous_channel()));
             hlayout->addWidget(B);
-            m_prev_channel_button=B;
+            m_prev_channel_button = B;
         }
         {
             QPushButton* B = new QPushButton("Next channel");
             QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_next_channel()));
             hlayout->addWidget(B);
-            m_next_channel_button=B;
+            m_next_channel_button = B;
         }
         hlayout->addStretch();
     }
@@ -285,9 +286,9 @@ void SherpaV1Private::compute_cluster_channel_matrix()
 
 void SherpaV1Private::update_buttons()
 {
-    int ch=m_channel_edit->text().toInt();
-    m_prev_channel_button->setEnabled(ch>1);
-    m_next_channel_button->setEnabled((ch==0)||(ch+1<=m_cluster_channel_matrix.N2()));
+    int ch = m_channel_edit->text().toInt();
+    m_prev_channel_button->setEnabled(ch > 1);
+    m_next_channel_button->setEnabled((ch == 0) || (ch + 1 <= m_cluster_channel_matrix.N2()));
 }
 
 void SherpaV1::slot_cluster_channel_matrix_computed()

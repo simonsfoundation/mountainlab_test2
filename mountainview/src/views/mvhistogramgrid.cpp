@@ -206,9 +206,10 @@ QList<HistogramView*> MVHistogramGrid::histogramViews()
     return d->m_histogram_views;
 }
 
-QStringList cluster_pair_set_to_string_list(const QSet<ClusterPair> &pairs) {
+QStringList cluster_pair_set_to_string_list(const QSet<ClusterPair>& pairs)
+{
     QStringList ret;
-    QList<ClusterPair> list=pairs.toList();
+    QList<ClusterPair> list = pairs.toList();
     qSort(list);
     foreach (ClusterPair pair, list) {
         ret << pair.toString();
@@ -309,7 +310,7 @@ void MVHistogramGridPrivate::do_highlighting_and_captions()
     QSet<ClusterPair> selected_cluster_pairs = q->mvContext()->selectedClusterPairs();
     for (int i = 0; i < m_histogram_views.count(); i++) {
         HistogramView* HV = m_histogram_views[i];
-        QString title0,caption0;
+        QString title0, caption0;
         if (m_pair_mode) {
             int k1 = HV->property("k1").toInt();
             int k2 = HV->property("k2").toInt();

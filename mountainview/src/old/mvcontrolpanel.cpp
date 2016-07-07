@@ -340,9 +340,9 @@ void MVControlPanel::slot_update_context()
 
     /*
     {
-        ClusterVisibilityRule rule = d->m_context->visibilityRule();
+	ClusterVisibilityRule rule = d->m_context->clusterVisibilityRule();
         rule.view_merged = d->m_controls.get_parameter_value("view_merged").toBool();
-        d->m_context->setVisibilityRule(rule);
+	d->m_context->setClusterVisibilityRule(rule);
     }
     */
 }
@@ -606,7 +606,7 @@ void ClusterVisibilityControls::slot_update_controls()
 
     {
         QRadioButton* BB = add_control("", "All");
-        if ((m_context->visibilityRule().view_tags.isEmpty()) && (m_context->visibilityRule().view_tags_not.isEmpty())) {
+	if ((m_context->clusterVisibilityRule().view_tags.isEmpty()) && (m_context->clusterVisibilityRule().view_tags_not.isEmpty())) {
             BB->setChecked(true);
         }
     }
@@ -616,14 +616,14 @@ void ClusterVisibilityControls::slot_update_controls()
     qSort(tags);
     foreach (QString tag, tags) {
         QRadioButton* BB = add_control(tag, tag);
-        if (m_context->visibilityRule().view_tags.contains(tag)) {
+	if (m_context->clusterVisibilityRule().view_tags.contains(tag)) {
             BB->setChecked(true);
         }
     }
 
     foreach (QString tag, tags) {
         QRadioButton* BB = add_control("!" + tag, "not " + tag);
-        if (m_context->visibilityRule().view_tags_not.contains(tag)) {
+	if (m_context->clusterVisibilityRule().view_tags_not.contains(tag)) {
             BB->setChecked(true);
         }
     }
@@ -647,7 +647,7 @@ QRadioButton* ClusterVisibilityControls::add_control(QString tag, QString label)
 /*
 void ClusterVisibilityControls::slot_controls_changed()
 {
-    ClusterVisibilityRule rule = m_context->visibilityRule();
+    ClusterVisibilityRule rule = m_context->clusterVisibilityRule();
     rule.view_tags.clear();
     //rule.view_tags_not.clear();
     for (int i = 0; i < m_controls.count(); i++) {
@@ -666,6 +666,6 @@ void ClusterVisibilityControls::slot_controls_changed()
             }
         }
     }
-    m_context->setVisibilityRule(rule);
+    m_context->setClusterVisibilityRule(rule);
 }
 */
