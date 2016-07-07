@@ -22,7 +22,9 @@ private slots:
     void slot_goto_previous_pair();
     void slot_goto_next_pair();
     void slot_button_clicked();
-    void slot_cluster_pair_attributes_changed();
+    void slot_add_to_merge_tag();
+    void slot_remove_to_merge_tag();
+    void slot_update_candidates();
 
 private:
     IndividualMergeDecisionPagePrivate* d;

@@ -49,7 +49,7 @@ SherpaV2::SherpaV2(MVContext* mvcontext, MVMainWindow* mw)
     this->addPage(d->make_page_3());
     this->addPage(d->make_page_4());
     this->addPage(d->make_page_5());
-    this->addPage(new IndividualMergeDecisionPage(mvcontext,mw));
+    this->addPage(new IndividualMergeDecisionPage(mvcontext, mw));
 
     this->resize(800, 600);
 
@@ -77,8 +77,8 @@ void SherpaV2::slot_select_merge_candidates()
 {
 
     QSet<ClusterPair> pairs;
-    QList<ClusterPair> keys=d->m_context->clusterPairAttributesKeys();
-    foreach (ClusterPair key,keys) {
+    QList<ClusterPair> keys = d->m_context->clusterPairAttributesKeys();
+    foreach (ClusterPair key, keys) {
         if (d->m_context->clusterPairTags(key).contains("to_merge")) {
             pairs.insert(key);
         }
@@ -91,7 +91,7 @@ QWizardPage* SherpaV2Private::make_page_1()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cluster detail view");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_1.txt"));
+    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_cluster_details.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -110,7 +110,7 @@ QWizardPage* SherpaV2Private::make_page_2()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Event Filter");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_2.txt"));
+    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_event_filter.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -129,7 +129,7 @@ QWizardPage* SherpaV2Private::make_page_3()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cluster detail view");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_3.txt"));
+    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_auto_correlograms.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -148,7 +148,7 @@ QWizardPage* SherpaV2Private::make_page_4()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Discrimination histograms");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_4.txt"));
+    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_discrim_hist.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -162,12 +162,12 @@ QWizardPage* SherpaV2Private::make_page_4()
     return page;
 }
 
-QWizardPage *SherpaV2Private::make_page_5()
+QWizardPage* SherpaV2Private::make_page_5()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cross-correlograms");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_5.txt"));
+    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_cross_correlograms.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -176,8 +176,8 @@ QWizardPage *SherpaV2Private::make_page_5()
 
     FlowLayout* flayout = new FlowLayout;
     {
-        QPushButton *B=new QPushButton("Select merge candidates");
-        QObject::connect(B,SIGNAL(clicked(bool)),q,SLOT(slot_select_merge_candidates()));
+        QPushButton* B = new QPushButton("Select merge candidates");
+        QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_select_merge_candidates()));
         flayout->addWidget(B);
     }
     flayout->addWidget(make_open_view_button("Cross-correlograms", "open-selected-cross-correlograms", "south"));
@@ -209,4 +209,3 @@ void SherpaV2Private::show_instructions(QString title, QString instructions)
 {
     QMessageBox::information(q, title, instructions);
 }
-

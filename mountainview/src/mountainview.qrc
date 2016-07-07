@@ -17,10 +17,10 @@
         <file>guides/sherpav1/page_1.txt</file>
         <file>guides/sherpav1/page_2.txt</file>
         <file>guides/sherpav1/page_3.txt</file>
-        <file>guides/sherpav2/page_3.txt</file>
-        <file>guides/sherpav2/page_1.txt</file>
-        <file>guides/sherpav2/page_2.txt</file>
-        <file>guides/sherpav2/page_4.txt</file>
-        <file>guides/sherpav2/page_5.txt</file>
+        <file>guides/sherpav2/page_auto_correlograms.txt</file>
+        <file>guides/sherpav2/page_cluster_details.txt</file>
+        <file>guides/sherpav2/page_event_filter.txt</file>
+        <file>guides/sherpav2/page_discrim_hist.txt</file>
+        <file>guides/sherpav2/page_cross_correlograms.txt</file>
     </qresource>
 </RCC>
