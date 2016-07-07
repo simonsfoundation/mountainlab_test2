@@ -41,6 +41,7 @@ public:
     ClusterVisibilityRule m_visibility_rule;
     QList<OptionChangedAction> m_option_changed_actions;
     QJsonObject m_original_object;
+    QSet<ClusterPair> m_selected_cluster_pairs;
 };
 
 MVContext::MVContext()
@@ -86,8 +87,7 @@ QJsonObject cluster_attributes_to_object(const QMap<int, QJsonObject>& map)
 {
     QJsonObject X;
     QList<int> keys = map.keys();
-    foreach(int key, keys)
-    {
+    foreach (int key, keys) {
         X[QString("%1").arg(key)] = map[key];
     }
     return X;
@@ -97,8 +97,7 @@ QMap<int, QJsonObject> object_to_cluster_attributes(QJsonObject X)
 {
     QMap<int, QJsonObject> ret;
     QStringList keys = X.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ret[key.toInt()] = X[key].toObject();
     }
     return ret;
@@ -108,8 +107,7 @@ QJsonObject timeseries_map_to_object(const QMap<QString, TimeseriesStruct>& TT)
 {
     QJsonObject ret;
     QStringList keys = TT.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         QJsonObject obj;
         obj["data"] = TT[key].data.makePath();
         obj["name"] = TT[key].name;
@@ -122,8 +120,7 @@ QMap<QString, TimeseriesStruct> object_to_timeseries_map(QJsonObject X)
 {
     QMap<QString, TimeseriesStruct> ret;
     QStringList keys = X.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         QJsonObject obj = X[key].toObject();
         TimeseriesStruct A;
         A.data = DiskReadMda(obj["data"].toString());
@@ -190,11 +187,9 @@ QList<int> MVContext::selectedClustersIncludingMerges() const
 {
     QList<int> X = this->selectedClusters();
     QSet<int> Y;
-    foreach(int k, X)
-    {
+    foreach (int k, X) {
         QList<int> list = d->m_cluster_merge.getMergeGroup(k);
-        foreach(int a, list)
-        {
+        foreach (int a, list) {
             Y.insert(a);
         }
     }
@@ -369,11 +364,10 @@ QSet<QString> MVContext::allClusterTags() const
     ret.insert("accepted");
     ret.insert("rejected");
     QList<int> keys = clusterAttributesKeys();
-    foreach(int key, keys)
-    {
+    foreach (int key, keys) {
         QSet<QString> tags0 = clusterTags(key);
-        foreach(QString tag, tags0)
-        ret.insert(tag);
+        foreach (QString tag, tags0)
+            ret.insert(tag);
     }
     return ret;
 }
@@ -415,11 +409,9 @@ QList<int> MVContext::visibleClustersIncludingMerges(int K) const
 {
     QList<int> X = this->visibleClusters(K);
     QSet<int> Y;
-    foreach(int k, X)
-    {
+    foreach (int k, X) {
         QList<int> list = d->m_cluster_merge.getMergeGroup(k);
-        foreach(int a, list)
-        {
+        foreach (int a, list) {
             Y.insert(a);
         }
     }
@@ -584,16 +576,58 @@ void MVContext::clickCluster(int k, Qt::KeyboardModifiers modifiers)
             QList<int> tmp = d->m_selected_clusters;
             tmp.removeAll(k);
             this->setSelectedClusters(tmp);
-        } else {
+        }
+        else {
             if (k >= 0) {
                 QList<int> tmp = d->m_selected_clusters;
                 tmp << k;
                 this->setSelectedClusters(tmp);
             }
         }
-    } else {
+    }
+    else {
+        this->setSelectedClusterPairs(QSet<ClusterPair>());
         this->setSelectedClusters(QList<int>());
         this->setCurrentCluster(k);
+    }
+}
+
+QSet<ClusterPair> MVContext::selectedClusterPairs() const
+{
+    return d->m_selected_cluster_pairs;
+}
+
+void MVContext::setSelectedClusterPairs(const QSet<ClusterPair>& pairs)
+{
+    if (d->m_selected_cluster_pairs == pairs)
+        return;
+    d->m_selected_cluster_pairs = pairs;
+    emit this->selectedClusterPairsChanged();
+}
+
+void MVContext::clickClusterPair(const ClusterPair& pair, Qt::KeyboardModifiers modifiers)
+{
+    qDebug() << __FUNCTION__  << __FILE__ << __LINE__;
+    if (modifiers & Qt::ControlModifier) {
+        if ((pair.k1 <= 0) || (pair.k2 <= 0))
+            return;
+        QSet<ClusterPair> tmp = d->m_selected_cluster_pairs;
+        if (tmp.contains(pair)) {
+            tmp.remove(pair);
+        }
+        else {
+            tmp.insert(pair);
+        }
+        this->setSelectedClusterPairs(tmp);
+    }
+    else {
+        QSet<ClusterPair> tmp;
+        tmp.insert(pair);
+        this->setSelectedClusterPairs(tmp);
+        QList<int> list0;
+        list0 << pair.k1 << pair.k2;
+        this->setSelectedClusters(list0);
+        this->setCurrentCluster(-1);
     }
 }
 
@@ -679,8 +713,7 @@ bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num)
     if ((view_all_untagged) && (tags.isEmpty()))
         return true;
 
-    foreach(QString tag, tags)
-    {
+    foreach (QString tag, tags) {
         if (view_tags.contains(tag))
             return true;
     }
@@ -691,8 +724,7 @@ bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num)
 QJsonArray intlist_to_json_array(const QList<int>& X)
 {
     QJsonArray ret;
-    foreach(int x, X)
-    {
+    foreach (int x, X) {
         ret.push_back(x);
     }
     return ret;
@@ -710,8 +742,7 @@ QList<int> json_array_to_intlist(const QJsonArray& X)
 QJsonArray strlist_to_json_array(const QList<QString>& X)
 {
     QJsonArray ret;
-    foreach(QString x, X)
-    {
+    foreach (QString x, X) {
         ret.push_back(x);
     }
     return ret;
@@ -766,4 +797,14 @@ QJsonObject MVEventFilter::toJsonObject() const
     obj["min_detectability_score"] = this->min_detectability_score;
     obj["max_outlier_score"] = this->max_outlier_score;
     return obj;
+}
+
+bool ClusterPair::operator==(const ClusterPair& other) const
+{
+    return ((k1 == other.k1) && (k2 == other.k2));
+}
+
+uint qHash(const ClusterPair& pair)
+{
+    return qHash(QString("%1:%2").arg(pair.k1).arg(pair.k2));
 }

@@ -34,6 +34,7 @@ protected:
     void setHistogramViews(const QList<HistogramView*> views);
     QList<HistogramView*> histogramViews();
     void prepareMimeData(QMimeData& mimeData, const QPoint& pos);
+    void setPairMode(bool val);
 private
 slots:
     void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);

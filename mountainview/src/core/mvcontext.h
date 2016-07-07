@@ -69,6 +69,18 @@ private:
     void copy_from(const ClusterVisibilityRule& other);
 };
 
+struct ClusterPair {
+    ClusterPair(int k1_in = 0, int k2_in = 0)
+    {
+        k1 = k1_in;
+        k2 = k2_in;
+    }
+
+    int k1, k2;
+    bool operator==(const ClusterPair& other) const;
+};
+uint qHash(const ClusterPair& pair);
+
 #include "mvmisc.h"
 
 class MVContextPrivate;
@@ -113,6 +125,11 @@ public:
     void setCurrentTimepoint(double tp);
     void setCurrentTimeRange(const MVRange& range);
     void clickCluster(int k, Qt::KeyboardModifiers modifiers);
+
+    /////////////////////////////////////////////////
+    QSet<ClusterPair> selectedClusterPairs() const;
+    void setSelectedClusterPairs(const QSet<ClusterPair>& pairs);
+    void clickClusterPair(const ClusterPair& pair, Qt::KeyboardModifiers modifiers);
 
     /////////////////////////////////////////////////
     QColor clusterColor(int k) const;
@@ -168,9 +185,9 @@ signals:
     void currentTimeRangeChanged();
     void optionChanged(QString name);
     void clusterVisibilityChanged();
+    void selectedClusterPairsChanged();
 
-private
-slots:
+private slots:
     void slot_option_changed(QString name);
 
 private:

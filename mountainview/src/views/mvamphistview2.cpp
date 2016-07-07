@@ -43,6 +43,8 @@ MVAmpHistView2::MVAmpHistView2(MVContext* context)
     d = new MVAmpHistView2Private;
     d->q = this;
 
+    this->setPairMode(false);
+
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);

@@ -131,12 +131,9 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
             HV->setBins(bin_min, bin_max, num_bins);
             QString title0 = QString("%1/%2").arg(d->m_correlograms[ii].k1).arg(d->m_correlograms[ii].k2);
             HV->setTitle(title0);
-            if (d->m_correlograms[ii].k1 == d->m_correlograms[ii].k2) {
-                HV->setProperty("k", d->m_correlograms[ii].k1);
-            } else {
-                HV->setProperty("k1", d->m_correlograms[ii].k1);
-                HV->setProperty("k2", d->m_correlograms[ii].k2);
-            }
+            HV->setProperty("k", d->m_correlograms[ii].k1);
+            HV->setProperty("k1", d->m_correlograms[ii].k1);
+            HV->setProperty("k2", d->m_correlograms[ii].k2);
             histogram_views << HV;
         }
     }
