@@ -86,8 +86,8 @@ SOURCES += clusterannotationguide.cpp
 
 INCLUDEPATH += contextmenuhandlers
 VPATH += contextmenuhandlers
-HEADERS += mvclustercontextmenuhandler.h
-SOURCES += mvclustercontextmenuhandler.cpp
+HEADERS += mvclustercontextmenuhandler.h mvclusterpaircontextmenuhandler.h
+SOURCES += mvclustercontextmenuhandler.cpp mvclusterpaircontextmenuhandler.cpp
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams

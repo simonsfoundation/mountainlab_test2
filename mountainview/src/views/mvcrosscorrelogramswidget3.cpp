@@ -131,16 +131,6 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
             HV->setBins(bin_min, bin_max, num_bins);
             QString title0;
             QString caption0;
-            if (this->pairMode()) {
-                title0 = QString("%1/%2").arg(k1).arg(k2);
-                caption0 = this->mvContext()->clusterPairTagsList(ClusterPair(k1, k2)).join(", ");
-            }
-            else {
-                title0 = QString("%1").arg(k1);
-                caption0 = this->mvContext()->clusterTagsList(k1).join(", ");
-            }
-            HV->setTitle(title0);
-            HV->setCaption(caption0);
             HV->setProperty("k", d->m_correlograms[ii].k1);
             HV->setProperty("k1", d->m_correlograms[ii].k1);
             HV->setProperty("k2", d->m_correlograms[ii].k2);

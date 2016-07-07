@@ -40,6 +40,7 @@ private slots:
     void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);
     void slot_export_image();
     void slot_cluster_attributes_changed(int cluster_number);
+    void slot_cluster_pair_attributes_changed(ClusterPair pair);
     void slot_update_highlighting();
     void slot_context_menu(const QPoint& pt);
 

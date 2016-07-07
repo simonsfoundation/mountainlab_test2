@@ -458,7 +458,7 @@ void MVClusterDetailWidget::prepareMimeData(QMimeData& mimeData, const QPoint& p
     QByteArray ba;
     QDataStream ds(&ba, QIODevice::WriteOnly);
     ds << mvContext()->selectedClusters();
-    mimeData.setData("application/x-mv-cluster", ba); // selected cluster data
+    mimeData.setData("application/x-mv-clusters", ba); // selected cluster data
 
     MVAbstractView::prepareMimeData(mimeData, pos); // call base class implementation
 }

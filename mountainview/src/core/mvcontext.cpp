@@ -464,7 +464,7 @@ QList<QString> MVContext::clusterPairTagsList(const ClusterPair& pair) const
 QSet<QString> MVContext::allClusterPairTags() const
 {
     QSet<QString> ret;
-    ret.insert("merged");
+    ret.insert("to_merge");
     QList<ClusterPair> keys = clusterPairAttributesKeys();
     foreach (ClusterPair key, keys) {
         QSet<QString> tags0 = clusterPairTags(key);

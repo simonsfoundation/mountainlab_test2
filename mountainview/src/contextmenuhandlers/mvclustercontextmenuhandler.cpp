@@ -13,13 +13,13 @@ MVClusterContextMenuHandler::MVClusterContextMenuHandler(MVContext* context, MVM
 
 bool MVClusterContextMenuHandler::canHandle(const QMimeData& md) const
 {
-    return md.hasFormat("application/x-mv-cluster");
+    return md.hasFormat("application/x-mv-clusters");
 }
 
 QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
 {
     QSet<int> clusters;
-    QDataStream ds(md.data("application/x-mv-cluster"));
+    QDataStream ds(md.data("application/x-mv-clusters"));
     ds >> clusters;
     QList<QAction*> actions;
 
@@ -242,9 +242,13 @@ QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) c
 QStringList MVClusterContextMenuHandler::validTags() const
 {
     /// TODO (LOW) these go in a configuration file
-    return QStringList() << "accepted"
-                         << "rejected"
-                         << "noise"
-                         << "mua"
-                         << "artifact";
+    QSet<QString> set=this->mvContext()->allClusterTags();
+    set << "accepted"
+        << "rejected"
+        << "noise"
+        << "mua"
+        << "artifact";
+    QStringList ret=set.toList();
+    qSort(ret);
+    return ret;
 }

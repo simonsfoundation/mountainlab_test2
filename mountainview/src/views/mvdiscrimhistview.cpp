@@ -233,10 +233,6 @@ void MVDiscrimHistViewPrivate::set_views()
             HV->setColors(q->mvContext()->colors());
             //HV->autoSetBins(50);
             HV->setBins(bin_min, bin_max, num_bins);
-            QString title0 = QString("%1/%2").arg(k1).arg(k2);
-            QString caption0 = QString("%1").arg(q->mvContext()->clusterPairTagsList(ClusterPair(k1,k2)).join(", "));
-            HV->setTitle(title0);
-            HV->setCaption(caption0);
             HV->setDrawVerticalAxisAtZero(true);
             HV->setXRange(MVRange(-max00, max00));
             HV->autoCenterXRange();

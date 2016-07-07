@@ -22,6 +22,7 @@
 #include "mvabstractviewfactory.h"
 #include "mvabstractcontextmenuhandler.h"
 #include "mvclustercontextmenuhandler.h"
+#include "mvclusterpaircontextmenuhandler.h"
 
 /// TODO, get rid of computationthread
 /// TODO: (HIGH) create test dataset to be distributed
@@ -61,24 +62,6 @@
 
 /// TODO (LOW) put styles in central place?
 #define MV_STATUS_BAR_HEIGHT 30
-
-class DummyContextMenuHandler : public MVAbstractContextMenuHandler {
-
-    // MVAbstractContextMenuHandler interface
-public:
-    bool canHandle(const QMimeData& md) const Q_DECL_OVERRIDE
-    {
-        return md.hasFormat("application/x-mv-cluster");
-    }
-
-    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE
-    {
-        Q_UNUSED(md)
-        QList<QAction*> result;
-        result.append(new QAction("TEST", 0));
-        return result;
-    }
-};
 
 class MVMainWindowPrivate {
 public:
@@ -140,6 +123,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     registerViewFactory(new MVDiscrimHistSherpaFactory(context, this));
 
     registerContextMenuHandler(new MVClusterContextMenuHandler(context, this));
+    registerContextMenuHandler(new MVClusterPairContextMenuHandler(context, this));
 
     QToolBar* main_toolbar = new QToolBar;
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_context, this);
