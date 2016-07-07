@@ -187,7 +187,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     QVBoxLayout* vlayout = new QVBoxLayout;
     vlayout->setSpacing(0);
     vlayout->setMargin(0);
-    vlayout->addWidget(main_toolbar);
+    //vlayout->addWidget(main_toolbar); //for now
     vlayout->addWidget(hsplitter);
     vlayout->addWidget(status_bar);
     this->setLayout(vlayout);
