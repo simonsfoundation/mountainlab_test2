@@ -1,5 +1,5 @@
 #include "jisotonic.h"
-#include <malloc.h>
+#include <stdlib.h>
 
 void jisotonic(int N,double *BB,double *MSE,double *AA,double *WW) {
 	if (N<1) return;
