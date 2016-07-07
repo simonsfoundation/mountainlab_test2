@@ -72,7 +72,21 @@ IndividualMergeDecisionPage::IndividualMergeDecisionPage(MVContext* context, MVM
     this->setLayout(layout);
 
     FlowLayout* flayout = new FlowLayout;
-    flayout->addWidget(d->make_select_and_open_view_button("Spike spray", "open-spike-spray", "south"));
+    {
+        flayout->addWidget(d->make_select_and_open_view_button("Spike spray", "open-spike-spray", "north"));
+    }
+    {
+        flayout->addWidget(d->make_select_and_open_view_button("Firing events", "open-firing-events", "south"));
+    }
+    {
+        flayout->addWidget(d->make_select_and_open_view_button("PCA Features", "open-pca-features", ""));
+    }
+    {
+        flayout->addWidget(d->make_select_and_open_view_button("Channel Features", "open-channel-features", ""));
+    }
+    {
+        flayout->addWidget(d->make_select_and_open_view_button("Cross-correlograms", "open-selected-cross-correlograms", ""));
+    }
     layout->addLayout(flayout);
 
     QObject::connect(d->m_context, SIGNAL(clusterPairAttributesChanged(ClusterPair)), this, SLOT(slot_cluster_pair_attributes_changed()));
@@ -124,7 +138,6 @@ void IndividualMergeDecisionPage::slot_cluster_pair_attributes_changed()
         }
     }
     qSort(pairs);
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << keys.count() << pairs.count() << "@@@@@@@@@@@@@@@@@@@@@@@@@@";
     d->m_cluster_pairs = pairs;
     d->m_current_cluster_pair_index = -1;
     d->update_controls();

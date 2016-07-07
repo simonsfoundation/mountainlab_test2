@@ -233,6 +233,15 @@ void TabberPrivate::put_widget_in_container(QString container_name, MVAbstractVi
             X->frame->show();
             X->frame->move(position);
         }
+        else {
+            QSize size(500, 300);
+            if (m_tab_widgets.first()) {
+                size = m_tab_widgets.first()->size();
+            }
+            X->frame->resize(size);
+            X->frame->setParent(0);
+            X->frame->show();
+        }
     }
     X->current_container_name = container_name;
     if (!container_name.isEmpty()) {
