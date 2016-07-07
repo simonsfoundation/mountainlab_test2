@@ -688,7 +688,6 @@ void MVContext::setSelectedClusterPairs(const QSet<ClusterPair>& pairs)
 
 void MVContext::clickClusterPair(const ClusterPair& pair, Qt::KeyboardModifiers modifiers)
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (modifiers & Qt::ControlModifier) {
         if ((pair.k1 <= 0) || (pair.k2 <= 0))
             return;

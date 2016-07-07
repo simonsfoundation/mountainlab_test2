@@ -17,12 +17,14 @@ enum CrossCorrelogramMode3 {
     All_Auto_Correlograms3,
     Selected_Auto_Correlograms3,
     Cross_Correlograms3,
-    Matrix_Of_Cross_Correlograms3
+    Matrix_Of_Cross_Correlograms3,
+    Selected_Cross_Correlograms3
 };
 
 struct CrossCorrelogramOptions3 {
     CrossCorrelogramMode3 mode = Undefined3;
     QList<int> ks;
+    QList<ClusterPair> pairs;
 };
 
 class MVCrossCorrelogramsWidget3Private;
@@ -84,6 +86,18 @@ class MVMatrixOfCrossCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
     MVMatrixOfCrossCorrelogramsFactory(MVContext* context, QObject* parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+private slots:
+    void updateEnabled();
+};
+
+class MVSelectedCrossCorrelogramsFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    MVSelectedCrossCorrelogramsFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

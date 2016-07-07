@@ -151,6 +151,8 @@ void MVCrossCorrelogramsWidget3::setOptions(CrossCorrelogramOptions3 opts)
         this->setPairMode(true);
     else if (opts.mode == Matrix_Of_Cross_Correlograms3)
         this->setPairMode(true);
+    else if (opts.mode == Selected_Cross_Correlograms3)
+        this->setPairMode(true);
     d->m_options = opts;
     this->recalculate();
 }
@@ -249,6 +251,15 @@ void MVCrossCorrelogramsWidget3Computer::compute()
                 CC.k2 = options.ks[j];
                 this->correlograms << CC;
             }
+        }
+    }
+    else if (options.mode == Selected_Cross_Correlograms3) {
+        for (int i = 0; i < options.pairs.count(); i++) {
+
+            Correlogram3 CC;
+            CC.k1 = options.pairs[i].k1;
+            CC.k2 = options.pairs[i].k2;
+            this->correlograms << CC;
         }
     }
 
@@ -438,4 +449,49 @@ MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(QWidget* parent)
 void MVMatrixOfCrossCorrelogramsFactory::updateEnabled()
 {
     setEnabled(!mvContext()->selectedClusters().isEmpty());
+}
+
+
+
+MVSelectedCrossCorrelogramsFactory::MVSelectedCrossCorrelogramsFactory(MVContext* context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
+{
+    connect(mvContext(), SIGNAL(selectedClusterPairsChanged()),
+        this, SLOT(updateEnabled()));
+    updateEnabled();
+}
+
+QString MVSelectedCrossCorrelogramsFactory::id() const
+{
+    return QStringLiteral("open-selected-cross-correlograms");
+}
+
+QString MVSelectedCrossCorrelogramsFactory::name() const
+{
+    return tr("Selected Cross-Correlograms");
+}
+
+QString MVSelectedCrossCorrelogramsFactory::title() const
+{
+    return tr("CC");
+}
+
+MVAbstractView* MVSelectedCrossCorrelogramsFactory::createView(QWidget* parent)
+{
+    Q_UNUSED(parent)
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
+    QList<ClusterPair> pairs = mvContext()->selectedClusterPairs().toList();
+    qSort(pairs);
+    if (pairs.isEmpty())
+        return X;
+    CrossCorrelogramOptions3 opts;
+    opts.mode = Selected_Cross_Correlograms3;
+    opts.pairs = pairs;
+    X->setOptions(opts);
+    return X;
+}
+
+void MVSelectedCrossCorrelogramsFactory::updateEnabled()
+{
+    setEnabled(!mvContext()->selectedClusterPairs().isEmpty());
 }

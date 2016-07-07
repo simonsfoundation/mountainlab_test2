@@ -247,7 +247,6 @@ void MVHistogramGrid::slot_histogram_view_clicked(Qt::KeyboardModifiers modifier
     if (d->m_pair_mode) {
         int k1 = sender()->property("k1").toInt();
         int k2 = sender()->property("k2").toInt();
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         mvContext()->clickClusterPair(ClusterPair(k1, k2), modifiers);
     }
     else {

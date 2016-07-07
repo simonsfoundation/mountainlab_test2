@@ -112,6 +112,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     registerViewFactory(new MVSelectedAutoCorrelogramsFactory(context, this));
     registerViewFactory(new MVCrossCorrelogramsFactory(context, this));
     registerViewFactory(new MVMatrixOfCrossCorrelogramsFactory(context, this));
+    registerViewFactory(new MVSelectedCrossCorrelogramsFactory(context, this));
     registerViewFactory(new MVTimeSeriesDataFactory(context, this));
     registerViewFactory(new MVClipsFactory(context, this));
     registerViewFactory(new MVPCAFeaturesFactory(context, this));
