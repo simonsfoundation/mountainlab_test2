@@ -139,10 +139,20 @@ SOURCES += \
     processors/mv_discrimhist_sherpa.cpp \
     processors/normalize_channels_processor.cpp \
     processors/normalize_channels.cpp
+!macx {
 SOURCES_NOCXX11 += \ #see below
     isosplit/isosplit2.cpp \
     isosplit/isocut.cpp \
     isosplit/jisotonic.cpp
+SOURCES_NOCXX11 += utils/eigenvalue_decomposition.cpp #see below
+}
+else {
+SOURCES += \ #see below
+    isosplit/isosplit2.cpp \
+    isosplit/isocut.cpp \
+    isosplit/jisotonic.cpp
+SOURCES += utils/eigenvalue_decomposition.cpp #see below
+}
 
 INCLUDEPATH += ../../common/commandlineparams
 VPATH += ../../common/commandlineparams
@@ -166,7 +176,7 @@ SOURCES += utils/get_sort_indices.cpp \
     utils/get_pca_features.cpp \
     utils/compute_templates_0.cpp \
     utils/msmisc.cpp
-SOURCES_NOCXX11 += utils/eigenvalue_decomposition.cpp #see below
+
 
 DEFINES += USE_SSE2
 INCLUDEPATH += ../../common/mda
