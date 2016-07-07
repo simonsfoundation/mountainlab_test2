@@ -18,7 +18,8 @@ MOC_DIR=../build
 TARGET = mountainview
 TEMPLATE = app
 
-SOURCES += mountainviewmain.cpp
+SOURCES += mountainviewmain.cpp \
+    guides/individualmergedecisionpage.cpp
 
 INCLUDEPATH += core
 VPATH += core
@@ -27,7 +28,8 @@ closemehandler.h flowlayout.h imagesavedialog.h \
 mountainprocessrunner.h mvabstractcontextmenuhandler.h \
 mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
 mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
-mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h
+mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
+    guides/individualmergedecisionpage.h
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
@@ -39,8 +41,8 @@ mvcontext.cpp tabber.cpp tabberframe.cpp taskprogressview.cpp actionfactory.cpp
 HEADERS += computationthread.h
 SOURCES += computationthread.cpp
 
-HEADERS += guides/sherpav1.h
-SOURCES += guides/sherpav1.cpp
+HEADERS += guides/sherpav1.h guides/sherpav2.h
+SOURCES += guides/sherpav1.cpp guides/sherpav2.cpp
 
 INCLUDEPATH += misc
 VPATH += misc

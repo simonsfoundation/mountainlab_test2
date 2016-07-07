@@ -59,7 +59,15 @@ QList<QAction*> MVClusterPairContextMenuHandler::actions(const QMimeData& md)
 
     //CROSS-CORRELOGRAMS
     {
-        /// TODO (HIGH) implement cross-correlograms for selected pairs
+        {
+            QAction* action = new QAction("Cross-correlograms", 0);
+            action->setToolTip("Open cross-correlograms for these pairs");
+            action->setEnabled(cluster_pairs.count() >= 1);
+            connect(action, &QAction::triggered, [mw]() {
+                mw->openView("open-selected-cross-correlograms");
+            });
+            actions << action;
+        }
     }
 
     //Separator

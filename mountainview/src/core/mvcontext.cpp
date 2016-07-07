@@ -177,10 +177,10 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     d->m_cluster_attributes = object_to_cluster_attributes(X["cluster_attributes"].toObject());
     d->m_cluster_pair_attributes = object_to_cluster_pair_attributes(X["cluster_pair_attributes"].toObject());
     d->m_timeseries = object_to_timeseries_map(X["timeseries"].toObject());
-    d->m_current_timeseries_name = X["current_timeseries_name"].toString();
-    d->m_firings = DiskReadMda(X["firings"].toString());
+    this->setCurrentTimeseriesName(X["current_timeseries_name"].toString());
+    this->setFirings(DiskReadMda(X["firings"].toString()));
     if (X.contains("event_filter")) {
-        d->m_event_filter = MVEventFilter::fromJsonObject(X["event_filter"].toObject());
+        this->setEventFilter(MVEventFilter::fromJsonObject(X["event_filter"].toObject()));
     }
     d->m_sample_rate = X["samplerate"].toDouble();
     if (X.contains("options")) {
@@ -188,8 +188,24 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     }
     d->m_mlproxy_url = X["mlproxy_url"].toString();
     if (X.contains("visibility_rule")) {
-        d->m_visibility_rule = ClusterVisibilityRule::fromJsonObject(X["visibility_rule"].toObject());
+        this->setClusterVisibilityRule(ClusterVisibilityRule::fromJsonObject(X["visibility_rule"].toObject()));
     }
+    emit this->currentTimeseriesChanged();
+    emit this->timeseriesNamesChanged();
+    emit this->firingsChanged();
+    emit this->eventFilterChanged();
+    emit this->filteredFiringsChanged();
+    emit this->clusterMergeChanged();
+    emit this->clusterAttributesChanged(0);
+    emit this->currentEventChanged();
+    emit this->currentClusterChanged();
+    emit this->selectedClustersChanged();
+    emit this->currentTimepointChanged();
+    emit this->currentTimeRangeChanged();
+    emit this->optionChanged("");
+    emit this->clusterVisibilityChanged();
+    emit this->selectedClusterPairsChanged();
+    emit this->clusterPairAttributesChanged(ClusterPair(0, 0));
 }
 
 MVEvent MVContext::currentEvent() const

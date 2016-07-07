@@ -17,5 +17,10 @@
         <file>guides/sherpav1/page_1.txt</file>
         <file>guides/sherpav1/page_2.txt</file>
         <file>guides/sherpav1/page_3.txt</file>
+        <file>guides/sherpav2/page_3.txt</file>
+        <file>guides/sherpav2/page_1.txt</file>
+        <file>guides/sherpav2/page_2.txt</file>
+        <file>guides/sherpav2/page_4.txt</file>
+        <file>guides/sherpav2/page_5.txt</file>
     </qresource>
 </RCC>

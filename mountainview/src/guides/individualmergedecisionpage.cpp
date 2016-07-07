@@ -1,0 +1,154 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+** Created: 7/7/2016
+*******************************************************/
+
+#include "individualmergedecisionpage.h"
+
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
+#include <flowlayout.h>
+#include "textfile.h"
+
+class IndividualMergeDecisionPagePrivate {
+public:
+    IndividualMergeDecisionPage* q;
+    MVContext* m_context;
+    MVMainWindow* m_main_window;
+
+    QLineEdit* m_pair_edit;
+    QAbstractButton* m_previous_button;
+    QAbstractButton* m_next_button;
+
+    QList<ClusterPair> m_cluster_pairs;
+    int m_current_cluster_pair_index = -1;
+
+    void update_controls();
+
+    QAbstractButton* make_select_and_open_view_button(QString text, QString view_id, QString container_name);
+};
+
+IndividualMergeDecisionPage::IndividualMergeDecisionPage(MVContext* context, MVMainWindow* mw)
+{
+    d = new IndividualMergeDecisionPagePrivate;
+    d->q = this;
+    d->m_context = context;
+    d->m_main_window = mw;
+
+    this->setTitle("Individual merge decisions");
+
+    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_individual_merge_decisions.txt"));
+    label->setWordWrap(true);
+
+    QHBoxLayout* hlayout = new QHBoxLayout;
+    hlayout->addStretch();
+    {
+        d->m_pair_edit = new QLineEdit;
+        d->m_pair_edit->setReadOnly(true);
+        hlayout->addWidget(d->m_pair_edit);
+    }
+    {
+        QPushButton* B = new QPushButton("Previous pair");
+        QObject::connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_goto_previous_pair()));
+        B->setEnabled(false);
+        hlayout->addWidget(B);
+        d->m_previous_button = B;
+    }
+    {
+        QPushButton* B = new QPushButton("Next pair");
+        QObject::connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_goto_next_pair()));
+        B->setEnabled(false);
+        hlayout->addWidget(B);
+        d->m_next_button = B;
+    }
+    hlayout->addStretch();
+
+    QVBoxLayout* layout = new QVBoxLayout;
+    layout->addWidget(label);
+    layout->addLayout(hlayout);
+    this->setLayout(layout);
+
+    FlowLayout* flayout = new FlowLayout;
+    flayout->addWidget(d->make_select_and_open_view_button("Spike spray", "open-spike-spray", "south"));
+    layout->addLayout(flayout);
+
+    QObject::connect(d->m_context, SIGNAL(clusterPairAttributesChanged(ClusterPair)), this, SLOT(slot_cluster_pair_attributes_changed()));
+    slot_cluster_pair_attributes_changed();
+}
+
+IndividualMergeDecisionPage::~IndividualMergeDecisionPage()
+{
+    delete d;
+}
+
+void IndividualMergeDecisionPage::slot_goto_previous_pair()
+{
+    if (d->m_current_cluster_pair_index <= 0)
+        return;
+    d->m_current_cluster_pair_index--;
+    d->update_controls();
+}
+
+void IndividualMergeDecisionPage::slot_goto_next_pair()
+{
+    if (d->m_current_cluster_pair_index >= d->m_cluster_pairs.count())
+        return;
+    d->m_current_cluster_pair_index++;
+    d->update_controls();
+}
+
+void IndividualMergeDecisionPage::slot_button_clicked()
+{
+    QString action = sender()->property("action").toString();
+    if (action == "open_view") {
+        d->m_main_window->setCurrentContainerName(sender()->property("container-name").toString());
+        d->m_main_window->openView(sender()->property("view-id").toString());
+    }
+    else if (action == "select_and_open_view") {
+        d->m_context->clickClusterPair(d->m_cluster_pairs.value(d->m_current_cluster_pair_index), Qt::NoModifier);
+        d->m_main_window->setCurrentContainerName(sender()->property("container-name").toString());
+        d->m_main_window->openView(sender()->property("view-id").toString());
+    }
+}
+
+void IndividualMergeDecisionPage::slot_cluster_pair_attributes_changed()
+{
+    QList<ClusterPair> pairs;
+    QList<ClusterPair> keys = d->m_context->clusterPairAttributesKeys();
+    foreach (ClusterPair key, keys) {
+        if (d->m_context->clusterPairTags(key).contains("to_merge")) {
+            pairs << key;
+        }
+    }
+    qSort(pairs);
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << keys.count() << pairs.count() << "@@@@@@@@@@@@@@@@@@@@@@@@@@";
+    d->m_cluster_pairs = pairs;
+    d->m_current_cluster_pair_index = -1;
+    d->update_controls();
+}
+
+void IndividualMergeDecisionPagePrivate::update_controls()
+{
+    ClusterPair pair = m_cluster_pairs.value(m_current_cluster_pair_index);
+    if ((pair.k1) && (pair.k2)) {
+        m_pair_edit->setText(QString("%1/%2").arg(pair.k1).arg(pair.k2));
+    }
+    else {
+        m_pair_edit->setText("");
+    }
+    m_previous_button->setEnabled(m_current_cluster_pair_index - 1 >= 0);
+    m_next_button->setEnabled(m_current_cluster_pair_index + 1 < m_cluster_pairs.count());
+}
+
+QAbstractButton* IndividualMergeDecisionPagePrivate::make_select_and_open_view_button(QString text, QString view_id, QString container_name)
+{
+    QPushButton* B = new QPushButton(text);
+    B->setProperty("action", "select_and_open_view");
+    B->setProperty("view-id", view_id);
+    B->setProperty("container-name", container_name);
+    QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_button_clicked()));
+    return B;
+}

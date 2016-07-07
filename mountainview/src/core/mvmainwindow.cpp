@@ -57,6 +57,7 @@
 #include <QToolButton>
 #include <QMenu>
 #include <mvdiscrimhistview_sherpa.h>
+#include <sherpav2.h>
 #include "textfile.h"
 #include "clusterannotationguide.h"
 
@@ -85,6 +86,7 @@ public:
 
     ClusterAnnotationGuide* m_cluster_annotation_guide;
     SherpaV1* m_sherpa_v1;
+    SherpaV2* m_sherpa_v2;
 
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
@@ -129,6 +131,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     QToolBar* main_toolbar = new QToolBar;
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_context, this);
     d->m_sherpa_v1 = new SherpaV1(d->m_context, this);
+    d->m_sherpa_v2 = new SherpaV2(d->m_context, this);
     {
         QMenu* menu = new QMenu;
         QToolButton* B = new QToolButton();
@@ -137,6 +140,12 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
         B->setMenu(menu);
         B->setPopupMode(QToolButton::InstantPopup);
         main_toolbar->addWidget(B);
+        {
+            QAction* A = new QAction("Sherpa version 2", this);
+            menu->addAction(A);
+            QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_sherpa_v2()));
+        }
+        /*
         {
             QAction* A = new QAction("Sherpa version 1", this);
             menu->addAction(A);
@@ -147,6 +156,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
             menu->addAction(A);
             QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_cluster_annotation_guide()));
         }
+        */
     }
 
     d->m_control_panel = new MVControlPanel2(context, this);
@@ -188,7 +198,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     QVBoxLayout* vlayout = new QVBoxLayout;
     vlayout->setSpacing(0);
     vlayout->setMargin(0);
-    //vlayout->addWidget(main_toolbar); //for now
+    vlayout->addWidget(main_toolbar);
     vlayout->addWidget(hsplitter);
     vlayout->addWidget(status_bar);
     this->setLayout(vlayout);
@@ -366,6 +376,15 @@ void MVMainWindow::slot_sherpa_v1()
     this->closeAllViews();
     d->m_sherpa_v1->show();
     d->m_sherpa_v1->raise();
+}
+
+void MVMainWindow::slot_sherpa_v2()
+{
+    this->closeAllViews();
+    d->m_sherpa_v2->show();
+    d->m_sherpa_v2->raise();
+    //the following causes widget to break
+    //d->m_sherpa_v2->setWindowFlags(d->m_sherpa_v2->windowFlags()|Qt::WindowStaysOnTopHint);
 }
 
 void MVMainWindow::slot_open_view(QObject* o)
