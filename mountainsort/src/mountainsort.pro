@@ -76,7 +76,9 @@ HEADERS += \
     processors/mv_discrimhist_processor.h \
     processors/mv_discrimhist.h \
     processors/mv_discrimhist_sherpa_processor.h \
-    processors/mv_discrimhist_sherpa.h
+    processors/mv_discrimhist_sherpa.h \
+    processors/normalize_channels_processor.h \
+    processors/normalize_channels.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -134,7 +136,9 @@ SOURCES += \
     processors/mv_discrimhist_processor.cpp \
     processors/mv_discrimhist.cpp \
     processors/mv_discrimhist_sherpa_processor.cpp \
-    processors/mv_discrimhist_sherpa.cpp
+    processors/mv_discrimhist_sherpa.cpp \
+    processors/normalize_channels_processor.cpp \
+    processors/normalize_channels.cpp
 SOURCES_NOCXX11 += \ #see below
     isosplit/isosplit2.cpp \
     isosplit/isocut.cpp \

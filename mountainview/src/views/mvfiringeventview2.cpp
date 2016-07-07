@@ -153,7 +153,8 @@ void MVFiringEventView2::onCalculationFinished()
 
     {
         QSet<int> X;
-        foreach (int k, d->m_labels_to_use) {
+        foreach(int k, d->m_labels_to_use)
+        {
             X.insert(this->mvContext()->clusterMerge().representativeLabel(k));
         }
         QList<int> list = X.toList();
@@ -330,7 +331,7 @@ MVFiringEventsFactory::MVFiringEventsFactory(MVContext* context, QObject* parent
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -389,7 +390,8 @@ void FiringEventAxisLayer::paint(QPainter* painter)
 FiringEventContentLayer::FiringEventContentLayer()
 {
     calculator = new FiringEventImageCalculator;
-    connect(calculator, SIGNAL(finished()), this, SLOT(slot_calculator_finished()));
+    //Direct connection appears to be important here
+    connect(calculator, SIGNAL(finished()), this, SLOT(slot_calculator_finished()), Qt::DirectConnection);
 }
 
 FiringEventContentLayer::~FiringEventContentLayer()
@@ -409,17 +411,19 @@ void FiringEventContentLayer::setWindowSize(QSize size)
     PaintLayer::setWindowSize(size);
 }
 
+/*
 void FiringEventContentLayer::updateImage()
 {
     calculator->requestInterruption();
     calculator->wait();
     calculator->start();
 }
+*/
 
 void FiringEventContentLayer::slot_calculator_finished()
 {
     if (this->calculator->isRunning()) {
-        // Calculator still running even though we are in slot_caculator_finished (think about how this happens)
+        qWarning() << "Calculator still running even though we are in slot_caculator_finished";
         return;
     }
     if (this->calculator->isInterruptionRequested())
@@ -448,7 +452,9 @@ void FiringEventImageCalculator::run()
         double amp0 = amplitudes.value(i);
         double xpix = time2xpix(t0);
         double ypix = val2ypix(amp0);
-        painter.drawEllipse(xpix, ypix, 3, 3);
+        if ((xpix >= 0) && (ypix >= 0)) {
+            painter.drawEllipse(xpix, ypix, 3, 3);
+        }
     }
 }
 
@@ -471,6 +477,8 @@ double FiringEventImageCalculator::time2xpix(double t)
         return 0;
 
     double xpct = (t - view_t1) / (view_t2 - view_t1);
+    if ((xpct < 0) || (xpct > 1))
+        return -1;
     double px = content_geometry.x() + xpct * content_geometry.width();
     return px;
 }

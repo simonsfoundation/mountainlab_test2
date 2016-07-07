@@ -17,6 +17,7 @@
 
 /// TODO: (MEDIUM) spike spray should respond to mouse wheel and show current position with marker
 /// TODO: (MEDIUM) much more responsive rendering of spike spray
+/// TODO: (HIGH) three panels in spikespray -- individual and overlapping
 
 class MVSpikeSprayComputer {
 public:
@@ -151,8 +152,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
         if (counts[k]) {
             alphas[k] = 255 / counts[k];
             alphas[k] = qMin(255, qMax(5, alphas[k]));
-        }
-        else
+        } else
             alphas[k] = 255;
     }
 
@@ -198,12 +198,10 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_amplitude_factor *= 1.2;
         update();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         d->m_amplitude_factor /= 1.2;
         update();
-    }
-    else {
+    } else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -221,8 +219,7 @@ void MVSpikeSprayViewPrivate::render_clip(QPainter* painter, long M, long T, dou
             QPointF pt = coord2pix(m, t, val);
             if (t == 0) {
                 path.moveTo(pt);
-            }
-            else {
+            } else {
                 path.lineTo(pt);
             }
         }
@@ -264,7 +261,8 @@ void MVSpikeSprayComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach (int x, labels_to_use) {
+        foreach(int x, labels_to_use)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -340,7 +338,7 @@ MVSpikeSprayFactory::MVSpikeSprayFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
