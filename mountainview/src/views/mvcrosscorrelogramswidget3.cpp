@@ -129,11 +129,22 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
             HV->setData(d->m_correlograms[ii].data);
             HV->setColors(mvContext()->colors());
             HV->setBins(bin_min, bin_max, num_bins);
-            QString title0 = QString("%1/%2").arg(d->m_correlograms[ii].k1).arg(d->m_correlograms[ii].k2);
+            QString title0;
+            QString caption0;
+            if (this->pairMode()) {
+                title0 = QString("%1/%2").arg(k1).arg(k2);
+                caption0 = this->mvContext()->clusterPairTagsList(ClusterPair(k1, k2)).join(", ");
+            }
+            else {
+                title0 = QString("%1").arg(k1);
+                caption0 = this->mvContext()->clusterTagsList(k1).join(", ");
+            }
             HV->setTitle(title0);
+            HV->setCaption(caption0);
             HV->setProperty("k", d->m_correlograms[ii].k1);
             HV->setProperty("k1", d->m_correlograms[ii].k1);
             HV->setProperty("k2", d->m_correlograms[ii].k2);
+
             histogram_views << HV;
         }
     }
@@ -297,6 +308,7 @@ QString MVAutoCorrelogramsFactory::title() const
 
 MVAbstractView* MVAutoCorrelogramsFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
     CrossCorrelogramOptions3 opts;
     opts.mode = All_Auto_Correlograms3;
@@ -329,6 +341,7 @@ QString MVSelectedAutoCorrelogramsFactory::title() const
 
 MVAbstractView* MVSelectedAutoCorrelogramsFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())
@@ -373,6 +386,7 @@ QString MVCrossCorrelogramsFactory::title() const
 
 MVAbstractView* MVCrossCorrelogramsFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.count() != 1)
@@ -416,6 +430,7 @@ QString MVMatrixOfCrossCorrelogramsFactory::title() const
 
 MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())

@@ -205,11 +205,13 @@ void ContentPane::initAnimations()
 
 void ContentPane::headerClicked(ATTR_UNUSED QPoint pos)
 {
+    Q_UNUSED(pos)
     emit this->clicked();
 }
 
 void ContentPane::paintEvent(ATTR_UNUSED QPaintEvent* event)
 {
+    Q_UNUSED(event)
     QStyleOption o;
     o.initFrom(this);
     QPainter p(this);

@@ -33,10 +33,9 @@
 
 // TODO: No need to use a namespace for our constants as we are using them only
 // in this class
-namespace ClickableFrame_constants
-{
-const char *const CARRET_ICON_CLOSED = ":/qAccordionIcons/caret-right.png"; /**< Qt qrc "path" for the closed icon */
-const char *const CARRET_ICON_OPENED = ":/qAccordionIcons/caret-bottom.png"; /**< Qt qrc "path" for the opened icon */
+namespace ClickableFrame_constants {
+const char* const CARRET_ICON_CLOSED = ":/qAccordionIcons/caret-right.png"; /**< Qt qrc "path" for the closed icon */
+const char* const CARRET_ICON_OPENED = ":/qAccordionIcons/caret-bottom.png"; /**< Qt qrc "path" for the opened icon */
 }
 
 /**
@@ -45,8 +44,7 @@ const char *const CARRET_ICON_OPENED = ":/qAccordionIcons/caret-bottom.png"; /**
  * This class represents a clickable QFrame. It is used by a ContentPane. The class
  * is used internally.
  */
-class QACCORDION_EXPORT ClickableFrame : public QFrame
-{
+class QACCORDION_EXPORT ClickableFrame : public QFrame {
 
     Q_OBJECT
 public:
@@ -56,8 +54,8 @@ public:
      * @param parent Parent widget or 0
      * @param f Qt::WindowFlags
      */
-    explicit ClickableFrame(QString header, QWidget *parent = 0,
-                            Qt::WindowFlags f = 0);
+    explicit ClickableFrame(QString header, QWidget* parent = 0,
+        Qt::WindowFlags f = 0);
 
     // TODO: Expose this function to the ContentPane api
     /**
@@ -124,8 +122,8 @@ public slots:
     void setCaretPixmap(QString pixmapPath);
 
 private:
-    QLabel *caretLabel;
-    QLabel *nameLabel;
+    QLabel* caretLabel;
+    QLabel* nameLabel;
 
     QString hoverStylesheet;
     QString normalStylesheet;
@@ -138,23 +136,22 @@ private:
     void initFrame();
 
 protected:
-
     /**
      * @brief Reimplemented function to QMouseEvents
      * @param event
      */
-    void mousePressEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent* event);
 
     /**
      * @brief Enter event for mouse over effects.
      * @param event
      */
-    void enterEvent(QEvent *event);
+    void enterEvent(QEvent* event);
     /**
      * @brief Leave effect for mouse over effects.
      * @param event
      */
-    void leaveEvent(QEvent *event);
+    void leaveEvent(QEvent* event);
 };
 
 #endif // CLICKABLEFRAME_H

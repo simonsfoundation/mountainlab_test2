@@ -16,9 +16,10 @@
 
 #include "qAccordion/clickableframe.h"
 
-ClickableFrame::ClickableFrame(QString header, QWidget *parent,
-                               Qt::WindowFlags f)
-    : header(header), QFrame(parent, f)
+ClickableFrame::ClickableFrame(QString header, QWidget* parent,
+    Qt::WindowFlags f)
+    : header(header)
+    , QFrame(parent, f)
 {
     this->setAttribute(Qt::WA_Hover, true);
     this->clickable = true;
@@ -35,7 +36,8 @@ void ClickableFrame::setClickable(bool status)
     this->clickable = status;
     if (status) {
         this->setCursor(Qt::PointingHandCursor);
-    } else {
+    }
+    else {
         this->setCursor(Qt::ForbiddenCursor);
     }
 }
@@ -73,7 +75,7 @@ void ClickableFrame::setCaretPixmap(QString pixmapPath)
 void ClickableFrame::initFrame()
 {
     this->setSizePolicy(QSizePolicy::Policy::Preferred,
-                        QSizePolicy::Policy::Fixed);
+        QSizePolicy::Policy::Fixed);
     this->setLayout(new QHBoxLayout());
 
     this->caretLabel = new QLabel();
@@ -84,30 +86,33 @@ void ClickableFrame::initFrame()
     nameLabel->setText(this->header);
     this->layout()->addWidget(nameLabel);
 
-    dynamic_cast<QHBoxLayout *>(this->layout())->addStretch();
+    dynamic_cast<QHBoxLayout*>(this->layout())->addStretch();
 
     this->setStyleSheet(this->normalStylesheet);
 }
 
-void ClickableFrame::mousePressEvent(QMouseEvent *event)
+void ClickableFrame::mousePressEvent(QMouseEvent* event)
 {
     if (this->clickable) {
         emit this->singleClick(event->pos());
         event->accept();
-    } else {
+    }
+    else {
         event->ignore();
     }
 }
 
-void ClickableFrame::enterEvent(ATTR_UNUSED QEvent *event)
+void ClickableFrame::enterEvent(ATTR_UNUSED QEvent* event)
 {
+    Q_UNUSED(event)
     if (this->clickable) {
         this->setStyleSheet(this->hoverStylesheet);
     }
 }
 
-void ClickableFrame::leaveEvent(ATTR_UNUSED QEvent *event)
+void ClickableFrame::leaveEvent(ATTR_UNUSED QEvent* event)
 {
+    Q_UNUSED(event)
     if (this->clickable) {
         this->setStyleSheet(this->normalStylesheet);
     }

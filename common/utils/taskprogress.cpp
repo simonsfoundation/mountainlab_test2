@@ -942,6 +942,7 @@ QString TaskProgressModel::singleLog(const TaskProgressLogMessage& msg, const QS
 
 void TaskProgressModel::_q_added(TaskProgressAgent* a)
 {
+    Q_UNUSED(a)
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
     endInsertRows();
 }

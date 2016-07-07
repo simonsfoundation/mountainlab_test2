@@ -236,6 +236,7 @@ QString MVClipsFactory::title() const
 
 MVAbstractView* MVClipsFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     qSort(ks);
     if (ks.count() == 0) {

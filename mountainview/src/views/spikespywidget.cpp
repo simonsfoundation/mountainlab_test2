@@ -76,6 +76,7 @@ SpikeSpyWidget::~SpikeSpyWidget()
 
 void SpikeSpyWidget::addView(const SpikeSpyViewData& data)
 {
+    Q_UNUSED(data)
     MVTimeSeriesView2* W = new MVTimeSeriesView2(d->m_context);
     /// TODO restore functionality of spikespywidget
     /*

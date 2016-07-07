@@ -1236,6 +1236,7 @@ QString MVClusterDetailsFactory::title() const
 
 MVAbstractView* MVClusterDetailsFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     MVClusterDetailWidget* X = new MVClusterDetailWidget(mvContext());
     //connect(X, SIGNAL(signalTemplateActivated()), this, SLOT(openClipsForTemplate()));
     //connect(X, SIGNAL(signalTemplateActivated()), X, SIGNAL(signalClusterContextMenu()));

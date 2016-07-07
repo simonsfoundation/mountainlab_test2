@@ -29,6 +29,7 @@ public:
     void setFillColor(const QColor& col); // The color for filling the histogram bars
     void setLineColor(const QColor& col); // The edge color for the bars
     void setTitle(const QString& title);
+    void setCaption(const QString& caption);
     void setColors(const QMap<QString, QColor>& colors); // Controls background and highlighting colors. For consistent app look.
 
     MVRange xRange() const;
@@ -51,7 +52,7 @@ protected:
 signals:
     void clicked(Qt::KeyboardModifiers modifiers);
     void rightClicked(Qt::KeyboardModifiers modifiers);
-    void activated(const QPoint &);
+    void activated(const QPoint&);
 
     void signalExportHistogramMatrixImage();
 

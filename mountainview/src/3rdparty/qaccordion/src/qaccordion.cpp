@@ -405,6 +405,7 @@ void QAccordion::numberOfPanesChanged(int number)
 
 void QAccordion::paintEvent(ATTR_UNUSED QPaintEvent* event)
 {
+    Q_UNUSED(event)
     QStyleOption o;
     o.initFrom(this);
     QPainter p(this);

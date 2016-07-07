@@ -69,7 +69,7 @@ protected:
     void recalculateOn(QObject*, const char* signal, bool suggest_only = true);
 
     void requestContextMenu(const QMimeData& md, const QPoint& pos);
-    virtual void prepareMimeData(QMimeData &mimeData, const QPoint &pos);
+    virtual void prepareMimeData(QMimeData& mimeData, const QPoint& pos);
 
     void contextMenuEvent(QContextMenuEvent* evt);
 private slots:

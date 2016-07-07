@@ -70,14 +70,15 @@ private:
 };
 
 struct ClusterPair {
-    ClusterPair(int k1_in = 0, int k2_in = 0)
-    {
-        k1 = k1_in;
-        k2 = k2_in;
-    }
+    ClusterPair(int k1_in = 0, int k2_in = 0);
+    ClusterPair(const ClusterPair& other);
 
     int k1, k2;
+    void operator=(const ClusterPair& other);
     bool operator==(const ClusterPair& other) const;
+    bool operator<(const ClusterPair& other) const;
+    QString toString() const;
+    static ClusterPair fromString(const QString& str);
 };
 uint qHash(const ClusterPair& pair);
 
@@ -97,13 +98,25 @@ public:
 
     /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;
+    void setClusterMerge(const ClusterMerge& CM);
+
+    /////////////////////////////////////////////////
     QJsonObject clusterAttributes(int num) const;
     QList<int> clusterAttributesKeys() const;
-    QSet<QString> clusterTags(int num) const; //part of attributes
-    QSet<QString> allClusterTags() const;
-    void setClusterMerge(const ClusterMerge& CM);
     void setClusterAttributes(int num, const QJsonObject& obj);
+    QSet<QString> clusterTags(int num) const; //part of attributes
+    QList<QString> clusterTagsList(int num) const;
+    QSet<QString> allClusterTags() const;
     void setClusterTags(int num, const QSet<QString>& tags); //part of attributes
+
+    /////////////////////////////////////////////////
+    QJsonObject clusterPairAttributes(const ClusterPair& pair) const;
+    QList<ClusterPair> clusterPairAttributesKeys() const;
+    void setClusterPairAttributes(const ClusterPair& pair, const QJsonObject& obj);
+    QSet<QString> clusterPairTags(const ClusterPair& pair) const; //part of attributes
+    QList<QString> clusterPairTagsList(const ClusterPair& pair) const;
+    QSet<QString> allClusterPairTags() const;
+    void setClusterPairTags(const ClusterPair& pair, const QSet<QString>& tags); //part of attributes
 
     /////////////////////////////////////////////////
     ClusterVisibilityRule visibilityRule() const;
@@ -186,6 +199,7 @@ signals:
     void optionChanged(QString name);
     void clusterVisibilityChanged();
     void selectedClusterPairsChanged();
+    void clusterPairAttributesChanged(ClusterPair pair);
 
 private slots:
     void slot_option_changed(QString name);

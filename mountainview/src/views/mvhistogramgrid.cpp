@@ -206,18 +206,39 @@ QList<HistogramView*> MVHistogramGrid::histogramViews()
     return d->m_histogram_views;
 }
 
+QStringList cluster_pair_set_to_string_list(const QSet<ClusterPair> &pairs) {
+    QStringList ret;
+    QList<ClusterPair> list=pairs.toList();
+    qSort(list);
+    foreach (ClusterPair pair, list) {
+        ret << pair.toString();
+    }
+    return ret;
+}
+
 void MVHistogramGrid::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
 {
     QByteArray ba;
     QDataStream ds(&ba, QIODevice::WriteOnly);
-    ds << mvContext()->selectedClusters();
-    mimeData.setData("application/x-mv-cluster", ba); // selected cluster data
+    if (this->pairMode()) {
+        ds << cluster_pair_set_to_string_list(mvContext()->selectedClusterPairs());
+        mimeData.setData("application/x-mv-cluster-pairs", ba); // selected cluster pairs data
+    }
+    else {
+        ds << mvContext()->selectedClusters();
+        mimeData.setData("application/x-mv-cluster", ba); // selected cluster data
+    }
     MVAbstractView::prepareMimeData(mimeData, pos);
 }
 
 void MVHistogramGrid::setPairMode(bool val)
 {
     d->m_pair_mode = val;
+}
+
+bool MVHistogramGrid::pairMode() const
+{
+    return d->m_pair_mode;
 }
 
 void MVHistogramGrid::slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers)

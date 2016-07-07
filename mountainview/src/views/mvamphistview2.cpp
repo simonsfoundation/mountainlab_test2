@@ -170,8 +170,10 @@ void MVAmpHistView2Private::set_views()
             HV->setColors(q->mvContext()->colors());
             //HV->autoSetBins(50);
             HV->setBins(bin_min, bin_max, num_bins);
-            QString title0 = QString("%1").arg(m_histograms[ii].k);
+            QString title0 = QString("%1").arg(k0);
+            QString caption0 = QString("%1").arg(q->mvContext()->clusterTagsList(k0).join(", "));
             HV->setTitle(title0);
+            HV->setCaption(caption0);
             HV->setDrawVerticalAxisAtZero(true);
             HV->setXRange(MVRange(-max00, max00));
             HV->autoCenterXRange();
@@ -205,6 +207,7 @@ QString MVAmplitudeHistogramsFactory::title() const
 
 MVAbstractView* MVAmplitudeHistogramsFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     MVAmpHistView2* X = new MVAmpHistView2(mvContext());
     QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_amplitude_histogram_activated()));
     return X;

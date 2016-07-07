@@ -153,8 +153,7 @@ void MVFiringEventView2::onCalculationFinished()
 
     {
         QSet<int> X;
-        foreach(int k, d->m_labels_to_use)
-        {
+        foreach (int k, d->m_labels_to_use) {
             X.insert(this->mvContext()->clusterMerge().representativeLabel(k));
         }
         QList<int> list = X.toList();
@@ -331,7 +330,7 @@ MVFiringEventsFactory::MVFiringEventsFactory(MVContext* context, QObject* parent
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -352,6 +351,7 @@ QString MVFiringEventsFactory::title() const
 
 MVAbstractView* MVFiringEventsFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())
         ks = mvContext()->visibilityRule().subset.toList();

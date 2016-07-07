@@ -138,8 +138,7 @@ void MVDiscrimHistViewComputer::compute()
     MPR.setProcessorName("mv_discrimhist");
 
     QStringList clusters_strlist;
-    foreach(int cluster, cluster_numbers)
-    {
+    foreach (int cluster, cluster_numbers) {
         clusters_strlist << QString("%1").arg(cluster);
     }
 
@@ -202,7 +201,8 @@ void MVDiscrimHistView::wheelEvent(QWheelEvent* evt)
     double zoom_factor = 1;
     if (evt->delta() > 0) {
         zoom_factor *= 1.2;
-    } else if (evt->delta() < 0) {
+    }
+    else if (evt->delta() < 0) {
         zoom_factor /= 1.2;
     }
     QList<HistogramView*> views = this->histogramViews(); //inherited
@@ -234,7 +234,9 @@ void MVDiscrimHistViewPrivate::set_views()
             //HV->autoSetBins(50);
             HV->setBins(bin_min, bin_max, num_bins);
             QString title0 = QString("%1/%2").arg(k1).arg(k2);
+            QString caption0 = QString("%1").arg(q->mvContext()->clusterPairTagsList(ClusterPair(k1,k2)).join(", "));
             HV->setTitle(title0);
+            HV->setCaption(caption0);
             HV->setDrawVerticalAxisAtZero(true);
             HV->setXRange(MVRange(-max00, max00));
             HV->autoCenterXRange();
@@ -251,7 +253,7 @@ MVDiscrimHistFactory::MVDiscrimHistFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -272,6 +274,7 @@ QString MVDiscrimHistFactory::title() const
 
 MVAbstractView* MVDiscrimHistFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     MVDiscrimHistView* X = new MVDiscrimHistView(mvContext());
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())

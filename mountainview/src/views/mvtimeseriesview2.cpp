@@ -300,6 +300,7 @@ QString MVTimeSeriesDataFactory::title() const
 
 MVAbstractView* MVTimeSeriesDataFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     MVTimeSeriesView2* X = new MVTimeSeriesView2(mvContext());
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     X->setLabelsToView(ks.toSet());

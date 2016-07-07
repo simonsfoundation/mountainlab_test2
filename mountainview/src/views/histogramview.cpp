@@ -23,6 +23,7 @@ public:
     int m_hovered_bin_index;
     int m_margin_left, m_margin_right, m_margin_top, m_margin_bottom;
     QString m_title;
+    QString m_caption;
     QMap<QString, QColor> m_colors;
     bool m_hovered;
     bool m_current;
@@ -51,7 +52,8 @@ HistogramView::HistogramView(QWidget* parent)
     d->m_max_bin_count = 0;
     d->m_num_bins = 0;
     d->m_hovered_bin_index = -1;
-    d->m_margin_left = d->m_margin_right = d->m_margin_top = d->m_margin_bottom = 5;
+    d->m_margin_left = d->m_margin_right = d->m_margin_top = 5;
+    d->m_margin_bottom = 14;
     d->m_hovered = false;
     d->m_current = false;
     d->m_selected = false;
@@ -159,6 +161,12 @@ void HistogramView::setLineColor(const QColor& col)
 void HistogramView::setTitle(const QString& title)
 {
     d->m_title = title;
+    update();
+}
+
+void HistogramView::setCaption(const QString& caption)
+{
+    d->m_caption = caption;
     update();
 }
 
@@ -577,5 +585,15 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
         painter.setFont(font);
         painter.setPen(QColor(100, 60, 60));
         painter.drawText(R, m_title, Qt::AlignLeft | Qt::AlignTop);
+    }
+    if (!m_caption.isEmpty()) {
+        int text_height = 12;
+        QRect R(0, H - m_margin_bottom, W, m_margin_bottom);
+        QFont font = painter.font();
+        font.setFamily("Arial");
+        font.setPixelSize(text_height);
+        painter.setFont(font);
+        painter.setPen(QColor(100, 60, 60));
+        painter.drawText(R, m_caption, Qt::AlignCenter | Qt::AlignVCenter);
     }
 }

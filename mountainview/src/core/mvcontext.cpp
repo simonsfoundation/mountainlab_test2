@@ -23,6 +23,7 @@ public:
     MVContext* q;
     ClusterMerge m_cluster_merge;
     QMap<int, QJsonObject> m_cluster_attributes;
+    QMap<ClusterPair, QJsonObject> m_cluster_pair_attributes;
     MVEvent m_current_event;
     int m_current_cluster;
     QList<int> m_selected_clusters;
@@ -78,6 +79,7 @@ void MVContext::clear()
 {
     d->m_cluster_merge.clear();
     d->m_cluster_attributes.clear();
+    d->m_cluster_pair_attributes.clear();
     d->m_timeseries.clear();
     d->m_firings = DiskReadMda();
     d->m_options.clear();
@@ -99,6 +101,26 @@ QMap<int, QJsonObject> object_to_cluster_attributes(QJsonObject X)
     QStringList keys = X.keys();
     foreach (QString key, keys) {
         ret[key.toInt()] = X[key].toObject();
+    }
+    return ret;
+}
+
+QJsonObject cluster_pair_attributes_to_object(const QMap<ClusterPair, QJsonObject>& map)
+{
+    QJsonObject X;
+    QList<ClusterPair> keys = map.keys();
+    foreach (ClusterPair key, keys) {
+        X[QString("%1").arg(key.toString())] = map[key];
+    }
+    return X;
+}
+
+QMap<ClusterPair, QJsonObject> object_to_cluster_pair_attributes(QJsonObject X)
+{
+    QMap<ClusterPair, QJsonObject> ret;
+    QStringList keys = X.keys();
+    foreach (QString key, keys) {
+        ret[ClusterPair::fromString(key)] = X[key].toObject();
     }
     return ret;
 }
@@ -135,6 +157,7 @@ QJsonObject MVContext::toMVFileObject() const
     QJsonObject X = d->m_original_object;
     X["cluster_merge"] = d->m_cluster_merge.toJsonObject();
     X["cluster_attributes"] = cluster_attributes_to_object(d->m_cluster_attributes);
+    X["cluster_pair_attributes"] = cluster_pair_attributes_to_object(d->m_cluster_pair_attributes);
     X["timeseries"] = timeseries_map_to_object(d->m_timeseries);
     X["current_timeseries_name"] = d->m_current_timeseries_name;
     X["firings"] = d->m_firings.makePath();
@@ -152,6 +175,7 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     d->m_original_object = X; // to preserve unused fields
     d->m_cluster_merge.setFromJsonObject(X["cluster_merge"].toObject());
     d->m_cluster_attributes = object_to_cluster_attributes(X["cluster_attributes"].toObject());
+    d->m_cluster_pair_attributes = object_to_cluster_pair_attributes(X["cluster_pair_attributes"].toObject());
     d->m_timeseries = object_to_timeseries_map(X["timeseries"].toObject());
     d->m_current_timeseries_name = X["current_timeseries_name"].toString();
     d->m_firings = DiskReadMda(X["firings"].toString());
@@ -358,6 +382,13 @@ QSet<QString> MVContext::clusterTags(int num) const
     return jsonarray2stringset(clusterAttributes(num)["tags"].toArray());
 }
 
+QList<QString> MVContext::clusterTagsList(int num) const
+{
+    QList<QString> ret = clusterTags(num).toList();
+    qSort(ret);
+    return ret;
+}
+
 QSet<QString> MVContext::allClusterTags() const
 {
     QSet<QString> ret;
@@ -398,6 +429,56 @@ void MVContext::setClusterTags(int num, const QSet<QString>& tags)
     QJsonObject obj = clusterAttributes(num);
     obj["tags"] = stringset2jsonarray(tags);
     setClusterAttributes(num, obj);
+}
+
+QJsonObject MVContext::clusterPairAttributes(const ClusterPair& pair) const
+{
+    return d->m_cluster_pair_attributes.value(pair);
+}
+
+QList<ClusterPair> MVContext::clusterPairAttributesKeys() const
+{
+    return d->m_cluster_pair_attributes.keys();
+}
+
+void MVContext::setClusterPairAttributes(const ClusterPair& pair, const QJsonObject& obj)
+{
+    if (d->m_cluster_pair_attributes.value(pair) == obj)
+        return;
+    d->m_cluster_pair_attributes[pair] = obj;
+    emit this->clusterPairAttributesChanged(pair);
+}
+
+QSet<QString> MVContext::clusterPairTags(const ClusterPair& pair) const
+{
+    return jsonarray2stringset(clusterPairAttributes(pair)["tags"].toArray());
+}
+
+QList<QString> MVContext::clusterPairTagsList(const ClusterPair& pair) const
+{
+    QList<QString> ret = clusterPairTags(pair).toList();
+    qSort(ret);
+    return ret;
+}
+
+QSet<QString> MVContext::allClusterPairTags() const
+{
+    QSet<QString> ret;
+    ret.insert("merged");
+    QList<ClusterPair> keys = clusterPairAttributesKeys();
+    foreach (ClusterPair key, keys) {
+        QSet<QString> tags0 = clusterPairTags(key);
+        foreach (QString tag, tags0)
+            ret.insert(tag);
+    }
+    return ret;
+}
+
+void MVContext::setClusterPairTags(const ClusterPair& pair, const QSet<QString>& tags)
+{
+    QJsonObject obj = clusterPairAttributes(pair);
+    obj["tags"] = stringset2jsonarray(tags);
+    setClusterPairAttributes(pair, obj);
 }
 
 ClusterVisibilityRule MVContext::visibilityRule() const
@@ -799,12 +880,52 @@ QJsonObject MVEventFilter::toJsonObject() const
     return obj;
 }
 
+ClusterPair::ClusterPair(int k1_in, int k2_in)
+{
+    k1 = k1_in;
+    k2 = k2_in;
+}
+
+ClusterPair::ClusterPair(const ClusterPair& other)
+{
+    k1 = other.k1;
+    k2 = other.k2;
+}
+
+void ClusterPair::operator=(const ClusterPair& other)
+{
+    k1 = other.k1;
+    k2 = other.k2;
+}
+
 bool ClusterPair::operator==(const ClusterPair& other) const
 {
     return ((k1 == other.k1) && (k2 == other.k2));
 }
 
+bool ClusterPair::operator<(const ClusterPair& other) const
+{
+    if (k1 < other.k1)
+        return true;
+    if (k1 > other.k1)
+        return false;
+    return (k2 < other.k2);
+}
+
+QString ClusterPair::toString() const
+{
+    return QString("pair_%1_%2").arg(k1).arg(k2);
+}
+
+ClusterPair ClusterPair::fromString(const QString& str)
+{
+    QStringList list = str.split("_");
+    if (list.count() != 3)
+        return ClusterPair(0, 0);
+    return ClusterPair(list[1].toInt(), list[2].toInt());
+}
+
 uint qHash(const ClusterPair& pair)
 {
-    return qHash(QString("%1:%2").arg(pair.k1).arg(pair.k2));
+    return qHash(pair.toString());
 }

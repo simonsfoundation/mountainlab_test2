@@ -98,6 +98,7 @@ MVAbstractView::ViewFeatures MVAbstractView::viewFeatures() const
 
 void MVAbstractView::renderView(QPainter* painter)
 {
+    Q_UNUSED(painter)
     // do nothing in the base class
 }
 

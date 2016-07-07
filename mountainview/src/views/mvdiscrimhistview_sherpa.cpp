@@ -245,6 +245,7 @@ QString MVDiscrimHistSherpaFactory::title() const
 
 MVAbstractView* MVDiscrimHistSherpaFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     MVDiscrimHistViewSherpa* X = new MVDiscrimHistViewSherpa(mvContext());
     X->setNumHistograms(50);
     return X;

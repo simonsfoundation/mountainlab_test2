@@ -361,6 +361,7 @@ QString MVSpikeSprayFactory::title() const
 
 MVAbstractView* MVSpikeSprayFactory::createView(QWidget* parent)
 {
+    Q_UNUSED(parent)
     QList<int> ks = mvContext()->selectedClustersIncludingMerges();
     if (ks.isEmpty())
         ks = mvContext()->visibilityRule().subset.toList();

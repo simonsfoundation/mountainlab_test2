@@ -24,14 +24,14 @@ class QAction;
 
 class MVAbstractContextMenuHandler {
 public:
-    MVAbstractContextMenuHandler(MVContext* context, MVMainWindow *mw);
+    MVAbstractContextMenuHandler(MVContext* context, MVMainWindow* mw);
     virtual ~MVAbstractContextMenuHandler() {}
-    virtual bool canHandle(const QMimeData& md) const { return false; }
+    virtual bool canHandle(const QMimeData& md) const { Q_UNUSED(md) return false; }
     virtual QList<QAction*> actions(const QMimeData& md) = 0;
 
 protected:
     MVContext* mvContext() const;
-    MVMainWindow *mainWindow() const;
+    MVMainWindow* mainWindow() const;
 
 private:
     MVContext* m_context;

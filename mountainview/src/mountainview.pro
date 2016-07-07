@@ -2,6 +2,7 @@ QT += core gui network
 
 DEFINES += USE_NETWORK
 CONFIG += c++11
+QMAKE_CXXFLAGS += -Wno-reorder #qaccordion
 
 CONFIG -= app_bundle #Please apple, don't make a bundle today
 
@@ -17,10 +18,7 @@ MOC_DIR=../build
 TARGET = mountainview
 TEMPLATE = app
 
-SOURCES += mountainviewmain.cpp \
-    views/mvclusterlegend.cpp \
-    core/actionfactory.cpp \
-    guides/sherpav1.cpp
+SOURCES += mountainviewmain.cpp
 
 INCLUDEPATH += core
 VPATH += core
@@ -29,21 +27,20 @@ closemehandler.h flowlayout.h imagesavedialog.h \
 mountainprocessrunner.h mvabstractcontextmenuhandler.h \
 mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
 mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
-mvcontext.h tabber.h tabberframe.h taskprogressview.h \
-    misc/paintlayer.h \
-    misc/paintlayerstack.h \
-    views/mvclusterlegend.h \
-    core/actionfactory.h \
-    guides/sherpav1.h
+mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h
+
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
 mountainprocessrunner.cpp mvabstractcontextmenuhandler.cpp \
 mvabstractcontrol.cpp mvabstractview.cpp mvabstractviewfactory.cpp \
 mvcontrolpanel2.cpp mvmainwindow.cpp mvstatusbar.cpp \
-mvcontext.cpp tabber.cpp tabberframe.cpp taskprogressview.cpp
+mvcontext.cpp tabber.cpp tabberframe.cpp taskprogressview.cpp actionfactory.cpp
 # to remove
 HEADERS += computationthread.h
 SOURCES += computationthread.cpp
+
+HEADERS += guides/sherpav1.h
+SOURCES += guides/sherpav1.cpp
 
 INCLUDEPATH += misc
 VPATH += misc
@@ -62,14 +59,16 @@ mvclipsview.h mvclipswidget.h mvclusterdetailwidget.h \
 mvclusterview.h mvclusterwidget.h mvcrosscorrelogramswidget3.h \
 mvdiscrimhistview.h mvfiringeventview2.h mvhistogramgrid.h \
 mvspikesprayview.h mvtimeseriesrendermanager.h mvtimeseriesview2.h \
-mvtimeseriesviewbase.h spikespywidget.h mvdiscrimhistview_sherpa.h
+mvtimeseriesviewbase.h spikespywidget.h mvdiscrimhistview_sherpa.h \
+mvclusterlegend.h
 SOURCES += \
 correlationmatrixview.cpp histogramview.cpp mvamphistview2.cpp \
 mvclipsview.cpp mvclipswidget.cpp mvclusterdetailwidget.cpp \
 mvclusterview.cpp mvclusterwidget.cpp mvcrosscorrelogramswidget3.cpp \
 mvdiscrimhistview.cpp mvfiringeventview2.cpp mvhistogramgrid.cpp \
 mvspikesprayview.cpp mvtimeseriesrendermanager.cpp mvtimeseriesview2.cpp \
-mvtimeseriesviewbase.cpp spikespywidget.cpp mvdiscrimhistview_sherpa.cpp
+mvtimeseriesviewbase.cpp spikespywidget.cpp mvdiscrimhistview_sherpa.cpp \
+mvclusterlegend.cpp
 
 INCLUDEPATH += controlwidgets
 VPATH += controlwidgets
