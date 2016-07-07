@@ -6,9 +6,17 @@
 #include "compute_templates_0.h"
 
 struct discrimhist_sherpa_data {
-    int k1, k2;
+    int k1=0, k2=0;
     QVector<double> data1;
     QVector<double> data2;
+    double separation_score=0;
+};
+
+struct discrimhist_sherpa_data_comparer {
+    bool operator()(const discrimhist_sherpa_data& a, const discrimhist_sherpa_data& b) const
+    {
+        return (a.separation_score<b.separation_score);
+    }
 };
 
 /// TODO parallelize mv_distrimhist
@@ -16,6 +24,7 @@ struct discrimhist_sherpa_data {
 void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
 Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_sherpa_opts opts);
 void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda& distance_matrix, int num_histograms);
+double compute_separation_score(const QVector<double>& data1, const QVector<double>& data2);
 
 bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_sherpa_opts opts)
 {
@@ -24,7 +33,7 @@ bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QStrin
 
     Mda distance_matrix = compute_distance_matrix(DiskReadMda(timeseries_path), DiskReadMda(firings_path), opts);
     QVector<int> k1s, k2s;
-    get_pairs_to_compare(k1s, k2s, distance_matrix, opts.num_histograms);
+    get_pairs_to_compare(k1s, k2s, distance_matrix, opts.num_histograms); //get more than we need to be reduced later after sorting
 
     QList<discrimhist_sherpa_data> datas;
     for (int ii = 0; ii < k1s.count(); ii++) {
@@ -34,13 +43,19 @@ bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QStrin
         DD.k1 = k1;
         DD.k2 = k2;
         get_discrimhist_sherpa_data(DD.data1, DD.data2, timeseries, firings, k1, k2, opts.clip_size);
+        DD.separation_score=compute_separation_score(DD.data1,DD.data2);
         datas << DD;
     }
+
+    qSort(datas.begin(),datas.end(),discrimhist_sherpa_data_comparer());
+
+    datas=datas.mid(0,opts.num_histograms);
 
     long total_count = 0;
     for (int i = 0; i < datas.count(); i++) {
         total_count += datas[i].data1.count();
         total_count += datas[i].data2.count();
+        qDebug() << i << datas[i].k1 << datas[i].k2 << datas[i].separation_score;
     }
 
     Mda output(4, total_count);
@@ -194,5 +209,26 @@ void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda&
     for (int ii = 0; ii < qMin(num_histograms, pairs.count()); ii++) {
         ret_k1 << pairs[ii].k1;
         ret_k2 << pairs[ii].k2;
+    }
+}
+
+double compute_separation_score(const QVector<double>& data1, const QVector<double>& data2) {
+    //return data1.count();
+    double mean1=compute_mean(data1);
+    double mean2=compute_mean(data2);
+    QVector<double> mean_subtracted_vals;
+    for (long i=0; i<data1.count(); i++) {
+        mean_subtracted_vals << data1[i]-mean1;
+    }
+    for (long i=0; i<data2.count(); i++) {
+        mean_subtracted_vals << data2[i]-mean2;
+    }
+
+    double stdev=compute_stdev(mean_subtracted_vals);
+    if (stdev) {
+        return (qAbs(mean2-mean1)/stdev);
+    }
+    else {
+        return 0;
     }
 }
