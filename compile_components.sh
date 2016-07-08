@@ -1,10 +1,14 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
+    echo ""
     echo "usage:"
     echo "./compile_components.sh default"
     echo "./compile_components.sh mountainview mountainbrowser"
     echo "example components: mdachunk mdaconvert mountainbrowser mountainoverlook mountainprocess mountainsort mountainview"
+    echo ""
+    echo "Note that mountainbrowser is intentionally not compiled by default."
+    echo ""
     exit 0
 fi
 
