@@ -1,3 +1,4 @@
 #!/bin/bash
 
-source "${BASH_SOURCE%/*}/compile_all.sh" clean
+./clean_components.sh default
+./clean_components.sh mountainbrowser
