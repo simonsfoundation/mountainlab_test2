@@ -11,6 +11,7 @@
 #include <QAction>
 #include <QVBoxLayout>
 #include <QToolButton>
+#include <QStackedLayout>
 
 class TabberFramePrivate {
 public:
@@ -24,6 +25,8 @@ public:
     QAction* m_move_down_action;
     QAction* m_pop_out_action;
     QAction* m_pop_in_action;
+    QStackedLayout* m_stack;
+    TabberFrameOverlay* m_overlay;
 
     void update_action_visibility();
     static QList<QAction*> find_actions_of_type(QList<QAction*> actions, QString str);
@@ -72,6 +75,9 @@ TabberFrame::TabberFrame(MVAbstractView* view)
         d->m_pop_in_action = A;
     }
 
+    QObject::connect(d->m_view, SIGNAL(calculationStarted()), this, SLOT(slot_update_calculating()));
+    QObject::connect(d->m_view, SIGNAL(calculationFinished()), this, SLOT(slot_update_calculating()));
+
     QToolButton* tool_button = new QToolButton;
     QMenu* menu = new QMenu;
     menu->addActions(d->find_actions_of_type(view->actions(), ""));
@@ -82,7 +88,8 @@ TabberFrame::TabberFrame(MVAbstractView* view)
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     QList<QAction*> toolbar_actions = d->find_actions_of_type(view->actions(), "toolbar");
-    foreach (QAction* a, toolbar_actions) {
+    foreach(QAction * a, toolbar_actions)
+    {
         d->m_toolbar->addAction(a);
     }
 
@@ -97,11 +104,19 @@ TabberFrame::TabberFrame(MVAbstractView* view)
 
     d->m_toolbar->addWidget(tool_button);
 
+    d->m_overlay = new TabberFrameOverlay;
+
+    QStackedLayout* stack = new QStackedLayout;
+    d->m_stack = stack;
+    stack->addWidget(view);
+    stack->addWidget(d->m_overlay);
+    stack->setCurrentWidget(d->m_overlay);
     QVBoxLayout* vlayout = new QVBoxLayout;
     vlayout->setSpacing(0);
     vlayout->setMargin(0);
     vlayout->addWidget(d->m_toolbar);
-    vlayout->addWidget(view);
+    vlayout->addLayout(stack);
+
     this->setLayout(vlayout);
 
     QObject::connect(view, SIGNAL(recalculateSuggestedChanged()), this, SLOT(slot_update_action_visibility()));
@@ -133,13 +148,24 @@ void TabberFrame::slot_update_action_visibility()
     d->update_action_visibility();
 }
 
+void TabberFrame::slot_update_calculating()
+{
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+    if (d->m_view->isCalculating()) {
+        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+        d->m_stack->setCurrentWidget(d->m_overlay);
+    } else {
+        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+        d->m_stack->setCurrentWidget(d->m_view);
+    }
+}
+
 void TabberFramePrivate::update_action_visibility()
 {
     if (m_view->recalculateSuggested()) {
         m_recalc_action->setVisible(true);
         m_never_recalc_action->setVisible(true);
-    }
-    else {
+    } else {
         m_recalc_action->setVisible(false);
         m_never_recalc_action->setVisible(false);
     }
@@ -149,14 +175,12 @@ void TabberFramePrivate::update_action_visibility()
         m_move_down_action->setVisible(true);
         m_pop_out_action->setVisible(true);
         m_pop_in_action->setVisible(false);
-    }
-    else if (m_container_name == "south") {
+    } else if (m_container_name == "south") {
         m_move_up_action->setVisible(true);
         m_move_down_action->setVisible(false);
         m_pop_out_action->setVisible(true);
         m_pop_in_action->setVisible(false);
-    }
-    else {
+    } else {
         m_move_up_action->setVisible(false);
         m_move_down_action->setVisible(false);
         m_pop_out_action->setVisible(false);
@@ -173,4 +197,15 @@ QList<QAction*> TabberFramePrivate::find_actions_of_type(QList<QAction*> actions
         }
     }
     return ret;
+}
+
+void TabberFrameOverlay::paintEvent(QPaintEvent* evt)
+{
+    Q_UNUSED(evt)
+    QPainter painter(this);
+    QFont font=painter.font();
+    font.setPointSize(font.pointSize()+8);
+    painter.setFont(font);
+    QRectF rect(0, 0, this->width(), this->height());
+    painter.drawText(rect,Qt::AlignCenter|Qt::AlignVCenter,"Calculating...");
 }

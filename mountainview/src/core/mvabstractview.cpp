@@ -160,20 +160,20 @@ void MVAbstractView::neverSuggestRecalculate()
 void MVAbstractView::slot_do_calculation()
 {
     d->set_recalculate_suggested(false);
-    emit this->calculationStarted();
     this->update();
     prepareCalculation();
     d->m_calculation_thread.start();
     d->m_calculation_scheduled = false;
     this->update();
+    emit this->calculationStarted();
 }
 
 void MVAbstractView::slot_calculation_finished()
 {
     this->onCalculationFinished();
     this->update();
-    emit this->calculationFinished();
     d->set_recalculate_suggested(false);
+    emit this->calculationFinished();
 }
 
 void MVAbstractView::slot_context_option_changed(QString name)

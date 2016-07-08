@@ -24,9 +24,16 @@ signals:
     void signalPopIn();
 private slots:
     void slot_update_action_visibility();
+    void slot_update_calculating();
 
 private:
     TabberFramePrivate* d;
+};
+
+class TabberFrameOverlay : public QWidget {
+public:
+protected:
+    void paintEvent(QPaintEvent *evt);
 };
 
 #endif // TABBERFRAME_H
