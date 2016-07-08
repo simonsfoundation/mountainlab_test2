@@ -18,7 +18,8 @@ public:
     friend class IndividualMergeDecisionPagePrivate;
     IndividualMergeDecisionPage(MVContext* context, MVMainWindow* mw);
     virtual ~IndividualMergeDecisionPage();
-private slots:
+private
+slots:
     void slot_goto_previous_pair();
     void slot_goto_next_pair();
     void slot_button_clicked();

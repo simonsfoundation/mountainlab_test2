@@ -21,7 +21,7 @@ public:
     friend class MVSpikeSprayViewPrivate;
     MVSpikeSprayView(MVContext* context);
     virtual ~MVSpikeSprayView();
-    void setLabelsToUse(const QList<int>& labels);
+    void setLabelsToUse(const QSet<int>& labels);
 
     void prepareCalculation() Q_DECL_OVERRIDE;
     void runCalculation() Q_DECL_OVERRIDE;
@@ -43,7 +43,8 @@ public:
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
-private slots:
+private
+slots:
     void updateEnabled();
 };
 

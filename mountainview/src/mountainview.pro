@@ -19,7 +19,8 @@ TARGET = mountainview
 TEMPLATE = app
 
 SOURCES += mountainviewmain.cpp \
-    guides/individualmergedecisionpage.cpp
+    guides/individualmergedecisionpage.cpp \
+    views/mvspikespraypanel.cpp
 
 INCLUDEPATH += core
 VPATH += core
@@ -29,7 +30,8 @@ mountainprocessrunner.h mvabstractcontextmenuhandler.h \
 mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
 mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
 mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
-    guides/individualmergedecisionpage.h
+    guides/individualmergedecisionpage.h \
+    views/mvspikespraypanel.h
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
