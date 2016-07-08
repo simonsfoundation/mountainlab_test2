@@ -16,6 +16,7 @@
 #include <QUrl>
 #include <QDir>
 #include <QCryptographicHash>
+#include <math.h>
 
 #ifdef QT_GUI_LIB
 #include <QtNetwork/QNetworkAccessManager>
@@ -295,7 +296,7 @@ double MLCompute::dotProduct(const QVector<double>& X1, const QVector<double>& X
 {
     if (X1.count() != X2.count())
         return 0;
-    double ret;
+    double ret=0;
     for (long i = 0; i < X1.count(); i++)
         ret += X1[i] * X2[i];
     return ret;
