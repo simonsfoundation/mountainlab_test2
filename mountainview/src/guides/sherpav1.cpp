@@ -71,8 +71,7 @@ void SherpaV1::slot_button_clicked()
     if (action == "open_view") {
         d->m_main_window->setCurrentContainerName(sender()->property("container-name").toString());
         d->m_main_window->openView(sender()->property("view-id").toString());
-    }
-    else if (action == "show_instructions") {
+    } else if (action == "show_instructions") {
         d->show_instructions(sender()->property("title").toString(), sender()->property("instructions").toString());
     }
 }
@@ -113,7 +112,6 @@ void SherpaV1::slot_next_channel(int offset)
     rule.use_subset = true;
     rule.subset = find_clusters_to_use(ch - 1, d->m_cluster_channel_matrix);
     d->m_context->setClusterVisibilityRule(rule);
-    /// TODO: change QList<int> to QSet<int> whereever appropriate
     d->m_context->setSelectedClusters(QList<int>());
 
     d->update_buttons();

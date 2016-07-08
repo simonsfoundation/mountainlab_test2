@@ -56,8 +56,11 @@ public:
 
 signals:
     void viewsChanged();
+    void signalExportMVFile();
+    void signalExportFiringsFile();
 
-public slots:
+public
+slots:
     void closeAllViews();
     void openView(const QString& id);
     void recalculateViews(RecalculateViewsMode mode);
@@ -67,9 +70,11 @@ protected:
 
 signals:
 
-public slots:
+public
+slots:
 
-private slots:
+private
+slots:
     void slot_action_move_to_other_tab_widget();
     void slot_pop_out_widget();
     /// TODO: (HIGH) cluster annotation guide doesn't belong in main window

@@ -21,6 +21,9 @@ struct mvtsv_colors {
 struct mvtsv_prefs {
     bool show_current_timepoint = true;
     bool show_time_axis = true;
+    bool show_time_axis_ticks = true;
+    bool show_time_axis_scale = true;
+    bool show_time_axis_scale_only_1ms = false;
 
     int num_label_levels = 3;
     int label_font_height = 12;
@@ -79,7 +82,8 @@ public:
 signals:
     void clicked();
 
-private slots:
+private
+slots:
     void slot_scroll_to_current_timepoint();
     void slot_zoom_in();
     void slot_zoom_out();

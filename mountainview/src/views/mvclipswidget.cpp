@@ -58,7 +58,10 @@ MVClipsWidget::MVClipsWidget(MVContext* context)
     d->m_view = new MVTimeSeriesView2(&d->m_view_context);
     mvtsv_prefs p = d->m_view->prefs();
     p.show_current_timepoint = false;
-    p.show_time_axis = false;
+    //p.show_time_axis = false;
+    p.show_time_axis_ticks = false;
+    p.show_time_axis_scale = false;
+    p.show_time_axis_scale_only_1ms = true;
     d->m_view->setPrefs(p);
 
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, d->m_view, SLOT(slot_zoom_in()));
@@ -141,7 +144,8 @@ void MVClipsWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach (int x, labels_to_use) {
+        foreach(int x, labels_to_use)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -215,7 +219,7 @@ MVClipsFactory::MVClipsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 

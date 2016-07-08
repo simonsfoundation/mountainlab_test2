@@ -8,7 +8,6 @@
 #include "mvexportcontrol.h"
 #include "mlcommon.h"
 
-
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -18,6 +17,7 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <QJsonDocument>
+#include <mvmainwindow.h>
 #include "taskprogress.h"
 
 class MVExportControlPrivate {
@@ -43,6 +43,9 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_array()));
         flayout->addWidget(B);
     }
+
+    connect(mw, SIGNAL(signalExportMVFile()), this, SLOT(slot_export_mv_document()));
+    connect(mw, SIGNAL(signalExportFiringsFile()), this, SLOT(slot_export_firings_array()));
 
     updateControls();
 }
@@ -110,8 +113,7 @@ void DownloadComputer2::compute()
     if (!X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3())) {
         if (MLUtil::threadInterruptRequested()) {
             task.error("Halted download: " + source_path);
-        }
-        else {
+        } else {
             task.error("Failed to readChunk from: " + source_path);
         }
         return;
@@ -120,8 +122,7 @@ void DownloadComputer2::compute()
     if (use_float64) {
         task.log("Writing 64-bit to " + dest_path);
         Y.write64(dest_path);
-    }
-    else {
+    } else {
         task.log("Writing 32-bit to " + dest_path);
         Y.write32(dest_path);
     }

@@ -29,9 +29,9 @@
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
 /// TODO: (HIGH) blobs for populations
 /// TODO: (HIGH) Resort by populations, ampl, etc
-/// TODO: (MEDIUM) time scale bar for clip view
-/// TODO (LOW) electrode view... (firetrack)
-/// TODO: (0.9.1) Go to timepoint
+/// TODO: (MEDIUM) electrode view... (firetrack)
+/// TODO: (0.9.1) Go to timepoint ****
+/// TODO: (MEDIUM) Change sherpa to clusterguide throughout -- so as not to be politically incorrect
 
 class TaskProgressViewThread : public QRunnable {
 public:

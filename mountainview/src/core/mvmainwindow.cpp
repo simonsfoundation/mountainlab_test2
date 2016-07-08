@@ -105,7 +105,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     d->q = this;
     d->m_viewMapper = new QSignalMapper(this);
     connect(d->m_viewMapper, SIGNAL(mapped(QObject*)),
-        this, SLOT(slot_open_view(QObject*)));
+            this, SLOT(slot_open_view(QObject*)));
 
     d->m_context = context;
 
@@ -133,17 +133,38 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     d->m_sherpa_v1 = new SherpaV1(d->m_context, this);
     d->m_sherpa_v2 = new SherpaV2(d->m_context, this);
     {
-        QMenu* menu = new QMenu;
-        QToolButton* B = new QToolButton();
-        //B->setIcon(QIcon(":/images/gear.png"));
-        B->setText("Guides");
-        B->setMenu(menu);
-        B->setPopupMode(QToolButton::InstantPopup);
-        main_toolbar->addWidget(B);
+
         {
-            QAction* A = new QAction("Sherpa version 2", this);
-            menu->addAction(A);
-            QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_sherpa_v2()));
+            QToolButton* B = new QToolButton();
+            B->setText("File");
+            QMenu* menu = new QMenu;
+            B->setMenu(menu);
+            B->setPopupMode(QToolButton::InstantPopup);
+            main_toolbar->addWidget(B);
+            {
+                QAction* A = new QAction("Export .mv file", this);
+                menu->addAction(A);
+                QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportMVFile()));
+            }
+            {
+                QAction* A = new QAction("Export firings file", this);
+                menu->addAction(A);
+                QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportFiringsFile()));
+            }
+        }
+        {
+            QToolButton* B = new QToolButton();
+            //B->setIcon(QIcon(":/images/gear.png"));
+            B->setText("Guides");
+            QMenu* menu = new QMenu;
+            B->setMenu(menu);
+            B->setPopupMode(QToolButton::InstantPopup);
+            main_toolbar->addWidget(B);
+            {
+                QAction* A = new QAction("Sherpa version 2", this);
+                menu->addAction(A);
+                QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_sherpa_v2()));
+            }
         }
         /*
         {
@@ -229,13 +250,13 @@ void MVMainWindow::registerViewFactory(MVAbstractViewFactory* f)
     // sort by group name and order
     QList<MVAbstractViewFactory*>::iterator iter
         = qUpperBound(d->m_viewFactories.begin(), d->m_viewFactories.end(),
-            f, [](MVAbstractViewFactory* f1, MVAbstractViewFactory* f2) {
+                      f, [](MVAbstractViewFactory* f1, MVAbstractViewFactory* f2) {
             if (f1->group() < f2->group())
                 return true;
             if (f1->group() == f2->group() && f1->order() < f2->order())
                 return true;
             return false;
-            });
+        });
     d->m_viewFactories.insert(iter, f);
 }
 
@@ -292,7 +313,8 @@ void MVMainWindow::recalculateViews(RecalculateViewsMode mode)
 {
     QList<MVAbstractView*> widgets = d->m_tabber->allWidgets();
     bool do_it = false;
-    foreach (MVAbstractView* VV, widgets) {
+    foreach(MVAbstractView * VV, widgets)
+    {
         if (!VV)
             continue;
         switch (mode) {
@@ -398,7 +420,8 @@ void MVMainWindow::slot_open_view(QObject* o)
 void MVMainWindow::handleContextMenu(const QMimeData& dt, const QPoint& globalPos)
 {
     QList<QAction*> actions;
-    foreach (MVAbstractContextMenuHandler* handler, contextMenuHandlers()) {
+    foreach(MVAbstractContextMenuHandler * handler, contextMenuHandlers())
+    {
         if (handler->canHandle(dt))
             actions += handler->actions(dt);
     }
@@ -409,7 +432,8 @@ void MVMainWindow::handleContextMenu(const QMimeData& dt, const QPoint& globalPo
     menu.exec(globalPos);
 
     // delete orphan actions
-    foreach (QAction* a, menu.actions()) {
+    foreach(QAction * a, menu.actions())
+    {
         if (!a->parent())
             a->deleteLater();
     }
@@ -417,7 +441,8 @@ void MVMainWindow::handleContextMenu(const QMimeData& dt, const QPoint& globalPo
 
 MVAbstractViewFactory* MVMainWindowPrivate::viewFactoryById(const QString& id) const
 {
-    foreach (MVAbstractViewFactory* f, m_viewFactories) {
+    foreach(MVAbstractViewFactory * f, m_viewFactories)
+    {
         if (f->id() == id)
             return f;
     }
@@ -433,7 +458,7 @@ MVAbstractView* MVMainWindowPrivate::openView(MVAbstractViewFactory* factory)
     add_tab(view, factory->title());
 
     QObject::connect(view, SIGNAL(contextMenuRequested(QMimeData, QPoint)),
-        q, SLOT(handleContextMenu(QMimeData, QPoint)));
+                     q, SLOT(handleContextMenu(QMimeData, QPoint)));
 
     return view;
 }
@@ -471,8 +496,7 @@ void MVMainWindowPrivate::update_sizes()
         }
         if (H0 > 900) {
             tv_height = 300;
-        }
-        else {
+        } else {
             tv_height = 200;
         }
         int cp_height = H0 - tv_height;
