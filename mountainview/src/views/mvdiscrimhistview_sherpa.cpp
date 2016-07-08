@@ -21,6 +21,7 @@ public:
     DiskReadMda firings;
     MVEventFilter event_filter;
     int num_histograms;
+    QSet<int> clusters_to_exclude;
 
     //output
     QList<DiscrimHistogram> histograms;
@@ -40,6 +41,7 @@ public:
     double m_zoom_factor = 1;
 
     void set_views();
+    QSet<int> get_clusters_to_exclude();
 };
 
 MVDiscrimHistViewSherpa::MVDiscrimHistViewSherpa(MVContext* context)
@@ -74,6 +76,7 @@ void MVDiscrimHistViewSherpa::prepareCalculation()
     d->m_computer.firings = mvContext()->firings();
     d->m_computer.event_filter = mvContext()->eventFilter();
     d->m_computer.num_histograms = d->m_num_histograms;
+    d->m_computer.clusters_to_exclude = d->get_clusters_to_exclude();
 }
 
 void MVDiscrimHistViewSherpa::runCalculation()
@@ -132,6 +135,7 @@ void MVDiscrimHistViewSherpaComputer::compute()
     params["timeseries"] = timeseries.makePath();
     params["firings"] = firings.makePath();
     params["num_histograms"] = num_histograms;
+    params["clusters_to_exclude"] = MLUtil::intListToStringList(clusters_to_exclude.toList()).join(",");
     MPR.setInputParameters(params);
 
     QString output_path = MPR.makeOutputFilePath("output");
@@ -174,8 +178,7 @@ void MVDiscrimHistViewSherpa::wheelEvent(QWheelEvent* evt)
     double zoom_factor = 1;
     if (evt->delta() > 0) {
         zoom_factor *= 1.2;
-    }
-    else if (evt->delta() < 0) {
+    } else if (evt->delta() < 0) {
         zoom_factor /= 1.2;
     }
     QList<HistogramView*> views = this->histogramViews(); //inherited
@@ -220,11 +223,23 @@ void MVDiscrimHistViewSherpaPrivate::set_views()
     q->setHistogramViews(views); //inherited
 }
 
+QSet<int> MVDiscrimHistViewSherpaPrivate::get_clusters_to_exclude()
+{
+    QSet<int> ret;
+    QList<int> keys = q->mvContext()->clusterAttributesKeys();
+    foreach(int key, keys)
+    {
+        if (q->mvContext()->clusterTags(key).contains("rejected"))
+            ret.insert(key);
+    }
+    return ret;
+}
+
 MVDiscrimHistSherpaFactory::MVDiscrimHistSherpaFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 

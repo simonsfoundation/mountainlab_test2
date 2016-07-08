@@ -1,5 +1,6 @@
 #include "mv_discrimhist_sherpa_processor.h"
 #include "mv_discrimhist_sherpa.h"
+#include "mlcommon.h"
 
 class mv_discrimhist_sherpa_ProcessorPrivate {
 public:
@@ -12,10 +13,10 @@ mv_discrimhist_sherpa_Processor::mv_discrimhist_sherpa_Processor()
     d->q = this;
 
     this->setName("mv_discrimhist_sherpa");
-    this->setVersion("0.15");
+    this->setVersion("0.152");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("output");
-    this->setRequiredParameters("num_histograms");
+    this->setRequiredParameters("num_histograms", "clusters_to_exclude");
 }
 
 mv_discrimhist_sherpa_Processor::~mv_discrimhist_sherpa_Processor()
@@ -36,8 +37,11 @@ bool mv_discrimhist_sherpa_Processor::run(const QMap<QString, QVariant>& params)
     QString firings_path = params["firings"].toString();
     QString output_path = params["output"].toString();
     int num_histograms = params["num_histograms"].toInt();
+    QStringList strlist = params["clusters_to_exclude"].toString().split(",", QString::SkipEmptyParts);
+    QSet<int> clusters_to_exclude = MLUtil::stringListToIntList(strlist).toSet();
 
     mv_discrimhist_sherpa_opts opts;
     opts.num_histograms = num_histograms;
+    opts.clusters_to_exclude = clusters_to_exclude;
     return mv_discrimhist_sherpa(timeseries_path, firings_path, output_path, opts);
 }

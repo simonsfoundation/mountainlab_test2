@@ -24,7 +24,7 @@ struct discrimhist_sherpa_data_comparer {
 
 void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
 Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_sherpa_opts opts);
-void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda& distance_matrix, int num_histograms);
+void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda& distance_matrix, int num_histograms, QSet<int> clusters_to_exclude);
 double compute_separation_score(const QVector<double>& data1, const QVector<double>& data2);
 
 bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_sherpa_opts opts)
@@ -34,7 +34,7 @@ bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QStrin
 
     Mda distance_matrix = compute_distance_matrix(DiskReadMda(timeseries_path), DiskReadMda(firings_path), opts);
     QVector<int> k1s, k2s;
-    get_pairs_to_compare(k1s, k2s, distance_matrix, opts.num_histograms * 2); //get more than we need to be reduced later after sorting
+    get_pairs_to_compare(k1s, k2s, distance_matrix, opts.num_histograms * 2, opts.clusters_to_exclude); //get more than we need to be reduced later after sorting
 
     QList<discrimhist_sherpa_data> datas;
     for (int ii = 0; ii < k1s.count(); ii++) {
@@ -181,7 +181,7 @@ struct pair_comparer {
     }
 };
 
-void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda& distance_matrix, int num_histograms)
+void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda& distance_matrix, int num_histograms, QSet<int> clusters_to_exclude)
 {
     QList<pair_struct> pairs;
     for (int i1 = 0; i1 < distance_matrix.N1(); i1++) {
@@ -190,7 +190,9 @@ void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda&
             pp.dist = distance_matrix.value(i1, i2);
             pp.k1 = i1 + 1;
             pp.k2 = i2 + 1;
-            pairs << pp;
+            if ((!clusters_to_exclude.contains(pp.k1)) && (!clusters_to_exclude.contains(pp.k2))) {
+                pairs << pp;
+            }
         }
     }
 
@@ -220,8 +222,7 @@ double compute_separation_score(const QVector<double>& data1, const QVector<doub
     double stdev = MLCompute::stdev(mean_subtracted_vals);
     if (stdev) {
         return (qAbs(mean2 - mean1) / stdev);
-    }
-    else {
+    } else {
         return 0;
     }
 }

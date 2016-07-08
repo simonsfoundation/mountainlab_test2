@@ -150,12 +150,9 @@ void TabberFrame::slot_update_action_visibility()
 
 void TabberFrame::slot_update_calculating()
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (d->m_view->isCalculating()) {
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         d->m_stack->setCurrentWidget(d->m_overlay);
     } else {
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         d->m_stack->setCurrentWidget(d->m_view);
     }
 }
@@ -203,9 +200,9 @@ void TabberFrameOverlay::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt)
     QPainter painter(this);
-    QFont font=painter.font();
-    font.setPointSize(font.pointSize()+8);
+    QFont font = painter.font();
+    font.setPointSize(font.pointSize() + 8);
     painter.setFont(font);
     QRectF rect(0, 0, this->width(), this->height());
-    painter.drawText(rect,Qt::AlignCenter|Qt::AlignVCenter,"Calculating...");
+    painter.drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
 }
