@@ -12,9 +12,9 @@
 #include <QTime>
 #include <stdio.h>
 #include "mpdaemon.h"
-#include "textfile.h"
+
 #include <QDebug>
-#include "mlutils.h"
+#include "mlcommon.h"
 
 class MPDaemonInterfacePrivate {
 public:
@@ -127,13 +127,13 @@ bool MPDaemonInterface::clearProcessing()
 #include "signal.h"
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
-    QString fname = cfp(mlTmpPath() + "/mpdaemon_running.pid");
+    QString fname = MLUtil::tempPath() + "/mpdaemon_running.pid";
     if (!QFile::exists(fname))
         return false;
     if (QFileInfo(fname).lastModified().secsTo(QDateTime::currentDateTime()) > 120) { // time since last write
         return false;
     }
-    long pid = read_text_file(fname).toLongLong();
+    long pid = TextFile::read(fname).toLongLong();
     bool ret = (kill(pid, 0) == 0);
     return ret;
 }
@@ -149,7 +149,7 @@ bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_
     num++;
 
     QString json = QJsonDocument(obj).toJson();
-    write_text_file(fname, json);
+    TextFile::write(fname, json);
     QTime timer;
     timer.start();
     //wait until it has been received by the daemon
@@ -177,7 +177,7 @@ QJsonObject MPDaemonInterfacePrivate::get_last_daemon_state()
     QString fname = last_daemon_state_fname();
     if (fname.isEmpty())
         return ret;
-    QString json = read_text_file(fname);
+    QString json = TextFile::read(fname);
     if (json.isEmpty())
         return ret;
     QJsonParseError error;

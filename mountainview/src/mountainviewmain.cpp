@@ -6,14 +6,13 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QStringList>
-#include "textfile.h"
+
 #include "usagetracking.h"
 #include "mda.h"
 #include <QDesktopServices>
 #include <QDesktopWidget>
 #include <QDir>
 #include <QImageWriter>
-#include "commandlineparams.h"
 #include "histogramview.h"
 #include "mvmainwindow.h"
 #include "mvclusterwidget.h"
@@ -114,7 +113,7 @@ int main(int argc, char* argv[])
     // I think this is no longer needed, thanks WW
     //qRegisterMetaType<TaskInfo>();
 
-    CLParams CLP = commandlineparams(argc, argv);
+    CLParams CLP(argc, argv);
 
     QString mv_fname;
     if (CLP.unnamed_parameters.value(0).endsWith(".mv")) {
@@ -146,13 +145,11 @@ int main(int argc, char* argv[])
         if (arg2 == "remotereadmda") {
             unit_test_remote_read_mda();
             return 0;
-        }
-        else if (arg2 == "remotereadmda2") {
+        } else if (arg2 == "remotereadmda2") {
             QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
             unit_test_remote_read_mda_2(arg3);
             return 0;
-        }
-        else if (arg2 == "taskprogressview") {
+        } else if (arg2 == "taskprogressview") {
             MVMainWindow* W = new MVMainWindow(new MVContext); //not that the view agent does not get deleted. :(
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
@@ -161,8 +158,7 @@ int main(int argc, char* argv[])
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
                 //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
-            }
-            else {
+            } else {
                 W->resize(W0, H0);
             }
             test_taskprogressview();
@@ -190,7 +186,7 @@ int main(int argc, char* argv[])
         MVMainWindow* W = new MVMainWindow(context);
 
         if (!mv_fname.isEmpty()) {
-            QString json = read_text_file(mv_fname);
+            QString json = TextFile::read(mv_fname);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
             context->setFromMVFileObject(obj);
         }
@@ -248,8 +244,7 @@ int main(int argc, char* argv[])
         W->setDefaultInitialization();
 
         return a.exec();
-    }
-    else if (mode == "spikespy") {
+    } else if (mode == "spikespy") {
         printf("spikespy...\n");
         QStringList timeseries_paths = CLP.named_parameters["timeseries"].toString().split(",");
         QStringList firings_paths = CLP.named_parameters["firings"].toString().split(",");

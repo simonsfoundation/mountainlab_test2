@@ -5,8 +5,7 @@
 *******************************************************/
 
 #include <QApplication>
-#include "commandlineparams.h"
-#include "textfile.h"
+
 #include <QDebug>
 #include <QWebInspector>
 #include <QWebView>
@@ -18,6 +17,7 @@
 #include <QJsonDocument>
 #include "mbcontroller.h"
 #include "msmisc.h"
+#include "mlcommon.h"
 
 #include "mountainbrowsermain.h"
 
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
 
-    CLParams CLP = commandlineparams(argc, argv);
+    CLParams CLP(argc, argv);
 
     QString mlproxy_url = CLP.named_parameters.value("url", "http://datalaboratory.org:8020").toString();
 

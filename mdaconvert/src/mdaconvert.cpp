@@ -49,8 +49,7 @@ bool mdaconvert(const mdaconvert_opts& opts)
             qWarning() << "dims should not be specified for input type mda";
             return -1;
         }
-    }
-    else {
+    } else {
         if (opts.input_dtype.isEmpty()) {
             qWarning() << "Input datatype must be specified";
             return false;
@@ -92,8 +91,7 @@ bool mdaconvert(const mdaconvert_opts& opts)
             qWarning() << "Error reading input header";
             return false;
         }
-    }
-    else {
+    } else {
         D.HH_in.data_type = get_mda_dtype(opts.input_dtype);
         D.HH_in.header_size = 0;
         D.HH_in.num_bytes_per_entry = get_num_bytes_per_entry(D.HH_in.data_type);
@@ -210,23 +208,17 @@ bool copy_data(working_data& D, long N)
     long num_read = 0;
     if (D.HH_out.data_type == MDAIO_TYPE_BYTE) {
         num_read = mda_read_byte((unsigned char*)buf, &D.HH_in, N, D.inf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_UINT16) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_UINT16) {
         num_read = mda_read_uint16((quint16*)buf, &D.HH_in, N, D.inf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_INT16) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_INT16) {
         num_read = mda_read_int16((qint16*)buf, &D.HH_in, N, D.inf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_INT32) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_INT32) {
         num_read = mda_read_int32((qint32*)buf, &D.HH_in, N, D.inf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_FLOAT32) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_FLOAT32) {
         num_read = mda_read_float32((float*)buf, &D.HH_in, N, D.inf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_FLOAT64) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_FLOAT64) {
         num_read = mda_read_float64((double*)buf, &D.HH_in, N, D.inf);
-    }
-    else {
+    } else {
         qWarning() << "Unsupported format for reading";
         return false;
     }
@@ -239,23 +231,17 @@ bool copy_data(working_data& D, long N)
     long num_written = 0;
     if (D.HH_out.data_type == MDAIO_TYPE_BYTE) {
         num_written = mda_write_byte((unsigned char*)buf, &D.HH_out, N, D.outf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_UINT16) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_UINT16) {
         num_written = mda_write_uint16((quint16*)buf, &D.HH_out, N, D.outf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_INT16) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_INT16) {
         num_written = mda_write_int16((qint16*)buf, &D.HH_out, N, D.outf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_INT32) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_INT32) {
         num_written = mda_write_int32((qint32*)buf, &D.HH_out, N, D.outf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_FLOAT32) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_FLOAT32) {
         num_written = mda_write_float32((float*)buf, &D.HH_out, N, D.outf);
-    }
-    else if (D.HH_out.data_type == MDAIO_TYPE_FLOAT64) {
+    } else if (D.HH_out.data_type == MDAIO_TYPE_FLOAT64) {
         num_written = mda_write_float64((double*)buf, &D.HH_out, N, D.outf);
-    }
-    else {
+    } else {
         qWarning() << "Unsupported format for writing";
         return false;
     }

@@ -10,7 +10,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
-#include "mlutils.h"
+#include "mlcommon.h"
 
 /// TODO remove unnecessary includes throughout (does QtCreator highlight them?)
 
@@ -40,7 +40,7 @@ void CloseMeHandler::start()
 
 void CloseMeHandler::slot_timer()
 {
-    QString fname = mlTmpPath() + "/closeme.tmp";
+    QString fname = MLUtil::tempPath() + "/closeme.tmp";
     if (QFile::exists(fname)) {
         QDateTime dt = QFileInfo(fname).created();
         if (dt > d->m_start_time) {

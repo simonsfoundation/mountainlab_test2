@@ -39,9 +39,8 @@
 #include "mv_discrimhist_processor.h"
 #include "mv_discrimhist_sherpa_processor.h"
 
-#include "mlutils.h"
+#include "mlcommon.h"
 
-#include "textfile.h"
 #include <sys/stat.h>
 #include <QJsonArray>
 #include <QJsonDocument>

@@ -4,27 +4,12 @@
 #include <QDir>
 #include <QCryptographicHash>
 #include <QThread>
-#include "cachemanager.h"
-#include "mlutils.h"
-
-//I have to temporarily put this code in to get code completion to work in QtCreator
-//even though DEFINES+=USE_NETWORK is in the .pro file.
-//#define USE_NETWORK
-
-#ifdef USE_NETWORK
-#include <QEventLoop>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QTemporaryFile>
-#include "taskprogress.h"
-#endif
+#include "mlcommon.h"
 
 #include <QCoreApplication>
 #ifdef QT_GUI_LIB
 #include <QMessageBox>
 #endif
-
-#include "textfile.h"
 
 double compute_min(const QVector<double>& X)
 {

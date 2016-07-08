@@ -4,8 +4,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QDebug>
-#include "textfile.h"
-#include "mlutils.h"
+#include "mlnetwork.h"
+
+#include "mlcommon.h"
 
 class MOFilePrivate {
 public:
@@ -28,7 +29,7 @@ MOFile::~MOFile()
 
 bool MOFile::read(const QString& path)
 {
-    QString json = read_text_file(path);
+    QString json = TextFile::read(path);
     if (json.isEmpty())
         return false;
     bool ret = this->setJson(json);
@@ -38,12 +39,12 @@ bool MOFile::read(const QString& path)
 
 bool MOFile::write(const QString& path)
 {
-    return write_text_file(path, this->json());
+    return TextFile::write(path, this->json());
 }
 
 bool MOFile::load(const QString& url)
 {
-    QString json = http_get_text_curl(url);
+    QString json = MLNetwork::httpGetText(url);
     bool ret = setJson(json);
     emit resultsChanged();
     return ret;

@@ -6,6 +6,9 @@ CONFIG -= app_bundle #Please apple, don't make a bundle
 
 QT += widgets
 
+include(../../mlcommon/mlcommon.pri)
+include(../../mlcommon/mlnetwork.pri)
+
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
 MOC_DIR=../build
@@ -21,24 +24,3 @@ SOURCES += mountainoverlookmain.cpp \
     mofile.cpp \
     moresultlistview.cpp
 
-INCLUDEPATH += ../../common/commandlineparams
-VPATH += ../../common/commandlineparams
-HEADERS += commandlineparams.h
-SOURCES += commandlineparams.cpp
-
-INCLUDEPATH += ../../common/cachemanager
-DEPENDPATH += ../../common/cachemanager
-VPATH += ../../common/cachemanager
-HEADERS += cachemanager.h
-SOURCES += cachemanager.cpp
-
-INCLUDEPATH += ../../common
-DEPENDPATH += ../../common
-VPATH += ../../common
-HEADERS += mlutils.h
-SOURCES += mlutils.cpp
-
-INCLUDEPATH += ../../common/utils
-VPATH += ../../common/utils
-HEADERS += textfile.h taskprogress.h
-SOURCES += textfile.cpp taskprogress.cpp

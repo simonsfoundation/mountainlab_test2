@@ -1,10 +1,10 @@
-#include "textfile.h"
+
 #include <QFile>
 #include <QTextStream>
 #include <QSettings>
 #include <QDebug>
 
-QString read_text_file(const QString & fname, QTextCodec *codec) {
+QString TextFile::read(const QString & fname, QTextCodec *codec) {
     QFile file(fname);
 	if (!file.open(QIODevice::ReadOnly|QIODevice::Text)) {
         return QString();
@@ -17,7 +17,7 @@ QString read_text_file(const QString & fname, QTextCodec *codec) {
     return ret;
 }
 
-bool write_text_file(const QString & fname,const QString &txt, QTextCodec *codec) {
+bool TextFile::write(const QString & fname,const QString &txt, QTextCodec *codec) {
     QFile file(fname);
     if (!file.open(QIODevice::WriteOnly|QIODevice::Text))
         return false;

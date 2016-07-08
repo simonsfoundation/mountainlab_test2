@@ -11,16 +11,13 @@
 
 #include <QCoreApplication>
 #include <stdio.h>
-#include "commandlineparams.h"
 #include "msprocessmanager.h"
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "diskreadmda.h"
-#include "unit_tests.h"
-#include "textfile.h"
-#include "cachemanager.h"
-#include "mlutils.h"
+//#include "unit_tests.h"
+#include "mlcommon.h"
 
 void print_usage();
 void list_processors(const MSProcessManager* PM);
@@ -32,7 +29,7 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, NULL);
 
-    CLParams CLP = commandlineparams(argc, argv);
+    CLParams CLP(argc, argv);
 
     MSProcessManager* PM = MSProcessManager::globalInstance();
     PM->loadDefaultProcessors();
@@ -45,7 +42,7 @@ int main(int argc, char* argv[])
             print_usage();
             return -1;
         }
-        QString json = read_text_file(arg2);
+        QString json = TextFile::read(arg2);
         if (json.isEmpty()) {
             printf("Unable to open file or file is empty: %s\n", arg2.toLatin1().data());
         }
@@ -54,16 +51,13 @@ int main(int argc, char* argv[])
             return -1;
         else
             return 0;
-    }
-    else if (arg1 == "list-processors") {
+    } else if (arg1 == "list-processors") {
         list_processors(PM);
         return 0;
-    }
-    else if (arg1 == "detail-processors") {
+    } else if (arg1 == "detail-processors") {
         PM->printDetails();
         return 0;
-    }
-    else if (arg1 == "spec") {
+    } else if (arg1 == "spec") {
         PM->printJsonSpec();
         return 0;
     }
@@ -79,7 +73,8 @@ int main(int argc, char* argv[])
         process["processor_name"] = processor_name;
         QJsonObject parameters;
         QStringList keys = CLP.named_parameters.keys();
-        foreach (QString key, keys) {
+        foreach(QString key, keys)
+        {
             parameters[key] = CLP.named_parameters[key].toString();
         }
         process["parameters"] = parameters;
@@ -87,8 +82,7 @@ int main(int argc, char* argv[])
             return 0;
         else
             return -1;
-    }
-    else {
+    } else {
         printf("Unexpected number of unnamed parameters: %d\n", CLP.unnamed_parameters.count());
     }
 
@@ -116,7 +110,8 @@ bool run_process(MSProcessManager* PM, QJsonObject process)
     QJsonObject parameters = process["parameters"].toObject();
     QStringList keys = parameters.keys();
     QMap<QString, QVariant> params;
-    foreach (QString key, keys) {
+    foreach(QString key, keys)
+    {
         params[key] = parameters[key].toString();
     }
 

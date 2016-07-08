@@ -7,8 +7,8 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <cachemanager.h>
-#include "textfile.h"
-#include "mlutils.h"
+
+#include "mlcommon.h"
 
 class MOMainWindowPrivate {
 public:
@@ -53,11 +53,11 @@ void MOMainWindow::slot_open_result(QString name)
     QJsonObject obj = d->m_mof.result(name);
     QString mv_json = QJsonDocument(obj["mv"].toObject()).toJson();
     QString path = CacheManager::globalInstance()->makeLocalFile(name + ".mv", CacheManager::LongTerm);
-    if (!write_text_file(path, mv_json)) {
+    if (!TextFile::write(path, mv_json)) {
         QMessageBox::critical(0, "Unable to write file", "Unable to write: " + path);
         return;
     }
-    QString mv_exe = mountainlabBasePath() + "/mountainview/bin/mountainview";
+    QString mv_exe = MLUtil::mountainlabBasePath() + "/mountainview/bin/mountainview";
     if (!QFile::exists(mv_exe)) {
         QMessageBox::critical(0, "Unable to open mountainview", "MountainView executable does not exist: " + mv_exe);
         return;

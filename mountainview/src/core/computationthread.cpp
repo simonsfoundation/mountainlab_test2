@@ -11,7 +11,7 @@
 #include <QDebug>
 #include <QTime>
 #include <QCoreApplication>
-#include "mlutils.h"
+#include "mlcommon.h"
 
 class ComputationThreadPrivate {
 public:
@@ -113,7 +113,7 @@ void ComputationThread::run()
         qsrand(d->m_randomization_seed);
         compute();
     }
-    if (!thread_interrupt_requested()) {
+    if (!MLUtil::threadInterruptRequested()) {
         QMutexLocker locker(&d->m_mutex);
         d->m_is_finished = true;
         d->m_is_computing = false;
@@ -130,7 +130,7 @@ void ComputationThread::slot_start()
     d->m_randomization_seed = qrand();
     {
         QMutexLocker locker(&d->m_mutex);
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             return;
         }
         d->m_start_scheduled = false;

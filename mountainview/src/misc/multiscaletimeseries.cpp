@@ -16,7 +16,7 @@
 #include <QMutex>
 #include <math.h>
 #include "mountainprocessrunner.h"
-#include "mlutils.h"
+#include "mlcommon.h"
 
 class MultiScaleTimeSeriesPrivate {
 public:
@@ -106,7 +106,7 @@ void MultiScaleTimeSeries::initialize()
         task.log("Running process");
     }
     MPR.runProcess();
-    if (thread_interrupt_requested()) {
+    if (MLUtil::threadInterruptRequested()) {
         return;
     }
     {
@@ -227,7 +227,7 @@ bool MultiScaleTimeSeriesPrivate::get_data(Mda& min, Mda& max, long t1, long t2,
         m_multiscale_data.readChunk(min, 0, t1 + t_offset_min, M, t2 - t1 + 1);
         m_multiscale_data.readChunk(max, 0, t1 + t_offset_max, M, t2 - t1 + 1);
 
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             return false;
         }
     }

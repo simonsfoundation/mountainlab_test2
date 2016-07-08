@@ -1,9 +1,8 @@
 #include "mountainsort_version.h"
-#include "textfile.h"
 
 #include <QCoreApplication>
 #include <QDebug>
-#include "mlutils.h"
+#include "mlcommon.h"
 
 #define STRINGIFY(x) #x
 

@@ -13,7 +13,7 @@
 #include "mvcontext.h"
 #include "mvstatusbar.h"
 #include "mvtimeseriesview2.h"
-#include "mlutils.h"
+#include "mlcommon.h"
 #include "mvabstractviewfactory.h"
 #include "mvamphistview2.h"
 #include "mvdiscrimhistview.h"
@@ -58,7 +58,7 @@
 #include <QMenu>
 #include <mvdiscrimhistview_sherpa.h>
 #include <sherpav2.h>
-#include "textfile.h"
+
 #include "clusterannotationguide.h"
 
 /// TODO (LOW) put styles in central place?

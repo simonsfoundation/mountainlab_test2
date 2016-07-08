@@ -1,5 +1,5 @@
 #include "onefile.h"
-#include "textfile.h"
+
 #include <QDateTime>
 #include <QDir>
 #include <iostream>
@@ -31,7 +31,7 @@ QString create_one_file_text(const QStringList &file_paths,QString type0) {
         txt+=comment+critical_string+"\n";
         txt+=comment+fname+"\n";
         txt+=comment+critical_string+"\n";
-        txt+=read_text_file(fname);
+        txt+=TextFile::read(fname);
         txt+="\n\n\n";
     }
     return txt;
@@ -75,8 +75,8 @@ QString trim_empty_lines_at_end(const QString &str) {
     return ret;
 }
 
-void write_text_file_if_different(QString fname,const QString &txt) {
-    QString txt2=read_text_file(fname);
+void TextFile::write_if_different(QString fname,const QString &txt) {
+    QString txt2=TextFile::read(fname);
     QString a=trim_empty_lines_at_end(txt);
     QString b=trim_empty_lines_at_end(txt2);
     if (a!=b) {
@@ -84,7 +84,7 @@ void write_text_file_if_different(QString fname,const QString &txt) {
         std::string resp;
         std::cin >> resp;
         if ((resp=="y")||(resp=="Y")) {
-            write_text_file(fname,txt);
+            TextFile::write(fname,txt);
         }
     }
 }
@@ -99,7 +99,7 @@ QString trim_initial_comment_characters(const QString &txt) {
 
 void onefile_save_changes(QString fname)
 {
-    QString txt=read_text_file(fname);
+    QString txt=TextFile::read(fname);
     QStringList lines=txt.split("\n");
     QString current_file_name="";
     QString current_file_text="";
@@ -113,7 +113,7 @@ void onefile_save_changes(QString fname)
             if (line_plus_two.contains(critical_string)) {
                 current_file_text=trim_empty_lines_at_end(current_file_text);
                 if ((!current_file_name.isEmpty())&&(!current_file_text.isEmpty())) {
-                    write_text_file_if_different(current_file_name,current_file_text);
+                    TextFile::write_if_different(current_file_name,current_file_text);
                 }
                 current_file_name=trim_initial_comment_characters(lines.value(i+1));
                 current_file_text="";
@@ -130,6 +130,6 @@ void onefile_save_changes(QString fname)
     }
     current_file_text=trim_empty_lines_at_end(current_file_text);
     if ((!current_file_name.isEmpty())&&(!current_file_text.isEmpty())) {
-        write_text_file_if_different(current_file_name,current_file_text);
+        TextFile::write_if_different(current_file_name,current_file_text);
     }
 }

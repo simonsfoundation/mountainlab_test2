@@ -28,9 +28,10 @@ public:
     QString makeLocalFile(const QString& file_name = "", Duration duration = ShortTerm);
     void cleanUp();
 
-    static MSCacheManager *globalInstance();
+    static MSCacheManager* globalInstance();
 
-private slots:
+private
+slots:
     void slot_remove_on_delete();
 
 private:

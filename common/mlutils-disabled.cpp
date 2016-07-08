@@ -4,7 +4,7 @@
 ** Created: 5/11/2016
 *******************************************************/
 
-#include "mlutils.h"
+#include "mlcommon.h"
 
 #include <QCryptographicHash>
 #include <QFileInfo>
@@ -12,11 +12,11 @@
 #include <QDir>
 #include <QThread>
 #include <QTime>
-#include "textfile.h"
+
 #include "taskprogress.h"
 
 #include <cachemanager.h>
-#include "textfile.h"
+
 #ifdef QT_GUI_LIB
 #include <QMessageBox>
 #include <QNetworkAccessManager>
@@ -75,7 +75,7 @@ void mkdir_if_doesnt_exist(const QString& path)
     }
 }
 
-QString mlTmpPath()
+QString MLUtil::tempPath()
 {
     //QString ret = mountainlabBasePath() + "/tmp";
     QString ret = QDir::tempPath() + "/mountainlab";
@@ -116,7 +116,7 @@ bool in_gui_thread()
 #endif
 }
 
-bool thread_interrupt_requested()
+bool MLUtil::threadInterruptRequested()
 {
     return QThread::currentThread()->isInterruptionRequested();
 }
@@ -127,21 +127,21 @@ bool curl_is_installed()
     return (exit_code == 0);
 }
 
-/// TODO: (MEDIUM) handle memory cache for http_get_text in a better way
-static QMap<QString, QString> s_http_get_text_curl_cache;
+/// TODO: (MEDIUM) handle memory cache for MLNetwork::httpGetText in a better way
+static QMap<QString, QString> s_MLNetwork::httpGetText_curl_cache;
 
-QString http_get_text_curl(const QString& url)
+QString MLNetwork::httpGetText_curl(const QString& url)
 {
     if (in_gui_thread()) {
-        if (s_http_get_text_curl_cache.contains(url)) {
-            return s_http_get_text_curl_cache[url];
+        if (s_MLNetwork::httpGetText_curl_cache.contains(url)) {
+            return s_MLNetwork::httpGetText_curl_cache[url];
         }
     }
     if (!curl_is_installed()) {
 #ifdef QT_GUI_LIB
         QMessageBox::critical(0, "Problem in http request", "Problem in http request. It appears that curl is not installed.");
 #else
-        qWarning() << "There is no reason we should be calling http_get_text_curl in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
+        qWarning() << "There is no reason we should be calling MLNetwork::httpGetText_curl in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
 #endif
         return "";
     }
@@ -154,14 +154,14 @@ QString http_get_text_curl(const QString& url)
 #ifdef QT_GUI_LIB
         QMessageBox::critical(0, "Problem downloading text file", "Problem in http request. Are you connected to the internet?");
 #else
-        qWarning() << "There is no reason we should be calling http_get_text_curl * in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
+        qWarning() << "There is no reason we should be calling MLNetwork::httpGetText_curl * in a non-gui application!!!!!!!!!!!!!!!!!!!!!!!";
 #endif
         return "";
     }
-    QString ret = read_text_file(tmp_fname);
+    QString ret = TextFile::read(tmp_fname);
     QFile::remove(tmp_fname);
     if (in_gui_thread()) {
-        s_http_get_text_curl_cache[url] = ret;
+        s_MLNetwork::httpGetText_curl_cache[url] = ret;
     }
     return ret;
 }
@@ -173,7 +173,7 @@ QString get_temp_fname()
     //return QString("%1/MdaClient_%2.tmp").arg(QDir::tempPath()).arg(rand_num);
 }
 
-QString http_get_binary_file_curl(const QString& url)
+QString MLNetwork::httpGetBinaryFile_curl(const QString& url)
 {
     QString tmp_fname = get_temp_fname();
     QString cmd = QString("curl \"%1\" > %2").arg(url).arg(tmp_fname);
@@ -186,11 +186,11 @@ QString http_get_binary_file_curl(const QString& url)
     return tmp_fname;
 }
 
-QString http_get_binary_file(const QString& url)
+QString MLNetwork::httpGetBinaryFile(const QString& url)
 {
 #ifdef QT_GUI_LIB
     if (in_gui_thread()) {
-        qCritical() << "Cannot call http_get_binary_file from within the GUI thread: " + url;
+        qCritical() << "Cannot call MLNetwork::httpGetBinaryFile from within the GUI thread: " + url;
         exit(-1);
     }
 
@@ -206,7 +206,7 @@ QString http_get_binary_file(const QString& url)
     long num_bytes = 0;
     temp.open(QIODevice::WriteOnly);
     QObject::connect(reply, &QNetworkReply::readyRead, [&]() {
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             TaskProgress errtask("Download halted");
             errtask.error("Thread interrupt requested");
             errtask.log(url);
@@ -221,7 +221,7 @@ QString http_get_binary_file(const QString& url)
     //task.setLabel(QString("Downloaded %1 MB in %2 sec").arg(num_bytes * 1.0 / 1e6).arg(timer.elapsed() * 1.0 / 1000));
     printf("RECEIVED BINARY (%d ms, %ld bytes) from %s\n", timer.elapsed(), num_bytes, url.toLatin1().data());
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_downloaded", num_bytes);
-    if (thread_interrupt_requested()) {
+    if (MLUtil::threadInterruptRequested()) {
         return "";
     }
     return fname;
@@ -239,11 +239,11 @@ QString abbreviate(const QString& str, int len1, int len2)
     return str.mid(0, len1) + "...\n...\n..." + str.mid(str.count() - len2);
 }
 
-QString http_get_text(const QString& url)
+QString MLNetwork::httpGetText(const QString& url)
 {
 #ifdef QT_GUI_LIB
     if (in_gui_thread()) {
-        return http_get_text_curl(url);
+        return MLNetwork::httpGetText_curl(url);
     }
     QTime timer;
     timer.start();

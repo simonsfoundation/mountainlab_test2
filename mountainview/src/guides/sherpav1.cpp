@@ -14,7 +14,7 @@
 #include <taskprogress.h>
 #include <QThread>
 #include "sherpav1.h"
-#include "textfile.h"
+
 #include "mv_compute_templates.h"
 
 class SherpaV1Private {
@@ -129,7 +129,7 @@ QWizardPage* SherpaV1Private::make_page_1()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cluster detail view");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav1/page_1.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav1/page_1.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -148,7 +148,7 @@ QWizardPage* SherpaV1Private::make_page_2()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Event Filter");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav1/page_2.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav1/page_2.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -167,7 +167,7 @@ QWizardPage* SherpaV1Private::make_page_3()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Auto-Correlograms");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav1/page_3.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav1/page_3.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -187,7 +187,7 @@ QWizardPage* SherpaV1Private::make_page_4()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Channel Groups");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav1/page_4.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav1/page_4.txt"));
     label->setWordWrap(true);
 
     QHBoxLayout* hlayout = new QHBoxLayout;

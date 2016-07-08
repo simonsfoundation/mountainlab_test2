@@ -12,13 +12,19 @@ class MyPage : public QWebPage {
 public:
     MyPage();
     virtual ~MyPage() {};
-    void setController(MBController *controller) {m_controller=controller;};
-private slots:
+    void setController(MBController* controller)
+    {
+        m_controller = controller;
+    };
+private
+slots:
     void slot_url_changed();
+
 protected:
-    virtual void javaScriptConsoleMessage(const QString & message, int lineNumber, const QString & sourceID);
+    virtual void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID);
+
 private:
-    MBController *m_controller;
+    MBController* m_controller;
 };
 
 #endif

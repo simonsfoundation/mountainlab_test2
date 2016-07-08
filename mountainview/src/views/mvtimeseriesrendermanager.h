@@ -8,7 +8,7 @@
 #define MVTIMESERIESRENDERMANAGER_H
 
 #include "multiscaletimeseries.h"
-#include "mlutils.h"
+#include "mlcommon.h"
 
 #include <QColor>
 #include <QImage>

@@ -12,7 +12,7 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <taskprogress.h>
-#include "mlutils.h"
+#include "mlcommon.h"
 #include "msmisc.h"
 
 /// TODO: (MEDIUM) spike spray should respond to mouse wheel and show current position with marker
@@ -283,7 +283,7 @@ void MVSpikeSprayComputer::compute()
 
         MT.runProcess();
 
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             task.error(QString("Halted while running process: " + processor_name));
             return;
         }
@@ -308,7 +308,7 @@ void MVSpikeSprayComputer::compute()
         clips_path = MT.makeOutputFilePath("clips");
 
         MT.runProcess();
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             task.error(QString("Halted while running process: " + processor_name));
             return;
         }

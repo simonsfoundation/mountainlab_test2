@@ -1,6 +1,6 @@
 #include <QCoreApplication>
 #include "get_command_line_params.h"
-#include "textfile.h"
+
 #include <stdio.h>
 #include <QDir>
 #include <iostream>
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
     QString txt=create_one_file_text(file_paths,type0);
     QString tmp_fname=create_temporary_file(type0);
-    write_text_file(tmp_fname,txt);
+    TextFile::write(tmp_fname,txt);
     open_editor(editor,tmp_fname);
     printf("Press [ENTER] to save changes to files: ");
     std::cin.ignore();

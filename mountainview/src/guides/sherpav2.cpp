@@ -14,7 +14,7 @@
 #include <taskprogress.h>
 #include <QThread>
 #include "sherpav2.h"
-#include "textfile.h"
+
 #include "mv_compute_templates.h"
 #include "individualmergedecisionpage.h"
 
@@ -91,7 +91,7 @@ QWizardPage* SherpaV2Private::make_page_1()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cluster detail view");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_cluster_details.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_cluster_details.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -110,7 +110,7 @@ QWizardPage* SherpaV2Private::make_page_2()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Event Filter");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_event_filter.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_event_filter.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -129,7 +129,7 @@ QWizardPage* SherpaV2Private::make_page_3()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cluster detail view");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_auto_correlograms.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_auto_correlograms.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -148,7 +148,7 @@ QWizardPage* SherpaV2Private::make_page_4()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Discrimination histograms");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_discrim_hist.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_discrim_hist.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -167,7 +167,7 @@ QWizardPage* SherpaV2Private::make_page_5()
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cross-correlograms");
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_cross_correlograms.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_cross_correlograms.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;

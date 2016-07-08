@@ -1,7 +1,7 @@
 #include "mda.h"
 #include "mdaio.h"
 #include <stdio.h>
-#include "textfile.h"
+
 #include "taskprogress.h"
 
 #define MDA_MAX_DIMS 6
@@ -784,7 +784,7 @@ bool MdaPrivate::safe_index(long i1, long i2, long i3, long i4, long i5, long i6
 
 bool MdaPrivate::read_from_text_file(const QString& path)
 {
-    QString txt = read_text_file(path);
+    QString txt = TextFile::read(path);
     QStringList lines = txt.split("\n", QString::SkipEmptyParts);
     QStringList lines2;
     for (int i = 0; i < lines.count(); i++) {
@@ -838,5 +838,5 @@ bool MdaPrivate::write_to_text_file(const QString& path)
         QString line = vals.join(sep);
         lines << line;
     }
-    return write_text_file(path, lines.join("\n"));
+    return TextFile::write(path, lines.join("\n"));
 }

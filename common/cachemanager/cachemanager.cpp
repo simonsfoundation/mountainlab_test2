@@ -10,9 +10,9 @@
 #include <QDebug>
 #include <QDateTime>
 #include <QThread>
-#include "mlutils.h"
+#include "mlcommon.h"
 
-#define DEFAULT_LOCAL_BASE_PATH mlTmpPath()
+#define DEFAULT_LOCAL_BASE_PATH MLUtil::tempPath()
 
 class CacheManagerPrivate {
 public:

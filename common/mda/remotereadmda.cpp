@@ -11,7 +11,7 @@
 #include <QDateTime>
 #include <taskprogress.h>
 #include "cachemanager.h"
-#include "mlutils.h"
+#include "mlcommon.h"
 
 #define REMOTE_READ_MDA_CHUNK_SIZE 5e5
 
@@ -172,7 +172,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
         QString fname = d->download_chunk_at_index(jj1); //download the single chunk
         if (fname.isEmpty()) {
             //task.error("fname is empty");
-            if (!thread_interrupt_requested()) {
+            if (!MLUtil::threadInterruptRequested()) {
                 TaskProgress errtask("Download chunk at index");
                 errtask.log(QString("m_remote_data_type = %1, download chunk size = %2").arg(d->m_remote_datatype).arg(d->m_download_chunk_size));
                 errtask.log(d->m_path);
@@ -184,11 +184,10 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
         DiskReadMda A(fname);
         A.readChunk(X, ii1 - jj1 * d->m_download_chunk_size, size); //starting reading at the offset of ii1 relative to the start index of the chunk
         return true;
-    }
-    else {
+    } else {
         for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
             task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
-            if (thread_interrupt_requested()) {
+            if (MLUtil::threadInterruptRequested()) {
                 //X = Mda(); //maybe it's better to return the right size.
                 //task.error("Halted");
                 return false;
@@ -209,8 +208,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
                     Xptr[b] = tmp_ptr[a];
                     b++;
                 }
-            }
-            else if (jj == jj2) { //case 2/3, this is the last chunk
+            } else if (jj == jj2) { //case 2/3, this is the last chunk
                 Mda tmp;
                 long size0 = ii2 + 1 - jj2 * d->m_download_chunk_size; //the size is going to be the difference between the start index of the last chunk and ii2+1
                 A.readChunk(tmp, 0, size0); //we start reading at position zero
@@ -287,7 +285,7 @@ void RemoteReadMdaPrivate::download_info_if_needed()
     //QString url=file_url_for_remote_path(m_path);
     QString url = m_path;
     QString url2 = url + "?a=info&output=text";
-    QString txt = http_get_text(url2);
+    QString txt = MLNetwork::httpGetText(url2);
     QStringList lines = txt.split("\n");
     QStringList sizes = lines.value(0).split(",");
     m_info.N1 = sizes.value(0).toLong();
@@ -316,7 +314,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         return fname;
     QString url = m_path;
     QString url0 = url + QString("?a=readChunk&output=text&index=%1&size=%2&datatype=%3").arg((long)(ii * m_download_chunk_size)).arg(size).arg(m_remote_datatype);
-    QString binary_url = http_get_text(url0).trimmed();
+    QString binary_url = MLNetwork::httpGetText(url0).trimmed();
     if (binary_url.isEmpty())
         return "";
 
@@ -326,7 +324,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         binary_url = m_path.mid(0, ind) + "/mdaserver/" + binary_url;
     }
 
-    QString mda_fname = http_get_binary_file(binary_url);
+    QString mda_fname = MLNetwork::httpGetBinaryFile(binary_url);
     if (mda_fname.isEmpty())
         return "";
     DiskReadMda tmp(mda_fname);
@@ -336,7 +334,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         return "";
     }
     if (m_remote_datatype == "float32_q8") {
-        QString dynamic_range_fname = http_get_binary_file(binary_url + ".q8");
+        QString dynamic_range_fname = MLNetwork::httpGetBinaryFile(binary_url + ".q8");
         if (dynamic_range_fname.isEmpty()) {
             qWarning() << "problem downloading .q8 file: " + binary_url + ".q8";
             return "";
@@ -352,8 +350,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
             qWarning() << "Unable to write file: " + fname;
             return "";
         }
-    }
-    else {
+    } else {
         QFile::rename(mda_fname, fname);
     }
     return fname;

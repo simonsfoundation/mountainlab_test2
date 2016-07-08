@@ -310,7 +310,7 @@ void MVFiringEventViewCalculator::compute()
     amplitudes.clear();
     for (long i = 0; i < L; i++) {
         if (i % 100 == 0) {
-            if (thread_interrupt_requested()) {
+            if (MLUtil::threadInterruptRequested()) {
                 task.error("Halted");
                 return;
             }

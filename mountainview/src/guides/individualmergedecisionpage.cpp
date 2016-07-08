@@ -11,7 +11,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <flowlayout.h>
-#include "textfile.h"
+
 
 class IndividualMergeDecisionPagePrivate {
 public:
@@ -43,7 +43,7 @@ IndividualMergeDecisionPage::IndividualMergeDecisionPage(MVContext* context, MVM
 
     QVBoxLayout* layout = new QVBoxLayout;
 
-    QLabel* label = new QLabel(read_text_file(":/guides/sherpav2/page_individual_merge_decisions.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_individual_merge_decisions.txt"));
     label->setWordWrap(true);
     layout->addWidget(label);
 

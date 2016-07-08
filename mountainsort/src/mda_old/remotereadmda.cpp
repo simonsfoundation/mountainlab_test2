@@ -156,7 +156,7 @@ void RemoteReadMdaPrivate::download_info_if_needed()
     //QString url=file_url_for_remote_path(m_path);
     QString url = m_path;
     QString url2 = url + "?a=info&output=text";
-    QString txt = http_get_text(url2);
+    QString txt = MLNetwork::httpGetText(url2);
     QStringList lines = txt.split("\n");
     QStringList sizes = lines.value(0).split(",");
     m_info.N1 = sizes.value(0).toLong();
@@ -184,10 +184,10 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
     //QString url=file_url_for_remote_path(m_path);
     QString url = m_path;
     QString url0 = url + QString("?a=readChunk&output=text&index=%1&size=%2&datatype=float64").arg((long)(ii * REMOTE_READ_MDA_CHUNK_SIZE)).arg(size);
-    QString binary_url = http_get_text(url0).trimmed();
+    QString binary_url = MLNetwork::httpGetText(url0).trimmed();
     if (binary_url.isEmpty())
         return "";
-    QString mda_fname = http_get_binary_file(binary_url);
+    QString mda_fname = MLNetwork::httpGetBinaryFile(binary_url);
     if (mda_fname.isEmpty())
         return "";
     DiskReadMda tmp(mda_fname);

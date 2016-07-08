@@ -4,12 +4,12 @@
 ** Created: 4/7/2016
 *******************************************************/
 
-#include "textfile.h"
 #include "mbcontroller.h"
 #include <QCoreApplication>
 #include <QProcess>
 #include "msmisc.h"
-#include "mlutils.h"
+#include "mlcommon.h"
+#include "mlnetwork.h"
 
 #include <QJsonDocument>
 #include <QDebug>
@@ -32,7 +32,8 @@ MBController::MBController()
 
 MBController::~MBController()
 {
-    foreach (QProcess* P, d->m_processes) {
+    foreach(QProcess * P, d->m_processes)
+    {
         P->terminate(); //I think it's okay to terminate a process. It won't cause this program to crash.
         delete P;
     }
@@ -53,20 +54,18 @@ QString MBController::mlProxyUrl()
 QString MBController::getJson(QString url_or_path)
 {
     if (url_or_path.startsWith("http")) {
-        return http_get_text(url_or_path);
-    }
-    else {
-        return read_text_file(url_or_path);
+        return MLNetwork::httpGetText(url_or_path);
+    } else {
+        return TextFile::read(url_or_path);
     }
 }
 
 QString MBController::getText(QString url_or_path)
 {
     if (url_or_path.startsWith("http")) {
-        return http_get_text(url_or_path);
-    }
-    else {
-        return read_text_file(url_or_path);
+        return MLNetwork::httpGetText(url_or_path);
+    } else {
+        return TextFile::read(url_or_path);
     }
 }
 
@@ -95,7 +94,7 @@ void MBController::openSortingResult(QString json)
             samplerate = 30000;
         }
         args << QString("--samplerate=%1").arg(samplerate);
-        QString mv_exe = mountainlabBasePath() + "/mountainview/bin/mountainview";
+        QString mv_exe = MLUtil::mountainlabBasePath() + "/mountainview/bin/mountainview";
         QProcess* process = new QProcess;
         process->setProcessChannelMode(QProcess::MergedChannels);
         connect(process, SIGNAL(readyRead()), this, SLOT(slot_ready_read()));

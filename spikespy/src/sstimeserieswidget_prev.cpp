@@ -20,7 +20,7 @@
 #include <QFileDialog>
 #include <QObjectList>
 #include <QTextBrowser>
-#include "mlutils.h"
+#include "mlcommon.h"
 
 void do_wait(int ms) {
 	QTime timer; timer.start();

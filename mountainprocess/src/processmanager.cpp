@@ -15,7 +15,8 @@
 #include <QEventLoop>
 #include <QCryptographicHash>
 #include "mpdaemon.h"
-#include "textfile.h"
+#include "mlcommon.h"
+
 #include <QCoreApplication>
 #include "mpdaemon.h"
 #include "scriptcontroller.h" //for resolve_file_name()
@@ -106,7 +107,7 @@ bool ProcessManager::loadProcessorFile(const QString& path)
             return false;
         }
     } else {
-        json = read_text_file(path);
+        json = TextFile::read(path);
         if (json.isEmpty()) {
             qCritical() << "Processor file is empty: " + path;
             return false;
@@ -368,7 +369,7 @@ void ProcessManager::slot_process_finished()
             QString json = QJsonDocument(obj).toJson();
             if (QFile::exists(fname))
                 QFile::remove(fname); //shouldn't be needed
-            if (write_text_file(fname + ".tmp", json)) {
+            if (TextFile::write(fname + ".tmp", json)) {
                 QFile::rename(fname + ".tmp", fname);
             }
         }

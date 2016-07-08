@@ -1,6 +1,6 @@
 #include "mda2txt_processor.h"
 #include "diskreadmda.h"
-#include "textfile.h"
+#include "mlcommon.h"
 
 class mda2txt_ProcessorPrivate {
 public:
@@ -27,17 +27,16 @@ mda2txt_Processor::~mda2txt_Processor()
 bool mda2txt_Processor::check(const QMap<QString, QVariant>& params)
 {
     if (!this->checkParameters(params))
-	return false;
+        return false;
     return true;
 }
 
 QString format_number(double num)
 {
     if (num == (long)num) {
-	return QString::number(num, 'f', 0);
-    }
-    else {
-	return QString::number(num, 'f');
+        return QString::number(num, 'f', 0);
+    } else {
+        return QString::number(num, 'f');
     }
 }
 
@@ -51,55 +50,54 @@ bool mda2txt_Processor::run(const QMap<QString, QVariant>& params)
     QString delimiter = params.value("delimeter", "tab").toString();
 
     if (delimiter == "tab")
-	delimiter = "\t";
+        delimiter = "\t";
     if (delimiter == "comma")
-	delimiter = ",";
+        delimiter = ",";
 
     DiskReadMda X;
     X.setPath(mda_path);
     QString txt;
     if (transpose) {
-	if (X.N1() > max_cols) {
-	    printf("Too many columns::: %ld>%ld\n", (long)X.N1(), max_cols);
-	    return false;
-	}
-	if (X.N2() > max_rows) {
-	    printf("Too many rows::: %ld>%ld\n", (long)X.N2(), max_rows);
-	    return false;
-	}
-	for (int i = 0; i < X.N2(); i++) {
-	    QString line;
-	    for (int j = 0; j < X.N1(); j++) {
-		line += QString("%1").arg(format_number(X.value(j, i)));
-		if (j + 1 < X.N1())
-		    line += QString("%1").arg(delimiter);
-	    }
-	    txt += line + "\n";
-	}
-    }
-    else {
-	if (X.N1() > max_rows) {
-	    printf("Too many rows: %ld\n", (long)X.N1());
-	    return false;
-	}
-	if (X.N2() > max_cols) {
-	    printf("Too many columns: %ld\n", (long)X.N2());
-	    return false;
-	}
-	for (int i = 0; i < X.N1(); i++) {
-	    QString line;
-	    for (int j = 0; j < X.N2(); j++) {
-		line += QString("%1").arg(format_number(X.value(i, j)));
-		if (j + 1 < X.N1())
-		    line += QString("%1").arg(delimiter);
-	    }
-	    txt += line + "\n";
-	}
+        if (X.N1() > max_cols) {
+            printf("Too many columns::: %ld>%ld\n", (long)X.N1(), max_cols);
+            return false;
+        }
+        if (X.N2() > max_rows) {
+            printf("Too many rows::: %ld>%ld\n", (long)X.N2(), max_rows);
+            return false;
+        }
+        for (int i = 0; i < X.N2(); i++) {
+            QString line;
+            for (int j = 0; j < X.N1(); j++) {
+                line += QString("%1").arg(format_number(X.value(j, i)));
+                if (j + 1 < X.N1())
+                    line += QString("%1").arg(delimiter);
+            }
+            txt += line + "\n";
+        }
+    } else {
+        if (X.N1() > max_rows) {
+            printf("Too many rows: %ld\n", (long)X.N1());
+            return false;
+        }
+        if (X.N2() > max_cols) {
+            printf("Too many columns: %ld\n", (long)X.N2());
+            return false;
+        }
+        for (int i = 0; i < X.N1(); i++) {
+            QString line;
+            for (int j = 0; j < X.N2(); j++) {
+                line += QString("%1").arg(format_number(X.value(i, j)));
+                if (j + 1 < X.N1())
+                    line += QString("%1").arg(delimiter);
+            }
+            txt += line + "\n";
+        }
     }
     printf("Writing %d bytes to %s...\n", txt.count(), txt_path.toLatin1().data());
-    if (!write_text_file(txt_path, txt)) {
-	printf("Unable to write file %s\n", txt_path.toLatin1().data());
-	return false;
+    if (!TextFile::write(txt_path, txt)) {
+        printf("Unable to write file %s\n", txt_path.toLatin1().data());
+        return false;
     }
     return true;
 }

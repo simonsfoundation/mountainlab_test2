@@ -478,7 +478,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
     //compute the cross-correlograms
     task.setProgress(0.7);
     for (int j = 0; j < correlograms.count(); j++) {
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             return;
         }
         int k1 = correlograms[j].k1;

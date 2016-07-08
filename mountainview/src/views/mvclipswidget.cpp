@@ -10,7 +10,7 @@
 #include <QHBoxLayout>
 #include "mountainprocessrunner.h"
 #include "msmisc.h"
-#include "mlutils.h"
+#include "mlcommon.h"
 #include "mvtimeseriesview2.h"
 #include "mvmainwindow.h"
 #include <QMessageBox>
@@ -161,7 +161,7 @@ void MVClipsWidgetComputer::compute()
         firings_out_path = MT.makeOutputFilePath("firings_out");
 
         MT.runProcess();
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             task.error(QString("Halted while running process: " + processor_name));
             return;
         }
@@ -184,7 +184,7 @@ void MVClipsWidgetComputer::compute()
         clips_path = MT.makeOutputFilePath("clips");
 
         MT.runProcess();
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             task.error(QString("Halted while running process: " + processor_name));
             return;
         }
@@ -204,7 +204,7 @@ void MVClipsWidgetComputer::compute()
     clips = CC;
     /*
     CC.readChunk(clips, 0, 0, 0, CC.N1(), CC.N2(), CC.N3());
-    if (thread_interrupt_requested()) {
+    if (MLUtil::threadInterruptRequested()) {
         task.error(QString("Halted while reading chunk from: " + clips_path));
         return;
     }

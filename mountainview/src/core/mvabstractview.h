@@ -8,7 +8,7 @@
 #define MVABSTRACTVIEW_H
 
 #include "mvcontext.h"
-#include "mlutils.h"
+#include "mlcommon.h"
 #include <QMimeData>
 #include <QWidget>
 
@@ -58,7 +58,7 @@ protected:
      * variables that may be used in the gui thread. However, it is guaranteed
      * that prepareCalculation() and onCalculationFinished() will not be called
      * in while runCalculation() is running. The calculation should check periodically
-     * whether thread_interrupt_requested() is true. In that case, it is
+     * whether MLUtil::threadInterruptRequested() is true. In that case, it is
      * important to return from runCalculation() prematurely.
      */
     virtual void prepareCalculation() = 0;

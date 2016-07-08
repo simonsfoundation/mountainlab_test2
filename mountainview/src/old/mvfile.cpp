@@ -6,8 +6,8 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QFileInfo>
-#include "textfile.h"
-#include "mlutils.h"
+
+#include "mlcommon.h"
 
 class MVFilePrivate {
 public:
@@ -48,7 +48,7 @@ void MVFile::operator=(const MVFile& other)
 
 bool MVFile::read(const QString& path)
 {
-    QString json = read_text_file(path);
+    QString json = TextFile::read(path);
     if (json.isEmpty())
         return false;
     bool ret = this->setJson(json);
@@ -59,12 +59,12 @@ bool MVFile::read(const QString& path)
 
 bool MVFile::write(const QString& path)
 {
-    return write_text_file(path, this->json());
+    return TextFile::write(path, this->json());
 }
 
 bool MVFile::load(const QString& url)
 {
-    QString json = http_get_text_curl(url);
+    QString json = MLNetwork::httpGetText_curl(url);
     bool ret = setJson(json);
     d->m_path = url;
     emit resultsChanged();

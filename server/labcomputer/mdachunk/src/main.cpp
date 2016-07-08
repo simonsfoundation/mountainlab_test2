@@ -4,14 +4,14 @@
 ** Created: 3/30/2016
 *******************************************************/
 
-#include "commandlineparams.h"
 #include "diskreadmda.h"
 #include "mda.h"
 #include <QDateTime>
 #include <QDir>
 #include <QString>
 #include <QStringList>
-#include "textfile.h"
+#include <mlcommon.h>
+
 #include "cachemanager.h"
 #include "msmisc.h"
 
@@ -23,7 +23,7 @@ Mda quantize8(Mda& X); //returns array of size 1x2 containing the min/max dynami
 
 int main(int argc, char* argv[])
 {
-    CLParams CLP = commandlineparams(argc, argv);
+    CLParams CLP(argc, argv);
     QString arg0 = CLP.unnamed_parameters.value(0);
     QString arg1 = CLP.unnamed_parameters.value(1);
 
@@ -175,7 +175,7 @@ QString get_file_info(const QString& fname)
 
 bool is_out_of_date(const QString& sha1_fname, const QString& fname)
 {
-    QString str = read_text_file(sha1_fname).split("\n").value(1); //the second line
+    QString str = TextFile::read(sha1_fname).split("\n").value(1); //the second line
     if (str.isEmpty())
         return true;
     return (str != get_file_info(fname));
@@ -191,12 +191,12 @@ QString get_sha1_code(const QString& fname)
             printf("Problem in system call: %s\n", cmd.toLatin1().data());
             return "";
         }
-        QString content = read_text_file(sha1_fname);
+        QString content = TextFile::read(sha1_fname);
         content = content.trimmed() + "\n" + get_file_info(fname);
-        write_text_file(sha1_fname, content);
+        TextFile::write(sha1_fname, content);
     }
     if (QFile::exists(sha1_fname)) {
-        sha1 = read_text_file(sha1_fname).trimmed();
+        sha1 = TextFile::read(sha1_fname).trimmed();
         int ind = sha1.indexOf(" ");
         sha1 = sha1.mid(0, ind);
     }

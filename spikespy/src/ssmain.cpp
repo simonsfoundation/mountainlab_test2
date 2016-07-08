@@ -3,7 +3,7 @@
 #include <QDebug>
 #include "sscontroller.h"
 #include <QStringList>
-#include "textfile.h"
+
 #include "usagetracking.h"
 #include "closemehandler.h"
 
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 
 	QString script;
 	if (!script_path.isEmpty()) {
-		script=read_text_file(script_path);
+		script=TextFile::read(script_path);
 	} else {
 		QList<QString> TL_paths;
 		if (mda_paths.isEmpty()) {

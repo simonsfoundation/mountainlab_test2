@@ -11,7 +11,7 @@
 #include <QDir>
 #include <QApplication>
 #include <QFileInfo>
-#include "mlutils.h"
+#include "mlcommon.h"
 
 class CloseMeHandlerPrivate {
 public:
@@ -39,7 +39,7 @@ void CloseMeHandler::start()
 
 void CloseMeHandler::slot_timer()
 {
-    QString fname = cfp(mlTmpPath() + "/closeme.tmp");
+    QString fname = MLUtil::tempPath() + "/closeme.tmp";
     if (QFile::exists(fname)) {
         QDateTime dt = QFileInfo(fname).created();
         if (dt > d->m_start_time) {

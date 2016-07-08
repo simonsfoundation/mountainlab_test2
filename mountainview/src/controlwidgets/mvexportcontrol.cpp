@@ -6,8 +6,8 @@
 
 #include "flowlayout.h"
 #include "mvexportcontrol.h"
-#include "mlutils.h"
-#include "textfile.h"
+#include "mlcommon.h"
+
 
 #include <QGridLayout>
 #include <QLabel>
@@ -77,7 +77,7 @@ void MVExportControl::slot_export_mv_document()
         fname = fname + ".mv";
     QJsonObject obj = this->mvContext()->toMVFileObject();
     QString json = QJsonDocument(obj).toJson();
-    if (!write_text_file(fname, json)) {
+    if (!TextFile::write(fname, json)) {
         TaskProgress task("export mountainview document");
         task.error("Error writing .mv file: " + fname);
     }
@@ -108,7 +108,7 @@ void DownloadComputer2::compute()
     task.setProgress(0.2);
     task.log(QString("Reading/Downloading %1x%2x%3").arg(X.N1()).arg(X.N2()).arg(X.N3()));
     if (!X.readChunk(Y, 0, 0, 0, X.N1(), X.N2(), X.N3())) {
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             task.error("Halted download: " + source_path);
         }
         else {

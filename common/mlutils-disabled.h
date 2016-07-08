@@ -13,16 +13,16 @@
 QString cfp(const QString& path); //cannonical file path
 QString compute_checksum_of_file(const QString& path);
 QString mountainlabBasePath();
-QString mlTmpPath();
+QString MLUtil::tempPath();
 QString mlLogPath();
 QString mlConfigPath();
 void mkdir_if_doesnt_exist(const QString& path);
 QString resolve_path(QString basepath, QString path);
 bool in_gui_thread();
-bool thread_interrupt_requested();
-QString http_get_text_curl(const QString& url);
-QString http_get_text(const QString& url);
-QString http_get_binary_file(const QString& url);
+bool MLUtil::threadInterruptRequested();
+QString MLNetwork::httpGetText_curl(const QString& url);
+QString MLNetwork::httpGetText(const QString& url);
+QString MLNetwork::httpGetBinaryFile(const QString& url);
 //QString get_path_query(const QString &path);
 //QString get_path_without_query(const QString &path);
 //QMap<QString,QString> parse_query(const QString &query);

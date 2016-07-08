@@ -297,14 +297,14 @@ void MVTimeSeriesRenderManagerThread::run()
     if (!M)
         return;
 
-    if (thread_interrupt_requested())
+    if (MLUtil::threadInterruptRequested())
         return;
 
     QImage image0 = QImage(panel_width, PANEL_HEIGHT(M), QImage::Format_ARGB32);
     QColor transparent(0, 0, 0, 0);
     image0.fill(transparent);
 
-    if (thread_interrupt_requested())
+    if (MLUtil::threadInterruptRequested())
         return;
 
     QPainter painter(&image0);
@@ -316,7 +316,7 @@ void MVTimeSeriesRenderManagerThread::run()
     Mda Xmin, Xmax;
     ts.getData(Xmin, Xmax, t1, t2, ds_factor);
 
-    if (thread_interrupt_requested())
+    if (MLUtil::threadInterruptRequested())
         return;
 
     double space = 0;
@@ -324,7 +324,7 @@ void MVTimeSeriesRenderManagerThread::run()
     long y0 = 0;
     QPen pen = painter.pen();
     for (int m = 0; m < M; m++) {
-        if (thread_interrupt_requested())
+        if (MLUtil::threadInterruptRequested())
             return;
         pen.setColor(get_channel_color(m));
         if (ds_factor == 1)
@@ -378,7 +378,7 @@ void MVTimeSeriesRenderManagerThread::run()
             painter.drawPath(path);
         }
 
-        if (thread_interrupt_requested())
+        if (MLUtil::threadInterruptRequested())
             return;
 
         painter.drawPath(path);
@@ -386,7 +386,7 @@ void MVTimeSeriesRenderManagerThread::run()
         y0 += channel_height + space;
     }
 
-    if (thread_interrupt_requested())
+    if (MLUtil::threadInterruptRequested())
         return;
     min_data = Xmin;
     max_data = Xmax;

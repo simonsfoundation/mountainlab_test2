@@ -3,7 +3,7 @@
 #include <QCoreApplication>
 #include "get_pca_features.h"
 #include <math.h>
-#include "textfile.h"
+
 #include <QDebug>
 #include <QSettings>
 #include <QDir>
@@ -14,6 +14,7 @@
 #include <QJsonArray>
 #include "imagesavedialog.h"
 #include "taskprogress.h"
+#include "mlcommon.h"
 
 QColor get_heat_map_color(double val)
 {
@@ -23,26 +24,22 @@ QColor get_heat_map_color(double val)
         r = 200 * (1 - tmp) + 150 * tmp;
         b = 200 * (1 - tmp) + 255 * tmp;
         g = 0 * (1 - tmp) + 0 * tmp;
-    }
-    else if (val < 0.4) {
+    } else if (val < 0.4) {
         double tmp = (val - 0.2) / 0.2;
         r = 150 * (1 - tmp) + 0 * tmp;
         b = 255 * (1 - tmp) + 255 * tmp;
         g = 0 * (1 - tmp) + 100 * tmp;
-    }
-    else if (val < 0.6) {
+    } else if (val < 0.6) {
         double tmp = (val - 0.4) / 0.2;
         r = 0 * (1 - tmp) + 255 * tmp;
         b = 255 * (1 - tmp) + 0 * tmp;
         g = 100 * (1 - tmp) + 20 * tmp;
-    }
-    else if (val < 0.8) {
+    } else if (val < 0.8) {
         double tmp = (val - 0.6) / 0.2;
         r = 255 * (1 - tmp) + 255 * tmp;
         b = 0 * (1 - tmp) + 0 * tmp;
         g = 20 * (1 - tmp) + 255 * tmp;
-    }
-    else if (val <= 1.0) {
+    } else if (val <= 1.0) {
         double tmp = (val - 0.8) / 0.2;
         r = 255 * (1 - tmp) + 255 * tmp;
         b = 0 * (1 - tmp) + 255 * tmp;
@@ -55,9 +52,10 @@ QColor get_heat_map_color(double val)
 QList<Epoch> read_epochs(const QString& path)
 {
     QList<Epoch> ret;
-    QString txt = read_text_file(path);
+    QString txt = TextFile::read(path);
     QStringList lines = txt.split("\n");
-    foreach (QString line, lines) {
+    foreach(QString line, lines)
+    {
         QList<QString> vals = line.split(QRegExp("\\s+"));
         if (vals.value(0) == "EPOCH") {
             if (vals.count() == 4) {
@@ -66,8 +64,7 @@ QList<Epoch> read_epochs(const QString& path)
                 E.t_begin = vals.value(2).toDouble() - 1;
                 E.t_end = vals.value(3).toDouble() - 1;
                 ret << E;
-            }
-            else {
+            } else {
                 qWarning() << "Problem parsing epochs file:" << path;
             }
         }
@@ -166,8 +163,7 @@ void draw_axis(QPainter* painter, draw_axis_opts opts)
                     ptB = ptA + QPointF(0, tick_length);
                     text_rect = QRectF(ptB + QPointF(20, 0), QSize(40, 50 - 3));
                     align = Qt::AlignTop | Qt::AlignCenter;
-                }
-                else { //vertical
+                } else { //vertical
                     ptB = ptA + QPointF(-tick_length, 0);
                     text_rect = QRectF(ptB + QPointF(-50, -20), QSize(50 - 3, 40));
                     align = Qt::AlignRight | Qt::AlignVCenter;
@@ -186,8 +182,7 @@ void draw_axis(QPainter* painter, draw_axis_opts opts)
             //draw little segments pointing up
             painter->drawLine(opts.pt1.x(), opts.pt1.y(), opts.pt1.x(), opts.pt1.y() - 4);
             painter->drawLine(opts.pt2.x(), opts.pt2.y(), opts.pt2.x(), opts.pt2.y() - 4);
-        }
-        else {
+        } else {
             painter->save();
             painter->rotate(-90);
             QRectF rect(opts.pt1.x() - 50, opts.pt1.y() - 50, 50 - 3, opts.pt2.y() - opts.pt1.y() + 100);
@@ -210,7 +205,8 @@ QJsonArray stringset2jsonarray(QSet<QString> set)
     QJsonArray ret;
     QStringList list = set.toList();
     qSort(list);
-    foreach (QString str, list) {
+    foreach(QString str, list)
+    {
         ret.append(str);
     }
     return ret;

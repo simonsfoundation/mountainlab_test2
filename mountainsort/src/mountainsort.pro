@@ -1,10 +1,12 @@
 QT += core
 QT -= gui
-#CONFIG += release
-#CONFIG -= debug
+QT += network
 CONFIG -= app_bundle #Please apple, don't make a bundle today :)
 
 CONFIG += c++11
+
+include(../../mlcommon/mlcommon.pri)
+include(../../mlcommon/mda.pri)
 
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
@@ -14,7 +16,7 @@ TEMPLATE = app
 
 QMAKE_POST_LINK += cp $$PWD/../bin/mountainsort $$PWD/../../mountainprocess/processors/mountainsort.mp
 
-INCLUDEPATH += utils core processors mda unit_tests 3rdparty isosplit ../../common/cachemanager
+INCLUDEPATH += utils core processors mda unit_tests 3rdparty isosplit
 
 DEFINES += MOUNTAINSORT_VERSION="0.0.1"
 
@@ -154,16 +156,6 @@ SOURCES += \ #see below
 SOURCES += utils/eigenvalue_decomposition.cpp #see below
 }
 
-INCLUDEPATH += ../../common/commandlineparams
-VPATH += ../../common/commandlineparams
-HEADERS += commandlineparams.h
-SOURCES += commandlineparams.cpp
-
-INCLUDEPATH += ../../common/utils
-VPATH += ../../common/utils
-HEADERS += textfile.h taskprogress.h
-SOURCES += textfile.cpp taskprogress.cpp
-
 HEADERS += utils/get_sort_indices.h \
     utils/matrix_mda.h \
     utils/msmisc.h \
@@ -177,24 +169,10 @@ SOURCES += utils/get_sort_indices.cpp \
     utils/compute_templates_0.cpp \
     utils/msmisc.cpp
 
-
 DEFINES += USE_SSE2
-INCLUDEPATH += ../../common/mda
-DEPENDPATH += ../../common/mda
-VPATH += ../../common/mda
-HEADERS += diskreadmda.h diskwritemda.h usagetracking.h mda.h mdaio.h
-SOURCES += diskreadmda.cpp diskwritemda.cpp usagetracking.cpp mda.cpp mdaio.cpp
-HEADERS += remotereadmda.h
-SOURCES += remotereadmda.cpp
 
 HEADERS += utils/get_principal_components.h
 SOURCES += utils/get_principal_components.cpp
-
-INCLUDEPATH += ../../common
-DEPENDPATH += ../../common
-VPATH += ../../common
-HEADERS += mlutils.h
-SOURCES += mlutils.cpp
 
 #some sources need to be compiled without -std=c++11 flag.
 #It would be nice to use something like CXXFLAGS_NOCXX11=$(CXXFLAGS), but doesn't seem to work

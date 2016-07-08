@@ -438,7 +438,7 @@ void MVClusterWidgetComputer::compute()
         MT.runProcess();
     }
 
-    if (thread_interrupt_requested()) {
+    if (MLUtil::threadInterruptRequested()) {
         return;
     }
 
@@ -461,7 +461,7 @@ void MVClusterWidgetComputer::compute()
 
         MT.runProcess();
 
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             return;
         }
     }
@@ -486,7 +486,7 @@ void MVClusterWidgetComputer::compute()
 
         MT.runProcess();
 
-        if (thread_interrupt_requested()) {
+        if (MLUtil::threadInterruptRequested()) {
             return;
         }
     }
@@ -510,7 +510,7 @@ void MVClusterWidgetComputer::compute()
         detectability_scores << F.value(5, j);
     }
 
-    if (thread_interrupt_requested()) {
+    if (MLUtil::threadInterruptRequested()) {
         return;
     }
 

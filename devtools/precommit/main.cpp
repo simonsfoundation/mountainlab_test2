@@ -6,7 +6,7 @@
 
 #include <QCoreApplication>
 #include <QDir>
-#include "textfile.h"
+
 
 QStringList find_paths(QString basepath, QStringList patterns, bool recursive);
 struct TODORecord {
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     QString basepath = a.applicationDirPath() + "/../../..";
     QStringList paths = find_paths(basepath, patterns, recursive);
     foreach (QString path, paths) {
-        QStringList lines = read_text_file(path).split("\n");
+        QStringList lines = TextFile::read(path).split("\n");
         for (int i = 0; i < lines.count(); i++) {
             QString line = lines[i].trimmed();
             if ((line.startsWith("/// TODO")) || (line.startsWith("%%% TODO"))) {
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         QString relpath = R.path.mid(basepath.count());
         todo_text += QString("%1:%2 %3\n").arg(relpath).arg(R.line_number).arg(R.text);
     }
-    write_text_file(basepath + "/todo.txt", todo_text);
+    TextFile::write(basepath + "/todo.txt", todo_text);
 
     return 0;
 }
