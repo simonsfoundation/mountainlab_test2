@@ -35,7 +35,7 @@ struct Define_Shells_Opts {
     int min_shell_size;
 };
 
-QList<long> find_label_inds(const QList<long>& labels, int k);
+QVector<long> find_label_inds(const QVector<int>& labels, int k);
 Mda get_subclips(Mda& clips, const QList<long>& inds);
 QList<Shell> define_shells(const QVector<double>& peaks, const Define_Shells_Opts& opts);
 QVector<double> randsample_with_replacement(long N, long K);

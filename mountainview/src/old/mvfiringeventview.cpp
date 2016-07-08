@@ -8,7 +8,7 @@
 #include <QMouseEvent>
 #include <QMenu>
 #include "mvutils.h"
-#include "msmisc.h"
+#include "mlcommon.h"
 
 /// TODO (LOW) remove mvfiringeventview.h/cpp
 
@@ -82,9 +82,9 @@ void MVFiringEventView::setFirings(const Mda& firings)
         d->m_amplitudes << firings.value(3, i);
     }
 
-    d->m_max_timepoint = compute_max(d->m_times);
+    d->m_max_timepoint = MLCompute::max(d->m_times);
     d->m_min_amplitude = qMin(0.0, compute_min(d->m_amplitudes));
-    d->m_max_amplitude = qMax(0.0, compute_max(d->m_amplitudes));
+    d->m_max_amplitude = qMax(0.0, MLCompute::max(d->m_amplitudes));
 
     d->schedule_update();
 }
@@ -198,7 +198,7 @@ void MVFiringEventView::slot_update()
 
     Mda smoothed_grid = grid;
     smooth_grid(smoothed_grid, 4);
-    double max_density = compute_max(smoothed_grid.totalSize(), smoothed_grid.dataPtr());
+    double max_density = MLCompute::max(smoothed_grid.totalSize(), smoothed_grid.dataPtr());
     double* smoothed_ptr = smoothed_grid.dataPtr();
 
     d->m_image = QImage(W, H, QImage::Format_ARGB32);

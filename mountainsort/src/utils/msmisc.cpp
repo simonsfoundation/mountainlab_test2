@@ -1,59 +1,16 @@
-#include "msmisc.h"
+#include "mlcommon.h"
 #include <math.h>
 #include <QDateTime>
 #include <QDir>
 #include <QCryptographicHash>
 #include <QThread>
 #include "mlcommon.h"
+#include "mda.h"
 
 #include <QCoreApplication>
 #ifdef QT_GUI_LIB
 #include <QMessageBox>
 #endif
-
-double compute_min(const QVector<double>& X)
-{
-    double ret = X.value(0);
-    for (int i = 0; i < X.count(); i++)
-        if (X[i] < ret)
-            ret = X[i];
-    return ret;
-}
-
-double compute_max(const QVector<double>& X)
-{
-    double ret = X.value(0);
-    for (int i = 0; i < X.count(); i++)
-        if (X[i] > ret)
-            ret = X[i];
-    return ret;
-}
-
-int compute_max(const QVector<int>& X)
-{
-    int ret = X.value(0);
-    for (int i = 0; i < X.count(); i++)
-        if (X[i] > ret)
-            ret = X[i];
-    return ret;
-}
-
-long compute_max(const QList<long>& X)
-{
-    long ret = X.value(0);
-    for (int i = 0; i < X.count(); i++)
-        if (X[i] > ret)
-            ret = X[i];
-    return ret;
-}
-
-double compute_norm(long N, double* X)
-{
-    double sumsqr = 0;
-    for (long i = 0; i < N; i++)
-        sumsqr += X[i] * X[i];
-    return sqrt(sumsqr);
-}
 
 Mda compute_mean_clip(Mda& clips)
 {
@@ -83,40 +40,6 @@ Mda compute_mean_clip(Mda& clips)
     return ret;
 }
 
-double compute_mean(long N, double* X)
-{
-    double sum = 0;
-    for (int i = 0; i < N; i++)
-        sum += X[i];
-    if (N)
-        sum /= N;
-    return sum;
-}
-
-double compute_mean(const QVector<double>& X)
-{
-    double sum = 0;
-    for (int i = 0; i < X.count(); i++)
-        sum += X[i];
-    if (X.count())
-        sum /= X.count();
-    return sum;
-}
-
-double compute_stdev(const QVector<double>& X)
-{
-    double sumsqr = 0;
-    for (int i = 0; i < X.count(); i++)
-        sumsqr += X[i] * X[i];
-    double sum = 0;
-    for (int i = 0; i < X.count(); i++)
-        sum += X[i];
-    int ct = X.count();
-    if (ct >= 2) {
-        return sqrt((sumsqr - sum * sum / ct) / (ct - 1));
-    } else
-        return 0;
-}
 Mda grab_clips_subset(Mda& clips, const QVector<int>& inds)
 {
     int M = clips.N1();
@@ -134,35 +57,4 @@ Mda grab_clips_subset(Mda& clips, const QVector<int>& inds)
         }
     }
     return ret;
-}
-
-double compute_max(long N, double* X)
-{
-    if (N == 0)
-        return 0;
-    double ret = X[0];
-    for (long i = 0; i < N; i++) {
-        if (X[i] > ret)
-            ret = X[i];
-    }
-    return ret;
-}
-
-double compute_min(long N, double* X)
-{
-    if (N == 0)
-        return 0;
-    double ret = X[0];
-    for (long i = 0; i < N; i++) {
-        if (X[i] < ret)
-            ret = X[i];
-    }
-    return ret;
-}
-
-QString compute_hash(const QString& str)
-{
-    QCryptographicHash hash(QCryptographicHash::Sha1);
-    hash.addData(str.toLatin1());
-    return QString(hash.result().toHex());
 }

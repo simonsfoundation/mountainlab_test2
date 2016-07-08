@@ -5,7 +5,8 @@
 *******************************************************/
 
 #include "compute_templates_0.h"
-#include "msmisc.h"
+#include "mlcommon.h"
+#include "mlcommon.h"
 #include <math.h>
 
 Mda compute_templates_0(DiskReadMda& X, Mda& firings, int clip_size)
@@ -26,7 +27,7 @@ Mda compute_templates_0(DiskReadMda& X, const QVector<double>& times, const QVec
     int T = clip_size;
     long L = times.count();
 
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
 
     int Tmid = (int)((T + 1) / 2) - 1;
 
@@ -67,7 +68,7 @@ void compute_templates_stdevs(Mda& templates, Mda& stdevs, DiskReadMda& X, const
     int T = clip_size;
     long L = times.count();
 
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
 
     int Tmid = (int)((T + 1) / 2) - 1;
 

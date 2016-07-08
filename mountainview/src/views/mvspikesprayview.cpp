@@ -13,7 +13,7 @@
 #include <QPainter>
 #include <taskprogress.h>
 #include "mlcommon.h"
-#include "msmisc.h"
+#include "mlcommon.h"
 
 /// TODO: (MEDIUM) spike spray should respond to mouse wheel and show current position with marker
 /// TODO: (MEDIUM) much more responsive rendering of spike spray
@@ -136,7 +136,7 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
             d->m_amplitude_factor = 1.5 / maxval;
     }
 
-    int K = compute_max(d->m_labels_to_render);
+    int K = MLCompute::max(d->m_labels_to_render);
     if (!K)
         return;
     int counts[K + 1];

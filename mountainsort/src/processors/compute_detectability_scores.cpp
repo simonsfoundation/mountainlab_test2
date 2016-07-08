@@ -8,10 +8,12 @@
 
 #include <diskreadmda.h>
 #include "extract_clips.h"
-#include "msmisc.h"
+#include "mlcommon.h"
+#include "mlcommon.h"
 #include <QTime>
 #include <math.h>
 #include "get_pca_features.h"
+#include "msmisc.h"
 
 bool compute_detectability_scores(QString timeseries_path, QString firings_path, QString firings_out_path, const compute_detectability_scores_opts& opts)
 {
@@ -29,7 +31,7 @@ bool compute_detectability_scores(QString timeseries_path, QString firings_path,
 
     //prepare the channels, labels, times, and allocate the scores
     printf("Preparing data arrays\n");
-    QList<long> channels, labels;
+    QVector<int> channels, labels;
     QVector<double> times;
     QVector<double> scores;
     for (int i = 0; i < L; i++) {
@@ -42,7 +44,7 @@ bool compute_detectability_scores(QString timeseries_path, QString firings_path,
     //we used to extract the clips here... that was taking too much RAM
     //Mda clips=extract_clips(timeseries,times,T);
 
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
 
     QList<Subcluster> subclusters;
 
@@ -51,7 +53,7 @@ bool compute_detectability_scores(QString timeseries_path, QString firings_path,
         int count1 = 0;
         int count2 = 0;
 
-        QList<long> inds_k;
+        QVector<long> inds_k;
 #pragma omp critical
         inds_k = find_label_inds(labels, k); //find the indices corresonding to this cluster
 
@@ -132,9 +134,9 @@ bool compute_detectability_scores(QString timeseries_path, QString firings_path,
     return true;
 }
 
-QList<long> find_label_inds(const QList<long>& labels, int k)
+QVector<long> find_label_inds(const QVector<int>& labels, int k)
 {
-    QList<long> ret;
+    QVector<long> ret;
     for (int i = 0; i < labels.count(); i++) {
         if (labels[i] == k)
             ret << i;
@@ -170,7 +172,7 @@ QList<Shell> define_shells(const QVector<double>& peaks, const Define_Shells_Opt
         return shells;
 
     //negatives and positives
-    if (compute_min(peaks) < 0) {
+    if (MLCompute::min(peaks) < 0) {
         QList<long> inds_neg, inds_pos;
         for (int i = 0; i < peaks.count(); i++) {
             if (peaks[i] < 0)
@@ -206,7 +208,7 @@ QList<Shell> define_shells(const QVector<double>& peaks, const Define_Shells_Opt
     }
 
     //only positives
-    double max_peak = compute_max(peaks);
+    double max_peak = MLCompute::max(peaks);
     double peak_lower = 0;
     double peak_upper = peak_lower + opts.shell_increment;
     while (peak_lower <= max_peak) {

@@ -17,7 +17,7 @@
 #include <QList>
 #include <QPainter>
 #include <math.h>
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "mvmisc.h"
 
 struct Correlogram3 {
@@ -87,7 +87,7 @@ void MVCrossCorrelogramsWidget3::runCalculation()
     d->m_computer.compute();
 }
 
-double compute_max2(const QList<Correlogram3>& data0)
+double max2(const QList<Correlogram3>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
@@ -104,7 +104,7 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
 {
     d->m_correlograms = d->m_computer.correlograms;
 
-    double bin_max = compute_max2(d->m_correlograms);
+    double bin_max = max2(d->m_correlograms);
     double bin_min = -bin_max;
     //int num_bins=100;
     int bin_size = 20;
@@ -208,7 +208,7 @@ void MVCrossCorrelogramsWidget3Computer::compute()
     }
 
     //compute K (the maximum label)
-    int K = compute_max(labels);
+    int K = MLCompute::max(labels);
 
     //handle the merge
     QMap<int, int> label_map = cluster_merge.labelMap(K);
@@ -450,8 +450,6 @@ void MVMatrixOfCrossCorrelogramsFactory::updateEnabled()
 {
     setEnabled(!mvContext()->selectedClusters().isEmpty());
 }
-
-
 
 MVSelectedCrossCorrelogramsFactory::MVSelectedCrossCorrelogramsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)

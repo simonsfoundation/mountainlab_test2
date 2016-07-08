@@ -2,7 +2,7 @@
 
 #include <QGridLayout>
 #include <taskprogress.h>
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "histogramview.h"
 #include <QWheelEvent>
 
@@ -94,7 +94,7 @@ double compute_min2(const QList<Histogram>& data0)
     return ret;
 }
 
-double compute_max2(const QList<Histogram>& data0)
+double MLCompute::max2(const QList<Histogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
@@ -119,7 +119,7 @@ void MVAmpHistView::onCalculationFinished()
 
     QGridLayout* GL = d->m_grid_layout;
     double bin_min = compute_min2(d->m_histograms);
-    double bin_max = compute_max2(d->m_histograms);
+    double bin_max = MLCompute::max2(d->m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
 
     int num_bins = 200; //how to choose this?
@@ -213,7 +213,7 @@ void MVAmpHistViewComputer::compute()
         labels << (int)firings.value(2, n);
     }
 
-    int K = compute_max(labels);
+    int K = MLCompute::max(labels);
 
     //assembe the histograms index 0 <--> k=1
     for (int k = 1; k <= K; k++) {

@@ -2,8 +2,9 @@
 
 #include "diskreadmda.h"
 #include "extract_clips.h"
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "compute_templates_0.h"
+#include "msmisc.h"
 
 struct discrimhist_sherpa_data {
     int k1 = 0, k2 = 0;
@@ -84,14 +85,6 @@ bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QStrin
     return true;
 }
 
-double compute_dot_product2(long N, double* v1, double* v2)
-{
-    double ip = 0;
-    for (int m = 0; m < N; m++)
-        ip += v1[m] * v2[m];
-    return ip;
-}
-
 void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size)
 {
     QVector<double> times1, times2;
@@ -122,17 +115,17 @@ void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, c
 
     long N = centroid1.N1() * centroid1.N2();
     double* ptr_diff = diff.dataPtr();
-    double norm0 = compute_norm(N, ptr_diff);
+    double norm0 = MLCompute::norm(N, ptr_diff);
     if (!norm0)
         norm0 = 1;
 
     ret1.clear();
     for (long i = 0; i < clips1.N3(); i++) {
-        ret1 << compute_dot_product2(N, ptr_diff, &ptr_clips1[N * i]) / (norm0 * norm0);
+        ret1 << MLCompute::dotProduct(N, ptr_diff, &ptr_clips1[N * i]) / (norm0 * norm0);
     }
     ret2.clear();
     for (long i = 0; i < clips2.N3(); i++) {
-        ret2 << compute_dot_product2(N, ptr_diff, &ptr_clips2[N * i]) / (norm0 * norm0);
+        ret2 << MLCompute::dotProduct(N, ptr_diff, &ptr_clips2[N * i]) / (norm0 * norm0);
     }
 }
 
@@ -214,8 +207,8 @@ void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda&
 double compute_separation_score(const QVector<double>& data1, const QVector<double>& data2)
 {
     //return data1.count();
-    double mean1 = compute_mean(data1);
-    double mean2 = compute_mean(data2);
+    double mean1 = MLCompute::mean(data1);
+    double mean2 = MLCompute::mean(data2);
     QVector<double> mean_subtracted_vals;
     for (long i = 0; i < data1.count(); i++) {
         mean_subtracted_vals << data1[i] - mean1;
@@ -224,10 +217,11 @@ double compute_separation_score(const QVector<double>& data1, const QVector<doub
         mean_subtracted_vals << data2[i] - mean2;
     }
 
-    double stdev = compute_stdev(mean_subtracted_vals);
+    double stdev = MLCompute::stdev(mean_subtracted_vals);
     if (stdev) {
         return (qAbs(mean2 - mean1) / stdev);
-    } else {
+    }
+    else {
         return 0;
     }
 }

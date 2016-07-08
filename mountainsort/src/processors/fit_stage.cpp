@@ -6,7 +6,8 @@
 
 #include "fit_stage.h"
 #include <QList>
-#include "msmisc.h"
+#include "mlcommon.h"
+#include "mlcommon.h"
 #include "diskreadmda.h"
 #include <math.h>
 #include "compute_templates_0.h"
@@ -37,7 +38,7 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
         times << firings_split.value(1, i);
         labels << (int)firings_split.value(2, i);
     }
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
 
     DiskReadMda X0(timeseries_path);
     Mda templates = compute_templates_0(X0, firings_split, T); //MxNxK
@@ -45,7 +46,7 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     QVector<double> template_norms;
     template_norms << 0;
     for (int k = 1; k <= K; k++) {
-        template_norms << compute_norm(M * T, templates.dataPtr(0, 0, k - 1));
+        template_norms << MLCompute::norm(M * T, templates.dataPtr(0, 0, k - 1));
     }
 
     bool something_changed = true;
@@ -151,8 +152,8 @@ double compute_score(long N, double* X, double* template0)
     double* resid_ptr = resid.dataPtr();
     for (long i = 0; i < N; i++)
         resid_ptr[i] = X[i] - template0[i];
-    double norm1 = compute_norm(N, X);
-    double norm2 = compute_norm(N, resid_ptr);
+    double norm1 = MLCompute::norm(N, X);
+    double norm2 = MLCompute::norm(N, resid_ptr);
     return norm1 * norm1 - norm2 * norm2;
 }
 
@@ -203,15 +204,15 @@ void subtract_scaled_template(long N, double* X, double* template0)
 Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts)
 {
 
-    QList<long> labels, labels_new;
+    QVector<int> labels, labels_new;
     for (long j = 0; j < firings.N2(); j++) {
         labels << (int)firings.value(2, j);
         labels_new << 0;
     }
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
     int k2 = 1;
     for (int k = 1; k <= K; k++) {
-        QList<long> inds_k = find_label_inds(labels, k);
+        QVector<long> inds_k = find_label_inds(labels, k);
         QVector<double> peaks;
         for (long j = 0; j < inds_k.count(); j++) {
             peaks << firings.value(3, inds_k[j]);

@@ -3,7 +3,7 @@
 
 #include <QGridLayout>
 #include <taskprogress.h>
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "histogramview.h"
 #include <QWheelEvent>
 #include "mvmainwindow.h"
@@ -95,7 +95,7 @@ double compute_min2(const QList<DiscrimHistogram>& data0)
     return ret;
 }
 
-double compute_max2(const QList<DiscrimHistogram>& data0)
+double max2(const QList<DiscrimHistogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
@@ -214,7 +214,7 @@ void MVDiscrimHistView::wheelEvent(QWheelEvent* evt)
 void MVDiscrimHistViewPrivate::set_views()
 {
     double bin_min = compute_min2(m_histograms);
-    double bin_max = compute_max2(m_histograms);
+    double bin_max = max2(m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
 
     int num_bins = 200; //how to choose this?

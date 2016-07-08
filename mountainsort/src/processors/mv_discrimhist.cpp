@@ -2,6 +2,7 @@
 
 #include "diskreadmda.h"
 #include "extract_clips.h"
+#include "mlcommon.h"
 #include "msmisc.h"
 
 struct discrimhist_data {
@@ -102,7 +103,7 @@ void get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const Di
 
     long N = centroid1.N1() * centroid1.N2();
     double* ptr_diff = diff.dataPtr();
-    double norm0 = compute_norm(N, ptr_diff);
+    double norm0 = MLCompute::norm(N, ptr_diff);
     if (!norm0)
         norm0 = 1;
 

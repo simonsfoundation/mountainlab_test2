@@ -6,7 +6,8 @@
 
 #include "merge_across_channels.h"
 #include "diskreadmda.h"
-#include "msmisc.h"
+#include "mlcommon.h"
+#include "mlcommon.h"
 #include "compute_templates_0.h"
 #include "fit_stage.h"
 #include "isosplit2.h"
@@ -39,7 +40,7 @@ bool merge_across_channels(const QString& timeseries_path, const QString& firing
         times << firings.value(1, j);
         labels << (int)firings.value(2, j);
     }
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
 
     Mda templates = compute_templates_0(X, times, labels, opts.clip_size);
 
@@ -93,7 +94,7 @@ bool merge_across_channels(const QString& timeseries_path, const QString& firing
 
     //remove unused labels
     new_labels = remove_unused_labels(new_labels);
-    int K_new = compute_max(new_labels);
+    int K_new = MLCompute::max<int>(new_labels);
     printf("Merged into %d of %d clusters\n", K_new, K);
 
     //set the output
@@ -181,7 +182,7 @@ double max_absolute_value_on_channel(Mda& template1, int channel)
     for (int i = 0; i < template1.N2(); i++) {
         vals << qAbs(template1.value(channel - 1, i));
     }
-    return compute_max(vals);
+    return MLCompute::max(vals);
 }
 
 double compute_noncentered_correlation(long N, double* X1, double* X2)
@@ -197,26 +198,29 @@ double compute_noncentered_correlation(long N, double* X1, double* X2)
     return S12 / (sqrt(S11) * sqrt(S22));
 }
 
-Mda time_shift_template(Mda &template0,int dt) {
-    int M=template0.N1();
-    int T=template0.N2();
-    Mda ret(M,T);
-    for (int t=0; t<T; t++) {
-        for (int m=0; m<M; m++) {
-            ret.setValue(template0.value(m,t-dt),m,t);
+Mda time_shift_template(Mda& template0, int dt)
+{
+    int M = template0.N1();
+    int T = template0.N2();
+    Mda ret(M, T);
+    for (int t = 0; t < T; t++) {
+        for (int m = 0; m < M; m++) {
+            ret.setValue(template0.value(m, t - dt), m, t);
         }
     }
     return ret;
 }
 
-double compute_sliding_noncentered_correlation(Mda &template1,Mda &template2) {
-    int M=template1.N1();
-    int T=template1.N2();
-    double best=0;
-    for (int dt=-T/2; dt<=T/2; dt++) {
-        Mda template1b=time_shift_template(template1,dt);
-        double val=compute_noncentered_correlation(M*T,template1b.dataPtr(),template2.dataPtr());
-        if (val>best) best=val;
+double compute_sliding_noncentered_correlation(Mda& template1, Mda& template2)
+{
+    int M = template1.N1();
+    int T = template1.N2();
+    double best = 0;
+    for (int dt = -T / 2; dt <= T / 2; dt++) {
+        Mda template1b = time_shift_template(template1, dt);
+        double val = compute_noncentered_correlation(M * T, template1b.dataPtr(), template2.dataPtr());
+        if (val > best)
+            best = val;
     }
     return best;
 }
@@ -292,7 +296,7 @@ Mda remove_redundant_events(Mda& firings, int maxdt)
         times << firings.value(1, i);
         labels << (int)firings.value(2, i);
     }
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
 
     QVector<int> to_use;
     for (long i = 0; i < L; i++)
@@ -327,7 +331,7 @@ Mda remove_redundant_events(Mda& firings, int maxdt)
 
 QVector<int> remove_unused_labels(const QVector<int>& labels)
 {
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
     QVector<int> used_labels;
     for (int k = 1; k <= K; k++)
         used_labels << 0;

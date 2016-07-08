@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QImage>
 #include "mvutils.h"
+#include "mlcommon.h"
 #include <QMenu>
 
 class HistogramViewPrivate {
@@ -188,10 +189,10 @@ void HistogramView::setXRange(MVRange range)
     update();
 }
 
-#include "msmisc.h"
+#include "mlcommon.h"
 void HistogramView::autoCenterXRange()
 {
-    double mean_value = compute_mean(d->m_N, d->m_data);
+    double mean_value = MLCompute::mean(d->m_N, d->m_data);
     MVRange xrange = this->xRange();
     double center1 = (xrange.min + xrange.max) / 2;
     xrange = xrange + (mean_value - center1);

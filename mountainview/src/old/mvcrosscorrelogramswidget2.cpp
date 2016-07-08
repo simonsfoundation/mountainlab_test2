@@ -17,7 +17,7 @@
 #include <QList>
 #include <QPainter>
 #include <math.h>
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "mvmisc.h"
 
 /// TODO: (MEDIUM) make abstract histogram view that encompasses both cross-correlograms and amplitude histograms
@@ -140,7 +140,7 @@ protected:
     void paintEvent(QPaintEvent* evt);
 };
 
-double compute_max2(const QList<Correlogram>& data0)
+double MLCompute::max2(const QList<Correlogram>& data0)
 {
     double ret = 0;
     for (int i = 0; i < data0.count(); i++) {
@@ -165,7 +165,7 @@ void MVCrossCorrelogramsWidget2::onCalculationFinished()
 
     QGridLayout* GL = d->m_grid_layout;
     double sample_freq = mvContext()->sampleRate();
-    double bin_max = compute_max2(d->m_correlograms);
+    double bin_max = MLCompute::max2(d->m_correlograms);
     double bin_min = -bin_max;
     //int num_bins=100;
     int bin_size = 20;
@@ -426,7 +426,7 @@ void MVCrossCorrelogramsWidget2Computer::compute()
     }
 
     //compute K (the maximum label)
-    int K = compute_max(labels);
+    int K = MLCompute::max(labels);
 
     //handle the merge
     QMap<int, int> label_map = cluster_merge.labelMap(K);

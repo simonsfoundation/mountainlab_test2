@@ -7,7 +7,8 @@
 #include "mv_firings_filter.h"
 
 #include <mda.h>
-#include "msmisc.h"
+#include "mlcommon.h"
+#include "mlcommon.h"
 #include <math.h>
 
 void define_shells(QVector<double>& shell_mins, QVector<double>& shell_maxs, QVector<double>& clip_peaks, double shell_increment, int min_shell_count);
@@ -30,7 +31,7 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
         peaks << peak;
     }
 
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
 
     if (opts.use_shell_split) {
         QVector<int> nums;
@@ -78,8 +79,8 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
                 }
             }
         }
-
-    } else {
+    }
+    else {
         firings_split = firings_original;
         original_cluster_numbers.allocate(1, K + 1);
         for (int k = 1; k <= K; k++)
@@ -100,7 +101,8 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
                         if (firings_split.value(4, i) <= max_outlier_score) {
                             inds << i;
                         }
-                    } else {
+                    }
+                    else {
                         inds << i;
                     }
                 }
@@ -114,7 +116,8 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
                 firings_out.setValue(firings_split.value(j, inds[i]), j, i); //speed this up?
             }
         }
-    } else
+    }
+    else
         firings_out = firings_split;
 
     firings_out.write64(firings_out_path);
@@ -125,7 +128,7 @@ bool mv_firings_filter(const QString& firings_path, const QString& firings_out_p
 void define_shells(QVector<double>& shell_mins, QVector<double>& shell_maxs, QVector<double>& clip_peaks, double shell_increment, int min_shell_count)
 {
     //positives
-    double max_clip_peaks = compute_max(clip_peaks);
+    double max_clip_peaks = MLCompute::max(clip_peaks);
     QVector<double> shell_mins_pos;
     QVector<double> shell_maxs_pos;
     {
@@ -161,11 +164,13 @@ void define_shells(QVector<double>& shell_mins, QVector<double>& shell_maxs, QVe
                     count_in = counts[min_b];
                 else
                     count_in = 0;
-            } else {
+            }
+            else {
                 max_b++;
                 if (max_b < num_bins) {
                     count_in += counts[max_b];
-                } else {
+                }
+                else {
                     if (count_in > 0) {
                         shell_mins_pos << min_b* shell_increment;
                         shell_maxs_pos << (max_b + 1) * shell_increment;
@@ -177,7 +182,7 @@ void define_shells(QVector<double>& shell_mins, QVector<double>& shell_maxs, QVe
     }
 
     //negatives
-    double min_clip_peaks = compute_min(clip_peaks);
+    double min_clip_peaks = MLCompute::min(clip_peaks);
     QVector<double> shell_mins_neg;
     QVector<double> shell_maxs_neg;
     {
@@ -213,11 +218,13 @@ void define_shells(QVector<double>& shell_mins, QVector<double>& shell_maxs, QVe
                     count_in = counts[min_b];
                 else
                     count_in = 0;
-            } else {
+            }
+            else {
                 max_b++;
                 if (max_b < num_bins) {
                     count_in += counts[max_b];
-                } else {
+                }
+                else {
                     if (count_in > 0) {
                         shell_mins_neg << min_b* shell_increment;
                         shell_maxs_neg << (max_b + 1) * shell_increment;

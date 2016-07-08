@@ -7,9 +7,11 @@
 #include <QDebug>
 #include <QTime>
 #include "extract_clips.h"
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "compute_templates_0.h"
 #include "get_sort_indices.h"
+#include "mlcommon.h"
+#include "msmisc.h"
 
 QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display);
 QVector<double> compute_peaks_v2(Mda& clips, long ch);
@@ -85,7 +87,7 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
                     jjjj++;
                 }
             }
-            k_offset += compute_max(labels);
+            k_offset += MLCompute::max<int>(labels);
         }
     }
 
@@ -107,7 +109,7 @@ bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_pat
             long k = (int)firings.value(2, i);
             labels << k;
         }
-        K = compute_max(labels);
+        K = MLCompute::max<int>(labels);
         QVector<int> channels;
         for (long k = 0; k < K; k++)
             channels << 0;
@@ -197,7 +199,7 @@ QVector<int> consolidate_labels_v2(DiskReadMda& X, const QVector<double>& times,
     printf("Consolidation factor = %g\n", consolidation_factor);
     long M = X.N1();
     long T = clip_size;
-    long K = compute_max(labels);
+    long K = MLCompute::max<int>(labels);
     long Tmid = (int)((T + 1) / 2) - 1;
     QVector<int> all_channels;
     for (long m = 0; m < M; m++)
@@ -225,7 +227,7 @@ QVector<int> consolidate_labels_v2(DiskReadMda& X, const QVector<double>& times,
                     max_energy = energies[m];
             }
         }
-        //double max_energy = compute_max(energies);
+        //double max_energy = MLCompute::max(energies);
         bool okay = true;
         if (energies[ch] < max_energy * consolidation_factor)
             okay = false;
@@ -252,7 +254,7 @@ QVector<int> consolidate_labels_v2(DiskReadMda& X, const QVector<double>& times,
     for (long i = 0; i < labels.count(); i++) {
         ret << label_mapping[labels[i]];
     }
-    printf("Channel %ld: Using %d of %ld clusters.\n", ch + 1, compute_max(ret), K);
+    printf("Channel %ld: Using %d of %ld clusters.\n", ch + 1, MLCompute::max<int>(ret), K);
     return ret;
 }
 
@@ -391,8 +393,8 @@ QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts
     QVector<double> abs_peaks = compute_abs_peaks_v2(clips, 0);
 
     //In the case we have both positive and negative peaks, just split into two tasks!
-    double min0 = compute_min(peaks);
-    double max0 = compute_max(peaks);
+    double min0 = MLCompute::min(peaks);
+    double max0 = MLCompute::max(peaks);
     if ((min0 < 0) && (max0 >= 0)) {
         //find the event inds corresponding to negative and positive peaks
         QVector<int> inds_neg, inds_pos;
@@ -414,7 +416,7 @@ QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts
         QVector<int> labels_pos = do_branch_cluster_v2(clips_pos, opts, channel_for_display);
 
         //Combine them together
-        long K_neg = compute_max(labels_neg);
+        long K_neg = MLCompute::max<int>(labels_neg);
         QVector<int> labels;
         for (long i = 0; i < L; i++)
             labels << 0;
@@ -435,7 +437,7 @@ QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts
     QTime timer;
     timer.start();
     QVector<int> labels0 = do_cluster_without_normalized_features(clips, opts);
-    long K0 = compute_max(labels0);
+    long K0 = MLCompute::max<int>(labels0);
 
     if (K0 > 1) {
         //if we found more than one cluster, then we should divide and conquer
@@ -456,7 +458,7 @@ QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts
             for (long a = 0; a < inds_k.count(); a++) {
                 labels[inds_k[a]] = labels_k[a] + kk_offset;
             }
-            kk_offset += compute_max(labels_k);
+            kk_offset += MLCompute::max<int>(labels_k);
         }
         return labels;
     }
@@ -464,7 +466,7 @@ QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts
         //otherwise, we have only one cluster
         //so we need to increase the threshold to see if we can get things to split at higher amplitude
         double abs_peak_threshold = 0;
-        double max_abs_peak = compute_max(abs_peaks);
+        double max_abs_peak = MLCompute::max(abs_peaks);
 
         //increase abs_peak_threshold by opts.shell_increment until we have at least opts.min_shell_size below and above the threshold
         while (true) {
@@ -492,7 +494,7 @@ QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts
 
             //Apply the procedure to the events above the threshold
             QVector<int> labels_above = do_branch_cluster_v2(clips_above, opts, channel_for_display);
-            long K_above = compute_max(labels_above);
+            long K_above = MLCompute::max<int>(labels_above);
 
             if (K_above <= 1) {
                 //there is really only one cluster

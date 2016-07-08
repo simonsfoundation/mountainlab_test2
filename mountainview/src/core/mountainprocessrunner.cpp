@@ -15,7 +15,7 @@
 #include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "cachemanager.h"
 #include "mlcommon.h"
 #include "taskprogress.h"
@@ -77,8 +77,7 @@ QJsonObject variantmap_to_json_obj(QVariantMap map)
     QJsonObject ret;
     QStringList keys = map.keys();
     // Use fromVariantMap
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ret[key] = QJsonValue::fromVariant(map[key]);
     }
     return ret;
@@ -88,8 +87,7 @@ QVariantMap json_obj_to_variantmap(QJsonObject obj)
 {
     QVariantMap ret;
     QStringList keys = obj.keys();
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         ret[key] = obj[key].toVariant();
     }
     return ret;
@@ -132,7 +130,8 @@ QJsonObject http_post(QString url, QJsonObject req)
         obj["success"] = false;
         obj["error"] = "Halting in http_post: " + url;
         return obj;
-    } else {
+    }
+    else {
         printf("RECEIVED TEXT (%d ms, %d bytes) from POST %s\n", timer.elapsed(), ret.count(), url.toLatin1().data());
         QString str = ret.mid(0, 5000) + "...";
         str.replace("\\n", "\n");
@@ -161,8 +160,7 @@ void MountainProcessRunner::runProcess()
         args << "run-process";
         args << d->m_processor_name;
         QStringList keys = d->m_parameters.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             args << QString("--%1=%2").arg(key).arg(d->m_parameters.value(key).toString());
         }
         //right now we can't detach while running locally
@@ -170,8 +168,7 @@ void MountainProcessRunner::runProcess()
         //    args << QString("--~detach=1");
         //}
         task.log(QString("Executing locally: %1").arg(mountainprocess_exe));
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             QString val = d->m_parameters[key].toString();
             task.log(QString("%1 = %2").arg(key).arg(val));
             if (val.startsWith("http")) {
@@ -211,7 +208,8 @@ void MountainProcessRunner::runProcess()
             task.error("Problem running mountainprocess");
         }
         */
-    } else {
+    }
+    else {
         /*
         QString url = d->m_mscmdserver_url + "/?";
         url += "processor=" + d->m_processor_name + "&";
@@ -276,12 +274,11 @@ QString MountainProcessRunnerPrivate::create_temporary_output_file_name(const QS
     QString str = processor_name + ":";
     QStringList keys = params.keys();
     qSort(keys);
-    foreach(QString key, keys)
-    {
+    foreach (QString key, keys) {
         str += key + "=" + params.value(key).toString() + "&";
     }
 
-    QString file_name = QString("%1_%2.tmp").arg(compute_hash(str)).arg(parameter_name);
+    QString file_name = QString("%1_%2.tmp").arg(MLUtil::computeSha1SumOfString(str)).arg(parameter_name);
     QString ret = CacheManager::globalInstance()->makeRemoteFile(mlproxy_url, file_name, CacheManager::LongTerm);
     return ret;
 }

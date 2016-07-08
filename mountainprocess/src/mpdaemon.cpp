@@ -613,10 +613,10 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
                 m_pripts.remove(pript_id);
                 return false;
             }
-            if (MLUtil::computeChecksumOfFile(fname) != S->script_path_checksums.value(ii)) {
+            if (MLUtil::computeSha1SumOfFile(fname) != S->script_path_checksums.value(ii)) {
                 QString message = "Script checksums do not match. Script file has changed since queueing: " + fname + " Not launching process: " + pript_id;
                 qWarning() << message;
-                qWarning() << MLUtil::computeChecksumOfFile(fname) << "<>" << S->script_path_checksums.value(ii);
+                qWarning() << MLUtil::computeSha1SumOfFile(fname) << "<>" << S->script_path_checksums.value(ii);
                 writeLogRecord("error", "message", message);
                 writeLogRecord("unqueue-script", "pript_id", pript_id, "reason", "Script file has changed: " + fname);
                 m_pripts.remove(pript_id);

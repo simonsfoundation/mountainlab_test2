@@ -3,8 +3,9 @@
 #include "diskwritemda.h"
 #include <QTime>
 #include <math.h>
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "mda.h"
+#include "mlcommon.h"
 
 bool mask_out_artifacts(const QString& timeseries_path, const QString& timeseries_out_path, double threshold, int interval_size)
 {
@@ -48,8 +49,8 @@ bool mask_out_artifacts(const QString& timeseries_path, const QString& timeserie
         for (long i = 0; i < norms.N2(); i++) {
             vals << norms.get(m, i);
         }
-        double sigma0 = compute_stdev(vals);
-        double mean0 = compute_mean(vals);
+        double sigma0 = MLCompute::stdev(vals);
+        double mean0 = MLCompute::mean(vals);
         for (int i = 0; i < norms.N2(); i++) {
             if (norms.value(m, i) > mean0 + sigma0 * threshold) {
                 use_it.setValue(0, m, i - 1); //don't use the neighbor chunks either
@@ -76,7 +77,8 @@ bool mask_out_artifacts(const QString& timeseries_path, const QString& timeserie
             if (use_it.value(m, i)) {
                 num_timepoints_used += interval_size;
                 Y.writeChunk(chunk, 0, timepoint);
-            } else {
+            }
+            else {
                 num_timepoints_not_used += interval_size;
             }
         }

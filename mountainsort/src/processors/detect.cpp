@@ -4,7 +4,7 @@
 #include <math.h>
 #include "diskreadmda.h"
 #include "msprefs.h"
-#include "msmisc.h"
+#include "mlcommon.h"
 
 bool detect(const QString& timeseries_path, const QString& detect_path, const Detect_Opts& opts)
 {

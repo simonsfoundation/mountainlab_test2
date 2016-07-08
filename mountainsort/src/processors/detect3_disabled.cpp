@@ -11,7 +11,7 @@
 #include <math.h>
 #include "diskreadmda.h"
 #include "msprefs.h"
-#include "msmisc.h"
+#include "mlcommon.h"
 #include <math.h>
 
 QVector<double> do_detect3(const QVector<double> &vals,int detect_interval,double detect_threshold,int sign);

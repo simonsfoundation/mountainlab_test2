@@ -35,7 +35,8 @@ QString format_number(double num)
 {
     if (num == (long)num) {
         return QString::number(num, 'f', 0);
-    } else {
+    }
+    else {
         return QString::number(num, 'f');
     }
 }
@@ -75,7 +76,8 @@ bool mda2txt_Processor::run(const QMap<QString, QVariant>& params)
             }
             txt += line + "\n";
         }
-    } else {
+    }
+    else {
         if (X.N1() > max_rows) {
             printf("Too many rows: %ld\n", (long)X.N1());
             return false;

@@ -158,7 +158,8 @@ QString MLUtil::resolvePath(const QString& basepath, const QString& path)
 {
     if (QFileInfo(path).isRelative()) {
         return basepath + "/" + path;
-    } else
+    }
+    else
         return path;
 }
 
@@ -167,7 +168,7 @@ void MLUtil::mkdirIfNeeded(const QString& path)
     mkdir_if_doesnt_exist(path);
 }
 
-QString MLUtil::computeChecksumOfFile(const QString& path)
+QString MLUtil::computeSha1SumOfFile(const QString& path)
 {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly))
@@ -208,7 +209,8 @@ CLParams::CLParams(int argc, char* argv[])
                 return;
             }
             this->named_parameters[name] = clp_string_to_variant(val);
-        } else {
+        }
+        else {
             this->unnamed_parameters << str;
         }
     }
@@ -235,4 +237,151 @@ QVariant clp_string_to_variant(const QString& str)
     if (clp_is_float(str))
         return str.toFloat();
     return str;
+}
+
+double MLCompute::min(const QVector<double>& X)
+{
+    double ret = X.value(0);
+    for (long i = 0; i < X.count(); i++) {
+        if (X[i] < ret)
+            ret = X[i];
+    }
+    return ret;
+}
+
+double MLCompute::max(const QVector<double>& X)
+{
+    double ret = X.value(0);
+    for (long i = 0; i < X.count(); i++) {
+        if (X[i] > ret)
+            ret = X[i];
+    }
+    return ret;
+}
+
+double MLCompute::sum(const QVector<double>& X)
+{
+    double ret = 0;
+    for (long i = 0; i < X.count(); i++) {
+        ret += X[i];
+    }
+    return ret;
+}
+
+double MLCompute::mean(const QVector<double>& X)
+{
+    if (X.isEmpty())
+        return 0;
+    return sum(X) / X.count();
+}
+
+double MLCompute::stdev(const QVector<double>& X)
+{
+    double sumsqr = 0;
+    for (int i = 0; i < X.count(); i++)
+        sumsqr += X[i] * X[i];
+    double sum = 0;
+    for (int i = 0; i < X.count(); i++)
+        sum += X[i];
+    int ct = X.count();
+    if (ct >= 2) {
+        return sqrt((sumsqr - sum * sum / ct) / (ct - 1));
+    }
+    else
+        return 0;
+}
+
+double MLCompute::dotProduct(const QVector<double>& X1, const QVector<double>& X2)
+{
+    if (X1.count() != X2.count())
+        return 0;
+    double ret;
+    for (long i = 0; i < X1.count(); i++)
+        ret += X1[i] * X2[i];
+    return ret;
+}
+
+double MLCompute::norm(const QVector<double>& X)
+{
+    return sqrt(dotProduct(X, X));
+}
+
+double MLCompute::correlation(const QVector<double>& X1, const QVector<double>& X2)
+{
+    if (X1.count() != X2.count())
+        return 0;
+    long N = X1.count();
+    double mean1 = mean(X1);
+    double stdev1 = stdev(X1);
+    double mean2 = mean(X2);
+    double stdev2 = stdev(X2);
+    if ((stdev1 == 0) || (stdev2 == 0))
+        return 0;
+    QVector<double> Y1(N);
+    QVector<double> Y2(N);
+    for (long i = 0; i < N; i++) {
+        Y1[i] = (X1[i] - mean1) / stdev1;
+        Y2[i] = (X2[i] - mean2) / stdev2;
+    }
+    return dotProduct(Y1, Y2);
+}
+
+double MLCompute::norm(long N, double* X)
+{
+    return sqrt(dotProduct(N, X, X));
+}
+
+double MLCompute::dotProduct(long N, double* X1, double* X2)
+{
+    double ret = 0;
+    for (long i = 0; i < N; i++)
+        ret += X1[i] * X2[i];
+    return ret;
+}
+
+QString MLUtil::computeSha1SumOfString(const QString& str)
+{
+    QCryptographicHash hash(QCryptographicHash::Sha1);
+    hash.addData(str.toLatin1());
+    return QString(hash.result().toHex());
+}
+
+double MLCompute::sum(long N, double* X)
+{
+    double ret = 0;
+    for (long i = 0; i < N; i++) {
+        ret += X[i];
+    }
+    return ret;
+}
+
+double MLCompute::mean(long N, double* X)
+{
+    if (!N)
+        return 0;
+    return sum(N, X) / N;
+}
+
+double MLCompute::max(long N, double* X)
+{
+    if (!N)
+        return 0;
+    double ret = X[0];
+    for (long i = 0; i < N; i++) {
+        if (X[i] > ret)
+            ret = X[i];
+    }
+    return ret;
+}
+
+double MLCompute::min(long N, double* X)
+{
+    if (!N)
+        return 0;
+    double ret = X[0];
+    for (long i = 0; i < N; i++) {
+        if (X[i] < ret)
+            ret = X[i];
+    }
+    return ret;
 }

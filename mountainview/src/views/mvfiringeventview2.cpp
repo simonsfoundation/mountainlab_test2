@@ -153,8 +153,7 @@ void MVFiringEventView2::onCalculationFinished()
 
     {
         QSet<int> X;
-        foreach(int k, d->m_labels_to_use)
-        {
+        foreach (int k, d->m_labels_to_use) {
             X.insert(this->mvContext()->clusterMerge().representativeLabel(k));
         }
         QList<int> list = X.toList();
@@ -184,12 +183,12 @@ void MVFiringEventView2::setAmplitudeRange(MVRange range)
     slot_update_image(); //because amplitude range has changed
 }
 
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "mvmainwindow.h"
 void MVFiringEventView2::autoSetAmplitudeRange()
 {
-    double min0 = compute_min(d->m_amplitudes0);
-    double max0 = compute_max(d->m_amplitudes0);
+    double min0 = MLCompute::min(d->m_amplitudes0);
+    double max0 = MLCompute::max(d->m_amplitudes0);
     setAmplitudeRange(MVRange(qMin(0.0, min0), qMax(0.0, max0)));
 }
 
@@ -331,7 +330,7 @@ MVFiringEventsFactory::MVFiringEventsFactory(MVContext* context, QObject* parent
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 

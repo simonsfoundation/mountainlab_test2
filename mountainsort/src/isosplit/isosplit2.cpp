@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <QDebug>
 #include "lapacke.h"
+#include "mlcommon.h"
 
 QVector<int> do_kmeans(Mda& X, int K);
 bool eigenvalue_decomposition_sym_isosplit(Mda& U, Mda& S, Mda& X);
@@ -402,7 +403,7 @@ QVector<int> test_redistribute(bool& do_merge, Mda& X, const QList<long>& inds1,
     return test_redistribute(do_merge, X1, X2, isocut_threshold);
 }
 
-int compute_max_00(const QVector<int>& X)
+int max_00(const QVector<int>& X)
 {
     int ret = X.value(0);
     for (int i = 0; i < X.count(); i++)
@@ -466,7 +467,7 @@ QVector<int> isosplit2(Mda& X, float isocut_threshold, int K_init, bool verbose)
         bool do_merge;
 
         QVector<int> labels0 = test_redistribute(do_merge, X, inds1, inds2, isocut_threshold);
-        int max_label = compute_max_00(labels0);
+        int max_label = max_00(labels0);
         if ((do_merge) || (max_label == 1)) {
             if (verbose)
                 printf("merging size=%d.\n", inds12.count());

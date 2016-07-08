@@ -6,7 +6,8 @@
 
 #include "fit_stage.h"
 #include <QList>
-#include "msmisc.h"
+#include "mlcommon.h"
+#include "mlcommon.h"
 #include "diskreadmda.h"
 #include <QTime>
 #include <math.h>
@@ -151,12 +152,12 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVe
     int T = opts.clip_size;
     int Tmid = (int)((T + 1) / 2) - 1;
     long L = times.count();
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
 
     QVector<double> template_norms;
     template_norms << 0;
     for (int k = 1; k <= K; k++) {
-        template_norms << compute_norm(M * T, templates.dataPtr(0, 0, k - 1));
+        template_norms << MLCompute::norm(M * T, templates.dataPtr(0, 0, k - 1));
     }
 
     bool something_changed = true;

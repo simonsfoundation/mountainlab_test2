@@ -10,7 +10,6 @@
 #include <QTime>
 #include "diskreadmda.h"
 #include "matrix_mda.h"
-#include "msmisc.h"
 #include "mlcommon.h"
 
 double max_difference(Mda& X, Mda& Y);
@@ -114,7 +113,8 @@ void run_unit_test_eigenvalue_decomposition()
             matrix_print(X);
             printf("\nX2:\n");
             matrix_print(X2);
-        } else if (pass == 2) {
+        }
+        else if (pass == 2) {
             printf("Elapsed time for M=%d: %g sec\n", M, elapsed / 1000);
         }
     }
@@ -153,7 +153,7 @@ void run_unit_test_isosplit()
     for (int i = 0; i < labels.count(); i++)
         L.set(labels[i], i);
     L.write32(path0 + "/isosplit_unit_test_L.mda");
-    int K = compute_max(labels);
+    int K = MLCompute::max<int>(labels);
     printf("K=%d\n", K);
 }
 
@@ -161,9 +161,11 @@ void run_unit_test(const QString& test_name)
 {
     if (test_name == "eigenvalue_decomposition") {
         run_unit_test_eigenvalue_decomposition();
-    } else if (test_name == "whiten") {
+    }
+    else if (test_name == "whiten") {
         run_unit_test_whiten();
-    } else if (test_name == "isosplit") {
+    }
+    else if (test_name == "isosplit") {
         run_unit_test_isosplit();
     }
 }

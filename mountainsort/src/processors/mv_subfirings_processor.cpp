@@ -8,7 +8,8 @@
 
 #include <QString>
 #include <diskreadmda.h>
-#include "msmisc.h"
+#include "mlcommon.h"
+#include "mlcommon.h"
 
 class mv_subfirings_ProcessorPrivate {
 public:
@@ -40,16 +41,17 @@ bool mv_subfirings_Processor::check(const QMap<QString, QVariant>& params)
     return true;
 }
 
-QList<bool> evenly_distributed_to_use(long num,long num_to_use) {
+QList<bool> evenly_distributed_to_use(long num, long num_to_use)
+{
     QList<bool> ret;
-    for (long i=0; i<num; i++) {
+    for (long i = 0; i < num; i++) {
         ret << false;
     }
-    double stride=num*1.0/num_to_use; //will be greater than 1
-    double j=0;
-    for (long i=0; i<num_to_use; i++) {
-        ret[(long)j]=true;
-        j+=stride;
+    double stride = num * 1.0 / num_to_use; //will be greater than 1
+    double j = 0;
+    for (long i = 0; i < num_to_use; i++) {
+        ret[(long)j] = true;
+        j += stride;
     }
     return ret;
 }
@@ -74,7 +76,7 @@ bool mv_subfirings(QString firings_path, QString firings_out_path, QVector<int> 
     }
 
     if (max_per_label) {
-        int K = compute_max(labels);
+        int K = MLCompute::max<int>(labels);
         for (int k = 0; k <= K; k++) {
             if (counts[k] > max_per_label) {
                 QList<bool> to_use_k = evenly_distributed_to_use(counts[k], max_per_label);

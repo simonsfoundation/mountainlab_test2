@@ -16,7 +16,7 @@
 #include <QList>
 #include <QPainter>
 #include <math.h>
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "mvmisc.h"
 
 class MVHistogramGridPrivate {

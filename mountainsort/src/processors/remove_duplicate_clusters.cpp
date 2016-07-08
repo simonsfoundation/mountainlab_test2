@@ -5,7 +5,8 @@
 #include "get_sort_indices.h"
 #include "compute_templates_0.h"
 #include <math.h>
-#include "msmisc.h"
+#include "mlcommon.h"
+#include "mlcommon.h"
 
 bool probably_the_same(Mda& templates, int ch1, int k1, int ch2, int k2, const remove_duplicate_clusters_Opts& opts);
 
@@ -55,7 +56,8 @@ bool remove_duplicate_clusters(const QString& timeseries_path, const QString& fi
                     if (probably_the_same(templates, ch1 - 1, k1, ch2 - 1, k2, opts)) {
                         if (fabs(templates.value(ch1, Tmid, k1)) > fabs(templates.value(ch2, Tmid, k2))) {
                             clusters_to_use[k2] = 0;
-                        } else {
+                        }
+                        else {
                             clusters_to_use[k1] = 0;
                         }
                     }
@@ -73,7 +75,8 @@ bool remove_duplicate_clusters(const QString& timeseries_path, const QString& fi
         if (clusters_to_use[k - 1]) {
             labels_map[k] = k0;
             k0++;
-        } else {
+        }
+        else {
             printf("Removing label %d\n", k);
             labels_map[k] = 0;
         }
@@ -153,9 +156,9 @@ bool probably_the_same(Mda& templates, int ch1, int k1, int ch2, int k2, const r
             resid.setValue(templates.value(m, t, k1) - templates.value(m, t - best_shift, k2), m, t);
         }
     }
-    double norm_resid = compute_norm(M * T, resid_ptr);
-    double norm1 = compute_norm(M * T, ptr1);
-    double norm2 = compute_norm(M * T, ptr2);
+    double norm_resid = MLCompute::norm(M * T, resid_ptr);
+    double norm1 = MLCompute::norm(M * T, ptr1);
+    double norm2 = MLCompute::norm(M * T, ptr2);
     if (norm_resid * norm_resid < norm1 * norm1 * 0.5) {
         if (norm_resid * norm_resid < norm2 * norm2 * 0.5) {
             return true;

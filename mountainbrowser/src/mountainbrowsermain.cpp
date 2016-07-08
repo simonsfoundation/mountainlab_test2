@@ -16,7 +16,7 @@
 #include <QWebFrame>
 #include <QJsonDocument>
 #include "mbcontroller.h"
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "mlcommon.h"
 
 #include "mountainbrowsermain.h"

@@ -22,7 +22,7 @@
 #include "mask_out_artifacts_processor.h"
 #include "fit_stage_processor.h"
 #include "compute_templates_processor.h"
-#include "msmisc.h"
+#include "mlcommon.h"
 #include "mv_firings_filter_processor.h"
 #include "mv_subfirings_processor.h"
 #include "mv_compute_templates_processor.h"
@@ -38,9 +38,6 @@
 #include "extract_channel_values_processor.h"
 #include "mv_discrimhist_processor.h"
 #include "mv_discrimhist_sherpa_processor.h"
-
-#include "mlcommon.h"
-
 #include <sys/stat.h>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -125,7 +122,7 @@ QString compute_process_code(const QString& processor_name, const QVariantMap& p
     X["parameters"] = QJsonObject::fromVariantMap(parameters);
     QString json = QJsonDocument(X).toJson();
     /// Witold I need a canonical json here so that the hash is always the same. (relatively important)
-    return compute_hash(json);
+    return MLUtil::computeSha1SumOfString(json);
 }
 
 QString compute_file_code(const QString& path)
@@ -155,12 +152,12 @@ QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& process
         version = PP->version();
         input_file_parameters = PP->inputFileParameters();
         output_file_parameters = PP->outputFileParameters();
-    } else
+    }
+    else
         return ret; //can't even find the processor (not registered)
 
     QVariantMap input_file_codes;
-    foreach(const QString & pp, input_file_parameters)
-    {
+    foreach (const QString& pp, input_file_parameters) {
         QString path0 = parameters[pp].toString();
         if (!path0.isEmpty()) {
             QString code0 = compute_file_code(path0);
@@ -168,8 +165,7 @@ QVariantMap MSProcessManagerPrivate::compute_process_info(const QString& process
         }
     }
     QVariantMap output_file_codes;
-    foreach(const QString & pp, output_file_parameters)
-    {
+    foreach (const QString& pp, output_file_parameters) {
         QString path0 = parameters[pp].toString();
         if (!path0.isEmpty()) {
             QString code0 = compute_file_code(path0);
@@ -199,7 +195,8 @@ bool MSProcessManager::runProcess(const QString& processor_name, const QVariantM
     bool ret = processor->run(parameters);
     if (ret) {
         printf("Elapsed time for processor %s: %g sec\n", processor_name.toLatin1().data(), timer.elapsed() * 1.0 / 1000);
-    } else {
+    }
+    else {
         qWarning() << "Error in processor->run" << processor_name;
     }
 
@@ -220,7 +217,8 @@ bool MSProcessManager::checkAndRunProcess(const QString& processor_name, const Q
         if (!this->runProcess(processor_name, parameters)) {
             printf("Problem running processor: %s\n", processor_name.toLatin1().data());
             return 0;
-        } else
+        }
+        else
             return true;
     }
 }
@@ -289,8 +287,7 @@ void MSProcessManager::printJsonSpec() const
         QJsonArray inputs;
         {
             QStringList input_file_parameters = P->inputFileParameters();
-            foreach(QString pname, input_file_parameters)
-            {
+            foreach (QString pname, input_file_parameters) {
                 QJsonObject P;
                 P["name"] = pname;
                 inputs.append(P);
@@ -300,8 +297,7 @@ void MSProcessManager::printJsonSpec() const
         QJsonArray outputs;
         {
             QStringList output_file_parameters = P->outputFileParameters();
-            foreach(QString pname, output_file_parameters)
-            {
+            foreach (QString pname, output_file_parameters) {
                 QJsonObject P;
                 P["name"] = pname;
                 outputs.append(P);
@@ -311,8 +307,7 @@ void MSProcessManager::printJsonSpec() const
         QJsonArray parameters;
         {
             QStringList parameters0 = P->requiredParameters();
-            foreach(QString pname, parameters0)
-            {
+            foreach (QString pname, parameters0) {
                 QJsonObject P;
                 P["name"] = pname;
                 P["optional"] = false;
@@ -321,8 +316,7 @@ void MSProcessManager::printJsonSpec() const
         }
         {
             QStringList parameters0 = P->optionalParameters();
-            foreach(QString pname, parameters0)
-            {
+            foreach (QString pname, parameters0) {
                 QJsonObject P;
                 P["name"] = pname;
                 P["optional"] = true;

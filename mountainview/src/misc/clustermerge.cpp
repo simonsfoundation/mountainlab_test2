@@ -10,7 +10,8 @@
 #include <QJsonDocument>
 #include <QSet>
 #include <QDebug>
-#include "msmisc.h"
+#include "mlcommon.h"
+#include "mlcommon.h"
 
 struct merge_pair {
     merge_pair(int l1, int l2)
@@ -221,7 +222,7 @@ QMap<int, int> ClusterMerge::labelMap(int K) const
 
 QVector<int> ClusterMerge::mapLabels(const QVector<int>& labels) const
 {
-    QMap<int, int> map = this->labelMap(compute_max(labels));
+    QMap<int, int> map = this->labelMap(MLCompute::max<int>(labels));
     QVector<int> ret = labels;
     for (long i = 0; i < ret.count(); i++) {
         ret[i] = map[ret[i]];
