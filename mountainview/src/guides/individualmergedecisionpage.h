@@ -24,6 +24,7 @@ private slots:
     void slot_button_clicked();
     void slot_add_to_merge_tag();
     void slot_remove_to_merge_tag();
+    void slot_add_mua_and_reject_tags();
     void slot_update_candidates();
 
 private:

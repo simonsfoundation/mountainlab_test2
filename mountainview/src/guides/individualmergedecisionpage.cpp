@@ -12,7 +12,6 @@
 #include <QPushButton>
 #include <flowlayout.h>
 
-
 class IndividualMergeDecisionPagePrivate {
 public:
     IndividualMergeDecisionPage* q;
@@ -109,6 +108,11 @@ IndividualMergeDecisionPage::IndividualMergeDecisionPage(MVContext* context, MVM
             QObject::connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_remove_to_merge_tag()));
             hlayout->addWidget(B);
         }
+        {
+            QPushButton* B = new QPushButton("Add \"mua\" and \"reject\" tags");
+            QObject::connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_add_mua_and_reject_tags()));
+            hlayout->addWidget(B);
+        }
         hlayout->addStretch();
         layout->addLayout(hlayout);
     }
@@ -143,8 +147,7 @@ void IndividualMergeDecisionPage::slot_button_clicked()
     if (action == "open_view") {
         d->m_main_window->setCurrentContainerName(sender()->property("container-name").toString());
         d->m_main_window->openView(sender()->property("view-id").toString());
-    }
-    else if (action == "select_and_open_view") {
+    } else if (action == "select_and_open_view") {
         d->m_context->clickClusterPair(d->m_cluster_pairs.value(d->m_current_cluster_pair_index), Qt::NoModifier);
         d->m_main_window->setCurrentContainerName(sender()->property("container-name").toString());
         d->m_main_window->openView(sender()->property("view-id").toString());
@@ -172,6 +175,20 @@ void IndividualMergeDecisionPage::slot_remove_to_merge_tag()
     d->m_context->setClusterPairTags(pair, tags);
 }
 
+void IndividualMergeDecisionPage::slot_add_mua_and_reject_tags()
+{
+    ClusterPair pair = d->m_cluster_pairs.value(d->m_current_cluster_pair_index);
+    QList<int> ks;
+    ks << pair.k1 << pair.k2;
+    foreach(int k, ks)
+    {
+        QSet<QString> tags = d->m_context->clusterTags(k);
+        tags.insert("mua");
+        tags.insert("reject");
+        d->m_context->setClusterTags(k, tags);
+    }
+}
+
 void IndividualMergeDecisionPage::slot_update_candidates()
 {
     d->update_candidate_pairs();
@@ -182,8 +199,7 @@ void IndividualMergeDecisionPagePrivate::update_controls()
     ClusterPair pair = m_cluster_pairs.value(m_current_cluster_pair_index);
     if ((pair.k1) && (pair.k2)) {
         m_pair_edit->setText(QString("%1/%2").arg(pair.k1).arg(pair.k2));
-    }
-    else {
+    } else {
         m_pair_edit->setText("");
     }
     m_previous_button->setEnabled(m_current_cluster_pair_index - 1 >= 0);
@@ -194,7 +210,8 @@ void IndividualMergeDecisionPagePrivate::update_candidate_pairs()
 {
     QList<ClusterPair> pairs;
     QList<ClusterPair> keys = m_context->clusterPairAttributesKeys();
-    foreach (ClusterPair key, keys) {
+    foreach(ClusterPair key, keys)
+    {
         if (m_context->clusterPairTags(key).contains("to_merge")) {
             pairs << key;
         }
