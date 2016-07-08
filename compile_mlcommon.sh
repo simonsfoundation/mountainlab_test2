@@ -1,10 +1,7 @@
 #!/bin/bash
 
-./compile_mlcommon.sh
-
-# Compile mountainview
-echo "Compiling mountainview"
-cd mountainview/src
+echo "Compiling mlcommon"
+cd mlcommon/src
 qmake
 make $1 -j 8
 EXIT_CODE=$?
