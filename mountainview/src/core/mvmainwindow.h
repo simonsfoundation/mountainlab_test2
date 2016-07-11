@@ -75,7 +75,6 @@ slots:
 
 private
 slots:
-    void slot_action_move_to_other_tab_widget();
     void slot_pop_out_widget();
     /// TODO: (HIGH) cluster annotation guide doesn't belong in main window
     void slot_cluster_annotation_guide();

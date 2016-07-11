@@ -364,18 +364,6 @@ void MVMainWindow::keyPressEvent(QKeyEvent* evt)
 }
 */
 
-/// TODO: (MEDIUM) this functionality should be moved to tabber
-void MVMainWindow::slot_action_move_to_other_tab_widget()
-{
-    QAction* a = qobject_cast<QAction*>(sender());
-    if (!a)
-        return;
-    MVAbstractView* W = qobject_cast<MVAbstractView*>(a->parentWidget());
-    if (!W)
-        return;
-    d->m_tabber->moveWidgetToOtherContainer(W);
-}
-
 void MVMainWindow::slot_pop_out_widget()
 {
     QAction* a = qobject_cast<QAction*>(sender());

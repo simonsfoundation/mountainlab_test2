@@ -80,9 +80,8 @@ void test_taskprogressview()
 //void run_export_instructions(MVMainWindow* W, const QStringList& instructions);
 
 /// TODO: (MEDIUM) provide mountainview usage information
-/// TODO: (MEDIUM) auto correlograms for selected clusters
 /// TODO (LOW) figure out what to do when #channels and/or #clusters is huge
-/// TODO: (HIGH) annotate axes as microvolts whenever relevant
+/// TODO: (LOW) annotate axes as microvolts whenever relevant
 /// TODO: (HIGH) option to use pre-processed data for PCA
 
 QColor brighten(QColor col, int amount);
