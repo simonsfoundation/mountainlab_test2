@@ -20,7 +20,7 @@
 
 /// TODO: (MEDIUM) spike spray should respond to mouse wheel and show current position with marker
 /// TODO: (MEDIUM) much more responsive rendering of spike spray
-/// TODO: (HIGH) three panels in spikespray -- individual and overlapping
+/// TODO: (HIGH) Implement the panels as layers, make a layer stack, and handle zoom/pan without using a scroll widget
 
 class MVSpikeSprayComputer {
 public:
@@ -177,7 +177,7 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
     }
 }
 
-void MVSpikeSprayView::wheelEvent(QWheelEvent *evt)
+void MVSpikeSprayView::wheelEvent(QWheelEvent* evt)
 {
     if (evt->delta() > 0) {
         slot_zoom_in();
@@ -235,8 +235,10 @@ void MVSpikeSprayViewPrivate::set_panel_width(double w)
 
 double MVSpikeSprayViewPrivate::actual_panel_width()
 {
-    if (m_panels.isEmpty()) return m_panel_width;
-    else return m_panels[0]->width();
+    if (m_panels.isEmpty())
+        return m_panel_width;
+    else
+        return m_panels[0]->width();
 }
 
 void MVSpikeSprayComputer::compute()
