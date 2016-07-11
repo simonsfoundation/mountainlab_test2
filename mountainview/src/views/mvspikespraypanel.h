@@ -2,6 +2,8 @@
 #define MVSPIKESPRAYPANEL_H
 
 #include <QList>
+#include <QMutex>
+#include <QThread>
 #include <QWidget>
 #include <mvcontext.h>
 
@@ -23,5 +25,28 @@ protected:
 private:
     MVSpikeSprayPanelPrivate* d;
 };
+
+class MVSSRenderThread : public QThread {
+    Q_OBJECT
+public:
+    //input
+    Mda clips;
+    QList<QColor> colors;
+    double amplitude_factor;
+    int W,H;
+
+    //output
+    QImage image;
+
+    QImage image_in_progress;
+    QMutex image_in_progress_mutex;
+
+    void run();
+    void render_clip(QPainter* painter, long M, long T, double* ptr, QColor col);
+    QPointF coord2pix(int m, double t, double val);
+signals:
+    void signalImageInProgressUpdated();
+};
+
 
 #endif // MVSPIKESPRAYPANEL_H

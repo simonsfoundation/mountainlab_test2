@@ -31,6 +31,12 @@ protected:
     void paintEvent(QPaintEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
 
+private slots:
+    void slot_zoom_in();
+    void slot_zoom_out();
+    void slot_vertical_zoom_in();
+    void slot_vertical_zoom_out();
+
 private:
     MVSpikeSprayViewPrivate* d;
 };

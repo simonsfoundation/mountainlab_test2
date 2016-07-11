@@ -13,9 +13,10 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QPainter>
+#include <QScrollArea>
 #include <taskprogress.h>
 #include "mlcommon.h"
-#include "mlcommon.h"
+#include "actionfactory.h"
 
 /// TODO: (MEDIUM) spike spray should respond to mouse wheel and show current position with marker
 /// TODO: (MEDIUM) much more responsive rendering of spike spray
@@ -45,6 +46,7 @@ public:
     QSet<int> m_labels_to_use;
 
     double m_amplitude_factor = 0; //zero triggers auto-calculation
+    int m_panel_width = 0;
 
     Mda m_clips_to_render;
     QVector<int> m_labels_to_render;
@@ -55,6 +57,8 @@ public:
 
     MVSpikeSprayPanel* add_panel();
     void set_amplitude_factor(double val);
+    void set_panel_width(double w);
+    double actual_panel_width();
 };
 
 MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
@@ -69,8 +73,24 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     recalculateOn(mvContext(), SIGNAL(timeseriesNamesChanged()));
     recalculateOn(mvContext(), SIGNAL(filteredFiringsChanged()));
 
+    QWidget* panel_widget = new QWidget;
     d->m_panel_layout = new QHBoxLayout;
-    this->setLayout(d->m_panel_layout);
+    panel_widget->setLayout(d->m_panel_layout);
+
+    QScrollArea* SA = new QScrollArea;
+    SA->setWidget(panel_widget);
+    SA->setWidgetResizable(true);
+
+    QHBoxLayout* layout = new QHBoxLayout;
+    layout->setSpacing(0);
+    layout->setMargin(0);
+    layout->addWidget(SA);
+    this->setLayout(layout);
+
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, SLOT(slot_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, SLOT(slot_zoom_out()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInVertical, this, SLOT(slot_vertical_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutVertical, this, SLOT(slot_vertical_zoom_out()));
 }
 
 MVSpikeSprayView::~MVSpikeSprayView()
@@ -147,14 +167,34 @@ void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
 void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->key() == Qt::Key_Up) {
-        d->set_amplitude_factor(d->m_amplitude_factor * 1.2);
+        this->slot_vertical_zoom_in();
     }
     else if (evt->key() == Qt::Key_Down) {
-        d->set_amplitude_factor(d->m_amplitude_factor / 1.2);
+        this->slot_vertical_zoom_out();
     }
     else {
         QWidget::keyPressEvent(evt);
     }
+}
+
+void MVSpikeSprayView::slot_zoom_in()
+{
+    d->set_panel_width(d->actual_panel_width() + 10);
+}
+
+void MVSpikeSprayView::slot_zoom_out()
+{
+    d->set_panel_width(qMax(d->actual_panel_width() - 10, 30.0));
+}
+
+void MVSpikeSprayView::slot_vertical_zoom_in()
+{
+    d->set_amplitude_factor(d->m_amplitude_factor * 1.2);
+}
+
+void MVSpikeSprayView::slot_vertical_zoom_out()
+{
+    d->set_amplitude_factor(d->m_amplitude_factor / 1.2);
 }
 
 MVSpikeSprayPanel* MVSpikeSprayViewPrivate::add_panel()
@@ -163,6 +203,7 @@ MVSpikeSprayPanel* MVSpikeSprayViewPrivate::add_panel()
     m_panel_layout->addWidget(P);
     m_panels << P;
     P->setAmplitudeFactor(m_amplitude_factor);
+    P->setMinimumWidth(m_panel_width);
     return P;
 }
 
@@ -172,6 +213,20 @@ void MVSpikeSprayViewPrivate::set_amplitude_factor(double val)
     for (int i = 0; i < m_panels.count(); i++) {
         m_panels[i]->setAmplitudeFactor(m_amplitude_factor);
     }
+}
+
+void MVSpikeSprayViewPrivate::set_panel_width(double w)
+{
+    m_panel_width = w;
+    for (int i = 0; i < m_panels.count(); i++) {
+        m_panels[i]->setMinimumWidth(w);
+    }
+}
+
+double MVSpikeSprayViewPrivate::actual_panel_width()
+{
+    if (m_panels.isEmpty()) return m_panel_width;
+    else return m_panels[0]->width();
 }
 
 void MVSpikeSprayComputer::compute()
