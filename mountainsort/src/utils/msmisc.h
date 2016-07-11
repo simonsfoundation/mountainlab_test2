@@ -9,6 +9,7 @@
 #include <QVector>
 #include "mda.h"
 #include <math.h>
+#include "pca.h"
 
 Mda compute_mean_clip(Mda& clips);
 Mda grab_clips_subset(Mda& clips, const QVector<int>& inds);

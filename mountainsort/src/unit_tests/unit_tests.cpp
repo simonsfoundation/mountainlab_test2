@@ -98,7 +98,7 @@ void run_unit_test_eigenvalue_decomposition()
         Mda U, S;
         QTime timer;
         timer.start();
-        eigenvalue_decomposition_sym(U, S, X);
+        //eigenvalue_decomposition_sym(U, S, X);
         double elapsed = timer.elapsed();
         if (pass == 1) {
             Mda Sdiag(M, M);

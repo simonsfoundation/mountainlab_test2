@@ -6,6 +6,7 @@
 #include <iostream>
 #include <QTime>
 
+/*
 void make_random_vector(int M, double* v)
 {
     for (int i = 0; i < M; i++)
@@ -134,3 +135,4 @@ void get_pca_features_2(int M, int N, int ncomp, double* features, double* data)
     do_pca(M, N, ncomp, components2, features, data);
     free(components2);
 }
+*/

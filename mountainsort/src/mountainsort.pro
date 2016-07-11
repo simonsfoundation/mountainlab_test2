@@ -78,7 +78,8 @@ HEADERS += \
     processors/mv_discrimhist_sherpa_processor.h \
     processors/mv_discrimhist_sherpa.h \
     processors/normalize_channels_processor.h \
-    processors/normalize_channels.h
+    processors/normalize_channels.h \
+    utils/pca.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -136,7 +137,8 @@ SOURCES += \
     processors/mv_discrimhist_sherpa_processor.cpp \
     processors/mv_discrimhist_sherpa.cpp \
     processors/normalize_channels_processor.cpp \
-    processors/normalize_channels.cpp
+    processors/normalize_channels.cpp \
+    utils/pca.cpp
 !macx {
 SOURCES_NOCXX11 += \ #see below
     isosplit/isosplit2.cpp \

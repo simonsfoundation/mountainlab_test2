@@ -68,6 +68,7 @@ bool extract_clips(const QString& timeseries_path, const QString& firings_path, 
     return true;
 }
 
+/*
 bool extract_clips_features(const QString& timeseries_path, const QString& firings_path, const QString& features_path, int clip_size, int num_features)
 {
     DiskReadMda X(timeseries_path);
@@ -79,13 +80,7 @@ bool extract_clips_features(const QString& timeseries_path, const QString& firin
     Mda clips = extract_clips(X, times, clip_size);
     Mda features(num_features, clips.N3());
     get_pca_features_2(clips.N1() * clips.N2(), clips.N3(), num_features, features.dataPtr(), clips.dataPtr());
-    /*
-#ifdef USE_LAPACK
-    get_pca_features(clips.N1()*clips.N2(),clips.N3(),num_features,features.dataPtr(),clips.dataPtr());
-#else
-    get_pca_features_2(clips.N1()*clips.N2(),clips.N3(),num_features,features.dataPtr(),clips.dataPtr());
-#endif
-    */
     features.write32(features_path);
     return true;
 }
+*/

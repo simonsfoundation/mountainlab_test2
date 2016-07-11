@@ -323,8 +323,8 @@ Mda compute_features(Mda& clips, int num_features)
         clips_reshaped.set(iii, clips.get(iii));
     }
 
-    Mda FF, CC;
-    compute_principle_components(CC, FF, clips_reshaped, num_features);
+    Mda FF, CC, sigma;
+    pca(CC, FF, sigma, clips_reshaped, num_features);
 
     return FF;
 

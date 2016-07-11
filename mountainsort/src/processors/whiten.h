@@ -8,6 +8,6 @@
 
 #include <QString>
 
-bool whiten(const QString &input,const QString &output);
+bool whiten(const QString& input, const QString& output);
 
 #endif // WHITEN_H

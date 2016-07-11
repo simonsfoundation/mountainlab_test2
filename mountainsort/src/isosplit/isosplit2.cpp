@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <QDebug>
 #include "mlcommon.h"
+#include "pca.h" //for whitening
 
 QVector<int> do_kmeans(Mda& X, int K);
 bool eigenvalue_decomposition_sym_isosplit(Mda& U, Mda& S, Mda& X);
@@ -261,6 +262,7 @@ Mda matrix_multiply_isosplit(const Mda& A, const Mda& B)
     return ret;
 }
 
+/*
 Mda get_whitening_matrix_isosplit(Mda& COV)
 {
     int M = COV.N1();
@@ -275,6 +277,7 @@ Mda get_whitening_matrix_isosplit(Mda& COV)
     Mda W = matrix_multiply_isosplit(matrix_multiply_isosplit(U, S2), matrix_transpose_isosplit(U));
     return W;
 }
+*/
 
 void whiten_two_clusters(double* V, Mda& X1, Mda& X2)
 {
@@ -300,8 +303,10 @@ void whiten_two_clusters(double* V, Mda& X1, Mda& X2)
             }
         }
 
-        Mda COV = matrix_multiply_isosplit(XX, matrix_transpose_isosplit(XX));
-        Mda W = get_whitening_matrix_isosplit(COV);
+        Mda XXt = matrix_multiply_isosplit(XX, matrix_transpose_isosplit(XX));
+        //Mda W = get_whitening_matrix_isosplit(COV);
+        Mda W;
+        whitening_matrix_from_XXt(W, XXt);
         X1 = matrix_multiply_isosplit(W, X1);
         X2 = matrix_multiply_isosplit(W, X2);
     }

@@ -2,7 +2,6 @@
 #include <QDebug>
 #include <QTime>
 
-
 /*
 #define HAVE_LAPACK_CONFIG_H
 #define LAPACK_COMPLEX_CPP

@@ -360,7 +360,8 @@ QVector<int> do_cluster_without_normalized_features(Mda& clips, const Branch_Clu
     }
 
     Mda CC, FF; // CC will be MTxK, FF will be KxL
-    compute_principle_components(CC, FF, clips_reshaped, opts.num_features);
+    Mda sigma;
+    pca(CC, FF, sigma, clips_reshaped, opts.num_features);
 
     //Mda FF;
     //FF.allocate(nF, L);

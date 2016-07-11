@@ -10,8 +10,9 @@
 #include "eigenvalue_decomposition.h"
 #include "matrix_mda.h"
 #include "get_pca_features.h"
+#include "msmisc.h"
 
-Mda get_whitening_matrix(Mda& COV);
+//Mda get_whitening_matrix(Mda& COV);
 
 bool whiten(const QString& input, const QString& output)
 {
@@ -19,8 +20,8 @@ bool whiten(const QString& input, const QString& output)
     long M = X.N1();
     long N = X.N2();
 
-    Mda COV(M, M);
-    double* COVptr = COV.dataPtr();
+    Mda XXt(M, M);
+    double* XXtptr = XXt.dataPtr();
     long chunk_size = PROCESSING_CHUNK_SIZE;
     if (N < PROCESSING_CHUNK_SIZE) {
         chunk_size = N;
@@ -38,14 +39,14 @@ bool whiten(const QString& input, const QString& output)
                 X.readChunk(chunk, 0, timepoint, M, qMin(chunk_size, N - timepoint));
             }
             double* chunkptr = chunk.dataPtr();
-            Mda COV0(M, M);
-            double* COV0ptr = COV0.dataPtr();
+            Mda XXt0(M, M);
+            double* XXt0ptr = XXt0.dataPtr();
             for (long i = 0; i < chunk.N2(); i++) {
                 long aa = M * i;
                 long bb = 0;
                 for (int m1 = 0; m1 < M; m1++) {
                     for (int m2 = 0; m2 < M; m2++) {
-                        COV0ptr[bb] += chunkptr[aa + m1] * chunkptr[aa + m2];
+                        XXt0ptr[bb] += chunkptr[aa + m1] * chunkptr[aa + m2];
                         bb++;
                     }
                 }
@@ -55,7 +56,7 @@ bool whiten(const QString& input, const QString& output)
                 long bb = 0;
                 for (int m1 = 0; m1 < M; m1++) {
                     for (int m2 = 0; m2 < M; m2++) {
-                        COVptr[bb] += COV0ptr[bb];
+                        XXtptr[bb] += XXt0ptr[bb];
                         bb++;
                     }
                 }
@@ -69,12 +70,14 @@ bool whiten(const QString& input, const QString& output)
     }
     if (N > 1) {
         for (int ii = 0; ii < M * M; ii++) {
-            COVptr[ii] /= (N - 1);
+            XXtptr[ii] /= (N - 1);
         }
     }
 
-    Mda AA = get_whitening_matrix(COV);
-    double* AAptr = AA.dataPtr();
+    //Mda AA = get_whitening_matrix(COV);
+    Mda WW;
+    whitening_matrix_from_XXt(WW, XXt);
+    double* WWptr = WW.dataPtr();
 
     DiskWriteMda Y;
     Y.open(MDAIO_TYPE_FLOAT32, output, M, N);
@@ -97,7 +100,7 @@ bool whiten(const QString& input, const QString& output)
                 long bb = 0;
                 for (int m1 = 0; m1 < M; m1++) {
                     for (int m2 = 0; m2 < M; m2++) {
-                        chunk_out_ptr[aa + m1] += chunk_in_ptr[aa + m2] * AAptr[bb];
+                        chunk_out_ptr[aa + m1] += chunk_in_ptr[aa + m2] * WWptr[bb];
                         bb++;
                     }
                 }
@@ -124,6 +127,7 @@ bool whiten(const QString& input, const QString& output)
  (WX)'*(WX)=1 //finish!!
 */
 
+/*
 Mda get_whitening_matrix(Mda& COV)
 {
     // return M*M mixing matrix to be applied to channels
@@ -134,14 +138,14 @@ Mda get_whitening_matrix(Mda& COV)
         abort();
     }
 
-    Mda CC,FF;
-    compute_principle_components(CC,FF,COV,M);
+    Mda CC,sigma;
+    pca_from_XXt(CC,sigma,COV,M);
     // CC is MxK, FF is KxM (where K=M) CC is has orthogonal rows
     // COV should be equal to CC*FF, with CC'*CC = 1
 
 
     Mda U(M, M), S(1, M);
-    eigenvalue_decomposition_sym(U, S, COV); // S is list of eigenvalues
+    //eigenvalue_decomposition_sym(U, S, COV); // S is list of eigenvalues
     Mda S2(M, M);
     for (int m = 0; m < M; m++) {
         if (S.get(m)) {
@@ -151,3 +155,4 @@ Mda get_whitening_matrix(Mda& COV)
     Mda W = matrix_multiply(matrix_multiply(U, S2), matrix_transpose(U)); // ok for small matrices only
     return W;
 }
+*/
