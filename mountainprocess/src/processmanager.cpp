@@ -481,14 +481,16 @@ QJsonObject ProcessManagerPrivate::compute_unique_process_object(MLProcessor P, 
 {
     /*
      * Returns an object that depends uniquely on the following:
-     *   1. Processor name and version
-     *   2. The paths, sizes, and modification times of the input files (together with their parameter names)
-     *   3. Same for the output files
-     *   4. The parameters converted to strings
+     *   1. Version of mountainprocess
+     *   2. Processor name and version
+     *   3. The paths, sizes, and modification times of the input files (together with their parameter names)
+     *   4. Same for the output files
+     *   5. The parameters converted to strings
      */
 
     QJsonObject obj;
 
+    obj["mountainprocess_version"] = "0.1";
     obj["processor_name"] = P.name;
     obj["processor_version"] = P.version;
     {
