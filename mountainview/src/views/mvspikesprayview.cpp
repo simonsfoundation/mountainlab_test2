@@ -92,11 +92,13 @@ void MVSpikeSprayView::setLabelsToUse(const QSet<int>& labels_to_use)
         P->setLabelsToUse(labels_to_use);
         P->setLegendVisible(false);
     }
-    for (int i = 0; i < list.count(); i++) {
-        MVSpikeSprayPanel* P = d->add_panel();
-        QSet<int> tmp;
-        tmp.insert(list[i]);
-        P->setLabelsToUse(tmp);
+    if (list.count() > 1) {
+        for (int i = 0; i < list.count(); i++) {
+            MVSpikeSprayPanel* P = d->add_panel();
+            QSet<int> tmp;
+            tmp.insert(list[i]);
+            P->setLabelsToUse(tmp);
+        }
     }
     recalculate();
 }
@@ -146,9 +148,11 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->key() == Qt::Key_Up) {
         d->set_amplitude_factor(d->m_amplitude_factor * 1.2);
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->set_amplitude_factor(d->m_amplitude_factor / 1.2);
-    } else {
+    }
+    else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -183,8 +187,7 @@ void MVSpikeSprayComputer::compute()
         QList<int> list = labels_to_use.toList();
         qSort(list);
         QString labels_str;
-        foreach(int x, list)
-        {
+        foreach (int x, list) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -260,7 +263,7 @@ MVSpikeSprayFactory::MVSpikeSprayFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
