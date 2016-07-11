@@ -30,6 +30,7 @@ public:
 protected:
     void paintEvent(QPaintEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
+    void wheelEvent(QWheelEvent* evt);
 
 private slots:
     void slot_zoom_in();

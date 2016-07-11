@@ -177,6 +177,16 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
     }
 }
 
+void MVSpikeSprayView::wheelEvent(QWheelEvent *evt)
+{
+    if (evt->delta() > 0) {
+        slot_zoom_in();
+    }
+    else if (evt->delta() < 0) {
+        slot_zoom_out();
+    }
+}
+
 void MVSpikeSprayView::slot_zoom_in()
 {
     d->set_panel_width(d->actual_panel_width() + 10);
