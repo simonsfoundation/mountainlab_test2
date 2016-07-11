@@ -47,8 +47,6 @@ HEADERS += \
     processors/mda2txt_processor.h \
     processors/mask_out_artifacts_processor.h \
     processors/mask_out_artifacts.h \
-    processors/adjust_times_processor.h \
-    processors/adjust_times.h \
     processors/fit_stage_processor.h \
     processors/fit_stage.h \
     processors/compute_templates.h \
@@ -105,8 +103,6 @@ SOURCES += \
     processors/mda2txt_processor.cpp \
     processors/mask_out_artifacts_processor.cpp \
     processors/mask_out_artifacts.cpp \
-    processors/adjust_times_processor.cpp \
-    processors/adjust_times.cpp \
     processors/fit_stage_processor.cpp \
     processors/fit_stage.cpp \
     processors/compute_templates.cpp \
@@ -187,9 +183,9 @@ QMAKE_EXTRA_COMPILERS += nocxx11
 #LAPACK
 #On Ubuntu: sudo apt-get install liblapacke-dev
 #On CentOS: sudo yum install lapack-devel.i686
-INCLUDEPATH += /usr/include/lapacke #this was needed on CentOS
-DEFINES += USE_LAPACK
-LIBS += -llapack -llapacke
+#   INCLUDEPATH += /usr/include/lapacke #this was needed on CentOS
+#   DEFINES += USE_LAPACK
+#   LIBS += -llapack -llapacke
 
 #FFTW
 LIBS += -fopenmp -lfftw3 -lfftw3_threads

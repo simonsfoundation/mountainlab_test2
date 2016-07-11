@@ -329,6 +329,7 @@ void normalize_features_v2(Mda& F)
     }
 }
 
+/*
 QVector<int> do_cluster_with_normalized_features(Mda& clips, const Branch_Cluster_V2_Opts& opts)
 {
     long M = clips.N1();
@@ -341,6 +342,7 @@ QVector<int> do_cluster_with_normalized_features(Mda& clips, const Branch_Cluste
     normalize_features_v2(FF);
     return isosplit2(FF);
 }
+*/
 
 QVector<int> do_cluster_without_normalized_features(Mda& clips, const Branch_Cluster_V2_Opts& opts)
 {
@@ -349,10 +351,21 @@ QVector<int> do_cluster_without_normalized_features(Mda& clips, const Branch_Clu
     long M = clips.N1();
     long T = clips.N2();
     long L = clips.N3();
-    long nF = opts.num_features;
-    Mda FF;
-    FF.allocate(nF, L);
-    get_pca_features(M * T, L, nF, FF.dataPtr(), clips.dataPtr(), opts.num_pca_representatives);
+    //long nF = opts.num_features;
+
+    Mda clips_reshaped(M * T, L);
+    long NNN = M * T * L;
+    for (long iii = 0; iii < NNN; iii++) {
+        clips_reshaped.set(iii, clips.get(iii));
+    }
+
+    Mda CC, FF; // CC will be MTxK, FF will be KxL
+    compute_principle_components(CC, FF, clips_reshaped, opts.num_features);
+
+    //Mda FF;
+    //FF.allocate(nF, L);
+    //get_pca_features(M * T, L, nF, FF.dataPtr(), clips.dataPtr(), opts.num_pca_representatives);
+
     //normalize_features(FF);
     QVector<int> ret = isosplit2(FF);
     return ret;

@@ -316,10 +316,22 @@ Mda compute_features(Mda& clips, int num_features)
     int M = clips.N1();
     int T = clips.N2();
     int L = clips.N3();
-    Mda ret;
-    ret.allocate(num_features, L);
-    get_pca_features(M * T, L, num_features, ret.dataPtr(), clips.dataPtr());
-    return ret;
+
+    Mda clips_reshaped(M * T, L);
+    long NNN = M * T * L;
+    for (long iii = 0; iii < NNN; iii++) {
+        clips_reshaped.set(iii, clips.get(iii));
+    }
+
+    Mda FF, CC;
+    compute_principle_components(CC, FF, clips_reshaped, num_features);
+
+    return FF;
+
+    //Mda ret;
+    //ret.allocate(num_features, L);
+    //get_pca_features(M * T, L, num_features, ret.dataPtr(), clips.dataPtr());
+    //return ret;
 }
 
 void compute_geometric_median(int M, int N, double* output, double* input, int num_iterations)

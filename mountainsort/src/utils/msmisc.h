@@ -12,5 +12,6 @@
 
 Mda compute_mean_clip(Mda& clips);
 Mda grab_clips_subset(Mda& clips, const QVector<int>& inds);
+bool eigenvalue_decomposition_sym(Mda& U, Mda& S, Mda& X);
 
 #endif // MSMISC_H

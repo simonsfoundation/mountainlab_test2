@@ -9,6 +9,7 @@
 #include "get_sort_indices.h"
 #include "eigenvalue_decomposition.h"
 #include "matrix_mda.h"
+#include "get_pca_features.h"
 
 Mda get_whitening_matrix(Mda& COV);
 
@@ -117,10 +118,28 @@ bool whiten(const QString& input, const QString& output)
     return true;
 }
 
+/*
+ COV = X' * X
+ We want to find W (MxM) such that
+ (WX)'*(WX)=1 //finish!!
+*/
+
 Mda get_whitening_matrix(Mda& COV)
 {
     // return M*M mixing matrix to be applied to channels
     int M = COV.N1();
+
+    if (COV.N2()!=M) {
+        qCritical() << "incorrect dimensions in get_whitening_matrix" << COV.N1() << COV.N2();
+        abort();
+    }
+
+    Mda CC,FF;
+    compute_principle_components(CC,FF,COV,M);
+    // CC is MxK, FF is KxM (where K=M) CC is has orthogonal rows
+    // COV should be equal to CC*FF, with CC'*CC = 1
+
+
     Mda U(M, M), S(1, M);
     eigenvalue_decomposition_sym(U, S, COV); // S is list of eigenvalues
     Mda S2(M, M);
