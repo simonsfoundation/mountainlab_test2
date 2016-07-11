@@ -320,7 +320,7 @@ Mda compute_features(Mda& clips, int num_features)
     Mda clips_reshaped(M * T, L);
     long NNN = M * T * L;
     for (long iii = 0; iii < NNN; iii++) {
-        clips_reshaped.set(iii, clips.get(iii));
+        clips_reshaped.set(clips.get(iii), iii);
     }
 
     Mda FF, CC, sigma;

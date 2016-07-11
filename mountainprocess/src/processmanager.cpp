@@ -73,15 +73,13 @@ void ProcessManager::setServerBasePath(const QString& path)
 bool ProcessManager::loadProcessors(const QString& path, bool recursive)
 {
     QStringList fnames = QDir(path).entryList(QStringList("*.mp"), QDir::Files, QDir::Name);
-    foreach(QString fname, fnames)
-    {
+    foreach (QString fname, fnames) {
         if (!this->loadProcessorFile(path + "/" + fname))
             return false;
     }
     if (recursive) {
         QStringList subdirs = QDir(path).entryList(QStringList("*"), QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-        foreach(QString subdir, subdirs)
-        {
+        foreach (QString subdir, subdirs) {
             if (!this->loadProcessors(path + "/" + subdir))
                 return false;
         }
@@ -106,7 +104,8 @@ bool ProcessManager::loadProcessorFile(const QString& path)
             qCritical() << "Executable processor file did not return output for spec: " + path;
             return false;
         }
-    } else {
+    }
+    else {
         json = TextFile::read(path);
         if (json.isEmpty()) {
             qCritical() << "Processor file is empty: " + path;
@@ -170,24 +169,21 @@ QString ProcessManager::startProcess(const QString& processor_name, const QVaria
         QString ppp;
         {
             QStringList keys = P.inputs.keys();
-            foreach(QString key, keys)
-            {
+            foreach (QString key, keys) {
                 exe_command.replace(QRegExp(QString("\\$%1").arg(key)), parameters[key].toString());
                 ppp += QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
             }
         }
         {
             QStringList keys = P.outputs.keys();
-            foreach(QString key, keys)
-            {
+            foreach (QString key, keys) {
                 exe_command.replace(QRegExp(QString("\\$%1").arg(key)), parameters[key].toString());
                 ppp += QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
             }
         }
         {
             QStringList keys = P.parameters.keys();
-            foreach(QString key, keys)
-            {
+            foreach (QString key, keys) {
                 exe_command.replace(QRegExp(QString("$%1").arg(key)), parameters[key].toString());
                 ppp += QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
             }
@@ -237,8 +233,7 @@ bool ProcessManager::checkParameters(const QString& processor_name, const QVaria
     MLProcessor P = d->m_processors[processor_name];
     {
         QStringList keys = P.inputs.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             if (!parameters.contains(key)) {
                 qWarning() << QString("checkProcess: Missing input in %1: %2").arg(processor_name).arg(key);
                 return false;
@@ -247,8 +242,7 @@ bool ProcessManager::checkParameters(const QString& processor_name, const QVaria
     }
     {
         QStringList keys = P.outputs.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             if (!parameters.contains(key)) {
                 qWarning() << QString("checkProcess: Missing output in %1: %2").arg(processor_name).arg(key);
                 return false;
@@ -257,8 +251,7 @@ bool ProcessManager::checkParameters(const QString& processor_name, const QVaria
     }
     {
         QStringList keys = P.parameters.keys();
-        foreach(QString key, keys)
-        {
+        foreach (QString key, keys) {
             if (!P.parameters[key].optional) {
                 if (!parameters.contains(key)) {
                     qWarning() << QString("checkProcess: Missing required parameter in %1: %2").arg(processor_name).arg(key);
@@ -361,7 +354,8 @@ void ProcessManager::slot_process_finished()
         QVariantMap parameters = d->m_processes[id].info.parameters;
         if (!d->m_processors.contains(processor_name)) {
             qCritical() << "Unexpected problem in slot_process_finished. processor not found!!! " + processor_name;
-        } else {
+        }
+        else {
             MLProcessor processor = d->m_processors[processor_name];
             QJsonObject obj = d->compute_unique_process_object(processor, parameters);
             QString code = d->compute_unique_object_code(obj);
@@ -390,8 +384,7 @@ void ProcessManager::slot_qprocess_output()
 
 void ProcessManagerPrivate::clear_all_processes()
 {
-    foreach(PMProcess P, m_processes)
-    {
+    foreach (PMProcess P, m_processes) {
         delete P.qprocess;
     }
     m_processes.clear();
@@ -425,12 +418,10 @@ QVariantMap ProcessManagerPrivate::resolve_file_names_in_parameters(QString proc
         return parameters_in;
     }
     MLProcessor MLP = m_processors[processor_name];
-    foreach(MLParameter P, MLP.inputs)
-    {
+    foreach (MLParameter P, MLP.inputs) {
         parameters[P.name] = resolve_file_name_p(parameters[P.name].toString());
     }
-    foreach(MLParameter P, MLP.outputs)
-    {
+    foreach (MLParameter P, MLP.outputs) {
         parameters[P.name] = resolve_file_name_p(parameters[P.name].toString());
     }
     return parameters;
@@ -497,8 +488,7 @@ QJsonObject ProcessManagerPrivate::compute_unique_process_object(MLProcessor P, 
         QJsonObject inputs;
         QStringList input_pnames = P.inputs.keys();
         qSort(input_pnames);
-        foreach(QString input_pname, input_pnames)
-        {
+        foreach (QString input_pname, input_pnames) {
             QString fname = resolve_file_name_p(parameters[input_pname].toString());
             inputs[input_pname] = create_file_object(fname);
         }
@@ -508,8 +498,7 @@ QJsonObject ProcessManagerPrivate::compute_unique_process_object(MLProcessor P, 
         QJsonObject outputs;
         QStringList output_pnames = P.outputs.keys();
         qSort(output_pnames);
-        foreach(QString output_pname, output_pnames)
-        {
+        foreach (QString output_pname, output_pnames) {
             QString fname = resolve_file_name_p(parameters[output_pname].toString());
             outputs[output_pname] = create_file_object(fname);
         }
@@ -519,8 +508,7 @@ QJsonObject ProcessManagerPrivate::compute_unique_process_object(MLProcessor P, 
         QJsonObject parameters0;
         QStringList pnames = P.parameters.keys();
         qSort(pnames);
-        foreach(QString pname, pnames)
-        {
+        foreach (QString pname, pnames) {
             parameters0[pname] = parameters[pname].toString();
         }
         obj["parameters"] = parameters0;
@@ -532,8 +520,7 @@ bool ProcessManagerPrivate::all_input_and_output_files_exist(MLProcessor P, cons
 {
     QStringList file_pnames = P.inputs.keys();
     file_pnames.append(P.outputs.keys());
-    foreach(QString pname, file_pnames)
-    {
+    foreach (QString pname, file_pnames) {
         QString fname = resolve_file_name_p(parameters.value(pname).toString());
         if (!fname.isEmpty()) {
             if (!QFile::exists(fname))

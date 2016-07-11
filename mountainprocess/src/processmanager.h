@@ -50,13 +50,13 @@ public:
     ProcessManager();
     virtual ~ProcessManager();
 
-    void setServerUrls(const QStringList &urls);
-    void setServerBasePath(const QString &path);
+    void setServerUrls(const QStringList& urls);
+    void setServerBasePath(const QString& path);
 
     bool loadProcessors(const QString& path, bool recursive = true);
     bool loadProcessorFile(const QString& path);
     QStringList processorNames() const;
-    MLProcessor processor(const QString &name);
+    MLProcessor processor(const QString& name);
 
     bool checkParameters(const QString& processor_name, const QVariantMap& parameters);
     bool processAlreadyCompleted(const QString& processor_name, const QVariantMap& parameters);

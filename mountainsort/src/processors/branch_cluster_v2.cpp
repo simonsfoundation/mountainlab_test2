@@ -356,7 +356,7 @@ QVector<int> do_cluster_without_normalized_features(Mda& clips, const Branch_Clu
     Mda clips_reshaped(M * T, L);
     long NNN = M * T * L;
     for (long iii = 0; iii < NNN; iii++) {
-        clips_reshaped.set(iii, clips.get(iii));
+        clips_reshaped.set(clips.get(iii), iii);
     }
 
     Mda CC, FF; // CC will be MTxK, FF will be KxL

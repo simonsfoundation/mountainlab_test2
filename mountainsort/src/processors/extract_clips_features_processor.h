@@ -10,18 +10,17 @@
 #include "msprocessor.h"
 
 class extract_clips_features_ProcessorPrivate;
-class extract_clips_features_Processor : public MSProcessor
-{
+class extract_clips_features_Processor : public MSProcessor {
 public:
     friend class extract_clips_features_ProcessorPrivate;
     extract_clips_features_Processor();
     virtual ~extract_clips_features_Processor();
 
-    bool check(const QMap<QString,QVariant> &params);
-    bool run(const QMap<QString,QVariant> &params);
+    bool check(const QMap<QString, QVariant>& params);
+    bool run(const QMap<QString, QVariant>& params);
+
 private:
-    extract_clips_features_ProcessorPrivate *d;
+    extract_clips_features_ProcessorPrivate* d;
 };
 
 #endif // EXTRACT_CLIPS_FEATURES_PROCESSOR_H
-
