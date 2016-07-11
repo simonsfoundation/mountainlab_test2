@@ -110,7 +110,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
     {
         QCheckBox* CB = new QCheckBox;
         CB->setText("Clip View");
-        connect(CB, SIGNAL(toggled(bool)), this, SLOT(slot_show_clip_view_toggled(bool)));
+        connect(CB, SIGNAL(clicked(bool)), this, SLOT(slot_show_clip_view_clicked()));
         CB->setChecked(true);
         bottom_panel->addWidget(CB);
     }
@@ -118,7 +118,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
         QCheckBox* CB = new QCheckBox;
         CB->setText("Density Plot");
         CB->setProperty("view_index", 0);
-        connect(CB, SIGNAL(toggled(bool)), this, SLOT(slot_show_view_toggled(bool)));
+        connect(CB, SIGNAL(clicked(bool)), this, SLOT(slot_show_view_clicked()));
         CB->setChecked(true);
         bottom_panel->addWidget(CB);
     }
@@ -126,7 +126,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
         QCheckBox* CB = new QCheckBox;
         CB->setText("Label Colors");
         CB->setProperty("view_index", 1);
-        connect(CB, SIGNAL(toggled(bool)), this, SLOT(slot_show_view_toggled(bool)));
+        connect(CB, SIGNAL(clicked(bool)), this, SLOT(slot_show_view_clicked()));
         CB->setChecked(true);
         bottom_panel->addWidget(CB);
     }
@@ -134,7 +134,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
         QCheckBox* CB = new QCheckBox;
         CB->setText("Time Colors");
         CB->setProperty("view_index", 2);
-        connect(CB, SIGNAL(toggled(bool)), this, SLOT(slot_show_view_toggled(bool)));
+        connect(CB, SIGNAL(clicked(bool)), this, SLOT(slot_show_view_clicked()));
         CB->setChecked(false);
         bottom_panel->addWidget(CB);
     }
@@ -142,7 +142,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
         QCheckBox* CB = new QCheckBox;
         CB->setText("Amplitude Colors");
         CB->setProperty("view_index", 3);
-        connect(CB, SIGNAL(toggled(bool)), this, SLOT(slot_show_view_toggled(bool)));
+        connect(CB, SIGNAL(clicked(bool)), this, SLOT(slot_show_view_clicked()));
         CB->setChecked(false);
         bottom_panel->addWidget(CB);
     }
@@ -331,14 +331,16 @@ void MVClusterWidget::slot_view_active_cluster_numbers_changed()
     }
 }
 
-void MVClusterWidget::slot_show_clip_view_toggled(bool val)
+void MVClusterWidget::slot_show_clip_view_clicked()
 {
+    bool val = ((QCheckBox*)sender())->isChecked();
     d->m_clips_view->setVisible(val);
 }
 
-void MVClusterWidget::slot_show_view_toggled(bool val)
+void MVClusterWidget::slot_show_view_clicked()
 {
     int index = sender()->property("view_index").toInt();
+    bool val = ((QCheckBox*)sender())->isChecked();
     if ((index >= 0) && (index < d->m_views.count())) {
         d->m_views[index]->setVisible(val);
     }
@@ -398,9 +400,9 @@ int MVClusterWidgetPrivate::current_event_index()
 void MVClusterWidgetPrivate::set_data_on_visible_views()
 {
     foreach (MVClusterView* V, m_views) {
-        if (V->isVisible()) {
-            V->setData(m_data);
-        }
+        //if (V->isVisible()) { // not sure why this condition is not working on initial load
+        V->setData(m_data);
+        //}
     }
 }
 
