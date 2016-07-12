@@ -12,6 +12,8 @@ if [ -z "$1" ]; then
     exit 0
 fi
 
+qmake -recursive
+
 if [ $1 == "default" ]
 then
 qmake
