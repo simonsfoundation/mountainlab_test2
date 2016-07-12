@@ -20,7 +20,9 @@ TEMPLATE = app
 
 SOURCES += mountainviewmain.cpp \
     guides/individualmergedecisionpage.cpp \
-    views/mvspikespraypanel.cpp
+    views/mvspikespraypanel.cpp \
+    views/firetrackview.cpp \
+    views/ftelectrodearrayview.cpp
 
 INCLUDEPATH += core
 VPATH += core
@@ -31,7 +33,9 @@ mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
 mvcontrolpanel2.h mvmainwindow.h mvstatusbar.h \
 mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
     guides/individualmergedecisionpage.h \
-    views/mvspikespraypanel.h
+    views/mvspikespraypanel.h \
+    views/firetrackview.h \
+    views/ftelectrodearrayview.h
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \

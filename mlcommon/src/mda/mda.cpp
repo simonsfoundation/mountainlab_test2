@@ -360,6 +360,11 @@ double* Mda::dataPtr()
     return d->m_data;
 }
 
+const double* Mda::constDataPtr() const
+{
+    return d->m_data;
+}
+
 double* Mda::dataPtr(long i)
 {
     return &d->m_data[i];
@@ -647,10 +652,10 @@ void Mda::setChunk(Mda& X, long i1, long i2, long i3)
     }
 }
 
-double Mda::minimum()
+double Mda::minimum() const
 {
     long NN = this->totalSize();
-    double* ptr = this->dataPtr();
+    const double* ptr = this->constDataPtr();
     if ((!NN) || (!ptr)) {
         return 0;
     }
@@ -662,10 +667,10 @@ double Mda::minimum()
     return ret;
 }
 
-double Mda::maximum()
+double Mda::maximum() const
 {
     long NN = this->totalSize();
-    double* ptr = this->dataPtr();
+    const double* ptr = this->constDataPtr();
     if ((!NN) || (!ptr)) {
         return 0;
     }
@@ -799,7 +804,8 @@ bool MdaPrivate::read_from_text_file(const QString& path)
                 if (ok) {
                     lines2 << line;
                 }
-            } else {
+            }
+            else {
                 lines2 << line;
             }
         }

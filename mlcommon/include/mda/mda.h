@@ -109,6 +109,7 @@ public:
 
     ///Return a pointer to the 1D raw data. The internal data may be efficiently read/written.
     double* dataPtr();
+    const double* constDataPtr() const;
     ///Return a pointer to the 1D raw data at the vectorized location i. The internal data may be efficiently read/written.
     double* dataPtr(long i);
     ///Return a pointer to the 1D raw data at the the location (i1,i2). The internal data may be efficiently read/written.
@@ -132,8 +133,8 @@ public:
     ///Set a chunk of the vectorized data of size N1xN2xN3 starting at position (i1,i2,i3)
     void setChunk(Mda& X, long i1, long i2, long i3);
 
-    double minimum();
-    double maximum();
+    double minimum() const;
+    double maximum() const;
 
     bool reshape(int N1b, int N2b, int N3b = 1, int N4b = 1, int N5b = 1, int N6b = 1);
 

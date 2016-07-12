@@ -35,8 +35,7 @@ public:
     void resizeEvent(QResizeEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
 
-private
-slots:
+private slots:
     void slot_vertical_zoom_in();
     void slot_vertical_zoom_out();
 

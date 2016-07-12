@@ -43,6 +43,7 @@ public:
     QList<OptionChangedAction> m_option_changed_actions;
     QJsonObject m_original_object;
     QSet<ClusterPair> m_selected_cluster_pairs;
+    ElectrodeGeometry m_electrode_geometry;
 };
 
 MVContext::MVContext()
@@ -541,6 +542,19 @@ void MVContext::setClusterVisibilityRule(const ClusterVisibilityRule& rule)
     emit this->clusterVisibilityChanged();
 }
 
+ElectrodeGeometry MVContext::electrodeGeometry() const
+{
+    return d->m_electrode_geometry;
+}
+
+void MVContext::setElectrodeGeometry(const ElectrodeGeometry& geom)
+{
+    if (d->m_electrode_geometry == geom)
+        return;
+    d->m_electrode_geometry = geom;
+    emit this->electrodeGeometryChanged();
+}
+
 void MVContext::setCurrentEvent(const MVEvent& evt)
 {
     if (evt == d->m_current_event)
@@ -943,4 +957,59 @@ ClusterPair ClusterPair::fromString(const QString& str)
 uint qHash(const ClusterPair& pair)
 {
     return qHash(pair.toString());
+}
+
+QJsonObject ElectrodeGeometry::toJsonObject() const
+{
+    QJsonArray C;
+    for (int j = 0; j < coordinates.count(); j++) {
+        QJsonArray X;
+        for (int k = 0; k < coordinates[j].count(); k++) {
+            X.push_back(coordinates[j][k]);
+        }
+        C.push_back(X);
+    }
+    QJsonObject ret;
+    ret["coordinates"] = C;
+    return ret;
+}
+
+bool ElectrodeGeometry::operator==(const ElectrodeGeometry& other)
+{
+    if (coordinates != other.coordinates)
+        return false;
+    return true;
+}
+
+ElectrodeGeometry ElectrodeGeometry::fromJsonObject(const QJsonObject& obj)
+{
+    ElectrodeGeometry ret;
+    QJsonArray C = obj["coordinates"].toArray();
+    for (int i = 0; i < C.count(); i++) {
+        QVector<double> tmp;
+        QJsonArray X = C[i].toArray();
+        for (int j = 0; j < X.count(); j++) {
+            tmp << X[j].toDouble();
+        }
+        ret.coordinates << tmp;
+    }
+    return ret;
+}
+
+ElectrodeGeometry ElectrodeGeometry::loadFromGeomFile(const QString& path)
+{
+    ElectrodeGeometry ret;
+    Mda geom(path);
+    if (geom.totalSize() > 10000) {
+        qWarning() << "The geometry file is too large for my limited vision." << path << geom.N1() << geom.N2() << geom.N3();
+        return ret;
+    }
+    for (int i = 0; i < geom.N2(); i++) {
+        QVector<double> tmp;
+        for (int j = 0; j < geom.N1(); j++) {
+            tmp << geom.value(j, i);
+        }
+        ret.coordinates << tmp;
+    }
+    return ret;
 }

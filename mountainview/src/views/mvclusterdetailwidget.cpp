@@ -308,20 +308,25 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
     if (evt->key() == Qt::Key_Up) {
         d->m_vscale_factor *= factor;
         update();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         d->m_vscale_factor /= factor;
         update();
-    } else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
+    }
+    else if ((evt->key() == Qt::Key_Plus) || (evt->key() == Qt::Key_Equal)) {
         d->zoom(1.1);
-    } else if (evt->key() == Qt::Key_Minus) {
+    }
+    else if (evt->key() == Qt::Key_Minus) {
         d->zoom(1 / 1.1);
-    } else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
+    }
+    else if ((evt->key() == Qt::Key_A) && (evt->modifiers() & Qt::ControlModifier)) {
         QList<int> ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             ks << d->m_views[i]->k();
         }
         mvContext()->setSelectedClusters(ks);
-    } else if (evt->key() == Qt::Key_Left) {
+    }
+    else if (evt->key() == Qt::Key_Left) {
         int view_index = d->get_current_view_index();
         if (view_index > 0) {
             int k = d->m_views[view_index - 1]->k();
@@ -333,7 +338,8 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             mvContext()->setSelectedClusters(ks);
             mvContext()->setCurrentCluster(k);
         }
-    } else if (evt->key() == Qt::Key_Right) {
+    }
+    else if (evt->key() == Qt::Key_Right) {
         int view_index = d->get_current_view_index();
         if ((view_index >= 0) && (view_index + 1 < d->m_views.count())) {
             int k = d->m_views[view_index + 1]->k();
@@ -345,13 +351,15 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
             mvContext()->setSelectedClusters(ks);
             mvContext()->setCurrentCluster(k);
         }
-    } else if (evt->matches(QKeySequence::SelectAll)) {
+    }
+    else if (evt->matches(QKeySequence::SelectAll)) {
         QList<int> all_ks;
         for (int i = 0; i < d->m_views.count(); i++) {
             all_ks << d->m_views[i]->k();
         }
         mvContext()->setSelectedClusters(all_ks);
-    } else
+    }
+    else
         evt->ignore();
 }
 
@@ -385,7 +393,8 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
             if (evt->modifiers() & Qt::ShiftModifier) {
                 int k0 = mvContext()->currentCluster();
                 d->shift_select_clusters_between(k0, k);
-            } else {
+            }
+            else {
                 mvContext()->clickCluster(k, evt->modifiers());
             }
         }
@@ -404,7 +413,8 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
     int view_index = d->find_view_index_at(pt);
     if (view_index >= 0) {
         d->set_hovered_k(d->m_views[view_index]->k());
-    } else {
+    }
+    else {
         d->set_hovered_k(-1);
     }
 }
@@ -547,7 +557,8 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
         m_scroll_x = x0 - 100;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    } else if (x0 > m_scroll_x + q->width()) {
+    }
+    else if (x0 > m_scroll_x + q->width()) {
         m_scroll_x = x0 - q->width() + 100;
     }
 }
@@ -562,7 +573,8 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
         m_scroll_x = view->x_position_before_scaling * m_space_ratio - current_screen_x;
         if (m_scroll_x < 0)
             m_scroll_x = 0;
-    } else {
+    }
+    else {
         m_space_ratio *= factor;
     }
     q->update();
@@ -782,7 +794,8 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     QList<ClusterData> cluster_data_merged;
     if (q->mvContext()) {
         cluster_data_merged = merge_cluster_data(q->mvContext()->clusterMerge(), m_cluster_data);
-    } else {
+    }
+    else {
         cluster_data_merged = m_cluster_data;
     }
 
@@ -901,9 +914,11 @@ void MVClusterDetailWidgetPrivate::shift_select_clusters_between(int k1, int k2)
         for (int ii = qMin(ind1, ind2); ii <= qMax(ind1, ind2); ii++) {
             selected_clusters.insert(m_views[ii]->k());
         }
-    } else if (ind1 >= 0) {
+    }
+    else if (ind1 >= 0) {
         selected_clusters.insert(m_views[ind1]->k());
-    } else if (ind2 >= 0) {
+    }
+    else if (ind2 >= 0) {
         selected_clusters.insert(m_views[ind2]->k());
     }
     q->mvContext()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
@@ -963,7 +978,8 @@ QList<ClusterData> MVClusterDetailWidgetPrivate::merge_cluster_data(const Cluste
                 }
             }
             ret << combine_cluster_data_group(group, CD[i]);
-        } else {
+        }
+        else {
             ClusterData CD0;
             CD0.k = CD[i].k;
             CD0.channel = CD[i].channel;

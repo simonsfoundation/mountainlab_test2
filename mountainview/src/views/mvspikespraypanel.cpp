@@ -20,7 +20,7 @@ public:
     QVector<int> m_labels_to_render;
     bool m_legend_visible = true;
     MVSSRenderThread m_render_thread;
-    bool m_start_render_required=false;
+    bool m_start_render_required = false;
 
     QColor get_label_color(int label);
     void start_render();
@@ -32,8 +32,8 @@ MVSpikeSprayPanel::MVSpikeSprayPanel(MVContext* context)
     d->q = this;
     d->m_context = context;
 
-    QObject::connect(&d->m_render_thread,SIGNAL(finished()),this,SLOT(update()));
-    QObject::connect(&d->m_render_thread,SIGNAL(signalImageInProgressUpdated()),this,SLOT(update()));
+    QObject::connect(&d->m_render_thread, SIGNAL(finished()), this, SLOT(update()));
+    QObject::connect(&d->m_render_thread, SIGNAL(signalImageInProgressUpdated()), this, SLOT(update()));
 }
 
 MVSpikeSprayPanel::~MVSpikeSprayPanel()
@@ -91,11 +91,11 @@ void MVSpikeSprayPanel::paintEvent(QPaintEvent* evt)
         QImage img;
         {
             QMutexLocker locker(&d->m_render_thread.image_in_progress_mutex);
-            img=d->m_render_thread.image_in_progress;
+            img = d->m_render_thread.image_in_progress;
         }
         if (!img.isNull()) {
-            QImage img_scaled=img.scaled(this->size(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-            painter.drawImage(0,0,img_scaled);
+            QImage img_scaled = img.scaled(this->size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            painter.drawImage(0, 0, img_scaled);
         }
     }
 
@@ -122,7 +122,6 @@ void MVSpikeSprayPanel::paintEvent(QPaintEvent* evt)
             y0 += text_height + spacing;
         }
     }
-
 }
 
 QColor MVSpikeSprayPanelPrivate::get_label_color(int label)
@@ -132,7 +131,7 @@ QColor MVSpikeSprayPanelPrivate::get_label_color(int label)
 
 void MVSpikeSprayPanelPrivate::start_render()
 {
-    m_start_render_required=false;
+    m_start_render_required = false;
     if (!m_clips_to_render)
         return;
     if (m_clips_to_render->N3() != m_labels_to_render.count()) {
@@ -167,43 +166,43 @@ void MVSpikeSprayPanelPrivate::start_render()
         if (counts[k]) {
             alphas[k] = 255 / counts[k];
             alphas[k] = qMin(255, qMax(5, alphas[k]));
-        } else
+        }
+        else
             alphas[k] = 255;
     }
 
     m_render_thread.requestInterruption();
     m_render_thread.wait();
 
-    long M=m_clips_to_render->N1();
-    long T=m_clips_to_render->N2();
-    m_render_thread.clips.allocate(M,T,inds.count());
+    long M = m_clips_to_render->N1();
+    long T = m_clips_to_render->N2();
+    m_render_thread.clips.allocate(M, T, inds.count());
     m_render_thread.colors.clear();
-    for (long j=0; j<inds.count(); j++) {
-        int label0=m_labels_to_render[inds[j]];
+    for (long j = 0; j < inds.count(); j++) {
+        int label0 = m_labels_to_render[inds[j]];
         QColor col = get_label_color(label0);
         if (label0 >= 0) {
             col.setAlpha(alphas[label0]);
         }
-        for (long t=0; t<T; t++) {
-            for (long m=0; m<M; m++) {
-                m_render_thread.clips.setValue(m_clips_to_render->value(m,t,inds[j]),m,t,j);
+        for (long t = 0; t < T; t++) {
+            for (long m = 0; m < M; m++) {
+                m_render_thread.clips.setValue(m_clips_to_render->value(m, t, inds[j]), m, t, j);
             }
         }
         m_render_thread.colors << col;
     }
 
-    m_render_thread.amplitude_factor=m_amplitude_factor;
-    m_render_thread.W=T*2;
-    m_render_thread.H=500;
+    m_render_thread.amplitude_factor = m_amplitude_factor;
+    m_render_thread.W = T * 2;
+    m_render_thread.H = 500;
 
     m_render_thread.start();
 }
 
-
 void MVSSRenderThread::run()
 {
-    image=QImage(W,H,QImage::Format_ARGB32);
-    QColor transparent(0,0,0,0);
+    image = QImage(W, H, QImage::Format_ARGB32);
+    QColor transparent(0, 0, 0, 0);
     image.fill(transparent);
 
     QPainter painter(&image);
@@ -211,29 +210,31 @@ void MVSSRenderThread::run()
 
     long M = clips.N1();
     long T = clips.N2();
-    long L=clips.N3();
-    if (L!=colors.count()) {
+    long L = clips.N3();
+    if (L != colors.count()) {
         qWarning() << "Unexpected sizes: " << colors.count() << L;
         return;
     }
     double* ptr = clips.dataPtr();
-    QTime timer; timer.start();
+    QTime timer;
+    timer.start();
     for (long i = 0; i < L; i++) {
-        if (timer.elapsed()>300) {
+        if (timer.elapsed() > 300) {
             {
                 QMutexLocker locker(&image_in_progress_mutex);
-                image_in_progress=image;
+                image_in_progress = image;
                 emit signalImageInProgressUpdated();
             }
             timer.restart();
         }
-        if (this->isInterruptionRequested()) return;
-        QColor col=colors[i];
+        if (this->isInterruptionRequested())
+            return;
+        QColor col = colors[i];
         render_clip(&painter, M, T, &ptr[M * T * i], col);
     }
     {
         QMutexLocker locker(&image_in_progress_mutex);
-        image_in_progress=image;
+        image_in_progress = image;
         emit signalImageInProgressUpdated();
     }
 }
@@ -251,7 +252,8 @@ void MVSSRenderThread::render_clip(QPainter* painter, long M, long T, double* pt
             QPointF pt = coord2pix(m, t, val);
             if (t == 0) {
                 path.moveTo(pt);
-            } else {
+            }
+            else {
                 path.lineTo(pt);
             }
         }

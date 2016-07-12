@@ -33,7 +33,7 @@ public:
     Mda clips;
     QList<QColor> colors;
     double amplitude_factor;
-    int W,H;
+    int W, H;
 
     //output
     QImage image;
@@ -47,6 +47,5 @@ public:
 signals:
     void signalImageInProgressUpdated();
 };
-
 
 #endif // MVSPIKESPRAYPANEL_H

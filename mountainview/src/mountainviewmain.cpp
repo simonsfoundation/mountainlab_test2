@@ -224,6 +224,11 @@ int main(int argc, char* argv[])
             QString window_title = CLP.named_parameters["window_title"].toString();
             W->setWindowTitle(window_title);
         }
+        if (CLP.named_parameters.contains("geom")) {
+            QString geom_path = CLP.named_parameters["geom"].toString();
+            ElectrodeGeometry eg = ElectrodeGeometry::loadFromGeomFile(geom_path);
+            context->setElectrodeGeometry(eg);
+        }
 
         //W->setMinimumSize(1000, 800);
         int W0 = 1800, H0 = 1200;

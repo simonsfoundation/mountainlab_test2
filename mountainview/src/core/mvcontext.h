@@ -82,6 +82,14 @@ struct ClusterPair {
 };
 uint qHash(const ClusterPair& pair);
 
+struct ElectrodeGeometry {
+    QList<QVector<double> > coordinates;
+    QJsonObject toJsonObject() const;
+    bool operator==(const ElectrodeGeometry& other);
+    static ElectrodeGeometry fromJsonObject(const QJsonObject& obj);
+    static ElectrodeGeometry loadFromGeomFile(const QString& path);
+};
+
 #include "mvmisc.h"
 
 class MVContextPrivate;
@@ -124,6 +132,10 @@ public:
     QList<int> visibleClustersIncludingMerges(int Kmax) const;
     bool clusterIsVisible(int k) const;
     void setClusterVisibilityRule(const ClusterVisibilityRule& rule);
+
+    /////////////////////////////////////////////////
+    ElectrodeGeometry electrodeGeometry() const;
+    void setElectrodeGeometry(const ElectrodeGeometry& geom);
 
     /////////////////////////////////////////////////
     MVEvent currentEvent() const;
@@ -200,6 +212,7 @@ signals:
     void clusterVisibilityChanged();
     void selectedClusterPairsChanged();
     void clusterPairAttributesChanged(ClusterPair pair);
+    void electrodeGeometryChanged();
 
 private slots:
     void slot_option_changed(QString name);
