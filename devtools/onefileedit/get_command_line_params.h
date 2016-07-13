@@ -18,13 +18,12 @@
 #include <QVariant>
 
 struct CLParams {
-	QMap<QString,QVariant> named_parameters;
-	QList<QString> unnamed_parameters;
-	bool success;
-	QString error_message;
+    QMap<QString, QVariant> named_parameters;
+    QList<QString> unnamed_parameters;
+    bool success;
+    QString error_message;
 };
 
-CLParams get_command_line_params(int argc,char *argv[]);
+CLParams get_command_line_params(int argc, char* argv[]);
 
 #endif // GET_COMMAND_LINE_PARAMS_H
-

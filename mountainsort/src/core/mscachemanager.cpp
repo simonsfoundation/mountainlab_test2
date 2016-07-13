@@ -53,12 +53,12 @@ void MSCacheManager::setLocalBasePath(const QString& path)
 QString MSCacheManager::makeRemoteFile(const QString& remote_url, const QString& file_name_in, MSCacheManager::Duration duration)
 {
     if (remote_url.isEmpty()) {
-	return makeLocalFile(file_name_in, duration);
+        return makeLocalFile(file_name_in, duration);
     }
 
     QString file_name = file_name_in;
     if (file_name.isEmpty())
-	file_name = d->create_random_file_name();
+        file_name = d->create_random_file_name();
     QString str;
     if (duration == ShortTerm)
         str = "tmp_short_term";
@@ -75,7 +75,7 @@ QString MSCacheManager::makeLocalFile(const QString& file_name_in, MSCacheManage
 {
     QString file_name = file_name_in;
     if (file_name.isEmpty())
-	file_name = d->create_random_file_name();
+        file_name = d->create_random_file_name();
     if (d->m_local_base_path.isEmpty()) {
         this->setLocalBasePath(DEFAULT_LOCAL_BASE_PATH);
     }

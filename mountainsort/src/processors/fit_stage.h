@@ -17,8 +17,8 @@ struct fit_stage_opts {
     int min_shell_size;
 };
 
-bool fit_stage(const QString &timeseries_path,const QString &firings_path,const QString &firings_out_path,const fit_stage_opts &opts);
-bool fit_stage_new(const QString &timeseries_path,const QString &firings_path,const QString &firings_out_path,const fit_stage_opts &opts);
+bool fit_stage(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts);
+bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts);
 
 double compute_score(long N, double* X, double* template0);
 QVector<int> find_events_to_use(const QVector<double>& times, const QVector<double>& scores, const fit_stage_opts& opts);
@@ -27,4 +27,3 @@ Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts);
 Mda sort_firings_by_time(const Mda& firings);
 
 #endif // FIT_STAGE_H
-

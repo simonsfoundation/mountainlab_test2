@@ -5,7 +5,6 @@
 #include <QMap>
 #include <QVariant>
 
-int ssfeatures(FILE *infile,FILE *outfile,const QMap<QString,QVariant> &params);
+int ssfeatures(FILE* infile, FILE* outfile, const QMap<QString, QVariant>& params);
 
 #endif // EXPFILTER_H
-

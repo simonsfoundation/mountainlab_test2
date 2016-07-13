@@ -56,8 +56,7 @@ void MOResultListViewPrivate::refresh_list()
     m_list->setHeaderLabels(labels);
     m_list->clear();
     QStringList names = m_mof->resultNames();
-    foreach(QString name, names)
-    {
+    foreach (QString name, names) {
         QJsonObject X = m_mof->result(name);
         QTreeWidgetItem* it = new QTreeWidgetItem;
         it->setData(0, Qt::UserRole, name);

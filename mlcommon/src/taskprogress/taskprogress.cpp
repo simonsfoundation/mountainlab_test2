@@ -419,15 +419,15 @@ public:
     {
         // lock is already taken
         connect(agent,
-                static_cast<void (TaskProgressAgent::*)(TaskProgressAgent*)>(&TaskProgressAgent::changed),
-                [this](TaskProgressAgent* agent) {
+            static_cast<void (TaskProgressAgent::*)(TaskProgressAgent*)>(&TaskProgressAgent::changed),
+            [this](TaskProgressAgent* agent) {
             update(agent);
-        });
+            });
         connect(agent,
-                static_cast<void (TaskProgressAgent::*)(TaskProgressAgent*)>(&TaskProgressAgent::logAdded),
-                [this](TaskProgressAgent* agent) {
+            static_cast<void (TaskProgressAgent::*)(TaskProgressAgent*)>(&TaskProgressAgent::logAdded),
+            [this](TaskProgressAgent* agent) {
             addLog(agent);
-        });
+            });
         m_data.prepend(agent);
         emit added(agent);
     }
@@ -557,8 +557,8 @@ void TaskProgressAgent::addTag(const QString& t)
 void TaskProgressAgent::addTags(const std::initializer_list<QString>& l)
 {
     lockForWrite();
-    foreach(const QString & t, l)
-    m_info.tags << t;
+    foreach (const QString& t, l)
+        m_info.tags << t;
     unlock();
     emit changed();
     emit changed(this);
@@ -577,8 +577,8 @@ void TaskProgressAgent::removeTag(const QString& t)
 void TaskProgressAgent::addTags(const QStringList& l)
 {
     lockForWrite();
-    foreach(const QString & t, l)
-    m_info.tags << t;
+    foreach (const QString& t, l)
+        m_info.tags << t;
     unlock();
     emit changed();
     emit changed(this);
@@ -796,11 +796,11 @@ TaskProgressModel::TaskProgressModel(QObject* parent)
 {
     m_monitor = TaskProgressMonitor::globalInstance();
     connect(m_monitor, SIGNAL(added(TaskProgressAgent*)),
-            this, SLOT(_q_added(TaskProgressAgent*)));
+        this, SLOT(_q_added(TaskProgressAgent*)));
     connect(m_monitor, SIGNAL(changed(TaskProgressAgent*)),
-            this, SLOT(_q_changed(TaskProgressAgent*)));
+        this, SLOT(_q_changed(TaskProgressAgent*)));
     connect(m_monitor, SIGNAL(logAdded(TaskProgressAgent*)),
-            this, SLOT(_q_logAdded(TaskProgressAgent*)));
+        this, SLOT(_q_logAdded(TaskProgressAgent*)));
 }
 
 QModelIndex TaskProgressModel::index(int row, int column, const QModelIndex& parent) const
@@ -863,7 +863,8 @@ QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
         // modified by jfm -- 5/17/2016
         if (!task.error.isEmpty()) {
             return task.label + ": " + task.error;
-        } else {
+        }
+        else {
             return task.label;
         }
     case Qt::ToolTipRole:
@@ -877,7 +878,8 @@ QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
         // modified by jfm -- 5/17/2016
         if (!task.error.isEmpty()) {
             return QColor(Qt::red);
-        } else {
+        }
+        else {
             if (task.progress < 1)
                 return QColor(Qt::blue);
         }
@@ -926,8 +928,7 @@ QVariant TaskProgressModel::logData(const QModelIndex& index, int role) const
 QString TaskProgressModel::assembleLog(const TaskInfo& task, const QString& prefix) const
 {
     QStringList entries;
-    foreach(const TaskProgressLogMessage & msg, task.log_messages)
-    {
+    foreach (const TaskProgressLogMessage& msg, task.log_messages) {
         entries << singleLog(msg, prefix);
     }
     return entries.join("\n");

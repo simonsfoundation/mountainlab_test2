@@ -22,8 +22,7 @@ public:
 
 signals:
 
-private
-slots:
+private slots:
 
 private:
     MVDiscrimHistViewPrivate* d;
@@ -37,8 +36,7 @@ public:
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
-private
-slots:
+private slots:
     void updateEnabled();
 };
 

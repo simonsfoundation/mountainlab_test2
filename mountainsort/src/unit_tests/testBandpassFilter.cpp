@@ -5,14 +5,16 @@
 #include <QCoreApplication>
 #include <QTemporaryFile>
 
-static QDir unitTestDataDir() {
+static QDir unitTestDataDir()
+{
     QDir d(QCoreApplication::applicationDirPath());
     d.cdUp();
     d.cd("src/unit_tests/data/");
     return d;
 }
 
-static QString testFilePath(const QString& baseName) {
+static QString testFilePath(const QString& baseName)
+{
     static QDir dir = unitTestDataDir();
     if (dir.exists() && dir.exists(baseName))
         return dir.absoluteFilePath(baseName);
@@ -20,7 +22,8 @@ static QString testFilePath(const QString& baseName) {
     return QString();
 }
 
-void TestBandpassFilter::testGroundTruth() {
+void TestBandpassFilter::testGroundTruth()
+{
     const QString groundTruth = testFilePath("ground_truth_bandpass_filter.mda");
     QVERIFY(QFile::exists(groundTruth));
     QFile output(QString("bandpass_test_%1.mda").arg(QDateTime::currentDateTime().toString("dMyyhhmmss")));
@@ -31,7 +34,7 @@ void TestBandpassFilter::testGroundTruth() {
     params["samplerate"] = 20000;
     params["freq_min"] = 300;
     params["freq_max"] = 10000;
-    params["freq_wid"] = 1000;         // ahb added
+    params["freq_wid"] = 1000; // ahb added
     bandpass_filter_Processor proc;
     QVERIFY(proc.run(params));
     output.close();
@@ -40,8 +43,8 @@ void TestBandpassFilter::testGroundTruth() {
     QCOMPARE(outputMda.N1(), groundTruthMda.N1());
     QCOMPARE(outputMda.N2(), groundTruthMda.N2());
     QCOMPARE(outputMda.totalSize(), groundTruthMda.totalSize());
-    for (int i=0 ; i<outputMda.N1() ; ++i) {
-        for (int j=0 ; j<outputMda.N2() ; ++j) {
+    for (int i = 0; i < outputMda.N1(); ++i) {
+        for (int j = 0; j < outputMda.N2(); ++j) {
             QCOMPARE(outputMda.get(i, j), groundTruthMda.get(i, j));
         }
     }

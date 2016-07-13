@@ -77,7 +77,8 @@ bool mask_out_artifacts(const QString& timeseries_path, const QString& timeserie
             if (use_it.value(m, i)) {
                 num_timepoints_used += interval_size;
                 Y.writeChunk(chunk, 0, timepoint);
-            } else {
+            }
+            else {
                 num_timepoints_not_used += interval_size;
             }
         }

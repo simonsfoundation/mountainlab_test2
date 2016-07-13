@@ -12,8 +12,8 @@
 
 class TextFile {
 public:
-    static QString read(const QString& fname, QTextCodec* codec=0);
-    static bool write(const QString& fname, const QString& txt, QTextCodec* codec=0);
+    static QString read(const QString& fname, QTextCodec* codec = 0);
+    static bool write(const QString& fname, const QString& txt, QTextCodec* codec = 0);
 };
 
 class MVUtil {
@@ -26,8 +26,8 @@ public:
 
 class MLNetwork {
 public:
-    static QString httpGetText(const QString &url);
-    static QString httpGetBinaryFile(const QString &url);
+    static QString httpGetText(const QString& url);
+    static QString httpGetBinaryFile(const QString& url);
 };
 
 #endif // TEXTFILE_H

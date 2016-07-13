@@ -176,7 +176,7 @@ MVControlPanel::MVControlPanel(MVContext* context, MVMainWindow* mw)
         QGridLayout* G = new QGridLayout;
         layout->addLayout(G);
 
-	d->m_controls.add_check_box(G, "view_merged", "View merged", false);
+        d->m_controls.add_check_box(G, "view_merged", "View merged", false);
 
         //FlowLayout* flayout = new FlowLayout;
         //new ClusterVisibilityControls(context, flayout);

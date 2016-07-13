@@ -71,7 +71,8 @@ void SherpaV1::slot_button_clicked()
     if (action == "open_view") {
         d->m_main_window->setCurrentContainerName(sender()->property("container-name").toString());
         d->m_main_window->openView(sender()->property("view-id").toString());
-    } else if (action == "show_instructions") {
+    }
+    else if (action == "show_instructions") {
         d->show_instructions(sender()->property("title").toString(), sender()->property("instructions").toString());
     }
 }

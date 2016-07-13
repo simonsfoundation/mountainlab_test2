@@ -8,49 +8,46 @@
 #include "ssabstractview_prev.h"
 
 class SSTimeSeriesViewPrivate;
-class SSTimeSeriesView : public SSAbstractView
-{
-	Q_OBJECT
+class SSTimeSeriesView : public SSAbstractView {
+    Q_OBJECT
 public:
-	friend class SSTimeSeriesViewPrivate;
-	explicit SSTimeSeriesView(QWidget *parent = 0);
-	~SSTimeSeriesView();
+    friend class SSTimeSeriesViewPrivate;
+    explicit SSTimeSeriesView(QWidget* parent = 0);
+    ~SSTimeSeriesView();
 
-    Q_INVOKABLE void setData(DiskArrayModel *data,bool is_owner=false);
-	Q_INVOKABLE DiskArrayModel *data();
-	//Q_INVOKABLE void setLabels(Mda *T,Mda *L);
-    Q_INVOKABLE void setLabels(DiskReadMdaOld *TL,bool is_owner=false);
-    Q_INVOKABLE void setCompareLabels(DiskReadMdaOld *TL,bool is_owner=false);
-	//Q_INVOKABLE void setConnectZeros(bool val);
-	Q_INVOKABLE void setClipMode(bool val);
-	bool clipMode();
+    Q_INVOKABLE void setData(DiskArrayModel* data, bool is_owner = false);
+    Q_INVOKABLE DiskArrayModel* data();
+    //Q_INVOKABLE void setLabels(Mda *T,Mda *L);
+    Q_INVOKABLE void setLabels(DiskReadMdaOld* TL, bool is_owner = false);
+    Q_INVOKABLE void setCompareLabels(DiskReadMdaOld* TL, bool is_owner = false);
+    //Q_INVOKABLE void setConnectZeros(bool val);
+    Q_INVOKABLE void setClipMode(bool val);
+    bool clipMode();
 
-	void setChannelLabels(const QStringList &labels);
+    void setChannelLabels(const QStringList& labels);
     void setUniformVerticalChannelSpacing(bool val);
-	void setTimesLabels(const QList<long> &times,const QList<long> &labels);
+    void setTimesLabels(const QList<long>& times, const QList<long>& labels);
 
-	SSLabelsModel *getLabels();
+    SSLabelsModel* getLabels();
 
-	double currentValue();
-	QString viewType();
+    double currentValue();
+    QString viewType();
     void setMarkerLinesVisible(bool val);
 
-    SSTimeSeriesPlot *plot();
+    SSTimeSeriesPlot* plot();
 
 private slots:
-	void slot_request_move_to_timepoint(int t0);
+    void slot_request_move_to_timepoint(int t0);
 
 signals:
-	void requestCenterOnCursor();
+    void requestCenterOnCursor();
 
 protected:
-	void keyPressEvent(QKeyEvent *);
+    void keyPressEvent(QKeyEvent*);
 
 protected:
-
-
 private:
-	SSTimeSeriesViewPrivate *d;
+    SSTimeSeriesViewPrivate* d;
 
 signals:
 

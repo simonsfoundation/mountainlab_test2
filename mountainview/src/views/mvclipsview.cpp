@@ -110,7 +110,8 @@ void MVClipsViewPrivate::auto_set_vert_scale_factor()
     double val = qMax(qAbs(X.minimum()), qAbs(X.maximum()));
     if (!val) {
         m_vert_scale_factor = 1;
-    } else {
+    }
+    else {
         m_vert_scale_factor = 1 / val;
     }
 }

@@ -10,18 +10,17 @@
 #include "msprocessor.h"
 
 class mv_firings_filter_ProcessorPrivate;
-class mv_firings_filter_Processor : public MSProcessor
-{
+class mv_firings_filter_Processor : public MSProcessor {
 public:
     friend class mv_firings_filter_ProcessorPrivate;
     mv_firings_filter_Processor();
     virtual ~mv_firings_filter_Processor();
 
-    bool check(const QMap<QString,QVariant> &params);
-    bool run(const QMap<QString,QVariant> &params);
+    bool check(const QMap<QString, QVariant>& params);
+    bool run(const QMap<QString, QVariant>& params);
+
 private:
-    mv_firings_filter_ProcessorPrivate *d;
+    mv_firings_filter_ProcessorPrivate* d;
 };
 
 #endif // MV_FIRINGS_FILTER_PROCESSOR_H
-

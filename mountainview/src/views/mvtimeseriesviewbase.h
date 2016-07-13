@@ -82,8 +82,7 @@ public:
 signals:
     void clicked();
 
-private
-slots:
+private slots:
     void slot_scroll_to_current_timepoint();
     void slot_zoom_in();
     void slot_zoom_out();

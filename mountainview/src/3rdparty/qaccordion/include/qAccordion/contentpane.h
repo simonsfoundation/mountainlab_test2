@@ -250,8 +250,7 @@ signals:
      */
     void isInactive();
 
-public
-slots:
+public slots:
 
     /**
      * @brief Slot that is called when the header has been triggered
@@ -291,8 +290,7 @@ private:
     void initAnimations();
 
     //jfm changed this from private to public to expose openContentPane
-public
-slots:
+public slots:
     //private slots:
 
     /**

@@ -19,7 +19,7 @@
 
 #include "mainwindow.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     QApplication qAccordionTester(argc, argv);
     QCoreApplication::setOrganizationName("crappbytes");

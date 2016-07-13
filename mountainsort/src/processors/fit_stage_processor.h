@@ -10,18 +10,17 @@
 #include "msprocessor.h"
 
 class fit_stage_ProcessorPrivate;
-class fit_stage_Processor : public MSProcessor
-{
+class fit_stage_Processor : public MSProcessor {
 public:
     friend class fit_stage_ProcessorPrivate;
     fit_stage_Processor();
     virtual ~fit_stage_Processor();
 
-    bool check(const QMap<QString,QVariant> &params);
-    bool run(const QMap<QString,QVariant> &params);
+    bool check(const QMap<QString, QVariant>& params);
+    bool run(const QMap<QString, QVariant>& params);
+
 private:
-    fit_stage_ProcessorPrivate *d;
+    fit_stage_ProcessorPrivate* d;
 };
 
 #endif // FIT_STAGE_PROCESSOR_H
-

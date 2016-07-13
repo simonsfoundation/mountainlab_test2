@@ -11,13 +11,12 @@ class MyPage : public QWebPage {
     Q_OBJECT
 public:
     MyPage();
-    virtual ~MyPage() {};
+    virtual ~MyPage(){};
     void setController(MBController* controller)
     {
         m_controller = controller;
     };
-private
-slots:
+private slots:
     void slot_url_changed();
 
 protected:

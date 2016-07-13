@@ -20,7 +20,6 @@ public:
     double max_outlier_score;
 };
 
-bool mv_firings_filter(const QString &firings,const QString &firings_out,const QString &original_cluster_numbers,const mv_firings_filter_opts &opts);
+bool mv_firings_filter(const QString& firings, const QString& firings_out, const QString& original_cluster_numbers, const mv_firings_filter_opts& opts);
 
 #endif // MV_FIRINGS_FILTER_H
-

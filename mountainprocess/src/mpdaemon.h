@@ -45,8 +45,7 @@ public:
     static bool pidExists(qint64 pid);
     static bool waitForFinishedAndWriteOutput(QProcess* P);
 
-private
-slots:
+private slots:
     void slot_commands_directory_changed();
     void slot_pript_qprocess_finished();
     void slot_qprocess_output();

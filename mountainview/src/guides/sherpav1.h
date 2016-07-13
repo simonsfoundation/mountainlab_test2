@@ -19,10 +19,9 @@ public:
     SherpaV1(MVContext* mvcontext, MVMainWindow* mw);
     virtual ~SherpaV1();
 
-private
-slots:
+private slots:
     void slot_button_clicked();
-    void slot_next_channel(int offset=1);
+    void slot_next_channel(int offset = 1);
     void slot_previous_channel();
     void slot_cluster_channel_matrix_computed();
 

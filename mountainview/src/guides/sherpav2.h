@@ -19,8 +19,7 @@ public:
     SherpaV2(MVContext* mvcontext, MVMainWindow* mw);
     virtual ~SherpaV2();
 
-private
-slots:
+private slots:
     void slot_button_clicked();
     void slot_select_merge_candidates();
 

@@ -59,8 +59,7 @@ signals:
     void signalExportMVFile();
     void signalExportFiringsFile();
 
-public
-slots:
+public slots:
     void closeAllViews();
     void openView(const QString& id);
     void recalculateViews(RecalculateViewsMode mode);
@@ -70,11 +69,9 @@ protected:
 
 signals:
 
-public
-slots:
+public slots:
 
-private
-slots:
+private slots:
     void slot_pop_out_widget();
     /// TODO: (HIGH) cluster annotation guide doesn't belong in main window
     void slot_cluster_annotation_guide();

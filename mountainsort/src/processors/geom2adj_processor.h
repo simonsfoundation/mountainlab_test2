@@ -10,18 +10,17 @@
 #include "msprocessor.h"
 
 class geom2adj_ProcessorPrivate;
-class geom2adj_Processor : public MSProcessor
-{
+class geom2adj_Processor : public MSProcessor {
 public:
     friend class geom2adj_ProcessorPrivate;
     geom2adj_Processor();
     virtual ~geom2adj_Processor();
 
-    bool check(const QMap<QString,QVariant> &params);
-    bool run(const QMap<QString,QVariant> &params);
+    bool check(const QMap<QString, QVariant>& params);
+    bool run(const QMap<QString, QVariant>& params);
+
 private:
-    geom2adj_ProcessorPrivate *d;
+    geom2adj_ProcessorPrivate* d;
 };
 
 #endif // GEOM2ADJ_H
-

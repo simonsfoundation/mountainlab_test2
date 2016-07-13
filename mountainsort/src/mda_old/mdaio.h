@@ -46,39 +46,39 @@
 #include <stdint.h>
 
 struct MDAIO_HEADER {
-	//note that all these data are *signed* 32-bit integers -- a historical choice
-	int32_t data_type; //the data type in the file
-	int32_t num_bytes_per_entry; //number of bytes per data entry (redundant)
-	int32_t num_dims; //the number of dimensions to read/write
-	int32_t dims[MDAIO_MAX_DIMS]; //the size of the dimensions
+    //note that all these data are *signed* 32-bit integers -- a historical choice
+    int32_t data_type; //the data type in the file
+    int32_t num_bytes_per_entry; //number of bytes per data entry (redundant)
+    int32_t num_dims; //the number of dimensions to read/write
+    int32_t dims[MDAIO_MAX_DIMS]; //the size of the dimensions
 
-	//the following make sense for reading but not writing -- purposes of info
-	//note that the header size will always be (3+num_dims)x4
-	long header_size; //the size of the header in bytes
+    //the following make sense for reading but not writing -- purposes of info
+    //note that the header size will always be (3+num_dims)x4
+    long header_size; //the size of the header in bytes
 };
 
 //simply read, write or copy the mda header
-long mda_read_header(struct MDAIO_HEADER *H,FILE *input_file);
-long mda_write_header(struct MDAIO_HEADER *H,FILE *output_file);
-void mda_copy_header(struct MDAIO_HEADER *Hdst,const struct MDAIO_HEADER *Hsrc);
+long mda_read_header(struct MDAIO_HEADER* H, FILE* input_file);
+long mda_write_header(struct MDAIO_HEADER* H, FILE* output_file);
+void mda_copy_header(struct MDAIO_HEADER* Hdst, const struct MDAIO_HEADER* Hsrc);
 
 //the following can be used no matter what the underlying data type is
-long mda_read_byte(unsigned char *data,struct MDAIO_HEADER *H,long n,FILE *input_file);
-long mda_read_float32(float *data,struct MDAIO_HEADER *H,long n,FILE *input_file);
-long mda_read_int16(int16_t *data,struct MDAIO_HEADER *H,long n,FILE *input_file);
-long mda_read_int32(int32_t *data,struct MDAIO_HEADER *H,long n,FILE *input_file);
-long mda_read_uint16(uint16_t *data,struct MDAIO_HEADER *H,long n,FILE *input_file);
-long mda_read_float64(double *data,struct MDAIO_HEADER *H,long n,FILE *input_file);
+long mda_read_byte(unsigned char* data, struct MDAIO_HEADER* H, long n, FILE* input_file);
+long mda_read_float32(float* data, struct MDAIO_HEADER* H, long n, FILE* input_file);
+long mda_read_int16(int16_t* data, struct MDAIO_HEADER* H, long n, FILE* input_file);
+long mda_read_int32(int32_t* data, struct MDAIO_HEADER* H, long n, FILE* input_file);
+long mda_read_uint16(uint16_t* data, struct MDAIO_HEADER* H, long n, FILE* input_file);
+long mda_read_float64(double* data, struct MDAIO_HEADER* H, long n, FILE* input_file);
 
 //the following can be used no matter what the underlying data type is
-long mda_write_byte(unsigned char *data,struct MDAIO_HEADER *H,long n,FILE *output_file);
-long mda_write_float32(float *data,struct MDAIO_HEADER *H,long n,FILE *output_file);
-long mda_write_int16(int16_t *data,struct MDAIO_HEADER *H,long n,FILE *output_file);
-long mda_write_int32(int32_t *data,struct MDAIO_HEADER *H,long n,FILE *output_file);
-long mda_write_uint16(uint16_t *data,struct MDAIO_HEADER *H,long n,FILE *output_file);
-long mda_write_float64(double *data,struct MDAIO_HEADER *H,long n,FILE *output_file);
+long mda_write_byte(unsigned char* data, struct MDAIO_HEADER* H, long n, FILE* output_file);
+long mda_write_float32(float* data, struct MDAIO_HEADER* H, long n, FILE* output_file);
+long mda_write_int16(int16_t* data, struct MDAIO_HEADER* H, long n, FILE* output_file);
+long mda_write_int32(int32_t* data, struct MDAIO_HEADER* H, long n, FILE* output_file);
+long mda_write_uint16(uint16_t* data, struct MDAIO_HEADER* H, long n, FILE* output_file);
+long mda_write_float64(double* data, struct MDAIO_HEADER* H, long n, FILE* output_file);
 
 //here's an example usage function. See top of file for more info.
-void transpose_array(char *infile_path,char *outfile_path);
+void transpose_array(char* infile_path, char* outfile_path);
 
 #endif // MDAIO_H

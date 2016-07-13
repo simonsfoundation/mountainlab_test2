@@ -13,73 +13,74 @@
 
 SSController::SSController()
 {
-
 }
 
 SSController::~SSController()
 {
-
 }
 
-QWidget *SSController::createTimeSeriesWidget() {
-	SSTimeSeriesWidget *W=new SSTimeSeriesWidget();
-	W->setAttribute(Qt::WA_DeleteOnClose);
-	W->showNormal();
-	W->resize(1000,500);
-	W->move(300,300);
-	return W;
-}
-
-QWidget *SSController::createTimeSeriesView() {
-	SSTimeSeriesView *V=new SSTimeSeriesView();
-	return V;
-}
-
-QWidget *SSController::createLabelView()
+QWidget* SSController::createTimeSeriesWidget()
 {
-	SSLabelView *V=new SSLabelView();
-	return V;
+    SSTimeSeriesWidget* W = new SSTimeSeriesWidget();
+    W->setAttribute(Qt::WA_DeleteOnClose);
+    W->showNormal();
+    W->resize(1000, 500);
+    W->move(300, 300);
+    return W;
 }
 
-QObject *SSController::loadArray(QString path) {
-	SSARRAY *X=new SSARRAY();
-	X->setPath(path.toLatin1().data());
-
-	return X;
-}
-
-QObject *SSController::readArray(QString path)
+QWidget* SSController::createTimeSeriesView()
 {
-    DiskReadMdaOld *ret=new DiskReadMdaOld;
-	ret->setPath(path);
-	return ret;
+    SSTimeSeriesView* V = new SSTimeSeriesView();
+    return V;
+}
+
+QWidget* SSController::createLabelView()
+{
+    SSLabelView* V = new SSLabelView();
+    return V;
+}
+
+QObject* SSController::loadArray(QString path)
+{
+    SSARRAY* X = new SSARRAY();
+    X->setPath(path.toLatin1().data());
+
+    return X;
+}
+
+QObject* SSController::readArray(QString path)
+{
+    DiskReadMdaOld* ret = new DiskReadMdaOld;
+    ret->setPath(path);
+    return ret;
 }
 
 static QList<QString> s_paths_to_remove;
 
 void CleanupObject::closing()
 {
-    for (int i=0; i<s_paths_to_remove.count(); i++) {
-        QString path=s_paths_to_remove[i];
+    for (int i = 0; i < s_paths_to_remove.count(); i++) {
+        QString path = s_paths_to_remove[i];
 
-        QDateTime time=QFileInfo(path).lastModified();
-        QString timestamp=time.toString("yyyy-mm-dd-hh-mm-ss");
-        QString tmp=QFileInfo(path).path()+"/spikespy."+QFileInfo(path).completeBaseName()+"."+timestamp;
+        QDateTime time = QFileInfo(path).lastModified();
+        QString timestamp = time.toString("yyyy-mm-dd-hh-mm-ss");
+        QString tmp = QFileInfo(path).path() + "/spikespy." + QFileInfo(path).completeBaseName() + "." + timestamp;
         if (QDir(tmp).exists()) {
-            qDebug()  << "Removing directory: " << tmp;
-            QStringList list=QDir(tmp).entryList(QStringList("*.mda"),QDir::Files|QDir::NoDotAndDotDot);
-            foreach (QString A,list) {
-                QFile::remove(tmp+"/"+A);
+            qDebug() << "Removing directory: " << tmp;
+            QStringList list = QDir(tmp).entryList(QStringList("*.mda"), QDir::Files | QDir::NoDotAndDotDot);
+            foreach (QString A, list) {
+                QFile::remove(tmp + "/" + A);
             }
             QDir(QFileInfo(tmp).path()).rmdir(QFileInfo(tmp).fileName());
         }
 
-        qDebug()  << "Removing file: " << path;
+        qDebug() << "Removing file: " << path;
         QFile(path).remove();
     }
 }
 
-void removeOnClose(const QString &path)
+void removeOnClose(const QString& path)
 {
     s_paths_to_remove << path;
 }

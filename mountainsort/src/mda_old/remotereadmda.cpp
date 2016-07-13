@@ -107,7 +107,8 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
         DiskReadMda A(fname);
         A.readChunk(X, ii1 - jj1 * REMOTE_READ_MDA_CHUNK_SIZE, size);
         return true;
-    } else {
+    }
+    else {
         for (long jj = jj1; jj <= jj2; jj++) {
             QString fname = d->download_chunk_at_index(jj);
             if (fname.isEmpty())
@@ -123,7 +124,8 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
                     Xptr[b] = tmp_ptr[a];
                     b++;
                 }
-            } else if (jj == jj2) {
+            }
+            else if (jj == jj2) {
                 Mda tmp;
                 long size0 = ii2 + 1 - jj2 * REMOTE_READ_MDA_CHUNK_SIZE;
                 A.readChunk(tmp, REMOTE_READ_MDA_CHUNK_SIZE - size0, size0);
@@ -133,7 +135,8 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
                     Xptr[b] = tmp_ptr[a];
                     b++;
                 }
-            } else {
+            }
+            else {
                 Mda tmp;
                 A.readChunk(tmp, 0, REMOTE_READ_MDA_CHUNK_SIZE);
                 double* tmp_ptr = tmp.dataPtr();

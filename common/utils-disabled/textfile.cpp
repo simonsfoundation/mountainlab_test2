@@ -90,7 +90,8 @@ QChar make_random_alphanumeric_tf()
     val++;
     QTime time = QTime::currentTime();
     int num = qHash(time.toString("hh:mm:ss:zzz") + QString::number(qrand() + val));
-    if (num<0) num=-num;
+    if (num < 0)
+        num = -num;
     num = num % 36;
     if (num < 26)
         return QChar('A' + num);

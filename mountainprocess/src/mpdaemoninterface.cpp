@@ -72,7 +72,8 @@ bool MPDaemonInterface::stop()
     if (!d->daemon_is_running()) {
         printf("daemon has been stopped.\n");
         return true;
-    } else {
+    }
+    else {
         printf("Failed to stop daemon\n");
         return false;
     }

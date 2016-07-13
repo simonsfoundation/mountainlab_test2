@@ -55,7 +55,7 @@ public:
      * @param f Qt::WindowFlags
      */
     explicit ClickableFrame(QString header, QWidget* parent = 0,
-                            Qt::WindowFlags f = 0);
+        Qt::WindowFlags f = 0);
 
     // TODO: Expose this function to the ContentPane api
     /**
@@ -109,8 +109,7 @@ signals:
      */
     void singleClick(QPoint pos);
 
-public
-slots:
+public slots:
 
     /**
      * @brief Set the caret pixmap

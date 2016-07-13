@@ -159,7 +159,8 @@ QString MLUtil::resolvePath(const QString& basepath, const QString& path)
 {
     if (QFileInfo(path).isRelative()) {
         return basepath + "/" + path;
-    } else
+    }
+    else
         return path;
 }
 
@@ -209,7 +210,8 @@ CLParams::CLParams(int argc, char* argv[])
                 return;
             }
             this->named_parameters[name] = clp_string_to_variant(val);
-        } else {
+        }
+        else {
             this->unnamed_parameters << str;
         }
     }
@@ -285,7 +287,8 @@ double MLCompute::stdev(const QVector<double>& X)
     int ct = X.count();
     if (ct >= 2) {
         return sqrt((sumsqr - sum * sum / ct) / (ct - 1));
-    } else
+    }
+    else
         return 0;
 }
 
@@ -293,7 +296,7 @@ double MLCompute::dotProduct(const QVector<double>& X1, const QVector<double>& X
 {
     if (X1.count() != X2.count())
         return 0;
-    double ret=0;
+    double ret = 0;
     for (long i = 0; i < X1.count(); i++)
         ret += X1[i] * X2[i];
     return ret;
@@ -387,8 +390,7 @@ double MLCompute::min(long N, double* X)
 QList<int> MLUtil::stringListToIntList(const QStringList& list)
 {
     QList<int> ret;
-    foreach(QString str, list)
-    {
+    foreach (QString str, list) {
         ret << str.toInt();
     }
     return ret;
@@ -397,8 +399,7 @@ QList<int> MLUtil::stringListToIntList(const QStringList& list)
 QStringList MLUtil::intListToStringList(const QList<int>& list)
 {
     QStringList ret;
-    foreach(int a, list)
-    {
+    foreach (int a, list) {
         ret << QString("%1").arg(a);
     }
     return ret;

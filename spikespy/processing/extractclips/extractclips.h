@@ -5,7 +5,6 @@
 #include <QMap>
 #include <QVariant>
 
-int extractclips(FILE *infile,FILE *infile_TL,FILE *outfile,FILE *outfile_TL,FILE *outfile_TM,const QMap<QString,QVariant> &params);
+int extractclips(FILE* infile, FILE* infile_TL, FILE* outfile, FILE* outfile_TL, FILE* outfile_TM, const QMap<QString, QVariant>& params);
 
 #endif // EXPFILTER_H
-

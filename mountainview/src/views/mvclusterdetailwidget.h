@@ -47,7 +47,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* evt);
     void mouseDoubleClickEvent(QMouseEvent* evt);
     void wheelEvent(QWheelEvent* evt);
-    void prepareMimeData(QMimeData &mimeData, const QPoint &pos);
+    void prepareMimeData(QMimeData& mimeData, const QPoint& pos);
 signals:
     ///A cluster has been double-clicked (or enter pressed?)
     //void signalTemplateActivated();

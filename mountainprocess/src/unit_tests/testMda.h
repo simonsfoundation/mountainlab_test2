@@ -3,13 +3,13 @@
 
 #include <QtTest/QTest>
 
-class TestMda: public QObject {
-	Q_OBJECT
+class TestMda : public QObject {
+    Q_OBJECT
 private slots:
-	void testDiskWrite();
-	void benchmarkAllocate();
-	void benchmarkDiskWrite();
-	void benchmarkDiskRead();
+    void testDiskWrite();
+    void benchmarkAllocate();
+    void benchmarkDiskWrite();
+    void benchmarkDiskRead();
 };
 
 #endif // TESTMDA_H

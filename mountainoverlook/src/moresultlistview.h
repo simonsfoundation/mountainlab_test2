@@ -14,8 +14,7 @@ public:
     virtual ~MOResultListView();
 signals:
     void resultActivated(QString name);
-private
-slots:
+private slots:
     void slot_refresh();
     void slot_item_activated(QTreeWidgetItem* it);
 

@@ -13,13 +13,13 @@
 #include <QStringList>
 
 struct CLParams {
-	QMap<QString,QVariant> named_parameters;
-	QList<QString> unnamed_parameters;
-	bool success;
-	QString error_message;
+    QMap<QString, QVariant> named_parameters;
+    QList<QString> unnamed_parameters;
+    bool success;
+    QString error_message;
 };
 
-CLParams commandlineparams(int argc,char *argv[]);
-CLParams commandlineparams(const QStringList &args);
+CLParams commandlineparams(int argc, char* argv[]);
+CLParams commandlineparams(const QStringList& args);
 
 #endif // GET_COMMAND_LINE_PARAMS_H

@@ -80,8 +80,7 @@ void TempFileCleanerPrivate::clean_path(QString path, double max_gb)
     }
     QStringList fnames = QDir(path).entryList(QStringList("*"), QDir::Files, QDir::Name);
     QList<FileRec> records;
-    foreach(QString fname, fnames)
-    {
+    foreach (QString fname, fnames) {
         FileRec rec;
         rec.path = path + "/" + fname;
         rec.elapsed_sec = QFileInfo(rec.path).lastModified().secsTo(QDateTime::currentDateTime());

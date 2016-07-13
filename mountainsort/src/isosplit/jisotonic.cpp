@@ -37,7 +37,8 @@ void jisotonic(int N, double* BB, double* MSE, double* AA, double* WW)
                 break;
             if (sum[last_index - 1] / count[last_index - 1] < sum[last_index] / count[last_index]) {
                 break;
-            } else {
+            }
+            else {
                 double prevMSE = sumsqr[last_index - 1] - sum[last_index - 1] * sum[last_index - 1] / count[last_index - 1];
                 prevMSE += sumsqr[last_index] - sum[last_index] * sum[last_index] / count[last_index];
                 unweightedcount[last_index - 1] += unweightedcount[last_index];

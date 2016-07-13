@@ -4,12 +4,11 @@
 #include <QObject>
 #include "mda.h"
 
-class MdaObject : public QObject, public Mda
-{
-	Q_OBJECT
+class MdaObject : public QObject, public Mda {
+    Q_OBJECT
 public:
-	explicit MdaObject(QObject *parent = 0);
-	~MdaObject();
+    explicit MdaObject(QObject* parent = 0);
+    ~MdaObject();
 
 signals:
 

@@ -14,7 +14,6 @@ struct filter_events_opts {
     double outlier_threshold;
 };
 
-bool filter_events(QString firings_path,QString firings_out_path,filter_events_opts opts);
+bool filter_events(QString firings_path, QString firings_out_path, filter_events_opts opts);
 
 #endif // FILTER_EVENTS_H
-

@@ -34,7 +34,8 @@ bool create_multiscale_timeseries(QString path_in, QString path_out)
                 printf("Problem in downsample_max\n");
                 return false;
             }
-        } else {
+        }
+        else {
             if (!downsample_min(DiskReadMda(prev_min_fname), min_fname, (N * 3) / ds_factor)) {
                 printf("Problem in downsample_min *\n");
                 return false;
@@ -55,8 +56,7 @@ bool create_multiscale_timeseries(QString path_in, QString path_out)
         return false;
     }
     printf("Removing temporary files\n");
-    foreach(QString fname, file_names)
-    {
+    foreach (QString fname, file_names) {
         QFile::remove(fname);
     }
 
@@ -147,8 +147,7 @@ bool downsample_max(const DiskReadMda& X, QString out_fname, long N)
 bool write_concatenation(QStringList input_fnames, QString output_fname)
 {
     long M = 1, N = 0;
-    foreach(QString fname, input_fnames)
-    {
+    foreach (QString fname, input_fnames) {
         DiskReadMda X(fname);
         M = X.N1();
         N += X.N2();
@@ -159,8 +158,7 @@ bool write_concatenation(QStringList input_fnames, QString output_fname)
         return false;
     }
     long offset = 0;
-    foreach(QString fname, input_fnames)
-    {
+    foreach (QString fname, input_fnames) {
         DiskReadMda X(fname);
 
         /// TODO choose chunk_size sensibly

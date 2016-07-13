@@ -4,8 +4,7 @@
 #include <QObject>
 
 class TempFileCleanerPrivate;
-class TempFileCleaner : public QObject
-{
+class TempFileCleaner : public QObject {
     Q_OBJECT
 public:
     friend class TempFileCleanerPrivate;
@@ -14,9 +13,9 @@ public:
     void addPath(QString path, double max_gb);
 private slots:
     void slot_timer();
+
 private:
-    TempFileCleanerPrivate *d;
+    TempFileCleanerPrivate* d;
 };
 
 #endif // TEMPFILECLEANER_H
-

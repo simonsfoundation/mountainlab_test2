@@ -17,26 +17,26 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget* parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
     // create a network access manager object to get some lorem ipsum :)
-    this->networkManager =
-        std::unique_ptr<QNetworkAccessManager>(new QNetworkAccessManager());
+    this->networkManager = std::unique_ptr<QNetworkAccessManager>(new QNetworkAccessManager());
     QObject::connect(this->networkManager.get(),
-                     &QNetworkAccessManager::finished, this,
-                     &MainWindow::networkRequestFinished);
+        &QNetworkAccessManager::finished, this,
+        &MainWindow::networkRequestFinished);
 
     // the demo qccordion. The Accordion will be added programmatically
-    QGroupBox *groupboxDemo = new QGroupBox();
+    QGroupBox* groupboxDemo = new QGroupBox();
     groupboxDemo->setTitle("Demo Accordion");
     groupboxDemo->setLayout(new QVBoxLayout());
     ui->verticalLayout->insertWidget(0, groupboxDemo);
-    QScrollArea *scrollAreaTop = new QScrollArea();
+    QScrollArea* scrollAreaTop = new QScrollArea();
     groupboxDemo->layout()->addWidget(scrollAreaTop);
-    QAccordion *topAccordion = new QAccordion();
+    QAccordion* topAccordion = new QAccordion();
     scrollAreaTop->setWidget(topAccordion);
     // if you are using a QScrollArea you have to tell it that the qaccrdion
     // widget is resizable
@@ -52,9 +52,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() { delete ui; }
 
-void MainWindow::networkRequestFinished(QNetworkReply *reply)
+void MainWindow::networkRequestFinished(QNetworkReply* reply)
 {
-    QLabel *ipsumLabel = this->labelIpsumQueue.front();
+    QLabel* ipsumLabel = this->labelIpsumQueue.front();
     this->labelIpsumQueue.pop();
     ipsumLabel->setTextFormat(Qt::TextFormat::RichText);
     ipsumLabel->setWordWrap(true);
@@ -62,7 +62,8 @@ void MainWindow::networkRequestFinished(QNetworkReply *reply)
     if (reply->error() == QNetworkReply::NetworkError::NoError) {
         QByteArray data = reply->readAll();
         ipsumLabel->setText(QString(data));
-    } else {
+    }
+    else {
         qDebug() << Q_FUNC_INFO << "Netowrk error: " << reply->error() << "\n"
                  << reply->errorString();
         ipsumLabel->setText(this->offlineIpsum);
@@ -70,7 +71,7 @@ void MainWindow::networkRequestFinished(QNetworkReply *reply)
     reply->deleteLater();
 }
 
-void MainWindow::contentPaneAdd(QAccordion *topAccordion)
+void MainWindow::contentPaneAdd(QAccordion* topAccordion)
 {
     ui->widgetControlAccordion->setCollapsible(false);
     // good pratice is to check the return value of addContentPane. see the API
@@ -84,13 +85,13 @@ void MainWindow::contentPaneAdd(QAccordion *topAccordion)
     this->addCF->setLayout(new QVBoxLayout());
     this->addCF->layout()->addWidget(
         new QLabel("Add a new Content Pane with the provided Header"));
-    QLineEdit *headerName = new QLineEdit();
+    QLineEdit* headerName = new QLineEdit();
     headerName->setPlaceholderText("Header name");
     this->addCF->layout()->addWidget(headerName);
-    QPushButton *addPaneButton = new QPushButton("Add Content Pane");
+    QPushButton* addPaneButton = new QPushButton("Add Content Pane");
     // use a lambda as slot
     QObject::connect(addPaneButton, &QPushButton::clicked, [this, topAccordion,
-                                                            headerName]() {
+                                                               headerName]() {
         if (headerName->text() != "") {
             // create a QFrame that acts as content frame for a new content pane
             QFrame *frame = new QFrame();
@@ -112,10 +113,9 @@ void MainWindow::contentPaneAdd(QAccordion *topAccordion)
     this->addCF->layout()->addWidget(addPaneButton);
 }
 
-void MainWindow::contentPaneInsert(QAccordion *topAccordion)
+void MainWindow::contentPaneInsert(QAccordion* topAccordion)
 {
-    int indexInsertPane =
-        ui->widgetControlAccordion->addContentPane("Insert Pane");
+    int indexInsertPane = ui->widgetControlAccordion->addContentPane("Insert Pane");
 
     // insert content pane
     this->insertCF = ui->widgetControlAccordion->getContentPane(indexInsertPane)
@@ -124,26 +124,26 @@ void MainWindow::contentPaneInsert(QAccordion *topAccordion)
     this->insertCF->layout()->addWidget(new QLabel(
         "Insert a new content pane by providing a Header and a Position"));
 
-    QHBoxLayout *headerPosition = new QHBoxLayout();
-    dynamic_cast<QVBoxLayout *>(this->insertCF->layout())
+    QHBoxLayout* headerPosition = new QHBoxLayout();
+    dynamic_cast<QVBoxLayout*>(this->insertCF->layout())
         ->addLayout(headerPosition);
-    QLineEdit *headerName = new QLineEdit();
+    QLineEdit* headerName = new QLineEdit();
     headerName->setPlaceholderText("Header name");
     headerPosition->addWidget(headerName);
-    QComboBox *position = new QComboBox();
+    QComboBox* position = new QComboBox();
     // inserting at 0 is always possible.
     position->addItem("Position 0", QVariant(0));
     QObject::connect(topAccordion, &QAccordion::numberOfContentPanesChanged,
-                     [position](int number) {
+        [position](int number) {
                          position->clear();
                          for (int i = 0; i <= number; i++) {
                              position->addItem("Position " + QString::number(i),
                                                QVariant(i));
                          }
-                     });
+        });
     headerPosition->layout()->addWidget(position);
 
-    QPushButton *insertPaneButton = new QPushButton("Insert Content Pane");
+    QPushButton* insertPaneButton = new QPushButton("Insert Content Pane");
     this->insertCF->layout()->addWidget(insertPaneButton);
     QObject::connect(
         insertPaneButton, &QPushButton::clicked,
@@ -171,24 +171,23 @@ void MainWindow::contentPaneInsert(QAccordion *topAccordion)
         });
 }
 
-void MainWindow::contentPaneRemove(QAccordion *topAccordion)
+void MainWindow::contentPaneRemove(QAccordion* topAccordion)
 {
-    int indexRemovePane =
-        ui->widgetControlAccordion->addContentPane("Remove Pane");
+    int indexRemovePane = ui->widgetControlAccordion->addContentPane("Remove Pane");
 
     this->removeCF = ui->widgetControlAccordion->getContentPane(indexRemovePane)
                          ->getContentFrame();
     this->removeCF->setLayout(new QVBoxLayout());
     this->removeCF->layout()->addWidget(
         new QLabel("Remove a content pane by providing the Header"));
-    QLineEdit *headerName = new QLineEdit();
+    QLineEdit* headerName = new QLineEdit();
     headerName->setPlaceholderText("Header name");
     this->removeCF->layout()->addWidget(headerName);
-    QPushButton *removePaneButton = new QPushButton("Remove Content Pane");
+    QPushButton* removePaneButton = new QPushButton("Remove Content Pane");
     this->removeCF->layout()->addWidget(removePaneButton);
     QObject::connect(removePaneButton, &QPushButton::clicked, [headerName,
-                                                               topAccordion,
-                                                               this]() {
+                                                                  topAccordion,
+                                                                  this]() {
         if (headerName->text() != "") {
             bool status =
                 topAccordion->removeContentPane(true, headerName->text());
@@ -204,29 +203,28 @@ void MainWindow::contentPaneRemove(QAccordion *topAccordion)
     });
 }
 
-void MainWindow::contentPaneMove(QAccordion *topAccordion)
+void MainWindow::contentPaneMove(QAccordion* topAccordion)
 {
-    int indexMoveContentP =
-        ui->widgetControlAccordion->addContentPane("Move Pane");
+    int indexMoveContentP = ui->widgetControlAccordion->addContentPane("Move Pane");
 
     this->moveCF = ui->widgetControlAccordion->getContentPane(indexMoveContentP)
                        ->getContentFrame();
     this->moveCF->setLayout(new QVBoxLayout());
     this->moveCF->layout()->addWidget(
         new QLabel("Move a content pane to another position"));
-    QHBoxLayout *fromToCombos = new QHBoxLayout();
-    dynamic_cast<QVBoxLayout *>(this->moveCF->layout())->addLayout(fromToCombos);
-    QComboBox *fromBox = new QComboBox();
-    QComboBox *toBox = new QComboBox();
+    QHBoxLayout* fromToCombos = new QHBoxLayout();
+    dynamic_cast<QVBoxLayout*>(this->moveCF->layout())->addLayout(fromToCombos);
+    QComboBox* fromBox = new QComboBox();
+    QComboBox* toBox = new QComboBox();
     fromToCombos->addWidget(fromBox);
     fromToCombos->addWidget(toBox);
 
-    QPushButton *movePaneButton = new QPushButton("Move Content Pane");
+    QPushButton* movePaneButton = new QPushButton("Move Content Pane");
     movePaneButton->setDisabled(true);
     this->moveCF->layout()->addWidget(movePaneButton);
 
     QObject::connect(topAccordion, &QAccordion::numberOfContentPanesChanged,
-                     [fromBox, toBox, movePaneButton](int number) {
+        [fromBox, toBox, movePaneButton](int number) {
                          fromBox->clear();
                          toBox->clear();
                          if (number <= 1) {
@@ -239,11 +237,11 @@ void MainWindow::contentPaneMove(QAccordion *topAccordion)
                              toBox->addItem(label, QVariant(i));
                          }
                          movePaneButton->setDisabled(false);
-                     });
+        });
 
     QObject::connect(movePaneButton, &QPushButton::clicked, [topAccordion,
-                                                             fromBox, toBox,
-                                                             this]() {
+                                                                fromBox, toBox,
+                                                                this]() {
         if (fromBox->currentData().toInt() != toBox->currentData().toInt()) {
             bool status = topAccordion->moveContentPane(
                 fromBox->currentData().toUInt(), toBox->currentData().toUInt());
@@ -264,14 +262,14 @@ void MainWindow::contentPaneMove(QAccordion *topAccordion)
     });
 }
 
-void MainWindow::createIpsumLabel(QFrame *frame)
+void MainWindow::createIpsumLabel(QFrame* frame)
 {
     // add some basic stuff to our QFrame
     frame->setLayout(new QVBoxLayout());
-    QLabel *ipsumLabel = new QLabel();
+    QLabel* ipsumLabel = new QLabel();
     frame->layout()->addWidget(ipsumLabel);
     this->labelIpsumQueue.push(ipsumLabel);
-    dynamic_cast<QVBoxLayout *>(frame->layout())->addStretch();
+    dynamic_cast<QVBoxLayout*>(frame->layout())->addStretch();
     // make the network request
     QNetworkRequest rquest;
     rquest.setUrl(QUrl(this->ipsumApi));

@@ -14,7 +14,6 @@ struct merge_labels_opts {
     int clip_size;
 };
 
-bool merge_labels(QString timeseries_path,QString firings_path,QString firings_out_path,merge_labels_opts opts);
+bool merge_labels(QString timeseries_path, QString firings_path, QString firings_out_path, merge_labels_opts opts);
 
 #endif // MERGE_LABELS_H
-

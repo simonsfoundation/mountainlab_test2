@@ -8,7 +8,7 @@
 
 #include <QString>
 
-void run_unit_test(const QString &test_name);
+void run_unit_test(const QString& test_name);
 void run_all_unit_tests();
 
 #endif // UNIT_TESTS_H

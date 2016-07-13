@@ -9,17 +9,17 @@
 #include "msprocessor.h"
 
 class whiten_ProcessorPrivate;
-class whiten_Processor : public MSProcessor
-{
+class whiten_Processor : public MSProcessor {
 public:
-	friend class whiten_ProcessorPrivate;
-	whiten_Processor();
-	virtual ~whiten_Processor();
+    friend class whiten_ProcessorPrivate;
+    whiten_Processor();
+    virtual ~whiten_Processor();
 
-	bool check(const QMap<QString,QVariant> &params);
-	bool run(const QMap<QString,QVariant> &params);
+    bool check(const QMap<QString, QVariant>& params);
+    bool run(const QMap<QString, QVariant>& params);
+
 private:
-	whiten_ProcessorPrivate *d;
+    whiten_ProcessorPrivate* d;
 };
 
 #endif // WHITEN_PROCESSOR_H

@@ -32,53 +32,50 @@
 
 #include "qAccordion/qaccordion.h"
 
-namespace Ui
-{
+namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget* parent = 0);
     ~MainWindow();
 
 private:
     // lorem ipsum api url
-    const char *const ipsumApi = "http://loripsum.net/api/1/short/code";
+    const char* const ipsumApi = "http://loripsum.net/api/1/short/code";
     // a random offline ipsum in case there is no network connection
-    const char *const offlineIpsum =
-        "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed plane "
-        "dicit quod intellegit. Aufert enim sensus actionemque tollit omnem. "
-        "Itaque ab his ordiamur. Restatis igitur vos; </p>"
-        "<pre>"
-        "Quod enim vituperabile est per se ipsum, id eo ipso vitium"
-        "nominatum puto, vel etiam a vitio dictum vituperari."
-        "Qui autem esse poteris, nisi te amor ipse ceperit?"
-        "</pre>";
+    const char* const offlineIpsum = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed plane "
+                                     "dicit quod intellegit. Aufert enim sensus actionemque tollit omnem. "
+                                     "Itaque ab his ordiamur. Restatis igitur vos; </p>"
+                                     "<pre>"
+                                     "Quod enim vituperabile est per se ipsum, id eo ipso vitium"
+                                     "nominatum puto, vel etiam a vitio dictum vituperari."
+                                     "Qui autem esse poteris, nisi te amor ipse ceperit?"
+                                     "</pre>";
 
-    Ui::MainWindow *ui;
+    Ui::MainWindow* ui;
     // Keep pointers to our contetn frames
-    QFrame *addCF;
-    QFrame *insertCF;
-    QFrame *removeCF;
-    QFrame *moveCF;
+    QFrame* addCF;
+    QFrame* insertCF;
+    QFrame* removeCF;
+    QFrame* moveCF;
 
     std::unique_ptr<QNetworkAccessManager> networkManager; /**< Network manager
                                                               for ipsum api
                                                               requests.*/
-    std::queue<QLabel *> labelIpsumQueue;
+    std::queue<QLabel*> labelIpsumQueue;
 
-    void networkRequestFinished(QNetworkReply *reply);
+    void networkRequestFinished(QNetworkReply* reply);
 
-    void contentPaneAdd(QAccordion *topAccordion);
-    void contentPaneInsert(QAccordion *topAccordion);
-    void contentPaneRemove(QAccordion *topAccordion);
-    void contentPaneMove(QAccordion *topAccordion);
+    void contentPaneAdd(QAccordion* topAccordion);
+    void contentPaneInsert(QAccordion* topAccordion);
+    void contentPaneRemove(QAccordion* topAccordion);
+    void contentPaneMove(QAccordion* topAccordion);
 
-    void createIpsumLabel(QFrame *frame);
+    void createIpsumLabel(QFrame* frame);
 };
 
 #endif // MAINWINDOW_H

@@ -30,8 +30,7 @@ public:
 
     static MSCacheManager* globalInstance();
 
-private
-slots:
+private slots:
     void slot_remove_on_delete();
 
 private:

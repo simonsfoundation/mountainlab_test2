@@ -12,8 +12,7 @@ public:
     virtual ~MOMainWindow();
     void read(const QString& mof_path);
     void load(const QString& mof_url);
-private
-slots:
+private slots:
     void slot_open_result(QString name);
 
 private:

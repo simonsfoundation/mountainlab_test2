@@ -4,15 +4,15 @@
 #include <QtTest/QTest>
 
 class TestMdaIO : public QObject {
-	Q_OBJECT
+    Q_OBJECT
 private slots:
-	void testHeader();
-	void testByte();
-	void testFloat32();
-	void testInt16();
-	void testInt32();
-	void testUInt16();
-	void testFloat64();
+    void testHeader();
+    void testByte();
+    void testFloat32();
+    void testInt16();
+    void testInt32();
+    void testUInt16();
+    void testFloat64();
 };
 
 #endif // TESTMDAIO_H

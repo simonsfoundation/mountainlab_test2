@@ -10,18 +10,17 @@
 #include "msprocessor.h"
 
 class filter_events_ProcessorPrivate;
-class filter_events_Processor : public MSProcessor
-{
+class filter_events_Processor : public MSProcessor {
 public:
     friend class filter_events_ProcessorPrivate;
     filter_events_Processor();
     virtual ~filter_events_Processor();
 
-    bool check(const QMap<QString,QVariant> &params);
-    bool run(const QMap<QString,QVariant> &params);
+    bool check(const QMap<QString, QVariant>& params);
+    bool run(const QMap<QString, QVariant>& params);
+
 private:
-    filter_events_ProcessorPrivate *d;
+    filter_events_ProcessorPrivate* d;
 };
 
 #endif // FILTER_EVENTS_PROCESSOR_H
-

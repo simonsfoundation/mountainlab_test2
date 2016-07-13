@@ -47,8 +47,7 @@ int main(int argc, char* argv[])
     }
 
     QStringList dims_strlist = params.named_parameters.value("dims", "").toString().split("x", QString::SkipEmptyParts);
-    foreach(QString str, dims_strlist)
-    {
+    foreach (QString str, dims_strlist) {
         opts.dims << str.toLong();
     }
 

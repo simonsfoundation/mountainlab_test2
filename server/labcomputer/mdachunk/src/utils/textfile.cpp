@@ -4,11 +4,12 @@
 #include <QSettings>
 #include <QDebug>
 
-QString TextFile::read(const QString & fname, QTextCodec *codec) {
+QString TextFile::read(const QString& fname, QTextCodec* codec)
+{
     QFile file(fname);
-	if (!file.open(QIODevice::ReadOnly|QIODevice::Text)) {
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return QString();
-	}
+    }
     QTextStream ts(&file);
     if (codec != 0)
         ts.setCodec(codec);
@@ -17,12 +18,13 @@ QString TextFile::read(const QString & fname, QTextCodec *codec) {
     return ret;
 }
 
-bool TextFile::write(const QString & fname,const QString &txt, QTextCodec *codec) {
+bool TextFile::write(const QString& fname, const QString& txt, QTextCodec* codec)
+{
     QFile file(fname);
-    if (!file.open(QIODevice::WriteOnly|QIODevice::Text))
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
         return false;
     QTextStream ts(&file);
-    if (codec != 0){
+    if (codec != 0) {
         ts.setAutoDetectUnicode(false);
         ts.setCodec(codec);
     }
@@ -32,14 +34,13 @@ bool TextFile::write(const QString & fname,const QString &txt, QTextCodec *codec
     //if (!QFile(fname).exists()) return false;
     return true;
 }
-QString read_parameter(const QString &fname,const QString &pname) {
-    QSettings settings(fname,QSettings::IniFormat);
+QString read_parameter(const QString& fname, const QString& pname)
+{
+    QSettings settings(fname, QSettings::IniFormat);
     return settings.value(pname).toString();
 }
-void write_parameter(const QString &fname,const QString &pname,const QString &pvalue) {
-    QSettings settings(fname,QSettings::IniFormat);
-    settings.setValue(pname,pvalue);
+void write_parameter(const QString& fname, const QString& pname, const QString& pvalue)
+{
+    QSettings settings(fname, QSettings::IniFormat);
+    settings.setValue(pname, pvalue);
 }
-
-
-

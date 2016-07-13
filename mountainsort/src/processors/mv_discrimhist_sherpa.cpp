@@ -222,7 +222,8 @@ double compute_separation_score(const QVector<double>& data1, const QVector<doub
     double stdev = MLCompute::stdev(mean_subtracted_vals);
     if (stdev) {
         return (qAbs(mean2 - mean1) / stdev);
-    } else {
+    }
+    else {
         return 0;
     }
 }

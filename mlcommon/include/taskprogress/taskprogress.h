@@ -131,8 +131,7 @@ public:
     bool hasTag(StandardCategory) const;
     bool hasTag(const QString& tag) const;
     double progress() const;
-public
-slots:
+public slots:
     void log(const QString& log_message);
     void error(const QString& error_message);
     void setProgress(double pct);
@@ -266,8 +265,7 @@ public:
 protected:
     QString assembleLog(const TaskInfo& task, const QString& prefix = QString()) const;
     QString singleLog(const TaskProgressLogMessage& msg, const QString& prefix = QString()) const;
-private
-slots:
+private slots:
     void _q_added(TaskProgressAgent*);
     void _q_changed(TaskProgressAgent*);
     void _q_logAdded(TaskProgressAgent*);
@@ -290,8 +288,7 @@ signals:
     void added(TaskProgressAgent*);
     void changed(TaskProgressAgent*);
     void reset();
-private
-slots:
+private slots:
     void _q_added(TaskProgressAgent* a);
     void _q_changed(TaskProgressAgent* a);
 

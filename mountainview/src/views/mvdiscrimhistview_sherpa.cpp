@@ -178,7 +178,8 @@ void MVDiscrimHistViewSherpa::wheelEvent(QWheelEvent* evt)
     double zoom_factor = 1;
     if (evt->delta() > 0) {
         zoom_factor *= 1.2;
-    } else if (evt->delta() < 0) {
+    }
+    else if (evt->delta() < 0) {
         zoom_factor /= 1.2;
     }
     QList<HistogramView*> views = this->histogramViews(); //inherited
@@ -227,8 +228,7 @@ QSet<int> MVDiscrimHistViewSherpaPrivate::get_clusters_to_exclude()
 {
     QSet<int> ret;
     QList<int> keys = q->mvContext()->clusterAttributesKeys();
-    foreach(int key, keys)
-    {
+    foreach (int key, keys) {
         if (q->mvContext()->clusterTags(key).contains("rejected"))
             ret.insert(key);
     }
@@ -239,7 +239,7 @@ MVDiscrimHistSherpaFactory::MVDiscrimHistSherpaFactory(MVContext* context, QObje
     : MVAbstractViewFactory(context, parent)
 {
     connect(mvContext(), SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 

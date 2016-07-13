@@ -37,8 +37,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent* evt);
     void resizeEvent(QResizeEvent* evt);
 
-private
-slots:
+private slots:
     void slot_update_image();
 
 private:
@@ -53,8 +52,7 @@ public:
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
-private
-slots:
+private slots:
     void updateEnabled();
 };
 
@@ -74,8 +72,7 @@ public:
 
     QImage output_image;
 
-private
-slots:
+private slots:
     void slot_calculator_finished();
 };
 
