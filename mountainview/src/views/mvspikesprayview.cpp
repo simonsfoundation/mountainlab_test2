@@ -143,7 +143,7 @@ void MVSpikeSprayView::onCalculationFinished()
 {
     d->m_clips_to_render = d->m_computer.clips_to_render;
     d->m_labels_to_render = d->m_computer.labels_to_render;
-    if (mvContext()->clusterVisibilityRule().view_merged) {
+    if (mvContext()->viewMerged()) {
         d->m_labels_to_render = d->m_context->clusterMerge().mapLabels(d->m_labels_to_render);
     }
 

@@ -61,6 +61,7 @@ MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* context)
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
+    this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
     this->recalculateOnOptionChanged("cc_max_dt_msec");
 
     this->recalculate();
@@ -80,8 +81,7 @@ void MVCrossCorrelogramsWidget3::prepareCalculation()
     d->m_computer.options = d->m_options;
     d->m_computer.max_dt = mvContext()->option("cc_max_dt_msec", 100).toDouble() / 1000 * mvContext()->sampleRate();
     d->m_computer.cluster_merge.clear();
-    /// TODO, I think that view_merged should not be a property of ClusterVisibilityRule
-    if (mvContext()->clusterVisibilityRule().view_merged) {
+    if (mvContext()->viewMerged()) {
         d->m_computer.cluster_merge = mvContext()->clusterMerge();
     }
 }

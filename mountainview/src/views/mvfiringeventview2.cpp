@@ -149,7 +149,7 @@ void MVFiringEventView2::onCalculationFinished()
     d->m_times0 = d->m_calculator.times;
     d->m_amplitudes0 = d->m_calculator.amplitudes;
 
-    if (mvContext()->clusterVisibilityRule().view_merged) {
+    if (mvContext()->viewMerged()) {
         d->m_labels0 = this->mvContext()->clusterMerge().mapLabels(d->m_labels0);
     }
 

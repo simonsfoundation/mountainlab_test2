@@ -214,7 +214,7 @@ void MVClusterWidget::runCalculation()
 void MVClusterWidget::onCalculationFinished()
 {
     QVector<int> merged_labels = d->m_computer.labels;
-    if (mvContext()->clusterVisibilityRule().view_merged) {
+    if (mvContext()->viewMerged()) {
         merged_labels = this->mvContext()->clusterMerge().mapLabels(merged_labels);
     }
 

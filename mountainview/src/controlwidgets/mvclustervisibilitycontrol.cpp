@@ -96,7 +96,7 @@ void MVClusterVisibilityControl::updateContext()
 
     rule.view_all_tagged = this->controlValue("all_tagged").toBool();
     rule.view_all_untagged = this->controlValue("all_untagged").toBool();
-    rule.view_merged = this->controlValue("view_merged").toBool();
+    mvContext()->setViewMerged(this->controlValue("view_merged").toBool());
 
     rule.view_tags.clear();
     QStringList tags = mvContext()->allClusterTags().toList();
@@ -161,5 +161,5 @@ void MVClusterVisibilityControl::updateControls()
         }
     }
 
-    this->setControlValue("view_merged", rule.view_merged);
+    this->setControlValue("view_merged", mvContext()->viewMerged());
 }

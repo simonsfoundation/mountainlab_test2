@@ -52,6 +52,7 @@ MVDiscrimHistView::MVDiscrimHistView(MVContext* context)
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
+    this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
 
     this->recalculate();
 }

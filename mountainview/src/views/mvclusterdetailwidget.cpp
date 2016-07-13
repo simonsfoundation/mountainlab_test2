@@ -170,6 +170,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewF
     QObject::connect(context, SIGNAL(currentClusterChanged()), this, SLOT(update()));
     QObject::connect(context, SIGNAL(selectedClustersChanged()), this, SLOT(update()));
     connect(context, SIGNAL(clusterVisibilityChanged()), this, SLOT(update()));
+    connect(context, SIGNAL(viewMergedChanged()), this, SLOT(update()));
 
     recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
@@ -582,7 +583,7 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
 
 QString MVClusterDetailWidgetPrivate::group_label_for_k(int k)
 {
-    if (q->mvContext()->clusterVisibilityRule().view_merged) {
+    if (q->mvContext()->viewMerged()) {
         return QString("%1").arg(q->mvContext()->clusterMerge().clusterLabelText(k));
     }
     else {
@@ -797,7 +798,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     painter.setClipRect(QRectF(left_margin, 0, W, H));
 
     QList<ClusterData> cluster_data_merged;
-    if (q->mvContext()->clusterVisibilityRule().view_merged) {
+    if (q->mvContext()->viewMerged()) {
         cluster_data_merged = merge_cluster_data(q->mvContext()->clusterMerge(), m_cluster_data);
     }
     else {
@@ -811,7 +812,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     QList<int> selected_clusters = q->mvContext()->selectedClusters();
     for (int i = 0; i < cluster_data_merged.count(); i++) {
         ClusterData CD = cluster_data_merged[i];
-        if (q->mvContext()->clusterVisibilityRule().isVisible(q->mvContext(), CD.k)) {
+        if (q->mvContext()->clusterIsVisible(CD.k)) {
             ClusterView* V = new ClusterView(q, this);
             V->setStdevShading(m_stdev_shading);
             V->setHighlighted(CD.k == q->mvContext()->currentCluster());

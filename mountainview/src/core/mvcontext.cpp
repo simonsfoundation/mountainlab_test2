@@ -43,6 +43,9 @@ public:
     QJsonObject m_original_object;
     QSet<ClusterPair> m_selected_cluster_pairs;
     ElectrodeGeometry m_electrode_geometry;
+    bool m_view_merged;
+
+    void update_current_and_selected_clusters_according_to_merged();
 };
 
 MVContext::MVContext()
@@ -164,6 +167,8 @@ QJsonObject MVContext::toMVFileObject() const
     X["options"] = QJsonObject::fromVariantMap(d->m_options);
     X["mlproxy_url"] = d->m_mlproxy_url;
     X["visibility_rule"] = d->m_visibility_rule.toJsonObject();
+    X["electrode_geometry"] = d->m_electrode_geometry.toJsonObject();
+    X["view_merged"] = d->m_view_merged;
     return X;
 }
 
@@ -187,6 +192,8 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     if (X.contains("visibility_rule")) {
         this->setClusterVisibilityRule(ClusterVisibilityRule::fromJsonObject(X["visibility_rule"].toObject()));
     }
+    d->m_electrode_geometry = ElectrodeGeometry::fromJsonObject(X["electrode_geometry"].toObject());
+    d->m_view_merged = X["view_merged"].toBool();
     emit this->currentTimeseriesChanged();
     emit this->timeseriesNamesChanged();
     emit this->firingsChanged();
@@ -203,6 +210,7 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     emit this->clusterVisibilityChanged();
     emit this->selectedClusterPairsChanged();
     emit this->clusterPairAttributesChanged(ClusterPair(0, 0));
+    emit this->viewMergedChanged();
 }
 
 MVEvent MVContext::currentEvent() const
@@ -375,6 +383,20 @@ ClusterMerge MVContext::clusterMerge() const
     return ret;
 }
 
+bool MVContext::viewMerged() const
+{
+    return d->m_view_merged;
+}
+
+void MVContext::setViewMerged(bool val)
+{
+    if (d->m_view_merged == val)
+        return;
+    d->m_view_merged = val;
+    d->update_current_and_selected_clusters_according_to_merged();
+    emit this->viewMergedChanged();
+}
+
 QJsonObject MVContext::clusterAttributes(int num) const
 {
     return d->m_cluster_attributes.value(num);
@@ -501,6 +523,10 @@ QList<int> MVContext::visibleClusters(int K) const
 
 bool MVContext::clusterIsVisible(int k) const
 {
+    if (this->viewMerged()) {
+        if (this->clusterMerge().representativeLabel(k) != k)
+            return false;
+    }
     return d->m_visibility_rule.isVisible(this, k);
 }
 
@@ -545,6 +571,7 @@ void MVContext::setCurrentCluster(int k)
         tmp << k;
         this->setSelectedClusters(tmp); //think about this
     }
+    d->update_current_and_selected_clusters_according_to_merged();
     emit currentClusterChanged();
 }
 
@@ -559,6 +586,7 @@ void MVContext::setSelectedClusters(const QList<int>& ks)
     if (!d->m_selected_clusters.contains(d->m_current_cluster)) {
         this->setCurrentCluster(-1);
     }
+    d->update_current_and_selected_clusters_according_to_merged();
     emit selectedClustersChanged();
 }
 
@@ -748,8 +776,6 @@ void ClusterVisibilityRule::operator=(const ClusterVisibilityRule& other)
 
 bool ClusterVisibilityRule::operator==(const ClusterVisibilityRule& other) const
 {
-    if (this->view_merged != other.view_merged)
-        return false;
     if (this->view_tags != other.view_tags)
         return false;
     if (this->view_all_tagged != other.view_all_tagged)
@@ -765,7 +791,6 @@ bool ClusterVisibilityRule::operator==(const ClusterVisibilityRule& other) const
 
 void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
 {
-    this->view_merged = other.view_merged;
     this->view_tags = other.view_tags;
     this->view_all_tagged = other.view_all_tagged;
     this->view_all_untagged = other.view_all_untagged;
@@ -776,11 +801,6 @@ void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
 
 bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num) const
 {
-    if (this->view_merged) {
-        if (context->clusterMerge().representativeLabel(cluster_num) != cluster_num)
-            return false;
-    }
-
     if (this->use_subset) {
         if (!subset.contains(cluster_num))
             return false;
@@ -842,7 +862,6 @@ QJsonObject ClusterVisibilityRule::toJsonObject() const
     QJsonObject obj;
     obj["view_all_tagged"] = this->view_all_tagged;
     obj["view_all_untagged"] = this->view_all_untagged;
-    obj["view_merged"] = this->view_merged;
     obj["view_tags"] = strlist_to_json_array(this->view_tags.toList());
     obj["use_subset"] = this->use_subset;
     obj["subset"] = intlist_to_json_array(this->subset.toList());
@@ -854,7 +873,6 @@ ClusterVisibilityRule ClusterVisibilityRule::fromJsonObject(const QJsonObject& X
     ClusterVisibilityRule ret;
     ret.view_all_tagged = X["view_all_tagged"].toBool();
     ret.view_all_untagged = X["view_all_untagged"].toBool();
-    ret.view_merged = X["view_merged"].toBool();
     ret.view_tags = QSet<QString>::fromList(json_array_to_strlist(X["view_tags"].toArray()));
     ret.use_subset = X["use_subset"].toBool();
     ret.subset = QSet<int>::fromList(json_array_to_intlist(X["subset"].toArray()));
@@ -995,4 +1013,23 @@ ElectrodeGeometry ElectrodeGeometry::loadFromGeomFile(const QString& path)
         ret.coordinates << tmp;
     }
     return ret;
+}
+
+void MVContextPrivate::update_current_and_selected_clusters_according_to_merged()
+{
+    if (m_view_merged) {
+        ClusterMerge CM = q->clusterMerge();
+        if (m_current_cluster >= 0) {
+            m_current_cluster = CM.representativeLabel(m_current_cluster);
+        }
+        QSet<int> selected_clusters_set = m_selected_clusters.toSet();
+        foreach (int k, m_selected_clusters) {
+            QList<int> list = CM.getMergeGroup(k);
+            foreach (int k2, list) {
+                selected_clusters_set.insert(k2);
+            }
+        }
+        m_selected_clusters = selected_clusters_set.toList();
+        qSort(m_selected_clusters);
+    }
 }

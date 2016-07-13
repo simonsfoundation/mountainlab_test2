@@ -60,7 +60,6 @@ public:
     QSet<QString> view_tags;
     bool view_all_tagged = true;
     bool view_all_untagged = true;
-    bool view_merged = false;
 
     bool use_subset = false;
     QSet<int> subset;
@@ -111,6 +110,8 @@ public:
 
     /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;
+    bool viewMerged() const;
+    void setViewMerged(bool val);
 
     /////////////////////////////////////////////////
     QJsonObject clusterAttributes(int num) const;
@@ -215,6 +216,7 @@ signals:
     void selectedClusterPairsChanged();
     void clusterPairAttributesChanged(ClusterPair pair);
     void electrodeGeometryChanged();
+    void viewMergedChanged();
 
 private slots:
     void slot_option_changed(QString name);

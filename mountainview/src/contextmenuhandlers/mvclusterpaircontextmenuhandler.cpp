@@ -57,6 +57,36 @@ QList<QAction*> MVClusterPairContextMenuHandler::actions(const QMimeData& md)
         actions << action;
     }
 
+    //MERGE
+    {
+        {
+            QAction* action = new QAction("Merge", 0);
+            action->setToolTip("Tag selected pairs as merged");
+            action->setEnabled(cluster_pairs.count() >= 1);
+            connect(action, &QAction::triggered, [cluster_pairs, context]() {
+                foreach (ClusterPair cluster_pair,cluster_pairs) {
+                    QSet<QString> tags = context->clusterPairTags(cluster_pair);
+                    tags.insert("merged");
+                    context->setClusterPairTags(cluster_pair,tags);
+                }
+            });
+            actions << action;
+        }
+        {
+            QAction* action = new QAction("Unmerge", 0);
+            action->setToolTip("Remove merged tag from selected clusters");
+            action->setEnabled(cluster_pairs.count() >= 1);
+            connect(action, &QAction::triggered, [cluster_pairs, context]() {
+                foreach (ClusterPair cluster_pair,cluster_pairs) {
+                    QSet<QString> tags = context->clusterPairTags(cluster_pair);
+                    tags.remove("merged");
+                    context->setClusterPairTags(cluster_pair,tags);
+                }
+            });
+            actions << action;
+        }
+    }
+
     //CROSS-CORRELOGRAMS
     {
         {

@@ -81,6 +81,7 @@ MVCrossCorrelogramsWidget2::MVCrossCorrelogramsWidget2(MVContext* context)
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
+    this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
     this->recalculateOnOptionChanged("cc_max_dt_msec");
 
     QGridLayout* GL = new QGridLayout;
