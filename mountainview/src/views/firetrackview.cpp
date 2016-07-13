@@ -9,6 +9,8 @@
 
 #include <QHBoxLayout>
 
+/// TODO show current cluster waveform in firetrackview
+
 class FireTrackViewPrivate {
 public:
     FireTrackView* q;
