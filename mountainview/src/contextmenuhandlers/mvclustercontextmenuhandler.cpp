@@ -67,6 +67,12 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
                             QSet<QString> tags=context->clusterPairTags(pair);
                             tags.insert("merged");
                             context->setClusterPairTags(pair,tags);
+                            {
+                                //if we are merging then the user most likely wants to view as merged
+                                ClusterVisibilityRule rule=context->clusterVisibilityRule();
+                                rule.view_merged=true;
+                                context->setClusterVisibilityRule(rule);
+                            }
                         }
                     }
                 }
