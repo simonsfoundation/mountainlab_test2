@@ -57,7 +57,7 @@ MVGeneralControl::~MVGeneralControl()
     delete d;
 }
 
-QString MVGeneralControl::title()
+QString MVGeneralControl::title() const
 {
     return "General Options";
 }

@@ -29,8 +29,7 @@ MVEventFilterControl::MVEventFilterControl(MVContext* context, MVMainWindow* mw)
     QGridLayout* glayout = new QGridLayout;
     int row = 0;
     {
-        QCheckBox* X = this->createCheckBoxControl("use_event_filter");
-        X->setText("Use event filter");
+        QCheckBox* X = this->createCheckBoxControl("use_event_filter", "Use event filter");
         context->onOptionChanged("use_event_filter", this, SLOT(updateControls()));
         glayout->addWidget(X, row, 0, 1, 2);
         row++;
@@ -59,7 +58,7 @@ MVEventFilterControl::~MVEventFilterControl()
     delete d;
 }
 
-QString MVEventFilterControl::title()
+QString MVEventFilterControl::title() const
 {
     return "Event Filter";
 }

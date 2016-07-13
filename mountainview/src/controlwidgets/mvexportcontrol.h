@@ -17,7 +17,7 @@ public:
     MVExportControl(MVContext* context, MVMainWindow* mw);
     virtual ~MVExportControl();
 
-    QString title() Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
 public slots:
     virtual void updateContext() Q_DECL_OVERRIDE;
     virtual void updateControls() Q_DECL_OVERRIDE;

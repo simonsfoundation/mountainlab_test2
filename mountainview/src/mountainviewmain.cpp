@@ -25,6 +25,7 @@
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtConcurrentRun>
+#include <mvmergecontrol.h>
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
 /// TODO: (HIGH) blobs for populations
@@ -244,6 +245,7 @@ int main(int argc, char* argv[])
         W->addControl(new MVGeneralControl(context, W), false);
         W->addControl(new MVEventFilterControl(context, W), false);
         W->addControl(new MVClusterVisibilityControl(context, W), false);
+        W->addControl(new MVMergeControl(context, W), false);
         W->addControl(new MVExportControl(context, W), false);
 
         a.processEvents();

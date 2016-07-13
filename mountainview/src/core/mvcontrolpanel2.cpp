@@ -75,6 +75,7 @@ void MVControlPanel2::addControl(MVAbstractControl* mvcontrol, bool start_open)
     if (start_open) {
         CP->openContentPane();
     }
+    mvcontrol->updateControls();
 }
 
 void MVControlPanel2::slot_recalc_visible()

@@ -9,6 +9,7 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include <QSet>
+#include <QToolButton>
 
 class MVAbstractControlPrivate {
 public:
@@ -20,6 +21,7 @@ public:
     QMap<QString, QLineEdit*> m_double_controls;
     QMap<QString, QComboBox*> m_choices_controls;
     QMap<QString, QCheckBox*> m_checkbox_controls;
+    QMap<QString, QToolButton*> m_toolbutton_controls;
 
     QMap<QString, QWidget*> all_control_widgets();
 };
@@ -111,12 +113,29 @@ QComboBox* MVAbstractControl::createChoicesControl(QString name)
     return X;
 }
 
-QCheckBox* MVAbstractControl::createCheckBoxControl(QString name)
+QCheckBox* MVAbstractControl::createCheckBoxControl(QString name, QString label)
 {
     QCheckBox* X = new QCheckBox;
     d->m_checkbox_controls[name] = X;
+    X->setText(label);
     QObject::connect(X, SIGNAL(clicked(bool)), this, SLOT(updateContext()));
     return X;
+}
+
+QToolButton* MVAbstractControl::createToolButtonControl(QString name, QString label, QObject* receiver, const char* signal_or_slot)
+{
+    QToolButton* X = new QToolButton;
+    X->setText(label);
+    d->m_toolbutton_controls[name] = X;
+    if ((receiver) && (signal_or_slot)) {
+        QObject::connect(X, SIGNAL(clicked(bool)), receiver, signal_or_slot);
+    }
+    return X;
+}
+
+void MVAbstractControl::updateControlsOn(QObject* sender, const char* signal)
+{
+    QObject::connect(sender, signal, this, SLOT(updateControls()));
 }
 
 void MVAbstractControl::setChoices(QString name, const QStringList& choices)
@@ -172,6 +191,14 @@ void add_to(QMap<QString, QWidget*>& A, QMap<QString, QCheckBox*>& B)
     }
 }
 
+void add_to(QMap<QString, QWidget*>& A, QMap<QString, QToolButton*>& B)
+{
+    QStringList keys = B.keys();
+    foreach (QString key, keys) {
+        A[key] = B[key];
+    }
+}
+
 QMap<QString, QWidget*> MVAbstractControlPrivate::all_control_widgets()
 {
     QMap<QString, QWidget*> ret;
@@ -179,5 +206,6 @@ QMap<QString, QWidget*> MVAbstractControlPrivate::all_control_widgets()
     add_to(ret, m_double_controls);
     add_to(ret, m_choices_controls);
     add_to(ret, m_checkbox_controls);
+    add_to(ret, m_toolbutton_controls);
     return ret;
 }

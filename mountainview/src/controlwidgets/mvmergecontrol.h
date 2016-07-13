@@ -17,9 +17,15 @@ public:
     MVMergeControl(MVContext* context, MVMainWindow* mw);
     virtual ~MVMergeControl();
 
+    QString title() const Q_DECL_OVERRIDE;
+
 public slots:
     virtual void updateContext() Q_DECL_OVERRIDE;
     virtual void updateControls() Q_DECL_OVERRIDE;
+
+private slots:
+    void slot_merge_selected();
+    void slot_unmerge_selected();
 
 private:
     MVMergeControlPrivate* d;

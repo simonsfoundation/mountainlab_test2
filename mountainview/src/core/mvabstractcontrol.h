@@ -9,6 +9,7 @@
 
 #include <QCheckBox>
 #include <QComboBox>
+#include <QToolButton>
 
 #include "mvcontext.h"
 
@@ -20,7 +21,7 @@ public:
     MVAbstractControl(MVContext* context, MVMainWindow* mw);
     virtual ~MVAbstractControl();
 
-    virtual QString title() = 0;
+    virtual QString title() const = 0;
 public slots:
     virtual void updateContext() = 0;
     virtual void updateControls() = 0;
@@ -37,7 +38,10 @@ protected:
     QWidget* createIntControl(QString name);
     QWidget* createDoubleControl(QString name);
     QComboBox* createChoicesControl(QString name);
-    QCheckBox* createCheckBoxControl(QString name);
+    QCheckBox* createCheckBoxControl(QString name, QString label);
+    QToolButton* createToolButtonControl(QString name, QString label, QObject* receiver = 0, const char* signal_or_slot = 0);
+
+    void updateControlsOn(QObject* sender, const char* signal);
 
 private slots:
     void slot_controls_changed();

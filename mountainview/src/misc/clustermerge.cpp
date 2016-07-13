@@ -13,31 +13,38 @@
 #include "mlcommon.h"
 #include "mlcommon.h"
 
-struct merge_pair {
-    merge_pair(int l1, int l2)
+struct merge_group {
+    QSet<int> members;
+    bool operator==(const merge_group& other) const
     {
-        label1 = l1;
-        label2 = l2;
+        return (members == other.members);
     }
-    bool operator==(const merge_pair& other) const
+    QList<int> sortedList() const
     {
-        return ((label1 == other.label1) && (label2 == other.label2));
+        QList<int> ret = members.toList();
+        qSort(ret);
+        return ret;
     }
-
-    int label1, label2;
 };
-uint qHash(const merge_pair& mp)
+
+uint qHash(const merge_group& mg)
 {
-    return qHash(QString("%1:::%2").arg(mp.label1).arg(mp.label2));
+    QString str;
+    QList<int> list = mg.sortedList();
+    QStringList strlist;
+    foreach (int k, list) {
+        strlist << QString("%1").arg(k);
+    }
+    return qHash(strlist.join("::"));
 }
 
 class ClusterMergePrivate {
 public:
     ClusterMerge* q;
-    QSet<merge_pair> m_merge_pairs;
+    QSet<merge_group> m_merge_groups;
 
     bool is_merged(int label1, int label2);
-    void make_transitive();
+    void consolidate_merge_groups();
 };
 
 ClusterMerge::ClusterMerge()
@@ -51,7 +58,7 @@ ClusterMerge::ClusterMerge(const ClusterMerge& other)
     d = new ClusterMergePrivate;
     d->q = this;
 
-    d->m_merge_pairs = other.d->m_merge_pairs;
+    d->m_merge_groups = other.d->m_merge_groups;
 }
 
 ClusterMerge::~ClusterMerge()
@@ -61,87 +68,71 @@ ClusterMerge::~ClusterMerge()
 
 void ClusterMerge::operator=(const ClusterMerge& other)
 {
-    d->m_merge_pairs = other.d->m_merge_pairs;
+    d->m_merge_groups = other.d->m_merge_groups;
 }
 
 bool ClusterMerge::operator==(const ClusterMerge& other) const
 {
-    if (d->m_merge_pairs.count() != other.d->m_merge_pairs.count())
-        return false;
-    foreach (merge_pair mp, d->m_merge_pairs)
-        if (!other.d->m_merge_pairs.contains(mp))
-            return false;
-    foreach (merge_pair mp, other.d->m_merge_pairs)
-        if (!d->m_merge_pairs.contains(mp))
-            return false;
-    return true;
+    return (d->m_merge_groups == other.d->m_merge_groups);
 }
 
 void ClusterMerge::clear()
 {
-    d->m_merge_pairs.clear();
+    d->m_merge_groups.clear();
 }
 
 void ClusterMerge::merge(const QSet<int>& labels)
 {
-    merge(labels.toList());
+    merge_group grp0;
+    grp0.members = labels;
+    d->m_merge_groups << grp0;
+    d->consolidate_merge_groups();
 }
 
 void ClusterMerge::merge(const QList<int>& labels)
 {
-    for (int i = 0; i < labels.count(); i++) {
-        for (int j = 0; j < labels.count(); j++) {
-            if (labels[i] != labels[j]) {
-                if (!d->is_merged(labels[i], labels[j])) {
-                    d->m_merge_pairs.insert(merge_pair(labels[i], labels[j]));
-                    d->m_merge_pairs.insert(merge_pair(labels[j], labels[i]));
-                }
-            }
-        }
-    }
-    d->make_transitive();
+    merge(labels.toSet());
 }
 
 void ClusterMerge::unmerge(int label)
 {
-    QSet<merge_pair> new_pairs;
-    foreach (merge_pair mp, d->m_merge_pairs) {
-        if ((mp.label1 != label) && (mp.label2 != label)) {
-            new_pairs.insert(mp);
-        }
-    }
-    d->m_merge_pairs = new_pairs;
+    QSet<int> tmp;
+    tmp.insert(label);
+    unmerge(tmp);
 }
 
 void ClusterMerge::unmerge(const QSet<int>& labels)
 {
-    unmerge(labels.toList());
+    QList<merge_group> list = d->m_merge_groups.toList();
+    for (int i = 0; i < list.count(); i++) {
+        foreach (int label, labels) {
+            list[i].members.remove(label);
+        }
+    }
+    d->m_merge_groups = list.toSet();
+    d->consolidate_merge_groups();
 }
 
 void ClusterMerge::unmerge(const QList<int>& labels)
 {
-    for (int i = 0; i < labels.count(); i++) {
-        unmerge(labels[i]);
-    }
+    unmerge(labels.toSet());
 }
 
 int ClusterMerge::representativeLabel(int label) const
 {
-    int ret = label;
-    foreach (merge_pair mp, d->m_merge_pairs) {
-        if (mp.label1 == label) {
-            if (mp.label2 < ret)
-                ret = mp.label2;
-        }
-    }
-    return ret;
+    QList<int> tmp = this->getMergeGroup(label);
+    if (tmp.isEmpty())
+        return label;
+    return tmp.value(0);
 }
 
 QList<int> ClusterMerge::representativeLabels() const
 {
     QSet<int> ret;
-    foreach (merge_pair mp, d->m_merge_pairs) {
-        ret.insert(this->representativeLabel(mp.label1));
+    foreach (merge_group mg, d->m_merge_groups) {
+        QList<int> tmp = mg.members.toList();
+        qSort(tmp);
+        ret.insert(tmp.value(0));
     }
     QList<int> ret2 = ret.toList();
     qSort(ret2);
@@ -150,20 +141,22 @@ QList<int> ClusterMerge::representativeLabels() const
 
 QList<int> ClusterMerge::getMergeGroup(int label) const
 {
-    QList<int> ret;
-    ret << label;
-    foreach (merge_pair mp, d->m_merge_pairs) {
-        if (mp.label1 == label) {
-            ret << mp.label2;
+    foreach (merge_group mg, d->m_merge_groups) {
+        if (mg.members.contains(label)) {
+            QList<int> tmp = mg.members.toList();
+            qSort(tmp);
+            return tmp;
         }
     }
-    qSort(ret);
+
+    QList<int> ret;
+    ret << label;
     return ret;
 }
 
 void ClusterMerge::setFromJsonObject(QJsonObject obj)
 {
-    d->m_merge_pairs.clear();
+    d->m_merge_groups.clear();
 
     QJsonArray merge_groups = obj["merge_groups"].toArray();
 
@@ -197,17 +190,7 @@ QJsonObject ClusterMerge::toJsonObject() const
 
 QString ClusterMerge::toJson() const
 {
-    QJsonArray X;
-    QList<int> rep_labels = this->representativeLabels();
-    for (int i = 0; i < rep_labels.count(); i++) {
-        QList<int> grp = this->getMergeGroup(rep_labels[i]);
-        if (grp.count() > 1) {
-            QJsonArray Y;
-            for (int j = 0; j < grp.count(); j++)
-                Y.append(grp[j]);
-            X.append(Y);
-        }
-    }
+    QJsonObject X = toJsonObject();
     return QJsonDocument(X).toJson();
 }
 
@@ -263,33 +246,45 @@ ClusterMerge ClusterMerge::fromJson(const QString& json)
 
 bool ClusterMergePrivate::is_merged(int label1, int label2)
 {
-    if (label1 == label2)
-        return true;
-    return m_merge_pairs.contains(merge_pair(label1, label2));
+    return q->getMergeGroup(label1).contains(label2);
 }
 
-void ClusterMergePrivate::make_transitive()
+void ClusterMergePrivate::consolidate_merge_groups()
 {
-    QSet<int> all_labels;
-    foreach (merge_pair mp, m_merge_pairs) {
-        all_labels.insert(mp.label1);
-    }
-    QList<int> all_labels0 = all_labels.toList();
-    bool done = false;
-    while (!done) {
-        done = true;
-        for (int i = 0; i < all_labels0.count(); i++) {
-            for (int j = 0; j < all_labels0.count(); j++) {
-                for (int k = 0; k < all_labels0.count(); k++) {
-                    int label1 = all_labels0[i];
-                    int label2 = all_labels0[j];
-                    int label3 = all_labels0[k];
-                    if ((is_merged(label1, label2)) && (is_merged(label2, label3)) && (!is_merged(label1, label3))) {
-                        m_merge_pairs.insert(merge_pair(label1, label3));
-                        done = false;
-                    }
-                }
+    QList<merge_group> list = m_merge_groups.toList();
+    QMap<int, int> assignments;
+    for (int i = 0; i < list.count(); i++) {
+        QList<int> tmp = list[i].members.toList();
+        QSet<int> merge_to;
+        foreach (int k, tmp) {
+            if (assignments.contains(k)) {
+                merge_to.insert(assignments[k]);
             }
+        }
+        int ind00;
+        if (merge_to.isEmpty()) {
+            ind00 = i;
+        }
+        else {
+            QList<int> tmp0 = merge_to.toList();
+            qSort(tmp0);
+            ind00 = tmp0.value(0);
+        }
+        foreach (int k, tmp) {
+            assignments[k] = ind00;
+        }
+    }
+    QMap<int, QSet<int> > groups;
+    QList<int> keys = assignments.keys();
+    foreach (int key, keys) {
+        groups[assignments[key]].insert(key);
+    }
+    m_merge_groups.clear();
+    foreach (QSet<int> grp, groups) {
+        if (grp.count() > 1) {
+            merge_group tmp;
+            tmp.members = grp;
+            m_merge_groups.insert(tmp);
         }
     }
 }

@@ -75,7 +75,7 @@ MVOpenViewsControl::~MVOpenViewsControl()
     delete d;
 }
 
-QString MVOpenViewsControl::title()
+QString MVOpenViewsControl::title() const
 {
     return "Open Views";
 }

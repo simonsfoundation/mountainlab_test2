@@ -55,7 +55,7 @@ MVExportControl::~MVExportControl()
     delete d;
 }
 
-QString MVExportControl::title()
+QString MVExportControl::title() const
 {
     return "Export";
 }
