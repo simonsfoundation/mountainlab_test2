@@ -84,6 +84,7 @@ void MVMergeControl::updateControls()
 void MVMergeControl::slot_merge_selected()
 {
     d->do_merge_or_unmerge(true);
+    mvContext()->setViewMerged(true);
 }
 
 void MVMergeControl::slot_unmerge_selected()

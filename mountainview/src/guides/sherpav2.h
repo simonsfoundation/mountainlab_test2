@@ -22,6 +22,7 @@ public:
 private slots:
     void slot_button_clicked();
     void slot_select_merge_candidates();
+    void slot_merge_all_merge_candidates();
 
 private:
     SherpaV2Private* d;

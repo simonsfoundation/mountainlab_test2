@@ -30,6 +30,7 @@ public:
     QWizardPage* make_page_3();
     QWizardPage* make_page_4();
     QWizardPage* make_page_5();
+    QWizardPage* make_page_7();
 
     QAbstractButton* make_instructions_button(QString text, QString instructions);
     QAbstractButton* make_open_view_button(QString text, QString view_id, QString container_name);
@@ -50,6 +51,7 @@ SherpaV2::SherpaV2(MVContext* mvcontext, MVMainWindow* mw)
     this->addPage(d->make_page_4());
     this->addPage(d->make_page_5());
     this->addPage(new IndividualMergeDecisionPage(mvcontext, mw));
+    this->addPage(d->make_page_7());
 
     this->resize(800, 600);
 
@@ -75,7 +77,6 @@ void SherpaV2::slot_button_clicked()
 
 void SherpaV2::slot_select_merge_candidates()
 {
-
     QSet<ClusterPair> pairs;
     QList<ClusterPair> keys = d->m_context->clusterPairAttributesKeys();
     foreach (ClusterPair key, keys) {
@@ -84,6 +85,24 @@ void SherpaV2::slot_select_merge_candidates()
         }
     }
     d->m_context->setSelectedClusterPairs(pairs);
+}
+
+void SherpaV2::slot_merge_all_merge_candidates()
+{
+    QSet<ClusterPair> pairs;
+    QList<ClusterPair> keys = d->m_context->clusterPairAttributesKeys();
+    foreach (ClusterPair key, keys) {
+        if (d->m_context->clusterPairTags(key).contains("merge_candidate")) {
+            pairs.insert(key);
+        }
+    }
+    foreach (ClusterPair pair, pairs) {
+        QSet<QString> tags = d->m_context->clusterPairTags(pair);
+        tags.remove("merge_candidate");
+        tags.insert("merged");
+        d->m_context->setClusterPairTags(pair, tags);
+    }
+    d->m_context->setViewMerged(true);
 }
 
 QWizardPage* SherpaV2Private::make_page_1()
@@ -181,6 +200,30 @@ QWizardPage* SherpaV2Private::make_page_5()
         flayout->addWidget(B);
     }
     flayout->addWidget(make_open_view_button("Cross-correlograms", "open-selected-cross-correlograms", "south"));
+    layout->addLayout(flayout);
+
+    return page;
+}
+
+QWizardPage* SherpaV2Private::make_page_7()
+{
+    QWizardPage* page = new QWizardPage;
+    page->setTitle("Merge");
+
+    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/merge.txt"));
+    label->setWordWrap(true);
+
+    QVBoxLayout* layout = new QVBoxLayout;
+    layout->addWidget(label);
+    page->setLayout(layout);
+
+    FlowLayout* flayout = new FlowLayout;
+    {
+        QPushButton* B = new QPushButton("Merge all merge candidates");
+        QObject::connect(B, SIGNAL(clicked(bool)), q, SLOT(slot_merge_all_merge_candidates()));
+        flayout->addWidget(B);
+    }
+
     layout->addLayout(flayout);
 
     return page;

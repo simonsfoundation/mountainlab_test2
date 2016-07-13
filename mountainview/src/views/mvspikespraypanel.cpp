@@ -193,8 +193,8 @@ void MVSpikeSprayPanelPrivate::start_render()
     }
 
     m_render_thread.amplitude_factor = m_amplitude_factor;
-    m_render_thread.W = T * 2;
-    m_render_thread.H = 500;
+    m_render_thread.W = T * 4;
+    m_render_thread.H = 1500;
 
     m_render_thread.start();
 }
