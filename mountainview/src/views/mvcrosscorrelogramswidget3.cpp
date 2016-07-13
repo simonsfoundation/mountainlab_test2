@@ -79,7 +79,11 @@ void MVCrossCorrelogramsWidget3::prepareCalculation()
     d->m_computer.event_filter = mvContext()->eventFilter();
     d->m_computer.options = d->m_options;
     d->m_computer.max_dt = mvContext()->option("cc_max_dt_msec", 100).toDouble() / 1000 * mvContext()->sampleRate();
-    d->m_computer.cluster_merge = mvContext()->clusterMerge();
+    d->m_computer.cluster_merge.clear();
+    /// TODO, I think that view_merged should not be a property of ClusterVisibilityRule
+    if (mvContext()->clusterVisibilityRule().view_merged) {
+        d->m_computer.cluster_merge = mvContext()->clusterMerge();
+    }
 }
 
 void MVCrossCorrelogramsWidget3::runCalculation()
@@ -255,10 +259,9 @@ void MVCrossCorrelogramsWidget3Computer::compute()
     }
     else if (options.mode == Selected_Cross_Correlograms3) {
         for (int i = 0; i < options.pairs.count(); i++) {
-
             Correlogram3 CC;
-            CC.k1 = options.pairs[i].k1;
-            CC.k2 = options.pairs[i].k2;
+            CC.k1 = options.pairs[i].kmin();
+            CC.k2 = options.pairs[i].kmax();
             this->correlograms << CC;
         }
     }
@@ -344,7 +347,7 @@ MVAbstractView* MVSelectedAutoCorrelogramsFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     if (ks.isEmpty())
         ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);
@@ -389,7 +392,7 @@ MVAbstractView* MVCrossCorrelogramsFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     if (ks.count() != 1)
         return X;
 
@@ -433,7 +436,7 @@ MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     if (ks.isEmpty())
         ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);

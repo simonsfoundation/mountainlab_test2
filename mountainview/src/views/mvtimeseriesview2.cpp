@@ -302,7 +302,7 @@ MVAbstractView* MVTimeSeriesDataFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
     MVTimeSeriesView2* X = new MVTimeSeriesView2(mvContext());
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     X->setLabelsToView(ks.toSet());
     return X;
 }

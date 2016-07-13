@@ -99,13 +99,13 @@ IndividualMergeDecisionPage::IndividualMergeDecisionPage(MVContext* context, MVM
         QHBoxLayout* hlayout = new QHBoxLayout;
         hlayout->addStretch();
         {
-            QPushButton* B = new QPushButton("Add \"to_merge\" tag");
-            QObject::connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_add_to_merge_tag()));
+            QPushButton* B = new QPushButton("Add \"merge_candidate\" tag");
+            QObject::connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_add_merge_candidate_tag()));
             hlayout->addWidget(B);
         }
         {
-            QPushButton* B = new QPushButton("Remove \"to_merge\" tag");
-            QObject::connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_remove_to_merge_tag()));
+            QPushButton* B = new QPushButton("Remove \"merge_candidate\" tag");
+            QObject::connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_remove_merge_candidate_tag()));
             hlayout->addWidget(B);
         }
         {
@@ -147,30 +147,30 @@ void IndividualMergeDecisionPage::slot_button_clicked()
     if (action == "open_view") {
         d->m_main_window->setCurrentContainerName(sender()->property("container-name").toString());
         d->m_main_window->openView(sender()->property("view-id").toString());
-    } else if (action == "select_and_open_view") {
+    }
+    else if (action == "select_and_open_view") {
         d->m_context->clickClusterPair(d->m_cluster_pairs.value(d->m_current_cluster_pair_index), Qt::NoModifier);
         d->m_main_window->setCurrentContainerName(sender()->property("container-name").toString());
         d->m_main_window->openView(sender()->property("view-id").toString());
     }
 }
 
-void IndividualMergeDecisionPage::slot_add_to_merge_tag()
+void IndividualMergeDecisionPage::slot_add_merge_candidate_tag()
 {
-
     ClusterPair pair = d->m_cluster_pairs.value(d->m_current_cluster_pair_index);
     QSet<QString> tags = d->m_context->clusterPairTags(pair);
-    if ((pair.k1) && (pair.k2)) {
-        tags.insert("to_merge");
+    if ((pair.kmin()) && (pair.kmax())) {
+        tags.insert("merge_candidate");
     }
     d->m_context->setClusterPairTags(pair, tags);
 }
 
-void IndividualMergeDecisionPage::slot_remove_to_merge_tag()
+void IndividualMergeDecisionPage::slot_remove_merge_candidate_tag()
 {
     ClusterPair pair = d->m_cluster_pairs.value(d->m_current_cluster_pair_index);
     QSet<QString> tags = d->m_context->clusterPairTags(pair);
-    if ((pair.k1) && (pair.k2)) {
-        tags.remove("to_merge");
+    if ((pair.kmin()) && (pair.kmax())) {
+        tags.remove("merge_candidate");
     }
     d->m_context->setClusterPairTags(pair, tags);
 }
@@ -179,9 +179,8 @@ void IndividualMergeDecisionPage::slot_add_mua_and_reject_tags()
 {
     ClusterPair pair = d->m_cluster_pairs.value(d->m_current_cluster_pair_index);
     QList<int> ks;
-    ks << pair.k1 << pair.k2;
-    foreach(int k, ks)
-    {
+    ks << pair.kmin() << pair.kmax();
+    foreach (int k, ks) {
         QSet<QString> tags = d->m_context->clusterTags(k);
         tags.insert("mua");
         tags.insert("reject");
@@ -197,9 +196,10 @@ void IndividualMergeDecisionPage::slot_update_candidates()
 void IndividualMergeDecisionPagePrivate::update_controls()
 {
     ClusterPair pair = m_cluster_pairs.value(m_current_cluster_pair_index);
-    if ((pair.k1) && (pair.k2)) {
-        m_pair_edit->setText(QString("%1/%2").arg(pair.k1).arg(pair.k2));
-    } else {
+    if ((pair.kmin()) && (pair.kmax())) {
+        m_pair_edit->setText(QString("%1/%2").arg(pair.kmin()).arg(pair.kmax()));
+    }
+    else {
         m_pair_edit->setText("");
     }
     m_previous_button->setEnabled(m_current_cluster_pair_index - 1 >= 0);
@@ -210,9 +210,8 @@ void IndividualMergeDecisionPagePrivate::update_candidate_pairs()
 {
     QList<ClusterPair> pairs;
     QList<ClusterPair> keys = m_context->clusterPairAttributesKeys();
-    foreach(ClusterPair key, keys)
-    {
-        if (m_context->clusterPairTags(key).contains("to_merge")) {
+    foreach (ClusterPair key, keys) {
+        if (m_context->clusterPairTags(key).contains("merge_candidate")) {
             pairs << key;
         }
     }

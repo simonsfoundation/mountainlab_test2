@@ -59,6 +59,7 @@ Mda grab_clips_subset(Mda& clips, const QVector<int>& inds)
     return ret;
 }
 
+/*
 bool eigenvalue_decomposition_sym_isosplit(Mda& U, Mda& S, Mda& X)
 {
     //X=U*diag(S)*U'
@@ -74,7 +75,7 @@ bool eigenvalue_decomposition_sym_isosplit(Mda& U, Mda& S, Mda& X)
     U.allocate(M, M);
     S.allocate(1, M);
     double* Uptr = U.dataPtr();
-    double* Sptr = S.dataPtr();
+    //double* Sptr = S.dataPtr();
     double* Xptr = X.dataPtr();
 
     for (int ii = 0; ii < M * M; ii++) {
@@ -95,3 +96,4 @@ bool eigenvalue_decomposition_sym_isosplit(Mda& U, Mda& S, Mda& X)
     }
     return true;
 }
+*/

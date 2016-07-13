@@ -152,7 +152,8 @@ QStringList MVClusterPairContextMenuHandler::validTags() const
 {
     QSet<QString> set = this->mvContext()->allClusterPairTags();
     /// TODO (LOW) these go in a configuration file
-    set << "to_merge";
+    set << "merge_candidate"
+        << "merged";
     QStringList ret = set.toList();
     qSort(ret);
     return ret;

@@ -214,7 +214,9 @@ void MVClusterWidget::runCalculation()
 void MVClusterWidget::onCalculationFinished()
 {
     QVector<int> merged_labels = d->m_computer.labels;
-    merged_labels = this->mvContext()->clusterMerge().mapLabels(merged_labels);
+    if (mvContext()->clusterVisibilityRule().view_merged) {
+        merged_labels = this->mvContext()->clusterMerge().mapLabels(merged_labels);
+    }
 
     this->setTimes(d->m_computer.times);
     this->setLabels(merged_labels);
@@ -547,7 +549,7 @@ QString MVPCAFeaturesFactory::title() const
 MVAbstractView* MVPCAFeaturesFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     if (ks.isEmpty())
         ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);
@@ -608,7 +610,7 @@ MVAbstractView* MVChannelFeaturesFactory::createView(QWidget* parent)
     }
     settings.setValue("open_channel_features_channels", strlist.join(","));
 
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     if (ks.isEmpty())
         ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);

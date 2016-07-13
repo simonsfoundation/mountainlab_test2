@@ -49,9 +49,18 @@ MVClusterVisibilityControl::MVClusterVisibilityControl(MVContext* context, MVMai
         QObject::connect(apply_button, SIGNAL(clicked(bool)), this, SLOT(updateContext()));
     }
 
+    FlowLayout* flow2 = new FlowLayout;
+    {
+        QCheckBox* CB = this->createCheckBoxControl("view_merged");
+        CB->setText("View merged");
+        QObject::connect(CB, SIGNAL(clicked(bool)), this, SLOT(updateContext()));
+        flow2->addWidget(CB);
+    }
+
     QVBoxLayout* vlayout = new QVBoxLayout;
     vlayout->addLayout(d->m_cluster_tag_flow_layout);
     vlayout->addLayout(d->m_cluster_pair_tag_flow_layout);
+    vlayout->addLayout(flow2);
     vlayout->addLayout(subset_layout);
 
     this->setLayout(vlayout);
@@ -87,6 +96,7 @@ void MVClusterVisibilityControl::updateContext()
 
     rule.view_all_tagged = this->controlValue("all_tagged").toBool();
     rule.view_all_untagged = this->controlValue("all_untagged").toBool();
+    rule.view_merged = this->controlValue("view_merged").toBool();
 
     rule.view_tags.clear();
     QStringList tags = mvContext()->allClusterTags().toList();
@@ -150,4 +160,6 @@ void MVClusterVisibilityControl::updateControls()
             d->m_subset_line_edit->setText(list2.join(","));
         }
     }
+
+    this->setControlValue("view_merged", rule.view_merged);
 }

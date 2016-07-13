@@ -149,7 +149,9 @@ void MVFiringEventView2::onCalculationFinished()
     d->m_times0 = d->m_calculator.times;
     d->m_amplitudes0 = d->m_calculator.amplitudes;
 
-    d->m_labels0 = this->mvContext()->clusterMerge().mapLabels(d->m_labels0);
+    if (mvContext()->clusterVisibilityRule().view_merged) {
+        d->m_labels0 = this->mvContext()->clusterMerge().mapLabels(d->m_labels0);
+    }
 
     {
         QSet<int> X;
@@ -352,7 +354,7 @@ QString MVFiringEventsFactory::title() const
 MVAbstractView* MVFiringEventsFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     if (ks.isEmpty())
         ks = mvContext()->clusterVisibilityRule().subset.toList();
     if (ks.isEmpty()) {

@@ -143,7 +143,9 @@ void MVSpikeSprayView::onCalculationFinished()
 {
     d->m_clips_to_render = d->m_computer.clips_to_render;
     d->m_labels_to_render = d->m_computer.labels_to_render;
-    d->m_labels_to_render = d->m_context->clusterMerge().mapLabels(d->m_labels_to_render);
+    if (mvContext()->clusterVisibilityRule().view_merged) {
+        d->m_labels_to_render = d->m_context->clusterMerge().mapLabels(d->m_labels_to_render);
+    }
 
     if (!d->m_amplitude_factor) {
         double maxval = qMax(qAbs(d->m_clips_to_render.minimum()), qAbs(d->m_clips_to_render.maximum()));
@@ -352,7 +354,7 @@ QString MVSpikeSprayFactory::title() const
 MVAbstractView* MVSpikeSprayFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     if (ks.isEmpty())
         ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);

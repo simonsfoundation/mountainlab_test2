@@ -89,7 +89,6 @@ FTElectrodeArrayView::FTElectrodeArrayView(QWidget* parent)
 
 void FTElectrodeArrayView::setElectrodeLocations(const Mda& L)
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << L.N1() << L.N2() << L.minimum() << L.maximum();
     d->m_electrode_locations = L;
     d->m_min_electrode_spacing = 99999;
     d->m_electrode_minx = 99999;
@@ -319,7 +318,6 @@ void FTElectrodeArrayView::paintEvent(QPaintEvent* evt)
     d->m_electrode_pixel_locations.clear();
     double miny = 9999;
     double maxy = -9999;
-    qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << M << "@@@@@@@@@@@@@@@@@@@@@@";
     for (int i = 0; i < M; i++) {
         float val = 0;
         if (d->m_timepoint < 0)
@@ -334,7 +332,6 @@ void FTElectrodeArrayView::paintEvent(QPaintEvent* evt)
         float brightness_factor = exp(d->m_brightness / 100 * 3);
         QColor col = d->color_map(val * brightness_factor);
         QPointF pt = d->ind2pix(i);
-        qDebug() << __FUNCTION__  << __FILE__ << __LINE__ << i << pt;
         d->m_electrode_pixel_locations << pt;
         painter.setBrush(QBrush(col));
         int tmp = (int)(255 * 0.7);

@@ -79,7 +79,7 @@ void SherpaV2::slot_select_merge_candidates()
     QSet<ClusterPair> pairs;
     QList<ClusterPair> keys = d->m_context->clusterPairAttributesKeys();
     foreach (ClusterPair key, keys) {
-        if (d->m_context->clusterPairTags(key).contains("to_merge")) {
+        if (d->m_context->clusterPairTags(key).contains("merge_candidate")) {
             pairs.insert(key);
         }
     }

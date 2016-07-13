@@ -144,8 +144,7 @@ void MVClipsWidgetComputer::compute()
     QString firings_out_path;
     {
         QString labels_str;
-        foreach(int x, labels_to_use)
-        {
+        foreach (int x, labels_to_use) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -219,7 +218,7 @@ MVClipsFactory::MVClipsFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 
@@ -241,7 +240,7 @@ QString MVClipsFactory::title() const
 MVAbstractView* MVClipsFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(0, "Unable to open clips", "You must select at least one cluster.");

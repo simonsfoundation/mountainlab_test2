@@ -272,7 +272,7 @@ MVAbstractView* MVDiscrimHistFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
     MVDiscrimHistView* X = new MVDiscrimHistView(mvContext());
-    QList<int> ks = mvContext()->selectedClustersIncludingMerges();
+    QList<int> ks = mvContext()->selectedClusters();
     if (ks.isEmpty())
         ks = mvContext()->clusterVisibilityRule().subset.toList();
     qSort(ks);

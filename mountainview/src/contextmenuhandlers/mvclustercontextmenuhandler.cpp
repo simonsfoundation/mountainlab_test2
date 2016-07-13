@@ -59,9 +59,17 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
             A->setEnabled(clusters.count() >= 2);
             A->setText("Merge selected");
             QObject::connect(A, &QAction::triggered, [clusters, context]() {
-                ClusterMerge CM = context->clusterMerge();
-                CM.merge(clusters);
-                context->setClusterMerge(CM);
+                QList<int> clusters_list=clusters.toList();
+                for (int i1=0; i1<clusters_list.count(); i1++) {
+                    for (int i2=0; i2<clusters_list.count(); i2++) {
+                        if (i1!=i2) {
+                            ClusterPair pair(clusters_list[i1],clusters_list[i2]);
+                            QSet<QString> tags=context->clusterPairTags(pair);
+                            tags.insert("merged");
+                            context->setClusterPairTags(pair,tags);
+                        }
+                    }
+                }
             });
             actions << A;
         }
@@ -70,9 +78,16 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
             A->setEnabled(can_unmerge_selected_clusters(context, clusters));
             A->setText("Unmerge selected");
             QObject::connect(A, &QAction::triggered, [clusters, context]() {
-                ClusterMerge CM = context->clusterMerge();
-                CM.unmerge(clusters);
-                context->setClusterMerge(CM);
+                QList<ClusterPair> pairs=context->clusterPairAttributesKeys();
+                for (int i=0; i<pairs.count(); i++) {
+                    QSet<QString> tags=context->clusterPairTags(pairs[i]);
+                    if (tags.contains("merged")) {
+                        if ((clusters.contains(pairs[i].kmin()))||(clusters.contains(pairs[i].kmax()))) {
+                            tags.remove("merged");
+                        }
+                    }
+                    context->setClusterPairTags(pairs[i],tags);
+                }
             });
             actions << A;
         }

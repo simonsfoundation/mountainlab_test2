@@ -21,7 +21,6 @@ struct OptionChangedAction {
 class MVContextPrivate {
 public:
     MVContext* q;
-    ClusterMerge m_cluster_merge;
     QMap<int, QJsonObject> m_cluster_attributes;
     QMap<ClusterPair, QJsonObject> m_cluster_pair_attributes;
     MVEvent m_current_event;
@@ -78,7 +77,6 @@ MVContext::~MVContext()
 
 void MVContext::clear()
 {
-    d->m_cluster_merge.clear();
     d->m_cluster_attributes.clear();
     d->m_cluster_pair_attributes.clear();
     d->m_timeseries.clear();
@@ -156,7 +154,6 @@ QMap<QString, TimeseriesStruct> object_to_timeseries_map(QJsonObject X)
 QJsonObject MVContext::toMVFileObject() const
 {
     QJsonObject X = d->m_original_object;
-    X["cluster_merge"] = d->m_cluster_merge.toJsonObject();
     X["cluster_attributes"] = cluster_attributes_to_object(d->m_cluster_attributes);
     X["cluster_pair_attributes"] = cluster_pair_attributes_to_object(d->m_cluster_pair_attributes);
     X["timeseries"] = timeseries_map_to_object(d->m_timeseries);
@@ -174,7 +171,6 @@ void MVContext::setFromMVFileObject(QJsonObject X)
 {
     this->clear();
     d->m_original_object = X; // to preserve unused fields
-    d->m_cluster_merge.setFromJsonObject(X["cluster_merge"].toObject());
     d->m_cluster_attributes = object_to_cluster_attributes(X["cluster_attributes"].toObject());
     d->m_cluster_pair_attributes = object_to_cluster_pair_attributes(X["cluster_pair_attributes"].toObject());
     d->m_timeseries = object_to_timeseries_map(X["timeseries"].toObject());
@@ -222,21 +218,6 @@ int MVContext::currentCluster() const
 QList<int> MVContext::selectedClusters() const
 {
     return d->m_selected_clusters;
-}
-
-QList<int> MVContext::selectedClustersIncludingMerges() const
-{
-    QList<int> X = this->selectedClusters();
-    QSet<int> Y;
-    foreach (int k, X) {
-        QList<int> list = d->m_cluster_merge.getMergeGroup(k);
-        foreach (int a, list) {
-            Y.insert(a);
-        }
-    }
-    QList<int> ret = Y.toList();
-    qSort(ret);
-    return ret;
 }
 
 double MVContext::currentTimepoint() const
@@ -381,7 +362,17 @@ void MVContext::setMLProxyUrl(QString url)
 
 ClusterMerge MVContext::clusterMerge() const
 {
-    return d->m_cluster_merge;
+    ClusterMerge ret;
+    QList<ClusterPair> keys = d->m_cluster_pair_attributes.keys();
+    foreach (ClusterPair pair, keys) {
+        if (this->clusterPairTags(pair).contains("merged")) {
+            QSet<int> labels;
+            labels.insert(pair.kmin());
+            labels.insert(pair.kmax());
+            ret.merge(labels);
+        }
+    }
+    return ret;
 }
 
 QJsonObject MVContext::clusterAttributes(int num) const
@@ -420,17 +411,6 @@ QSet<QString> MVContext::allClusterTags() const
     return ret;
 }
 
-void MVContext::setClusterMerge(const ClusterMerge& CM)
-{
-    if (d->m_cluster_merge == CM)
-        return;
-    d->m_cluster_merge = CM;
-    emit this->clusterMergeChanged();
-    if (!d->m_visibility_rule.view_merged) {
-        emit this->clusterVisibilityChanged();
-    }
-}
-
 void MVContext::setClusterAttributes(int num, const QJsonObject& obj)
 {
     if (d->m_cluster_attributes.value(num) == obj)
@@ -462,8 +442,12 @@ void MVContext::setClusterPairAttributes(const ClusterPair& pair, const QJsonObj
 {
     if (d->m_cluster_pair_attributes.value(pair) == obj)
         return;
+    ClusterMerge cluster_merge_before = this->clusterMerge();
     d->m_cluster_pair_attributes[pair] = obj;
     emit this->clusterPairAttributesChanged(pair);
+    if (!(cluster_merge_before == this->clusterMerge())) {
+        emit this->clusterMergeChanged();
+    }
 }
 
 QSet<QString> MVContext::clusterPairTags(const ClusterPair& pair) const
@@ -481,7 +465,8 @@ QList<QString> MVContext::clusterPairTagsList(const ClusterPair& pair) const
 QSet<QString> MVContext::allClusterPairTags() const
 {
     QSet<QString> ret;
-    ret.insert("to_merge");
+    ret.insert("merge_candidate");
+    ret.insert("merged");
     QList<ClusterPair> keys = clusterPairAttributesKeys();
     foreach (ClusterPair key, keys) {
         QSet<QString> tags0 = clusterPairTags(key);
@@ -501,21 +486,6 @@ void MVContext::setClusterPairTags(const ClusterPair& pair, const QSet<QString>&
 ClusterVisibilityRule MVContext::clusterVisibilityRule() const
 {
     return d->m_visibility_rule;
-}
-
-QList<int> MVContext::visibleClustersIncludingMerges(int K) const
-{
-    QList<int> X = this->visibleClusters(K);
-    QSet<int> Y;
-    foreach (int k, X) {
-        QList<int> list = d->m_cluster_merge.getMergeGroup(k);
-        foreach (int a, list) {
-            Y.insert(a);
-        }
-    }
-    QList<int> ret = Y.toList();
-    qSort(ret);
-    return ret;
 }
 
 QList<int> MVContext::visibleClusters(int K) const
@@ -719,7 +689,7 @@ void MVContext::setSelectedClusterPairs(const QSet<ClusterPair>& pairs)
 void MVContext::clickClusterPair(const ClusterPair& pair, Qt::KeyboardModifiers modifiers)
 {
     if (modifiers & Qt::ControlModifier) {
-        if ((pair.k1 <= 0) || (pair.k2 <= 0))
+        if ((pair.kmin() <= 0) || (pair.kmax() <= 0))
             return;
         QSet<ClusterPair> tmp = d->m_selected_cluster_pairs;
         if (tmp.contains(pair)) {
@@ -735,7 +705,7 @@ void MVContext::clickClusterPair(const ClusterPair& pair, Qt::KeyboardModifiers 
         tmp.insert(pair);
         this->setSelectedClusterPairs(tmp);
         QList<int> list0;
-        list0 << pair.k1 << pair.k2;
+        list0 << pair.kmin() << pair.kmax();
         this->setSelectedClusters(list0);
         this->setCurrentCluster(-1);
     }
@@ -806,7 +776,7 @@ void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
 
 bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num) const
 {
-    if (!this->view_merged) {
+    if (this->view_merged) {
         if (context->clusterMerge().representativeLabel(cluster_num) != cluster_num)
             return false;
     }
@@ -909,41 +879,54 @@ QJsonObject MVEventFilter::toJsonObject() const
     return obj;
 }
 
-ClusterPair::ClusterPair(int k1_in, int k2_in)
+ClusterPair::ClusterPair(int k1, int k2)
 {
-    k1 = k1_in;
-    k2 = k2_in;
+    set(k1, k2);
 }
 
 ClusterPair::ClusterPair(const ClusterPair& other)
 {
-    k1 = other.k1;
-    k2 = other.k2;
+    set(other.kmin(), other.kmax());
+}
+
+void ClusterPair::set(int k1, int k2)
+{
+    m_kmin = qMin(k1, k2);
+    m_kmax = qMax(k1, k2);
+}
+
+int ClusterPair::kmin() const
+{
+    return m_kmin;
+}
+
+int ClusterPair::kmax() const
+{
+    return m_kmax;
 }
 
 void ClusterPair::operator=(const ClusterPair& other)
 {
-    k1 = other.k1;
-    k2 = other.k2;
+    set(other.kmin(), other.kmax());
 }
 
 bool ClusterPair::operator==(const ClusterPair& other) const
 {
-    return ((k1 == other.k1) && (k2 == other.k2));
+    return ((kmin() == other.kmin()) && (kmax() == other.kmax()));
 }
 
 bool ClusterPair::operator<(const ClusterPair& other) const
 {
-    if (k1 < other.k1)
+    if (kmin() < other.kmin())
         return true;
-    if (k1 > other.k1)
+    if (kmax() > other.kmax())
         return false;
-    return (k2 < other.k2);
+    return (kmax() < other.kmax());
 }
 
 QString ClusterPair::toString() const
 {
-    return QString("pair_%1_%2").arg(k1).arg(k2);
+    return QString("pair_%1_%2").arg(m_kmin).arg(m_kmax);
 }
 
 ClusterPair ClusterPair::fromString(const QString& str)

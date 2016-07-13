@@ -64,7 +64,6 @@ bool extract_clips_features_Processor::run(const QMap<QString, QVariant>& params
     }
     Mda CC, FF, sigma;
     pca(CC, FF, sigma, clips_reshaped, num_features);
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << FF.N1() << FF.N2() << features_path;
     return FF.write32(features_path);
 
     //return extract_clips_features(timeseries_path,firings_path,features_path,clip_size,num_features);

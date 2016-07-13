@@ -582,7 +582,12 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
 
 QString MVClusterDetailWidgetPrivate::group_label_for_k(int k)
 {
-    return QString("%1").arg(q->mvContext()->clusterMerge().clusterLabelText(k));
+    if (q->mvContext()->clusterVisibilityRule().view_merged) {
+        return QString("%1").arg(q->mvContext()->clusterMerge().clusterLabelText(k));
+    }
+    else {
+        return QString("%1").arg(k);
+    }
 }
 
 int MVClusterDetailWidgetPrivate::get_current_view_index()
@@ -792,7 +797,7 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     painter.setClipRect(QRectF(left_margin, 0, W, H));
 
     QList<ClusterData> cluster_data_merged;
-    if (q->mvContext()) {
+    if (q->mvContext()->clusterVisibilityRule().view_merged) {
         cluster_data_merged = merge_cluster_data(q->mvContext()->clusterMerge(), m_cluster_data);
     }
     else {

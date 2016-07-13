@@ -60,7 +60,7 @@ public:
     QSet<QString> view_tags;
     bool view_all_tagged = true;
     bool view_all_untagged = true;
-    bool view_merged = true;
+    bool view_merged = false;
 
     bool use_subset = false;
     QSet<int> subset;
@@ -70,15 +70,20 @@ private:
 };
 
 struct ClusterPair {
-    ClusterPair(int k1_in = 0, int k2_in = 0);
+    ClusterPair(int k1 = 0, int k2 = 0);
     ClusterPair(const ClusterPair& other);
 
-    int k1, k2;
+    void set(int k1, int k2);
+    int kmin() const;
+    int kmax() const;
     void operator=(const ClusterPair& other);
     bool operator==(const ClusterPair& other) const;
     bool operator<(const ClusterPair& other) const;
     QString toString() const;
     static ClusterPair fromString(const QString& str);
+
+private:
+    int m_kmin = 0, m_kmax = 0;
 };
 uint qHash(const ClusterPair& pair);
 
@@ -106,7 +111,6 @@ public:
 
     /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;
-    void setClusterMerge(const ClusterMerge& CM);
 
     /////////////////////////////////////////////////
     QJsonObject clusterAttributes(int num) const;
@@ -129,7 +133,6 @@ public:
     /////////////////////////////////////////////////
     ClusterVisibilityRule clusterVisibilityRule() const;
     QList<int> visibleClusters(int Kmax) const;
-    QList<int> visibleClustersIncludingMerges(int Kmax) const;
     bool clusterIsVisible(int k) const;
     void setClusterVisibilityRule(const ClusterVisibilityRule& rule);
 
@@ -141,7 +144,6 @@ public:
     MVEvent currentEvent() const;
     int currentCluster() const;
     QList<int> selectedClusters() const;
-    QList<int> selectedClustersIncludingMerges() const;
     double currentTimepoint() const;
     MVRange currentTimeRange() const;
     void setCurrentEvent(const MVEvent& evt);
