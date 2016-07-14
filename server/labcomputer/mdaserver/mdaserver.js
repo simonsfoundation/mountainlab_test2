@@ -148,6 +148,7 @@ function run_process_and_read_stdout(exe,args,callback) {
 }
 
 function serve_file(filename,response) {
+	response.writeHead(200, {"Access-Control-Allow-Origin":"*", "Content-Type":"application/json"});
 	fs.exists(filename,function(exists) {
 		if (!exists) {
 			response.writeHead(404, {"Content-Type": "text/plain"});

@@ -21,6 +21,7 @@
 /// TODO: (MEDIUM) spike spray should respond to mouse wheel and show current position with marker
 /// TODO: (MEDIUM) much more responsive rendering of spike spray
 /// TODO: (HIGH) Implement the panels as layers, make a layer stack, and handle zoom/pan without using a scroll widget
+/// TODO: (HIGH) GUI option to set max. number of spikespray spikes to render
 
 class MVSpikeSprayComputer {
 public:
