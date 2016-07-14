@@ -165,7 +165,7 @@ function serve_file(filename,response) {
 				return;
 			}
 
-			response.writeHead(200);
+			//response.writeHead(200);
 			response.write(file, "binary");
 			response.end();
 		});
