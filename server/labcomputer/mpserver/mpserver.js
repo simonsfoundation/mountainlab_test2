@@ -169,7 +169,15 @@ http.createServer(function (REQ, RESP) {
 		});
 		
 		REQ.on('end',function() {
-			callback(JSON.parse(body));;
+			try {
+				var obj=JSON.parse(body);
+				callback(obj);
+			}
+			catch (e) {
+				console.log(body);
+				console.error('Problem parsing json in receive_json_post.........');
+				callback({success:false,error:'Problem parsing json in receive_json_post'});
+			}
 		});
 	}
 	
