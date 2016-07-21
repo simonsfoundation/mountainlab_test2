@@ -247,7 +247,8 @@ void MVDiscrimHistViewSherpaPrivate::set_views()
             HV->setBins(bin_min, bin_max, num_bins);
             QString title0 = QString("%1/%2").arg(k1).arg(k2);
             HV->setTitle(title0);
-            HV->setDrawVerticalAxisAtZero(true);
+            //HV->setDrawVerticalAxisAtZero(true);
+            HV->setDrawVerticalAxisAtZero(false);
             HV->setXRange(MVRange(-max00, max00));
             HV->autoCenterXRange();
             HV->setProperty("k1", k1);

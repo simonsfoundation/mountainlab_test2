@@ -272,7 +272,8 @@ void MVDiscrimHistViewPrivate::set_views()
             HV->setColors(q->mvContext()->colors());
             //HV->autoSetBins(50);
             HV->setBins(bin_min, bin_max, num_bins);
-            HV->setDrawVerticalAxisAtZero(true);
+            //HV->setDrawVerticalAxisAtZero(true);
+            HV->setDrawVerticalAxisAtZero(false);
             HV->setXRange(MVRange(-max00, max00));
             HV->autoCenterXRange();
             HV->setProperty("k1", k1);
