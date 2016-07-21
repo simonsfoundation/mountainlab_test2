@@ -105,6 +105,12 @@ MVHistogramGrid::~MVHistogramGrid()
     delete d;
 }
 
+void MVHistogramGrid::setPreferredHistogramWidth(int width)
+{
+    d->m_preferred_hist_width=width;
+    d->on_resize();
+}
+
 QImage MVHistogramGrid::renderImage(int W, int H)
 {
     if (!W)

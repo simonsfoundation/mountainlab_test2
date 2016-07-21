@@ -23,6 +23,8 @@ public:
     MVHistogramGrid(MVContext* context);
     virtual ~MVHistogramGrid();
 
+    void setPreferredHistogramWidth(int width); //use 0 for zoomed all the way out
+
     QImage renderImage(int W = 0, int H = 0);
 
     void paintEvent(QPaintEvent* evt);

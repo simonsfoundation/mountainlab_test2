@@ -257,7 +257,8 @@ void MVDiscrimHistViewSherpaPrivate::set_views()
         }
     }
 
-    q->setHistogramViews(views); //inherited
+    q->setHistogramViews(views); //base class
+    q->slot_zoom_in_horizontal(2.5); //give it a nice zoom in to start
 }
 
 QSet<int> MVDiscrimHistViewSherpaPrivate::get_clusters_to_exclude()
@@ -298,7 +299,8 @@ MVAbstractView* MVDiscrimHistSherpaFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
     MVDiscrimHistViewSherpa* X = new MVDiscrimHistViewSherpa(mvContext());
-    X->setNumHistograms(50);
+    X->setPreferredHistogramWidth(200);
+    X->setNumHistograms(80);
     return X;
 }
 
