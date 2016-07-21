@@ -36,6 +36,7 @@ public:
     void setXRange(MVRange range);
     void autoCenterXRange(); //centers range based on data
     void setDrawVerticalAxisAtZero(bool val);
+    void addVerticalLine(double val);
 
     void setCurrent(bool val); // Set this as the current histogram (affects highlighting)
     void setSelected(bool val); // Set this as among the selected histograms (affects highlighting)

@@ -30,6 +30,7 @@ public:
     bool m_current;
     bool m_selected;
     bool m_draw_vertical_axis_at_zero = false;
+    QList<double> m_vertical_lines;
     MVRange m_xrange = MVRange(0, 0);
 
     void update_bin_counts();
@@ -204,6 +205,12 @@ void HistogramView::setDrawVerticalAxisAtZero(bool val)
     if (d->m_draw_vertical_axis_at_zero == val)
         return;
     d->m_draw_vertical_axis_at_zero = val;
+    update();
+}
+
+void HistogramView::addVerticalLine(double val)
+{
+    d->m_vertical_lines << val;
     update();
 }
 
@@ -572,6 +579,15 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
         QPointF pt1 = coord2pix(QPointF(0, m_max_bin_count));
         QPen pen = painter.pen();
         pen.setColor(Qt::black);
+        painter.setPen(pen);
+        painter.drawLine(pt0, pt1);
+    }
+
+    foreach (double val, m_vertical_lines) {
+        QPointF pt0 = coord2pix(QPointF(val, 0));
+        QPointF pt1 = coord2pix(QPointF(val, m_max_bin_count));
+        QPen pen = painter.pen();
+        pen.setColor(Qt::gray);
         pen.setStyle(Qt::DashLine);
         painter.setPen(pen);
         painter.drawLine(pt0, pt1);

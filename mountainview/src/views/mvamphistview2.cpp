@@ -55,6 +55,7 @@ MVAmpHistView2::MVAmpHistView2(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
+    this->recalculateOnOptionChanged("amp_thresh_display",false);
 
     this->recalculate();
 }
@@ -202,6 +203,8 @@ void MVAmpHistView2Private::set_views()
 
     int num_bins = 200; //how to choose this?
 
+    double amp_thresh=q->mvContext()->option("amp_thresh_display",0).toDouble();
+
     QList<HistogramView*> views;
     for (int ii = 0; ii < m_histograms.count(); ii++) {
         int k0 = m_histograms[ii].k;
@@ -212,6 +215,10 @@ void MVAmpHistView2Private::set_views()
             //HV->autoSetBins(50);
             HV->setBins(bin_min, bin_max, num_bins);
             HV->setDrawVerticalAxisAtZero(true);
+            if (amp_thresh) {
+                HV->addVerticalLine(-amp_thresh);
+                HV->addVerticalLine(amp_thresh);
+            }
             HV->setXRange(MVRange(-max00, max00));
             HV->autoCenterXRange();
             HV->setProperty("k", k0);
