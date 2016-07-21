@@ -57,8 +57,8 @@ MVDiscrimHistViewSherpa::MVDiscrimHistViewSherpa(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
 
-    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, SLOT(slot_zoom_in()));
-    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, SLOT(slot_zoom_out()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInHorizontal, this, SLOT(slot_zoom_in_horizontal()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutHorizontal, this, SLOT(slot_zoom_out_horizontal()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::PanLeft, this, SLOT(slot_pan_left()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::PanRight, this, SLOT(slot_pan_right()));
 
@@ -182,15 +182,18 @@ void MVDiscrimHistViewSherpaComputer::compute()
 
 void MVDiscrimHistViewSherpa::wheelEvent(QWheelEvent* evt)
 {
+    Q_UNUSED(evt)
+    /*
     if (evt->delta() > 0) {
         slot_zoom_in();
     }
     else if (evt->delta() < 0) {
         slot_zoom_out();
     }
+    */
 }
 
-void MVDiscrimHistViewSherpa::slot_zoom_in(double zoom_factor)
+void MVDiscrimHistViewSherpa::slot_zoom_in_horizontal(double zoom_factor)
 {
     QList<HistogramView*> views = this->histogramViews(); //inherited
     for (int i = 0; i < views.count(); i++) {
@@ -198,9 +201,9 @@ void MVDiscrimHistViewSherpa::slot_zoom_in(double zoom_factor)
     }
 }
 
-void MVDiscrimHistViewSherpa::slot_zoom_out(double factor)
+void MVDiscrimHistViewSherpa::slot_zoom_out_horizontal(double factor)
 {
-    slot_zoom_in(1 / factor);
+    slot_zoom_in_horizontal(1 / factor);
 }
 
 void MVDiscrimHistViewSherpa::slot_pan_left(double units)

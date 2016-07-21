@@ -8,6 +8,8 @@ public:
     enum ActionType {
         ZoomIn,
         ZoomOut,
+        ZoomInHorizontal,
+        ZoomOutHorizontal,
         ZoomInVertical,
         ZoomOutVertical,
         PanLeft,

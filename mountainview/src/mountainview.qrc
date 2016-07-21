@@ -22,5 +22,9 @@
         <file>guides/sherpav2/page_event_filter.txt</file>
         <file>guides/sherpav2/page_discrim_hist.txt</file>
         <file>guides/sherpav2/page_cross_correlograms.txt</file>
+        <file>images/horizontal-zoom-out.png</file>
+        <file>images/horizontal-zoom-in.png</file>
+        <file>images/right.png</file>
+        <file>images/left.png</file>
     </qresource>
 </RCC>

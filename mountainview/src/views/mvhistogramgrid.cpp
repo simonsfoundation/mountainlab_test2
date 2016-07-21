@@ -35,10 +35,11 @@ class MVHistogramGridPrivate {
 public:
     MVHistogramGrid* q;
 
+    QScrollArea *m_scroll_area;
     QWidget* m_grid_widget;
     QGridLayout* m_grid_layout;
     QList<HistogramView*> m_histogram_views;
-    double m_preferred_hist_width = 10; //set to a minimum (zoomed way out)
+    double m_preferred_hist_width = 0; //zero means zoomed all the way out
     HorizontalScaleAxisData m_horizontal_scale_axis_data;
     HorizontalScaleAxis* m_horizontal_scale_axis;
     bool m_force_square_matrix = false;
@@ -76,6 +77,7 @@ MVHistogramGrid::MVHistogramGrid(MVContext* context)
     //SA->setWidgetResizable(true);
     layout->addWidget(SA);
     this->setLayout(layout);
+    d->m_scroll_area=SA;
 
     QWidget* GW = new QWidget;
     QGridLayout* GL = new QGridLayout;
@@ -258,6 +260,12 @@ bool MVHistogramGrid::pairMode() const
 void MVHistogramGrid::setForceSquareMatrix(bool val)
 {
     d->m_force_square_matrix = val;
+    if (val) {
+        d->m_scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    }
+    else {
+        d->m_scroll_area->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    }
     d->on_resize();
 }
 
@@ -324,26 +332,34 @@ void MVHistogramGrid::slot_context_menu(const QPoint& pt)
 
 void MVHistogramGrid::slot_zoom_in(double factor)
 {
+    int hscroll_value=0,vscroll_value=0;
+    if (d->m_scroll_area->horizontalScrollBar()) hscroll_value=d->m_scroll_area->horizontalScrollBar()->value();
+    if (d->m_scroll_area->verticalScrollBar()) vscroll_value=d->m_scroll_area->verticalScrollBar()->value();
     bool done = false;
     double preferred_hist_width = d->m_preferred_hist_width;
+    if ((factor>1)&&(preferred_hist_width==0)) {
+        preferred_hist_width=1;
+    }
     int iteration_count = 0;
     while (!done) {
         int num_rows1, num_cols1, height1, num_rows2, num_cols2, height2;
         d->get_num_rows_cols_and_height_for_preferred_hist_width(num_rows1, num_cols1, height1, preferred_hist_width);
-        preferred_hist_width = qMax(1.0, preferred_hist_width * factor);
+        preferred_hist_width = qMin(1.0e6,qMin(preferred_hist_width+10,preferred_hist_width * factor));
         d->get_num_rows_cols_and_height_for_preferred_hist_width(num_rows2, num_cols2, height2, preferred_hist_width);
-        bool something_changed = (num_rows1 != num_rows2);
+        bool something_changed = (height1 != height2);
         if (something_changed)
             done = true;
         iteration_count++;
         if (iteration_count > 1000) {
             preferred_hist_width = d->m_preferred_hist_width;
+            if (factor<1) preferred_hist_width=0;
             done = true;
         }
-        qDebug() << "num_rows/num_cols/height" << num_rows2 << num_cols2 << height2;
     }
     d->m_preferred_hist_width = preferred_hist_width;
     d->on_resize();
+    if (d->m_scroll_area->horizontalScrollBar()) d->m_scroll_area->horizontalScrollBar()->setValue(hscroll_value);
+    if (d->m_scroll_area->verticalScrollBar()) d->m_scroll_area->verticalScrollBar()->setValue(vscroll_value);
 }
 
 void MVHistogramGrid::slot_zoom_out(double factor)
@@ -450,9 +466,15 @@ void MVHistogramGridPrivate::on_resize()
         int height_per_row = height / num_rows;
         if (height_per_row > q->height())
             height = num_rows * q->height();
+        if (m_preferred_hist_width==0) {
+            height=q->height()-5;
+        }
         m_grid_widget->setFixedHeight(height);
         if (m_force_square_matrix) {
-            m_grid_widget->setFixedHeight(q->height() - 5);
+            double width=height*q->width()/q->height();
+            if (m_preferred_hist_width==0)
+                width=q->width()-5;
+            m_grid_widget->setFixedWidth(width);
         }
         setup_grid(num_cols);
     }
@@ -462,6 +484,11 @@ void MVHistogramGridPrivate::get_num_rows_cols_and_height_for_preferred_hist_wid
 {
     int W = q->width();
     int H = q->height();
+    if (!(W*H)) {
+        num_rows=num_cols=1;
+        height=0;
+        return;
+    }
     double preferred_aspect_ratio = 1.618; //golden ratio
     if (m_force_square_matrix) {
         preferred_aspect_ratio = W * 1.0 / H;
@@ -469,18 +496,24 @@ void MVHistogramGridPrivate::get_num_rows_cols_and_height_for_preferred_hist_wid
 
     if (m_force_square_matrix) {
         int NUM = m_histogram_views.count();
-        num_rows = (int)sqrt(NUM);
-        if (num_rows < 1)
-            num_rows = 1;
-        num_cols = (NUM + num_rows - 1) / num_rows;
-        double hist_width = W / num_cols;
+        num_rows = qMax(1,(int)sqrt(NUM));
+        num_cols = qMax(1,(NUM + num_rows - 1) / num_rows);
+        double hist_width=preferred_hist_width;
+        if (hist_width*num_cols<W) {
+            hist_width=W/(num_cols);
+        }
         double hist_height = hist_width / preferred_aspect_ratio;
         height = hist_height * num_rows;
     }
     else {
         bool done = false;
         while (!done) {
-            num_cols = qMax(1.0, W / preferred_hist_width);
+            if (preferred_hist_width) {
+                num_cols = qMax(1.0, W / preferred_hist_width);
+            }
+            else {
+                num_cols = qMax(1,(int)(m_histogram_views.count()/preferred_aspect_ratio +0.5));
+            }
             int hist_width = W / num_cols;
             int hist_height = hist_width / preferred_aspect_ratio;
             num_rows = qMax(1, (m_histogram_views.count() + num_cols - 1) / num_cols);

@@ -7,6 +7,7 @@
 #include "histogramview.h"
 #include <QWheelEvent>
 #include "mvmainwindow.h"
+#include "actionfactory.h"
 
 struct DiscrimHistogram {
     int k1, k2;
@@ -49,6 +50,11 @@ MVDiscrimHistView::MVDiscrimHistView(MVContext* context)
     d->q = this;
 
     this->setForceSquareMatrix(true);
+
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInHorizontal, this, SLOT(slot_zoom_in_horizontal()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutHorizontal, this, SLOT(slot_zoom_out_horizontal()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::PanLeft, this, SLOT(slot_pan_left()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::PanRight, this, SLOT(slot_pan_right()));
 
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
@@ -212,6 +218,36 @@ void MVDiscrimHistView::wheelEvent(QWheelEvent* evt)
     for (int i = 0; i < views.count(); i++) {
         views[i]->setXRange(views[i]->xRange() * (1.0 / zoom_factor));
     }
+}
+
+void MVDiscrimHistView::slot_zoom_in_horizontal(double zoom_factor)
+{
+    QList<HistogramView*> views = this->histogramViews(); //inherited
+    for (int i = 0; i < views.count(); i++) {
+        views[i]->setXRange(views[i]->xRange() * (1.0 / zoom_factor));
+    }
+}
+
+void MVDiscrimHistView::slot_zoom_out_horizontal(double factor)
+{
+    slot_zoom_in_horizontal(1 / factor);
+}
+
+void MVDiscrimHistView::slot_pan_left(double units)
+{
+    QList<HistogramView*> views = this->histogramViews(); //inherited
+    for (int i = 0; i < views.count(); i++) {
+        MVRange range = views[i]->xRange();
+        if (range.range()) {
+            range = range + units * range.range();
+        }
+        views[i]->setXRange(range);
+    }
+}
+
+void MVDiscrimHistView::slot_pan_right(double units)
+{
+    slot_pan_left(-units);
 }
 
 void MVDiscrimHistViewPrivate::set_views()

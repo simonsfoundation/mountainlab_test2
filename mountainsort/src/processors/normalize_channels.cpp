@@ -111,3 +111,43 @@ bool normalize_channels(const QString& input, const QString& output)
 
     return true;
 }
+
+/*
+    ComputerManager XX;
+
+    // non open-mp implementation
+    for (long timepoint=0; timepoint < N; timepoint += chunk_size) {
+        Mda chunk;
+        X.readChunk(chunk, 0, timepoint, M, qMin(chunk_size, N - timepoint));
+        NC_Computer *C=new NC_Computer1;
+        C->chunk=chunk;
+        XX.addComputer(C);
+    }
+
+    for (int i=0; i<XX.computerCount(); i++) {
+        NC_Computer *C=XX.computer(i);
+        C->wait();
+        for (int m=0; m<M; m++) {
+            sumsqrs[m]+=C->sumsqrs[m];
+        }
+    }
+
+    XX.clearComputers();
+
+    DiskWriteMda Y;
+    Y.open(MDAIO_TYPE_FLOAT32, output, M, N);
+
+    for (long timepoint=0; timepoint < N; timepoint += chunk_size) {
+        Mda chunk;
+        X.readChunk(chunk, 0, timepoint, M, qMin(chunk_size, N - timepoint));
+        NC_Computer *C=new NC_Computer2;
+        C->chunk=chunk;
+        XX.addComputer(C);
+    }
+
+    for (int i=0; i<XX.computerCount(); i++) {
+        NC_Computer *C=XX.computer(i);
+        C->wait();
+        Y.writeChunk(C->chunk, 0, timepoint);
+    }
+*/
