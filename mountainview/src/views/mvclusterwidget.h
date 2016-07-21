@@ -53,6 +53,8 @@ private slots:
     void slot_show_clip_view_clicked();
     void slot_show_view_clicked();
     void slot_clips_view_thread_finished();
+    void slot_shift_colors_left(int step = 1);
+    void slot_shift_colors_right();
 
 private:
     MVClusterWidgetPrivate* d;

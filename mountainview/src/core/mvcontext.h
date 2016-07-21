@@ -191,7 +191,7 @@ public:
     void setMLProxyUrl(QString url);
 
     /////////////////////////////////////////////////
-    QVariant option(QString name, QVariant default_val = QVariant());
+    QVariant option(QString name, QVariant default_val = QVariant()) const;
     void setOption(QString name, QVariant value);
     void onOptionChanged(QString name, const QObject* receiver, const char* member, Qt::ConnectionType type = Qt::DirectConnection);
 

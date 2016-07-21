@@ -92,6 +92,19 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, SLOT(slot_zoom_out()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInVertical, this, SLOT(slot_vertical_zoom_in()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutVertical, this, SLOT(slot_vertical_zoom_out()));
+
+    {
+        QAction* A = new QAction("<-Colors", this);
+        A->setProperty("action_type", "toolbar");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_shift_colors_left()));
+        this->addAction(A);
+    }
+    {
+        QAction* A = new QAction("Colors->", this);
+        A->setProperty("action_type", "toolbar");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_shift_colors_right()));
+        this->addAction(A);
+    }
 }
 
 MVSpikeSprayView::~MVSpikeSprayView()
@@ -208,6 +221,19 @@ void MVSpikeSprayView::slot_vertical_zoom_in()
 void MVSpikeSprayView::slot_vertical_zoom_out()
 {
     d->set_amplitude_factor(d->m_amplitude_factor / 1.2);
+}
+
+void MVSpikeSprayView::slot_shift_colors_left(int step)
+{
+    int shift = this->mvContext()->option("cluster_color_index_shift", 0).toInt();
+    shift += step;
+    this->mvContext()->setOption("cluster_color_index_shift", shift);
+    this->recalculate();
+}
+
+void MVSpikeSprayView::slot_shift_colors_right()
+{
+    slot_shift_colors_left(-1);
 }
 
 MVSpikeSprayPanel* MVSpikeSprayViewPrivate::add_panel()

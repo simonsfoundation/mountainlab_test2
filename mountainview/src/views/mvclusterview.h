@@ -75,6 +75,7 @@ private slots:
     void slot_context_menu(const QPoint& pos);
     void slot_active_cluster_numbers_changed();
     void slot_hovered_cluster_number_changed();
+    void slot_update_colors();
 
 protected:
     void paintEvent(QPaintEvent* evt);

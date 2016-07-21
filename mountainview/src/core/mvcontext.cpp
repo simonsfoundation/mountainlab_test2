@@ -248,7 +248,11 @@ QList<QColor> MVContext::channelColors() const
 
 QList<QColor> MVContext::clusterColors() const
 {
-    return d->m_cluster_colors;
+    QList<QColor> ret;
+    for (int i = 0; i < d->m_cluster_colors.count(); i++) {
+        ret << this->clusterColor(i + 1);
+    }
+    return ret;
 }
 
 DiskReadMda MVContext::currentTimeseries() const
@@ -267,6 +271,10 @@ QColor MVContext::clusterColor(int k) const
         return Qt::black;
     if (d->m_cluster_colors.isEmpty())
         return Qt::black;
+    int cluster_color_index_shift = this->option("cluster_color_index_shift", 0).toInt();
+    k += cluster_color_index_shift;
+    while (k < 1)
+        k += d->m_cluster_colors.count();
     return d->m_cluster_colors[(k - 1) % d->m_cluster_colors.count()];
 }
 
@@ -315,7 +323,7 @@ double MVContext::sampleRate() const
     return d->m_sample_rate;
 }
 
-QVariant MVContext::option(QString name, QVariant default_val)
+QVariant MVContext::option(QString name, QVariant default_val) const
 {
     return d->m_options.value(name, default_val);
 }

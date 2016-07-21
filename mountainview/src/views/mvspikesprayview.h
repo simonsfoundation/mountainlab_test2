@@ -37,6 +37,8 @@ private slots:
     void slot_zoom_out();
     void slot_vertical_zoom_in();
     void slot_vertical_zoom_out();
+    void slot_shift_colors_left(int step = 1);
+    void slot_shift_colors_right();
 
 private:
     MVSpikeSprayViewPrivate* d;

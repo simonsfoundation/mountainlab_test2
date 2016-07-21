@@ -9,6 +9,7 @@
 #include <taskprogress.h>
 #include "mvclipsview.h"
 #include "mlcommon.h"
+#include <QAction>
 #include <QSettings>
 #include <QThread>
 #include <math.h>
@@ -186,6 +187,19 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
     connect(context, SIGNAL(currentEventChanged()), this, SLOT(slot_current_event_changed()));
 
     connect(&d->m_clips_view_thread, SIGNAL(finished()), this, SLOT(slot_clips_view_thread_finished()));
+
+    {
+        QAction* A = new QAction("<-Colors", this);
+        A->setProperty("action_type", "toolbar");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_shift_colors_left()));
+        this->addAction(A);
+    }
+    {
+        QAction* A = new QAction("Colors->", this);
+        A->setProperty("action_type", "toolbar");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_shift_colors_right()));
+        this->addAction(A);
+    }
 }
 
 MVClusterWidget::~MVClusterWidget()
@@ -357,6 +371,19 @@ void MVClusterWidget::slot_clips_view_thread_finished()
         return;
     }
     d->m_clips_view->setClips(d->m_clips_view_thread.clips);
+}
+
+void MVClusterWidget::slot_shift_colors_left(int step)
+{
+    int shift = this->mvContext()->option("cluster_color_index_shift", 0).toInt();
+    shift += step;
+    this->mvContext()->setOption("cluster_color_index_shift", shift);
+    this->recalculate();
+}
+
+void MVClusterWidget::slot_shift_colors_right()
+{
+    slot_shift_colors_left(-1);
 }
 
 void MVClusterWidgetPrivate::connect_view(MVClusterView* V)

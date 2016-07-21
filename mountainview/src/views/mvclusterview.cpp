@@ -99,6 +99,8 @@ MVClusterView::MVClusterView(MVContext* context, QWidget* parent)
 
     d->m_legend.setClusterColors(context->clusterColors());
 
+    context->onOptionChanged("cluster_color_index_shift", this, SLOT(slot_update_colors()));
+
     connect(&d->m_legend, SIGNAL(activeClusterNumbersChanged()), this, SLOT(slot_active_cluster_numbers_changed()));
     connect(&d->m_legend, SIGNAL(hoveredClusterNumberChanged()), this, SLOT(slot_hovered_cluster_number_changed()));
     connect(&d->m_legend, SIGNAL(repaintNeeded()), this, SLOT(update()));
@@ -288,6 +290,11 @@ void MVClusterView::slot_hovered_cluster_number_changed()
         d->m_grid_update_needed = true;
         update();
     }
+}
+
+void MVClusterView::slot_update_colors()
+{
+    d->m_legend.setClusterColors(d->m_context->clusterColors());
 }
 
 QRectF compute_centered_square(QRectF R)
