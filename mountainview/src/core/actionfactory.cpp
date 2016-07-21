@@ -31,6 +31,16 @@ void ActionFactory::addToToolbar(ActionType action, QWidget* container, QObject*
         tooltip = "Vertical zoom out. Alternatively, use the DOWN arrow.";
         icon = QIcon(":/images/vertical-zoom-out.png");
         break;
+    case ActionType::PanLeft:
+        name = "<-Pan";
+        tooltip = "Pan Left";
+        icon = QIcon();
+        break;
+    case ActionType::PanRight:
+        name = "Pan->";
+        tooltip = "Pan Right";
+        icon = QIcon();
+        break;
     default:
         break;
     }

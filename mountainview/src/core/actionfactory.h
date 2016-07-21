@@ -9,7 +9,9 @@ public:
         ZoomIn,
         ZoomOut,
         ZoomInVertical,
-        ZoomOutVertical
+        ZoomOutVertical,
+        PanLeft,
+        PanRight
     };
     static void addToToolbar(ActionType action, QWidget* container, const char* signalOrSlot)
     {

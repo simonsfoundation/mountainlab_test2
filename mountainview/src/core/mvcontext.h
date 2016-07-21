@@ -25,6 +25,7 @@ struct MVRange {
     bool operator==(const MVRange& other) const;
     MVRange operator+(double offset);
     MVRange operator*(double scale);
+    double range() const { return max - min; }
     double min, max;
 };
 

@@ -7,6 +7,7 @@
 #include "histogramview.h"
 #include <QWheelEvent>
 #include "mvmainwindow.h"
+#include "actionfactory.h"
 
 struct DiscrimHistogram {
     int k1, k2;
@@ -55,6 +56,11 @@ MVDiscrimHistViewSherpa::MVDiscrimHistViewSherpa(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
+
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, SLOT(slot_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, SLOT(slot_zoom_out()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::PanLeft, this, SLOT(slot_pan_left()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::PanRight, this, SLOT(slot_pan_right()));
 
     this->recalculate();
 }
@@ -176,17 +182,42 @@ void MVDiscrimHistViewSherpaComputer::compute()
 
 void MVDiscrimHistViewSherpa::wheelEvent(QWheelEvent* evt)
 {
-    double zoom_factor = 1;
     if (evt->delta() > 0) {
-        zoom_factor *= 1.2;
+        slot_zoom_in();
     }
     else if (evt->delta() < 0) {
-        zoom_factor /= 1.2;
+        slot_zoom_out();
     }
+}
+
+void MVDiscrimHistViewSherpa::slot_zoom_in(double zoom_factor)
+{
     QList<HistogramView*> views = this->histogramViews(); //inherited
     for (int i = 0; i < views.count(); i++) {
         views[i]->setXRange(views[i]->xRange() * (1.0 / zoom_factor));
     }
+}
+
+void MVDiscrimHistViewSherpa::slot_zoom_out(double factor)
+{
+    slot_zoom_in(1 / factor);
+}
+
+void MVDiscrimHistViewSherpa::slot_pan_left(double units)
+{
+    QList<HistogramView*> views = this->histogramViews(); //inherited
+    for (int i = 0; i < views.count(); i++) {
+        MVRange range = views[i]->xRange();
+        if (range.range()) {
+            range = range + units * range.range();
+        }
+        views[i]->setXRange(range);
+    }
+}
+
+void MVDiscrimHistViewSherpa::slot_pan_right(double units)
+{
+    slot_pan_left(-units);
 }
 
 void MVDiscrimHistViewSherpaPrivate::set_views()

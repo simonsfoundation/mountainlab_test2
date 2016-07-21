@@ -23,6 +23,10 @@ public:
 signals:
 
 private slots:
+    void slot_zoom_in(double factor = 1.2);
+    void slot_zoom_out(double factor = 1.2);
+    void slot_pan_left(double units = 0.1);
+    void slot_pan_right(double units = 0.1);
 
 private:
     MVDiscrimHistViewSherpaPrivate* d;
