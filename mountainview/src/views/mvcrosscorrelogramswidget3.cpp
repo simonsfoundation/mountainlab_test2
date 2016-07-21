@@ -46,6 +46,8 @@ public:
     MVCrossCorrelogramsWidget3* q;
     MVCrossCorrelogramsWidget3Computer m_computer;
     QList<Correlogram3> m_correlograms;
+    bool m_log_mode=false;
+    double m_logscale_min=10;
 
     QGridLayout* m_grid_layout;
 
@@ -63,6 +65,13 @@ MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
     this->recalculateOnOptionChanged("cc_max_dt_msec");
+
+    {
+        QAction* A = new QAction("Log scale", this);
+        A->setProperty("action_type", "toolbar");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_log_scale()));
+        this->addAction(A);
+    }
 
     this->recalculate();
 }
@@ -130,6 +139,7 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
         int k2 = d->m_correlograms[ii].k2;
         if ((mvContext()->clusterIsVisible(k1)) && (mvContext()->clusterIsVisible(k2))) {
             HistogramView* HV = new HistogramView;
+            HV->setLogMode(d->m_log_mode,d->m_logscale_min);
             HV->setData(d->m_correlograms[ii].data);
             HV->setColors(mvContext()->colors());
             HV->setBins(bin_min, bin_max, num_bins);
@@ -161,6 +171,15 @@ void MVCrossCorrelogramsWidget3::setOptions(CrossCorrelogramOptions3 opts)
         this->setPairMode(true);
     d->m_options = opts;
     this->recalculate();
+}
+
+void MVCrossCorrelogramsWidget3::slot_log_scale()
+{
+    d->m_log_mode=!d->m_log_mode;
+    QList<HistogramView *> views=this->histogramViews();
+    for (int i=0; i<views.count(); i++) {
+        views[i]->setLogMode(d->m_log_mode,d->m_logscale_min);
+    }
 }
 
 QVector<double> compute_cc_data3(const QVector<double>& times1_in, const QVector<double>& times2_in, int max_dt, bool exclude_matches)

@@ -22,8 +22,8 @@ public:
     virtual ~HistogramView();
 
     void setData(const QVector<double>& values); // The data to view
-    void setData(int N, double* values); // Alternative specification
     void setSecondData(const QVector<double>& values);
+    void setBins(const QVector<double> &bin_centers);
     void setBins(double bin_min, double bin_max, int num_bins); //Set evenly spaced bins
     void autoSetBins(int num_bins); // auto set evenly spaced bins based on range of data (call setData first)
     void setFillColor(const QColor& col); // The color for filling the histogram bars
@@ -31,6 +31,7 @@ public:
     void setTitle(const QString& title);
     void setCaption(const QString& caption);
     void setColors(const QMap<QString, QColor>& colors); // Controls background and highlighting colors. For consistent app look.
+    void setLogMode(bool val, double log_timescale);
 
     MVRange xRange() const;
     void setXRange(MVRange range);

@@ -42,7 +42,7 @@ public:
     void setOptions(CrossCorrelogramOptions3 opts);
 signals:
 private slots:
-
+    void slot_log_scale();
 private:
     MVCrossCorrelogramsWidget3Private* d;
 };
