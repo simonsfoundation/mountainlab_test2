@@ -173,6 +173,7 @@ public:
 
     /////////////////////////////////////////////////
     DiskReadMda currentTimeseries() const;
+    DiskReadMda timeseries(QString name) const;
     QString currentTimeseriesName() const;
     QStringList timeseriesNames() const;
     void addTimeseries(QString name, DiskReadMda timeseries);

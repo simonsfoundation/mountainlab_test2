@@ -32,6 +32,7 @@ private:
 
 class TabberFrameOverlay : public QWidget {
 public:
+    QString calculating_message;
 protected:
     void paintEvent(QPaintEvent* evt);
 };

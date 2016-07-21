@@ -150,6 +150,7 @@ void TabberFrame::slot_update_action_visibility()
 void TabberFrame::slot_update_calculating()
 {
     if (d->m_view->isCalculating()) {
+        if (d->m_view) d->m_overlay->calculating_message=d->m_view->calculatingMessage();
         d->m_stack->setCurrentWidget(d->m_overlay);
     }
     else {
@@ -207,5 +208,5 @@ void TabberFrameOverlay::paintEvent(QPaintEvent* evt)
     font.setPointSize(font.pointSize() + 8);
     painter.setFont(font);
     QRectF rect(0, 0, this->width(), this->height());
-    painter.drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, "Calculating...");
+    painter.drawText(rect, Qt::AlignCenter | Qt::AlignVCenter, calculating_message);
 }

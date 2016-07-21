@@ -257,7 +257,12 @@ QList<QColor> MVContext::clusterColors() const
 
 DiskReadMda MVContext::currentTimeseries() const
 {
-    return d->m_timeseries.value(d->m_current_timeseries_name).data;
+    return timeseries(d->m_current_timeseries_name);
+}
+
+DiskReadMda MVContext::timeseries(QString name) const
+{
+    return d->m_timeseries.value(name).data;
 }
 
 QString MVContext::currentTimeseriesName() const

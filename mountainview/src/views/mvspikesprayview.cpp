@@ -70,6 +70,7 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     d->m_context = context;
 
     recalculateOnOptionChanged("clip_size");
+    recalculateOnOptionChanged("timeseries_for_spikespray");
     recalculateOn(mvContext(), SIGNAL(clusterMergeChanged()));
     recalculateOn(mvContext(), SIGNAL(timeseriesNamesChanged()));
     recalculateOn(mvContext(), SIGNAL(filteredFiringsChanged()));
@@ -139,13 +140,18 @@ void MVSpikeSprayView::setLabelsToUse(const QSet<int>& labels_to_use)
 
 void MVSpikeSprayView::prepareCalculation()
 {
+    QString timeseries_name = d->m_context->option("timeseries_for_spikespray").toString();
+    if (timeseries_name.isEmpty()) timeseries_name=d->m_context->currentTimeseriesName();
+    this->setCalculatingMessage(QString("Calculating using %1...").arg(timeseries_name));
     d->m_labels_to_render.clear();
     d->m_computer.mlproxy_url = d->m_context->mlProxyUrl();
-    d->m_computer.timeseries = d->m_context->currentTimeseries();
+    d->m_computer.timeseries = d->m_context->timeseries(timeseries_name);
     d->m_computer.firings = d->m_context->firings();
     d->m_computer.filter = d->m_context->eventFilter();
     d->m_computer.labels_to_use = d->m_labels_to_use;
     d->m_computer.clip_size = d->m_context->option("clip_size").toInt();
+
+    d->m_amplitude_factor = 0;
 }
 
 void MVSpikeSprayView::runCalculation()
@@ -163,8 +169,9 @@ void MVSpikeSprayView::onCalculationFinished()
 
     if (!d->m_amplitude_factor) {
         double maxval = qMax(qAbs(d->m_clips_to_render.minimum()), qAbs(d->m_clips_to_render.maximum()));
-        if (maxval)
-            d->m_amplitude_factor = 1.5 / maxval;
+        if (maxval) {
+            d->set_amplitude_factor(1.5 / maxval);
+        }
     }
 
     for (long i = 0; i < d->m_panels.count(); i++) {
@@ -184,11 +191,9 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->key() == Qt::Key_Up) {
         this->slot_vertical_zoom_in();
-    }
-    else if (evt->key() == Qt::Key_Down) {
+    } else if (evt->key() == Qt::Key_Down) {
         this->slot_vertical_zoom_out();
-    }
-    else {
+    } else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -197,8 +202,7 @@ void MVSpikeSprayView::wheelEvent(QWheelEvent* evt)
 {
     if (evt->delta() > 0) {
         slot_zoom_in();
-    }
-    else if (evt->delta() < 0) {
+    } else if (evt->delta() < 0) {
         slot_zoom_out();
     }
 }
@@ -283,7 +287,8 @@ void MVSpikeSprayComputer::compute()
         QList<int> list = labels_to_use.toList();
         qSort(list);
         QString labels_str;
-        foreach (int x, list) {
+        foreach(int x, list)
+        {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -359,7 +364,7 @@ MVSpikeSprayFactory::MVSpikeSprayFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
+            this, SLOT(updateEnabled()));
     updateEnabled();
 }
 

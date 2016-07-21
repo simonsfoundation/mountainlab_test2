@@ -33,6 +33,8 @@ public:
     bool recalculateSuggested() const;
     void stopCalculation();
 
+    QString calculatingMessage() const;
+
 public slots:
     void recalculate();
     void neverSuggestRecalculate();
@@ -67,6 +69,7 @@ protected:
 
     void recalculateOnOptionChanged(QString name, bool suggest_only = true);
     void recalculateOn(QObject*, const char* signal, bool suggest_only = true);
+    void setCalculatingMessage(QString msg);
 
     void requestContextMenu(const QMimeData& md, const QPoint& pos);
     virtual void prepareMimeData(QMimeData& mimeData, const QPoint& pos);
