@@ -99,20 +99,24 @@ function h=efficient_hash(X)
 % idea is it's very unlikely X could change without changing the output h.
 % AHB 6/10/16
 tic
-s = '';
-s = [s, local_hash(sum(X,2))];   % channel sums
-s = [s, local_hash(X(:,1e3))];   % start of data
-s = [s, local_hash(X(:,end-1e3:end))];   % end of data
-[M N] = size(X);
-y = X(1:(10*M+1):end);      % stride so hits each channel every 10M t-pts
-off = 0;           % index offset
-big = 1e7;         % max size to send to local_hash (uses RAM)
-for i=1:ceil(numel(y)/big)        % hash y in contiguous chunks if needed
-  inds = off+1:min(numel(y),off+big);
-  s = [s, local_hash(y(inds))];
-  off = off+big;
-end
-h = DataHash(s,struct('Method','MD5'));
+if numel(X)>1e5    % only bother if large
+  s = '';
+  s = [s, local_hash(sum(X,2))];   % channel sums
+  s = [s, local_hash(X(:,1e3))];   % start of data
+  s = [s, local_hash(X(:,end-1e3:end))];   % end of data
+  [M N] = size(X);
+  y = X(1:(10*M+1):end);      % stride so hits each channel every 10M t-pts
+  off = 0;           % index offset
+  big = 1e7;         % max size to send to local_hash (uses RAM)
+  for i=1:ceil(numel(y)/big)        % hash y in contiguous chunks if needed
+    inds = off+1:min(numel(y),off+big);
+    s = [s, local_hash(y(inds))];
+    off = off+big;
+  end
+  h = DataHash(s,struct('Method','MD5'));
+else
+  h = DataHash(X,struct('Method','MD5'));
+end  
 elapsed=toc;
 if (elapsed>0.5)
 	fprintf('Time to compute the md5 sum: %.2f seconds\n',elapsed);
