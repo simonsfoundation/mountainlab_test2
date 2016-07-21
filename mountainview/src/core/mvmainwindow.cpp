@@ -92,9 +92,9 @@ public:
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
 
-    MVCrossCorrelogramsWidget3* open_auto_correlograms();
-    MVCrossCorrelogramsWidget3* open_cross_correlograms(int k);
-    MVCrossCorrelogramsWidget3* open_matrix_of_cross_correlograms();
+    //MVCrossCorrelogramsWidget3* open_auto_correlograms();
+    //MVCrossCorrelogramsWidget3* open_cross_correlograms(int k);
+    //MVCrossCorrelogramsWidget3* open_matrix_of_cross_correlograms();
 
     TabberTabWidget* tab_widget_of(QWidget* W);
 };
@@ -499,6 +499,7 @@ void MVMainWindowPrivate::add_tab(MVAbstractView* W, QString label)
     m_tabber->addWidget(m_tabber->currentContainerName(), label, W);
 }
 
+/*
 MVCrossCorrelogramsWidget3* MVMainWindowPrivate::open_auto_correlograms()
 {
     MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(m_context);
@@ -536,6 +537,7 @@ MVCrossCorrelogramsWidget3* MVMainWindowPrivate::open_matrix_of_cross_correlogra
     add_tab(X, QString("CC Matrix"));
     return X;
 }
+*/
 
 TabberTabWidget* MVMainWindowPrivate::tab_widget_of(QWidget* W)
 {

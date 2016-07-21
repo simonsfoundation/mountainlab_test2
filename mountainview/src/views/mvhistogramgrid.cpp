@@ -44,7 +44,6 @@ public:
     HorizontalScaleAxis* m_horizontal_scale_axis;
     bool m_force_square_matrix = false;
 
-    QList<QWidget*> m_child_widgets;
     bool m_pair_mode = true;
 
     void do_highlighting_and_captions();
@@ -89,7 +88,6 @@ MVHistogramGrid::MVHistogramGrid(MVContext* context)
     GL->setHorizontalSpacing(12);
     GL->setVerticalSpacing(0);
     GL->setMargin(0);
-    this->setLayout(GL);
 
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, SLOT(slot_zoom_in()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, SLOT(slot_zoom_out()));
@@ -198,9 +196,7 @@ void MVHistogramGrid::setHorizontalScaleAxis(HorizontalScaleAxisData X)
 
 void MVHistogramGrid::setHistogramViews(const QList<HistogramView*> views)
 {
-    qDeleteAll(d->m_child_widgets);
     qDeleteAll(d->m_histogram_views);
-    d->m_child_widgets.clear();
     d->m_histogram_views.clear();
     d->m_histogram_views = views;
 
@@ -449,7 +445,6 @@ void MVHistogramGridPrivate::setup_grid(int num_cols)
     if (m_horizontal_scale_axis_data.use_it) {
         HorizontalScaleAxis* HSA = m_horizontal_scale_axis;
         HSA->m_data = m_horizontal_scale_axis_data;
-        m_child_widgets << HSA;
         GL->addWidget(HSA, num_rows, 0);
     }
 }

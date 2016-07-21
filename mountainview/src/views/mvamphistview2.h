@@ -21,6 +21,10 @@ public:
 signals:
 
 private slots:
+    void slot_zoom_in_horizontal(double factor = 1.2);
+    void slot_zoom_out_horizontal(double factor = 1.2);
+    void slot_pan_left(double units = 0.1);
+    void slot_pan_right(double units = 0.1);
 
 private:
     MVAmpHistView2Private* d;

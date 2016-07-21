@@ -5,8 +5,9 @@
 #include "mlcommon.h"
 #include "histogramview.h"
 #include <QWheelEvent>
+#include "actionfactory.h"
 
-/// TODO zoom in/out icons
+/// TODO: (MEDIUM) vertical zoom on all histograms
 
 struct AmpHistogram {
     int k;
@@ -45,6 +46,11 @@ MVAmpHistView2::MVAmpHistView2(MVContext* context)
 
     this->setPairMode(false);
 
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInHorizontal, this, SLOT(slot_zoom_in_horizontal()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutHorizontal, this, SLOT(slot_zoom_out_horizontal()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::PanLeft, this, SLOT(slot_pan_left()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::PanRight, this, SLOT(slot_pan_right()));
+
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
@@ -69,6 +75,36 @@ void MVAmpHistView2::prepareCalculation()
 void MVAmpHistView2::runCalculation()
 {
     d->m_computer.compute();
+}
+
+void MVAmpHistView2::slot_zoom_in_horizontal(double zoom_factor)
+{
+    QList<HistogramView*> views = this->histogramViews(); //inherited
+    for (int i = 0; i < views.count(); i++) {
+        views[i]->setXRange(views[i]->xRange() * (1.0 / zoom_factor));
+    }
+}
+
+void MVAmpHistView2::slot_zoom_out_horizontal(double factor)
+{
+    slot_zoom_in_horizontal(1 / factor);
+}
+
+void MVAmpHistView2::slot_pan_left(double units)
+{
+    QList<HistogramView*> views = this->histogramViews(); //inherited
+    for (int i = 0; i < views.count(); i++) {
+        MVRange range = views[i]->xRange();
+        if (range.range()) {
+            range = range + units * range.range();
+        }
+        views[i]->setXRange(range);
+    }
+}
+
+void MVAmpHistView2::slot_pan_right(double units)
+{
+    slot_pan_left(-units);
 }
 
 double compute_min2(const QList<AmpHistogram>& data0)
@@ -130,9 +166,10 @@ void MVAmpHistView2Computer::compute()
         this->histograms << HH;
     }
 
+    int row=3; //for amplitudes
     for (long n = 0; n < L; n++) {
         int label0 = (int)firings.value(2, n);
-        double amp0 = firings.value(3, n);
+        double amp0 = firings.value(row, n);
         if ((label0 >= 1) && (label0 <= K)) {
             this->histograms[label0 - 1].data << amp0;
         }
@@ -141,6 +178,8 @@ void MVAmpHistView2Computer::compute()
 
 void MVAmpHistView2::wheelEvent(QWheelEvent* evt)
 {
+    Q_UNUSED(evt)
+    /*
     double zoom_factor = 1;
     if (evt->delta() > 0) {
         zoom_factor *= 1.2;
@@ -152,6 +191,7 @@ void MVAmpHistView2::wheelEvent(QWheelEvent* evt)
     for (int i = 0; i < views.count(); i++) {
         views[i]->setXRange(views[i]->xRange() * (1.0 / zoom_factor));
     }
+    */
 }
 
 void MVAmpHistView2Private::set_views()
@@ -206,7 +246,6 @@ MVAbstractView* MVAmplitudeHistogramsFactory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
     MVAmpHistView2* X = new MVAmpHistView2(mvContext());
-    QObject::connect(X, SIGNAL(histogramActivated()), this, SLOT(slot_amplitude_histogram_activated()));
     return X;
 }
 
@@ -217,3 +256,4 @@ void MVAmplitudeHistogramsFactory::slot_amplitude_histogram_activated()
         return;
     //not sure what to do here
 }
+
