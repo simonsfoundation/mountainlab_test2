@@ -48,6 +48,8 @@ MVDiscrimHistView::MVDiscrimHistView(MVContext* context)
     d = new MVDiscrimHistViewPrivate;
     d->q = this;
 
+    this->setForceSquareMatrix(true);
+
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);

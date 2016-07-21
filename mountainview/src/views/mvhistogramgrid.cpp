@@ -18,23 +18,9 @@
 #include <math.h>
 #include "mlcommon.h"
 #include "mvmisc.h"
-
-class MVHistogramGridPrivate {
-public:
-    MVHistogramGrid* q;
-
-    QGridLayout* m_grid_layout;
-    QList<HistogramView*> m_histogram_views;
-    int m_num_columns;
-    HorizontalScaleAxisData m_horizontal_scale_axis_data;
-
-    QList<QWidget*> m_child_widgets;
-    bool m_pair_mode = true;
-
-    void do_highlighting_and_captions();
-    int find_view_index_for_k(int k);
-    void shift_select_clusters_between(int kA, int kB);
-};
+#include <QScrollArea>
+#include <QScrollBar>
+#include "actionfactory.h"
 
 class HorizontalScaleAxis : public QWidget {
 public:
@@ -45,12 +31,36 @@ protected:
     void paintEvent(QPaintEvent* evt);
 };
 
+class MVHistogramGridPrivate {
+public:
+    MVHistogramGrid* q;
+
+    QWidget* m_grid_widget;
+    QGridLayout* m_grid_layout;
+    QList<HistogramView*> m_histogram_views;
+    double m_preferred_hist_width = 10; //set to a minimum (zoomed way out)
+    HorizontalScaleAxisData m_horizontal_scale_axis_data;
+    HorizontalScaleAxis* m_horizontal_scale_axis;
+    bool m_force_square_matrix = false;
+
+    QList<QWidget*> m_child_widgets;
+    bool m_pair_mode = true;
+
+    void do_highlighting_and_captions();
+    int find_view_index_for_k(int k);
+    void shift_select_clusters_between(int kA, int kB);
+    void setup_grid(int num_cols);
+    void on_resize();
+    void get_num_rows_cols_and_height_for_preferred_hist_width(int& num_rows, int& num_cols, int& height, double preferred_width);
+};
+
 MVHistogramGrid::MVHistogramGrid(MVContext* context)
     : MVAbstractView(context)
 {
     d = new MVHistogramGridPrivate;
     d->q = this;
-    d->m_num_columns = -1;
+
+    d->m_horizontal_scale_axis = new HorizontalScaleAxis;
 
     QObject::connect(context, SIGNAL(clusterAttributesChanged(int)), this, SLOT(slot_cluster_attributes_changed(int)));
     QObject::connect(context, SIGNAL(clusterPairAttributesChanged(ClusterPair)), this, SLOT(slot_cluster_pair_attributes_changed(ClusterPair)));
@@ -58,12 +68,29 @@ MVHistogramGrid::MVHistogramGrid(MVContext* context)
     QObject::connect(context, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
     QObject::connect(context, SIGNAL(selectedClusterPairsChanged()), this, SLOT(slot_update_highlighting()));
 
+    QHBoxLayout* layout = new QHBoxLayout;
+    layout->setSpacing(0);
+    layout->setMargin(0);
+    QScrollArea* SA = new QScrollArea;
+    SA->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //SA->setWidgetResizable(true);
+    layout->addWidget(SA);
+    this->setLayout(layout);
+
+    QWidget* GW = new QWidget;
     QGridLayout* GL = new QGridLayout;
+    GW->setLayout(GL);
+    SA->setWidget(GW);
+    d->m_grid_layout = GL;
+    d->m_grid_widget = GW;
+
     GL->setHorizontalSpacing(12);
     GL->setVerticalSpacing(0);
     GL->setMargin(0);
     this->setLayout(GL);
-    d->m_grid_layout = GL;
+
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, SLOT(slot_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, SLOT(slot_zoom_out()));
 
     {
         QAction* a = new QAction("Export image", this);
@@ -156,6 +183,12 @@ void MVHistogramGrid::keyPressEvent(QKeyEvent* evt)
     }
 }
 
+void MVHistogramGrid::resizeEvent(QResizeEvent* evt)
+{
+    MVAbstractView::resizeEvent(evt);
+    d->on_resize();
+}
+
 void MVHistogramGrid::setHorizontalScaleAxis(HorizontalScaleAxisData X)
 {
     d->m_horizontal_scale_axis_data = X;
@@ -169,34 +202,14 @@ void MVHistogramGrid::setHistogramViews(const QList<HistogramView*> views)
     d->m_histogram_views.clear();
     d->m_histogram_views = views;
 
-    int NUM = views.count();
-    int num_rows = (int)sqrt(NUM);
-    if (num_rows < 1)
-        num_rows = 1;
-    int num_cols = (NUM + num_rows - 1) / num_rows;
-    d->m_num_columns = num_cols;
-
-    QGridLayout* GL = d->m_grid_layout;
     for (int jj = 0; jj < views.count(); jj++) {
         HistogramView* HV = views[jj];
-        int row0 = (jj) / num_cols;
-        int col0 = (jj) % num_cols;
-        GL->addWidget(HV, row0, col0);
-        HV->setProperty("row", row0);
-        HV->setProperty("col", col0);
-        HV->setProperty("view_index", jj);
         connect(HV, SIGNAL(clicked(Qt::KeyboardModifiers)), this, SLOT(slot_histogram_view_clicked(Qt::KeyboardModifiers)));
         //connect(HV, SIGNAL(activated()), this, SLOT(slot_histogram_view_activated()));
         connect(HV, SIGNAL(activated(QPoint)), this, SLOT(slot_context_menu(QPoint)));
         connect(HV, SIGNAL(signalExportHistogramMatrixImage()), this, SLOT(slot_export_image()));
     }
-
-    if (d->m_horizontal_scale_axis_data.use_it) {
-        HorizontalScaleAxis* HSA = new HorizontalScaleAxis;
-        HSA->m_data = d->m_horizontal_scale_axis_data;
-        d->m_child_widgets << HSA;
-        GL->addWidget(HSA, num_rows, 0);
-    }
+    d->on_resize();
 
     d->do_highlighting_and_captions();
 }
@@ -240,6 +253,12 @@ void MVHistogramGrid::setPairMode(bool val)
 bool MVHistogramGrid::pairMode() const
 {
     return d->m_pair_mode;
+}
+
+void MVHistogramGrid::setForceSquareMatrix(bool val)
+{
+    d->m_force_square_matrix = val;
+    d->on_resize();
 }
 
 void MVHistogramGrid::slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers)
@@ -303,6 +322,35 @@ void MVHistogramGrid::slot_context_menu(const QPoint& pt)
     QCoreApplication::sendEvent(this, &e);
 }
 
+void MVHistogramGrid::slot_zoom_in(double factor)
+{
+    bool done = false;
+    double preferred_hist_width = d->m_preferred_hist_width;
+    int iteration_count = 0;
+    while (!done) {
+        int num_rows1, num_cols1, height1, num_rows2, num_cols2, height2;
+        d->get_num_rows_cols_and_height_for_preferred_hist_width(num_rows1, num_cols1, height1, preferred_hist_width);
+        preferred_hist_width = qMax(1.0, preferred_hist_width * factor);
+        d->get_num_rows_cols_and_height_for_preferred_hist_width(num_rows2, num_cols2, height2, preferred_hist_width);
+        bool something_changed = (num_rows1 != num_rows2);
+        if (something_changed)
+            done = true;
+        iteration_count++;
+        if (iteration_count > 1000) {
+            preferred_hist_width = d->m_preferred_hist_width;
+            done = true;
+        }
+        qDebug() << "num_rows/num_cols/height" << num_rows2 << num_cols2 << height2;
+    }
+    d->m_preferred_hist_width = preferred_hist_width;
+    d->on_resize();
+}
+
+void MVHistogramGrid::slot_zoom_out(double factor)
+{
+    slot_zoom_in(1 / factor);
+}
+
 void MVHistogramGridPrivate::do_highlighting_and_captions()
 {
     QList<int> selected_clusters = q->mvContext()->selectedClusters();
@@ -361,6 +409,88 @@ void MVHistogramGridPrivate::shift_select_clusters_between(int kA, int kB)
             selected_clusters.insert(m_histogram_views[ind2]->property("k2").toInt());
         }
         q->mvContext()->setSelectedClusters(QList<int>::fromSet(selected_clusters));
+    }
+}
+
+void MVHistogramGridPrivate::setup_grid(int num_cols)
+{
+    QGridLayout* GL = m_grid_layout;
+    for (int i = GL->count() - 1; i >= 0; i--) {
+        GL->takeAt(i);
+    }
+    int num_rows = 0;
+    for (int jj = 0; jj < m_histogram_views.count(); jj++) {
+        HistogramView* HV = m_histogram_views[jj];
+        int row0 = (jj) / num_cols;
+        int col0 = (jj) % num_cols;
+        GL->addWidget(HV, row0, col0);
+        HV->setProperty("row", row0);
+        HV->setProperty("col", col0);
+        HV->setProperty("view_index", jj);
+        num_rows = qMax(num_rows, row0 + 1);
+    }
+
+    if (m_horizontal_scale_axis_data.use_it) {
+        HorizontalScaleAxis* HSA = m_horizontal_scale_axis;
+        HSA->m_data = m_horizontal_scale_axis_data;
+        m_child_widgets << HSA;
+        GL->addWidget(HSA, num_rows, 0);
+    }
+}
+
+void MVHistogramGridPrivate::on_resize()
+{
+    int W = q->width();
+    int scroll_bar_width = 30; //how to determine?
+    m_grid_widget->setFixedWidth(W - scroll_bar_width);
+
+    if (!m_histogram_views.isEmpty()) {
+        int num_rows, num_cols, height;
+        get_num_rows_cols_and_height_for_preferred_hist_width(num_rows, num_cols, height, m_preferred_hist_width);
+        int height_per_row = height / num_rows;
+        if (height_per_row > q->height())
+            height = num_rows * q->height();
+        m_grid_widget->setFixedHeight(height);
+        if (m_force_square_matrix) {
+            m_grid_widget->setFixedHeight(q->height() - 5);
+        }
+        setup_grid(num_cols);
+    }
+}
+
+void MVHistogramGridPrivate::get_num_rows_cols_and_height_for_preferred_hist_width(int& num_rows, int& num_cols, int& height, double preferred_hist_width)
+{
+    int W = q->width();
+    int H = q->height();
+    double preferred_aspect_ratio = 1.618; //golden ratio
+    if (m_force_square_matrix) {
+        preferred_aspect_ratio = W * 1.0 / H;
+    }
+
+    if (m_force_square_matrix) {
+        int NUM = m_histogram_views.count();
+        num_rows = (int)sqrt(NUM);
+        if (num_rows < 1)
+            num_rows = 1;
+        num_cols = (NUM + num_rows - 1) / num_rows;
+        double hist_width = W / num_cols;
+        double hist_height = hist_width / preferred_aspect_ratio;
+        height = hist_height * num_rows;
+    }
+    else {
+        bool done = false;
+        while (!done) {
+            num_cols = qMax(1.0, W / preferred_hist_width);
+            int hist_width = W / num_cols;
+            int hist_height = hist_width / preferred_aspect_ratio;
+            num_rows = qMax(1, (m_histogram_views.count() + num_cols - 1) / num_cols);
+            height = num_rows * hist_height;
+            if (height < H - hist_height * 0.5) {
+                preferred_hist_width += 1;
+            }
+            else
+                done = true;
+        }
     }
 }
 

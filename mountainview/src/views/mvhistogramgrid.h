@@ -27,6 +27,7 @@ public:
 
     void paintEvent(QPaintEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
+    void resizeEvent(QResizeEvent* evt);
 signals:
 
 protected:
@@ -36,6 +37,7 @@ protected:
     void prepareMimeData(QMimeData& mimeData, const QPoint& pos);
     void setPairMode(bool val);
     bool pairMode() const;
+    void setForceSquareMatrix(bool val);
 private slots:
     void slot_histogram_view_clicked(Qt::KeyboardModifiers modifiers);
     void slot_export_image();
@@ -43,6 +45,8 @@ private slots:
     void slot_cluster_pair_attributes_changed(ClusterPair pair);
     void slot_update_highlighting();
     void slot_context_menu(const QPoint& pt);
+    void slot_zoom_in(double factor = 1.2);
+    void slot_zoom_out(double factor = 1.2);
 
 private:
     MVHistogramGridPrivate* d;

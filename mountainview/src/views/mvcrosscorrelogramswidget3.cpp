@@ -153,8 +153,10 @@ void MVCrossCorrelogramsWidget3::setOptions(CrossCorrelogramOptions3 opts)
         this->setPairMode(false);
     else if (opts.mode == Cross_Correlograms3)
         this->setPairMode(true);
-    else if (opts.mode == Matrix_Of_Cross_Correlograms3)
+    else if (opts.mode == Matrix_Of_Cross_Correlograms3) {
         this->setPairMode(true);
+        this->setForceSquareMatrix(true);
+    }
     else if (opts.mode == Selected_Cross_Correlograms3)
         this->setPairMode(true);
     d->m_options = opts;
