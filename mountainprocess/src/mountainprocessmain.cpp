@@ -73,7 +73,8 @@ int main(int argc, char* argv[])
     QJsonParseError parse_error;
     QJsonObject config = QJsonDocument::fromJson(TextFile::read(config_fname).toLatin1(), &parse_error).object();
     if (parse_error.error != QJsonParseError::NoError) {
-        qWarning() << "Unable to parse confuration file (but maybe not a problem on local machine -- trying example file): " + config_fname;
+        //qWarning() << "Unable to parse confuration file (but maybe not a problem on local machine -- trying example file): " + config_fname;
+        qWarning() << "---";
         config = QJsonDocument::fromJson(TextFile::read(config_fname + ".example").toLatin1(), &parse_error).object();
         if (parse_error.error != QJsonParseError::NoError) {
             qWarning() << "Unable to parse confuration file: " + config_fname + ".example";
@@ -349,6 +350,24 @@ bool initialize_process_manager(QString config_fname, QJsonObject config)
     return true;
 }
 
+QString remove_comments_in_line(QString line) {
+    int ind=line.indexOf("//");
+    if (ind>=0) {
+        return line.mid(0,ind);
+    }
+    else {
+        return line;
+    }
+}
+
+QString remove_comments(QString json) {
+    QStringList lines=json.split("\n");
+    for (int i=0; i<lines.count(); i++) {
+        lines[i]=remove_comments_in_line(lines[i]);
+    }
+    return lines.join("\n");
+}
+
 bool load_parameter_file(QVariantMap& params, const QString& fname)
 {
     QString json = TextFile::read(fname);
@@ -356,6 +375,7 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
         qCritical() << "Non-existent or empty parameter file: " + fname;
         return false;
     }
+    json=remove_comments(json);
     QJsonParseError error;
     /// Witold I use toLatin1() everywhere. Is this the appropriate way to convert to byte array?
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
