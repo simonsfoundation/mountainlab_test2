@@ -183,6 +183,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
     this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
     this->recalculateOnOptionChanged("clip_size");
+    onOptionChanged("cluster_color_index_shift",this,SLOT(onCalculationFinished()));
 
     connect(context, SIGNAL(currentEventChanged()), this, SLOT(slot_current_event_changed()));
 
@@ -378,7 +379,6 @@ void MVClusterWidget::slot_shift_colors_left(int step)
     int shift = this->mvContext()->option("cluster_color_index_shift", 0).toInt();
     shift += step;
     this->mvContext()->setOption("cluster_color_index_shift", shift);
-    this->recalculate();
 }
 
 void MVClusterWidget::slot_shift_colors_right()

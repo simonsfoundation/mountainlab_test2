@@ -124,6 +124,11 @@ void MVAbstractView::recalculateOn(QObject* obj, const char* signal, bool sugges
         QObject::connect(obj, signal, this, SLOT(recalculate()));
 }
 
+void MVAbstractView::onOptionChanged(QString name, QObject *receiver, const char *signal_or_slot)
+{
+    mvContext()->onOptionChanged(name,receiver,signal_or_slot);
+}
+
 void MVAbstractView::setCalculatingMessage(QString msg)
 {
     d->m_calculating_message=msg;

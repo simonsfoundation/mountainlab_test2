@@ -74,6 +74,7 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     recalculateOn(mvContext(), SIGNAL(clusterMergeChanged()));
     recalculateOn(mvContext(), SIGNAL(timeseriesNamesChanged()));
     recalculateOn(mvContext(), SIGNAL(filteredFiringsChanged()));
+    onOptionChanged("cluster_color_index_shift",this,SLOT(onCalculationFinished()));
 
     QWidget* panel_widget = new QWidget;
     d->m_panel_layout = new QHBoxLayout;
@@ -232,7 +233,7 @@ void MVSpikeSprayView::slot_shift_colors_left(int step)
     int shift = this->mvContext()->option("cluster_color_index_shift", 0).toInt();
     shift += step;
     this->mvContext()->setOption("cluster_color_index_shift", shift);
-    this->recalculate();
+    //this->onCalculationFinished();
 }
 
 void MVSpikeSprayView::slot_shift_colors_right()
