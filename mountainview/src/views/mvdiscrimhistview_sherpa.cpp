@@ -244,7 +244,7 @@ void MVDiscrimHistViewSherpaPrivate::set_views()
             HV->setSecondData(m_histograms[ii].data2);
             HV->setColors(q->mvContext()->colors());
             //HV->autoSetBins(50);
-            HV->setBins(bin_min, bin_max, num_bins);
+            HV->setBinInfo(bin_min, bin_max, num_bins);
             QString title0 = QString("%1/%2").arg(k1).arg(k2);
             HV->setTitle(title0);
             //HV->setDrawVerticalAxisAtZero(true);

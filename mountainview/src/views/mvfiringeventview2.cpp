@@ -108,7 +108,7 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
     d->m_paint_layer_stack.addLayer(d->m_legend);
     connect(&d->m_paint_layer_stack, SIGNAL(repaintNeeded()), this, SLOT(update()));
 
-    onOptionChanged("cluster_color_index_shift",this,SLOT(onCalculationFinished()));
+    onOptionChanged("cluster_color_index_shift", this, SLOT(onCalculationFinished()));
 
     d->m_amplitude_range = MVRange(0, 1);
     this->setMarkersVisible(false);

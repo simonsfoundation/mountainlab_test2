@@ -74,7 +74,7 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     recalculateOn(mvContext(), SIGNAL(clusterMergeChanged()));
     recalculateOn(mvContext(), SIGNAL(timeseriesNamesChanged()));
     recalculateOn(mvContext(), SIGNAL(filteredFiringsChanged()));
-    onOptionChanged("cluster_color_index_shift",this,SLOT(onCalculationFinished()));
+    onOptionChanged("cluster_color_index_shift", this, SLOT(onCalculationFinished()));
 
     QWidget* panel_widget = new QWidget;
     d->m_panel_layout = new QHBoxLayout;
@@ -142,7 +142,8 @@ void MVSpikeSprayView::setLabelsToUse(const QSet<int>& labels_to_use)
 void MVSpikeSprayView::prepareCalculation()
 {
     QString timeseries_name = d->m_context->option("timeseries_for_spikespray").toString();
-    if (timeseries_name.isEmpty()) timeseries_name=d->m_context->currentTimeseriesName();
+    if (timeseries_name.isEmpty())
+        timeseries_name = d->m_context->currentTimeseriesName();
     this->setCalculatingMessage(QString("Calculating using %1...").arg(timeseries_name));
     d->m_labels_to_render.clear();
     d->m_computer.mlproxy_url = d->m_context->mlProxyUrl();
@@ -192,9 +193,11 @@ void MVSpikeSprayView::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->key() == Qt::Key_Up) {
         this->slot_vertical_zoom_in();
-    } else if (evt->key() == Qt::Key_Down) {
+    }
+    else if (evt->key() == Qt::Key_Down) {
         this->slot_vertical_zoom_out();
-    } else {
+    }
+    else {
         QWidget::keyPressEvent(evt);
     }
 }
@@ -203,7 +206,8 @@ void MVSpikeSprayView::wheelEvent(QWheelEvent* evt)
 {
     if (evt->delta() > 0) {
         slot_zoom_in();
-    } else if (evt->delta() < 0) {
+    }
+    else if (evt->delta() < 0) {
         slot_zoom_out();
     }
 }
@@ -288,8 +292,7 @@ void MVSpikeSprayComputer::compute()
         QList<int> list = labels_to_use.toList();
         qSort(list);
         QString labels_str;
-        foreach(int x, list)
-        {
+        foreach (int x, list) {
             if (!labels_str.isEmpty())
                 labels_str += ",";
             labels_str += QString("%1").arg(x);
@@ -365,7 +368,7 @@ MVSpikeSprayFactory::MVSpikeSprayFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
     connect(context, SIGNAL(selectedClustersChanged()),
-            this, SLOT(updateEnabled()));
+        this, SLOT(updateEnabled()));
     updateEnabled();
 }
 

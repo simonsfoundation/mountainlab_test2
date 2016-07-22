@@ -51,16 +51,17 @@ QString MVPrefsControl::title() const
 
 void MVPrefsControl::updateContext()
 {
-    QString ts4ss=this->controlValue("timeseries_for_spikespray").toString();
-    if (ts4ss=="Default timeseries") ts4ss="";
-    mvContext()->setOption("timeseries_for_spikespray",ts4ss);
+    QString ts4ss = this->controlValue("timeseries_for_spikespray").toString();
+    if (ts4ss == "Default timeseries")
+        ts4ss = "";
+    mvContext()->setOption("timeseries_for_spikespray", ts4ss);
     mvContext()->setOption("amp_thresh_display", this->controlValue("amp_thresh_display").toDouble());
 }
 
 void MVPrefsControl::updateControls()
 {
-    QStringList choices=mvContext()->timeseriesNames();
-    choices.insert(0,"Default timeseries");
+    QStringList choices = mvContext()->timeseriesNames();
+    choices.insert(0, "Default timeseries");
     this->setChoices("timeseries_for_spikespray", choices);
     this->setControlValue("amp_thresh_display", mvContext()->option("amp_thresh_display").toDouble());
 }

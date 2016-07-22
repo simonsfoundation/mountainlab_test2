@@ -28,7 +28,7 @@ public:
     bool m_calculation_scheduled;
     bool m_recalculate_suggested;
     bool m_never_suggest_recalculate = false;
-    QString m_calculating_message="Calculating...";
+    QString m_calculating_message = "Calculating...";
 
     CalculationThread m_calculation_thread;
 
@@ -124,14 +124,14 @@ void MVAbstractView::recalculateOn(QObject* obj, const char* signal, bool sugges
         QObject::connect(obj, signal, this, SLOT(recalculate()));
 }
 
-void MVAbstractView::onOptionChanged(QString name, QObject *receiver, const char *signal_or_slot)
+void MVAbstractView::onOptionChanged(QString name, QObject* receiver, const char* signal_or_slot)
 {
-    mvContext()->onOptionChanged(name,receiver,signal_or_slot);
+    mvContext()->onOptionChanged(name, receiver, signal_or_slot);
 }
 
 void MVAbstractView::setCalculatingMessage(QString msg)
 {
-    d->m_calculating_message=msg;
+    d->m_calculating_message = msg;
 }
 
 void MVAbstractView::requestContextMenu(const QMimeData& md, const QPoint& pos)

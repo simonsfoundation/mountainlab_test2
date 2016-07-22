@@ -55,7 +55,7 @@ MVAmpHistView2::MVAmpHistView2(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
-    this->recalculateOnOptionChanged("amp_thresh_display",false);
+    this->recalculateOnOptionChanged("amp_thresh_display", false);
 
     this->recalculate();
 }
@@ -167,7 +167,7 @@ void MVAmpHistView2Computer::compute()
         this->histograms << HH;
     }
 
-    int row=3; //for amplitudes
+    int row = 3; //for amplitudes
     for (long n = 0; n < L; n++) {
         int label0 = (int)firings.value(2, n);
         double amp0 = firings.value(row, n);
@@ -203,7 +203,7 @@ void MVAmpHistView2Private::set_views()
 
     int num_bins = 200; //how to choose this?
 
-    double amp_thresh=q->mvContext()->option("amp_thresh_display",0).toDouble();
+    double amp_thresh = q->mvContext()->option("amp_thresh_display", 0).toDouble();
 
     QList<HistogramView*> views;
     for (int ii = 0; ii < m_histograms.count(); ii++) {
@@ -213,11 +213,12 @@ void MVAmpHistView2Private::set_views()
             HV->setData(m_histograms[ii].data);
             HV->setColors(q->mvContext()->colors());
             //HV->autoSetBins(50);
-            HV->setBins(bin_min, bin_max, num_bins);
+            HV->setBinInfo(bin_min, bin_max, num_bins);
             HV->setDrawVerticalAxisAtZero(true);
             if (amp_thresh) {
-                HV->addVerticalLine(-amp_thresh);
-                HV->addVerticalLine(amp_thresh);
+                QList<double> vals;
+                vals << -amp_thresh << amp_thresh;
+                HV->setVerticalLines(vals);
             }
             HV->setXRange(MVRange(-max00, max00));
             HV->autoCenterXRange();
@@ -263,4 +264,3 @@ void MVAmplitudeHistogramsFactory::slot_amplitude_histogram_activated()
         return;
     //not sure what to do here
 }
-
