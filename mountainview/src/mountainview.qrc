@@ -26,6 +26,5 @@
         <file>images/horizontal-zoom-in.png</file>
         <file>images/right.png</file>
         <file>images/left.png</file>
-        <file>images/log.png</file>
     </qresource>
 </RCC>
