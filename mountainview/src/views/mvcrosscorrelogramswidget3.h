@@ -45,6 +45,7 @@ public:
 signals:
 private slots:
     void slot_log_time_scale();
+    void slot_warning();
 
 private:
     MVCrossCorrelogramsWidget3Private* d;

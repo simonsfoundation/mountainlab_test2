@@ -27,23 +27,10 @@ MVGeneralControl::MVGeneralControl(MVContext* context, MVMainWindow* mw)
     int row = 0;
     {
         QWidget* X = this->createChoicesControl("timeseries");
+        X->setToolTip("The default timeseries used for all the views");
         connect(context, SIGNAL(timeseriesNamesChanged()), this, SLOT(updateControls()));
         connect(context, SIGNAL(currentTimeseriesChanged()), this, SLOT(updateControls()));
         glayout->addWidget(new QLabel("Timeseries:"), row, 0);
-        glayout->addWidget(X, row, 1);
-        row++;
-    }
-    {
-        QWidget* X = this->createIntControl("clip_size");
-        context->onOptionChanged("clip_size", this, SLOT(updateControls()));
-        glayout->addWidget(new QLabel("Clip size:"), row, 0);
-        glayout->addWidget(X, row, 1);
-        row++;
-    }
-    {
-        QWidget* X = this->createDoubleControl("cc_max_dt_msec");
-        context->onOptionChanged("cc_max_dt_msec", this, SLOT(updateControls()));
-        glayout->addWidget(new QLabel("Max. dt (ms):"), row, 0);
         glayout->addWidget(X, row, 1);
         row++;
     }
@@ -65,14 +52,10 @@ QString MVGeneralControl::title() const
 void MVGeneralControl::updateContext()
 {
     mvContext()->setCurrentTimeseriesName(this->controlValue("timeseries").toString());
-    mvContext()->setOption("clip_size", this->controlValue("clip_size").toInt());
-    mvContext()->setOption("cc_max_dt_msec", this->controlValue("cc_max_dt_msec").toDouble());
 }
 
 void MVGeneralControl::updateControls()
 {
     this->setChoices("timeseries", mvContext()->timeseriesNames());
     this->setControlValue("timeseries", mvContext()->currentTimeseriesName());
-    this->setControlValue("clip_size", mvContext()->option("clip_size").toInt());
-    this->setControlValue("cc_max_dt_msec", mvContext()->option("cc_max_dt_msec").toDouble());
 }
