@@ -21,11 +21,15 @@
 #include "taskprogress.h"
 //#include "mvtimeseriesview.h" //for unit test
 
+#include <QHBoxLayout>
 #include <QJsonDocument>
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtConcurrentRun>
+#include <mvcrosscorrelogramswidget3.h>
 #include <mvmergecontrol.h>
+#include <mvspikesprayview.h>
+#include <tabber.h>
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
 /// TODO: (HIGH) blobs for populations
@@ -101,6 +105,9 @@ QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColo
 #include "mveventfiltercontrol.h"
 #include "mvclustervisibilitycontrol.h"
 #include "mvexportcontrol.h"
+
+void set_nice_size(QWidget* W);
+
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
@@ -116,11 +123,6 @@ int main(int argc, char* argv[])
 
     CLParams CLP(argc, argv);
 
-    QString mv_fname;
-    if (CLP.unnamed_parameters.value(0).endsWith(".mv")) {
-        mv_fname = CLP.unnamed_parameters.value(0);
-    }
-
     QList<QColor> channel_colors;
     QStringList color_strings;
     color_strings
@@ -131,15 +133,60 @@ int main(int argc, char* argv[])
     for (int i = 0; i < color_strings.count(); i++)
         channel_colors << QColor(brighten(color_strings[i], 80));
 
-    //int num1 = 7;
-    //int num2 = 32;
-    //QList<QColor> colors00 = generate_colors(Qt::gray, Qt::white, num2);
     QList<QColor> label_colors = generate_colors_ahb();
-    //QList<QColor> label_colors;
-    //for (int j = 0; j < colors00.count(); j++) {
-    //    //label_colors << brighten(colors00.value((j * num1) % num2),2);
-    //    label_colors << colors00.value((j * num1) % num2);
-    //}
+
+    QString mv_fname;
+    if (CLP.unnamed_parameters.value(0).endsWith(".mv")) {
+        mv_fname = CLP.unnamed_parameters.value(0);
+    }
+    if (CLP.unnamed_parameters.value(0).endsWith(".smv")) {
+        MVContext* mvcontext = new MVContext;
+        mvcontext->setChannelColors(channel_colors);
+        mvcontext->setClusterColors(label_colors);
+        QWidget* WW = new QWidget;
+        QVBoxLayout* LL = new QVBoxLayout;
+        WW->setLayout(LL);
+        Tabber* tabber = new Tabber;
+        LL->addWidget(tabber->createTabWidget("north"));
+        if (CLP.unnamed_parameters.count() > 1) //only make the south tab widget if we have more than one static view
+            LL->addWidget(tabber->createTabWidget("south"));
+        set_nice_size(WW);
+        WW->show();
+        for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
+            QString fname = CLP.unnamed_parameters.value(i);
+            if (fname.endsWith(".smv")) {
+                QJsonObject obj = QJsonDocument::fromJson(TextFile::read(fname).toLatin1()).object();
+                QString view_type = obj["view-type"].toString();
+                if (view_type == "MVSpikeSprayView") {
+                    mvcontext->setFromMVFileObject(obj["mvcontext"].toObject());
+                    MVSpikeSprayView* V = new MVSpikeSprayView(mvcontext);
+                    V->loadStaticView(obj);
+                    QString container;
+                    if (i % 2 == 0)
+                        container = "north";
+                    else
+                        container = "south";
+                    tabber->addWidget(container, QFileInfo(fname).fileName(), V);
+                }
+                else if (view_type == "MVCrossCorrelogramsWidget") {
+                    mvcontext->setFromMVFileObject(obj["mvcontext"].toObject());
+                    MVCrossCorrelogramsWidget3* V = new MVCrossCorrelogramsWidget3(mvcontext);
+                    V->loadStaticView(obj);
+                    QString container;
+                    if (i % 2 == 0)
+                        container = "north";
+                    else
+                        container = "south";
+                    tabber->addWidget(container, QFileInfo(fname).fileName(), V);
+                }
+                else {
+                    qWarning() << "Unknown view type: " + view_type;
+                    return -1;
+                }
+            }
+        }
+        return a.exec();
+    }
 
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
@@ -159,7 +206,6 @@ int main(int argc, char* argv[])
             int W0 = 1400, H0 = 1000;
             QRect geom = QApplication::desktop()->geometry();
             if ((geom.width() - 100 < W0) || (geom.height() - 100 < H0)) {
-                //W->showMaximized();
                 W->resize(geom.width() - 100, geom.height() - 100);
             }
             else {
@@ -233,13 +279,7 @@ int main(int argc, char* argv[])
         }
 
         //W->setMinimumSize(1000, 800);
-        int W0 = 1800, H0 = 1200;
-        QRect geom = QApplication::desktop()->geometry();
-        if (geom.width() - 100 < W0)
-            W0 = geom.width() - 100;
-        if (geom.height() - 100 < H0)
-            H0 = geom.height() - 100;
-        W->resize(W0, H0);
+        set_nice_size(W);
         W->show();
 
         W->addControl(new MVOpenViewsControl(context, W), true);
@@ -647,4 +687,15 @@ QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColo
     }
 
     return colors;
+}
+
+void set_nice_size(QWidget* W)
+{
+    int W0 = 1800, H0 = 1200;
+    QRect geom = QApplication::desktop()->geometry();
+    if (geom.width() - 100 < W0)
+        W0 = geom.width() - 100;
+    if (geom.height() - 100 < H0)
+        H0 = geom.height() - 100;
+    W->resize(W0, H0);
 }

@@ -25,6 +25,9 @@ struct CrossCorrelogramOptions3 {
     CrossCorrelogramMode3 mode = Undefined3;
     QList<int> ks;
     QList<ClusterPair> pairs;
+
+    QJsonObject toJsonObject();
+    void fromJsonObject(const QJsonObject& X);
 };
 
 class MVCrossCorrelogramsWidget3Private;
@@ -42,10 +45,15 @@ public:
     void setOptions(CrossCorrelogramOptions3 opts);
     void setTimeScaleMode(HistogramView::TimeScaleMode mode);
     HistogramView::TimeScaleMode timeScaleMode() const;
+
+    QJsonObject exportStaticView();
+    void loadStaticView(const QJsonObject& X);
+
 signals:
 private slots:
     void slot_log_time_scale();
     void slot_warning();
+    void slot_export_static_view();
 
 private:
     MVCrossCorrelogramsWidget3Private* d;

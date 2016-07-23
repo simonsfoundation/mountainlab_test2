@@ -148,7 +148,11 @@ bool Mda::read(const char* path)
         return false;
     }
     MDAIO_HEADER H;
-    mda_read_header(&H, input_file);
+    if (!mda_read_header(&H, input_file)) {
+        qWarning() << "Problem reading mda file: " + QString(path);
+        fclose(input_file);
+        return false;
+    }
     this->allocate(H.dims[0], H.dims[1], H.dims[2], H.dims[3], H.dims[4], H.dims[5]);
     mda_read_float64(d->m_data, &H, d->m_total_size, input_file);
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", d->m_total_size * H.num_bytes_per_entry);
@@ -254,7 +258,9 @@ QByteArray Mda::toByteArray64() const
 
 bool Mda::fromByteArray(const QByteArray& X)
 {
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
     QString path = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
+    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << path << X.count();
     MLUtil::writeByteArray(path, X);
     return this->read(path);
 }

@@ -17,9 +17,12 @@
 #include <QList>
 #include <QMessageBox>
 #include <QPainter>
+#include <QSettings>
 #include <math.h>
 #include "mlcommon.h"
 #include "mvmisc.h"
+#include <QFileDialog>
+#include <QJsonDocument>
 
 struct Correlogram3 {
     int k1 = 0, k2 = 0;
@@ -40,6 +43,10 @@ public:
     QList<Correlogram3> correlograms;
 
     void compute();
+
+    bool loaded_from_static_output = false;
+    QJsonObject exportStaticOutput();
+    void loadStaticOutput(const QJsonObject& X);
 };
 
 class MVCrossCorrelogramsWidget3Private {
@@ -83,6 +90,13 @@ MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* context)
         A->setToolTip("When in log time scale mode, there may appear to be a dip near zero even when no such dip exists. This is especially true when the histogram is relatively sparse. Also, the time scale is actually a pseudo log. See the documentation or forum for more details.");
         A->setProperty("action_type", "toolbar");
         QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_warning()));
+        this->addAction(A);
+    }
+
+    {
+        QAction* A = new QAction("Export static view", this);
+        A->setProperty("action_type", "");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_export_static_view()));
         this->addAction(A);
     }
 
@@ -200,6 +214,48 @@ HistogramView::TimeScaleMode MVCrossCorrelogramsWidget3::timeScaleMode() const
     return d->m_time_scale_mode;
 }
 
+QString to_string(HistogramView::TimeScaleMode mode)
+{
+    if (mode == HistogramView::Log)
+        return "Log";
+    if (mode == HistogramView::Uniform)
+        return "Uniform";
+    return "";
+}
+
+void from_string(HistogramView::TimeScaleMode& tsm, QString str)
+{
+    if (str == "Log")
+        tsm = HistogramView::Log;
+    if (str == "Uniform")
+        tsm = HistogramView::Uniform;
+}
+
+QJsonObject MVCrossCorrelogramsWidget3::exportStaticView()
+{
+    QJsonObject ret;
+    ret["view-type"] = "MVCrossCorrelogramsWidget";
+    ret["version"] = "0.1";
+    ret["mvcontext"] = mvContext()->toMVFileObject();
+    ret["computer-output"] = d->m_computer.exportStaticOutput();
+    ret["options"] = d->m_options.toJsonObject();
+    ret["time-scale-mode"] = to_string(d->m_time_scale_mode);
+    return ret;
+}
+
+void MVCrossCorrelogramsWidget3::loadStaticView(const QJsonObject& X)
+{
+    QJsonObject computer_output = X["computer-output"].toObject();
+    d->m_computer.loadStaticOutput(computer_output);
+    CrossCorrelogramOptions3 opts;
+    opts.fromJsonObject(X["options"].toObject());
+    this->setOptions(opts);
+    HistogramView::TimeScaleMode tsm;
+    from_string(tsm, X["time-scale-mode"].toString());
+    this->setTimeScaleMode(tsm);
+    this->recalculate();
+}
+
 void MVCrossCorrelogramsWidget3::slot_log_time_scale()
 {
     HistogramView::TimeScaleMode mode = timeScaleMode();
@@ -216,6 +272,22 @@ void MVCrossCorrelogramsWidget3::slot_warning()
     QAction* A = qobject_cast<QAction*>(sender());
     QString str = A->toolTip();
     QMessageBox::information(this, "Warning about log scale", str);
+}
+
+void MVCrossCorrelogramsWidget3::slot_export_static_view()
+{
+    QSettings settings("SCDA", "MountainView");
+    QString default_dir = settings.value("default_export_dir", "").toString();
+    QString fname = QFileDialog::getSaveFileName(this, "Export static cross-correlogram view", default_dir, "*.smv");
+    if (fname.isEmpty())
+        return;
+    settings.setValue("default_export_dir", QFileInfo(fname).path());
+    if (QFileInfo(fname).suffix() != "smv")
+        fname = fname + ".smv";
+    QJsonObject obj = exportStaticView();
+    if (!TextFile::write(fname, QJsonDocument(obj).toJson())) {
+        qWarning() << "Unable to write file: " + fname;
+    }
 }
 
 QVector<double> compute_cc_data3(const QVector<double>& times1_in, const QVector<double>& times2_in, int max_dt, bool exclude_matches)
@@ -252,6 +324,10 @@ typedef QVector<int> IntList;
 void MVCrossCorrelogramsWidget3Computer::compute()
 {
     TaskProgress task(TaskProgress::Calculate, QString("Cross Correlograms (%1)").arg(options.mode));
+    if (loaded_from_static_output) {
+        task.log("Loaded from static output");
+        return;
+    }
 
     correlograms.clear();
 
@@ -345,6 +421,37 @@ void MVCrossCorrelogramsWidget3Computer::compute()
         int k2 = correlograms[j].k2;
         correlograms[j].data = compute_cc_data3(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
     }
+}
+
+QJsonObject MVCrossCorrelogramsWidget3Computer::exportStaticOutput()
+{
+    QJsonObject ret;
+    ret["version"] = "MVCrossCorrelogramsWidget3Computer-0.1";
+    QJsonArray cc;
+    for (int i = 0; i < correlograms.count(); i++) {
+        QJsonObject oo;
+        oo["data"] = MLUtil::toJsonValue(correlograms[i].data);
+        oo["k1"] = correlograms[i].k1;
+        oo["k2"] = correlograms[i].k2;
+        cc.append(oo);
+    }
+    ret["correlograms"] = cc;
+    return ret;
+}
+
+void MVCrossCorrelogramsWidget3Computer::loadStaticOutput(const QJsonObject& X)
+{
+    QJsonArray cc = X["correlograms"].toArray();
+    correlograms.clear();
+    for (int ii = 0; ii < cc.count(); ii++) {
+        QJsonObject oo = cc[ii].toObject();
+        Correlogram3 CC;
+        MLUtil::fromJsonValue(CC.data, oo["data"]);
+        CC.k1 = oo["k1"].toInt();
+        CC.k2 = oo["k2"].toInt();
+        correlograms << CC;
+    }
+    loaded_from_static_output = true;
 }
 
 MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(MVContext* context, QObject* parent)
@@ -570,5 +677,65 @@ void MVCrossCorrelogramsWidget3Private::update_scale_stuff()
             }
         }
         HV->setTickMarks(tickvals);
+    }
+}
+
+QString to_string(CrossCorrelogramMode3 mode)
+{
+    if (mode == Undefined3)
+        return "Undefined";
+    if (mode == All_Auto_Correlograms3)
+        return "All_Auto_Correlograms";
+    if (mode == Selected_Auto_Correlograms3)
+        return "Selected_Auto_Correlograms";
+    if (mode == Cross_Correlograms3)
+        return "Cross_Correlograms";
+    if (mode == Matrix_Of_Cross_Correlograms3)
+        return "Matrix_Of_Cross_Correlograms";
+    if (mode == Selected_Cross_Correlograms3)
+        return "Selected_Cross_Correlograms";
+    return "";
+}
+
+void from_string(CrossCorrelogramMode3& mode, QString str)
+{
+    if (str == "Undefined")
+        mode = Undefined3;
+    if (str == "All_Auto_Correlograms")
+        mode = All_Auto_Correlograms3;
+    if (str == "Selected_Auto_Correlograms")
+        mode = Selected_Auto_Correlograms3;
+    if (str == "Cross_Correlograms")
+        mode = Cross_Correlograms3;
+    if (str == "Matrix_Of_Cross_Correlograms")
+        mode = Matrix_Of_Cross_Correlograms3;
+    if (str == "Selected_Cross_Correlograms")
+        mode = Selected_Cross_Correlograms3;
+}
+
+QJsonObject CrossCorrelogramOptions3::toJsonObject()
+{
+    QJsonObject ret;
+    ret["mode"] = to_string(mode);
+    ret["ks"] = MLUtil::toJsonValue(ks);
+    QList<int> tmp;
+    for (int i = 0; i < pairs.count(); i++) {
+        tmp << pairs[i].kmin();
+        tmp << pairs[i].kmax();
+    }
+    ret["pairs"] = MLUtil::toJsonValue(tmp);
+    return ret;
+}
+
+void CrossCorrelogramOptions3::fromJsonObject(const QJsonObject& X)
+{
+    from_string(mode, X["mode"].toString());
+    MLUtil::fromJsonValue(ks, X["ks"]);
+    QList<int> tmp;
+    MLUtil::fromJsonValue(tmp, X["pairs"]);
+    pairs.clear();
+    for (int i = 0; i < tmp.count(); i += 2) {
+        ClusterPair pair(tmp.value(i), tmp.value(i + 1));
+        pairs << pair;
     }
 }

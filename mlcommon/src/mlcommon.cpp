@@ -411,6 +411,19 @@ void MLUtil::fromJsonValue(QByteArray& X, const QJsonValue& val)
     X = QByteArray::fromBase64(val.toString().toLatin1());
 }
 
+void MLUtil::fromJsonValue(QList<int>& X, const QJsonValue& val)
+{
+    X.clear();
+    QByteArray ba;
+    MLUtil::fromJsonValue(ba, val);
+    QDataStream ds(&ba, QIODevice::ReadOnly);
+    while (!ds.atEnd()) {
+        int val;
+        ds >> val;
+        X << val;
+    }
+}
+
 void MLUtil::fromJsonValue(QVector<int>& X, const QJsonValue& val)
 {
     X.clear();
@@ -424,12 +437,45 @@ void MLUtil::fromJsonValue(QVector<int>& X, const QJsonValue& val)
     }
 }
 
+void MLUtil::fromJsonValue(QVector<double>& X, const QJsonValue& val)
+{
+    X.clear();
+    QByteArray ba;
+    MLUtil::fromJsonValue(ba, val);
+    QDataStream ds(&ba, QIODevice::ReadOnly);
+    while (!ds.atEnd()) {
+        double val;
+        ds >> val;
+        X << val;
+    }
+}
+
 QJsonValue MLUtil::toJsonValue(const QByteArray& X)
 {
     return QString(X.toBase64());
 }
 
+QJsonValue MLUtil::toJsonValue(const QList<int>& X)
+{
+    QByteArray ba;
+    QDataStream ds(&ba, QIODevice::WriteOnly);
+    for (int i = 0; i < X.count(); i++) {
+        ds << X[i];
+    }
+    return toJsonValue(ba);
+}
+
 QJsonValue MLUtil::toJsonValue(const QVector<int>& X)
+{
+    QByteArray ba;
+    QDataStream ds(&ba, QIODevice::WriteOnly);
+    for (int i = 0; i < X.count(); i++) {
+        ds << X[i];
+    }
+    return toJsonValue(ba);
+}
+
+QJsonValue MLUtil::toJsonValue(const QVector<double>& X)
 {
     QByteArray ba;
     QDataStream ds(&ba, QIODevice::WriteOnly);
@@ -454,10 +500,13 @@ bool MLUtil::writeByteArray(const QString& path, const QByteArray& X)
 {
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
+        qWarning() << "Unable to open file for writing byte array: " + path;
         return false;
     }
-    if (file.write(X) != X.count())
+    if (file.write(X) != X.count()) {
+        qWarning() << "Problem writing byte array: " + path;
         return false;
+    }
     file.close();
     return true;
 }

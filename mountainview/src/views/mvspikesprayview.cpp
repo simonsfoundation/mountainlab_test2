@@ -11,12 +11,15 @@
 #include "mvspikespraypanel.h"
 
 #include <QHBoxLayout>
+#include <QJsonDocument>
 #include <QMessageBox>
 #include <QPainter>
 #include <QScrollArea>
+#include <QSettings>
 #include <taskprogress.h>
 #include "mlcommon.h"
 #include "actionfactory.h"
+#include <QFileDialog>
 
 /// TODO: (MEDIUM) spike spray should respond to mouse wheel and show current position with marker
 /// TODO: (MEDIUM) much more responsive rendering of spike spray
@@ -60,7 +63,9 @@ void MVSpikeSprayComputer::loadStaticOutput(const QJsonObject& X)
 {
     {
         QByteArray ba;
+        qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << X["clips_to_render"].toString().count();
         MLUtil::fromJsonValue(ba, X["clips_to_render"]);
+        qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "@@@@@@@@@@@@@@@@@@@@@@@" << ba.count();
         clips_to_render.fromByteArray(ba);
     }
     MLUtil::fromJsonValue(labels_to_render, X["labels_to_render"]);
@@ -132,6 +137,13 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
         QAction* A = new QAction("Colors->", this);
         A->setProperty("action_type", "toolbar");
         QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_shift_colors_right()));
+        this->addAction(A);
+    }
+
+    {
+        QAction* A = new QAction("Export static view", this);
+        A->setProperty("action_type", "");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_export_static_view()));
         this->addAction(A);
     }
 }
@@ -212,14 +224,20 @@ void MVSpikeSprayView::onCalculationFinished()
 QJsonObject MVSpikeSprayView::exportStaticView()
 {
     QJsonObject ret;
+    ret["view-type"] = "MVSpikeSprayView";
     ret["mvcontext"] = mvContext()->toMVFileObject();
     ret["computer-output"] = d->m_computer.exportStaticOutput();
+    ret["labels-to-use"] = MLUtil::toJsonValue(d->m_labels_to_use.toList().toVector());
     return ret;
 }
 
 void MVSpikeSprayView::loadStaticView(const QJsonObject& X)
 {
-    d->m_computer.loadStaticOutput(X);
+    QJsonObject computer_output = X["computer-output"].toObject();
+    d->m_computer.loadStaticOutput(computer_output);
+    QVector<int> labels_to_use;
+    MLUtil::fromJsonValue(labels_to_use, X["labels-to-use"]);
+    this->setLabelsToUse(labels_to_use.toList().toSet());
     this->recalculate();
 }
 
@@ -284,6 +302,22 @@ void MVSpikeSprayView::slot_shift_colors_left(int step)
 void MVSpikeSprayView::slot_shift_colors_right()
 {
     slot_shift_colors_left(-1);
+}
+
+void MVSpikeSprayView::slot_export_static_view()
+{
+    QSettings settings("SCDA", "MountainView");
+    QString default_dir = settings.value("default_export_dir", "").toString();
+    QString fname = QFileDialog::getSaveFileName(this, "Export static spikespray view", default_dir, "*.smv");
+    if (fname.isEmpty())
+        return;
+    settings.setValue("default_export_dir", QFileInfo(fname).path());
+    if (QFileInfo(fname).suffix() != "smv")
+        fname = fname + ".smv";
+    QJsonObject obj = exportStaticView();
+    if (!TextFile::write(fname, QJsonDocument(obj).toJson())) {
+        qWarning() << "Unable to write file: " + fname;
+    }
 }
 
 MVSpikeSprayPanel* MVSpikeSprayViewPrivate::add_panel()

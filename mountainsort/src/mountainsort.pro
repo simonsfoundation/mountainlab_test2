@@ -55,7 +55,7 @@ HEADERS += \
     processors/mv_firings_filter.h \
     processors/extract_clips_processor.h \
     processors/mv_subfirings_processor.h \
-    ../../common/cachemanager/cachemanager.h \
+    ../../mlcommon/src/cachemanager/cachemanager.h \
     processors/extract_clips_features_processor.h \
     processors/compute_detectability_scores_processor.h \
     processors/compute_detectability_scores.h \
@@ -112,7 +112,7 @@ SOURCES += \
     processors/mv_firings_filter.cpp \
     processors/extract_clips_processor.cpp \
     processors/mv_subfirings_processor.cpp \
-    ../../common/cachemanager/cachemanager.cpp \
+    ../../mlcommon/src/cachemanager/cachemanager.cpp \
     processors/extract_clips_features_processor.cpp \
     processors/compute_detectability_scores_processor.cpp \
     processors/compute_detectability_scores.cpp \
