@@ -17,26 +17,33 @@ class HistogramViewPrivate;
 class HistogramView : public QWidget {
     Q_OBJECT
 public:
+    enum TimeScaleMode {
+        Uniform,
+        Log,
+        Cubic
+    };
+
     friend class HistogramViewPrivate;
     explicit HistogramView(QWidget* parent = 0);
     virtual ~HistogramView();
 
     void setData(const QVector<double>& values); // The data to view
-    void setData(int N, double* values); // Alternative specification
     void setSecondData(const QVector<double>& values);
-    void setBins(double bin_min, double bin_max, int num_bins); //Set evenly spaced bins
-    void autoSetBins(int num_bins); // auto set evenly spaced bins based on range of data (call setData first)
+    void setBinInfo(double bin_min, double bin_max, int num_bins); //Set evenly spaced bins
     void setFillColor(const QColor& col); // The color for filling the histogram bars
     void setLineColor(const QColor& col); // The edge color for the bars
     void setTitle(const QString& title);
     void setCaption(const QString& caption);
     void setColors(const QMap<QString, QColor>& colors); // Controls background and highlighting colors. For consistent app look.
+    void setTimeScaleMode(TimeScaleMode mode);
+    void setTimeConstant(double timepoints);
 
     MVRange xRange() const;
     void setXRange(MVRange range);
     void autoCenterXRange(); //centers range based on data
     void setDrawVerticalAxisAtZero(bool val);
-    void addVerticalLine(double val);
+    void setVerticalLines(const QList<double>& vals);
+    void setTickMarks(const QList<double>& vals);
 
     void setCurrent(bool val); // Set this as the current histogram (affects highlighting)
     void setSelected(bool val); // Set this as among the selected histograms (affects highlighting)

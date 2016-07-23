@@ -15,6 +15,7 @@
 #include <QGridLayout>
 #include <QKeyEvent>
 #include <QList>
+#include <QMessageBox>
 #include <QPainter>
 #include <math.h>
 #include "mlcommon.h"
@@ -50,6 +51,9 @@ public:
     QGridLayout* m_grid_layout;
 
     CrossCorrelogramOptions3 m_options;
+    HistogramView::TimeScaleMode m_time_scale_mode = HistogramView::Uniform;
+
+    void update_scale_stuff();
 };
 
 MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* context)
@@ -63,6 +67,24 @@ MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
     this->recalculateOnOptionChanged("cc_max_dt_msec");
+    this->recalculateOnOptionChanged("cc_log_time_constant_msec");
+    this->recalculateOnOptionChanged("cc_bin_size_msec");
+
+    {
+        QAction* A = new QAction("Log", this);
+        A->setProperty("action_type", "toolbar");
+        A->setCheckable(true);
+        //A->setIcon(QIcon(":/images/log.png"));
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_log_time_scale()));
+        this->addAction(A);
+    }
+    {
+        QAction* A = new QAction("Warning", this);
+        A->setToolTip("When in log time scale mode, there may appear to be a dip near zero even when no such dip exists. This is especially true when the histogram is relatively sparse. Also, the time scale is actually a pseudo log. See the documentation or forum for more details.");
+        A->setProperty("action_type", "toolbar");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_warning()));
+        this->addAction(A);
+    }
 
     this->recalculate();
 }
@@ -111,13 +133,14 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
     double bin_max = max2(d->m_correlograms);
     double bin_min = -bin_max;
     //int num_bins=100;
-    int bin_size = 20;
+    double sample_freq = mvContext()->sampleRate();
+    int bin_size = mvContext()->option("cc_bin_size_msec").toDouble() / 1000 * sample_freq;
     int num_bins = (bin_max - bin_min) / bin_size;
-    if (num_bins < 100)
-        num_bins = 100;
+    //if (num_bins < 100)
+    //    num_bins = 100;
     if (num_bins > 2000)
         num_bins = 2000;
-    double sample_freq = mvContext()->sampleRate();
+
     double time_width = (bin_max - bin_min) / sample_freq * 1000;
     HorizontalScaleAxisData X;
     X.use_it = true;
@@ -132,7 +155,7 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
             HistogramView* HV = new HistogramView;
             HV->setData(d->m_correlograms[ii].data);
             HV->setColors(mvContext()->colors());
-            HV->setBins(bin_min, bin_max, num_bins);
+            HV->setBinInfo(bin_min, bin_max, num_bins);
             QString title0;
             QString caption0;
             HV->setProperty("k", d->m_correlograms[ii].k1);
@@ -143,6 +166,7 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
         }
     }
     this->setHistogramViews(histogram_views);
+    d->update_scale_stuff();
 }
 
 void MVCrossCorrelogramsWidget3::setOptions(CrossCorrelogramOptions3 opts)
@@ -161,6 +185,37 @@ void MVCrossCorrelogramsWidget3::setOptions(CrossCorrelogramOptions3 opts)
         this->setPairMode(true);
     d->m_options = opts;
     this->recalculate();
+}
+
+void MVCrossCorrelogramsWidget3::setTimeScaleMode(HistogramView::TimeScaleMode mode)
+{
+    if (d->m_time_scale_mode == mode)
+        return;
+    d->m_time_scale_mode = mode;
+    d->update_scale_stuff();
+}
+
+HistogramView::TimeScaleMode MVCrossCorrelogramsWidget3::timeScaleMode() const
+{
+    return d->m_time_scale_mode;
+}
+
+void MVCrossCorrelogramsWidget3::slot_log_time_scale()
+{
+    HistogramView::TimeScaleMode mode = timeScaleMode();
+    if (mode == HistogramView::Uniform)
+        mode = HistogramView::Log;
+    //else if (mode==HistogramView::Cubic) mode=HistogramView::Log;
+    else if (mode == HistogramView::Log)
+        mode = HistogramView::Uniform;
+    setTimeScaleMode(mode);
+}
+
+void MVCrossCorrelogramsWidget3::slot_warning()
+{
+    QAction* A = qobject_cast<QAction*>(sender());
+    QString str = A->toolTip();
+    QMessageBox::information(this, "Warning about log scale", str);
 }
 
 QVector<double> compute_cc_data3(const QVector<double>& times1_in, const QVector<double>& times2_in, int max_dt, bool exclude_matches)
@@ -497,4 +552,23 @@ MVAbstractView* MVSelectedCrossCorrelogramsFactory::createView(QWidget* parent)
 void MVSelectedCrossCorrelogramsFactory::updateEnabled()
 {
     setEnabled(!mvContext()->selectedClusterPairs().isEmpty());
+}
+
+void MVCrossCorrelogramsWidget3Private::update_scale_stuff()
+{
+    QList<HistogramView*> views = q->histogramViews();
+    foreach (HistogramView* HV, views) {
+        HV->setTimeScaleMode(m_time_scale_mode);
+        double time_constant_sec = q->mvContext()->option("cc_log_time_constant_msec", 1).toDouble() / 1000;
+        HV->setTimeConstant(q->mvContext()->sampleRate() * time_constant_sec);
+        QList<double> tickvals;
+        if (m_time_scale_mode == HistogramView::Uniform) {
+        }
+        else if (m_time_scale_mode == HistogramView::Log) {
+            for (int sign = -1; sign <= 1; sign += 2) {
+                tickvals << 30 * sign << 300 * sign << 3000 * sign << 30000 * sign;
+            }
+        }
+        HV->setTickMarks(tickvals);
+    }
 }

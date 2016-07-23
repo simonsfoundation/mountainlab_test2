@@ -40,8 +40,12 @@ public:
     void onCalculationFinished() Q_DECL_OVERRIDE;
 
     void setOptions(CrossCorrelogramOptions3 opts);
+    void setTimeScaleMode(HistogramView::TimeScaleMode mode);
+    HistogramView::TimeScaleMode timeScaleMode() const;
 signals:
 private slots:
+    void slot_log_time_scale();
+    void slot_warning();
 
 private:
     MVCrossCorrelogramsWidget3Private* d;

@@ -350,20 +350,22 @@ bool initialize_process_manager(QString config_fname, QJsonObject config)
     return true;
 }
 
-QString remove_comments_in_line(QString line) {
-    int ind=line.indexOf("//");
-    if (ind>=0) {
-        return line.mid(0,ind);
+QString remove_comments_in_line(QString line)
+{
+    int ind = line.indexOf("//");
+    if (ind >= 0) {
+        return line.mid(0, ind);
     }
     else {
         return line;
     }
 }
 
-QString remove_comments(QString json) {
-    QStringList lines=json.split("\n");
-    for (int i=0; i<lines.count(); i++) {
-        lines[i]=remove_comments_in_line(lines[i]);
+QString remove_comments(QString json)
+{
+    QStringList lines = json.split("\n");
+    for (int i = 0; i < lines.count(); i++) {
+        lines[i] = remove_comments_in_line(lines[i]);
     }
     return lines.join("\n");
 }
@@ -375,7 +377,7 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
         qCritical() << "Non-existent or empty parameter file: " + fname;
         return false;
     }
-    json=remove_comments(json);
+    json = remove_comments(json);
     QJsonParseError error;
     /// Witold I use toLatin1() everywhere. Is this the appropriate way to convert to byte array?
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();

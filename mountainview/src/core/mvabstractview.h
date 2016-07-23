@@ -71,10 +71,8 @@ protected slots:
 protected:
     void recalculateOnOptionChanged(QString name, bool suggest_only = true);
     void recalculateOn(QObject*, const char* signal, bool suggest_only = true);
-    void onOptionChanged(QString name,QObject *receiver, const char *signal_or_slot);
+    void onOptionChanged(QString name, QObject* receiver, const char* signal_or_slot);
     void setCalculatingMessage(QString msg);
-
-
 
     void requestContextMenu(const QMimeData& md, const QPoint& pos);
     virtual void prepareMimeData(QMimeData& mimeData, const QPoint& pos);
