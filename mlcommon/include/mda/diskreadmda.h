@@ -18,39 +18,29 @@ class DiskReadMdaPrivate;
 class DiskReadMda {
 public:
     friend class DiskReadMdaPrivate;
-    ///Constructor pointing to the .mda file specified by path (file name).
-    DiskReadMda(const QString& path = "");
-    ///Copy constructor
-    DiskReadMda(const DiskReadMda& other);
-    ///Constructor based on an in-memory array. This enables passing an Mda into a function that expects a DiskReadMda.
-    DiskReadMda(const Mda& X);
-    ///Destructor
+    DiskReadMda(const QString& path = ""); ///Constructor pointing to the .mda file specified by path (file name).
+    DiskReadMda(const DiskReadMda& other); ///Copy constructor
+    DiskReadMda(const Mda& X); ///Constructor based on an in-memory array. This enables passing an Mda into a function that expects a DiskReadMda.
     virtual ~DiskReadMda();
-    ///Assignment operator
     void operator=(const DiskReadMda& other);
 
     ///Set the path (file name) of the .mda file to read.
     void setPath(const QString& file_path);
+
     void setRemoteDataType(const QString& dtype);
     void setDownloadChunkSize(long size);
     long downloadChunkSize();
 
     QString makePath() const; //not capturing the reshaping
 
-    ///The first dimension of the array
+    ///The dimensions of the array
     long N1() const;
-    ///The second dimension of the array
     long N2() const;
-    ///The third dimension of the array
     long N3() const;
-    ///The fourth dimension of the array
     long N4() const;
-    ///The fifth dimension of the array
     long N5() const;
-    ///The sixth dimension of the array
     long N6() const;
-    ///The product of N1() through N6()
-    long totalSize() const;
+    long totalSize() const; //product of N1..N6
 
     bool reshape(long N1b, long N2b, long N3b = 1, long N4b = 1, long N5b = 1, long N6b = 1);
     DiskReadMda reshaped(long N1b, long N2b, long N3b = 1, long N4b = 1, long N5b = 1, long N6b = 1);
