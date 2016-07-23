@@ -9,6 +9,8 @@
 
 #include <QTextCodec>
 #include <QDebug>
+#include <QJsonValue>
+#include <QByteArray>
 
 namespace TextFile {
 QString read(const QString& fname, QTextCodec* codec = 0);
@@ -28,6 +30,12 @@ QString computeSha1SumOfFile(const QString& path);
 QString computeSha1SumOfString(const QString& str);
 QList<int> stringListToIntList(const QStringList& list);
 QStringList intListToStringList(const QList<int>& list);
+QJsonValue toJsonValue(const QByteArray& X);
+QJsonValue toJsonValue(const QVector<int>& X);
+void fromJsonValue(QByteArray& X, const QJsonValue& val);
+void fromJsonValue(QVector<int>& X, const QJsonValue& val);
+QByteArray readByteArray(const QString& path);
+bool writeByteArray(const QString& path, const QByteArray& X);
 };
 
 namespace MLCompute {

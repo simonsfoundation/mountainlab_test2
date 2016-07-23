@@ -38,7 +38,34 @@ public:
     QVector<int> labels_to_render;
 
     void compute();
+
+    bool loaded_from_static_output = false;
+    QJsonObject exportStaticOutput();
+    void loadStaticOutput(const QJsonObject& X);
 };
+
+QJsonObject MVSpikeSprayComputer::exportStaticOutput()
+{
+    QJsonObject ret;
+    ret["version"] = "MVSpikeSprayComputer-0.1";
+    {
+        QByteArray ba = clips_to_render.toByteArray32();
+        ret["clips_to_render"] = MLUtil::toJsonValue(ba);
+    }
+    ret["labels_to_render"] = MLUtil::toJsonValue(labels_to_render);
+    return ret;
+}
+
+void MVSpikeSprayComputer::loadStaticOutput(const QJsonObject& X)
+{
+    {
+        QByteArray ba;
+        MLUtil::fromJsonValue(ba, X["clips_to_render"]);
+        clips_to_render.fromByteArray(ba);
+    }
+    MLUtil::fromJsonValue(labels_to_render, X["labels_to_render"]);
+    loaded_from_static_output = true;
+}
 
 class MVSpikeSprayViewPrivate {
 public:
@@ -182,6 +209,20 @@ void MVSpikeSprayView::onCalculationFinished()
     }
 }
 
+QJsonObject MVSpikeSprayView::exportStaticView()
+{
+    QJsonObject ret;
+    ret["mvcontext"] = mvContext()->toMVFileObject();
+    ret["computer-output"] = d->m_computer.exportStaticOutput();
+    return ret;
+}
+
+void MVSpikeSprayView::loadStaticView(const QJsonObject& X)
+{
+    d->m_computer.loadStaticOutput(X);
+    this->recalculate();
+}
+
 void MVSpikeSprayView::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt)
@@ -282,6 +323,10 @@ double MVSpikeSprayViewPrivate::actual_panel_width()
 void MVSpikeSprayComputer::compute()
 {
     TaskProgress task("Spike spray computer");
+    if (loaded_from_static_output) {
+        task.log("Loaded from static output");
+        return;
+    }
 
     labels_to_render.clear();
 

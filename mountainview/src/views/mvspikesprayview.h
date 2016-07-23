@@ -27,6 +27,9 @@ public:
     void runCalculation() Q_DECL_OVERRIDE;
     void onCalculationFinished() Q_DECL_OVERRIDE;
 
+    QJsonObject exportStaticView();
+    void loadStaticView(const QJsonObject& X);
+
 protected:
     void paintEvent(QPaintEvent* evt);
     void keyPressEvent(QKeyEvent* evt);

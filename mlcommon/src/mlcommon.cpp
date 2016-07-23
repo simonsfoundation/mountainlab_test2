@@ -17,6 +17,7 @@
 #include <QDir>
 #include <QCryptographicHash>
 #include <math.h>
+#include <QDataStream>
 
 #ifdef QT_GUI_LIB
 #include <QtNetwork/QNetworkAccessManager>
@@ -403,4 +404,60 @@ QStringList MLUtil::intListToStringList(const QList<int>& list)
         ret << QString("%1").arg(a);
     }
     return ret;
+}
+
+void MLUtil::fromJsonValue(QByteArray& X, const QJsonValue& val)
+{
+    X = QByteArray::fromBase64(val.toString().toLatin1());
+}
+
+void MLUtil::fromJsonValue(QVector<int>& X, const QJsonValue& val)
+{
+    X.clear();
+    QByteArray ba;
+    MLUtil::fromJsonValue(ba, val);
+    QDataStream ds(&ba, QIODevice::ReadOnly);
+    while (!ds.atEnd()) {
+        int val;
+        ds >> val;
+        X << val;
+    }
+}
+
+QJsonValue MLUtil::toJsonValue(const QByteArray& X)
+{
+    return QString(X.toBase64());
+}
+
+QJsonValue MLUtil::toJsonValue(const QVector<int>& X)
+{
+    QByteArray ba;
+    QDataStream ds(&ba, QIODevice::WriteOnly);
+    for (int i = 0; i < X.count(); i++) {
+        ds << X[i];
+    }
+    return toJsonValue(ba);
+}
+
+QByteArray MLUtil::readByteArray(const QString& path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return QByteArray();
+    }
+    QByteArray ret = file.readAll();
+    file.close();
+    return ret;
+}
+
+bool MLUtil::writeByteArray(const QString& path, const QByteArray& X)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) {
+        return false;
+    }
+    if (file.write(X) != X.count())
+        return false;
+    file.close();
+    return true;
 }

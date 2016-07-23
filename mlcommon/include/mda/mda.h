@@ -53,6 +53,11 @@ public:
     ///Write the array to the .mda file specified by path, with file format 64-bit float
     bool write64(const char* path) const;
 
+    QByteArray toByteArray8() const;
+    QByteArray toByteArray32() const;
+    QByteArray toByteArray64() const;
+    bool fromByteArray(const QByteArray& X);
+
     ///The number of dimensions. This will be between 2 and 6. It will be 3 if N3()>1 and N4()...N6() are all 1. And so on.
     int ndims() const;
     ///The size of the first dimension

@@ -1,5 +1,6 @@
 #include "mda.h"
 #include "mdaio.h"
+#include <cachemanager.h>
 #include <stdio.h>
 #include "mlcommon.h"
 #include "taskprogress.h"
@@ -228,6 +229,34 @@ bool Mda::write64(const char* path) const
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
+}
+
+QByteArray Mda::toByteArray8() const
+{
+    QString path = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
+    write8(path);
+    return MLUtil::readByteArray(path);
+}
+
+QByteArray Mda::toByteArray32() const
+{
+    QString path = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
+    write32(path);
+    return MLUtil::readByteArray(path);
+}
+
+QByteArray Mda::toByteArray64() const
+{
+    QString path = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
+    write64(path);
+    return MLUtil::readByteArray(path);
+}
+
+bool Mda::fromByteArray(const QByteArray& X)
+{
+    QString path = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
+    MLUtil::writeByteArray(path, X);
+    return this->read(path);
 }
 
 int Mda::ndims() const
