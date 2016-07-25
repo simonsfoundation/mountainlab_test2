@@ -236,7 +236,6 @@ QJsonObject MVCrossCorrelogramsWidget3::exportStaticView()
     QJsonObject ret;
     ret["view-type"] = "MVCrossCorrelogramsWidget";
     ret["version"] = "0.1";
-    ret["mvcontext"] = mvContext()->toMVFileObject();
     ret["computer-output"] = d->m_computer.exportStaticOutput();
     ret["options"] = d->m_options.toJsonObject();
     ret["time-scale-mode"] = to_string(d->m_time_scale_mode);

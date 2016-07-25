@@ -35,6 +35,9 @@ public:
 
     QString calculatingMessage() const;
 
+    virtual QJsonObject exportStaticView();
+    virtual void loadStaticView(const QJsonObject& X);
+
 public slots:
     void recalculate();
     void neverSuggestRecalculate();

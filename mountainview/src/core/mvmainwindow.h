@@ -51,6 +51,7 @@ public:
     void setCurrentContainerName(const QString& name);
 
     QList<MVAbstractView*> allViews();
+    QJsonObject exportStaticViews() const;
 
     MVContext* mvContext() const;
 

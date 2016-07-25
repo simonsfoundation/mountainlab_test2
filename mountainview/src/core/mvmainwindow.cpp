@@ -302,6 +302,29 @@ QList<MVAbstractView*> MVMainWindow::allViews()
     return d->m_tabber->allWidgets();
 }
 
+QJsonObject MVMainWindow::exportStaticViews() const
+{
+    QList<MVAbstractView*> views = d->m_tabber->allWidgets();
+    QJsonObject ret;
+    ret["export-static-views-version"] = "0.1";
+    ret["mvcontext"] = d->m_context->toMVFileObject();
+    QJsonArray SV;
+    foreach (MVAbstractView* V, views) {
+        QJsonObject obj = V->exportStaticView();
+        if (!obj.isEmpty()) {
+            QJsonObject tmp;
+            tmp["container"] = V->property("container").toString();
+            if (V->viewFactory()) {
+                tmp["view-factory-title"] = V->viewFactory()->title();
+            }
+            tmp["data"] = obj;
+            SV.append(tmp);
+        }
+    }
+    ret["static-views"] = SV;
+    return ret;
+}
+
 void MVMainWindow::openView(const QString& id)
 {
     MVAbstractViewFactory* f = d->viewFactoryById(id);

@@ -20,6 +20,7 @@
 #include <QApplication>
 #include <QFileDialog>
 #include <QJsonArray>
+#include <QJsonDocument>
 #include <QMenu>
 #include <QMessageBox>
 #include <QTimer>
@@ -43,6 +44,8 @@ struct ClusterData {
     QVector<int> inds;
     QVector<double> times;
     QVector<double> peaks;
+
+    QJsonObject toJsonObject();
 };
 
 struct ChannelSpacingInfo {
@@ -65,6 +68,10 @@ public:
     QList<ClusterData> cluster_data;
 
     virtual void compute();
+
+    bool loaded_from_static_output = false;
+    QJsonObject exportStaticOutput();
+    void loadStaticOutput(const QJsonObject& X);
 };
 
 class ClusterView {
@@ -193,6 +200,13 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewF
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInVertical, this, SLOT(slot_vertical_zoom_in()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutVertical, this, SLOT(slot_vertical_zoom_out()));
 
+    {
+        QAction* A = new QAction("Export static view", this);
+        A->setProperty("action_type", "");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_export_static_view()));
+        this->addAction(A);
+    }
+
     recalculate();
 }
 
@@ -260,6 +274,28 @@ QImage MVClusterDetailWidget::renderImage(int W, int H)
     this->update(); //make sure we update, because some internal stuff has changed!
 
     return ret;
+}
+
+QJsonObject MVClusterDetailWidget::exportStaticView()
+{
+    QJsonObject ret;
+    ret["view-type"] = "MVClusterDetailWidget";
+    ret["version"] = "0.1";
+    ret["calculator-output"] = d->m_calculator.exportStaticOutput();
+
+    QJsonObject info;
+    info["vscale_factor"] = d->m_vscale_factor;
+    info["space_ratio"] = d->m_space_ratio;
+    info["total_time_sec"] = d->m_total_time_sec;
+    info["stdev_shading"] = d->m_stdev_shading;
+    ret["info"] = info;
+
+    return ret;
+}
+
+void MVClusterDetailWidget::loadStaticView(const QJsonObject& X)
+{
+    Q_UNUSED(X)
 }
 
 ChannelSpacingInfo compute_channel_spacing_info(QList<ClusterData>& cdata, double vscale_factor)
@@ -509,6 +545,22 @@ void MVClusterDetailWidget::slot_vertical_zoom_out()
 {
     d->m_vscale_factor /= 1.15;
     update();
+}
+
+void MVClusterDetailWidget::slot_export_static_view()
+{
+    QSettings settings("SCDA", "MountainView");
+    QString default_dir = settings.value("default_export_dir", "").toString();
+    QString fname = QFileDialog::getSaveFileName(this, "Export static cluster details view", default_dir, "*.smv");
+    if (fname.isEmpty())
+        return;
+    settings.setValue("default_export_dir", QFileInfo(fname).path());
+    if (QFileInfo(fname).suffix() != "smv")
+        fname = fname + ".smv";
+    QJsonObject obj = exportStaticView();
+    if (!TextFile::write(fname, QJsonDocument(obj).toJson())) {
+        qWarning() << "Unable to write file: " + fname;
+    }
 }
 
 void MVClusterDetailWidgetPrivate::compute_total_time()
@@ -1162,6 +1214,25 @@ void MVClusterDetailWidgetCalculator::compute()
     }
 }
 
+QJsonObject MVClusterDetailWidgetCalculator::exportStaticOutput()
+{
+    QJsonObject ret;
+    ret["version"] = "MVClusterDetailWidgetCalculator-0.1";
+
+    QJsonArray cd_list;
+    for (int i = 0; i < cluster_data.count(); i++) {
+        QJsonObject cd = cluster_data[i].toJsonObject();
+        cd_list.push_back(cd);
+    }
+    ret["cluster_data"] = cd_list;
+    return ret;
+}
+
+void MVClusterDetailWidgetCalculator::loadStaticOutput(const QJsonObject& X)
+{
+    Q_UNUSED(X)
+}
+
 ClusterView::ClusterView(MVClusterDetailWidget* q0, MVClusterDetailWidgetPrivate* d0)
 {
     q = q0;
@@ -1266,3 +1337,15 @@ void MVClusterDetailsFactory::openClipsForTemplate()
     mw->openView("open-clips");
 }
 */
+
+QJsonObject ClusterData::toJsonObject()
+{
+    QJsonObject ret;
+    ret["channel"] = this->channel;
+    //ret["inds"]=MLUtil::toJsonValue(this->inds); //to big, and unnecessary.... same with peaks and times
+    ret["num_events"] = this->inds.count();
+    ret["k"] = this->k;
+    ret["stdev0"] = MLUtil::toJsonValue(this->stdev0.toByteArray32());
+    ret["template0"] = MLUtil::toJsonValue(this->template0.toByteArray32());
+    return ret;
+}

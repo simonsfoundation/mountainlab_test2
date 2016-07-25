@@ -225,7 +225,6 @@ QJsonObject MVSpikeSprayView::exportStaticView()
 {
     QJsonObject ret;
     ret["view-type"] = "MVSpikeSprayView";
-    ret["mvcontext"] = mvContext()->toMVFileObject();
     ret["computer-output"] = d->m_computer.exportStaticOutput();
     ret["labels-to-use"] = MLUtil::toJsonValue(d->m_labels_to_use.toList().toVector());
     return ret;

@@ -25,6 +25,7 @@ public slots:
 private slots:
     void slot_export_mv_document();
     void slot_export_firings_array();
+    void slot_export_static_views();
 
 private:
     MVExportControlPrivate* d;

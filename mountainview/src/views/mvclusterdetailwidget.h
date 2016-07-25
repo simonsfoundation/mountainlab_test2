@@ -39,6 +39,9 @@ public:
     ///Create an image of the current view
     QImage renderImage(int W = 0, int H = 0);
 
+    QJsonObject exportStaticView() Q_DECL_OVERRIDE;
+    void loadStaticView(const QJsonObject& X) Q_DECL_OVERRIDE;
+
 protected:
     void paintEvent(QPaintEvent* evt);
     void keyPressEvent(QKeyEvent* evt);
@@ -59,6 +62,7 @@ private slots:
     void slot_zoom_out();
     void slot_vertical_zoom_in();
     void slot_vertical_zoom_out();
+    void slot_export_static_view();
 
 private:
     MVClusterDetailWidgetPrivate* d;

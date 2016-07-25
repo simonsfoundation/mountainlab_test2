@@ -43,6 +43,11 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_array()));
         flayout->addWidget(B);
     }
+    {
+        QPushButton* B = new QPushButton("Export static views (.smv)");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_static_views()));
+        flayout->addWidget(B);
+    }
 
     connect(mw, SIGNAL(signalExportMVFile()), this, SLOT(slot_export_mv_document()));
     connect(mw, SIGNAL(signalExportFiringsFile()), this, SLOT(slot_export_firings_array()));
@@ -153,4 +158,20 @@ void MVExportControl::slot_export_firings_array()
 
     DiskReadMda firings = mvContext()->firings();
     export_file(firings.makePath(), fname, true);
+}
+
+void MVExportControl::slot_export_static_views()
+{
+    QSettings settings("SCDA", "MountainView");
+    QString default_dir = settings.value("default_export_dir", "").toString();
+    QString fname = QFileDialog::getSaveFileName(this, "Export static views", default_dir, "*.smv");
+    if (fname.isEmpty())
+        return;
+    settings.setValue("default_export_dir", QFileInfo(fname).path());
+    if (QFileInfo(fname).suffix() != "smv")
+        fname = fname + ".smv";
+    QJsonObject obj = this->mainWindow()->exportStaticViews();
+    if (!TextFile::write(fname, QJsonDocument(obj).toJson())) {
+        qWarning() << "Unable to write file: " + fname;
+    }
 }

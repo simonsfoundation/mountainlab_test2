@@ -87,6 +87,18 @@ QString MVAbstractView::calculatingMessage() const
     return d->m_calculating_message;
 }
 
+QJsonObject MVAbstractView::exportStaticView()
+{
+    qWarning() << "exportStaticView not implemented for view.";
+    return QJsonObject();
+}
+
+void MVAbstractView::loadStaticView(const QJsonObject& X)
+{
+    Q_UNUSED(X)
+    qWarning() << "loadStaticView not implemented for view.";
+}
+
 MVAbstractViewFactory* MVAbstractView::viewFactory() const
 {
     return 0;
