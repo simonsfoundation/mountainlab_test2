@@ -84,7 +84,8 @@ http.createServer(function (REQ, RESP) {
 				REQ.on('data',function(chunk) {
 					if (!ok) return;
 					num_bytes_received+=chunk.length;
-					write_stream.write(chunk,'binary');
+					var ret=write_stream.write(chunk,'binary');
+					console.log(ret);
 				});
 				REQ.on('end',function() {
 					if (!ok) return;

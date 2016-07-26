@@ -33,7 +33,7 @@ $(document).ready(function() {
 		$('#file_id').html('');
 		$('#url_link').html('');
 		$.ajax({
-				url: 'http://localhost:8041?a=upload&file_id='+file_id,  //Server script to process data
+				url: window.location.protocol+'//'+window.location.hostname+':8041?a=upload&file_id='+file_id,  //Server script to process data
 				type: 'POST',
 				xhr: function() {  // Custom XMLHttpRequest
 					var myXhr = $.ajaxSettings.xhr();
