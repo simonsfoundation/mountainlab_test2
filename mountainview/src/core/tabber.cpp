@@ -115,6 +115,7 @@ QList<MVAbstractView*> Tabber::allWidgets()
 {
     QList<MVAbstractView*> ret;
     for (int i = 0; i < d->m_widgets.count(); i++) {
+        d->m_widgets[i].widget->setProperty("container", d->m_widgets[i].current_container_name);
         ret << d->m_widgets[i].widget;
     }
     return ret;
