@@ -153,6 +153,16 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
                 menu->addAction(A);
                 QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportFiringsFile()));
             }
+            {
+                QAction* A = new QAction("Export static views (.smv)", this);
+                menu->addAction(A);
+                QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportStaticViews()));
+            }
+            {
+                QAction* A = new QAction("Share views on web", this);
+                menu->addAction(A);
+                QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalShareViewsOnWeb()));
+            }
         }
         {
             QToolButton* B = new QToolButton();

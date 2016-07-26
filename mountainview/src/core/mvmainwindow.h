@@ -59,6 +59,8 @@ signals:
     void viewsChanged();
     void signalExportMVFile();
     void signalExportFiringsFile();
+    void signalExportStaticViews();
+    void signalShareViewsOnWeb();
 
 public slots:
     void closeAllViews();

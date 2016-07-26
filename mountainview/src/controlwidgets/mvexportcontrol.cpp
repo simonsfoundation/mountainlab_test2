@@ -18,6 +18,7 @@
 #include <QSettings>
 #include <QJsonDocument>
 #include <mvmainwindow.h>
+#include <QMessageBox>
 #include "taskprogress.h"
 
 class MVExportControlPrivate {
@@ -48,9 +49,16 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_static_views()));
         flayout->addWidget(B);
     }
+    {
+        QPushButton* B = new QPushButton("Share views on web");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_share_views_on_web()));
+        flayout->addWidget(B);
+    }
 
     connect(mw, SIGNAL(signalExportMVFile()), this, SLOT(slot_export_mv_document()));
     connect(mw, SIGNAL(signalExportFiringsFile()), this, SLOT(slot_export_firings_array()));
+    connect(mw, SIGNAL(signalExportStaticViews()), this, SLOT(slot_export_static_views()));
+    connect(mw, SIGNAL(signalShareViewsOnWeb()), this, SLOT(slot_share_views_on_web()));
 
     updateControls();
 }
@@ -174,4 +182,12 @@ void MVExportControl::slot_export_static_views()
     if (!TextFile::write(fname, QJsonDocument(obj).toJson())) {
         qWarning() << "Unable to write file: " + fname;
     }
+}
+
+void MVExportControl::slot_share_views_on_web()
+{
+    QString info;
+    info+="First export a .smv file. Then upload it on this website: http://datalaboratory.org:8040/mountainviewweb/mvupload.html.";
+    info+="Note that for now, only templates and cross-correlograms views may be shared.";
+    QMessageBox::information(0,"Share views on web",info);
 }
