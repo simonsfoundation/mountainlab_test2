@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     QJsonObject config = QJsonDocument::fromJson(TextFile::read(config_fname).toLatin1(), &parse_error).object();
     if (parse_error.error != QJsonParseError::NoError) {
         //qWarning() << "Unable to parse confuration file (but maybe not a problem on local machine -- trying example file): " + config_fname;
-        qWarning() << "---";
+        qWarning() << "trying labcomputer.json.example";
         config = QJsonDocument::fromJson(TextFile::read(config_fname + ".example").toLatin1(), &parse_error).object();
         if (parse_error.error != QJsonParseError::NoError) {
             qWarning() << "Unable to parse confuration file: " + config_fname + ".example";
