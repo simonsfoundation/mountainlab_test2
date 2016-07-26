@@ -1,0 +1,71 @@
+<html>
+
+<head>
+<script src="jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+	$(':file').change(function(){
+	    var file = this.files[0];
+	    var name = file.name;
+	    var size = file.size;
+	    var type = file.type;
+	    //Your validation
+	});
+
+	$(':button').click(function(){
+		
+		var reader=new FileReader();
+		reader.onload=function(ee) {
+			var buf = ee.target.result;
+			upload_data(buf);	
+		}
+		reader.readAsArrayBuffer($(':file')[0].files[0]);
+
+	});
+
+	function upload_data(buf)  {
+		$.ajax({
+				url: '?a=upload&file_id=test4',  //Server script to process data
+				type: 'POST',
+				xhr: function() {  // Custom XMLHttpRequest
+					var myXhr = $.ajaxSettings.xhr();
+					if(myXhr.upload) { // Check if upload property exists
+						myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+					}
+				return myXhr;
+			},
+			//Ajax events
+			//beforeSend: beforeSendHandler,
+			success: function(aaa) {
+				console.log('upload complete');
+				console.log(aaa);
+			},
+			//error: errorHandler,
+			// Form data
+			data: buf,
+			//Options to tell jQuery not to process data or worry about content-type.
+			cache: false,
+			contentType: false,
+			processData: false
+		});
+	}
+
+		
+
+	function progressHandlingFunction(e){
+		if (e.lengthComputable) {
+			$('progress').attr({value:e.loaded,max:e.total});
+		}
+	}
+});
+	
+</script>
+</head>
+
+<body>
+<input name="file" type="file" />
+<input type="button" value="Upload" />
+<progress></progress>
+</body>
+</html>
+				
