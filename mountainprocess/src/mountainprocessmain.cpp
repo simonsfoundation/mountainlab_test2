@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     /// TODO don't need to always load the process manager?
 
     /// TODO get rid of mlConfigPath()
-    QString config_fname = MLUtil::mountainlabBasePath() + "/server/labcomputer/labcomputer.json";
+    QString config_fname = MLUtil::mountainlabBasePath() + "/labcomputer/labcomputer.json";
     QString config_path = QFileInfo(config_fname).path();
     QJsonParseError parse_error;
     QJsonObject config = QJsonDocument::fromJson(TextFile::read(config_fname).toLatin1(), &parse_error).object();
