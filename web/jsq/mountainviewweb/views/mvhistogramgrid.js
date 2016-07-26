@@ -61,7 +61,16 @@ function MVHistogramGrid(O,mvcontext,pair_mode) {
 	}
 	function histogram_clicked(sender,modifiers) {
 		var k=sender.property('k');
-		O.mvContext().clickCluster(k,modifiers);
+		var k1=sender.property('k1');
+		var k2=sender.property('k2');
+		if (!pair_mode)
+			O.mvContext().clickCluster(k,modifiers);
+		else {
+			//O.mvContext().clickClusterPair(k1,k2,modifiers);
+			O.mvContext().setCurrentCluster(-1);
+			//O.mvContext().setCurrentClusterPair([k1,k2]);
+			O.mvContext().setSelectedClusters(JSQ.toSet([k1,k2]));
+		}
 	}
 	function setHorizontalScaleAxis(opts) {
 		m_horizontal_scale_axis_data=JSQ.clone(opts);

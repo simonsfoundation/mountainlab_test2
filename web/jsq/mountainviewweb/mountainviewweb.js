@@ -76,16 +76,20 @@ function jsqmain(query) {
         }
 
         var url=filebasket_url+'/?a=download&file_id='+file_id;
+        MW.setStatus('load-main','Loading data from '+url+'.... please wait...');
         $.getJSON(url,function(data) {
+            MW.setStatus('load-main','Loaded data from '+url);
             console.log(data);
             mvcontext.setStaticMode(true);
             mvcontext.setFromMVFileObject(data.mvcontext);
             var static_views=data['static-views'];
+            MW.setStatus('load-static-views','Loading '+static_views.length+' static views');
             for (var i in static_views) {
                 var SV=static_views[i];
                 var VV=create_static_view(mvcontext,SV.data);    
                 MW.addView(SV.container||get_container_from_index(i),SV.data['view-type'],VV);
-            }            
+            }  
+            MW.setStatus('load-static-views','Loaded '+static_views.length+' static views');
         });
     }
     function get_container_from_index(i) {

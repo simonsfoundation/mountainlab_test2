@@ -9,6 +9,7 @@ function JSQCore() {
 	this.numSet2List=function(set) {return numSet2List(set);};
 	this.numSort=function(array) {numSort(array);};
 	this.makeRandomId=function(num_chars) {return make_random_id(num_chars||10);};
+	this.toSet=function(list) {return toSet(list);};
 
 	this._object=function(id) {return object(id);};
 	this._addObject=function(id,obj) {addObject(id,obj);};
@@ -53,6 +54,13 @@ function JSQCore() {
 	}
 	function numSort(array) {
 		array.sort(function(a,b) {return (a-b);});
+	}
+	function toSet(list) {
+		var ret={};
+		for (var i in list) {
+			ret[list[i]]=1;
+		}
+		return ret;
 	}
 
 	var m_connection_manager=new JSQConnectionManager();
