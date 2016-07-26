@@ -5,13 +5,11 @@ var	url=require('url');
 var http=require('http');
 var fs=require('fs');
 
-var config={
-	filebasket_listen_port:8040,
-	storage_path:'storage'
-};
+var args=process.argv.slice(2);
+var listen_port=args[0]||8041;
 
-var listen_port=config.filebasket_listen_port;
-var storage_path=config.storage_path;
+var listen_port=listen_port;
+var storage_path='/tmp/filebasket';
 
 mkdir_if_needed(storage_path);
 
@@ -68,30 +66,38 @@ http.createServer(function (REQ, RESP) {
 			var file_id=query.file_id||'';
 			if (valid_file_id(file_id)) {
 				var fname=storage_path+'/'+file_id+'.dat';
+				var ok=true;
 				if (fs.existsSync(fname)) {
-					send_text_response('file already exists with id: '+file_id);
+					ok=false;
+					send_json_response({success:false,error:'file already exists with id: '+file_id});
 					return;
 				}
-				var write_stream=fs.createWriteStream(fname)
+				var write_stream;
+				write_stream=fs.createWriteStream(fname);
+				write_stream.on('error',function(err) {
+					console.log ('ERROR: '+JSON.stringify(err));
+					ok=false;
+					send_json_response({success:false,error:JSON.stringify(err)});
+					return;
+				});
 				var num_bytes_received=0;
-				var num_bytes_written=0;
 				REQ.on('data',function(chunk) {
+					if (!ok) return;
 					num_bytes_received+=chunk.length;
-					console.log(chunk);
-					console.log(chunk.length);
 					write_stream.write(chunk,'binary');
 				});
 				REQ.on('end',function() {
+					if (!ok) return;
 					write_stream.end();
-					send_text_response('received '+num_bytes_received+' bytes, wrote '+num_bytes_written+' bytes');
+					send_json_response({success:true,message:'received '+num_bytes_received+' bytes'});
 				});
 			}
 			else {
-				send_text_response('invalid file id: '+file_id);	
+				send_json_response({success:false,error:'invalid file id: '+file_id});	
 			}
 		}
 		else {
-			send_text_response('invalid method: '+method);	
+			send_json_response({success:false,error:'invalid method: '+method});	
 		}
 	}
 	

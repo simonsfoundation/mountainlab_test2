@@ -1,0 +1,111 @@
+<html>
+
+<head>
+<script src="../jsqcore/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="./mvupload.css">
+
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$(':button').attr('disabled','disabled');
+	$(':file').change(function(){
+	    var file = this.files[0];
+	    var name = file.name;
+	    var size = file.size;
+	    var type = file.type;
+	    if (name) {
+	    	$(':button').removeAttr('disabled');
+	    }
+	    //Your validation
+	});
+
+	$(':button').click(function(){
+		var reader=new FileReader();
+		reader.onload=function(ee) {
+			var buf = ee.target.result;
+			upload_data(buf);	
+		}
+		reader.readAsArrayBuffer($(':file')[0].files[0]);
+	});
+
+	function upload_data(buf)  {
+		var file_id=make_random_id(10);
+		$('#file_id').html('');
+		$('#url_link').html('');
+		$.ajax({
+				url: 'http://localhost:8041?a=upload&file_id='+file_id,  //Server script to process data
+				type: 'POST',
+				xhr: function() {  // Custom XMLHttpRequest
+					var myXhr = $.ajaxSettings.xhr();
+					if(myXhr.upload) { // Check if upload property exists
+						myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+					}
+				return myXhr;
+			},
+			//Ajax events
+			//beforeSend: beforeSendHandler,
+			success: function(aaa) {
+				console.log(aaa);
+				if (aaa.success) {
+					$('#status').html(aaa.message);
+					$('#file_id').html(file_id);
+					var tmp1=window.location.protocol+'//'+window.location.host;
+					var tmp2=window.location.protocol+'//'+window.location.hostname;
+					var url0=tmp1+'/mountainviewweb/mountainviewweb.html?test=3&filebasket='+tmp2+':8041&file_id='+file_id
+					$('#url_link').html('<a href="'+url0+'" target=_blank>'+url0+'</a>')
+				}
+				else {
+					$('#status').html('Error: '+aaa.error);
+				}
+				setTimeout(function() {
+					$('progress').val(0);
+				},1000);
+			},
+			//error: errorHandler,
+			// Form data
+			data: buf,
+			//Options to tell jQuery not to process data or worry about content-type.
+			cache: false,
+			contentType: false,
+			processData: false
+		});
+	}
+
+	function progressHandlingFunction(e){
+		if (e.lengthComputable) {
+			$('progress').attr({value:e.loaded,max:e.total});
+		}
+	}
+
+	function make_random_id(num_chars)
+	{
+	    var text = "";
+	    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+	    for( var i=0; i < num_chars; i++ )
+	        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+	    return text;
+	}
+
+});
+	
+</script>
+</head>
+
+<body>
+<h3>Upload .smv file</h3>
+<form>
+<input name="file" type="file" /><br/>
+<input type="button" value="Upload" />
+</form>
+<table>
+<tr><td>Status:</td><td><span id=status>Waiting for upload...</span></td></tr>
+<tr><td>Progress:</td><td><progress value="0" max="100"></progress></td></tr>
+<tr><td>File id:</td><td><span id=file_id></span></td></tr>
+<tr><td>URL:</td><td><span id=url_link></span></td></tr>
+
+</table>
+</body>
+</html>
+				
