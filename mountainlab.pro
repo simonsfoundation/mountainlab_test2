@@ -21,7 +21,7 @@ defineReplace(ifcomponent) {
   return("")
 }
 
-SUBDIRS += $$ifcomponent(mdachunk,server/labcomputer/mdachunk/src/mdachunk.pro)
+SUBDIRS += $$ifcomponent(mdachunk,labcomputer/mdachunk/src/mdachunk.pro)
 SUBDIRS += $$ifcomponent(mdaconvert,mdaconvert/src/mdaconvert.pro)
 SUBDIRS += $$ifcomponent(mountainbrowser,mountainbrowser/src/mountainbrowser.pro)
 SUBDIRS += $$ifcomponent(mountainoverlook,mountainoverlook/src/mountainoverlook.pro)
