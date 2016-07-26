@@ -278,8 +278,17 @@ int main(int argc, char* argv[])
             context->setElectrodeGeometry(eg);
         }
 
-        //W->setMinimumSize(1000, 800);
+        if (CLP.named_parameters.contains("labels_subset")) {
+            QStringList labels_subset_str=CLP.named_parameters["labels_subset"].toString().split(",",QString::SkipEmptyParts);
+            QList<int> labels_subset;
+            foreach (QString label,labels_subset_str) {
+                labels_subset << label.toInt();
+            }
+            context->setLabelsSubset(labels_subset.toSet());
+        }
+
         set_nice_size(W);
+
         W->show();
 
         W->addControl(new MVOpenViewsControl(context, W), true);

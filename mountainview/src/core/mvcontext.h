@@ -143,6 +143,10 @@ public:
     void setElectrodeGeometry(const ElectrodeGeometry& geom);
 
     /////////////////////////////////////////////////
+    QSet<int> labelsSubset() const;
+    void setLabelsSubset(const QSet<int> &labels_subset);
+
+    /////////////////////////////////////////////////
     MVEvent currentEvent() const;
     int currentCluster() const;
     QList<int> selectedClusters() const;
@@ -222,6 +226,7 @@ signals:
 
 private slots:
     void slot_option_changed(QString name);
+    void slot_firings_subset_calculator_finished();
 
 private:
     MVContextPrivate* d;

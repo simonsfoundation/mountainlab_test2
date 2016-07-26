@@ -19,6 +19,7 @@
 #include <QJsonDocument>
 #include <mvmainwindow.h>
 #include <QMessageBox>
+#include <QTextBrowser>
 #include "taskprogress.h"
 
 class MVExportControlPrivate {
@@ -186,8 +187,15 @@ void MVExportControl::slot_export_static_views()
 
 void MVExportControl::slot_share_views_on_web()
 {
-    QString info;
-    info+="First export a .smv file. Then upload it on this website: http://datalaboratory.org:8040/mountainviewweb/mvupload.html.";
-    info+="Note that for now, only templates and cross-correlograms views may be shared.";
-    QMessageBox::information(0,"Share views on web",info);
+    QTextBrowser *tb=new QTextBrowser;
+    tb->setOpenExternalLinks(true);
+    tb->setAttribute(Qt::WA_DeleteOnClose);
+    QString html;
+    html+="<p>";
+    html+="<p>First export a .smv file. Then upload it on this website:</p>";
+    QString url0="http://datalaboratory.org:8040/mountainviewweb/mvupload.html";
+    html+="<p><a href=\""+url0+"\">"+url0+"</a></p>";
+    html+="<p>Note that for now, only templates and cross-correlograms views may be shared.</p>";
+    tb->show();
+    tb->setHtml(html);
 }

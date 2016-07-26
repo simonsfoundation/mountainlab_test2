@@ -7,6 +7,9 @@
 #include "mvcontext.h"
 #include <QAction>
 #include <QDebug>
+#include <QThread>
+#include "mlcommon.h"
+#include "mountainprocessrunner.h"
 
 struct TimeseriesStruct {
     QString name;
@@ -33,6 +36,7 @@ public:
     QMap<QString, TimeseriesStruct> m_timeseries;
     QString m_current_timeseries_name;
     DiskReadMda m_firings;
+    DiskReadMda m_firings_subset;
     MVEventFilter m_event_filter;
     double m_sample_rate = 0;
     QMap<QString, QVariant> m_options;
@@ -43,10 +47,16 @@ public:
     QJsonObject m_original_object;
     QSet<ClusterPair> m_selected_cluster_pairs;
     ElectrodeGeometry m_electrode_geometry;
+    QSet<int> m_labels_subset;
     bool m_view_merged;
 
     void update_current_and_selected_clusters_according_to_merged();
 };
+
+QJsonArray intlist_to_json_array(const QList<int>& X);
+QList<int> json_array_to_intlist(const QJsonArray& X);
+QJsonArray strlist_to_json_array(const QList<QString>& X);
+QList<QString> json_array_to_strlist(const QJsonArray& X);
 
 MVContext::MVContext()
 {
@@ -170,6 +180,7 @@ QJsonObject MVContext::toMVFileObject() const
     X["mlproxy_url"] = d->m_mlproxy_url;
     X["visibility_rule"] = d->m_visibility_rule.toJsonObject();
     X["electrode_geometry"] = d->m_electrode_geometry.toJsonObject();
+    X["labels_subset"] = intlist_to_json_array(d->m_labels_subset.toList());
     X["view_merged"] = d->m_view_merged;
     return X;
 }
@@ -195,6 +206,7 @@ void MVContext::setFromMVFileObject(QJsonObject X)
         this->setClusterVisibilityRule(ClusterVisibilityRule::fromJsonObject(X["visibility_rule"].toObject()));
     }
     d->m_electrode_geometry = ElectrodeGeometry::fromJsonObject(X["electrode_geometry"].toObject());
+    d->m_labels_subset = json_array_to_intlist(X["labels_subset"].toArray()).toSet();
     d->m_view_merged = X["view_merged"].toBool();
     emit this->currentTimeseriesChanged();
     emit this->timeseriesNamesChanged();
@@ -322,7 +334,11 @@ void MVContext::addTimeseries(QString name, DiskReadMda timeseries)
 
 DiskReadMda MVContext::firings()
 {
-    return d->m_firings;
+    if (d->m_labels_subset.isEmpty())
+        return d->m_firings;
+    else {
+        return d->m_firings_subset;
+    }
 }
 
 double MVContext::sampleRate() const
@@ -566,6 +582,55 @@ void MVContext::setElectrodeGeometry(const ElectrodeGeometry& geom)
     emit this->electrodeGeometryChanged();
 }
 
+QSet<int> MVContext::labelsSubset() const
+{
+    return d->m_labels_subset;
+}
+
+class FiringsSubsetCalculator : public QThread {
+public:
+    //input
+    QString mlproxy_url;
+    QString firings_path;
+    QSet<int> labels_subset;
+
+    //output
+    QString firings_out_path;
+
+    void run() {
+        MountainProcessRunner PR;
+        PR.setMLProxyUrl(mlproxy_url);
+        PR.setProcessorName("firings_subset");
+        QMap<QString, QVariant> params;
+        params["firings"] = firings_path;
+        QStringList labels_subset_str;
+        QList<int> labels_subset_list=labels_subset.toList();
+        qSort(labels_subset_list); //to make it unique
+        foreach (int label,labels_subset_list) {
+            labels_subset_str << QString("%1").arg(label);
+        }
+        params["labels"] = labels_subset_str.join(",");
+        PR.setInputParameters(params);
+        firings_out_path = PR.makeOutputFilePath("firings_out");
+        PR.runProcess();
+    }
+};
+
+void MVContext::setLabelsSubset(const QSet<int>& labels_subset)
+{
+    if (d->m_labels_subset == labels_subset)
+        return;
+    d->m_labels_subset = labels_subset;
+    if (!labels_subset.isEmpty()) {
+        FiringsSubsetCalculator *CC=new FiringsSubsetCalculator;
+        QObject::connect(CC,SIGNAL(finished()),this,SLOT(slot_firings_subset_calculator_finished()));
+        CC->mlproxy_url=d->m_mlproxy_url;
+        CC->firings_path=d->m_firings.makePath();
+        CC->labels_subset=d->m_labels_subset;
+        CC->start();
+    }
+}
+
 void MVContext::setCurrentEvent(const MVEvent& evt)
 {
     if (evt == d->m_current_event)
@@ -689,6 +754,14 @@ void MVContext::slot_option_changed(QString name)
             d->m_option_changed_actions[i].action->trigger();
         }
     }
+}
+
+void MVContext::slot_firings_subset_calculator_finished()
+{
+    FiringsSubsetCalculator *CC=(FiringsSubsetCalculator*)qobject_cast<QThread*>(sender());
+    if (!CC) return;
+    d->m_firings_subset.setPath(CC->firings_out_path);
+    CC->deleteLater();
 }
 
 void MVContext::clickCluster(int k, Qt::KeyboardModifiers modifiers)
