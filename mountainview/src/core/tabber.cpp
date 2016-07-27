@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QMenu>
 #include <QTabBar>
+#include <QInputDialog>
 #include "tabberframe.h"
 
 struct TabberWidget {
@@ -56,6 +57,7 @@ TabberTabWidget* Tabber::createTabWidget(const QString& container_name)
     d->m_tab_widgets[container_name] = TW;
     TW->setProperty("container_name", container_name);
     connect(TW, SIGNAL(tabCloseRequested(int)), this, SLOT(slot_tab_close_requested(int)));
+    connect(TW, SIGNAL(signalRightClick(QPoint)), this, SLOT(slot_tab_bar_right_clicked(QPoint)));
     connect(TW, SIGNAL(tabBarDoubleClicked(int)), this, SLOT(slot_tab_bar_double_clicked(int)));
     if (!container_name.isEmpty()) {
         d->m_current_container_name = container_name;
@@ -159,11 +161,32 @@ void Tabber::slot_tab_close_requested(int index)
 
 void Tabber::slot_tab_bar_double_clicked(int index)
 {
-    TabberTabWidget* TW = (TabberTabWidget*)sender();
+    TabberTabWidget* TW = qobject_cast<TabberTabWidget*>(sender());
+    if (!TW)
+        return;
     MVAbstractView* W = TW->view(index);
     if (!W)
         return;
     moveWidgetToOtherContainer(W);
+}
+
+void Tabber::slot_tab_bar_right_clicked(QPoint pt)
+{
+    TabberTabWidget* TW = qobject_cast<TabberTabWidget*>(sender());
+    if (!TW)
+        return;
+    int index = TW->tabBar()->tabAt(pt);
+    if (index < 0)
+        return;
+
+    QString new_txt = QInputDialog::getText(0, "Rename tab", TW->tabBar()->tabText(index));
+    if (!new_txt.isEmpty()) {
+        TW->tabBar()->setTabText(index, new_txt);
+        MVAbstractView* W = TW->view(index);
+        if (!W)
+            return;
+        W->setTitle(new_txt);
+    }
 }
 
 void Tabber::slot_widget_destroyed(QObject* obj)
@@ -344,6 +367,9 @@ TabberTabWidget::TabberTabWidget()
     d->q = this;
     this->setTabsClosable(true);
     this->setMovable(true);
+
+    this->tabBar()->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(this->tabBar(), SIGNAL(customContextMenuRequested(QPoint)), this, SIGNAL(signalRightClick(QPoint)));
 }
 
 TabberTabWidget::~TabberTabWidget()

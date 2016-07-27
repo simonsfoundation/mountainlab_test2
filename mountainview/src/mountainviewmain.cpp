@@ -278,13 +278,13 @@ int main(int argc, char* argv[])
             context->setElectrodeGeometry(eg);
         }
 
-        if (CLP.named_parameters.contains("labels_subset")) {
-            QStringList labels_subset_str=CLP.named_parameters["labels_subset"].toString().split(",",QString::SkipEmptyParts);
-            QList<int> labels_subset;
-            foreach (QString label,labels_subset_str) {
-                labels_subset << label.toInt();
+        if (CLP.named_parameters.contains("clusters")) {
+            QStringList clusters_subset_str = CLP.named_parameters["clusters"].toString().split(",", QString::SkipEmptyParts);
+            QList<int> clusters_subset;
+            foreach (QString label, clusters_subset_str) {
+                clusters_subset << label.toInt();
             }
-            context->setLabelsSubset(labels_subset.toSet());
+            context->setClustersSubset(clusters_subset.toSet());
         }
 
         set_nice_size(W);

@@ -66,6 +66,7 @@ public slots:
     void closeAllViews();
     void openView(const QString& id);
     void recalculateViews(RecalculateViewsMode mode);
+    void extractSelectedClusters();
 
 protected:
     void resizeEvent(QResizeEvent* evt);

@@ -139,6 +139,11 @@ double compute_distance(long N, double* ptr1, double* ptr2)
     return sqrt(sumsqr);
 }
 
+bool is_zero(const Mda& X)
+{
+    return ((X.minimum() == 0) && (X.maximum() == 0));
+}
+
 Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_sherpa_opts opts)
 {
     QVector<double> times;
@@ -160,7 +165,12 @@ Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_disc
             Mda tmp2;
             X.getChunk(tmp2, 0, 0, k2, M, T, 1);
             double dist = compute_distance(M * T, tmp1.dataPtr(), tmp2.dataPtr());
-            ret.setValue(dist, k1, k2);
+            if ((is_zero(tmp1)) || (is_zero(tmp2))) {
+                ret.setValue(0, k1, k2);
+            }
+            else {
+                ret.setValue(dist, k1, k2);
+            }
         }
     }
     return ret;
@@ -191,7 +201,9 @@ void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda&
             pp.k1 = i1 + 1;
             pp.k2 = i2 + 1;
             if ((!clusters_to_exclude.contains(pp.k1)) && (!clusters_to_exclude.contains(pp.k2))) {
-                pairs << pp;
+                if (pp.dist) {
+                    pairs << pp;
+                }
             }
         }
     }

@@ -13,7 +13,7 @@ mv_discrimhist_sherpa_Processor::mv_discrimhist_sherpa_Processor()
     d->q = this;
 
     this->setName("mv_discrimhist_sherpa");
-    this->setVersion("0.152");
+    this->setVersion("0.153");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("output");
     this->setRequiredParameters("num_histograms", "clusters_to_exclude");

@@ -181,7 +181,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
 
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()));
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
-    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     this->recalculateOnOptionChanged("clip_size");
     onOptionChanged("cluster_color_index_shift", this, SLOT(onCalculationFinished()));
 

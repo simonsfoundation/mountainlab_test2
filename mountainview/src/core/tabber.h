@@ -43,6 +43,7 @@ signals:
 private slots:
     void slot_tab_close_requested(int index);
     void slot_tab_bar_double_clicked(int index);
+    void slot_tab_bar_right_clicked(QPoint pt);
     void slot_widget_destroyed(QObject* obj);
     void slot_recalculate_suggested_changed();
     void slot_move_to_other_container();
@@ -61,6 +62,8 @@ public:
     TabberTabWidget();
     virtual ~TabberTabWidget();
     MVAbstractView* view(int index);
+signals:
+    void signalRightClick(QPoint pt);
 
 private:
     TabberTabWidgetPrivate* d;

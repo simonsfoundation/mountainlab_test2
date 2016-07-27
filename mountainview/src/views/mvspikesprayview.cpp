@@ -105,7 +105,7 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     recalculateOnOptionChanged("timeseries_for_spikespray");
     recalculateOn(mvContext(), SIGNAL(clusterMergeChanged()));
     recalculateOn(mvContext(), SIGNAL(timeseriesNamesChanged()));
-    recalculateOn(mvContext(), SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     onOptionChanged("cluster_color_index_shift", this, SLOT(onCalculationFinished()));
 
     QWidget* panel_widget = new QWidget;
@@ -223,7 +223,7 @@ void MVSpikeSprayView::onCalculationFinished()
 
 QJsonObject MVSpikeSprayView::exportStaticView()
 {
-    QJsonObject ret;
+    QJsonObject ret = MVAbstractView::exportStaticView();
     ret["view-type"] = "MVSpikeSprayView";
     ret["computer-output"] = d->m_computer.exportStaticOutput();
     ret["labels-to-use"] = MLUtil::toJsonValue(d->m_labels_to_use.toList().toVector());
@@ -232,6 +232,7 @@ QJsonObject MVSpikeSprayView::exportStaticView()
 
 void MVSpikeSprayView::loadStaticView(const QJsonObject& X)
 {
+    MVAbstractView::loadStaticView(X);
     QJsonObject computer_output = X["computer-output"].toObject();
     d->m_computer.loadStaticOutput(computer_output);
     QVector<int> labels_to_use;

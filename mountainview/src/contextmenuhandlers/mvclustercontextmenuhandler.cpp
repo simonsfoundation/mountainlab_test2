@@ -168,7 +168,7 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         actions << action;
     }
 
-    //SPIKE SPRAY
+    //CLIPS
     {
         QAction* action = new QAction("Clips", 0);
         action->setToolTip("View all spike clips for these clusters");
@@ -176,6 +176,24 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         action->setData(clusterList);
         connect(action, &QAction::triggered, [mw]() {
             mw->openView("open-clips");
+        });
+        actions << action;
+    }
+
+    //Separator
+    {
+        QAction* action = new QAction(0);
+        action->setSeparator(true);
+        actions << action;
+    }
+
+    //EXTRACT SELECTED CLUSTERS
+    {
+        QAction* action = new QAction("Extract selected clusters in new window", 0);
+        action->setToolTip("Extract selected clusters in new window");
+        action->setEnabled(clusters.count() >= 1);
+        connect(action, &QAction::triggered, [mw]() {
+            mw->extractSelectedClusters();
         });
         actions << action;
     }

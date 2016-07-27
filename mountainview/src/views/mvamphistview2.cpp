@@ -51,7 +51,7 @@ MVAmpHistView2::MVAmpHistView2(MVContext* context)
     ActionFactory::addToToolbar(ActionFactory::ActionType::PanLeft, this, SLOT(slot_pan_left()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::PanRight, this, SLOT(slot_pan_right()));
 
-    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
@@ -160,7 +160,7 @@ void MVAmpHistView2Computer::compute()
 
     int K = MLCompute::max<int>(labels);
 
-    //assembe the histograms index 0 <--> k=1
+    //assemble the histograms index 0 <--> k=1
     for (int k = 1; k <= K; k++) {
         AmpHistogram HH;
         HH.k = k;
@@ -173,6 +173,13 @@ void MVAmpHistView2Computer::compute()
         double amp0 = firings.value(row, n);
         if ((label0 >= 1) && (label0 <= K)) {
             this->histograms[label0 - 1].data << amp0;
+        }
+    }
+
+    for (int i = 0; i < histograms.count(); i++) {
+        if (histograms[i].data.count() == 0) {
+            histograms.removeAt(i);
+            i--;
         }
     }
 }

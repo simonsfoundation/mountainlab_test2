@@ -69,7 +69,7 @@ MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* context)
     d = new MVCrossCorrelogramsWidget3Private;
     d->q = this;
 
-    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
@@ -163,20 +163,22 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
 
     QList<HistogramView*> histogram_views;
     for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
-        int k1 = d->m_correlograms[ii].k1;
-        int k2 = d->m_correlograms[ii].k2;
-        if ((mvContext()->clusterIsVisible(k1)) && (mvContext()->clusterIsVisible(k2))) {
-            HistogramView* HV = new HistogramView;
-            HV->setData(d->m_correlograms[ii].data);
-            HV->setColors(mvContext()->colors());
-            HV->setBinInfo(bin_min, bin_max, num_bins);
-            QString title0;
-            QString caption0;
-            HV->setProperty("k", d->m_correlograms[ii].k1);
-            HV->setProperty("k1", d->m_correlograms[ii].k1);
-            HV->setProperty("k2", d->m_correlograms[ii].k2);
+        if ((d->m_correlograms[ii].data.count() > 0) || (this->pairMode())) {
+            int k1 = d->m_correlograms[ii].k1;
+            int k2 = d->m_correlograms[ii].k2;
+            if ((mvContext()->clusterIsVisible(k1)) && (mvContext()->clusterIsVisible(k2))) {
+                HistogramView* HV = new HistogramView;
+                HV->setData(d->m_correlograms[ii].data);
+                HV->setColors(mvContext()->colors());
+                HV->setBinInfo(bin_min, bin_max, num_bins);
+                QString title0;
+                QString caption0;
+                HV->setProperty("k", d->m_correlograms[ii].k1);
+                HV->setProperty("k1", d->m_correlograms[ii].k1);
+                HV->setProperty("k2", d->m_correlograms[ii].k2);
 
-            histogram_views << HV;
+                histogram_views << HV;
+            }
         }
     }
     this->setHistogramViews(histogram_views);
@@ -233,7 +235,7 @@ void from_string(HistogramView::TimeScaleMode& tsm, QString str)
 
 QJsonObject MVCrossCorrelogramsWidget3::exportStaticView()
 {
-    QJsonObject ret;
+    QJsonObject ret = MVAbstractView::exportStaticView();
     ret["view-type"] = "MVCrossCorrelogramsWidget";
     ret["version"] = "0.1";
     ret["computer-output"] = d->m_computer.exportStaticOutput();
@@ -244,6 +246,7 @@ QJsonObject MVCrossCorrelogramsWidget3::exportStaticView()
 
 void MVCrossCorrelogramsWidget3::loadStaticView(const QJsonObject& X)
 {
+    MVAbstractView::loadStaticView(X);
     QJsonObject computer_output = X["computer-output"].toObject();
     d->m_computer.loadStaticOutput(computer_output);
     CrossCorrelogramOptions3 opts;

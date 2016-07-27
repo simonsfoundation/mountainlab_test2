@@ -46,6 +46,7 @@ struct ClusterData {
     QVector<double> peaks;
 
     QJsonObject toJsonObject();
+    void fromJsonObject(const QJsonObject& X);
 };
 
 struct ChannelSpacingInfo {
@@ -179,7 +180,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewF
     connect(context, SIGNAL(clusterVisibilityChanged()), this, SLOT(update()));
     connect(context, SIGNAL(viewMergedChanged()), this, SLOT(update()));
 
-    recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
     recalculateOnOptionChanged("clip_size");
 
@@ -278,7 +279,7 @@ QImage MVClusterDetailWidget::renderImage(int W, int H)
 
 QJsonObject MVClusterDetailWidget::exportStaticView()
 {
-    QJsonObject ret;
+    QJsonObject ret = MVAbstractView::exportStaticView();
     ret["view-type"] = "MVClusterDetailWidget";
     ret["version"] = "0.1";
     ret["calculator-output"] = d->m_calculator.exportStaticOutput();
@@ -295,7 +296,14 @@ QJsonObject MVClusterDetailWidget::exportStaticView()
 
 void MVClusterDetailWidget::loadStaticView(const QJsonObject& X)
 {
-    Q_UNUSED(X)
+    MVAbstractView::loadStaticView(X);
+    d->m_calculator.loadStaticOutput(X["calculator-output"].toObject());
+    QJsonObject info = X["info"].toObject();
+    d->m_vscale_factor = info["vscale_factor"].toDouble();
+    d->m_space_ratio = info["space_ratio"].toDouble();
+    d->m_total_time_sec = info["total_time_sec"].toDouble();
+    d->m_stdev_shading = info["stdev_shading"].toBool();
+    this->recalculate();
 }
 
 ChannelSpacingInfo compute_channel_spacing_info(QList<ClusterData>& cdata, double vscale_factor)
@@ -1209,7 +1217,9 @@ void MVClusterDetailWidgetCalculator::compute()
         templates0.readChunk(CD.template0, 0, 0, k - 1, M, T, 1);
         stdevs0.readChunk(CD.stdev0, 0, 0, k - 1, M, T, 1);
         if (!MLUtil::threadInterruptRequested()) {
-            cluster_data << CD;
+            if (CD.inds.count() > 0) {
+                cluster_data << CD;
+            }
         }
     }
 }
@@ -1230,7 +1240,14 @@ QJsonObject MVClusterDetailWidgetCalculator::exportStaticOutput()
 
 void MVClusterDetailWidgetCalculator::loadStaticOutput(const QJsonObject& X)
 {
-    Q_UNUSED(X)
+    cluster_data.clear();
+    QJsonArray cd_list = X["cluster_data"].toArray();
+    for (int i = 0; i < cd_list.count(); i++) {
+        ClusterData CD;
+        CD.fromJsonObject(cd_list[i].toObject());
+        cluster_data << CD;
+    }
+    loaded_from_static_output = true;
 }
 
 ClusterView::ClusterView(MVClusterDetailWidget* q0, MVClusterDetailWidgetPrivate* d0)
@@ -1343,9 +1360,25 @@ QJsonObject ClusterData::toJsonObject()
     QJsonObject ret;
     ret["channel"] = this->channel;
     //ret["inds"]=MLUtil::toJsonValue(this->inds); //to big, and unnecessary.... same with peaks and times
-    ret["num_events"] = this->inds.count();
+    ret["num_events"] = this->num_events;
     ret["k"] = this->k;
     ret["stdev0"] = MLUtil::toJsonValue(this->stdev0.toByteArray32());
     ret["template0"] = MLUtil::toJsonValue(this->template0.toByteArray32());
     return ret;
+}
+
+void ClusterData::fromJsonObject(const QJsonObject& X)
+{
+    this->channel = X["channel"].toInt();
+    this->num_events = X["num_events"].toInt();
+    this->k = X["k"].toInt();
+    QByteArray tmp;
+    {
+        MLUtil::fromJsonValue(tmp, X["stdev0"]);
+        this->stdev0.fromByteArray(tmp);
+    }
+    {
+        MLUtil::fromJsonValue(tmp, X["template0"]);
+        this->template0.fromByteArray(tmp);
+    }
 }

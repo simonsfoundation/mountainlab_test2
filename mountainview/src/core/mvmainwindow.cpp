@@ -19,6 +19,9 @@
 #include "mvdiscrimhistview.h"
 #include "sherpav1.h"
 
+#include <QApplication>
+#include <QProcess>
+
 #include "mvabstractviewfactory.h"
 #include "mvabstractcontextmenuhandler.h"
 #include "mvclustercontextmenuhandler.h"
@@ -59,6 +62,7 @@
 #include <mvdiscrimhistview_sherpa.h>
 #include <sherpav2.h>
 #include <firetrackview.h>
+#include <cachemanager.h>
 
 #include "clusterannotationguide.h"
 
@@ -178,6 +182,21 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
                 QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_sherpa_v2()));
             }
         }
+
+        {
+            QToolButton* B = new QToolButton();
+            B->setText("Tools");
+            QMenu* menu = new QMenu;
+            B->setMenu(menu);
+            B->setPopupMode(QToolButton::InstantPopup);
+            main_toolbar->addWidget(B);
+            {
+                QAction* A = new QAction("Extract selected clusters in new view", this);
+                menu->addAction(A);
+                QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(extractSelectedClusters()));
+            }
+        }
+
         /*
         {
             QAction* A = new QAction("Sherpa version 1", this);
@@ -373,6 +392,25 @@ void MVMainWindow::recalculateViews(RecalculateViewsMode mode)
     }
 }
 
+void MVMainWindow::extractSelectedClusters()
+{
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".mv";
+    QJsonObject obj = this->mvContext()->toMVFileObject();
+    QString json = QJsonDocument(obj).toJson();
+    TextFile::write(tmp_fname, json);
+    QString exe = qApp->applicationFilePath();
+    QStringList args;
+    QList<int> clusters = mvContext()->selectedClusters();
+    QStringList clusters_str;
+    foreach (int cluster, clusters) {
+        clusters_str << QString("%1").arg(cluster);
+    }
+
+    args << tmp_fname << "--clusters=" + clusters_str.join(",");
+    qDebug() << "EXECUTING: " + exe + " " + args.join(" ");
+    QProcess::startDetached(exe, args);
+}
+
 MVContext* MVMainWindow::mvContext() const
 {
     return d->m_context;
@@ -474,6 +512,8 @@ MVAbstractView* MVMainWindowPrivate::openView(MVAbstractViewFactory* factory)
     if (!view)
         return Q_NULLPTR;
     //    set_tool_button_menu(view);
+    /// TODO: don't pass label as argument to add_tab (think about it)
+    view->setTitle(factory->title());
     add_tab(view, factory->title());
 
     QObject::connect(view, SIGNAL(contextMenuRequested(QMimeData, QPoint)),

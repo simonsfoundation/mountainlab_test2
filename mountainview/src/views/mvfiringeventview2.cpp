@@ -123,7 +123,7 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
     connect(context, SIGNAL(currentTimeRangeChanged()), SLOT(slot_update_image()));
 
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()));
-    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     this->recalculate();
 }
 

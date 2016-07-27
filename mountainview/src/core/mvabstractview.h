@@ -33,6 +33,9 @@ public:
     bool recalculateSuggested() const;
     void stopCalculation();
 
+    QString title() const;
+    void setTitle(const QString& title);
+
     QString calculatingMessage() const;
 
     virtual QJsonObject exportStaticView();

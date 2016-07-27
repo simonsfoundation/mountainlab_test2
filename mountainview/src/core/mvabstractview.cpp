@@ -29,6 +29,7 @@ public:
     bool m_recalculate_suggested;
     bool m_never_suggest_recalculate = false;
     QString m_calculating_message = "Calculating...";
+    QString m_title;
 
     CalculationThread m_calculation_thread;
 
@@ -82,6 +83,16 @@ void MVAbstractView::stopCalculation()
     d->stop_calculation();
 }
 
+QString MVAbstractView::title() const
+{
+    return d->m_title;
+}
+
+void MVAbstractView::setTitle(const QString& title)
+{
+    d->m_title = title;
+}
+
 QString MVAbstractView::calculatingMessage() const
 {
     return d->m_calculating_message;
@@ -89,14 +100,15 @@ QString MVAbstractView::calculatingMessage() const
 
 QJsonObject MVAbstractView::exportStaticView()
 {
-    qWarning() << "exportStaticView not implemented for view.";
+    QJsonObject ret;
+    ret["title"] = this->title();
     return QJsonObject();
 }
 
 void MVAbstractView::loadStaticView(const QJsonObject& X)
 {
-    Q_UNUSED(X)
-    qWarning() << "loadStaticView not implemented for view.";
+    if (X.contains("title"))
+        this->setTitle(X["title"].toString());
 }
 
 MVAbstractViewFactory* MVAbstractView::viewFactory() const

@@ -143,8 +143,8 @@ public:
     void setElectrodeGeometry(const ElectrodeGeometry& geom);
 
     /////////////////////////////////////////////////
-    QSet<int> labelsSubset() const;
-    void setLabelsSubset(const QSet<int> &labels_subset);
+    QSet<int> clustersSubset() const;
+    void setClustersSubset(const QSet<int>& clusters_subset);
 
     /////////////////////////////////////////////////
     MVEvent currentEvent() const;

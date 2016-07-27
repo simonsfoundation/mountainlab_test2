@@ -52,7 +52,7 @@ MVDiscrimHistViewSherpa::MVDiscrimHistViewSherpa(MVContext* context)
     d->q = this;
 
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
-    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);

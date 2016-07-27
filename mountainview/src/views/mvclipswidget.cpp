@@ -74,7 +74,7 @@ MVClipsWidget::MVClipsWidget(MVContext* context)
     this->setLayout(hlayout);
 
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
-    this->recalculateOn(context, SIGNAL(filteredFiringsChanged()));
+    this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     this->recalculateOnOptionChanged("clip_size");
 
     recalculate();
