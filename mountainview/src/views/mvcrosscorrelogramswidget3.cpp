@@ -38,6 +38,7 @@ public:
     CrossCorrelogramOptions3 options;
     int max_dt;
     ClusterMerge cluster_merge;
+    int pair_mode=false;
 
     //output
     QList<Correlogram3> correlograms;
@@ -120,6 +121,7 @@ void MVCrossCorrelogramsWidget3::prepareCalculation()
     if (mvContext()->viewMerged()) {
         d->m_computer.cluster_merge = mvContext()->clusterMerge();
     }
+    d->m_computer.pair_mode=this->pairMode();
 }
 
 void MVCrossCorrelogramsWidget3::runCalculation()
@@ -163,22 +165,20 @@ void MVCrossCorrelogramsWidget3::onCalculationFinished()
 
     QList<HistogramView*> histogram_views;
     for (int ii = 0; ii < d->m_correlograms.count(); ii++) {
-        if ((d->m_correlograms[ii].data.count() > 0) || (this->pairMode())) {
-            int k1 = d->m_correlograms[ii].k1;
-            int k2 = d->m_correlograms[ii].k2;
-            if ((mvContext()->clusterIsVisible(k1)) && (mvContext()->clusterIsVisible(k2))) {
-                HistogramView* HV = new HistogramView;
-                HV->setData(d->m_correlograms[ii].data);
-                HV->setColors(mvContext()->colors());
-                HV->setBinInfo(bin_min, bin_max, num_bins);
-                QString title0;
-                QString caption0;
-                HV->setProperty("k", d->m_correlograms[ii].k1);
-                HV->setProperty("k1", d->m_correlograms[ii].k1);
-                HV->setProperty("k2", d->m_correlograms[ii].k2);
+        int k1 = d->m_correlograms[ii].k1;
+        int k2 = d->m_correlograms[ii].k2;
+        if ((mvContext()->clusterIsVisible(k1)) && (mvContext()->clusterIsVisible(k2))) {
+            HistogramView* HV = new HistogramView;
+            HV->setData(d->m_correlograms[ii].data);
+            HV->setColors(mvContext()->colors());
+            HV->setBinInfo(bin_min, bin_max, num_bins);
+            QString title0;
+            QString caption0;
+            HV->setProperty("k", d->m_correlograms[ii].k1);
+            HV->setProperty("k1", d->m_correlograms[ii].k1);
+            HV->setProperty("k2", d->m_correlograms[ii].k2);
 
-                histogram_views << HV;
-            }
+            histogram_views << HV;
         }
     }
     this->setHistogramViews(histogram_views);
@@ -422,6 +422,10 @@ void MVCrossCorrelogramsWidget3Computer::compute()
         int k1 = correlograms[j].k1;
         int k2 = correlograms[j].k2;
         correlograms[j].data = compute_cc_data3(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
+        if ((correlograms[j].data.isEmpty())&&(!pair_mode)) {
+            correlograms.removeAt(j);
+            j--;
+        }
     }
 }
 

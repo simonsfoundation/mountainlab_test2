@@ -26,6 +26,7 @@
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtConcurrentRun>
+#include <mvclusterdetailwidget.h>
 #include <mvcrosscorrelogramswidget3.h>
 #include <mvmergecontrol.h>
 #include <mvspikesprayview.h>
@@ -148,6 +149,7 @@ int main(int argc, char* argv[])
         WW->setLayout(LL);
         Tabber* tabber = new Tabber;
         LL->addWidget(tabber->createTabWidget("north"));
+        LL->addWidget(tabber->createTabWidget("south"));
         if (CLP.unnamed_parameters.count() > 1) //only make the south tab widget if we have more than one static view
             LL->addWidget(tabber->createTabWidget("south"));
         set_nice_size(WW);
@@ -156,32 +158,39 @@ int main(int argc, char* argv[])
             QString fname = CLP.unnamed_parameters.value(i);
             if (fname.endsWith(".smv")) {
                 QJsonObject obj = QJsonDocument::fromJson(TextFile::read(fname).toLatin1()).object();
-                QString view_type = obj["view-type"].toString();
-                if (view_type == "MVSpikeSprayView") {
-                    mvcontext->setFromMVFileObject(obj["mvcontext"].toObject());
-                    MVSpikeSprayView* V = new MVSpikeSprayView(mvcontext);
-                    V->loadStaticView(obj);
-                    QString container;
-                    if (i % 2 == 0)
-                        container = "north";
-                    else
-                        container = "south";
-                    tabber->addWidget(container, QFileInfo(fname).fileName(), V);
-                }
-                else if (view_type == "MVCrossCorrelogramsWidget") {
-                    mvcontext->setFromMVFileObject(obj["mvcontext"].toObject());
-                    MVCrossCorrelogramsWidget3* V = new MVCrossCorrelogramsWidget3(mvcontext);
-                    V->loadStaticView(obj);
-                    QString container;
-                    if (i % 2 == 0)
-                        container = "north";
-                    else
-                        container = "south";
-                    tabber->addWidget(container, QFileInfo(fname).fileName(), V);
-                }
-                else {
-                    qWarning() << "Unknown view type: " + view_type;
-                    return -1;
+                mvcontext->setFromMVFileObject(obj["mvcontext"].toObject());
+                QJsonArray static_views=obj["static-views"].toArray();
+                for (int ii=0; ii<static_views.count(); ii++) {
+                    QJsonObject SV=static_views[ii].toObject();
+                    QString container=SV["container"].toString();
+                    QJsonObject SVdata=SV["data"].toObject();
+                    QString view_type = SVdata["view-type"].toString();
+                    qDebug() << "OPENING VIEW: "+view_type;
+                    if (container.isEmpty()) {
+                        if (i % 2 == 0)
+                            container = "north";
+                        else
+                            container = "south";
+                    }
+                    if (view_type == "MVSpikeSprayView") {
+                        MVAbstractView* V = new MVSpikeSprayView(mvcontext);
+                        V->loadStaticView(SVdata);
+                        tabber->addWidget(container, view_type, V);
+                    }
+                    else if (view_type == "MVCrossCorrelogramsWidget") {
+                        MVAbstractView* V = new MVCrossCorrelogramsWidget3(mvcontext);
+                        V->loadStaticView(SVdata);
+                        tabber->addWidget(container, view_type, V);
+                    }
+                    else if (view_type == "MVClusterDetailWidget") {
+                        MVAbstractView* V = new MVClusterDetailWidget(mvcontext);
+                        V->loadStaticView(SVdata);
+                        tabber->addWidget(container, view_type, V);
+                    }
+                    else {
+                        qWarning() << "Unknown view type: " + view_type;
+                        return -1;
+                    }
                 }
             }
         }

@@ -207,7 +207,9 @@ void MVContext::setFromMVFileObject(QJsonObject X)
         this->setClusterVisibilityRule(ClusterVisibilityRule::fromJsonObject(X["visibility_rule"].toObject()));
     }
     d->m_electrode_geometry = ElectrodeGeometry::fromJsonObject(X["electrode_geometry"].toObject());
-    d->m_clusters_subset = json_array_to_intlist(X["clusters_subset"].toArray()).toSet();
+    if (X.contains("clusters_subset")) {
+        this->setClustersSubset(json_array_to_intlist(X["clusters_subset"].toArray()).toSet());
+    }
     d->m_view_merged = X["view_merged"].toBool();
     emit this->currentTimeseriesChanged();
     emit this->timeseriesNamesChanged();

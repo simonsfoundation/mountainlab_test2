@@ -41,9 +41,7 @@ struct ClusterData {
     int channel;
     Mda template0;
     Mda stdev0;
-    QVector<int> inds;
-    QVector<double> times;
-    QVector<double> peaks;
+    int num_events=0;
 
     QJsonObject toJsonObject();
     void fromJsonObject(const QJsonObject& X);
@@ -804,7 +802,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
 
     if (!compressed_info) {
         RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height, m_bottom_rect.width(), text_height);
-        txt = QString("%1 spikes").arg(m_CD.inds.count());
+        txt = QString("%1 spikes").arg(m_CD.num_events);
         QPen pen;
         pen.setWidth(1);
         pen.setColor(q->mvContext()->color("info_text"));
@@ -817,7 +815,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
         QPen pen;
         pen.setWidth(1);
         RR = QRectF(m_bottom_rect.x(), m_bottom_rect.y() + m_bottom_rect.height() - text_height * 2, m_bottom_rect.width(), text_height);
-        double rate = m_CD.inds.count() * 1.0 / d->m_total_time_sec;
+        double rate = m_CD.num_events * 1.0 / d->m_total_time_sec;
         pen.setColor(get_firing_rate_text_color(rate));
         if (!compressed_info)
             txt = QString("%1 sp/sec").arg(QString::number(rate, 'g', 2));
@@ -1002,11 +1000,10 @@ ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterD
         sumsqr0.allocate(group[0].template0.N1(), group[0].template0.N2(), group[0].template0.N3());
     }
     double total_weight = 0;
+    ret.num_events=group.count();
     for (int i = 0; i < group.count(); i++) {
-        ret.inds << group[i].inds;
-        ret.peaks << group[i].peaks;
-        ret.times << group[i].times;
-        double weight = ret.inds.count();
+        ret.num_events+= group[i].num_events;
+        double weight = group[i].num_events;
         for (int i3 = 0; i3 < sum0.N3(); i3++) {
             for (int i2 = 0; i2 < sum0.N2(); i2++) {
                 for (int i1 = 0; i1 < sum0.N1(); i1++) {
@@ -1204,10 +1201,7 @@ void MVClusterDetailWidgetCalculator::compute()
         CD.channel = 0;
         for (int i = 0; i < L; i++) {
             if (labels[i] == k) {
-                CD.inds << i;
-                CD.times << times[i];
-                CD.channel = channels[i];
-                CD.peaks << peaks[i];
+                CD.num_events++;
             }
         }
         if (MLUtil::threadInterruptRequested()) {
@@ -1217,7 +1211,7 @@ void MVClusterDetailWidgetCalculator::compute()
         templates0.readChunk(CD.template0, 0, 0, k - 1, M, T, 1);
         stdevs0.readChunk(CD.stdev0, 0, 0, k - 1, M, T, 1);
         if (!MLUtil::threadInterruptRequested()) {
-            if (CD.inds.count() > 0) {
+            if (CD.num_events > 0) {
                 cluster_data << CD;
             }
         }
