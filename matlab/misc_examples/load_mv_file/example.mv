@@ -1,0 +1,226 @@
+{
+    "cluster_attributes": {
+        "1": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "10": {
+            "tags": [
+                "noise",
+                "rejected"
+            ]
+        },
+        "11": {
+            "tags": [
+                "noise",
+                "rejected"
+            ]
+        },
+        "12": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "13": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "14": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "15": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "16": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "17": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "18": {
+            "tags": [
+                "noise",
+                "rejected"
+            ]
+        },
+        "19": {
+            "tags": [
+                "noise",
+                "rejected"
+            ]
+        },
+        "2": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "20": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "21": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "22": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "23": {
+            "tags": [
+                "noise",
+                "rejected"
+            ]
+        },
+        "24": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "25": {
+            "tags": [
+                "noise",
+                "rejected"
+            ]
+        },
+        "26": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "27": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "28": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "29": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "3": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "30": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "31": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "32": {
+            "tags": [
+                "noise",
+                "rejected"
+            ]
+        },
+        "4": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "5": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "6": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "7": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "8": {
+            "tags": [
+                "accepted"
+            ]
+        },
+        "9": {
+            "tags": [
+                "noise",
+                "rejected"
+            ]
+        }
+    },
+    "cluster_pair_attributes": {
+        "pair_12_14": {
+            "tags": [
+                "merge_candidate"
+            ]
+        },
+        "pair_6_7": {
+            "tags": [
+                "merge_candidate"
+            ]
+        }
+    },
+    "clusters_subset": [
+    ],
+    "current_timeseries_name": "Preprocessed Data",
+    "electrode_geometry": {
+        "coordinates": [
+            [
+                2.1461144473548733e-316
+            ]
+        ]
+    },
+    "event_filter": {
+        "max_outlier_score": 6,
+        "min_detectability_score": 3,
+        "use_event_filter": true
+    },
+    "firings": "firings.mda",
+    "mlproxy_url": "",
+    "options": {
+        "amp_thresh_display": 0,
+        "cc_bin_size_msec": 0.5,
+        "cc_log_time_constant_msec": 1,
+        "cc_max_dt_msec": 100,
+        "clip_size": 150,
+        "timeseries_for_spikespray": ""
+    },
+    "samplerate": 30000,
+    "timeseries": {
+        "Preprocessed Data": {
+            "data": "pre2.mda",
+            "name": "Preprocessed Data"
+        }
+    },
+    "view_merged": true,
+    "visibility_rule": {
+        "subset": [
+        ],
+        "use_subset": false,
+        "view_all_tagged": true,
+        "view_all_untagged": true,
+        "view_tags": [
+        ]
+    }
+}
