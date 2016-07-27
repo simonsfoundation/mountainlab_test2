@@ -48,20 +48,20 @@ bool geom2adj_Processor::run(const QMap<QString, QVariant>& params)
 
     Mda X(input);
     Mda Y;
-    int M = X.N1();
-    int N = X.N2();
+    int N = X.N1();    // note transposed rel to appearance in CSV
+    int M = X.N2();
 
     if (channels.isEmpty()) {
         for (int m = 1; m <= M; m++)
             channels << m;
     }
 
-    Y.allocate(N, N);
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
+    Y.allocate(M, M);
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < M; j++) {
             double distsqr = 0;
-            for (int m = 0; m < M; m++) {
-                double val = X.value(m, i) - X.value(m, j);
+            for (int n = 0; n < N; n++) {   // loop over coord dimension
+                double val = X.value(n, i) - X.value(n, j);
                 distsqr += val * val;
             }
             if (distsqr <= radius * radius) {

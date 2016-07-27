@@ -1,5 +1,39 @@
 function [firings_fname,info]=alg_scda_005(timeseries_fname,output_dir,opts)
+% ALG_SCDA_005  Matlab implementation of JFM's javascript/C++ sorter of July 2017
+%
+% [firingsfile,info] = alg_scda_005(rawfile,output_dir,o)
+%
+% Inputs:
+%    rawfile - path to .mda of MxN (ie # channels by # timepoints) raw signal data
+%    output_dir - path to existing directory where all output will be written
+%    o - optional, contains sorting options, can include any of:
+%                   clip_size=100;
+%                   detect_threshold=4;
+%                   detect_interval=10;
+%                   shell_increment=3;
+%                   min_shell_size=150;
+%                   samplerate=30000;
+%                   sign=0;
+%                   freq_min=300;
+%                   freq_max=10000;
+%                   num_fea=10;
+%                   adj_radius=0;
+%                   channels=[];
+%                   timerange=[-1,-1];
+%                   use_whitening=1;
+%                   use_mask_out_artifacts=1;
+%                   geom=''; path of CSV file giving x,y coords of each electrode
+%                            (if absent or empty assumes full dense connectivity)
+% Outputs:
+%    firingsfile - path to the firings.mda output file
+%    info - struct with fields:
+%           filtfile - filtered timeseries
+%           prefile - path to the preprocessed timeseries (filt and whitened)
+%
+% Also see: mountainlab_devel/sorting_algs/alg_scda_005_js.m  which is just a
+%           wrapper to alg_scda_005.js
 
+% Magland & Barnett 7/27/16
 def_opts.clip_size=100;
 def_opts.detect_threshold=4;
 def_opts.detect_interval=10;
@@ -19,7 +53,7 @@ def_opts.geom='';
 opts=ms_set_default_opts(opts,def_opts);
 
 raw=timeseries;
-geom=params.geom;
+geom=opts.geom;
 
 o_geom2adj=struct('channels',opts.channels,'radius',opts.adj_radius);
 o_extract_raw=struct('t1',opts.timerange(1),'t2',opts.timerange(2)),'channels',opts.channels);
@@ -61,9 +95,9 @@ end;
 if (opts.use_whitening)
     mscmd_whiten(pre1b,pre2,o_whiten);
 else
-    mscmd_normalize_channels(pre1b,pre2,struct);
+    mscmd_normalize_channels(pre1b,pre2,struct);       % ******
 end;
-mscmd_detect(pre2,detect,o_detect);
+mscmd_detect(pre2,detect,o_detect);       % <--- make variant w/ detect3
 mscmd_branch_cluster_v2(pre2,detect,adjacency_matrix,firings1,o_branch_cluster);
 mscmd_merge_across_channels(pre2,firings1,firings2,o_merge_across_channels);
 mscmd_fit_stage(pre2,firings2,firings3,o_fit_stage);

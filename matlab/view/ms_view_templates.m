@@ -73,6 +73,7 @@ Tmargin=T+Tpad;
 vmargin=vspread*1.5;
 additional_left_margin=T*0.5;
 xlim([-Tmargin-additional_left_margin,(T+Tpad)*K+Tmargin]);
+vspread, vmargin, M
 ylim([-vspread*(M-1)-vmargin,vmargin]);
 set(gca,'xtick',[]); set(gca,'ytick',[]);
 %set(gca,'position',[0,0,1,1]);
