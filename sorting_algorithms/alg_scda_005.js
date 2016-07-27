@@ -20,7 +20,7 @@ function run_algorithm(params) {
 	params.timerange=params.timerange||[-1,-1];
 	params.use_whitening=params.use_whitening||'true';
 	params.use_mask_out_artifacts=params.use_mask_out_artifacts||'true';
-	
+
 	var raw=params.raw;
 	var geom=params.geom;
 	var outpath=params.outpath;
