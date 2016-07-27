@@ -16,10 +16,10 @@ TEMPLATE = lib
 
 INCLUDEPATH += ../include
 VPATH += ../include
-HEADERS += mlcommon.h
+HEADERS += mlcommon.h sumit.h
 
 SOURCES += \
-    mlcommon.cpp
+    mlcommon.cpp sumit.cpp
 
 INCLUDEPATH += ../include/mda
 VPATH += ../include/mda

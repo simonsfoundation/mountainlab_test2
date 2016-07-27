@@ -18,6 +18,7 @@
 #include <QDebug>
 #include <unistd.h> //for usleep
 #include "mpdaemon.h"
+#include "mlcommon.h"
 
 class ScriptControllerPrivate {
 public:
@@ -71,15 +72,22 @@ QString ScriptController::fileChecksum(const QString& fname_in)
     QTime timer;
     timer.start();
     printf("Computing checksum for file %s\n", fname.toLatin1().data());
+    QString ret=MLUtil::computeSha1SumOfFile(fname);
+    printf("%s -- Elapsed: %g sec\n", ret.toLatin1().data(), timer.elapsed() * 1.0 / 1000);
+    return ret;
+
+    /*
     QFile file(fname);
     if (!file.open(QIODevice::ReadOnly))
         return "";
+
     QCryptographicHash hash(QCryptographicHash::Sha1);
     hash.addData(&file);
     file.close();
     QString ret = QString(hash.result().toHex());
     printf("%s -- Elapsed: %g sec\n", ret.toLatin1().data(), timer.elapsed() * 1.0 / 1000);
     return ret;
+    */
 }
 
 QString ScriptController::stringChecksum(const QString& str)

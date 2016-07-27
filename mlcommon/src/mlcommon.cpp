@@ -170,8 +170,12 @@ void MLUtil::mkdirIfNeeded(const QString& path)
     mkdir_if_doesnt_exist(path);
 }
 
+
+#include "sumit.h"
 QString MLUtil::computeSha1SumOfFile(const QString& path)
 {
+    return sumit(path);
+    /*
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly))
         return "";
@@ -180,6 +184,7 @@ QString MLUtil::computeSha1SumOfFile(const QString& path)
     file.close();
     QString ret = QString(hash.result().toHex());
     return ret;
+    */
 }
 
 QString MLUtil::tempPath()
