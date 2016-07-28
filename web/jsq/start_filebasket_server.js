@@ -84,8 +84,7 @@ http.createServer(function (REQ, RESP) {
 				REQ.on('data',function(chunk) {
 					if (!ok) return;
 					num_bytes_received+=chunk.length;
-					var ret=write_stream.write(chunk,'binary');
-					console.log(ret);
+					write_stream.write(chunk,'binary');
 				});
 				REQ.on('end',function() {
 					if (!ok) return;
@@ -122,7 +121,7 @@ http.createServer(function (REQ, RESP) {
 console.log ('Listening on port '+listen_port);
 
 function valid_file_id(file_id) {
-	return /^[a-z0-9]+$/i.test(file_id);
+	return /^[a-z0-9\.]+$/i.test(file_id);
 }
 
 function serve_file(filename,response) {

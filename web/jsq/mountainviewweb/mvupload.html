@@ -23,13 +23,14 @@ $(document).ready(function() {
 		var reader=new FileReader();
 		reader.onload=function(ee) {
 			var buf = ee.target.result;
-			upload_data(buf);	
-		}
+			var file=$(':file')[0].files[0];
+			var file_id=make_random_id(10)+'.'+file.name;
+			upload_data(file_id,buf);
+		};
 		reader.readAsArrayBuffer($(':file')[0].files[0]);
 	});
 
-	function upload_data(buf)  {
-		var file_id=make_random_id(10);
+	function upload_data(file_id,buf)  {
 		$('#file_id').html('');
 		$('#url_link').html('');
 		$.ajax({
