@@ -343,6 +343,7 @@ QJsonObject MVMainWindow::exportStaticViews() const
         if (!obj.isEmpty()) {
             QJsonObject tmp;
             tmp["container"] = V->property("container").toString();
+            tmp["title"] = V->title();
             if (V->viewFactory()) {
                 tmp["view-factory-title"] = V->viewFactory()->title();
             }

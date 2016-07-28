@@ -157,12 +157,15 @@ int main(int argc, char* argv[])
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString fname = CLP.unnamed_parameters.value(i);
             if (fname.endsWith(".smv")) {
+                WW->setWindowTitle(fname);
                 QJsonObject obj = QJsonDocument::fromJson(TextFile::read(fname).toLatin1()).object();
                 mvcontext->setFromMVFileObject(obj["mvcontext"].toObject());
                 QJsonArray static_views = obj["static-views"].toArray();
                 for (int ii = 0; ii < static_views.count(); ii++) {
                     QJsonObject SV = static_views[ii].toObject();
                     QString container = SV["container"].toString();
+                    QString title = SV["title"].toString();
+                    qDebug() << "TITLE:::" << title;
                     QJsonObject SVdata = SV["data"].toObject();
                     QString view_type = SVdata["view-type"].toString();
                     qDebug() << "OPENING VIEW: " + view_type;
@@ -172,24 +175,23 @@ int main(int argc, char* argv[])
                         else
                             container = "south";
                     }
+                    MVAbstractView* V = 0;
                     if (view_type == "MVSpikeSprayView") {
-                        MVAbstractView* V = new MVSpikeSprayView(mvcontext);
-                        V->loadStaticView(SVdata);
-                        tabber->addWidget(container, view_type, V);
+                        V = new MVSpikeSprayView(mvcontext);
                     }
                     else if (view_type == "MVCrossCorrelogramsWidget") {
-                        MVAbstractView* V = new MVCrossCorrelogramsWidget3(mvcontext);
-                        V->loadStaticView(SVdata);
-                        tabber->addWidget(container, view_type, V);
+                        V = new MVCrossCorrelogramsWidget3(mvcontext);
                     }
                     else if (view_type == "MVClusterDetailWidget") {
-                        MVAbstractView* V = new MVClusterDetailWidget(mvcontext);
-                        V->loadStaticView(SVdata);
-                        tabber->addWidget(container, view_type, V);
+                        V = new MVClusterDetailWidget(mvcontext);
                     }
                     else {
                         qWarning() << "Unknown view type: " + view_type;
                         return -1;
+                    }
+                    if (V) {
+                        V->loadStaticView(SVdata);
+                        tabber->addWidget(container, title, V);
                     }
                 }
             }

@@ -1,5 +1,10 @@
 console.log('Running open_server...');
 
+/*
+WARNING (to myself)!!!!
+Resist the temptation to allow this server to do more than simply opening files
+*/
+
 //// requires
 var	url=require('url');
 var http=require('http');

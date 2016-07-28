@@ -26,3 +26,9 @@ times3=firings3(2,:);
 disp('Number of events corresponding to cluster 13:');
 disp(length(times3));
 
+% get the list of merged pairs (thx Loren)
+pairs=get_mv_merged_pairs(mv_file);
+disp('Merge pairs:');
+for j=1:length(pairs)
+    disp(pairs{j});
+end;

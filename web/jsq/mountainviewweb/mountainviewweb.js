@@ -32,7 +32,7 @@ function jsqmain(query) {
             for (var i in static_views) {
                 var SV=static_views[i];
                 var VV=create_static_view(mvcontext,SV.data);    
-                MW.addView(SV.container||get_container_from_index(i),SV.data['view-type'],VV);
+                MW.addView(SV.container||get_container_from_index(i),SV.title||SV.data['view-type'],VV);
             }  
             MW.setStatus('load-static-views','Loaded '+static_views.length+' static views');
         });
