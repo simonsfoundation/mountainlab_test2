@@ -1,4 +1,4 @@
-function [firings_fname,info]=alg_scda_005(timeseries_fname,output_dir,opts)
+function [firings,info]=alg_scda_005(timeseries_fname,output_dir,opts)
 % ALG_SCDA_005  Matlab implementation of JFM's javascript/C++ sorter of July 2017
 %
 % [firingsfile,info] = alg_scda_005(rawfile,output_dir,o)
@@ -24,11 +24,15 @@ function [firings_fname,info]=alg_scda_005(timeseries_fname,output_dir,opts)
 %                   use_mask_out_artifacts=1;
 %                   geom=''; path of CSV file giving x,y coords of each electrode
 %                            (if absent or empty assumes full dense connectivity)
+%                   detectmeth = 1 or 3 (controls detection method)
 % Outputs:
 %    firingsfile - path to the firings.mda output file
 %    info - struct with fields:
 %           filtfile - filtered timeseries
 %           prefile - path to the preprocessed timeseries (filt and whitened)
+%
+% For now detect3 uses pure-matlab version - todo: write processor adjust_times
+%  to allow executable to do it.
 %
 % Also see: mountainlab_devel/sorting_algs/alg_scda_005_js.m  which is just a
 %           wrapper to alg_scda_005.js
@@ -50,13 +54,14 @@ def_opts.timerange=[-1,-1];
 def_opts.use_whitening=1;
 def_opts.use_mask_out_artifacts=1;
 def_opts.geom='';
+def_opts.detectmeth = 1;
 opts=ms_set_default_opts(opts,def_opts);
 
-raw=timeseries;
+raw=timeseries_fname;
 geom=opts.geom;
 
 o_geom2adj=struct('channels',opts.channels,'radius',opts.adj_radius);
-o_extract_raw=struct('t1',opts.timerange(1),'t2',opts.timerange(2)),'channels',opts.channels);
+o_extract_raw=struct('t1',opts.timerange(1),'t2',opts.timerange(2),'channels',opts.channels);
 o_filter=struct('samplerate',opts.samplerate,'freq_min',opts.freq_min,'freq_max',opts.freq_max);
 o_mask_out_artifacts=struct('threshold',3,'interval_size',200);
 o_whiten=struct;
@@ -70,6 +75,7 @@ o_fit_stage=struct('clip_size',opts.clip_size+6.,'min_shell_size',opts.min_shell
 pre0=[output_dir,'/pre0.mda'];
 pre1=[output_dir,'/pre1.mda'];
 pre1b=[output_dir,'/pre1b.mda'];
+pre2=[output_dir,'/pre2.mda'];
 detect=[output_dir,'/detect.mda'];
 firings1=[output_dir,'/firings1.mda'];
 firings2=[output_dir,'/firings2.mda'];
@@ -95,9 +101,21 @@ end;
 if (opts.use_whitening)
     mscmd_whiten(pre1b,pre2,o_whiten);
 else
-    mscmd_normalize_channels(pre1b,pre2,struct);       % ******
+    mscmd_normalize_channels(pre1b,pre2,struct);
 end;
-mscmd_detect(pre2,detect,o_detect);       % <--- make variant w/ detect3
+if opts.detectmeth==1
+  mscmd_detect(pre2,detect,o_detect);
+elseif opts.detectmeth==3          % replace w/ mscmd_detect3 when ready:
+  printf('\n---- DETECT3 in MATLAB ----\n');
+  Y = readmda(pre2);          % for now use pure matlab...
+  % (opts ignored: individual_channels, assumed to be 0)
+  pols = 'mbp'; o_detect.polarity = pols(o_detect.sign+2); % sign -> polarity
+  o_detect
+  times = ms_detect3(Y,o_detect);
+  writemda([0*times;times], detect, 'float64');  % fills channels w/ 0
+else
+  error('unknown opts.detectmeth');
+end
 mscmd_branch_cluster_v2(pre2,detect,adjacency_matrix,firings1,o_branch_cluster);
 mscmd_merge_across_channels(pre2,firings1,firings2,o_merge_across_channels);
 mscmd_fit_stage(pre2,firings2,firings3,o_fit_stage);
@@ -106,4 +124,6 @@ mscmd_compute_detectability_scores(pre2,firings4,firings5,o_compute_detectabilit
 
 mscmd_copy(firings5,firings);
 
+info.filtfile = pre1b;      % send info out
+info.prefile = pre2;
 end

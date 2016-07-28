@@ -28,7 +28,7 @@ if ~isfield(opts,'showcenter'), opts.showcenter = 0; end
 
 Tpad=opts.Tpad;
 
-vspread=max(abs(templates(:)));
+vspread=max(max(abs(templates(:))), 1e-15);  % prevent hitting zero
 
 colors={...
     [0.1562,0.1562,0.1562],... %"#282828"
@@ -73,7 +73,6 @@ Tmargin=T+Tpad;
 vmargin=vspread*1.5;
 additional_left_margin=T*0.5;
 xlim([-Tmargin-additional_left_margin,(T+Tpad)*K+Tmargin]);
-vspread, vmargin, M
 ylim([-vspread*(M-1)-vmargin,vmargin]);
 set(gca,'xtick',[]); set(gca,'ytick',[]);
 %set(gca,'position',[0,0,1,1]);
