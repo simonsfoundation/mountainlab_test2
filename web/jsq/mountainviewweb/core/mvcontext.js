@@ -2,6 +2,7 @@ function MVContext(O) {
 	O=O||this;
 	JSQObject(O);
 
+    this.getMVFileObject=function() {return getMVFileObject();};
     this.setFromMVFileObject=function(obj) {setFromMVFileObject(obj);};
     this.setStaticMode=function(val) {m_static_mode=val;};
     this.staticMode=function() {return m_static_mode;};
@@ -88,6 +89,9 @@ function MVContext(O) {
         m_options={clip_size:100,cc_max_dt:100};        
     }
 
+    function getMVFileObject() {
+        return JSQ.clone(m_original_object);
+    }
     function setFromMVFileObject(obj) {
         clear();
         m_original_object=JSQ.clone(obj); // to preserve unused fields

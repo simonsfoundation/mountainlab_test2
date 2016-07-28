@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
                     qDebug() << "TITLE:::" << title;
                     QJsonObject SVdata = SV["data"].toObject();
                     QString view_type = SVdata["view-type"].toString();
-                    qDebug() << "OPENING VIEW: " + view_type;
+                    qDebug() << "OPENING VIEW: " + view_type << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
                     if (container.isEmpty()) {
                         if (i % 2 == 0)
                             container = "north";

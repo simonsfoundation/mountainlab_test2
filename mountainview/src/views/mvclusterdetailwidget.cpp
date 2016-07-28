@@ -224,7 +224,9 @@ MVAbstractViewFactory* MVClusterDetailWidget::viewFactory() const
 void MVClusterDetailWidget::prepareCalculation()
 {
 
-    d->compute_total_time();
+    if (!d->m_calculator.loaded_from_static_output) {
+        d->compute_total_time();
+    }
     d->m_calculator.mlproxy_url = mvContext()->mlProxyUrl();
     d->m_calculator.filter = mvContext()->eventFilter();
     d->m_calculator.timeseries = mvContext()->currentTimeseries();
@@ -1133,6 +1135,10 @@ void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs
 void MVClusterDetailWidgetCalculator::compute()
 {
     TaskProgress task(TaskProgress::Calculate, "Cluster Details");
+    if (this->loaded_from_static_output) {
+        task.log("Loaded from static output");
+        return;
+    }
 
     QTime timer;
     timer.start();

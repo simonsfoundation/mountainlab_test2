@@ -5,9 +5,6 @@ function jsqmain(query) {
 
     {
         var mvcontext=new MVContext();
-        var MW=new MVMainWindow(0,mvcontext);
-        MW.showFullBrowser();
-        MW.setControlPanelVisible(false);
 
         var filebasket_url=query.filebasket;
         if (!filebasket_url) {
@@ -21,12 +18,20 @@ function jsqmain(query) {
         }
 
         var url=filebasket_url+'/?a=download&file_id='+file_id;
+
+        var MW=new MVMainWindow(0,mvcontext);
+        MW.showFullBrowser();
+        MW.setControlPanelVisible(false);
         MW.setStatus('load-main','Loading data from '+url+'.... please wait...');
+
         $.getJSON(url,function(data) {
             MW.setStatus('load-main','Loaded data from '+url);
             console.log(data);
             mvcontext.setStaticMode(true);
             mvcontext.setFromMVFileObject(data.mvcontext);
+            MW.setTitle(file_id);
+            MW.setSMVObject(data);
+            MW.setupActions(); //must be done after mvcontext has been set up
             var static_views=data['static-views'];
             MW.setStatus('load-static-views','Loading '+static_views.length+' static views');
             for (var i in static_views) {

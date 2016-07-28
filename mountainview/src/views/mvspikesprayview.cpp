@@ -63,9 +63,7 @@ void MVSpikeSprayComputer::loadStaticOutput(const QJsonObject& X)
 {
     {
         QByteArray ba;
-        qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << X["clips_to_render"].toString().count();
         MLUtil::fromJsonValue(ba, X["clips_to_render"]);
-        qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << "@@@@@@@@@@@@@@@@@@@@@@@" << ba.count();
         clips_to_render.fromByteArray(ba);
     }
     MLUtil::fromJsonValue(labels_to_render, X["labels_to_render"]);

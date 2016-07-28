@@ -258,9 +258,7 @@ QByteArray Mda::toByteArray64() const
 
 bool Mda::fromByteArray(const QByteArray& X)
 {
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__;
     QString path = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
-    qDebug() << "DEBUG" << __FUNCTION__ << __FILE__ << __LINE__ << path << X.count();
     MLUtil::writeByteArray(path, X);
     return this->read(path);
 }

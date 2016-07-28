@@ -12,6 +12,13 @@
 	background:rgb(210,230,250);
 }
 
+.MVMenuBar {
+	font-size: 11px;
+}
+.MVStatusBar {
+	font-size: 11px;
+}
+
 .MVControlPanel th {
 	font: bold 11px "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
 	color: #4f6b72;
