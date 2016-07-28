@@ -193,9 +193,10 @@ void MVExportControl::slot_share_views_on_web()
     QString html;
     html += "<p>";
     html += "<p>First export a .smv file. Then upload it on this website:</p>";
-    QString url0 = "http://datalaboratory.org:8040/mountainviewweb/mvupload.html";
+    QString url0 = "http://datalaunch.org/upload";
     html += "<p><a href=\"" + url0 + "\">" + url0 + "</a></p>";
     html += "<p>Note that for now, only templates and cross-correlograms views may be shared.</p>";
     tb->show();
+    tb->resize(600,400);
     tb->setHtml(html);
 }
