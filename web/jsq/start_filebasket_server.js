@@ -37,7 +37,7 @@ http.createServer(function (REQ, RESP) {
 		if (method=="download") {
 			var file_id=query.file_id||'';
 			if (valid_file_id(file_id)) {
-				var fname=storage_path+'/'+file_id+'.dat';
+				var fname=storage_path+'/'+file_id;
 				serve_file(fname,RESP);
 			}
 			else {
@@ -65,7 +65,7 @@ http.createServer(function (REQ, RESP) {
 		if (method=='upload') {
 			var file_id=query.file_id||'';
 			if (valid_file_id(file_id)) {
-				var fname=storage_path+'/'+file_id+'.dat';
+				var fname=storage_path+'/'+file_id;
 				var ok=true;
 				if (fs.existsSync(fname)) {
 					ok=false;
