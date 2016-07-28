@@ -17,22 +17,24 @@ for j=1:length(names)
 	% the first element will be 'pair' and the second and third elements will be the numbers
 	pair_nums = [str2num(pair_num_strs{2}) str2num(pair_num_strs{3})];
         % go through the merge list and see if either of these clusters is in it already
-	if (length(merged_pair_list) == 0) 
-	    % add the pair to the list
-	    merged_pair_list{1} = pair_nums;
-	else
-	    found = 0;
-	    for m_ind = 1:length(merged_pair_list)
-	    	if ~isempty(intersect(merged_pair_list{m_ind}, pair_nums))
-		    merged_pair_list{m_ind} = unique([merged_pair_list{m_ind} pair_nums]);
-		    found = 1;
-		    break;
-		end
-	    end
-	    if ~found 
-	       merged_pair_list{end+1} = pair_nums;
-	   end
-       end
+    merged_pair_list{end+1}=pair_nums;
+    
+% 	if (length(merged_pair_list) == 0) 
+% 	    % add the pair to the list
+% 	    merged_pair_list{1} = pair_nums;
+% 	else
+% 	    found = 0;
+% 	    for m_ind = 1:length(merged_pair_list)
+% 	    	if ~isempty(intersect(merged_pair_list{m_ind}, pair_nums))
+% 		    merged_pair_list{m_ind} = unique([merged_pair_list{m_ind} pair_nums]);
+% 		    found = 1;
+% 		    break;
+% 		end
+% 	    end
+% 	    if ~found 
+% 	       merged_pair_list{end+1} = pair_nums;
+% 	   end
+%     end
     end;
 end;
 

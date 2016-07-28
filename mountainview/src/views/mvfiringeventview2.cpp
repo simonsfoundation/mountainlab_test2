@@ -92,6 +92,7 @@ public:
 MVFiringEventView2::MVFiringEventView2(MVContext* context)
     : MVTimeSeriesViewBase(context)
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d = new MVFiringEventView2Private;
     d->q = this;
 
@@ -125,6 +126,7 @@ MVFiringEventView2::MVFiringEventView2(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()));
     this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     this->recalculate();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 MVFiringEventView2::~MVFiringEventView2()
@@ -135,6 +137,7 @@ MVFiringEventView2::~MVFiringEventView2()
 
 void MVFiringEventView2::prepareCalculation()
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_calculator.labels_to_use = d->m_labels_to_use;
     d->m_calculator.firings = mvContext()->firings();
     d->m_calculator.filter = mvContext()->eventFilter();
@@ -142,11 +145,14 @@ void MVFiringEventView2::prepareCalculation()
 
 void MVFiringEventView2::runCalculation()
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_calculator.compute();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 void MVFiringEventView2::onCalculationFinished()
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_labels0 = d->m_calculator.labels;
     d->m_times0 = d->m_calculator.times;
     d->m_amplitudes0 = d->m_calculator.amplitudes;
@@ -178,6 +184,7 @@ void MVFiringEventView2::setLabelsToUse(const QSet<int>& labels_to_use)
 
 void MVFiringEventView2::setAmplitudeRange(MVRange range)
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (d->m_amplitude_range == range)
         return;
     d->m_amplitude_range = range;
@@ -191,6 +198,7 @@ void MVFiringEventView2::setAmplitudeRange(MVRange range)
 #include "mvmainwindow.h"
 void MVFiringEventView2::autoSetAmplitudeRange()
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     double min0 = MLCompute::min(d->m_amplitudes0);
     double max0 = MLCompute::max(d->m_amplitudes0);
     setAmplitudeRange(MVRange(qMin(0.0, min0), qMax(0.0, max0)));
@@ -230,6 +238,7 @@ void MVFiringEventView2::mouseReleaseEvent(QMouseEvent* evt)
 
 void MVFiringEventView2::resizeEvent(QResizeEvent* evt)
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_axis_layer->content_geometry = this->contentGeometry();
     d->m_paint_layer_stack.setWindowSize(this->size());
     slot_update_image();
@@ -253,7 +262,9 @@ void MVFiringEventView2::slot_update_image()
 
 void MVFiringEventView2::paintContent(QPainter* painter)
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_paint_layer_stack.paint(painter);
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 
     //legend
     //d->m_legend.setParentWindowSize(this->size());
@@ -303,6 +314,7 @@ double MVFiringEventView2Private::ypix2val(double ypix)
 
 void MVFiringEventViewCalculator::compute()
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     TaskProgress task("Computing firing events");
 
     firings = compute_filtered_firings_locally(firings, filter);
@@ -328,6 +340,7 @@ void MVFiringEventViewCalculator::compute()
         }
     }
     task.log(QString("Found %1 events, using %2 clusters").arg(times.count()).arg(labels_to_use.count()));
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 MVFiringEventsFactory::MVFiringEventsFactory(MVContext* context, QObject* parent)

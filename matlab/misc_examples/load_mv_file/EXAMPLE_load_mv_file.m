@@ -26,9 +26,30 @@ times3=firings3(2,:);
 disp('Number of events corresponding to cluster 13:');
 disp(length(times3));
 
-% get the list of merged pairs (thx Loren)
+% get the list of merged pairs (thx Loren) -- not transitive
 pairs=get_mv_merged_pairs(mv_file);
 disp('Merge pairs:');
 for j=1:length(pairs)
     disp(pairs{j});
 end;
+
+% get the list of merged groups -- transitive
+groups=get_mv_merged_groups(mv_file);
+disp('Merge groups:');
+for j=1:length(groups)
+    disp(groups{j});
+end;
+
+% get the merge matrix -- non-transitive
+K=max(firings(3,:));
+merge_matrix=get_mv_merge_matrix(mv_file,1:K,0);
+figure; imagesc(merge_matrix); colormap('gray');
+title('non-transitive');
+
+% get the merge matrix -- transitive
+K=max(firings(3,:));
+merge_matrix=get_mv_merge_matrix(mv_file,1:K,1);
+figure; imagesc(merge_matrix); colormap('gray');
+title('transitive');
+
+

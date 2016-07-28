@@ -175,6 +175,16 @@
                 "merged"
             ]
         },
+        "pair_3_4": {
+            "tags": [
+                "merged"
+            ]
+        },
+        "pair_4_6": {
+            "tags": [
+                "merged"
+            ]
+        },
         "pair_6_7": {
             "tags": [
                 "merged"
@@ -213,7 +223,7 @@
             "name": "Preprocessed Data"
         }
     },
-    "view_merged": true,
+    "view_merged": false,
     "visibility_rule": {
         "subset": [
         ],
