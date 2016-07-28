@@ -1,0 +1,41 @@
+<html>
+
+<style>
+iframe {
+	position:fixed;
+	top:0px;
+	left:0px;
+	bottom:0px;
+	right:0px;
+	width:100%;
+	height:100%;
+	border:none;
+	margin:0;
+	padding:0;
+	overflow: hidden;
+	z-index: 999999;
+}
+</style>
+
+<script type="text/javascript">
+var query=parse_url_params();
+console.log(query);
+function parse_url_params() {
+	var match,
+	pl     = /\+/g,  // Regex for replacing addition symbol with a space
+	search = /([^&=]+)=?([^&]*)/g,
+	decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+	query  = window.location.search.substring(1);
+	url_params = {};
+	while (match = search.exec(query))
+		url_params[decode(match[1])] = decode(match[2]);
+	return url_params;
+}
+</script>
+
+<body>
+	<iframe src="$iframe_url$">
+		Your browser does not support iframes
+	</iframe>
+</body>
+</html>
