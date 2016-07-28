@@ -6,7 +6,7 @@ var http=require('http');
 var fs=require('fs');
 
 var args=process.argv.slice(2);
-var listen_port=args[0]||8080;
+var listen_port=args[0]||80;
 
 http.createServer(function (REQ, RESP) {
 	var url_parts = url.parse(REQ.url,true);	
