@@ -42,7 +42,7 @@ http.createServer(function (REQ, RESP) {
 			path=path.slice('/open/'.length);	
 			url0=get_open_url(path,query);
 		}
-		else if ((path.startsWith('/upload/')||(path=='/upload')) {
+		else if ((path.startsWith('/upload/'))||(path=='/upload')) {
 			path=path.slice('/upload/'.length);
 			url0=get_upload_url(path,query);
 		}
