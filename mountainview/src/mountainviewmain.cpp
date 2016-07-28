@@ -157,6 +157,7 @@ int main(int argc, char* argv[])
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString fname = CLP.unnamed_parameters.value(i);
             if (fname.endsWith(".smv")) {
+                WW->setWindowTitle(fname);
                 QJsonObject obj = QJsonDocument::fromJson(TextFile::read(fname).toLatin1()).object();
                 mvcontext->setFromMVFileObject(obj["mvcontext"].toObject());
                 QJsonArray static_views = obj["static-views"].toArray();
