@@ -50,10 +50,8 @@ $(document).ready(function() {
 				if (aaa.success) {
 					$('#status').html(aaa.message);
 					$('#file_id').html(file_id);
-					var tmp1=window.location.protocol+'//'+window.location.host;
-					var tmp2=window.location.protocol+'//'+window.location.hostname;
-					var url0=tmp1+'/mountainviewweb/mountainviewweb.html?test=3&filebasket='+tmp2+':8041&file_id='+file_id
-					$('#url_link').html('<a href="'+url0+'" target=_blank>'+url0+'</a>')
+					var url0='http://'+window.location.hostname+':8016/open/'+file_id;
+					$('#url_link').html('<a href="'+url0+'" target=_blank>'+url0+'</a>');
 				}
 				else {
 					$('#status').html('Error: '+aaa.error);
