@@ -102,7 +102,7 @@ QJsonObject MVAbstractView::exportStaticView()
 {
     QJsonObject ret;
     ret["title"] = this->title();
-    return ret;
+    return QJsonObject();
 }
 
 void MVAbstractView::loadStaticView(const QJsonObject& X)

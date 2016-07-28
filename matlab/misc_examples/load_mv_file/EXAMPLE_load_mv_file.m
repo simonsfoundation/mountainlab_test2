@@ -38,7 +38,13 @@ groups=get_mv_merged_groups(mv_file);
 disp('Merge groups:');
 for j=1:length(groups)
     disp(groups{j});
-end;
+end;Conversations
+
+
+wehrli@mail.med.upenn.edu
+Add to circles
+wehrli@mail.med.upenn.edu
+
 
 % get the merge matrix -- non-transitive
 K=max(firings(3,:));
