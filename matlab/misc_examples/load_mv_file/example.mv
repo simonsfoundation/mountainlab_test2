@@ -172,12 +172,12 @@
     "cluster_pair_attributes": {
         "pair_12_14": {
             "tags": [
-                "merge_candidate"
+                "merged"
             ]
         },
         "pair_6_7": {
             "tags": [
-                "merge_candidate"
+                "merged"
             ]
         }
     },
