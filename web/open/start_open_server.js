@@ -73,7 +73,6 @@ function get_url(path,query) {
 	if (path.endsWith('.smv')) {
 		var url='http://datalaboratory.org:8040';
 		url+='/mountainviewweb/mountainviewweb.html?';
-		url+='test=3&filebasket=http://datalaboratory.org:8041&';
 		url+='file_id='+path;
 	}
 	else {

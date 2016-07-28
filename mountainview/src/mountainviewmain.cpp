@@ -159,13 +159,13 @@ int main(int argc, char* argv[])
             if (fname.endsWith(".smv")) {
                 QJsonObject obj = QJsonDocument::fromJson(TextFile::read(fname).toLatin1()).object();
                 mvcontext->setFromMVFileObject(obj["mvcontext"].toObject());
-                QJsonArray static_views=obj["static-views"].toArray();
-                for (int ii=0; ii<static_views.count(); ii++) {
-                    QJsonObject SV=static_views[ii].toObject();
-                    QString container=SV["container"].toString();
-                    QJsonObject SVdata=SV["data"].toObject();
+                QJsonArray static_views = obj["static-views"].toArray();
+                for (int ii = 0; ii < static_views.count(); ii++) {
+                    QJsonObject SV = static_views[ii].toObject();
+                    QString container = SV["container"].toString();
+                    QJsonObject SVdata = SV["data"].toObject();
                     QString view_type = SVdata["view-type"].toString();
-                    qDebug() << "OPENING VIEW: "+view_type;
+                    qDebug() << "OPENING VIEW: " + view_type;
                     if (container.isEmpty()) {
                         if (i % 2 == 0)
                             container = "north";

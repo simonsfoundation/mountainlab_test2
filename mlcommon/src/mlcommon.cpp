@@ -170,7 +170,6 @@ void MLUtil::mkdirIfNeeded(const QString& path)
     mkdir_if_doesnt_exist(path);
 }
 
-
 #include "sumit.h"
 QString MLUtil::computeSha1SumOfFile(const QString& path)
 {
