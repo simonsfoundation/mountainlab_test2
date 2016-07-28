@@ -121,7 +121,7 @@ http.createServer(function (REQ, RESP) {
 console.log ('Listening on port '+listen_port);
 
 function valid_file_id(file_id) {
-	return /^[a-z0-9\.]+$/i.test(file_id);
+    return /^[a-z0-9\.\_]+$/i.test(file_id);
 }
 
 function serve_file(filename,response) {

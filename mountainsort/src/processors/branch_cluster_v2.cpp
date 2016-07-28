@@ -196,7 +196,6 @@ QList<long> get_sort_indices(const QVector<int>& channels, const QVector<double>
 
 QVector<int> consolidate_labels_v2(DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor)
 {
-    printf("Consolidation factor = %g\n", consolidation_factor);
     long M = X.N1();
     long T = clip_size;
     long K = MLCompute::max<int>(labels);

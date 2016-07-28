@@ -343,8 +343,10 @@ bool initialize_process_manager(QString config_fname, QJsonObject config)
         if (QFileInfo(p0).isRelative()) {
             p0 = QFileInfo(config_fname).path() + "/" + p0;
         }
-        printf("Searching for processors in %s\n", p0.toLatin1().data());
+        //printf("Searching for processors in %s\n", p0.toLatin1().data());
         PM->loadProcessors(p0);
+        int num_processors=PM->processorNames().count();
+        printf("Loaded %d processors in %s\n",num_processors,p0.toLatin1().data());
     }
 
     return true;
