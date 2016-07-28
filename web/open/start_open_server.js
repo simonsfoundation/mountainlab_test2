@@ -2,7 +2,9 @@ console.log('Running open_server...');
 
 /*
 WARNING (to myself)!!!!
-Resist the temptation to allow this server to do more than simply opening files
+Resist the temptation to allow this server to do more than simply opening/uploading files
+by creating an iframe and directing to other url's
+This can be run on a bare-bones machine with nothing valuable on it (no data).
 */
 
 //// requires
@@ -35,18 +37,21 @@ http.createServer(function (REQ, RESP) {
 		console.log('GET: '+REQ.url);
 		console.log('path: '+path);
 		console.log(query);
-		if (!path.startsWith('/open/')) {
-			send_text_response("invalid path");
-			return;
+		var url0='';
+		if (path.startsWith('/open/')) {
+			path=path.slice('/open/'.length);	
+			url0=get_open_url(path,query);
 		}
-		path=path.slice(6);
-		var txt=fs.readFileSync(__dirname+'/open.html');
-		var url0=get_url(path,query);
+		else if ((path.startsWith('/upload/')||(path=='/upload')) {
+			path=path.slice('/upload/'.length);
+			url0=get_upload_url(path,query);
+		}
 		if (!url0) {
-			send_text_response('Unable to open: '+path);
+			send_text_response('Unable to open: '+path);	
 			return;
 		}
 		console.log(url0);
+		var txt=fs.readFileSync(__dirname+'/open.html');
 		txt=txt.toString().split('$iframe_url$').join(url0);
 		send_html_response(txt);
 	}
@@ -74,7 +79,7 @@ http.createServer(function (REQ, RESP) {
 }).listen(listen_port);
 console.log ('Listening on port '+listen_port);
 
-function get_url(path,query) {
+function get_open_url(path,query) {
 	if (path.endsWith('.smv')) {
 		var url='http://datalaboratory.org:8040';
 		url+='/mountainviewweb/mountainviewweb.html?';
@@ -84,6 +89,10 @@ function get_url(path,query) {
 		url='';
 	}
 	return url;
+}
+
+function get_upload_url(path,query) {
+	return 'http://datalaboratory.org:8040/mountainviewweb/mvupload.html';
 }
 
 function serve_file(filename,response) {
