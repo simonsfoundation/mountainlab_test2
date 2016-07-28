@@ -72,7 +72,7 @@ QString ScriptController::fileChecksum(const QString& fname_in)
     QTime timer;
     timer.start();
     printf("Computing checksum for file %s\n", fname.toLatin1().data());
-    QString ret=MLUtil::computeSha1SumOfFile(fname);
+    QString ret = MLUtil::computeSha1SumOfFile(fname);
     printf("%s -- Elapsed: %g sec\n", ret.toLatin1().data(), timer.elapsed() * 1.0 / 1000);
     return ret;
 

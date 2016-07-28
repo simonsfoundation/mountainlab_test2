@@ -48,7 +48,7 @@ bool geom2adj_Processor::run(const QMap<QString, QVariant>& params)
 
     Mda X(input);
     Mda Y;
-    int N = X.N1();    // note transposed rel to appearance in CSV
+    int N = X.N1(); // note transposed rel to appearance in CSV
     int M = X.N2();
 
     if (channels.isEmpty()) {
@@ -60,7 +60,7 @@ bool geom2adj_Processor::run(const QMap<QString, QVariant>& params)
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < M; j++) {
             double distsqr = 0;
-            for (int n = 0; n < N; n++) {   // loop over coord dimension
+            for (int n = 0; n < N; n++) { // loop over coord dimension
                 double val = X.value(n, i) - X.value(n, j);
                 distsqr += val * val;
             }

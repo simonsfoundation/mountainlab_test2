@@ -1,64 +1,9 @@
 function jsqmain(query) {
 	var context={};
 
-    if (query.test=='1') {
-        var mlproxy_url='http://datalaboratory.org:8020';
-        var base_url='http://datalaboratory.org:8020/mdaserver/franklab/results/20160426_r1_nt16/ms_20160605';
-        var timeseries_url=base_url+'/pre2.mda';
-        var firings_url=base_url+'/firings_new.mda';
+    if (!query.filebasket) query.filebasket='http://datalaboratory.org:8041'
 
-        //var timeseries_url='http://datalaboratory.org:8020/mdaserver/franklab/results/20160426_r1_nt16/ms_20160605/pre2.mda';
-        //var firings_url='http://datalaboratory.org:8020/mdaserver/franklab/results/20160426_r1_nt16/ms_20160605/firings_new.mda';
-        //var mlproxy_url='http://datalaboratory.org:8020';
-
-        var mvcontext=new MVContext();
-        mvcontext.setTimeseries(new RemoteReadMda(timeseries_url));
-        mvcontext.setFirings(new RemoteReadMda(firings_url));
-        mvcontext.setMLProxyUrl(mlproxy_url);
-        mvcontext.setOption('clip_size',150);
-        mvcontext.setOption('cc_max_dt_msec',100);
-        mvcontext.setSampleRate(30000);
-
-        var WW=new MVMainWindow(0,mvcontext);
-        WW.showFullBrowser();
-
-        var VV=new MVAmpHistView(0,mvcontext);
-        WW.addView('north','Amplitudes',VV);
-
-        var VV=new MVTemplatesView(0,mvcontext);
-        WW.addView('north','Templates',VV);
-
-        var VV=new MVCrossCorrelogramsView(0,mvcontext,'All_Auto_Correlograms');
-        WW.addView('south','Auto-Correlograms',VV);
-
-        var GCW=new GeneralControlWidget(0,mvcontext,WW);
-        WW.addControlWidget(GCW);
-    }
-    else if (query.test=='2') {
-        var mvcontext=new MVContext();
-        var MW=new MVMainWindow(0,mvcontext);
-        MW.showFullBrowser();
-        MW.setControlPanelVisible(false);
-
-        var url=query.smvfile;
-        if (!url) {
-            alert('Missing url parameter: smvfile.');
-            return;
-        }
-
-        $.getJSON(url,function(data) {
-            console.log(data);
-            mvcontext.setStaticMode(true);
-            mvcontext.setFromMVFileObject(data.mvcontext);
-            var static_views=data['static-views'];
-            for (var i in static_views) {
-                var SV=static_views[i];
-                var VV=create_static_view(mvcontext,SV.data);    
-                MW.addView(SV.container||get_container_from_index(i),SV.data['view-type'],VV);
-            }            
-        });
-    }
-    else if (query.test=='3') {
+    {
         var mvcontext=new MVContext();
         var MW=new MVMainWindow(0,mvcontext);
         MW.showFullBrowser();
@@ -87,13 +32,13 @@ function jsqmain(query) {
             for (var i in static_views) {
                 var SV=static_views[i];
                 var VV=create_static_view(mvcontext,SV.data);    
-                MW.addView(SV.container||get_container_from_index(i),SV.data['view-type'],VV);
+                MW.addView(SV.container||get_container_from_index(i),SV.title||SV.data['view-type'],VV);
             }  
             MW.setStatus('load-static-views','Loaded '+static_views.length+' static views');
         });
     }
     function get_container_from_index(i) {
-        if (i%2==0) return 'north';
+        if (i%2===0) return 'north';
         else return 'south';
     }
     function create_static_view(mvcontext,obj) {

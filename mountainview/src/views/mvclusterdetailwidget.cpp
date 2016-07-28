@@ -41,7 +41,7 @@ struct ClusterData {
     int channel;
     Mda template0;
     Mda stdev0;
-    int num_events=0;
+    int num_events = 0;
 
     QJsonObject toJsonObject();
     void fromJsonObject(const QJsonObject& X);
@@ -1000,9 +1000,9 @@ ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterD
         sumsqr0.allocate(group[0].template0.N1(), group[0].template0.N2(), group[0].template0.N3());
     }
     double total_weight = 0;
-    ret.num_events=group.count();
+    ret.num_events = group.count();
     for (int i = 0; i < group.count(); i++) {
-        ret.num_events+= group[i].num_events;
+        ret.num_events += group[i].num_events;
         double weight = group[i].num_events;
         for (int i3 = 0; i3 < sum0.N3(); i3++) {
             for (int i2 = 0; i2 < sum0.N2(); i2++) {

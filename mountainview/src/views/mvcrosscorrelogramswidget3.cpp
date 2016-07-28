@@ -38,7 +38,7 @@ public:
     CrossCorrelogramOptions3 options;
     int max_dt;
     ClusterMerge cluster_merge;
-    int pair_mode=false;
+    int pair_mode = false;
 
     //output
     QList<Correlogram3> correlograms;
@@ -121,7 +121,7 @@ void MVCrossCorrelogramsWidget3::prepareCalculation()
     if (mvContext()->viewMerged()) {
         d->m_computer.cluster_merge = mvContext()->clusterMerge();
     }
-    d->m_computer.pair_mode=this->pairMode();
+    d->m_computer.pair_mode = this->pairMode();
 }
 
 void MVCrossCorrelogramsWidget3::runCalculation()
@@ -422,7 +422,7 @@ void MVCrossCorrelogramsWidget3Computer::compute()
         int k1 = correlograms[j].k1;
         int k2 = correlograms[j].k2;
         correlograms[j].data = compute_cc_data3(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
-        if ((correlograms[j].data.isEmpty())&&(!pair_mode)) {
+        if ((correlograms[j].data.isEmpty()) && (!pair_mode)) {
             correlograms.removeAt(j);
             j--;
         }

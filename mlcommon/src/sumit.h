@@ -17,8 +17,7 @@ In the case of files, outputs the sha1 checksum, equivalent to the output of sha
 In the case of directories, outputs a unique sha1 checksum that depends only on the contents of the directory (not the name or location of the directory). The computation depends on the checksum of each and every file within the directory tree, but again checksums do not need to be recomputed for the files in subsequent calls.
 */
 
-QString sumit(const QString &path);
-QString sumit_dir(const QString &path);
+QString sumit(const QString& path);
+QString sumit_dir(const QString& path);
 
 #endif // SUMIT_H
-

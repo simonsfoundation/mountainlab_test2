@@ -1,4 +1,9 @@
-console.log('Running filebasket...');
+console.log('Running open_server...');
+
+/*
+WARNING (to myself)!!!!
+Resist the temptation to allow this server to do more than simply opening files
+*/
 
 //// requires
 var	url=require('url');
@@ -6,18 +11,12 @@ var http=require('http');
 var fs=require('fs');
 
 var args=process.argv.slice(2);
-var listen_port=args[0]||8041;
-
-var listen_port=listen_port;
-var storage_path='/tmp/filebasket';
-
-mkdir_if_needed(storage_path);
+var listen_port=args[0]||80;
 
 http.createServer(function (REQ, RESP) {
 	var url_parts = url.parse(REQ.url,true);	
 	var path=url_parts.pathname;
 	var query=url_parts.query;
-	var method=query.a||'';
 	if (REQ.method == 'OPTIONS') {
 		var headers = {};
 		
@@ -34,71 +33,26 @@ http.createServer(function (REQ, RESP) {
 	}
 	else if (REQ.method=='GET') {
 		console.log('GET: '+REQ.url);
-		if (method=="download") {
-			var file_id=query.file_id||'';
-			if (valid_file_id(file_id)) {
-				var fname=storage_path+'/'+file_id;
-				serve_file(fname,RESP);
-			}
-			else {
-				send_text_response('invalid file id: '+file_id);
-			}
+		console.log('path: '+path);
+		console.log(query);
+		if (!path.startsWith('/open/')) {
+			send_text_response("invalid path");
+			return;
 		}
-		else if (method=="") {
-			try {
-				var txt=fs.readFileSync('./'+path);
-				if (path.endsWith('.js'))
-					send_javascript_response(txt);
-				else if (path.endsWith('.html'))
-					send_html_response(txt);
-			}
-			catch(err) {
-				send_text_response('file probably does not exist.');
-			}
+		path=path.slice(6);
+		var txt=fs.readFileSync(__dirname+'/open.html');
+		var url0=get_url(path,query);
+		if (!url0) {
+			send_text_response('Unable to open: '+path);
+			return;
 		}
-		else {
-			send_text_response('invalid method: '+method);
-		}
+		console.log(url0);
+		txt=txt.toString().split('$iframe_url$').join(url0);
+		send_html_response(txt);
 	}
 	else if(REQ.method=='POST') {
 		console.log('POST: '+REQ.url);
-		if (method=='upload') {
-			var file_id=query.file_id||'';
-			if (valid_file_id(file_id)) {
-				var fname=storage_path+'/'+file_id;
-				var ok=true;
-				if (fs.existsSync(fname)) {
-					ok=false;
-					send_json_response({success:false,error:'file already exists with id: '+file_id});
-					return;
-				}
-				var write_stream;
-				write_stream=fs.createWriteStream(fname);
-				write_stream.on('error',function(err) {
-					console.log ('ERROR: '+JSON.stringify(err));
-					ok=false;
-					send_json_response({success:false,error:JSON.stringify(err)});
-					return;
-				});
-				var num_bytes_received=0;
-				REQ.on('data',function(chunk) {
-					if (!ok) return;
-					num_bytes_received+=chunk.length;
-					write_stream.write(chunk,'binary');
-				});
-				REQ.on('end',function() {
-					if (!ok) return;
-					write_stream.end();
-					send_json_response({success:true,message:'received '+num_bytes_received+' bytes'});
-				});
-			}
-			else {
-				send_json_response({success:false,error:'invalid file id: '+file_id});	
-			}
-		}
-		else {
-			send_json_response({success:false,error:'invalid method: '+method});	
-		}
+		send_text_response("POST not supported");
 	}
 	
 	function send_json_response(obj) {
@@ -120,8 +74,16 @@ http.createServer(function (REQ, RESP) {
 }).listen(listen_port);
 console.log ('Listening on port '+listen_port);
 
-function valid_file_id(file_id) {
-	return /^[a-z0-9\.]+$/i.test(file_id);
+function get_url(path,query) {
+	if (path.endsWith('.smv')) {
+		var url='http://datalaboratory.org:8040';
+		url+='/mountainviewweb/mountainviewweb.html?';
+		url+='file_id='+path;
+	}
+	else {
+		url='';
+	}
+	return url;
 }
 
 function serve_file(filename,response) {
@@ -149,13 +111,6 @@ function serve_file(filename,response) {
 	});
 }
 
-function mkdir_if_needed(path) {
-	var fs=require('fs');
-	if (!fs.existsSync(path)){
-    	fs.mkdirSync(path);
-	}
-}
-
 if (!String.prototype.endsWith) {
   String.prototype.endsWith = function(searchString, position) {
       var subjectString = this.toString();
@@ -166,4 +121,60 @@ if (!String.prototype.endsWith) {
       var lastIndex = subjectString.indexOf(searchString, position);
       return lastIndex !== -1 && lastIndex === position;
   };
+}
+
+/*! https://mths.be/startswith v0.2.0 by @mathias */
+if (!String.prototype.startsWith) {
+	(function() {
+		'use strict'; // needed to support `apply`/`call` with `undefined`/`null`
+		var defineProperty = (function() {
+			// IE 8 only supports `Object.defineProperty` on DOM elements
+			try {
+				var object = {};
+				var $defineProperty = Object.defineProperty;
+				var result = $defineProperty(object, object, object) && $defineProperty;
+			} catch(error) {}
+			return result;
+		}());
+		var toString = {}.toString;
+		var startsWith = function(search) {
+			if (this == null) {
+				throw TypeError();
+			}
+			var string = String(this);
+			if (search && toString.call(search) == '[object RegExp]') {
+				throw TypeError();
+			}
+			var stringLength = string.length;
+			var searchString = String(search);
+			var searchLength = searchString.length;
+			var position = arguments.length > 1 ? arguments[1] : undefined;
+			// `ToInteger`
+			var pos = position ? Number(position) : 0;
+			if (pos != pos) { // better `isNaN`
+				pos = 0;
+			}
+			var start = Math.min(Math.max(pos, 0), stringLength);
+			// Avoid the `indexOf` call if no match is possible
+			if (searchLength + start > stringLength) {
+				return false;
+			}
+			var index = -1;
+			while (++index < searchLength) {
+				if (string.charCodeAt(start + index) != searchString.charCodeAt(index)) {
+					return false;
+				}
+			}
+			return true;
+		};
+		if (defineProperty) {
+			defineProperty(String.prototype, 'startsWith', {
+				'value': startsWith,
+				'configurable': true,
+				'writable': true
+			});
+		} else {
+			String.prototype.startsWith = startsWith;
+		}
+	}());
 }

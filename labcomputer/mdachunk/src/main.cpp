@@ -190,6 +190,8 @@ bool is_out_of_date(const QString& sha1_fname, const QString& fname)
 
 QString get_sha1_code(const QString& fname)
 {
+    return MLUtil::computeSha1SumOfFile(fname);
+    /*
     QString sha1_fname = fname + ".sha1";
     QString sha1;
     if ((!QFile::exists(sha1_fname)) || (is_out_of_date(sha1_fname, fname))) {
@@ -213,6 +215,7 @@ QString get_sha1_code(const QString& fname)
         sha1 = "";
     }
     return sha1;
+    */
 }
 
 QString get_chunk_code(const QString& fname, const QString& datatype, long index, long size)
