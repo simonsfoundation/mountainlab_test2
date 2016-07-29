@@ -41,11 +41,6 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         flayout->addWidget(B);
     }
     {
-        QPushButton* B = new QPushButton("Export firings array");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_array()));
-        flayout->addWidget(B);
-    }
-    {
         QPushButton* B = new QPushButton("Export static views (.smv)");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_static_views()));
         flayout->addWidget(B);
@@ -55,11 +50,22 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_share_views_on_web()));
         flayout->addWidget(B);
     }
+    {
+        QPushButton* B = new QPushButton("Export firings.mda");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_array()));
+        flayout->addWidget(B);
+    }
+    {
+        QPushButton* B = new QPushButton("Export cluster_annotation.mda");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_cluster_annotation_array()));
+        flayout->addWidget(B);
+    }
 
     connect(mw, SIGNAL(signalExportMVFile()), this, SLOT(slot_export_mv_document()));
-    connect(mw, SIGNAL(signalExportFiringsFile()), this, SLOT(slot_export_firings_array()));
     connect(mw, SIGNAL(signalExportStaticViews()), this, SLOT(slot_export_static_views()));
     connect(mw, SIGNAL(signalShareViewsOnWeb()), this, SLOT(slot_share_views_on_web()));
+    connect(mw, SIGNAL(signalExportFiringsFile()), this, SLOT(slot_export_firings_array()));
+    connect(mw, SIGNAL(signalExportClusterAnnotationFile()), this, SLOT(slot_export_cluster_annotation_array()));
 
     updateControls();
 }
@@ -167,6 +173,52 @@ void MVExportControl::slot_export_firings_array()
 
     DiskReadMda firings = mvContext()->firings();
     export_file(firings.makePath(), fname, true);
+}
+
+void MVExportControl::slot_export_cluster_annotation_array()
+{
+    //first row is the cluster number
+    //second row is 0 if not accepted, 1 if accepted
+    //third row is the merge label (i.e., smallest cluster number in the merge group)
+    QSet<int> clusters_set=mvContext()->clustersSubset();
+    if (clusters_set.isEmpty()) {
+        QList<int> keys=mvContext()->clusterAttributesKeys();
+        foreach (int key, keys) {
+            clusters_set.insert(key);
+        }
+        QList<ClusterPair> pairs=mvContext()->clusterPairAttributesKeys();
+        foreach (ClusterPair pair, pairs) {
+            clusters_set.insert(pair.kmin());
+            clusters_set.insert(pair.kmax());
+        }
+    }
+    QList<int> clusters=clusters_set.toList();
+    qSort(clusters);
+    int num=clusters.count();
+    Mda cluster_annotation(3,num);
+    for (int i=0; i<num; i++) {
+        int accepted=0;
+        if (mvContext()->clusterTags(clusters[i]).contains("accepted")) accepted=1;
+        int merge_label=mvContext()->clusterMerge().representativeLabel(clusters[i]);
+        cluster_annotation.setValue(clusters[i],0,i);
+        cluster_annotation.setValue(accepted,1,i);
+        cluster_annotation.setValue(merge_label,2,i);
+    }
+
+
+    QSettings settings("SCDA", "MountainView");
+    QString default_dir = settings.value("default_export_dir", "").toString();
+    QString fname = QFileDialog::getSaveFileName(this, "Export cluster annotation array", default_dir, "*.mda");
+    if (fname.isEmpty())
+        return;
+    settings.setValue("default_export_dir", QFileInfo(fname).path());
+    if (QFileInfo(fname).suffix() != "mda")
+        fname = fname + ".mda";
+
+    if (!cluster_annotation.write32(fname)) {
+        QMessageBox::warning(0,"Problem exporting cluster annotation array","Unable to write file: "+fname);
+    }
+
 }
 
 void MVExportControl::slot_export_static_views()
