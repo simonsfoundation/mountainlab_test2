@@ -29,6 +29,8 @@ struct Correlogram3 {
     QVector<double> data;
 };
 
+QVector<double> compute_cc_data3(const QVector<double>& times1_in, const QVector<double>& times2_in, int max_dt, bool exclude_matches, double max_est_data_size);
+
 class MVCrossCorrelogramsWidget3Computer {
 public:
     //input
@@ -39,6 +41,7 @@ public:
     int max_dt;
     ClusterMerge cluster_merge;
     int pair_mode = false;
+    double max_est_data_size = 0;
 
     //output
     QList<Correlogram3> correlograms;
@@ -77,6 +80,7 @@ MVCrossCorrelogramsWidget3::MVCrossCorrelogramsWidget3(MVContext* context)
     this->recalculateOnOptionChanged("cc_max_dt_msec");
     this->recalculateOnOptionChanged("cc_log_time_constant_msec");
     this->recalculateOnOptionChanged("cc_bin_size_msec");
+    this->recalculateOnOptionChanged("cc_max_est_data_size");
 
     {
         QAction* A = new QAction("Log", this);
@@ -122,6 +126,7 @@ void MVCrossCorrelogramsWidget3::prepareCalculation()
         d->m_computer.cluster_merge = mvContext()->clusterMerge();
     }
     d->m_computer.pair_mode = this->pairMode();
+    d->m_computer.max_est_data_size = mvContext()->option("cc_max_est_data_size", 10000).toDouble();
 }
 
 void MVCrossCorrelogramsWidget3::runCalculation()
@@ -292,7 +297,34 @@ void MVCrossCorrelogramsWidget3::slot_export_static_view()
     }
 }
 
-QVector<double> compute_cc_data3(const QVector<double>& times1_in, const QVector<double>& times2_in, int max_dt, bool exclude_matches)
+double pseudorandomnumber(double i)
+{
+    double ret = sin(i + cos(i));
+    ret = (ret + 5) - (long)(ret + 5);
+    return ret;
+}
+
+QVector<double> pseudorandomsample(const QVector<double>& X, double dsfactor)
+{
+    QVector<double> ret;
+    for (long i = 0; i < X.count(); i++) {
+        double randnum = pseudorandomnumber(i);
+        if (randnum <= 1 / dsfactor)
+            ret << X[i];
+    }
+    return ret;
+}
+
+double estimate_cc_data_size(const QVector<double>& times1, const QVector<double>& times2, int max_dt, bool exclude_matches)
+{
+    double dsfactor = 10;
+    QVector<double> times1b = pseudorandomsample(times1, dsfactor);
+    QVector<double> times2b = pseudorandomsample(times2, dsfactor);
+    QVector<double> datab = compute_cc_data3(times1b, times2b, max_dt, exclude_matches, 0);
+    return datab.count() * dsfactor * dsfactor;
+}
+
+QVector<double> compute_cc_data3(const QVector<double>& times1_in, const QVector<double>& times2_in, int max_dt, bool exclude_matches, double max_est_data_size)
 {
     QVector<double> ret;
     QVector<double> times1 = times1_in;
@@ -302,6 +334,16 @@ QVector<double> compute_cc_data3(const QVector<double>& times1_in, const QVector
 
     if ((times1.isEmpty()) || (times2.isEmpty()))
         return ret;
+
+    if (max_est_data_size) {
+        double estimated_data_size = estimate_cc_data_size(times1, times2, max_dt, exclude_matches);
+        if (estimated_data_size > max_est_data_size) {
+            double dsfactor = sqrt(estimated_data_size / max_est_data_size);
+            qDebug() << QString("Downsampling arrays by dsfactor: %1").arg(dsfactor);
+            times1 = pseudorandomsample(times1, dsfactor);
+            times2 = pseudorandomsample(times2, dsfactor);
+        }
+    }
 
     long i1 = 0;
     for (long i2 = 0; i2 < times2.count(); i2++) {
@@ -421,7 +463,10 @@ void MVCrossCorrelogramsWidget3Computer::compute()
         }
         int k1 = correlograms[j].k1;
         int k2 = correlograms[j].k2;
-        correlograms[j].data = compute_cc_data3(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2));
+        correlograms[j].data = compute_cc_data3(the_times.value(k1), the_times.value(k2), max_dt, (k1 == k2), max_est_data_size);
+        if (correlograms[j].data.count() > max_est_data_size) {
+            qWarning() << QString("%1>%2").arg(correlograms[j].data.count()).arg(max_est_data_size);
+        }
         if ((correlograms[j].data.isEmpty()) && (!pair_mode)) {
             correlograms.removeAt(j);
             j--;

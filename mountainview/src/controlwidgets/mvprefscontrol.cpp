@@ -58,6 +58,13 @@ MVPrefsControl::MVPrefsControl(MVContext* context, MVMainWindow* mw)
         row++;
     }
     {
+        QWidget* X = this->createDoubleControl("cc_max_est_data_size");
+        context->onOptionChanged("cc_max_est_data_size", this, SLOT(updateControls()));
+        glayout->addWidget(new QLabel("CC max est data size:"), row, 0);
+        glayout->addWidget(X, row, 1);
+        row++;
+    }
+    {
         QWidget* X = this->createDoubleControl("amp_thresh_display");
         context->onOptionChanged("amp_thresh_display", this, SLOT(updateControls()));
         glayout->addWidget(new QLabel("Amp. thresh. (display):"), row, 0);
@@ -89,6 +96,7 @@ void MVPrefsControl::updateContext()
     mvContext()->setOption("cc_max_dt_msec", this->controlValue("cc_max_dt_msec").toDouble());
     mvContext()->setOption("cc_log_time_constant_msec", this->controlValue("cc_log_time_constant_msec").toDouble());
     mvContext()->setOption("cc_bin_size_msec", this->controlValue("cc_bin_size_msec").toDouble());
+    mvContext()->setOption("cc_max_est_data_size", this->controlValue("cc_max_est_data_size").toDouble());
     mvContext()->setOption("amp_thresh_display", this->controlValue("amp_thresh_display").toDouble());
 }
 
@@ -101,5 +109,6 @@ void MVPrefsControl::updateControls()
     this->setControlValue("cc_max_dt_msec", mvContext()->option("cc_max_dt_msec").toDouble());
     this->setControlValue("cc_log_time_constant_msec", mvContext()->option("cc_log_time_constant_msec").toDouble());
     this->setControlValue("cc_bin_size_msec", mvContext()->option("cc_bin_size_msec").toDouble());
+    this->setControlValue("cc_max_est_data_size", mvContext()->option("cc_max_est_data_size").toDouble());
     this->setControlValue("amp_thresh_display", mvContext()->option("amp_thresh_display").toDouble());
 }

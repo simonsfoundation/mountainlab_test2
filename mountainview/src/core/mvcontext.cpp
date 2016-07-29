@@ -70,6 +70,7 @@ MVContext::MVContext()
     d->m_options["cc_max_dt_msec"] = 100;
     d->m_options["cc_log_time_constant_msec"] = 1;
     d->m_options["cc_bin_size_msec"] = 0.5;
+    d->m_options["cc_max_est_data_size"] = "1e4";
 
     // default colors
     d->m_colors["background"] = QColor(240, 240, 240);
