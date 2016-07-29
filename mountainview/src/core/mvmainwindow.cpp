@@ -21,6 +21,7 @@
 
 #include <QApplication>
 #include <QProcess>
+#include <mvtemplatesview2.h>
 
 #include "mvabstractviewfactory.h"
 #include "mvabstractcontextmenuhandler.h"
@@ -115,6 +116,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     d->m_context = context;
 
     registerViewFactory(new MVClusterDetailsFactory(context, this));
+    registerViewFactory(new MVTemplatesView2Factory(context, this));
     registerViewFactory(new MVAutoCorrelogramsFactory(context, this));
     registerViewFactory(new MVSelectedAutoCorrelogramsFactory(context, this));
     registerViewFactory(new MVCrossCorrelogramsFactory(context, this));

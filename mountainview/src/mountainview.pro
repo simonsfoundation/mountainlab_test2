@@ -24,7 +24,10 @@ SOURCES += mountainviewmain.cpp \
     views/firetrackview.cpp \
     views/ftelectrodearrayview.cpp \
     controlwidgets/mvmergecontrol.cpp \
-    controlwidgets/mvprefscontrol.cpp
+    controlwidgets/mvprefscontrol.cpp \
+    views/mvpanelwidget.cpp \
+    views/mvtemplatesview2.cpp \
+    views/mvtemplatesview2panel.cpp
 
 INCLUDEPATH += core
 VPATH += core
@@ -39,7 +42,10 @@ mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
     views/firetrackview.h \
     views/ftelectrodearrayview.h \
     controlwidgets/mvmergecontrol.h \
-    controlwidgets/mvprefscontrol.h
+    controlwidgets/mvprefscontrol.h \
+    views/mvpanelwidget.h \
+    views/mvtemplatesview2.h \
+    views/mvtemplatesview2panel.h
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
