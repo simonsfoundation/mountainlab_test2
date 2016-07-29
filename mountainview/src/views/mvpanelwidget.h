@@ -31,6 +31,8 @@ protected:
     void paintEvent(QPaintEvent* evt);
     void wheelEvent(QWheelEvent* evt);
     void mousePressEvent(QMouseEvent* evt);
+    void mouseReleaseEvent(QMouseEvent* evt);
+    void mouseMoveEvent(QMouseEvent* evt);
 
 signals:
     void signalPanelClicked(int index);

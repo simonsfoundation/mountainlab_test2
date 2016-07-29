@@ -29,6 +29,10 @@ public:
     QRectF m_viewport_geom = QRectF(0, 0, 1, 1);
     int m_current_panel_index = -1;
 
+    QPointF m_press_anchor = QPointF(-1, -1);
+    QRectF m_press_anchor_viewport_geom = QRectF(0, 0, 1, 1);
+    bool m_is_dragging = false;
+
     void correct_viewport_geom();
     void zoom(double factor);
     void update_panel_geometries();
@@ -39,6 +43,8 @@ MVPanelWidget::MVPanelWidget()
 {
     d = new MVPanelWidgetPrivate;
     d->q = this;
+
+    this->setMouseTracking(true);
 }
 
 MVPanelWidget::~MVPanelWidget()
@@ -137,14 +143,46 @@ void MVPanelWidget::wheelEvent(QWheelEvent* evt)
 
 void MVPanelWidget::mousePressEvent(QMouseEvent* evt)
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
-    int index = d->panel_index_at_pt(evt->pos());
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << ":::::::::::::::" << index;
-    if (index >= 0) {
-        d->m_current_panel_index = index;
-        update();
-    }
+    d->m_press_anchor = evt->pos();
+    d->m_press_anchor_viewport_geom = d->m_viewport_geom;
+    d->m_is_dragging = false;
+
     QWidget::mousePressEvent(evt);
+}
+
+void MVPanelWidget::mouseReleaseEvent(QMouseEvent* evt)
+{
+    d->m_press_anchor = QPointF(-1, -1);
+    if (!d->m_is_dragging) {
+        int index = d->panel_index_at_pt(evt->pos());
+        if (index >= 0) {
+            d->m_current_panel_index = index;
+            update();
+        }
+        emit this->signalPanelClicked();
+    }
+    d->m_is_dragging = false;
+}
+
+void MVPanelWidget::mouseMoveEvent(QMouseEvent* evt)
+{
+    if (d->m_press_anchor.x() >= 0) {
+        double dx = evt->pos().x() - d->m_press_anchor.x();
+        double dy = evt->pos().y() - d->m_press_anchor.y();
+
+        if ((Math.abs(dx) >= 4) || (Math.abs(dy) >= 4)) {
+            is_dragging = true;
+        }
+        if (is_dragging) {
+            if (columnCount() > 1) {
+                m_viewport_geom[0] = press_anchor_viewport_geom[0] + dx / O.size()[0];
+            }
+            if (rowCount() > 1) {
+                m_viewport_geom[1] = press_anchor_viewport_geom[1] + dy / O.size()[1];
+            }
+            update_layout();
+        }
+    }
 }
 
 void MVPanelWidgetPrivate::correct_viewport_geom()
