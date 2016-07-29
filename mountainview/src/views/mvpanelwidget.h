@@ -11,8 +11,7 @@
 #include <QWidget>
 
 class MVPanelWidgetPrivate;
-class MVPanelWidget : public QWidget
-{
+class MVPanelWidget : public QWidget {
     Q_OBJECT
 public:
     friend class MVPanelWidgetPrivate;
@@ -20,7 +19,7 @@ public:
     virtual ~MVPanelWidget();
 
     void clearPanels(bool delete_layers);
-    void addPanel(int row, int col, PaintLayer *layer);
+    void addPanel(int row, int col, PaintLayer* layer);
     int rowCount() const;
     int columnCount() const;
     void setSpacing(int row_spacing, int col_spacing);
@@ -29,14 +28,15 @@ public:
     void setViewportGeometry(QRectF geom);
 
 protected:
-    void paintEvent(QPaintEvent *evt);
+    void paintEvent(QPaintEvent* evt);
+    void wheelEvent(QWheelEvent* evt);
+    void mousePressEvent(QMouseEvent* evt);
 
 signals:
     void signalPanelClicked(int index);
 
 private:
-    MVPanelWidgetPrivate *d;
+    MVPanelWidgetPrivate* d;
 };
 
 #endif // MVPANELWIDGET_H
-

@@ -13,11 +13,10 @@
 #include <paintlayer.h>
 
 class MVTemplatesView2Private;
-class MVTemplatesView2 : public MVAbstractView
-{
+class MVTemplatesView2 : public MVAbstractView {
 public:
     friend class MVTemplatesView2Private;
-    MVTemplatesView2(MVContext *mvcontext);
+    MVTemplatesView2(MVContext* mvcontext);
     virtual ~MVTemplatesView2();
 
     void prepareCalculation() Q_DECL_OVERRIDE;
@@ -27,7 +26,7 @@ public:
     void zoomAllTheWayOut();
 
 private:
-    MVTemplatesView2Private *d;
+    MVTemplatesView2Private* d;
 };
 
 class MVTemplatesView2Factory : public MVAbstractViewFactory {
@@ -42,6 +41,4 @@ private slots:
     //void openClipsForTemplate();
 };
 
-
 #endif // MVTEMPLATESVIEW2_H
-

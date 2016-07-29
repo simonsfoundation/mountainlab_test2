@@ -54,11 +54,16 @@ public:
 
     MVTemplatesView2Calculator m_calculator;
     QList<ClusterData2> m_cluster_data;
-    double m_total_time_sec=0;
-    bool m_zoomed_out_once=false;
-    MVPanelWidget *m_panel_widget;
+    double m_max_absval = 1;
+    QList<MVTemplatesView2Panel*> m_panels;
+
+    double m_total_time_sec = 0;
+    bool m_zoomed_out_once = false;
+    MVPanelWidget* m_panel_widget;
+    double m_vscale_factor = 2;
 
     void compute_total_time();
+    void update_scale_factors();
 };
 
 MVTemplatesView2::MVTemplatesView2(MVContext* mvcontext)
@@ -67,10 +72,10 @@ MVTemplatesView2::MVTemplatesView2(MVContext* mvcontext)
     d = new MVTemplatesView2Private;
     d->q = this;
 
-    QVBoxLayout *layout=new QVBoxLayout;
+    QVBoxLayout* layout = new QVBoxLayout;
     this->setLayout(layout);
 
-    d->m_panel_widget=new MVPanelWidget;
+    d->m_panel_widget = new MVPanelWidget;
     layout->addWidget(d->m_panel_widget);
 
     this->recalculateOn(mvcontext, SIGNAL(firingsChanged()), false);
@@ -112,19 +117,34 @@ void MVTemplatesView2::onCalculationFinished()
         d->m_zoomed_out_once = true;
     }
     d->m_panel_widget->clearPanels(true);
-    for (int i=0; i<d->m_cluster_data.count(); i++) {
-        ClusterData2 CD=d->m_cluster_data[i];
-        MVTemplatesView2Panel *panel=new MVTemplatesView2Panel;
+    d->m_panels.clear();
+    QList<QColor> channel_colors;
+    {
+        int M = d->m_cluster_data.value(0).template0.N1();
+        for (int m = 0; m < M; m++) {
+            channel_colors << mvContext()->channelColor(m + 1);
+        }
+    }
+    d->m_max_absval = 0;
+    for (int i = 0; i < d->m_cluster_data.count(); i++) {
+        d->m_max_absval = qMax(qMax(d->m_max_absval, qAbs(d->m_cluster_data[i].template0.minimum())), qAbs(d->m_cluster_data[i].template0.maximum()));
+    }
+    for (int i = 0; i < d->m_cluster_data.count(); i++) {
+        ClusterData2 CD = d->m_cluster_data[i];
+        MVTemplatesView2Panel* panel = new MVTemplatesView2Panel;
         panel->setElectrodeGeometry(mvContext()->electrodeGeometry());
         panel->setTemplate(CD.template0);
-        d->m_panel_widget->addPanel(0,i,panel);
+        panel->setChannelColors(channel_colors);
+        d->m_panel_widget->addPanel(0, i, panel);
+        d->m_panels << panel;
     }
+    d->update_scale_factors();
     this->update();
 }
 
 void MVTemplatesView2::zoomAllTheWayOut()
 {
-    d->m_panel_widget->setViewportGeometry(QRectF(0,0,1,1));
+    d->m_panel_widget->setViewportGeometry(QRectF(0, 0, 1, 1));
 }
 
 void mv_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs_out, const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
@@ -154,7 +174,6 @@ void mv_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs
     templates_out.setRemoteDataType("float32_q8");
     stdevs_out.setRemoteDataType("float32_q8");
 }
-
 
 void MVTemplatesView2Calculator::compute()
 {
@@ -238,6 +257,16 @@ void MVTemplatesView2Calculator::compute()
 void MVTemplatesView2Private::compute_total_time()
 {
     m_total_time_sec = q->mvContext()->currentTimeseries().N2() / q->mvContext()->sampleRate();
+}
+
+void MVTemplatesView2Private::update_scale_factors()
+{
+    double factor = m_vscale_factor;
+    if (m_max_absval)
+        factor /= m_max_absval;
+    for (int i = 0; i < m_panels.count(); i++) {
+        m_panels[i]->setVerticalScaleFactor(factor);
+    }
 }
 
 MVTemplatesView2Factory::MVTemplatesView2Factory(MVContext* context, QObject* parent)
