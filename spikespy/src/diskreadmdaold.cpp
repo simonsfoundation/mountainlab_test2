@@ -283,7 +283,7 @@ double* DiskReadMdaOldPrivate::load_chunk(long i)
                         tmp2[j] = (double)tmp[j];
                 }
                 else if (m_data_type == MDAIO_TYPE_UINT16) {
-                    quint32* tmp = (quint32*)data;
+		    quint32* tmp = (quint32*)data;
                     double* tmp2 = m_chunks[i].data;
                     for (size_t j = 0; j < num; j++)
                         tmp2[j] = (double)tmp[j];
@@ -293,7 +293,7 @@ double* DiskReadMdaOldPrivate::load_chunk(long i)
                     double* tmp2 = m_chunks[i].data;
                     for (size_t j = 0; j < num; j++)
                         tmp2[j] = (double)tmp[j];
-                }
+		}
                 else {
                     printf("Warning: unexpected data type: %ld\n", m_data_type);
                 }

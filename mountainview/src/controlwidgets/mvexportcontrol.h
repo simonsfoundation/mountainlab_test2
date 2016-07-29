@@ -24,9 +24,10 @@ public slots:
 
 private slots:
     void slot_export_mv_document();
-    void slot_export_firings_array();
     void slot_export_static_views();
     void slot_share_views_on_web();
+    void slot_export_firings_array();
+    void slot_export_cluster_annotation_array();
 
 private:
     MVExportControlPrivate* d;

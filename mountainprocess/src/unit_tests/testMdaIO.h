@@ -13,6 +13,7 @@ private slots:
     void testInt32();
     void testUInt16();
     void testFloat64();
+    void testUInt32();
 };
 
 #endif // TESTMDAIO_H

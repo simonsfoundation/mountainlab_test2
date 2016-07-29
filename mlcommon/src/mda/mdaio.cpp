@@ -102,6 +102,8 @@ long mda_write_header(struct MDAIO_HEADER* X, FILE* output_file)
         X->num_bytes_per_entry = 2;
     else if (X->data_type == MDAIO_TYPE_FLOAT64)
         X->num_bytes_per_entry = 8;
+    else if (X->data_type == MDAIO_TYPE_UINT32)
+        X->num_bytes_per_entry = 4;
 
     if ((X->num_dims <= 0) || (X->num_dims > MDAIO_MAX_DIMS)) {
         printf("mda_write_header: Problem with num dims: %d\n", X->num_dims);
@@ -171,6 +173,9 @@ long mdaReadData(Type* data, const struct MDAIO_HEADER* header, const long size,
     else if (header->data_type == MDAIO_TYPE_FLOAT64) {
         return mdaReadData_impl<double>(data, size, inputFile);
     }
+    else if (header->data_type == MDAIO_TYPE_UINT32) {
+        return mdaReadData_impl<uint32_t>(data, size, inputFile);
+    }
     else
         return 0;
 }
@@ -209,6 +214,9 @@ long mdaWriteData(DataType* data, const long size, const struct MDAIO_HEADER* he
     else if (header->data_type == MDAIO_TYPE_FLOAT64) {
         return mdaWriteData_impl<double>(data, size, outputFile);
     }
+    else if (header->data_type == MDAIO_TYPE_UINT32) {
+        return mdaWriteData_impl<uint32_t>(data, size, outputFile);
+    }
     else
         return 0;
 }
@@ -243,6 +251,12 @@ long mda_read_uint16(uint16_t* data, struct MDAIO_HEADER* H, long n, FILE* input
     return mdaReadData(data, H, n, input_file);
 }
 
+long mda_read_uint32(uint32_t* data, struct MDAIO_HEADER* H, long n, FILE* input_file)
+{
+    return mdaReadData(data, H, n, input_file);
+}
+
+
 long mda_write_byte(unsigned char* data, struct MDAIO_HEADER* H, long n, FILE* output_file)
 {
     return mdaWriteData(data, n, H, output_file);
@@ -269,6 +283,11 @@ long mda_write_uint16(uint16_t* data, struct MDAIO_HEADER* H, long n, FILE* outp
 }
 
 long mda_write_float64(double* data, struct MDAIO_HEADER* H, long n, FILE* output_file)
+{
+    return mdaWriteData(data, n, H, output_file);
+}
+
+long mda_write_uint32(uint32_t* data, struct MDAIO_HEADER* H, long n, FILE* output_file)
 {
     return mdaWriteData(data, n, H, output_file);
 }

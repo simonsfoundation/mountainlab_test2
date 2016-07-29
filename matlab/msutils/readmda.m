@@ -62,6 +62,10 @@ elseif (code==-6)
     A(:)=fread(F,N,'uint16');
 elseif (code==-7)
     A(:)=fread(F,N,'double');
+elseif (code==-8)
+    A(:)=fread(F,N,'uint32');
+else
+    error('Unsupported data type code: %d',code);
 end;
 
 fclose(F);

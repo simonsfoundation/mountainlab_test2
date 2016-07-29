@@ -151,3 +151,8 @@ void TestMdaIO::testFloat64()
 {
     test_type<double>(MDAIO_TYPE_FLOAT64, mda_read_float64, mda_write_float64);
 }
+
+void TestMdaIO::testUInt32()
+{
+    test_type<uint32_t>(MDAIO_TYPE_UINT32, mda_read_uint32, mda_write_uint32);
+}
