@@ -227,7 +227,7 @@ bool copy_data(working_data& D, long N)
         num_read = mda_read_float64((double*)buf, &D.HH_in, N, D.inf);
     }
     else if (D.HH_out.data_type == MDAIO_TYPE_UINT32) {
-	num_read = mda_read_uint32((quint32*)buf, &D.HH_in, N, D.inf);
+        num_read = mda_read_uint32((quint32*)buf, &D.HH_in, N, D.inf);
     }
     else {
         qWarning() << "Unsupported format for reading";
@@ -259,7 +259,7 @@ bool copy_data(working_data& D, long N)
         num_written = mda_write_float64((double*)buf, &D.HH_out, N, D.outf);
     }
     else if (D.HH_out.data_type == MDAIO_TYPE_UINT32) {
-	num_written = mda_write_uint32((quint32*)buf, &D.HH_out, N, D.outf);
+        num_written = mda_write_uint32((quint32*)buf, &D.HH_out, N, D.outf);
     }
     else {
         qWarning() << "Unsupported format for writing";
@@ -291,7 +291,7 @@ int get_mda_dtype(QString format)
     if (format == "float64")
         return MDAIO_TYPE_FLOAT64;
     if (format == "int32")
-	return MDAIO_TYPE_INT32;
+        return MDAIO_TYPE_INT32;
     return 0;
 }
 
@@ -317,8 +317,8 @@ int get_num_bytes_per_entry(int dtype)
         return 8;
         break;
     case MDAIO_TYPE_UINT32:
-	return 4;
-	break;
+        return 4;
+        break;
     }
 
     return 0;

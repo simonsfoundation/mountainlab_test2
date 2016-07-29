@@ -256,7 +256,6 @@ long mda_read_uint32(uint32_t* data, struct MDAIO_HEADER* H, long n, FILE* input
     return mdaReadData(data, H, n, input_file);
 }
 
-
 long mda_write_byte(unsigned char* data, struct MDAIO_HEADER* H, long n, FILE* output_file)
 {
     return mdaWriteData(data, n, H, output_file);

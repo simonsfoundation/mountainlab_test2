@@ -180,31 +180,31 @@ void MVExportControl::slot_export_cluster_annotation_array()
     //first row is the cluster number
     //second row is 0 if not accepted, 1 if accepted
     //third row is the merge label (i.e., smallest cluster number in the merge group)
-    QSet<int> clusters_set=mvContext()->clustersSubset();
+    QSet<int> clusters_set = mvContext()->clustersSubset();
     if (clusters_set.isEmpty()) {
-        QList<int> keys=mvContext()->clusterAttributesKeys();
+        QList<int> keys = mvContext()->clusterAttributesKeys();
         foreach (int key, keys) {
             clusters_set.insert(key);
         }
-        QList<ClusterPair> pairs=mvContext()->clusterPairAttributesKeys();
+        QList<ClusterPair> pairs = mvContext()->clusterPairAttributesKeys();
         foreach (ClusterPair pair, pairs) {
             clusters_set.insert(pair.kmin());
             clusters_set.insert(pair.kmax());
         }
     }
-    QList<int> clusters=clusters_set.toList();
+    QList<int> clusters = clusters_set.toList();
     qSort(clusters);
-    int num=clusters.count();
-    Mda cluster_annotation(3,num);
-    for (int i=0; i<num; i++) {
-        int accepted=0;
-        if (mvContext()->clusterTags(clusters[i]).contains("accepted")) accepted=1;
-        int merge_label=mvContext()->clusterMerge().representativeLabel(clusters[i]);
-        cluster_annotation.setValue(clusters[i],0,i);
-        cluster_annotation.setValue(accepted,1,i);
-        cluster_annotation.setValue(merge_label,2,i);
+    int num = clusters.count();
+    Mda cluster_annotation(3, num);
+    for (int i = 0; i < num; i++) {
+        int accepted = 0;
+        if (mvContext()->clusterTags(clusters[i]).contains("accepted"))
+            accepted = 1;
+        int merge_label = mvContext()->clusterMerge().representativeLabel(clusters[i]);
+        cluster_annotation.setValue(clusters[i], 0, i);
+        cluster_annotation.setValue(accepted, 1, i);
+        cluster_annotation.setValue(merge_label, 2, i);
     }
-
 
     QSettings settings("SCDA", "MountainView");
     QString default_dir = settings.value("default_export_dir", "").toString();
@@ -216,9 +216,8 @@ void MVExportControl::slot_export_cluster_annotation_array()
         fname = fname + ".mda";
 
     if (!cluster_annotation.write32(fname)) {
-        QMessageBox::warning(0,"Problem exporting cluster annotation array","Unable to write file: "+fname);
+        QMessageBox::warning(0, "Problem exporting cluster annotation array", "Unable to write file: " + fname);
     }
-
 }
 
 void MVExportControl::slot_export_static_views()
@@ -249,6 +248,6 @@ void MVExportControl::slot_share_views_on_web()
     html += "<p><a href=\"" + url0 + "\">" + url0 + "</a></p>";
     html += "<p>Note that for now, only templates and cross-correlograms views may be shared.</p>";
     tb->show();
-    tb->resize(600,400);
+    tb->resize(600, 400);
     tb->setHtml(html);
 }
