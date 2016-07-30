@@ -43,7 +43,6 @@ struct TaskInfo {
 
 Q_DECLARE_METATYPE(TaskInfo)
 
-
 class TaskProgress : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString label READ label WRITE setLabel)
@@ -89,7 +88,6 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(TaskProgress::StandardCategories);
 
-
 namespace TaskManager {
 
 class TagsFilterProxyModel;
@@ -97,7 +95,7 @@ class TagsFilterProxyModel;
 class TaskProgressAgent : public QObject {
     Q_OBJECT
 public:
-    virtual const TaskInfo &taskInfo() const = 0;
+    virtual const TaskInfo& taskInfo() const = 0;
 signals:
     void changed();
 };
@@ -107,7 +105,6 @@ class TaskProgressModel;
 class TaskProgressMonitor : public QObject {
     Q_OBJECT
 public:
-
     virtual int count() const = 0;
     virtual TaskProgressAgent* at(int index) const = 0;
     virtual int indexOf(TaskProgressAgent*) const = 0;
@@ -153,11 +150,12 @@ public:
     QVariant taskData(const QModelIndex& index, int role = Qt::DisplayRole) const;
     QVariant logData(const QModelIndex& index, int role = Qt::DisplayRole) const;
 
-    bool isActive(const QModelIndex &task) const;
-    bool isCompletedWithin(const QModelIndex &task, int time) const;
-    bool isTask(const QModelIndex &idx) const;
+    bool isActive(const QModelIndex& task) const;
+    bool isCompletedWithin(const QModelIndex& task, int time) const;
+    bool isTask(const QModelIndex& idx) const;
+
 protected:
-    QString assembleLog(const TaskInfo &task, const QString& prefix = QString()) const;
+    QString assembleLog(const TaskInfo& task, const QString& prefix = QString()) const;
     QString singleLog(const TaskProgressLogMessage& msg, const QString& prefix = QString()) const;
 
     QList<TaskProgressAgentPrivate*> m_data; // active first, completed later
@@ -175,10 +173,10 @@ public:
     int indexOf(TaskProgressAgent* a) const;
 
     QAbstractItemModel* model() const;
-private:
-    TagsFilterProxyModel *m_proxy;
-    TaskProgressModel *m_base;
-};
 
+private:
+    TagsFilterProxyModel* m_proxy;
+    TaskProgressModel* m_base;
+};
 }
 #endif // TASKPROGRESS_H

@@ -42,7 +42,7 @@ public:
     }
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
     {
-//        if (index.internalId() != 0xDEADBEEF || index.column() != 0) {
+        //        if (index.internalId() != 0xDEADBEEF || index.column() != 0) {
         if (index.parent().isValid() || index.column() != 0) {
             QStyledItemDelegate::paint(painter, option, index);
             return;
@@ -134,22 +134,31 @@ public:
         LM_Hidden
     };
 
-    TaskProgressViewModeProxy(QObject *parent = 0) : QSortFilterProxyModel(parent) {}
+    TaskProgressViewModeProxy(QObject* parent = 0)
+        : QSortFilterProxyModel(parent)
+    {
+    }
 
-    void setCompleteTasksMode(CompleteTasksMode m) {
-        if (m == m_cMode) return;
+    void setCompleteTasksMode(CompleteTasksMode m)
+    {
+        if (m == m_cMode)
+            return;
         m_cMode = m;
         invalidateFilter();
     }
 
-    void setLogsMode(LogsMode m) {
-        if (m == m_lMode) return;
+    void setLogsMode(LogsMode m)
+    {
+        if (m == m_lMode)
+            return;
         m_lMode = m;
         invalidateFilter();
     }
 
-    void setCompleteTasksModeThreshold(unsigned int secs) {
-        if (secs == m_ctmThreshold) return;
+    void setCompleteTasksModeThreshold(unsigned int secs)
+    {
+        if (secs == m_ctmThreshold)
+            return;
         m_ctmThreshold = secs;
         if (completeTasksMode() == CTM_HiddenIfOlderThan)
             invalidateFilter();
@@ -160,28 +169,36 @@ public:
     unsigned int completeTasksModeThreshold() const { return m_ctmThreshold; }
 
 protected:
-    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const {
-        TaskManager::TaskProgressModel *mdl = taskModel();
-        if (!mdl) return true;
+    bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
+    {
+        TaskManager::TaskProgressModel* mdl = taskModel();
+        if (!mdl)
+            return true;
         QModelIndex sourceIndex = mdl->index(source_row, 0, source_parent);
-        if (!sourceIndex.isValid()) return false;
+        if (!sourceIndex.isValid())
+            return false;
         bool isTask = mdl->isTask(sourceIndex);
-        if (!isTask && logsMode() == LM_Hidden) return false;
+        if (!isTask && logsMode() == LM_Hidden)
+            return false;
         if (isTask) {
             if (!mdl->isActive(sourceIndex)) {
-                if (completeTasksMode() == CTM_Shown) return true;
-                if (completeTasksMode() == CTM_Hidden) return false;
+                if (completeTasksMode() == CTM_Shown)
+                    return true;
+                if (completeTasksMode() == CTM_Hidden)
+                    return false;
                 if (completeTasksMode() == CTM_HiddenIfOlderThan
-                        && !mdl->isCompletedWithin(sourceIndex, completeTasksModeThreshold()))
+                    && !mdl->isCompletedWithin(sourceIndex, completeTasksModeThreshold()))
                     return false;
             }
         }
         return true;
     }
 
-    TaskManager::TaskProgressModel *taskModel() const {
+    TaskManager::TaskProgressModel* taskModel() const
+    {
         return (TaskManager::TaskProgressModel*)sourceModel();
     }
+
 private:
     CompleteTasksMode m_cMode = CTM_Shown;
     LogsMode m_lMode = LM_Shown;
@@ -191,7 +208,7 @@ private:
 class TaskProgressViewPrivate {
 public:
     TaskProgressView* q;
-    TaskProgressViewModeProxy *proxyModel;
+    TaskProgressViewModeProxy* proxyModel;
 
     QString shortened(QString txt, int maxlen);
 };
@@ -237,16 +254,16 @@ TaskProgressView::TaskProgressView()
 
     // setup actions menu
     setContextMenuPolicy(Qt::ActionsContextMenu);
-    QMenu *modeMenu = new QMenu(this);
+    QMenu* modeMenu = new QMenu(this);
     modeMenu->setTitle("Mode");
     addAction(modeMenu->menuAction());
-    QAction *defMode = new QAction("Default", this);
+    QAction* defMode = new QAction("Default", this);
     defMode->setCheckable(true);
     modeMenu->addAction(defMode);
-    QAction *activeMode = new QAction("Active only", this);
+    QAction* activeMode = new QAction("Active only", this);
     activeMode->setCheckable(true);
     modeMenu->addAction(activeMode);
-    QActionGroup *grp = new QActionGroup(this);
+    QActionGroup* grp = new QActionGroup(this);
     grp->addAction(defMode);
     grp->addAction(activeMode);
     connect(defMode, &QAction::toggled, [this](bool checked) {
@@ -260,8 +277,6 @@ TaskProgressView::TaskProgressView()
        }
     });
     defMode->setChecked(true);
-
-
 }
 
 TaskProgressView::~TaskProgressView()

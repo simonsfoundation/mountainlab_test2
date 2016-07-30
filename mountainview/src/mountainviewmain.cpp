@@ -57,8 +57,8 @@ public:
         else if (m_idx % 3 == 1)
             TP1.addTag(TaskProgress::Calculate);
         TP1.setDescription(QStringLiteral("The description of the task. This should complete on destruct."));
-        for (int i = 0; i <= 100; i+=1) {
-            if(QCoreApplication::instance()->closingDown())
+        for (int i = 0; i <= 100; i += 1) {
+            if (QCoreApplication::instance()->closingDown())
                 return; // quit
             TP1.setProgress(i * 1.0 / 100.0);
             TP1.setLabel(QString("Test task %1 (%2)").arg(m_idx, 2, 10, QChar('0')).arg(i * 1.0 / 100.0));
@@ -120,7 +120,6 @@ int main(int argc, char* argv[])
     CloseMeHandler::start();
 
     setbuf(stdout, 0);
-
 
     CLParams CLP(argc, argv);
 

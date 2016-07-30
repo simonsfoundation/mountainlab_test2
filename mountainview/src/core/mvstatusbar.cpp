@@ -45,8 +45,8 @@ MVStatusBar::MVStatusBar()
 
     d->m_tp_agent = TaskManager::TaskProgressMonitor::globalInstance();
     connect(d->m_tp_agent, SIGNAL(quantitiesChanged()), this, SLOT(slot_update_quantities()));
-    connect(d->m_tp_agent->model(), SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(slot_update_tasks()));
-    connect(d->m_tp_agent->model(), SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(slot_update_tasks()));
+    connect(d->m_tp_agent->model(), SIGNAL(rowsInserted(QModelIndex, int, int)), this, SLOT(slot_update_tasks()));
+    connect(d->m_tp_agent->model(), SIGNAL(dataChanged(QModelIndex, QModelIndex)), this, SLOT(slot_update_tasks()));
 }
 
 MVStatusBar::~MVStatusBar()
