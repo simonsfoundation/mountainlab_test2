@@ -534,9 +534,12 @@ void HistogramViewPrivate::do_paint(QPainter& painter, int W, int H)
     }
 
     if (m_selected) {
-        painter.setPen(QPen(m_colors["view_frame_selected"], 4));
-        painter.drawRect(R);
+        painter.setPen(QPen(m_colors["view_frame_selected"], 2));
     }
+    else {
+        painter.setPen(QPen(m_colors["view_frame"], 1));
+    }
+    painter.drawRect(R);
 
     if (m_update_required) {
         update_bin_counts();

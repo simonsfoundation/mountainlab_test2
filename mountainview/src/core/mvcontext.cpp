@@ -76,10 +76,11 @@ MVContext::MVContext()
     d->m_colors["background"] = QColor(240, 240, 240);
     d->m_colors["frame1"] = QColor(245, 245, 245);
     d->m_colors["info_text"] = QColor(80, 80, 80);
-    d->m_colors["view_background"] = QColor(245, 245, 245);
+    d->m_colors["view_background"] = QColor(243, 243, 247);
     d->m_colors["view_background_highlighted"] = QColor(210, 230, 250);
     d->m_colors["view_background_selected"] = QColor(220, 240, 250);
-    d->m_colors["view_background_hovered"] = QColor(240, 245, 240);
+    d->m_colors["view_background_hovered"] = QColor(243, 243, 237);
+    d->m_colors["view_frame"] = QColor(150, 120, 120);
     d->m_colors["view_frame_selected"] = QColor(50, 20, 20);
     d->m_colors["divider_line"] = QColor(255, 100, 150);
     d->m_colors["calculation-in-progress"] = QColor(130, 130, 140, 50);

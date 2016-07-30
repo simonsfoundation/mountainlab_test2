@@ -11,16 +11,11 @@
 #include <QVBoxLayout>
 #include <mountainprocessrunner.h>
 #include <taskprogress.h>
+#include "actionfactory.h"
 
 struct ClusterData2 {
-    ClusterData2()
-    {
-        k = 0;
-        channel = 0;
-    }
-
-    int k;
-    int channel;
+    int k = 0;
+    int channel = 0;
     Mda template0;
     Mda stdev0;
     int num_events = 0;
@@ -60,9 +55,11 @@ public:
     double m_total_time_sec = 0;
     bool m_zoomed_out_once = false;
     MVPanelWidget* m_panel_widget;
-    double m_vscale_factor = 2;
+    double m_vscale_factor = 4;
+    double m_hscale_factor = 2;
 
     void compute_total_time();
+    void update_panels();
     void update_scale_factors();
 };
 
@@ -78,9 +75,24 @@ MVTemplatesView2::MVTemplatesView2(MVContext* mvcontext)
     d->m_panel_widget = new MVPanelWidget;
     layout->addWidget(d->m_panel_widget);
 
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, d->m_panel_widget, SLOT(zoomIn()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, d->m_panel_widget, SLOT(zoomOut()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInVertical, this, SLOT(slot_vertical_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutVertical, this, SLOT(slot_vertical_zoom_out()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInHorizontal, this, SLOT(slot_horizontal_zoom_in()));
+    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutHorizontal, this, SLOT(slot_horizontal_zoom_out()));
+
     this->recalculateOn(mvcontext, SIGNAL(firingsChanged()), false);
     this->recalculateOn(mvcontext, SIGNAL(currentTimeseriesChanged()));
     this->recalculateOnOptionChanged("clip_size");
+
+    QObject::connect(mvcontext, SIGNAL(clusterMergeChanged()), this, SLOT(slot_update_highlighting()));
+    QObject::connect(mvcontext, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting()));
+    QObject::connect(mvcontext, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_highlighting()));
+    connect(mvcontext, SIGNAL(clusterVisibilityChanged()), this, SLOT(slot_update_panels()));
+    connect(mvcontext, SIGNAL(viewMergedChanged()), this, SLOT(slot_update_panels()));
+
+    connect(d->m_panel_widget, SIGNAL(signalPanelClicked(int, Qt::KeyboardModifiers)), this, SLOT(slot_panel_clicked(int, Qt::KeyboardModifiers)));
 
     this->recalculate();
 }
@@ -116,35 +128,81 @@ void MVTemplatesView2::onCalculationFinished()
         this->zoomAllTheWayOut();
         d->m_zoomed_out_once = true;
     }
-    d->m_panel_widget->clearPanels(true);
-    d->m_panels.clear();
-    QList<QColor> channel_colors;
-    {
-        int M = d->m_cluster_data.value(0).template0.N1();
-        for (int m = 0; m < M; m++) {
-            channel_colors << mvContext()->channelColor(m + 1);
-        }
-    }
-    d->m_max_absval = 0;
-    for (int i = 0; i < d->m_cluster_data.count(); i++) {
-        d->m_max_absval = qMax(qMax(d->m_max_absval, qAbs(d->m_cluster_data[i].template0.minimum())), qAbs(d->m_cluster_data[i].template0.maximum()));
-    }
-    for (int i = 0; i < d->m_cluster_data.count(); i++) {
-        ClusterData2 CD = d->m_cluster_data[i];
-        MVTemplatesView2Panel* panel = new MVTemplatesView2Panel;
-        panel->setElectrodeGeometry(mvContext()->electrodeGeometry());
-        panel->setTemplate(CD.template0);
-        panel->setChannelColors(channel_colors);
-        d->m_panel_widget->addPanel(0, i, panel);
-        d->m_panels << panel;
-    }
-    d->update_scale_factors();
-    this->update();
+    d->update_panels();
 }
 
 void MVTemplatesView2::zoomAllTheWayOut()
 {
     d->m_panel_widget->setViewportGeometry(QRectF(0, 0, 1, 1));
+}
+
+void MVTemplatesView2::slot_update_panels()
+{
+    d->update_panels();
+}
+
+void MVTemplatesView2::slot_update_highlighting()
+{
+    int current_k = mvContext()->currentCluster();
+    QSet<int> selected_ks = mvContext()->selectedClusters().toSet();
+    for (int i = 0; i < d->m_panels.count(); i++) {
+        int k0 = d->m_cluster_data.value(i).k;
+        d->m_panels[i]->setCurrent(current_k == k0);
+        d->m_panels[i]->setSelected(selected_ks.contains(k0));
+        if (current_k == k0) {
+            d->m_panel_widget->setCurrentPanelIndex(i); //for purposes of zooming
+        }
+    }
+    update();
+}
+
+void MVTemplatesView2::slot_panel_clicked(int index, Qt::KeyboardModifiers modifiers)
+{
+    if (modifiers & Qt::ShiftModifier) {
+        int i1 = d->m_panel_widget->currentPanelIndex();
+        int i2 = index;
+        int j1 = qMin(i1, i2);
+        int j2 = qMax(i1, i2);
+        if ((j1 >= 0) && (j2 >= 0)) {
+            QSet<int> set = mvContext()->selectedClusters().toSet();
+            for (int j = j1; j <= j2; j++) {
+                int k = d->m_cluster_data.value(j).k;
+                if (k > 0)
+                    set.insert(k);
+            }
+            mvContext()->setSelectedClusters(set.toList());
+        }
+    }
+    else {
+        ClusterData2 CD = d->m_cluster_data.value(index);
+        if (CD.k > 0) {
+            mvContext()->clickCluster(CD.k, modifiers);
+        }
+    }
+}
+
+void MVTemplatesView2::slot_vertical_zoom_in()
+{
+    d->m_vscale_factor *= 1.1;
+    d->update_scale_factors();
+}
+
+void MVTemplatesView2::slot_vertical_zoom_out()
+{
+    d->m_vscale_factor /= 1.1;
+    d->update_scale_factors();
+}
+
+void MVTemplatesView2::slot_horizontal_zoom_in()
+{
+    d->m_hscale_factor *= 1.1;
+    d->update_scale_factors();
+}
+
+void MVTemplatesView2::slot_horizontal_zoom_out()
+{
+    d->m_hscale_factor /= 1.1;
+    d->update_scale_factors();
 }
 
 void mv_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs_out, const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
@@ -259,14 +317,47 @@ void MVTemplatesView2Private::compute_total_time()
     m_total_time_sec = q->mvContext()->currentTimeseries().N2() / q->mvContext()->sampleRate();
 }
 
+void MVTemplatesView2Private::update_panels()
+{
+    m_panel_widget->clearPanels(true);
+    m_panels.clear();
+    QList<QColor> channel_colors;
+    {
+        int M = m_cluster_data.value(0).template0.N1();
+        for (int m = 0; m < M; m++) {
+            channel_colors << q->mvContext()->channelColor(m + 1);
+        }
+    }
+    m_max_absval = 0;
+    for (int i = 0; i < m_cluster_data.count(); i++) {
+        m_max_absval = qMax(qMax(m_max_absval, qAbs(m_cluster_data[i].template0.minimum())), qAbs(m_cluster_data[i].template0.maximum()));
+    }
+    int num_rows = 1;
+    int num_cols = ceil(m_cluster_data.count() * 1.0 / num_rows);
+    for (int i = 0; i < m_cluster_data.count(); i++) {
+        ClusterData2 CD = m_cluster_data[i];
+        MVTemplatesView2Panel* panel = new MVTemplatesView2Panel;
+        panel->setElectrodeGeometry(q->mvContext()->electrodeGeometry());
+        panel->setTemplate(CD.template0);
+        panel->setChannelColors(channel_colors);
+        panel->setColors(q->mvContext()->colors());
+        m_panel_widget->addPanel(i / num_cols, i % num_cols, panel);
+        m_panels << panel;
+    }
+    update_scale_factors();
+    q->slot_update_highlighting();
+}
+
 void MVTemplatesView2Private::update_scale_factors()
 {
-    double factor = m_vscale_factor;
+    double vfactor = m_vscale_factor;
     if (m_max_absval)
-        factor /= m_max_absval;
+        vfactor /= m_max_absval;
     for (int i = 0; i < m_panels.count(); i++) {
-        m_panels[i]->setVerticalScaleFactor(factor);
+        m_panels[i]->setVerticalScaleFactor(vfactor);
+        m_panels[i]->setHorizontalScaleFactor(m_hscale_factor);
     }
+    q->update();
 }
 
 MVTemplatesView2Factory::MVTemplatesView2Factory(MVContext* context, QObject* parent)

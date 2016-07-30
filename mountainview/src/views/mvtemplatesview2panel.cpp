@@ -16,6 +16,10 @@ public:
     QList<QRectF> m_electrode_boxes;
     int m_clip_size = 0;
     double m_vertical_scale_factor = 1;
+    double m_horizontal_scale_factor = 1;
+    bool m_current = false;
+    bool m_selected = false;
+    QMap<QString, QColor> m_colors;
 
     void setup_electrode_boxes(double W, double H);
     QPointF coord2pix(int m, int t, double val);
@@ -42,6 +46,11 @@ void MVTemplatesView2Panel::setElectrodeGeometry(const ElectrodeGeometry& geom)
     d->m_electrode_geometry = geom;
 }
 
+void MVTemplatesView2Panel::setHorizontalScaleFactor(double factor)
+{
+    d->m_horizontal_scale_factor = factor;
+}
+
 void MVTemplatesView2Panel::setVerticalScaleFactor(double factor)
 {
     d->m_vertical_scale_factor = factor;
@@ -52,20 +61,49 @@ void MVTemplatesView2Panel::setChannelColors(const QList<QColor>& colors)
     d->m_channel_colors = colors;
 }
 
+void MVTemplatesView2Panel::setColors(const QMap<QString, QColor>& colors)
+{
+    d->m_colors = colors;
+}
+
+void MVTemplatesView2Panel::setCurrent(bool val)
+{
+    d->m_current = val;
+}
+
+void MVTemplatesView2Panel::setSelected(bool val)
+{
+    d->m_selected = val;
+}
+
 void MVTemplatesView2Panel::paint(QPainter* painter)
 {
     QSize ss = this->windowSize();
     QPen pen = painter->pen();
 
-    d->setup_electrode_boxes(ss.width(), ss.height());
-
-    //draw box
-    {
-        pen.setColor(Qt::gray);
-        pen.setWidth(1);
-        painter->setPen(pen);
-        painter->drawRect(0, 0, ss.width(), ss.height());
+    QRect R(0, 0, ss.width(), ss.height());
+    if (d->m_current) {
+        painter->fillRect(R, d->m_colors["view_background_highlighted"]);
     }
+    else if (d->m_selected) {
+        painter->fillRect(R, d->m_colors["view_background_selected"]);
+    }
+    //else if (d->m_hovered) {
+    //    painter->fillRect(R, d->m_colors["view_background_hovered"]);
+    //}
+    else {
+        painter->fillRect(R, d->m_colors["view_background"]);
+    }
+
+    if (d->m_selected) {
+        painter->setPen(QPen(d->m_colors["view_frame_selected"], 1));
+    }
+    else {
+        painter->setPen(QPen(d->m_colors["view_frame"], 1));
+    }
+    painter->drawRect(R);
+
+    d->setup_electrode_boxes(ss.width(), ss.height());
 
     int M = d->m_template.N1();
     int T = d->m_template.N2();
@@ -84,6 +122,9 @@ void MVTemplatesView2Panel::paint(QPainter* painter)
         pen.setWidth(2);
         painter->strokePath(path, pen);
         QRectF box = d->m_electrode_boxes.value(m);
+        pen.setColor(QColor(180, 200, 200));
+        pen.setWidth(1);
+        painter->setPen(pen);
         painter->drawEllipse(box);
     }
 }
@@ -111,8 +152,26 @@ void MVTemplatesView2PanelPrivate::setup_electrode_boxes(double W, double H)
     m_electrode_boxes.clear();
 
     QList<QVector<double> > coords = m_electrode_geometry.coordinates;
+    if (coords.isEmpty()) {
+        int M = m_template.N1();
+        int num_rows = qMax(1, (int)sqrt(M));
+        int num_cols = ceil(M * 1.0 / num_rows);
+        for (int m = 0; m < M; m++) {
+            QVector<double> tmp;
+            tmp << (m % num_cols) + 0.5 * ((m / num_cols) % 2) << m / num_cols;
+            coords << tmp;
+        }
+    }
     if (coords.isEmpty())
         return;
+
+    /*
+    for (int m=0; m<coords.count(); m++) {
+        if (coords[m].count()>0) {
+            coords[m][0]*=m_horizontal_scale_factor;
+        }
+    }
+    */
 
     int D = coords[0].count();
     QVector<double> mins(D), maxs(D);
@@ -126,32 +185,37 @@ void MVTemplatesView2PanelPrivate::setup_electrode_boxes(double W, double H)
         }
     }
 
-    double spacing = estimate_spacing(coords); //compute this more better
-    for (int d = 0; d < D; d++) {
-        mins[d] -= spacing;
-        maxs[d] += spacing;
-    }
+    double spacing = estimate_spacing(coords);
 
     double W0 = maxs.value(0) - mins.value(0);
     double H0 = maxs.value(1) - mins.value(1);
+    double W0_padded = W0 + spacing * 4 / 3;
+    double H0_padded = H0 + spacing * 4 / 3;
 
-    double scale_factor = 1;
-    if (W0 * H > W * H0) {
+    double hscale_factor = 1;
+    double vscale_factor = 1;
+    if (W0_padded * H > W * H0_padded) {
         //limited by width
-        if (W0)
-            scale_factor = W / W0;
+        if (W0_padded) {
+            hscale_factor = W / W0_padded;
+            vscale_factor = W / W0_padded;
+        }
     }
     else {
-        if (H0)
-            scale_factor = H / H0;
+        if (H0_padded)
+            vscale_factor = H / H0_padded;
+        if (W0_padded)
+            hscale_factor = W / W0_padded;
     }
 
+    double offset_x = (W - W0 * hscale_factor) / 2;
+    double offset_y = (H - H0 * vscale_factor) / 2;
     for (int m = 0; m < coords.count(); m++) {
         QVector<double> c = coords[m];
-        double x0 = (c.value(0) - mins.value(0)) * scale_factor;
-        double y0 = (c.value(1) - mins.value(1)) * scale_factor;
-        double radx = spacing * scale_factor / 2;
-        double rady = spacing * scale_factor / 3.5;
+        double x0 = offset_x + (c.value(0) - mins.value(0)) * hscale_factor;
+        double y0 = offset_y + (c.value(1) - mins.value(1)) * vscale_factor;
+        double radx = spacing * hscale_factor / 2;
+        double rady = spacing * vscale_factor / 3.5;
         m_electrode_boxes << QRectF(x0 - radx, y0 - rady, radx * 2, rady * 2);
     }
 }

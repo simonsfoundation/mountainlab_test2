@@ -24,8 +24,17 @@ public:
     int columnCount() const;
     void setSpacing(int row_spacing, int col_spacing);
     void setMargins(int row_margin, int col_margin);
+    void setMinimumPanelWidth(int w);
+    void setMinimumPanelHeight(int h);
+
+    int currentPanelIndex() const;
+    void setCurrentPanelIndex(int index); //for zooming
 
     void setViewportGeometry(QRectF geom);
+
+public slots:
+    void zoomIn();
+    void zoomOut();
 
 protected:
     void paintEvent(QPaintEvent* evt);
@@ -35,7 +44,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* evt);
 
 signals:
-    void signalPanelClicked(int index);
+    void signalPanelClicked(int index, Qt::KeyboardModifiers modifiers);
 
 private:
     MVPanelWidgetPrivate* d;

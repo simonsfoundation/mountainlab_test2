@@ -14,6 +14,7 @@
 
 class MVTemplatesView2Private;
 class MVTemplatesView2 : public MVAbstractView {
+    Q_OBJECT
 public:
     friend class MVTemplatesView2Private;
     MVTemplatesView2(MVContext* mvcontext);
@@ -24,6 +25,15 @@ public:
     void onCalculationFinished() Q_DECL_OVERRIDE;
 
     void zoomAllTheWayOut();
+
+private slots:
+    void slot_update_panels();
+    void slot_update_highlighting();
+    void slot_panel_clicked(int index, Qt::KeyboardModifiers modifiers);
+    void slot_vertical_zoom_in();
+    void slot_vertical_zoom_out();
+    void slot_horizontal_zoom_in();
+    void slot_horizontal_zoom_out();
 
 private:
     MVTemplatesView2Private* d;

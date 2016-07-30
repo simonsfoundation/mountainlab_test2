@@ -18,8 +18,12 @@ public:
     virtual ~MVTemplatesView2Panel();
     void setTemplate(const Mda& X);
     void setElectrodeGeometry(const ElectrodeGeometry& geom);
+    void setHorizontalScaleFactor(double factor);
     void setVerticalScaleFactor(double factor);
     void setChannelColors(const QList<QColor>& colors);
+    void setColors(const QMap<QString, QColor>& colors);
+    void setCurrent(bool val);
+    void setSelected(bool val);
 
 protected:
     void paint(QPainter* painter);

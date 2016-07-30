@@ -25,9 +25,12 @@ public:
     int m_row_spacing = 3;
     int m_col_margin = 3;
     int m_col_spacing = 3;
-    double m_max_panel_width = 600;
     QRectF m_viewport_geom = QRectF(0, 0, 1, 1);
     int m_current_panel_index = -1;
+    bool m_fixed_width = false;
+    bool m_fixed_height = false;
+    double m_minimum_panel_width = 100;
+    double m_minimum_panel_height = 100;
 
     QPointF m_press_anchor = QPointF(-1, -1);
     QRectF m_press_anchor_viewport_geom = QRectF(0, 0, 1, 1);
@@ -105,10 +108,41 @@ void MVPanelWidget::setMargins(int row_margin, int col_margin)
     update();
 }
 
+void MVPanelWidget::setMinimumPanelWidth(int w)
+{
+    d->m_minimum_panel_width = w;
+}
+
+void MVPanelWidget::setMinimumPanelHeight(int h)
+{
+    d->m_minimum_panel_height = h;
+}
+
+int MVPanelWidget::currentPanelIndex() const
+{
+    return d->m_current_panel_index;
+}
+
+void MVPanelWidget::setCurrentPanelIndex(int index)
+{
+    d->m_current_panel_index = index;
+    update();
+}
+
 void MVPanelWidget::setViewportGeometry(QRectF geom)
 {
     d->m_viewport_geom = geom;
     update();
+}
+
+void MVPanelWidget::zoomIn()
+{
+    d->zoom(1.1);
+}
+
+void MVPanelWidget::zoomOut()
+{
+    d->zoom(1 / 1.1);
 }
 
 void MVPanelWidget::paintEvent(QPaintEvent* evt)
@@ -119,6 +153,7 @@ void MVPanelWidget::paintEvent(QPaintEvent* evt)
     d->correct_viewport_geom();
     d->update_panel_geometries();
 
+    QPen pen = painter.pen();
     for (int i = 0; i < d->m_panels.count(); i++) {
         QRectF geom = d->m_panels[i].geom;
         d->m_panels[i].layer->setWindowSize(geom.size().toSize());
@@ -135,9 +170,9 @@ void MVPanelWidget::wheelEvent(QWheelEvent* evt)
     int delta = evt->delta();
     double factor = 1;
     if (delta > 0)
-        factor = 1.2;
+        factor = 1.03;
     else
-        factor = 1 / 1.2;
+        factor = 1 / 1.03;
     d->zoom(factor);
 }
 
@@ -156,10 +191,8 @@ void MVPanelWidget::mouseReleaseEvent(QMouseEvent* evt)
     if (!d->m_is_dragging) {
         int index = d->panel_index_at_pt(evt->pos());
         if (index >= 0) {
-            d->m_current_panel_index = index;
-            update();
+            emit this->signalPanelClicked(index, evt->modifiers());
         }
-        emit this->signalPanelClicked();
     }
     d->m_is_dragging = false;
 }
@@ -169,18 +202,18 @@ void MVPanelWidget::mouseMoveEvent(QMouseEvent* evt)
     if (d->m_press_anchor.x() >= 0) {
         double dx = evt->pos().x() - d->m_press_anchor.x();
         double dy = evt->pos().y() - d->m_press_anchor.y();
-
-        if ((Math.abs(dx) >= 4) || (Math.abs(dy) >= 4)) {
-            is_dragging = true;
+        if ((qAbs(dx) >= 4) || (qAbs(dy) >= 4)) {
+            d->m_is_dragging = true;
         }
-        if (is_dragging) {
-            if (columnCount() > 1) {
-                m_viewport_geom[0] = press_anchor_viewport_geom[0] + dx / O.size()[0];
+        if (d->m_is_dragging) {
+            d->m_viewport_geom = d->m_press_anchor_viewport_geom;
+            if (this->columnCount() > 1) {
+                d->m_viewport_geom.translate(dx / this->width(), 0);
             }
-            if (rowCount() > 1) {
-                m_viewport_geom[1] = press_anchor_viewport_geom[1] + dy / O.size()[1];
+            if (this->rowCount() > 1) {
+                d->m_viewport_geom.translate(0, dy / this->height());
             }
-            update_layout();
+            this->update();
         }
     }
 }
@@ -188,25 +221,37 @@ void MVPanelWidget::mouseMoveEvent(QMouseEvent* evt)
 void MVPanelWidgetPrivate::correct_viewport_geom()
 {
     QRectF G = m_viewport_geom;
-    if (q->width() * G.width() / m_panels.count() > m_max_panel_width) {
-        G.setWidth(m_max_panel_width * m_panels.count() / q->width());
+
+    //respect the minimum panel width/height
+    if ((!m_fixed_width) && (q->columnCount() > 1) && (!m_panels.isEmpty())) {
+        if (G.width() * q->width() / m_panels.count() < m_minimum_panel_width) {
+            G.setWidth(m_minimum_panel_width / q->width() * m_panels.count());
+        }
     }
+    if ((!m_fixed_height) && (q->rowCount() > 1) && (!m_panels.isEmpty())) {
+        if (G.height() * q->height() / m_panels.count() < m_minimum_panel_height) {
+            G.setHeight(m_minimum_panel_height / q->height() * m_panels.count());
+        }
+    }
+
+    //don't let it be smaller than it could be
     if (G.width() < 1) {
-        G.setLeft(0);
-        G.setWidth(1);
+        G = QRectF(0, G.top(), 1, G.height());
     }
-    if (G.left() + G.width() < 1)
-        G.setLeft(1 - G.width());
-    if (G.left() > 0)
-        G.setLeft(0);
     if (G.height() < 1) {
-        G.setTop(0);
-        G.setHeight(1);
+        G = QRectF(G.left(), 0, G.width(), 1);
     }
+
+    //don't allow scroll too far to right or left, or down or up
+    if (G.left() + G.width() < 1)
+        G.translate(1 - G.left() - G.width(), 0);
+    if (G.left() > 0)
+        G.translate(-G.left(), 0);
     if (G.top() + G.height() < 1)
-        G.setTop(1 - G.height());
+        G.translate(0, 1 - G.top() - G.height());
     if (G.top() > 0)
-        G.setTop(0);
+        G.translate(0, -G.top());
+
     m_viewport_geom = G;
 }
 
@@ -216,10 +261,10 @@ void MVPanelWidgetPrivate::zoom(double factor)
     if ((m_current_panel_index >= 0) && (m_current_panel_index < m_panels.count())) {
         current_panel_geom = m_panels[m_current_panel_index].geom;
     }
-    if (q->rowCount() > 1) {
+    if ((q->rowCount() > 1) && (!m_fixed_height)) {
         m_viewport_geom.setHeight(m_viewport_geom.height() * factor);
     }
-    if (q->columnCount() > 1) {
+    if ((q->columnCount() > 1) && (!m_fixed_width)) {
         m_viewport_geom.setWidth(m_viewport_geom.width() * factor);
     }
     correct_viewport_geom();
@@ -231,8 +276,8 @@ void MVPanelWidgetPrivate::zoom(double factor)
     double dx = new_current_panel_geom.center().x() - current_panel_geom.center().x();
     double dy = new_current_panel_geom.center().y() - current_panel_geom.center().y();
     if ((dx) || (dy)) {
-        m_viewport_geom.setLeft(m_viewport_geom.left() - dx / q->width());
-        m_viewport_geom.setTop(m_viewport_geom.top() - dy / q->height());
+        m_viewport_geom.translate(-dx / q->width(), 0);
+        m_viewport_geom.translate(0, -dy / q->height());
     }
     correct_viewport_geom();
     update_panel_geometries();
@@ -247,10 +292,10 @@ void MVPanelWidgetPrivate::update_panel_geometries()
         return;
     if (!num_cols)
         return;
-    double viewport_W = q->width();
-    double viewport_H = q->height();
+    double window_W = q->width();
+    double window_H = q->height();
     QRectF VG = m_viewport_geom;
-    QRectF vgeom = QRectF(VG.left() * viewport_W, VG.top() * viewport_H, VG.width() * viewport_W, VG.height() * viewport_H);
+    QRectF vgeom = QRectF(VG.left() * window_W, VG.top() * window_H, VG.width() * window_W, VG.height() * window_H);
     double W0 = (vgeom.width() - (num_cols - 1) * m_col_spacing - m_col_margin * 2) / num_cols;
     double H0 = (vgeom.height() - (num_rows - 1) * m_row_spacing - m_row_margin * 2) / num_rows;
     for (int i = 0; i < m_panels.count(); i++) {

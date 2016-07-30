@@ -707,6 +707,8 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     pen_frame.setColor(q->mvContext()->color("frame1"));
     if (m_selected)
         pen_frame.setColor(q->mvContext()->color("view_frame_selected"));
+    else
+        pen_frame.setColor(q->mvContext()->color("view_frame"));
     painter->setPen(pen_frame);
     painter->drawRect(rect2);
 
