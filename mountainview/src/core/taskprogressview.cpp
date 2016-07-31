@@ -256,123 +256,20 @@ TaskProgressView::TaskProgressView()
     d->toolbar = new QToolBar(this);
     setSelectionMode(ContiguousSelection);
     setItemDelegate(new TaskProgressViewDelegate(this));
-    TaskManager::TaskProgressModel* model = TaskManager::TaskProgressMonitor::globalInstance()->model();
-    d->proxyModel = new TaskProgressViewModeProxy(this);
-    d->proxyModel->setSourceModel(model);
-    d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_Hidden);
-    setModel(d->proxyModel);
+    setupModels();
+
     header()->setSectionResizeMode(0, QHeaderView::Stretch);
     header()->hide();
     setExpandsOnDoubleClick(false);
     connect(this, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showLogMessages(QModelIndex)));
     QShortcut* copyToClipboard = new QShortcut(QKeySequence(QKeySequence::Copy), this);
     connect(copyToClipboard, SIGNAL(activated()), this, SLOT(copySelectedToClipboard()));
-    connect(d->proxyModel, &QAbstractItemModel::modelReset, [this]() {
-        for(int i = 0; i < this->model()->rowCount(); ++i)
-            this->setFirstColumnSpanned(i, QModelIndex(), true);
-    });
 
-    connect(d->proxyModel, &QAbstractItemModel::rowsInserted, [this](const QModelIndex& parent, int from, int to) {
-        if (parent.isValid()) return;
-        for(int i = from; i <=to; ++i)
-            this->setFirstColumnSpanned(i, QModelIndex(), true);
-    });
-    for (int i = 0; i < this->model()->rowCount(); ++i)
-        setFirstColumnSpanned(i, QModelIndex(), true);
-    connect(this->model(), &QAbstractItemModel::dataChanged, [this](const QModelIndex& from, const QModelIndex& to) {
-        if (from.parent().isValid()) return;
-        for (int i = from.row(); i<=to.row(); ++i) {
-            setFirstColumnSpanned(i, QModelIndex(), true);
-        }
-    });
     QTimer* timer = new QTimer(this);
     timer->start(1000);
     connect(timer, SIGNAL(timeout()), viewport(), SLOT(update()));
 
-    // setup actions menu
-    setContextMenuPolicy(Qt::ActionsContextMenu);
-    QMenu* modeMenu = new QMenu(this);
-    modeMenu->setTitle("Mode");
-    addAction(modeMenu->menuAction());
-    QAction* defMode = new QAction("All tasks", this);
-    defMode->setCheckable(true);
-    modeMenu->addAction(defMode);
-    QAction* activeMode = new QAction("Active tasks", this);
-    activeMode->setCheckable(true);
-    modeMenu->addAction(activeMode);
-
-    QMenu *finishedWithin = new QMenu("Active and finished within", this);
-    modeMenu->addMenu(finishedWithin);
-
-    QActionGroup* grp = new QActionGroup(this);
-    grp->addAction(defMode);
-    grp->addAction(activeMode);
-
-    struct __delay {
-        int secs;
-        const char *description;
-    };
-
-    __delay arr[] = {
-        { 1, "1 second" },
-        { 5, "5 seconds" },
-        {10, "10 seconds" },
-        {30, "30 seconds" },
-        {60, "1 minute" },
-        {300, "5 minutes" },
-        {1800, "30 minutes" },
-        {3600, "1 hour" }
-    };
-    const int arrsize = sizeof(arr)/sizeof(arr[0]);
-    for (int i = 0; i < arrsize; ++i) {
-        QAction* delay = new QAction(arr[i].description, this);
-        delay->setCheckable(true);
-        finishedWithin->addAction(delay);
-        grp->addAction(delay);
-        const int time = arr[i].secs;
-        delay->setProperty("delay", time*1000);
-        connect(delay, &QAction::toggled, [time,this](bool checked) {
-            if(!checked) return;
-            int t = time;
-            d->proxyModel->setCompleteTasksModeThreshold(t);
-            d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_HiddenIfOlderThan);
-        });
-    }
-
-    QAction *custom = new QAction("Custom time...", this);
-    finishedWithin->addSeparator();
-    finishedWithin->addAction(custom);
-    connect(custom, &QAction::triggered, [grp,defMode,this]() {
-       bool ok;
-       int secs = QInputDialog::getInt(this, "Custom time", "Enter time in seconds:", 60, 1, 10000, 1, &ok);
-       if (!ok) {
-           return;
-       } else {
-           if (grp->checkedAction())
-               grp->checkedAction()->setChecked(false);
-       }
-       d->proxyModel->setCompleteTasksModeThreshold(secs);
-       d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_HiddenIfOlderThan);
-    });
-
-    d->toolbar->addAction(modeMenu->menuAction());
-    QToolButton *modeButton = qobject_cast<QToolButton*>(d->toolbar->widgetForAction(modeMenu->menuAction()));
-    if (modeButton) {
-        modeButton->setIcon(QIcon::fromTheme("document-preview"));
-        modeButton->setPopupMode(QToolButton::InstantPopup);
-    }
-    connect(defMode, &QAction::toggled, [this](bool checked) {
-       if (checked) {
-           d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_Shown);
-       }
-    });
-    connect(activeMode, &QAction::toggled, [this](bool checked) {
-       if (checked) {
-           d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_Hidden);
-       }
-    });
-    defMode->setChecked(true);
-    d->toolbar->addAction(d->proxyModel->showLogsAction());
+    setupActions();
 }
 
 TaskProgressView::~TaskProgressView()
@@ -451,6 +348,121 @@ void TaskProgressView::updateGeometries()
     QRect scrollbarRect = verticalScrollBar()->geometry();
     scrollbarRect.setTop(tbSize.height());
     verticalScrollBar()->setGeometry(scrollbarRect);
+}
+
+void TaskProgressView::setupModels()
+{
+    TaskManager::TaskProgressModel* model = TaskManager::TaskProgressMonitor::globalInstance()->model();
+    d->proxyModel = new TaskProgressViewModeProxy(this);
+    d->proxyModel->setSourceModel(model);
+    d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_Hidden);
+    setModel(d->proxyModel);
+
+    connect(d->proxyModel, &QAbstractItemModel::modelReset, [this]() {
+        for(int i = 0; i < this->model()->rowCount(); ++i)
+            this->setFirstColumnSpanned(i, QModelIndex(), true);
+    });
+
+    connect(d->proxyModel, &QAbstractItemModel::rowsInserted, [this](const QModelIndex& parent, int from, int to) {
+        if (parent.isValid()) return;
+        for(int i = from; i <=to; ++i)
+            this->setFirstColumnSpanned(i, QModelIndex(), true);
+    });
+    for (int i = 0; i < this->model()->rowCount(); ++i)
+        setFirstColumnSpanned(i, QModelIndex(), true);
+    connect(this->model(), &QAbstractItemModel::dataChanged, [this](const QModelIndex& from, const QModelIndex& to) {
+        if (from.parent().isValid()) return;
+        for (int i = from.row(); i<=to.row(); ++i) {
+            setFirstColumnSpanned(i, QModelIndex(), true);
+        }
+    });
+}
+
+void TaskProgressView::setupActions()
+{
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+    QMenu* modeMenu = new QMenu(this);
+    modeMenu->setTitle("Mode");
+    addAction(modeMenu->menuAction());
+    QAction* defMode = new QAction("All tasks", this);
+    defMode->setCheckable(true);
+    modeMenu->addAction(defMode);
+    QAction* activeMode = new QAction("Active tasks", this);
+    activeMode->setCheckable(true);
+    modeMenu->addAction(activeMode);
+
+    QMenu *finishedWithin = new QMenu("Active and finished within", this);
+    modeMenu->addMenu(finishedWithin);
+
+    QActionGroup* grp = new QActionGroup(this);
+    grp->addAction(defMode);
+    grp->addAction(activeMode);
+
+    struct __delay {
+        int secs;
+        const char *description;
+    };
+
+    __delay arr[] = {
+        { 1, "1 second" },
+        { 5, "5 seconds" },
+        {10, "10 seconds" },
+        {30, "30 seconds" },
+        {60, "1 minute" },
+        {300, "5 minutes" },
+        {1800, "30 minutes" },
+        {3600, "1 hour" }
+    };
+    const int arrsize = sizeof(arr)/sizeof(arr[0]);
+    for (int i = 0; i < arrsize; ++i) {
+        QAction* delay = new QAction(arr[i].description, this);
+        delay->setCheckable(true);
+        finishedWithin->addAction(delay);
+        grp->addAction(delay);
+        const int time = arr[i].secs;
+        delay->setProperty("delay", time*1000);
+        connect(delay, &QAction::toggled, [time,this](bool checked) {
+            if(!checked) return;
+            int t = time;
+            d->proxyModel->setCompleteTasksModeThreshold(t);
+            d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_HiddenIfOlderThan);
+        });
+    }
+
+    QAction *custom = new QAction("Custom time...", this);
+    finishedWithin->addSeparator();
+    finishedWithin->addAction(custom);
+    connect(custom, &QAction::triggered, [grp,defMode,this]() {
+       bool ok;
+       int secs = QInputDialog::getInt(this, "Custom time", "Enter time in seconds:", 60, 1, 1000000, 1, &ok);
+       if (!ok) {
+           return;
+       } else {
+           if (grp->checkedAction())
+               grp->checkedAction()->setChecked(false);
+       }
+       d->proxyModel->setCompleteTasksModeThreshold(secs);
+       d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_HiddenIfOlderThan);
+    });
+
+    d->toolbar->addAction(modeMenu->menuAction());
+    QToolButton *modeButton = qobject_cast<QToolButton*>(d->toolbar->widgetForAction(modeMenu->menuAction()));
+    if (modeButton) {
+        modeButton->setIcon(QIcon::fromTheme("document-preview"));
+        modeButton->setPopupMode(QToolButton::InstantPopup);
+    }
+    connect(defMode, &QAction::toggled, [this](bool checked) {
+       if (checked) {
+           d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_Shown);
+       }
+    });
+    connect(activeMode, &QAction::toggled, [this](bool checked) {
+       if (checked) {
+           d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_Hidden);
+       }
+    });
+    defMode->setChecked(true);
+    d->toolbar->addAction(d->proxyModel->showLogsAction());
 }
 
 QString TaskProgressViewPrivate::shortened(QString txt, int maxlen)
