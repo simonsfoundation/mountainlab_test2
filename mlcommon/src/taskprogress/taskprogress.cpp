@@ -407,7 +407,6 @@ namespace ChangeLog {
                 foreach (Change* ch, cl) {
                     ch->exec(model, index);
                 }
-                qDebug() << "Applied" << cl.size() << "changes to id" << id;
             }
             clear();
         }
