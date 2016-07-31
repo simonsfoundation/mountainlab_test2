@@ -28,6 +28,8 @@
 #include <QScrollBar>
 #include <QToolBar>
 #include <QToolButton>
+#include <QSignalMapper>
+#include <QInputDialog>
 
 class TaskProgressViewDelegate : public QStyledItemDelegate {
 public:
@@ -148,8 +150,6 @@ public:
         connect(m_showLogs, &QAction::toggled, [this](bool t) {
             setLogsMode(t ? LM_Shown : LM_Hidden);
         });
-
-//        connect(m_showLogs, SIGNAL(toggled(bool)), this, SLOT(updateLogsMode(bool)));
     }
 
     void setCompleteTasksMode(CompleteTasksMode m)
@@ -157,6 +157,12 @@ public:
         if (m == m_cMode)
             return;
         m_cMode = m;
+        if (m_cMode == CTM_HiddenIfOlderThan) {
+            m_timerId = startTimer(1000);
+        } else if (m_timerId) {
+            killTimer(m_timerId);
+            m_timerId = 0;
+        }
         invalidateFilter();
     }
 
@@ -173,8 +179,11 @@ public:
         if (secs == m_ctmThreshold)
             return;
         m_ctmThreshold = secs;
-        if (completeTasksMode() == CTM_HiddenIfOlderThan)
+        if (completeTasksMode() == CTM_HiddenIfOlderThan) {
+            if (m_timerId) killTimer(m_timerId);
+            m_timerId = startTimer(1000);
             invalidateFilter();
+        }
     }
 
     LogsMode logsMode() const { return m_lMode; }
@@ -217,11 +226,18 @@ protected:
         return (TaskManager::TaskProgressModel*)sourceModel();
     }
 
+    void timerEvent(QTimerEvent *event) {
+        if (event->timerId() == m_timerId) {
+            invalidateFilter();
+        }
+    }
+
 private:
     CompleteTasksMode m_cMode = CTM_Shown;
     LogsMode m_lMode = LM_Shown;
     unsigned int m_ctmThreshold = 10; // 10 seconds
     QAction *m_showLogs;
+    int m_timerId = 0;
 };
 
 class TaskProgressViewPrivate {
@@ -284,19 +300,65 @@ TaskProgressView::TaskProgressView()
     QAction* activeMode = new QAction("Active tasks", this);
     activeMode->setCheckable(true);
     modeMenu->addAction(activeMode);
-//    QAction *lastMinute = new QAction("Active and finished within one minute", this);
-//    lastMinute->setCheckable(true);
-//    modeMenu->addAction(lastMinute);
+
+    QMenu *finishedWithin = new QMenu("Active and finished within", this);
+    modeMenu->addMenu(finishedWithin);
+
     QActionGroup* grp = new QActionGroup(this);
     grp->addAction(defMode);
     grp->addAction(activeMode);
-//    grp->addAction(lastMinute);
+
+    struct __delay {
+        int secs;
+        const char *description;
+    };
+
+    __delay arr[] = {
+        { 1, "1 second" },
+        { 5, "5 seconds" },
+        {10, "10 seconds" },
+        {30, "30 seconds" },
+        {60, "1 minute" },
+        {300, "5 minutes" },
+        {1800, "30 minutes" },
+        {3600, "1 hour" }
+    };
+    const int arrsize = sizeof(arr)/sizeof(arr[0]);
+    for (int i = 0; i < arrsize; ++i) {
+        QAction* delay = new QAction(arr[i].description, this);
+        delay->setCheckable(true);
+        finishedWithin->addAction(delay);
+        grp->addAction(delay);
+        const int time = arr[i].secs;
+        delay->setProperty("delay", time*1000);
+        connect(delay, &QAction::toggled, [time,this](bool checked) {
+            if(!checked) return;
+            int t = time;
+            d->proxyModel->setCompleteTasksModeThreshold(t);
+            d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_HiddenIfOlderThan);
+        });
+    }
+
+    QAction *custom = new QAction("Custom time...", this);
+    finishedWithin->addSeparator();
+    finishedWithin->addAction(custom);
+    connect(custom, &QAction::triggered, [grp,defMode,this]() {
+       bool ok;
+       int secs = QInputDialog::getInt(this, "Custom time", "Enter time in seconds:", 60, 1, 10000, 1, &ok);
+       if (!ok) {
+           return;
+       } else {
+           if (grp->checkedAction())
+               grp->checkedAction()->setChecked(false);
+       }
+       d->proxyModel->setCompleteTasksModeThreshold(secs);
+       d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_HiddenIfOlderThan);
+    });
 
     d->toolbar->addAction(modeMenu->menuAction());
     QToolButton *modeButton = qobject_cast<QToolButton*>(d->toolbar->widgetForAction(modeMenu->menuAction()));
     if (modeButton) {
         modeButton->setIcon(QIcon::fromTheme("document-preview"));
-//    modeButton->setToolTip(modeMenu->title());
         modeButton->setPopupMode(QToolButton::InstantPopup);
     }
     connect(defMode, &QAction::toggled, [this](bool checked) {
@@ -309,12 +371,6 @@ TaskProgressView::TaskProgressView()
            d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_Hidden);
        }
     });
-//    connect(lastMinute, &QAction::toggled, [this](bool checked) {
-//       if (checked) {
-//           d->proxyModel->setCompleteTasksModeThreshold(60);
-//           d->proxyModel->setCompleteTasksMode(TaskProgressViewModeProxy::CTM_HiddenIfOlderThan);
-//       }
-//    });
     defMode->setChecked(true);
     d->toolbar->addAction(d->proxyModel->showLogsAction());
 }

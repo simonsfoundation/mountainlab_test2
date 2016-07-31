@@ -393,7 +393,6 @@ namespace ChangeLog {
             if (change)
                 changeList.append(change);
         }
-
         void exec(TaskProgressModelPrivate* model)
         {
             for (auto iter = m_log.cbegin(); iter != m_log.cend(); ++iter) {
