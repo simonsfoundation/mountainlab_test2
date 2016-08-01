@@ -18,6 +18,7 @@
 #include "mlcommon.h"
 
 #include <QCoreApplication>
+#include <QTimer>
 #include "mpdaemon.h"
 #include "scriptcontroller.h" //for resolve_file_name()
 
@@ -52,6 +53,8 @@ ProcessManager::ProcessManager()
 {
     d = new ProcessManagerPrivate;
     d->q = this;
+
+    QTimer::singleShot(1000,this,SLOT(slot_monitor()));
 }
 
 ProcessManager::~ProcessManager()
@@ -380,6 +383,34 @@ void ProcessManager::slot_qprocess_output()
     if (!str.isEmpty()) {
         printf("%s", str.data());
     }
+}
+
+QString execute_and_read_stdout(QString cmd) {
+    QProcess P;
+    P.start(cmd);
+    P.waitForStarted();
+    P.waitForFinished();
+    return P.readAllStandardOutput();
+}
+
+void ProcessManager::slot_monitor()
+{
+    QStringList ids=d->m_processes.keys();
+    foreach (QString id, ids) {
+        PMProcess *PP=&d->m_processes[id];
+        if (PP->qprocess) {
+            QString cmd=QString("ps -p %1 -o rss,%cpu --noheader").arg(PP->qprocess->pid());
+            QString str=execute_and_read_stdout(cmd);
+            QStringList list=str.split(" ",QString::SkipEmptyParts);
+            MonitorStats MS;
+            MS.timestamp=QDateTime::currentDateTime();
+            MS.mem_bytes=list.value(0).toLong()*1000;
+            MS.cpu_pct=list.value(1).toDouble();
+            PP->info.monitor_stats << MS;
+        }
+    }
+
+    QTimer::singleShot(1000,this,SLOT(slot_monitor()));
 }
 
 void ProcessManagerPrivate::clear_all_processes()

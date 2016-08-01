@@ -10,6 +10,7 @@
 #include <QString>
 #include <QVariant>
 #include <QProcess>
+#include <QDateTime>
 
 struct MLParameter {
     QString name;
@@ -31,12 +32,19 @@ struct MLProcessor {
     QString basepath;
 };
 
+struct MonitorStats {
+    QDateTime timestamp;
+    long mem_bytes=0;
+    double cpu_pct=0;
+};
+
 struct MLProcessInfo {
     QString processor_name;
     QVariantMap parameters;
     QString exe_command;
     bool finished;
     int exit_code;
+    QList<MonitorStats> monitor_stats;
     QProcess::ExitStatus exit_status;
     QByteArray standard_output;
     QByteArray standard_error;
@@ -77,6 +85,7 @@ signals:
 private slots:
     void slot_process_finished();
     void slot_qprocess_output();
+    void slot_monitor();
 
 private:
     ProcessManagerPrivate* d;

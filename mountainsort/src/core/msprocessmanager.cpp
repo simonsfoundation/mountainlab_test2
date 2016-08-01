@@ -130,7 +130,7 @@ QString compute_file_code(const QString& path)
     //didn't compile on mac so using the following which only depends on size and modification date
 
     QFileInfo info(path);
-    return QString("%1:%2:3").arg(info.size()).arg(info.lastModified().toMSecsSinceEpoch()).arg(info.size());
+    return QString("%1:%2:%3").arg(info.size()).arg(info.lastModified().toMSecsSinceEpoch()).arg(info.size());
 
     /*
     //the code comprises the device,inode,size, and modification time (in seconds)

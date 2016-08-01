@@ -56,6 +56,10 @@ struct run_script_opts {
     QString server_base_path;
 };
 
+QJsonArray monitor_stats_to_json_array(const QList<MonitorStats> &stats);
+long compute_peak_mem_bytes(const QList<MonitorStats> &stats);
+double compute_peak_cpu_pct(const QList<MonitorStats> &stats);
+
 int main(int argc, char* argv[])
 {
     qInstallMessageHandler(mountainprocessMessageOutput);
@@ -146,6 +150,17 @@ int main(int argc, char* argv[])
                 }
                 PM->clearProcess(id); //clean up
             }
+
+            printf("---------------------------------------------------------------\n");
+            printf("PROCESS COMPLETED: %s\n",info.processor_name.toLatin1().data());
+            if (!error_message.isEmpty())
+                printf("ERROR: %s\n",error_message.toLatin1().data());
+            long mb=compute_peak_mem_bytes(info.monitor_stats)/1000000;
+            double cpu=compute_peak_cpu_pct(info.monitor_stats);
+            if (cpu) {
+                printf("Peak mem / cpu: %ld MB / %g%%\n",mb,cpu);
+            }
+            printf("---------------------------------------------------------------\n");
         }
         QJsonObject obj; //the output info
         obj["exe_command"] = info.exe_command;
@@ -161,6 +176,9 @@ int main(int argc, char* argv[])
         obj["standard_error"] = QString(info.standard_error);
         obj["success"] = error_message.isEmpty();
         obj["error"] = error_message;
+        obj["peak_mem_bytes"]=(long long)compute_peak_mem_bytes(info.monitor_stats);
+        obj["peak_cpu_pct"]=compute_peak_cpu_pct(info.monitor_stats);
+        //obj["monitor_stats"]=monitor_stats_to_json_array(info.monitor_stats); -- at some point we can include this in the file. For now we only worry about the computed peak values
         if (!output_fname.isEmpty()) { //The user wants the results to go in this file
             QString obj_json = QJsonDocument(obj).toJson();
             if (!TextFile::write(output_fname, obj_json)) {
@@ -170,6 +188,7 @@ int main(int argc, char* argv[])
         if (!error_message.isEmpty()) {
             qCritical() << "Error in mountainprocessmain" << error_message;
         }
+        printf("\n");
 
         return ret; //returns exit code 0 if okay
     }
@@ -581,4 +600,32 @@ void mountainprocessMessageOutput(QtMsgType type, const QMessageLogContext& cont
         fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         exit(-1);
     }
+}
+
+QJsonArray monitor_stats_to_json_array(const QList<MonitorStats> &stats) {
+    QJsonArray ret;
+    for (int i=0; i<stats.count(); i++) {
+        MonitorStats X=stats[i];
+        QJsonObject obj;
+        obj["timestamp"]=X.timestamp.toMSecsSinceEpoch();
+        obj["mem_bytes"]=(long long)X.mem_bytes;
+        obj["cpu_pct"]=X.cpu_pct;
+        ret << obj;
+    }
+    return ret;
+}
+long compute_peak_mem_bytes(const QList<MonitorStats> &stats) {
+    long ret=0;
+    for (int i=0; i<stats.count(); i++) {
+        ret=qMax(ret,stats[i].mem_bytes);
+    }
+    return ret;
+}
+
+double compute_peak_cpu_pct(const QList<MonitorStats> &stats) {
+    double ret=0;
+    for (int i=0; i<stats.count(); i++) {
+        ret=qMax(ret,stats[i].cpu_pct);
+    }
+    return ret;
 }

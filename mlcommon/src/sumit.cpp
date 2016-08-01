@@ -81,7 +81,7 @@ QString sumit(const QString& path)
     //didn't compile on mac so using the following which only depends on size and modification date
 
     QFileInfo info(path);
-    QString id_string = QString("%1:%2:3").arg(info.size()).arg(info.lastModified().toMSecsSinceEpoch()).arg(info.size());
+    QString id_string = QString("%1:%2:%3").arg(info.size()).arg(info.lastModified().toMSecsSinceEpoch()).arg(info.size());
 
     //QString id_string = QString("%1:%2:%3:%4").arg(SS.st_dev).arg(SS.st_ino).arg(SS.st_size).arg(SS.st_mtim.tv_sec);
     QString file_id = compute_the_string_hash(id_string);
