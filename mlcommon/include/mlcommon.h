@@ -80,12 +80,7 @@ public:
 template <typename T>
 T MLCompute::max(const QVector<T>& X)
 {
-    T ret = X.value(0);
-    for (long i = 0; i < X.count(); i++) {
-        if (X[i] > ret)
-            ret = X[i];
-    }
-    return ret;
+    return *std::max_element(X.constBegin(), X.constEnd());
 }
 
 #endif // TEXTFILE_H

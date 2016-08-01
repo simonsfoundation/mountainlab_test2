@@ -247,48 +247,32 @@ QVariant clp_string_to_variant(const QString& str)
 
 double MLCompute::min(const QVector<double>& X)
 {
-    double ret = X.value(0);
-    for (long i = 0; i < X.count(); i++) {
-        if (X[i] < ret)
-            ret = X[i];
-    }
-    return ret;
+    return *std::min_element(X.constBegin(), X.constEnd());
 }
 
 double MLCompute::max(const QVector<double>& X)
 {
-    double ret = X.value(0);
-    for (long i = 0; i < X.count(); i++) {
-        if (X[i] > ret)
-            ret = X[i];
-    }
-    return ret;
+    return *std::max_element(X.constBegin(), X.constEnd());
 }
 
 double MLCompute::sum(const QVector<double>& X)
 {
-    double ret = 0;
-    for (long i = 0; i < X.count(); i++) {
-        ret += X[i];
-    }
-    return ret;
+    return std::accumulate(X.constBegin(), X.constEnd(), 0.0);
 }
 
 double MLCompute::mean(const QVector<double>& X)
 {
     if (X.isEmpty())
         return 0;
-    return sum(X) / X.count();
+    double s = sum(X);
+    qDebug() << s << X.count();
+    return s / X.count();
 }
 
 double MLCompute::stdev(const QVector<double>& X)
 {
-    double sumsqr = 0;
-    for (int i = 0; i < X.count(); i++)
-        sumsqr += X[i] * X[i];
-    double sum = 0;
-    for (int i = 0; i < X.count(); i++)
-        sum += X[i];
+    double sumsqr = std::inner_product(X.constBegin(), X.constEnd(), X.constBegin(), 0.0);
+    double sum = std::accumulate(X.constBegin(), X.constEnd(), 0.0);
     int ct = X.count();
     if (ct >= 2) {
         return sqrt((sumsqr - sum * sum / ct) / (ct - 1));
@@ -301,10 +285,7 @@ double MLCompute::dotProduct(const QVector<double>& X1, const QVector<double>& X
 {
     if (X1.count() != X2.count())
         return 0;
-    double ret = 0;
-    for (long i = 0; i < X1.count(); i++)
-        ret += X1[i] * X2[i];
-    return ret;
+    return std::inner_product(X1.constBegin(), X1.constEnd(), X1.constBegin(), 0.0);
 }
 
 double MLCompute::norm(const QVector<double>& X)
@@ -339,18 +320,12 @@ double MLCompute::norm(long N, double* X)
 
 double MLCompute::dotProduct(long N, double* X1, double* X2)
 {
-    double ret = 0;
-    for (long i = 0; i < N; i++)
-        ret += X1[i] * X2[i];
-    return ret;
+    return std::inner_product(X1, X1+N, X2, 0.0);
 }
 
 double MLCompute::dotProduct(long N, float* X1, float* X2)
 {
-    double ret = 0;
-    for (long i = 0; i < N; i++)
-        ret += X1[i] * X2[i];
-    return ret;
+    return std::inner_product(X1, X1+N, X2, 0.0);
 }
 
 QString MLUtil::computeSha1SumOfString(const QString& str)
@@ -362,11 +337,7 @@ QString MLUtil::computeSha1SumOfString(const QString& str)
 
 double MLCompute::sum(long N, double* X)
 {
-    double ret = 0;
-    for (long i = 0; i < N; i++) {
-        ret += X[i];
-    }
-    return ret;
+    return std::accumulate(X, X+N, 0);
 }
 
 double MLCompute::mean(long N, double* X)
@@ -378,31 +349,18 @@ double MLCompute::mean(long N, double* X)
 
 double MLCompute::max(long N, double* X)
 {
-    if (!N)
-        return 0;
-    double ret = X[0];
-    for (long i = 0; i < N; i++) {
-        if (X[i] > ret)
-            ret = X[i];
-    }
-    return ret;
+    return N ? *std::max_element(X, X+N) : 0;
 }
 
 double MLCompute::min(long N, double* X)
 {
-    if (!N)
-        return 0;
-    double ret = X[0];
-    for (long i = 0; i < N; i++) {
-        if (X[i] < ret)
-            ret = X[i];
-    }
-    return ret;
+    return N ? *std::min_element(X, X+N) : 0;
 }
 
 QList<int> MLUtil::stringListToIntList(const QStringList& list)
 {
     QList<int> ret;
+    ret.reserve(list.size());
     foreach (QString str, list) {
         ret << str.toInt();
     }
@@ -412,8 +370,9 @@ QList<int> MLUtil::stringListToIntList(const QStringList& list)
 QStringList MLUtil::intListToStringList(const QList<int>& list)
 {
     QStringList ret;
+    ret.reserve(list.size());
     foreach (int a, list) {
-        ret << QString("%1").arg(a);
+        ret << QString::number(a);
     }
     return ret;
 }
@@ -525,35 +484,17 @@ bool MLUtil::writeByteArray(const QString& path, const QByteArray& X)
 
 double MLCompute::min(long N, float* X)
 {
-    if (!N)
-        return 0;
-    double ret = X[0];
-    for (long i = 0; i < N; i++) {
-        if (X[i] < ret)
-            ret = X[i];
-    }
-    return ret;
+    return N ? *std::min_element(X, X+N) : 0;
 }
 
 double MLCompute::max(long N, float* X)
 {
-    if (!N)
-        return 0;
-    double ret = X[0];
-    for (long i = 0; i < N; i++) {
-        if (X[i] > ret)
-            ret = X[i];
-    }
-    return ret;
+    return N ? *std::max_element(X, X+N) : 0;
 }
 
 double MLCompute::sum(long N, float* X)
 {
-    double ret = 0;
-    for (long i = 0; i < N; i++) {
-        ret += X[i];
-    }
-    return ret;
+    return std::accumulate(X, X+N, 0);
 }
 
 double MLCompute::mean(long N, float* X)
