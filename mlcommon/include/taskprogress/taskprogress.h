@@ -43,6 +43,26 @@ struct TaskInfo {
 
 Q_DECLARE_METATYPE(TaskInfo)
 
+class TaskProgress;
+
+class MLDebug : public QDebug {
+public:
+    MLDebug(const MLDebug &other);
+    ~MLDebug();
+
+private:
+    enum Mode {
+        Log,
+        Error
+    };
+    MLDebug(TaskProgress *tp, Mode m);
+
+    TaskProgress *m_tp;
+    QString m_string;
+    Mode m_mode;
+    friend class TaskProgress;
+};
+
 class TaskProgress : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString label READ label WRITE setLabel)
@@ -72,6 +92,8 @@ public:
     bool hasTag(StandardCategory) const;
     bool hasTag(const QString& tag) const;
     double progress() const;
+    MLDebug log();
+    MLDebug error();
 public slots:
     void log(const QString& log_message);
     void error(const QString& error_message);
