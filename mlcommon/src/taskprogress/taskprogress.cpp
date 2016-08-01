@@ -1019,6 +1019,16 @@ double TaskProgress::progress() const
     return m_info.progress;
 }
 
+MLDebug TaskProgress::log()
+{
+    return MLDebug(this, MLDebug::Log);
+}
+
+MLDebug TaskProgress::error()
+{
+    return MLDebug(this, MLDebug::Error);
+}
+
 void TaskProgress::log(const QString& log_message)
 {
     TaskManager::TaskProgressEvent* event = new TaskManager::TaskProgressEvent(m_id,
@@ -1070,5 +1080,21 @@ QString TaskProgress::catToString(TaskProgress::StandardCategory cat) const
     case None:
     default:
         return QString();
+    }
+}
+
+MLDebug::MLDebug(TaskProgress *tp, Mode m) : QDebug((QString*)0), m_tp(tp), m_mode(m) {
+    QDebug tmp(&m_string);
+    swap(tmp);
+}
+
+MLDebug::MLDebug(const MLDebug &other) : QDebug(other), m_tp(other.m_tp), m_string(other.m_string), m_mode(other.m_mode) {}
+
+MLDebug::~MLDebug()
+{
+    if (m_string.isEmpty()) return;
+    switch  (m_mode) {
+    case Log: m_tp->log(m_string); break;
+    case Error: m_tp->error(m_string); break;
     }
 }
