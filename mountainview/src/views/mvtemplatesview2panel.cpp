@@ -187,13 +187,19 @@ void MVTemplatesView2PanelPrivate::setup_electrode_boxes(double W, double H)
 
     double spacing = estimate_spacing(coords);
 
-    double W0 = maxs.value(0) - mins.value(0);
-    double H0 = maxs.value(1) - mins.value(1);
+    //double W0 = maxs.value(0) - mins.value(0);
+    //double H0 = maxs.value(1) - mins.value(1);
+    double W0 = maxs.value(1) - mins.value(1);
+    double H0 = maxs.value(0) - mins.value(0);
+
     double W0_padded = W0 + spacing * 4 / 3;
     double H0_padded = H0 + spacing * 4 / 3;
 
     double hscale_factor = 1;
     double vscale_factor = 1;
+
+
+
     if (W0_padded * H > W * H0_padded) {
         //limited by width
         if (W0_padded) {
@@ -212,8 +218,10 @@ void MVTemplatesView2PanelPrivate::setup_electrode_boxes(double W, double H)
     double offset_y = (H - H0 * vscale_factor) / 2;
     for (int m = 0; m < coords.count(); m++) {
         QVector<double> c = coords[m];
-        double x0 = offset_x + (c.value(0) - mins.value(0)) * hscale_factor;
-        double y0 = offset_y + (c.value(1) - mins.value(1)) * vscale_factor;
+        //double x0 = offset_x + (c.value(0) - mins.value(0)) * hscale_factor;
+        //double y0 = offset_y + (c.value(1) - mins.value(1)) * vscale_factor;
+        double x0 = offset_x + (c.value(1) - mins.value(1)) * hscale_factor;
+        double y0 = offset_y + (c.value(0) - mins.value(0)) * vscale_factor;
         double radx = spacing * hscale_factor / 2;
         double rady = spacing * vscale_factor / 3.5;
         m_electrode_boxes << QRectF(x0 - radx, y0 - rady, radx * 2, rady * 2);
