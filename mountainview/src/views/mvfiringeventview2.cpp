@@ -320,7 +320,7 @@ void MVFiringEventViewCalculator::compute()
         }
         int label0 = (int)firings.value(2, i);
         if (labels_to_use.contains(label0)) {
-            //task.setProgress(i * 1.0 / L);
+            task.setProgress(i * 1.0 / L);
             times << firings.value(1, i);
             labels << label0;
             amplitudes << firings.value(3, i);

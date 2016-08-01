@@ -95,7 +95,7 @@ public:
         emit dataChanged(index(idx.row(), 0), index(idx.row(), columnCount() - 1));
     }
 
-    void log(const QModelIndex& idx, const QString& message, const QDateTime &dt = QDateTime::currentDateTime())
+    void log(const QModelIndex& idx, const QString& message, const QDateTime& dt = QDateTime::currentDateTime())
     {
         TaskProgressAgentPrivate* task = info(idx);
         if (!task)
@@ -106,7 +106,7 @@ public:
         task->emitChanged();
     }
 
-    void error(const QModelIndex& idx, const QString& message, const QDateTime &dt = QDateTime::currentDateTime())
+    void error(const QModelIndex& idx, const QString& message, const QDateTime& dt = QDateTime::currentDateTime())
     {
         TaskProgressAgentPrivate* task = info(idx);
         if (!task)
@@ -138,7 +138,7 @@ public:
         emit dataChanged(index(idx.row(), 0), index(idx.row(), columnCount() - 1));
     }
 
-    void completeTask(const QModelIndex& index, const QDateTime &dt = QDateTime::currentDateTime())
+    void completeTask(const QModelIndex& index, const QDateTime& dt = QDateTime::currentDateTime())
     {
         TaskProgressAgentPrivate* task = info(index);
         if (!task)
@@ -512,12 +512,16 @@ public:
     static TaskProgressMonitorPrivate* privateInstance();
 
 protected:
-    void start() {
-        if (m_timerId) return;
+    void start()
+    {
+        if (m_timerId)
+            return;
         m_timerId = startTimer(500);
     }
-    void stop() {
-        if (!m_timerId) return;
+    void stop()
+    {
+        if (!m_timerId)
+            return;
         killTimer(m_timerId);
         m_timerId = 0;
     }
