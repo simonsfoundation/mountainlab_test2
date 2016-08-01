@@ -7,8 +7,8 @@
 #include "mlcommon.h"
 #include "pca.h" //for whitening
 
-QVector<int> do_kmeans(Mda& X, int K);
-bool eigenvalue_decomposition_sym_isosplit(Mda& U, Mda& S, Mda& X);
+QVector<int> do_kmeans(Mda32& X, int K);
+bool eigenvalue_decomposition_sym_isosplit(Mda32& U, Mda32& S, Mda32& X);
 
 struct AttemptedComparisons {
     QVector<double> centers1, centers2;
@@ -72,7 +72,7 @@ void geometric_median(int M, int N, double* ret, double* X)
     }
 }
 
-QVector<double> compute_centroid(Mda& X)
+QVector<double> compute_centroid(Mda32& X)
 {
     int M = X.N1();
     int N = X.N2();
@@ -89,7 +89,7 @@ QVector<double> compute_centroid(Mda& X)
     return ret;
 }
 
-QVector<double> compute_center(Mda& X, const QList<long>& inds)
+QVector<double> compute_center(Mda32& X, const QList<long>& inds)
 {
     int M = X.N1();
     int NN = inds.count();
@@ -117,11 +117,11 @@ QVector<double> compute_center(Mda& X, const QList<long>& inds)
     return ret;
 }
 
-Mda compute_centers(Mda& X, const QVector<int>& labels, int K)
+Mda32 compute_centers(Mda32& X, const QVector<int>& labels, int K)
 {
     int M = X.N1();
     //int N=X.N2();
-    Mda ret;
+    Mda32 ret;
     ret.allocate(M, K);
     for (int k = 0; k < K; k++) {
         QList<long> inds = find_inds(labels, k);
@@ -132,7 +132,7 @@ Mda compute_centers(Mda& X, const QVector<int>& labels, int K)
     return ret;
 }
 
-double distance_between_vectors(int M, double* v1, double* v2)
+double distance_between_vectors(int M, float* v1, float* v2)
 {
     double sumsqr = 0;
     for (int i = 0; i < M; i++) {
@@ -142,7 +142,7 @@ double distance_between_vectors(int M, double* v1, double* v2)
     return sqrt(sumsqr);
 }
 
-bool was_already_attempted(int M, AttemptedComparisons& attempted_comparisons, double* center1, double* center2, int count1, int count2, double repeat_tolerance)
+bool was_already_attempted(int M, AttemptedComparisons& attempted_comparisons, float* center1, float* center2, int count1, int count2, double repeat_tolerance)
 {
     double tol = repeat_tolerance;
     for (int i = 0; i < attempted_comparisons.counts1.count(); i++) {
@@ -152,10 +152,10 @@ bool was_already_attempted(int M, AttemptedComparisons& attempted_comparisons, d
             double diff_count2 = fabs(attempted_comparisons.counts2[i] - count2);
             double avg_count2 = (attempted_comparisons.counts2[i] + count2) / 2;
             if (diff_count2 <= tol * avg_count2) {
-                double C1[M];
+                float C1[M];
                 for (int m = 0; m < M; m++)
                     C1[m] = attempted_comparisons.centers1[i * M + m];
-                double C2[M];
+                float C2[M];
                 for (int m = 0; m < M; m++)
                     C2[m] = attempted_comparisons.centers2[i * M + m];
                 double dist0 = distance_between_vectors(M, C1, C2);
@@ -174,7 +174,7 @@ bool was_already_attempted(int M, AttemptedComparisons& attempted_comparisons, d
     return false;
 }
 
-void find_next_comparison(int M, int K, int& k1, int& k2, bool* active_labels, double* Cptr, int* counts, AttemptedComparisons& attempted_comparisons, double repeat_tolerance)
+void find_next_comparison(int M, int K, int& k1, int& k2, bool* active_labels, float* Cptr, int* counts, AttemptedComparisons& attempted_comparisons, double repeat_tolerance)
 {
     QVector<int> active_inds;
     for (int k = 0; k < K; k++)
@@ -228,9 +228,9 @@ void find_next_comparison(int M, int K, int& k1, int& k2, bool* active_labels, d
     k2 = -1;
 }
 
-Mda matrix_transpose_isosplit(const Mda& A)
+Mda32 matrix_transpose_isosplit(const Mda32& A)
 {
-    Mda ret(A.N2(), A.N1());
+    Mda32 ret(A.N2(), A.N1());
     for (int i = 0; i < A.N1(); i++) {
         for (int j = 0; j < A.N2(); j++) {
             ret.set(A.get(i, j), j, i);
@@ -239,7 +239,7 @@ Mda matrix_transpose_isosplit(const Mda& A)
     return ret;
 }
 
-Mda matrix_multiply_isosplit(const Mda& A, const Mda& B)
+Mda32 matrix_multiply_isosplit(const Mda32& A, const Mda32& B)
 {
     int N1 = A.N1();
     int N2 = A.N2();
@@ -249,7 +249,7 @@ Mda matrix_multiply_isosplit(const Mda& A, const Mda& B)
         qWarning() << "Unexpected problem in matrix_multiply" << N1 << N2 << N2B << N3;
         exit(-1);
     }
-    Mda ret(N1, N3);
+    Mda32 ret(N1, N3);
     for (int i = 0; i < N1; i++) {
         for (int j = 0; j < N3; j++) {
             double val = 0;
@@ -263,23 +263,23 @@ Mda matrix_multiply_isosplit(const Mda& A, const Mda& B)
 }
 
 /*
-Mda get_whitening_matrix_isosplit(Mda& COV)
+Mda32 get_whitening_matrix_isosplit(Mda32& COV)
 {
     int M = COV.N1();
-    Mda U(M, M), S(1, M);
+    Mda32 U(M, M), S(1, M);
     eigenvalue_decomposition_sym_isosplit(U, S, COV);
-    Mda S2(M, M);
+    Mda32 S2(M, M);
     for (int m = 0; m < M; m++) {
         if (S.get(m)) {
             S2.set(1 / sqrt(S.get(m)), m, m);
         }
     }
-    Mda W = matrix_multiply_isosplit(matrix_multiply_isosplit(U, S2), matrix_transpose_isosplit(U));
+    Mda32 W = matrix_multiply_isosplit(matrix_multiply_isosplit(U, S2), matrix_transpose_isosplit(U));
     return W;
 }
 */
 
-void whiten_two_clusters(double* V, Mda& X1, Mda& X2)
+void whiten_two_clusters(double* V, Mda32& X1, Mda32& X2)
 {
     int M = X1.N1();
     int N1 = X1.N2();
@@ -291,7 +291,7 @@ void whiten_two_clusters(double* V, Mda& X1, Mda& X2)
 
     if (M < N) { //otherwise there are too few points to whiten
 
-        Mda XX(M, N);
+        Mda32 XX(M, N);
         for (int i = 0; i < N1; i++) {
             for (int j = 0; j < M; j++) {
                 XX.set(X1.get(j, i) - center1[j], j, i);
@@ -303,9 +303,9 @@ void whiten_two_clusters(double* V, Mda& X1, Mda& X2)
             }
         }
 
-        Mda XXt = matrix_multiply_isosplit(XX, matrix_transpose_isosplit(XX));
-        //Mda W = get_whitening_matrix_isosplit(COV);
-        Mda W;
+        Mda32 XXt = matrix_multiply_isosplit(XX, matrix_transpose_isosplit(XX));
+        //Mda32 W = get_whitening_matrix_isosplit(COV);
+        Mda32 W;
         whitening_matrix_from_XXt(W, XXt);
         X1 = matrix_multiply_isosplit(W, X1);
         X2 = matrix_multiply_isosplit(W, X2);
@@ -319,11 +319,11 @@ void whiten_two_clusters(double* V, Mda& X1, Mda& X2)
     }
 }
 
-QVector<int> test_redistribute(bool& do_merge, Mda& Y1, Mda& Y2, double isocut_threshold)
+QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isocut_threshold)
 {
-    Mda X1;
+    Mda32 X1;
     X1 = Y1;
-    Mda X2;
+    Mda32 X2;
     X2 = Y2;
     int M = X1.N1();
     int N1 = X1.N2();
@@ -387,17 +387,17 @@ QVector<int> test_redistribute(bool& do_merge, Mda& Y1, Mda& Y2, double isocut_t
     return ret;
 }
 
-QVector<int> test_redistribute(bool& do_merge, Mda& X, const QList<long>& inds1, const QList<long>& inds2, double isocut_threshold)
+QVector<int> test_redistribute(bool& do_merge, Mda32& X, const QList<long>& inds1, const QList<long>& inds2, double isocut_threshold)
 {
     int M = X.N1();
-    Mda X1;
+    Mda32 X1;
     X1.allocate(M, inds1.count());
     for (int i = 0; i < inds1.count(); i++) {
         for (int m = 0; m < M; m++) {
             X1.setValue(X.value(m, inds1[i]), m, i);
         }
     }
-    Mda X2;
+    Mda32 X2;
     X2.allocate(M, inds2.count());
     for (int i = 0; i < inds2.count(); i++) {
         for (int m = 0; m < M; m++) {
@@ -416,7 +416,7 @@ int max_00(const QVector<int>& X)
     return ret;
 }
 
-QVector<int> isosplit2(Mda& X, float isocut_threshold, int K_init, bool verbose)
+QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbose)
 {
     double repeat_tolerance = 0.2;
 
@@ -427,13 +427,13 @@ QVector<int> isosplit2(Mda& X, float isocut_threshold, int K_init, bool verbose)
     bool active_labels[K_init];
     for (int ii = 0; ii < K_init; ii++)
         active_labels[ii] = true;
-    Mda centers = compute_centers(X, labels, K_init); //M x K_init
+    Mda32 centers = compute_centers(X, labels, K_init); //M x K_init
     int counts[K_init];
     for (int ii = 0; ii < K_init; ii++)
         counts[ii] = 0;
     for (int i = 0; i < N; i++)
         counts[labels[i]]++;
-    double* Cptr = centers.dataPtr();
+    dtype32* Cptr = centers.dataPtr();
 
     AttemptedComparisons attempted_comparisons;
 
@@ -561,16 +561,16 @@ QVector<int> choose_random_indices(int N, int K)
 }
 
 //do k-means with K clusters -- X is MxN representing N points in M-dimensional space. Returns a labels vector of size N.
-QVector<int> do_kmeans(Mda& X, int K)
+QVector<int> do_kmeans(Mda32& X, int K)
 {
     int M = X.N1();
     int N = X.N2();
     if (N == 0)
         return QVector<int>(); //added 4/8/16 to prevent crash
-    double* Xptr = X.dataPtr();
-    Mda centroids_mda;
+    dtype32* Xptr = X.dataPtr();
+    Mda32 centroids_mda;
     centroids_mda.allocate(M, K);
-    double* centroids = centroids_mda.dataPtr();
+    dtype32* centroids = centroids_mda.dataPtr();
     QVector<int> labels;
     for (int i = 0; i < N; i++)
         labels << -1;
@@ -645,11 +645,12 @@ QVector<int> do_kmeans(Mda& X, int K)
     return labels;
 }
 
+/*
 void test_isosplit2_routines()
 {
     { //whiten two clusters
         //compare this with the test in matlab isosplit2('test')
-        Mda X1, X2;
+        Mda32 X1, X2;
         int M = 4;
         X1.allocate(M, M);
         X2.allocate(M, M);
@@ -678,7 +679,7 @@ void test_isosplit2_routines()
     {
         int M = 2;
         int N = 120;
-        Mda X;
+        Mda32 X;
         X.allocate(M, N);
         for (int i = 0; i < N; i++) {
             double r1 = (qrand() % 100000) * 1.0 / 100000;
@@ -711,3 +712,4 @@ void test_isosplit2_routines()
         printf("\n");
     }
 }
+*/

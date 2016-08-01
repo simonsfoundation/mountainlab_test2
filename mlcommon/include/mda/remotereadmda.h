@@ -9,6 +9,7 @@
 
 #include <QString>
 #include "mda.h"
+#include "mda32.h"
 
 class RemoteReadMdaPrivate;
 /**
@@ -38,6 +39,7 @@ public:
 
     ///Retrieve a chunk of the vectorized data of size 1xN starting at position i
     bool readChunk(Mda& X, long i, long size) const;
+    bool readChunk32(Mda32& X, long i, long size) const;
 
 private:
     RemoteReadMdaPrivate* d;

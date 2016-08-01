@@ -60,6 +60,12 @@ double sum(long N, double* X);
 double mean(long N, double* X);
 double dotProduct(long N, double* X1, double* X2);
 double norm(long N, double* X);
+double min(long N, float* X);
+double max(long N, float* X);
+double sum(long N, float* X);
+double mean(long N, float* X);
+double dotProduct(long N, float* X1, float* X2);
+double norm(long N, float* X);
 }
 
 class CLParams {

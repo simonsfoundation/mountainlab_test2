@@ -11,6 +11,8 @@
 #include <QDateTime>
 #include <taskprogress.h>
 #include <mlnetwork.h>
+#include <mda32.h>
+#include <diskreadmda32.h>
 #include "cachemanager.h"
 #include "mlcommon.h"
 
@@ -242,6 +244,113 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
                 Mda tmp;
                 A.readChunk(tmp, 0, d->m_download_chunk_size); //read the entire chunk, because we'll use it all
                 double* tmp_ptr = tmp.dataPtr();
+                long b = jj * d->m_download_chunk_size - ii1; //we start writing at the offset between the start index of the chunk and the start index
+                for (long a = 0; a < d->m_download_chunk_size; a++) {
+                    Xptr[b] = tmp_ptr[a];
+                    b++;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+bool RemoteReadMda::readChunk32(Mda32& X, long i, long size) const
+{
+    if (d->m_download_failed) {
+        //don't make excessive calls... once we fail, that's it.
+        return false;
+    }
+    //double size_mb = size * datatype_size * 1.0 / 1e6;
+    //TaskProgress task(TaskProgress::Download, "Downloading array chunk");
+    //if (size_mb > 0.5) {
+    //    task.setLabel(QString("Downloading array chunk: %1 MB").arg(size_mb));
+    //}
+    //read a chunk of the remote array considered as a 1D array
+
+    TaskProgress task(TaskProgress::Download, QString("Downloading %1 numbers -- %2 (%3x%4x%5)").arg(format_num(size)).arg(d->m_remote_datatype).arg(N1()).arg(N2()).arg(N3()));
+    task.log(this->makePath());
+
+    X.allocate(size, 1); //allocate the output array
+    dtype32* Xptr = X.dataPtr(); //pointer to the output data
+    long ii1 = i; //start index of the remote array
+    long ii2 = i + size - 1; //end index of the remote array
+    long jj1 = ii1 / d->m_download_chunk_size; //start chunk index of the remote array
+    long jj2 = ii2 / d->m_download_chunk_size; //end chunk index of the remote array
+    if (jj1 == jj2) { //in this case there is only one chunk we need to worry about
+        task.setProgress(0.2);
+        QString fname = d->download_chunk_at_index(jj1); //download the single chunk
+        if (fname.isEmpty()) {
+            //task.error("fname is empty");
+            if (!MLUtil::threadInterruptRequested()) {
+                TaskProgress errtask("Download chunk at index");
+                errtask.log(QString("m_remote_data_type = %1, download chunk size = %2").arg(d->m_remote_datatype).arg(d->m_download_chunk_size));
+                errtask.log(d->m_path);
+                errtask.error(QString("Failed to download chunk at index %1").arg(jj1));
+                d->m_download_failed = true;
+            }
+            return false;
+        }
+        DiskReadMda32 A(fname);
+        A.readChunk(X, ii1 - jj1 * d->m_download_chunk_size, size); //starting reading at the offset of ii1 relative to the start index of the chunk
+        return true;
+    }
+    else {
+        for (long jj = jj1; jj <= jj2; jj++) { //otherwise we need to step through the chunks
+            task.setProgress((jj - jj1 + 0.5) / (jj2 - jj1 + 1));
+            if (MLUtil::threadInterruptRequested()) {
+                //X = Mda32(); //maybe it's better to return the right size.
+                //task.error("Halted");
+                return false;
+            }
+            QString fname = d->download_chunk_at_index(jj); //download the chunk at index jj
+            if (fname.isEmpty()) {
+                //task.error("fname is empty *");
+                return false;
+            }
+            DiskReadMda32 A(fname);
+            if (jj == jj1) { //case 1/3, this is the first chunk
+                Mda32 tmp;
+                long size0 = (jj1 + 1) * d->m_download_chunk_size - ii1; //the size is going to be the difference between ii1 and the start index of the next chunk
+                A.readChunk(tmp, ii1 - jj1 * d->m_download_chunk_size, size0); //again we start reading at the offset of ii1 relative to the start index of the chunk
+                dtype32* tmp_ptr = tmp.dataPtr(); //copy the data directly from tmp_ptr to Xptr
+                long b = 0;
+                for (long a = 0; a < size0; a++) {
+                    Xptr[b] = tmp_ptr[a];
+                    b++;
+                }
+            }
+            else if (jj == jj2) { //case 2/3, this is the last chunk
+                Mda32 tmp;
+                long size0 = ii2 + 1 - jj2 * d->m_download_chunk_size; //the size is going to be the difference between the start index of the last chunk and ii2+1
+                A.readChunk(tmp, 0, size0); //we start reading at position zero
+                dtype32* tmp_ptr = tmp.dataPtr();
+                //copy the data to the last part of X
+                long b = size - size0;
+                for (long a = 0; a < size0; a++) {
+                    Xptr[b] = tmp_ptr[a];
+                    b++;
+                }
+            }
+
+            /*
+             ///this was the old code, which was wrong!!!!!!!!! -- fixed on 5/16/2016
+            else if (jj == jj2) {
+                Mda32 tmp;
+                long size0 = ii2 + 1 - jj2 * d->m_download_chunk_size;
+                A.readChunk(tmp, d->m_download_chunk_size - size0, size0);
+                dtype32* tmp_ptr = tmp.dataPtr();
+                long b = jj2 * d->m_download_chunk_size - ii1;
+                for (long a = 0; a < size0; a++) {
+                    Xptr[b] = tmp_ptr[a];
+                    b++;
+                }
+            }
+            */
+            else { //case 3/3, this is a middle chunk
+                Mda32 tmp;
+                A.readChunk(tmp, 0, d->m_download_chunk_size); //read the entire chunk, because we'll use it all
+                dtype32* tmp_ptr = tmp.dataPtr();
                 long b = jj * d->m_download_chunk_size - ii1; //we start writing at the offset between the start index of the chunk and the start index
                 for (long a = 0; a < d->m_download_chunk_size; a++) {
                     Xptr[b] = tmp_ptr[a];

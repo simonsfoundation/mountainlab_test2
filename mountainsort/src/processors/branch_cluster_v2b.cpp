@@ -12,21 +12,22 @@
 #include "get_sort_indices.h"
 #include "mlcommon.h"
 #include "msmisc.h"
+#include "diskreadmda32.h"
 
 struct ClipsGroup {
-    Mda* clips;
+    Mda32* clips;
     QList<long> inds;
 };
 
 QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display);
 QVector<double> compute_peaks_v2b(ClipsGroup clips, long ch);
-QVector<int> consolidate_labels_v2b(DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor);
+QVector<int> consolidate_labels_v2b(DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor);
 QList<long> get_sort_indices_b(const QVector<int>& channels, const QVector<double>& template_peaks);
 
 bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_path, const QString& adjacency_matrix_path, const QString& output_firings_path, const Branch_Cluster_V2_Opts& opts)
 {
     printf("Starting branch_cluster_v2 --------------------\n");
-    DiskReadMda X;
+    DiskReadMda32 X;
     X.setPath(timeseries_path);
     long M = X.N1();
 
@@ -60,7 +61,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
     long k_offset = 0;
 #pragma omp parallel for
     for (long m = 0; m < M; m++) {
-        Mda clips;
+        Mda32 clips;
         QVector<double> times;
 #pragma omp critical
         {
@@ -130,7 +131,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
         }
         long T_for_peaks = 3;
         long Tmid_for_peaks = (int)((T_for_peaks + 1) / 2) - 1;
-        Mda templates = compute_templates_0(X, firings, T_for_peaks); //MxTxK
+        Mda32 templates = compute_templates_0(X, firings, T_for_peaks); //MxTxK
         QVector<double> template_peaks;
         for (long k = 0; k < K; k++) {
             if (channels[k] >= 1) {
@@ -203,7 +204,7 @@ QList<long> get_sort_indices_b(const QVector<int>& channels, const QVector<doubl
     return ret;
 }
 
-QVector<int> consolidate_labels_v2b(DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor)
+QVector<int> consolidate_labels_v2b(DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor)
 {
     long M = X.N1();
     long T = clip_size;
@@ -221,8 +222,8 @@ QVector<int> consolidate_labels_v2b(DiskReadMda& X, const QVector<double>& times
             if (labels[i] == k)
                 times_k << times[i];
         }
-        Mda clips_k = extract_clips(X, times_k, all_channels, clip_size);
-        Mda template_k = compute_mean_clip(clips_k);
+        Mda32 clips_k = extract_clips(X, times_k, all_channels, clip_size);
+        Mda32 template_k = compute_mean_clip(clips_k);
         QVector<double> energies;
         for (long m = 0; m < M; m++)
             energies << 0;
@@ -310,48 +311,6 @@ QVector<int> find_peaks_above_threshold_v2b(QVector<double>& peaks, double thres
     return ret;
 }
 
-void normalize_features_v2b(Mda& F)
-{
-    long M = F.N1();
-    long N = F.N2();
-    QVector<double> norms;
-    long aa = 0;
-    for (long i = 0; i < N; i++) {
-        double sumsqr = 0;
-        for (long j = 0; j < M; j++) {
-            double val = F.get(aa);
-            sumsqr += val * val;
-            aa++;
-        }
-        norms << sqrt(sumsqr);
-    }
-    aa = 0;
-    for (long i = 0; i < N; i++) {
-        double factor = 1;
-        if (norms[i])
-            factor = 1 / norms[i];
-        for (long j = 0; j < M; j++) {
-            F.set(F.get(aa) * factor, aa);
-            aa++;
-        }
-    }
-}
-
-/*
-QVector<int> do_cluster_with_normalized_features(Mda& clips, const Branch_Cluster_V2_Opts& opts)
-{
-    long M = clips.N1();
-    long T = clips.N2();
-    long L = clips.N3();
-    long nF = opts.num_features;
-    Mda FF;
-    FF.allocate(nF, L);
-    get_pca_features(M * T, L, nF, FF.dataPtr(), clips.dataPtr());
-    normalize_features_v2(FF);
-    return isosplit2(FF);
-}
-*/
-
 QVector<int> do_cluster_without_normalized_features_b(ClipsGroup clips, const Branch_Cluster_V2_Opts& opts)
 {
     QTime timer;
@@ -361,12 +320,12 @@ QVector<int> do_cluster_without_normalized_features_b(ClipsGroup clips, const Br
     long L = clips.inds.count();
     //long nF = opts.num_features;
 
-    Mda CC, FF; // CC will be MTxK, FF will be KxL
-    Mda sigma;
+    Mda32 CC, FF; // CC will be MTxK, FF will be KxL
+    Mda32 sigma;
     {
 
         //do this inside a block so memory gets released
-        Mda clips_reshaped(M * T, L);
+        Mda32 clips_reshaped(M * T, L);
         long iii = 0;
         for (long ii = 0; ii < L; ii++) {
             for (int t = 0; t < T; t++) {
@@ -389,13 +348,13 @@ QVector<int> do_cluster_without_normalized_features_b(ClipsGroup clips, const Br
     return ret;
 }
 
-QVector<double> compute_dists_from_template_b(ClipsGroup clips, Mda& template0)
+QVector<double> compute_dists_from_template_b(ClipsGroup clips, Mda32& template0)
 {
     long M = clips.clips->N1();
     long T = clips.clips->N2();
     long L = clips.inds.count();
-    double* ptr1 = clips.clips->dataPtr();
-    double* ptr2 = template0.dataPtr();
+    dtype32* ptr1 = clips.clips->dataPtr();
+    dtype32* ptr2 = template0.dataPtr();
     QVector<double> ret;
     for (long i = 0; i < L; i++) {
         long aaa = clips.inds[i] * M * T;
@@ -442,12 +401,12 @@ ClipsGroup grab_clips_subset(ClipsGroup clips, const QVector<int>& inds)
     */
 }
 
-Mda compute_mean_clip_b(ClipsGroup clips)
+Mda32 compute_mean_clip_b(ClipsGroup clips)
 {
     int M = clips.clips->N1();
     int T = clips.clips->N2();
     int L = clips.inds.count();
-    Mda ret;
+    Mda32 ret;
     ret.allocate(M, T);
     for (int i = 0; i < L; i++) {
         long aaa = clips.inds[i] * M * T;
@@ -604,7 +563,7 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
                     labels_next_shell << labels_above[inds_next_shell[i]];
 
                 //compute the centroids for the next shell above
-                Mda centroids;
+                Mda32 centroids;
                 centroids.allocate(M, T, K_above);
                 for (long kk = 1; kk <= K_above; kk++) {
                     QVector<int> inds_kk;
@@ -613,7 +572,7 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
                             inds_kk << i;
                     }
                     ClipsGroup clips_kk = grab_clips_subset(clips_next_shell, inds_kk);
-                    Mda centroid0 = compute_mean_clip_b(clips_kk);
+                    Mda32 centroid0 = compute_mean_clip_b(clips_kk);
                     for (long t = 0; t < T; t++) {
                         for (long m = 0; m < M; m++) {
                             centroids.setValue(centroid0.value(m, t), m, t, kk - 1);
@@ -635,7 +594,7 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
                 for (long k = 1; k <= K_above; k++) {
                     QVector<int> tmp;
                     tmp << k - 1;
-                    Mda centroid0 = grab_clips_subset(centroids, tmp);
+                    Mda32 centroid0 = grab_clips_subset(centroids, tmp);
                     QVector<double> dists = compute_dists_from_template_b(clips_below, centroid0);
                     for (long i = 0; i < inds_below.count(); i++) {
                         distances.setValue(dists[i], i, k - 1);

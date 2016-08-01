@@ -345,6 +345,14 @@ double MLCompute::dotProduct(long N, double* X1, double* X2)
     return ret;
 }
 
+double MLCompute::dotProduct(long N, float* X1, float* X2)
+{
+    double ret = 0;
+    for (long i = 0; i < N; i++)
+        ret += X1[i] * X2[i];
+    return ret;
+}
+
 QString MLUtil::computeSha1SumOfString(const QString& str)
 {
     QCryptographicHash hash(QCryptographicHash::Sha1);
@@ -513,4 +521,49 @@ bool MLUtil::writeByteArray(const QString& path, const QByteArray& X)
     }
     file.close();
     return true;
+}
+
+double MLCompute::min(long N, float* X)
+{
+    if (!N)
+        return 0;
+    double ret = X[0];
+    for (long i = 0; i < N; i++) {
+        if (X[i] < ret)
+            ret = X[i];
+    }
+    return ret;
+}
+
+double MLCompute::max(long N, float* X)
+{
+    if (!N)
+        return 0;
+    double ret = X[0];
+    for (long i = 0; i < N; i++) {
+        if (X[i] > ret)
+            ret = X[i];
+    }
+    return ret;
+}
+
+double MLCompute::sum(long N, float* X)
+{
+    double ret = 0;
+    for (long i = 0; i < N; i++) {
+        ret += X[i];
+    }
+    return ret;
+}
+
+double MLCompute::mean(long N, float* X)
+{
+    if (!N)
+        return 0;
+    return sum(N, X) / N;
+}
+
+double MLCompute::norm(long N, float* X)
+{
+    return sqrt(dotProduct(N, X, X));
 }

@@ -352,14 +352,14 @@ QVector<int> do_cluster_without_normalized_features(Mda& clips, const Branch_Clu
     long L = clips.N3();
     //long nF = opts.num_features;
 
-    Mda clips_reshaped(M * T, L);
+    Mda32 clips_reshaped(M * T, L);
     long NNN = M * T * L;
     for (long iii = 0; iii < NNN; iii++) {
         clips_reshaped.set(clips.get(iii), iii);
     }
 
-    Mda CC, FF; // CC will be MTxK, FF will be KxL
-    Mda sigma;
+    Mda32 CC, FF; // CC will be MTxK, FF will be KxL
+    Mda32 sigma;
     pca(CC, FF, sigma, clips_reshaped, opts.num_features);
 
     //Mda FF;

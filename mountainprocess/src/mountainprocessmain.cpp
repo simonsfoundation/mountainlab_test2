@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
             long mb = compute_peak_mem_bytes(info.monitor_stats) / 1000000;
             double cpu = compute_peak_cpu_pct(info.monitor_stats);
             if (cpu) {
-                printf("Peak mem / cpu: %ld MB / %g%%\n", mb, cpu);
+                printf("Peak usage: %ld MB RAM / %g%% CPU\n", mb, cpu);
             }
             printf("---------------------------------------------------------------\n");
         }

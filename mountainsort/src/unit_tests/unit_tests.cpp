@@ -140,32 +140,3 @@ void run_unit_test_whiten()
     printf("\nY:\n");
     matrix_print(Y);
 }
-
-#include "isosplit2.h"
-void run_unit_test_isosplit()
-{
-    QString path0 = qApp->applicationDirPath() + "/../test_data";
-    Mda X;
-    X.read(path0 + "/isosplit_unit_test_X.mda");
-    QVector<int> labels = isosplit2(X, 1.5, 30, true);
-    Mda L;
-    L.allocate(1, labels.count());
-    for (int i = 0; i < labels.count(); i++)
-        L.set(labels[i], i);
-    L.write32(path0 + "/isosplit_unit_test_L.mda");
-    int K = MLCompute::max<int>(labels);
-    printf("K=%d\n", K);
-}
-
-void run_unit_test(const QString& test_name)
-{
-    if (test_name == "eigenvalue_decomposition") {
-        run_unit_test_eigenvalue_decomposition();
-    }
-    else if (test_name == "whiten") {
-        run_unit_test_whiten();
-    }
-    else if (test_name == "isosplit") {
-        run_unit_test_isosplit();
-    }
-}
