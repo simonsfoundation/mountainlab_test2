@@ -12,7 +12,7 @@ branch_cluster_v2_Processor::branch_cluster_v2_Processor()
     d->q = this;
 
     this->setName("branch_cluster_v2");
-    this->setVersion("0.11");
+    this->setVersion("0.14");
     this->setInputFileParameters("timeseries", "detect", "adjacency_matrix");
     this->setOutputFileParameters("firings_out");
     this->setRequiredParameters("clip_size", "min_shell_size", "shell_increment", "num_features");
@@ -48,5 +48,6 @@ bool branch_cluster_v2_Processor::run(const QMap<QString, QVariant>& params)
     opts.num_pca_representatives = params.value("num_pca_representatives", 5000).toLongLong();
     opts.consolidation_factor = params.value("consolidation_factor", 0.9).toDouble();
 
-    return branch_cluster_v2(timeseries_path, detect_path, adjacency_matrix_path, firings_path, opts);
+    //return branch_cluster_v2(timeseries_path, detect_path, adjacency_matrix_path, firings_path, opts);
+    return branch_cluster_v2b(timeseries_path, detect_path, adjacency_matrix_path, firings_path, opts);
 }

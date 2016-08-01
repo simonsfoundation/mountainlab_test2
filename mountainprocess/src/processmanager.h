@@ -34,8 +34,8 @@ struct MLProcessor {
 
 struct MonitorStats {
     QDateTime timestamp;
-    long mem_bytes=0;
-    double cpu_pct=0;
+    long mem_bytes = 0;
+    double cpu_pct = 0;
 };
 
 struct MLProcessInfo {

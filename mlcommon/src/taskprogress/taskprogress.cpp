@@ -68,9 +68,10 @@ public:
             info->m_info.progress = value.toDouble();
             if (info->m_info.progress >= 1) {
                 completeTask(task);
-            } else {
+            }
+            else {
                 info->emitChanged();
-        emit dataChanged(index(row, 0), index(row, columnCount() - 1));
+                emit dataChanged(index(row, 0), index(row, columnCount() - 1));
             }
         }
     }
@@ -152,8 +153,7 @@ public:
         task->m_info.progress = 1.0;
         task->m_info.end_time = dt;
         task->emitChanged();
-        if (row == newRow - 1)
-        {
+        if (row == newRow - 1) {
             emit dataChanged(this->index(row, 0), this->index(row, columnCount() - 1));
             return;
         }

@@ -140,7 +140,8 @@ SOURCES += \
     processors/normalize_channels_processor.cpp \
     processors/normalize_channels.cpp \
     utils/pca.cpp \
-    processors/firings_subset_processor.cpp
+    processors/firings_subset_processor.cpp \
+    processors/branch_cluster_v2b.cpp
 !macx {
 SOURCES_NOCXX11 += \ #see below
     isosplit/isosplit2.cpp \
