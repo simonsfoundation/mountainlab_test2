@@ -137,12 +137,12 @@ void MVPanelWidget::setViewportGeometry(QRectF geom)
 
 void MVPanelWidget::zoomIn()
 {
-    d->zoom(1.1);
+    d->zoom(1.2);
 }
 
 void MVPanelWidget::zoomOut()
 {
-    d->zoom(1 / 1.1);
+    d->zoom(1 / 1.2);
 }
 
 void MVPanelWidget::paintEvent(QPaintEvent* evt)
@@ -170,9 +170,9 @@ void MVPanelWidget::wheelEvent(QWheelEvent* evt)
     int delta = evt->delta();
     double factor = 1;
     if (delta > 0)
-        factor = 1.03;
+        factor = 1.1;
     else
-        factor = 1 / 1.03;
+        factor = 1 / 1.1;
     d->zoom(factor);
 }
 
