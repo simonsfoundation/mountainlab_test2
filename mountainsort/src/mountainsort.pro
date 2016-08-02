@@ -142,20 +142,20 @@ SOURCES += \
     utils/pca.cpp \
     processors/firings_subset_processor.cpp \
     processors/branch_cluster_v2b.cpp
-!macx {
-SOURCES_NOCXX11 += \ #see below
-    isosplit/isosplit2.cpp \
-    isosplit/isocut.cpp \
-    isosplit/jisotonic.cpp
-SOURCES_NOCXX11 += utils/eigenvalue_decomposition.cpp #see below
-}
-else {
+#!macx {
+#SOURCES_NOCXX11 += \ #see below
+#    isosplit/isosplit2.cpp \
+#    isosplit/isocut.cpp \
+#    isosplit/jisotonic.cpp
+#SOURCES_NOCXX11 += utils/eigenvalue_decomposition.cpp #see below
+#}
+#else {
 SOURCES += \ #see below
     isosplit/isosplit2.cpp \
     isosplit/isocut.cpp \
     isosplit/jisotonic.cpp
 SOURCES += utils/eigenvalue_decomposition.cpp #see below
-}
+#}
 
 HEADERS += utils/get_sort_indices.h \
     utils/matrix_mda.h \
