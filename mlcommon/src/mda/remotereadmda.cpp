@@ -162,7 +162,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     //read a chunk of the remote array considered as a 1D array
 
     TaskProgress task(TaskProgress::Download, QString("Downloading %1 numbers - %2 (%3x%4x%5)").arg(format_num(size)).arg(d->m_remote_datatype).arg(N1()).arg(N2()).arg(N3()));
-    task.log(this->makePath());
+    task.log() << "Reading chunk:" << this->makePath() << i << size;
 
     X.allocate(size, 1); //allocate the output array
     double* Xptr = X.dataPtr(); //pointer to the output data
@@ -177,9 +177,9 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
             //task.error("fname is empty");
             if (!MLUtil::threadInterruptRequested()) {
                 TaskProgress errtask("Download chunk at index");
-                errtask.log(QString("m_remote_data_type = %1, download chunk size = %2").arg(d->m_remote_datatype).arg(d->m_download_chunk_size));
-                errtask.log(d->m_path);
-                errtask.error(QString("Failed to download chunk at index %1").arg(jj1));
+                errtask.log() << QString("m_remote_data_type = %1, download chunk size = %2").arg(d->m_remote_datatype).arg(d->m_download_chunk_size);
+                errtask.log() << d->m_path;
+                errtask.error() << QString("Failed to download chunk at index %1").arg(jj1);
                 d->m_download_failed = true;
             }
             return false;

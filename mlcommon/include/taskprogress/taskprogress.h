@@ -47,7 +47,7 @@ class TaskProgress;
 
 class MLDebug : public QDebug {
 public:
-    MLDebug(const MLDebug &other);
+    MLDebug(const MLDebug& other);
     ~MLDebug();
 
 private:
@@ -55,9 +55,9 @@ private:
         Log,
         Error
     };
-    MLDebug(TaskProgress *tp, Mode m);
+    MLDebug(TaskProgress* tp, Mode m);
 
-    TaskProgress *m_tp;
+    TaskProgress* m_tp;
     QString m_string;
     Mode m_mode;
     friend class TaskProgress;

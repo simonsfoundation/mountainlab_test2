@@ -1083,18 +1083,33 @@ QString TaskProgress::catToString(TaskProgress::StandardCategory cat) const
     }
 }
 
-MLDebug::MLDebug(TaskProgress *tp, Mode m) : QDebug((QString*)0), m_tp(tp), m_mode(m) {
+MLDebug::MLDebug(TaskProgress* tp, Mode m)
+    : QDebug((QString*)0)
+    , m_tp(tp)
+    , m_mode(m)
+{
     QDebug tmp(&m_string);
     swap(tmp);
 }
 
-MLDebug::MLDebug(const MLDebug &other) : QDebug(other), m_tp(other.m_tp), m_string(other.m_string), m_mode(other.m_mode) {}
+MLDebug::MLDebug(const MLDebug& other)
+    : QDebug(other)
+    , m_tp(other.m_tp)
+    , m_string(other.m_string)
+    , m_mode(other.m_mode)
+{
+}
 
 MLDebug::~MLDebug()
 {
-    if (m_string.isEmpty()) return;
-    switch  (m_mode) {
-    case Log: m_tp->log(m_string); break;
-    case Error: m_tp->error(m_string); break;
+    if (m_string.isEmpty())
+        return;
+    switch (m_mode) {
+    case Log:
+        m_tp->log(m_string);
+        break;
+    case Error:
+        m_tp->error(m_string);
+        break;
     }
 }

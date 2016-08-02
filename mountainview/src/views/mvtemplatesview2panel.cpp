@@ -198,8 +198,6 @@ void MVTemplatesView2PanelPrivate::setup_electrode_boxes(double W, double H)
     double hscale_factor = 1;
     double vscale_factor = 1;
 
-
-
     if (W0_padded * H > W * H0_padded) {
         //limited by width
         if (W0_padded) {
