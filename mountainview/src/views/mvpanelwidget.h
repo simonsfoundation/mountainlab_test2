@@ -26,6 +26,7 @@ public:
     void setMargins(int row_margin, int col_margin);
     void setMinimumPanelWidth(int w);
     void setMinimumPanelHeight(int h);
+    void setScrollable(bool h_scrollable, bool v_scrollable);
 
     int currentPanelIndex() const;
     void setCurrentPanelIndex(int index); //for zooming

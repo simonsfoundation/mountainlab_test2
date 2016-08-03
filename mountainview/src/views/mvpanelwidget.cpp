@@ -27,8 +27,8 @@ public:
     int m_col_spacing = 3;
     QRectF m_viewport_geom = QRectF(0, 0, 1, 1);
     int m_current_panel_index = -1;
-    bool m_fixed_width = false;
-    bool m_fixed_height = false;
+    bool m_h_scrollable = true;
+    bool m_v_scrollable = true;
     double m_minimum_panel_width = 0;
     double m_minimum_panel_height = 0;
 
@@ -116,6 +116,12 @@ void MVPanelWidget::setMinimumPanelWidth(int w)
 void MVPanelWidget::setMinimumPanelHeight(int h)
 {
     d->m_minimum_panel_height = h;
+}
+
+void MVPanelWidget::setScrollable(bool h_scrollable, bool v_scrollable)
+{
+    d->m_h_scrollable=h_scrollable;
+    d->m_v_scrollable=v_scrollable;
 }
 
 int MVPanelWidget::currentPanelIndex() const
@@ -223,12 +229,12 @@ void MVPanelWidgetPrivate::correct_viewport_geom()
     QRectF G = m_viewport_geom;
 
     //respect the minimum panel width/height
-    if ((!m_fixed_width) && (q->columnCount() > 1) && (!m_panels.isEmpty())) {
+    if ((m_h_scrollable) && (q->columnCount() > 1) && (!m_panels.isEmpty())) {
         if (G.width() * q->width() / m_panels.count() < m_minimum_panel_width) {
             G.setWidth(m_minimum_panel_width / q->width() * m_panels.count());
         }
     }
-    if ((!m_fixed_height) && (q->rowCount() > 1) && (!m_panels.isEmpty())) {
+    if ((m_v_scrollable) && (q->rowCount() > 1) && (!m_panels.isEmpty())) {
         if (G.height() * q->height() / m_panels.count() < m_minimum_panel_height) {
             G.setHeight(m_minimum_panel_height / q->height() * m_panels.count());
         }
@@ -261,10 +267,10 @@ void MVPanelWidgetPrivate::zoom(double factor)
     if ((m_current_panel_index >= 0) && (m_current_panel_index < m_panels.count())) {
         current_panel_geom = m_panels[m_current_panel_index].geom;
     }
-    if ((q->rowCount() > 1) && (!m_fixed_height)) {
+    if ((q->rowCount() > 1) && (m_v_scrollable)) {
         m_viewport_geom.setHeight(m_viewport_geom.height() * factor);
     }
-    if ((q->columnCount() > 1) && (!m_fixed_width)) {
+    if ((q->columnCount() > 1) && (m_h_scrollable)) {
         m_viewport_geom.setWidth(m_viewport_geom.width() * factor);
     }
     correct_viewport_geom();

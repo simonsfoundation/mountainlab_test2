@@ -20,8 +20,8 @@ public:
     bool m_selected = false;
     QMap<QString, QColor> m_colors;
     QString m_title;
-    double m_top_section_height = 25;
-    double m_bottom_section_height = 30;
+    double m_top_section_height = 0;
+    double m_bottom_section_height = 0;
     double m_firing_rate_disk_diameter = 0;
 
     void setup_electrode_boxes(double W, double H);
@@ -89,6 +89,9 @@ void MVTemplatesView2Panel::paint(QPainter* painter)
     QSize ss = this->windowSize();
     QPen pen = painter->pen();
 
+    d->m_top_section_height=qMax(20.0,ss.height()*0.1);
+    d->m_bottom_section_height=qMax(20.0,ss.height()*0.1);
+
     //BACKGROUND
     QRect R(0, 0, ss.width(), ss.height());
     if (d->m_current) {
@@ -118,7 +121,7 @@ void MVTemplatesView2Panel::paint(QPainter* painter)
         QString txt = d->m_title;
         QRectF R(0, 0, ss.width(), d->m_top_section_height);
         QFont fnt = painter->font();
-        fnt.setPixelSize(12);
+        fnt.setPixelSize(qMin(16.0,qMax(10.0,qMin(d->m_top_section_height,ss.width()*1.0)-4)));
         painter->setFont(fnt);
         QPen pen = painter->pen();
         pen.setColor(d->m_colors["cluster_label"]);
@@ -135,7 +138,7 @@ void MVTemplatesView2Panel::paint(QPainter* painter)
             painter->setBrush(QBrush(d->m_colors["firing_rate_disk"]));
             QRectF R(0, ss.height() - d->m_bottom_section_height, ss.width(), d->m_bottom_section_height);
             double tmp = qMin(R.width(), R.height());
-            double rad = tmp * d->m_firing_rate_disk_diameter / 2;
+            double rad = tmp * d->m_firing_rate_disk_diameter / 2 * 0.9;
             painter->drawEllipse(R.center(), rad, rad);
             painter->setPen(pen_hold);
             painter->setBrush(brush_hold);

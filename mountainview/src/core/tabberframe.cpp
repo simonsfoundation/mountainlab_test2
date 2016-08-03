@@ -91,6 +91,11 @@ TabberFrame::TabberFrame(MVAbstractView* view)
     foreach (QAction* a, toolbar_actions) {
         d->m_toolbar->addAction(a);
     }
+    QList<QWidget*> toolbar_controls=view->toolbarControls();
+    foreach (QWidget *W,toolbar_controls) {
+        W->show();
+        d->m_toolbar->addWidget(W);
+    }
 
     d->m_toolbar->addWidget(spacer);
 
