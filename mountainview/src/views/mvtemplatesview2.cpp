@@ -8,6 +8,7 @@
 #include "mvpanelwidget.h"
 #include "mvtemplatesview2panel.h"
 
+#include <QLabel>
 #include <QSpinBox>
 #include <QVBoxLayout>
 #include <mountainprocessrunner.h>
@@ -52,7 +53,7 @@ public:
     QList<ClusterData2> m_cluster_data;
     double m_max_absval = 1;
     QList<MVTemplatesView2Panel*> m_panels;
-    int m_num_rows=1;
+    int m_num_rows = 1;
 
     double m_total_time_sec = 0;
     bool m_zoomed_out_once = false;
@@ -96,10 +97,11 @@ MVTemplatesView2::MVTemplatesView2(MVContext* mvcontext)
     connect(d->m_panel_widget, SIGNAL(signalPanelClicked(int, Qt::KeyboardModifiers)), this, SLOT(slot_panel_clicked(int, Qt::KeyboardModifiers)));
 
     {
-        QSpinBox *SB=new QSpinBox;
-        SB->setRange(1,10);
+        QSpinBox* SB = new QSpinBox;
+        SB->setRange(1, 10);
         SB->setValue(1);
-        QObject::connect(SB,SIGNAL(valueChanged(int)),this,SLOT(slot_set_num_rows(int)));
+        QObject::connect(SB, SIGNAL(valueChanged(int)), this, SLOT(slot_set_num_rows(int)));
+        this->addToolbarControl(new QLabel("# Rows:"));
         this->addToolbarControl(SB);
     }
 
@@ -191,8 +193,7 @@ void MVTemplatesView2::slot_panel_clicked(int index, Qt::KeyboardModifiers modif
             }
             mvContext()->setSelectedClusters(set.toList());
         }
-    }
-    else {
+    } else {
         ClusterData2 CD = d->m_cluster_data.value(index);
         if (CD.k > 0) {
             mvContext()->clickCluster(CD.k, modifiers);
@@ -214,7 +215,7 @@ void MVTemplatesView2::slot_vertical_zoom_out()
 
 void MVTemplatesView2::slot_set_num_rows(int num_rows)
 {
-    d->m_num_rows=num_rows;
+    d->m_num_rows = num_rows;
     d->update_panels();
 }
 

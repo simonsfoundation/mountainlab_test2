@@ -190,13 +190,13 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
     connect(&d->m_clips_view_thread, SIGNAL(finished()), this, SLOT(slot_clips_view_thread_finished()));
 
     {
-        QAction* A = new QAction("<-Colors", this);
+        QAction* A = new QAction("<-col", this);
         A->setProperty("action_type", "toolbar");
         QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_shift_colors_left()));
         this->addAction(A);
     }
     {
-        QAction* A = new QAction("Colors->", this);
+        QAction* A = new QAction("col->", this);
         A->setProperty("action_type", "toolbar");
         QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_shift_colors_right()));
         this->addAction(A);

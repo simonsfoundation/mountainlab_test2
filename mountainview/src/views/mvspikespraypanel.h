@@ -17,6 +17,8 @@ public:
     void setClipsToRender(Mda* X);
     void setLabelsToRender(const QVector<int>& X);
     void setAmplitudeFactor(double X);
+    void setBrightnessFactor(double factor);
+    void setWeightFactor(double factor);
     void setLegendVisible(bool val);
 
 protected:

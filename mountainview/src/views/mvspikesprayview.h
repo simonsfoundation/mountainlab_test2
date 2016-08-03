@@ -43,6 +43,8 @@ private slots:
     void slot_shift_colors_left(int step = 1);
     void slot_shift_colors_right();
     void slot_export_static_view();
+    void slot_brightness_slider_changed(int val);
+    void slot_weight_slider_changed(int val);
 
 private:
     MVSpikeSprayViewPrivate* d;

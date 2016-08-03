@@ -212,21 +212,34 @@ void MVAbstractView::neverSuggestRecalculate()
 
 void MVAbstractView::slot_do_calculation()
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->set_recalculate_suggested(false);
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     this->update();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     prepareCalculation();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_calculation_thread.start();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_calculation_scheduled = false;
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     this->update();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     emit this->calculationStarted();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 void MVAbstractView::slot_calculation_finished()
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     this->onCalculationFinished();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     this->update();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->set_recalculate_suggested(false);
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     emit this->calculationFinished();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 void MVAbstractView::slot_context_option_changed(QString name)

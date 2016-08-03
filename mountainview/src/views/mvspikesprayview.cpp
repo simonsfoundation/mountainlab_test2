@@ -77,6 +77,8 @@ public:
     QSet<int> m_labels_to_use;
 
     double m_amplitude_factor = 0; //zero triggers auto-calculation
+    double m_brightness_factor = 1;
+    double m_weight_factor = 1;
     int m_panel_width = 0;
 
     Mda m_clips_to_render;
@@ -90,6 +92,7 @@ public:
     void set_amplitude_factor(double val);
     void set_panel_width(double w);
     double actual_panel_width();
+    void update_panel_factors();
 };
 
 MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
@@ -126,13 +129,13 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutVertical, this, SLOT(slot_vertical_zoom_out()));
 
     {
-        QAction* A = new QAction("<-Colors", this);
+        QAction* A = new QAction("<-col", this);
         A->setProperty("action_type", "toolbar");
         QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_shift_colors_left()));
         this->addAction(A);
     }
     {
-        QAction* A = new QAction("Colors->", this);
+        QAction* A = new QAction("col->", this);
         A->setProperty("action_type", "toolbar");
         QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_shift_colors_right()));
         this->addAction(A);
@@ -143,6 +146,24 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
         A->setProperty("action_type", "");
         QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_export_static_view()));
         this->addAction(A);
+    }
+
+    {
+        QSlider *S=new QSlider;
+        S->setRange(0,300);
+        S->setValue(100);
+        S->setMaximumWidth(100);
+        this->addToolbarControl(S);
+        QObject::connect(S,SIGNAL(valueChanged(int)),this,SLOT(slot_brightness_slider_changed(int)));
+    }
+
+    {
+        QSlider *S=new QSlider;
+        S->setRange(0,1000);
+        S->setValue(100);
+        S->setMaximumWidth(100);
+        this->addToolbarControl(S);
+        QObject::connect(S,SIGNAL(valueChanged(int)),this,SLOT(slot_weight_slider_changed(int)));
     }
 }
 
@@ -156,6 +177,7 @@ void MVSpikeSprayView::setLabelsToUse(const QSet<int>& labels_to_use)
 {
     d->m_labels_to_use = labels_to_use;
     qDeleteAll(d->m_panels);
+    d->m_panels.clear();
 
     QList<int> list = labels_to_use.toList();
     qSort(list);
@@ -173,6 +195,7 @@ void MVSpikeSprayView::setLabelsToUse(const QSet<int>& labels_to_use)
             P->setLabelsToUse(tmp);
         }
     }
+    d->update_panel_factors();
     recalculate();
 }
 
@@ -318,12 +341,23 @@ void MVSpikeSprayView::slot_export_static_view()
     }
 }
 
+void MVSpikeSprayView::slot_brightness_slider_changed(int val)
+{
+    d->m_brightness_factor=val*1.0/100;
+    d->update_panel_factors();
+}
+
+void MVSpikeSprayView::slot_weight_slider_changed(int val)
+{
+    d->m_weight_factor=val*1.0/100;
+    d->update_panel_factors();
+}
+
 MVSpikeSprayPanel* MVSpikeSprayViewPrivate::add_panel()
 {
     MVSpikeSprayPanel* P = new MVSpikeSprayPanel(m_context);
     m_panel_layout->addWidget(P);
     m_panels << P;
-    P->setAmplitudeFactor(m_amplitude_factor);
     P->setMinimumWidth(m_panel_width);
     return P;
 }
@@ -331,9 +365,7 @@ MVSpikeSprayPanel* MVSpikeSprayViewPrivate::add_panel()
 void MVSpikeSprayViewPrivate::set_amplitude_factor(double val)
 {
     m_amplitude_factor = val;
-    for (int i = 0; i < m_panels.count(); i++) {
-        m_panels[i]->setAmplitudeFactor(m_amplitude_factor);
-    }
+    update_panel_factors();
 }
 
 void MVSpikeSprayViewPrivate::set_panel_width(double w)
@@ -350,6 +382,16 @@ double MVSpikeSprayViewPrivate::actual_panel_width()
         return m_panel_width;
     else
         return m_panels[0]->width();
+}
+
+void MVSpikeSprayViewPrivate::update_panel_factors()
+{
+    for (int i=0; i<m_panels.count(); i++) {
+        MVSpikeSprayPanel *P=m_panels[i];
+        P->setAmplitudeFactor(m_amplitude_factor);
+        P->setBrightnessFactor(m_brightness_factor);
+        P->setWeightFactor(m_weight_factor);
+    }
 }
 
 void MVSpikeSprayComputer::compute()

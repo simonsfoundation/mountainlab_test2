@@ -21,6 +21,8 @@ public:
     bool m_legend_visible = true;
     MVSSRenderThread m_render_thread;
     bool m_start_render_required = false;
+    double m_weight_factor=1;
+    double m_brightness_factor=2;
 
     QColor get_label_color(int label);
     void start_render();
@@ -64,8 +66,24 @@ void MVSpikeSprayPanel::setLabelsToRender(const QVector<int>& X)
 
 void MVSpikeSprayPanel::setAmplitudeFactor(double X)
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_amplitude_factor = X;
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_start_render_required = true;
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+    update();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+}
+
+void MVSpikeSprayPanel::setBrightnessFactor(double factor)
+{
+    d->m_brightness_factor=factor;
+    update();
+}
+
+void MVSpikeSprayPanel::setWeightFactor(double factor)
+{
+    d->m_weight_factor=factor;
     update();
 }
 
@@ -129,6 +147,16 @@ QColor MVSpikeSprayPanelPrivate::get_label_color(int label)
     return m_context->clusterColor(label);
 }
 
+QColor brighten(QColor col,double factor) {
+    double r=col.red()*factor;
+    double g=col.green()*factor;
+    double b=col.blue()*factor;
+    r=qMin(255.0,r);
+    g=qMin(255.0,g);
+    b=qMin(255.0,b);
+    return QColor(r,g,b);
+}
+
 void MVSpikeSprayPanelPrivate::start_render()
 {
     m_start_render_required = false;
@@ -162,13 +190,16 @@ void MVSpikeSprayPanelPrivate::start_render()
         }
     }
     int alphas[K + 1];
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << "++++++++++++" << m_weight_factor;
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << this->m_labels_to_use;
     for (int k = 0; k <= K; k++) {
         if (counts[k]) {
-            alphas[k] = 255 / counts[k];
-            alphas[k] = qMin(255, qMax(5, alphas[k]));
+            alphas[k] = (int)(255.0 / counts[k] * 2 * m_weight_factor);
+            alphas[k] = qMin(255, qMax(10, alphas[k]));
         }
         else
             alphas[k] = 255;
+        qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << counts[k] << alphas[k];
     }
 
     m_render_thread.requestInterruption();
@@ -181,6 +212,7 @@ void MVSpikeSprayPanelPrivate::start_render()
     for (long j = 0; j < inds.count(); j++) {
         int label0 = m_labels_to_render[inds[j]];
         QColor col = get_label_color(label0);
+        col=brighten(col,m_brightness_factor);
         if (label0 >= 0) {
             col.setAlpha(alphas[label0]);
         }
