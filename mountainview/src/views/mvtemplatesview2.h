@@ -35,6 +35,7 @@ private slots:
     void slot_panel_clicked(int index, Qt::KeyboardModifiers modifiers);
     void slot_vertical_zoom_in();
     void slot_vertical_zoom_out();
+    void slot_set_num_rows(int num_rows);
 
 private:
     MVTemplatesView2Private* d;

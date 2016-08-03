@@ -41,6 +41,8 @@ public:
     virtual QJsonObject exportStaticView();
     virtual void loadStaticView(const QJsonObject& X);
 
+    QList<QWidget*> toolbarControls();
+
 public slots:
     void recalculate();
     void neverSuggestRecalculate();
@@ -84,6 +86,8 @@ protected:
     virtual void prepareMimeData(QMimeData& mimeData, const QPoint& pos);
 
     void contextMenuEvent(QContextMenuEvent* evt);
+
+    void addToolbarControl(QWidget *W);
 private slots:
     void slot_do_calculation();
     void slot_calculation_finished();

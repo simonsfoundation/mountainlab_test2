@@ -30,6 +30,7 @@ public:
     bool m_never_suggest_recalculate = false;
     QString m_calculating_message = "Calculating...";
     QString m_title;
+    QList<QWidget*> m_toolbar_controls;
 
     CalculationThread m_calculation_thread;
 
@@ -111,6 +112,11 @@ void MVAbstractView::loadStaticView(const QJsonObject& X)
         this->setTitle(X["title"].toString());
 }
 
+QList<QWidget *> MVAbstractView::toolbarControls()
+{
+    return d->m_toolbar_controls;
+}
+
 MVAbstractViewFactory* MVAbstractView::viewFactory() const
 {
     return 0;
@@ -180,6 +186,13 @@ void MVAbstractView::contextMenuEvent(QContextMenuEvent* evt)
     prepareMimeData(mimeData, pt);
     if (!mimeData.formats().isEmpty())
         requestContextMenu(mimeData, pt);
+}
+
+void MVAbstractView::addToolbarControl(QWidget *W)
+{
+    W->setParent(this);
+    d->m_toolbar_controls << W;
+    W->hide();
 }
 
 void MVAbstractView::recalculate()

@@ -8,6 +8,7 @@
 #include "mvpanelwidget.h"
 #include "mvtemplatesview2panel.h"
 
+#include <QSpinBox>
 #include <QVBoxLayout>
 #include <mountainprocessrunner.h>
 #include <taskprogress.h>
@@ -51,6 +52,7 @@ public:
     QList<ClusterData2> m_cluster_data;
     double m_max_absval = 1;
     QList<MVTemplatesView2Panel*> m_panels;
+    int m_num_rows=1;
 
     double m_total_time_sec = 0;
     bool m_zoomed_out_once = false;
@@ -73,6 +75,7 @@ MVTemplatesView2::MVTemplatesView2(MVContext* mvcontext)
     this->setLayout(layout);
 
     d->m_panel_widget = new MVPanelWidget;
+    d->m_panel_widget->setScrollable(true, false);
     layout->addWidget(d->m_panel_widget);
 
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, d->m_panel_widget, SLOT(zoomIn()));
@@ -91,6 +94,14 @@ MVTemplatesView2::MVTemplatesView2(MVContext* mvcontext)
     connect(mvcontext, SIGNAL(viewMergedChanged()), this, SLOT(slot_update_panels()));
 
     connect(d->m_panel_widget, SIGNAL(signalPanelClicked(int, Qt::KeyboardModifiers)), this, SLOT(slot_panel_clicked(int, Qt::KeyboardModifiers)));
+
+    {
+        QSpinBox *SB=new QSpinBox;
+        SB->setRange(1,10);
+        SB->setValue(1);
+        QObject::connect(SB,SIGNAL(valueChanged(int)),this,SLOT(slot_set_num_rows(int)));
+        this->addToolbarControl(SB);
+    }
 
     this->recalculate();
 }
@@ -199,6 +210,12 @@ void MVTemplatesView2::slot_vertical_zoom_out()
 {
     d->m_vscale_factor /= 1.1;
     d->update_scale_factors();
+}
+
+void MVTemplatesView2::slot_set_num_rows(int num_rows)
+{
+    d->m_num_rows=num_rows;
+    d->update_panels();
 }
 
 void mv_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs_out, const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
@@ -315,7 +332,7 @@ void MVTemplatesView2Private::compute_total_time()
 
 double get_disksize_for_firing_rate(double firing_rate)
 {
-    return qMin(1.0, sqrt(firing_rate / 10));
+    return qMin(1.0, sqrt(firing_rate / 5));
 }
 
 void MVTemplatesView2Private::update_panels()
@@ -333,7 +350,7 @@ void MVTemplatesView2Private::update_panels()
     for (int i = 0; i < m_cluster_data.count(); i++) {
         m_max_absval = qMax(qMax(m_max_absval, qAbs(m_cluster_data[i].template0.minimum())), qAbs(m_cluster_data[i].template0.maximum()));
     }
-    int num_rows = 1;
+    int num_rows = m_num_rows;
     int num_cols = ceil(m_cluster_data.count() * 1.0 / num_rows);
     for (int i = 0; i < m_cluster_data.count(); i++) {
         ClusterData2 CD = m_cluster_data[i];
