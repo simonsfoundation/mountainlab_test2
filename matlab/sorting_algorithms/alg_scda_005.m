@@ -108,11 +108,8 @@ if opts.detectmeth==1
 elseif opts.detectmeth==3          % replace w/ mscmd_detect3 when ready:
   printf('\n---- DETECT3 in MATLAB ----\n');
   Y = readmda(pre2);          % for now use pure matlab...
-  % (opts ignored: individual_channels, assumed to be 0)
-  pols = 'mbp'; o_detect.polarity = pols(o_detect.sign+2); % sign -> polarity
-  o_detect
-  times = ms_detect3(Y,o_detect);
-  writemda([0*times;times], detect, 'float64');  % fills channels w/ 0
+  [times chans] = ms_detect3(Y,o_detect);
+  writemda([chans;times], detect, 'float64');
 else
   error('unknown opts.detectmeth');
 end
