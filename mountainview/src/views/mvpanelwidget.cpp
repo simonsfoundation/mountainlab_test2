@@ -29,8 +29,8 @@ public:
     int m_current_panel_index = -1;
     bool m_fixed_width = false;
     bool m_fixed_height = false;
-    double m_minimum_panel_width = 100;
-    double m_minimum_panel_height = 100;
+    double m_minimum_panel_width = 0;
+    double m_minimum_panel_height = 0;
 
     QPointF m_press_anchor = QPointF(-1, -1);
     QRectF m_press_anchor_viewport_geom = QRectF(0, 0, 1, 1);

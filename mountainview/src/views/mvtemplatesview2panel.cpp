@@ -16,10 +16,13 @@ public:
     QList<QRectF> m_electrode_boxes;
     int m_clip_size = 0;
     double m_vertical_scale_factor = 1;
-    double m_horizontal_scale_factor = 1;
     bool m_current = false;
     bool m_selected = false;
     QMap<QString, QColor> m_colors;
+    QString m_title;
+    double m_top_section_height = 25;
+    double m_bottom_section_height = 30;
+    double m_firing_rate_disk_diameter = 0;
 
     void setup_electrode_boxes(double W, double H);
     QPointF coord2pix(int m, int t, double val);
@@ -44,11 +47,6 @@ void MVTemplatesView2Panel::setTemplate(const Mda& X)
 void MVTemplatesView2Panel::setElectrodeGeometry(const ElectrodeGeometry& geom)
 {
     d->m_electrode_geometry = geom;
-}
-
-void MVTemplatesView2Panel::setHorizontalScaleFactor(double factor)
-{
-    d->m_horizontal_scale_factor = factor;
 }
 
 void MVTemplatesView2Panel::setVerticalScaleFactor(double factor)
@@ -76,11 +74,22 @@ void MVTemplatesView2Panel::setSelected(bool val)
     d->m_selected = val;
 }
 
+void MVTemplatesView2Panel::setTitle(const QString& txt)
+{
+    d->m_title = txt;
+}
+
+void MVTemplatesView2Panel::setFiringRateDiskDiameter(double val)
+{
+    d->m_firing_rate_disk_diameter = val;
+}
+
 void MVTemplatesView2Panel::paint(QPainter* painter)
 {
     QSize ss = this->windowSize();
     QPen pen = painter->pen();
 
+    //BACKGROUND
     QRect R(0, 0, ss.width(), ss.height());
     if (d->m_current) {
         painter->fillRect(R, d->m_colors["view_background_highlighted"]);
@@ -95,6 +104,7 @@ void MVTemplatesView2Panel::paint(QPainter* painter)
         painter->fillRect(R, d->m_colors["view_background"]);
     }
 
+    //FRAME
     if (d->m_selected) {
         painter->setPen(QPen(d->m_colors["view_frame_selected"], 1));
     }
@@ -103,8 +113,39 @@ void MVTemplatesView2Panel::paint(QPainter* painter)
     }
     painter->drawRect(R);
 
+    //TOP SECTION
+    {
+        QString txt = d->m_title;
+        QRectF R(0, 0, ss.width(), d->m_top_section_height);
+        QFont fnt = painter->font();
+        fnt.setPixelSize(12);
+        painter->setFont(fnt);
+        QPen pen = painter->pen();
+        pen.setColor(d->m_colors["cluster_label"]);
+        painter->setPen(pen);
+        painter->drawText(R, Qt::AlignCenter | Qt::AlignVCenter, txt);
+    }
+
+    //BOTTOM SECTION
+    {
+        if (d->m_firing_rate_disk_diameter) {
+            QPen pen_hold = painter->pen();
+            QBrush brush_hold = painter->brush();
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(QBrush(d->m_colors["firing_rate_disk"]));
+            QRectF R(0, ss.height() - d->m_bottom_section_height, ss.width(), d->m_bottom_section_height);
+            double tmp = qMin(R.width(), R.height());
+            double rad = tmp * d->m_firing_rate_disk_diameter / 2;
+            painter->drawEllipse(R.center(), rad, rad);
+            painter->setPen(pen_hold);
+            painter->setBrush(brush_hold);
+        }
+    }
+
+    //SETUP ELECTRODE LOCATIONS
     d->setup_electrode_boxes(ss.width(), ss.height());
 
+    //ELECTRODES AND WAVEFORMS
     int M = d->m_template.N1();
     int T = d->m_template.N2();
     d->m_clip_size = T;
@@ -151,6 +192,9 @@ void MVTemplatesView2PanelPrivate::setup_electrode_boxes(double W, double H)
 {
     m_electrode_boxes.clear();
 
+    double W1 = W;
+    double H1 = H - m_top_section_height - m_bottom_section_height;
+
     QList<QVector<double> > coords = m_electrode_geometry.coordinates;
     if (coords.isEmpty()) {
         int M = m_template.N1();
@@ -164,14 +208,6 @@ void MVTemplatesView2PanelPrivate::setup_electrode_boxes(double W, double H)
     }
     if (coords.isEmpty())
         return;
-
-    /*
-    for (int m=0; m<coords.count(); m++) {
-        if (coords[m].count()>0) {
-            coords[m][0]*=m_horizontal_scale_factor;
-        }
-    }
-    */
 
     int D = coords[0].count();
     QVector<double> mins(D), maxs(D);
@@ -198,22 +234,22 @@ void MVTemplatesView2PanelPrivate::setup_electrode_boxes(double W, double H)
     double hscale_factor = 1;
     double vscale_factor = 1;
 
-    if (W0_padded * H > W * H0_padded) {
+    if (W0_padded * H1 > W1 * H0_padded) {
         //limited by width
         if (W0_padded) {
-            hscale_factor = W / W0_padded;
-            vscale_factor = W / W0_padded;
+            hscale_factor = W1 / W0_padded;
+            vscale_factor = W1 / W0_padded;
         }
     }
     else {
         if (H0_padded)
-            vscale_factor = H / H0_padded;
+            vscale_factor = H1 / H0_padded;
         if (W0_padded)
-            hscale_factor = W / W0_padded;
+            hscale_factor = W1 / W0_padded;
     }
 
-    double offset_x = (W - W0 * hscale_factor) / 2;
-    double offset_y = (H - H0 * vscale_factor) / 2;
+    double offset_x = (W1 - W0 * hscale_factor) / 2;
+    double offset_y = m_top_section_height + (H1 - H0 * vscale_factor) / 2;
     for (int m = 0; m < coords.count(); m++) {
         QVector<double> c = coords[m];
         //double x0 = offset_x + (c.value(0) - mins.value(0)) * hscale_factor;

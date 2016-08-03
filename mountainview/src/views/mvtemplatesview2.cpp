@@ -79,8 +79,6 @@ MVTemplatesView2::MVTemplatesView2(MVContext* mvcontext)
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOut, this, d->m_panel_widget, SLOT(zoomOut()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInVertical, this, SLOT(slot_vertical_zoom_in()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutVertical, this, SLOT(slot_vertical_zoom_out()));
-    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInHorizontal, this, SLOT(slot_horizontal_zoom_in()));
-    ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutHorizontal, this, SLOT(slot_horizontal_zoom_out()));
 
     this->recalculateOn(mvcontext, SIGNAL(firingsChanged()), false);
     this->recalculateOn(mvcontext, SIGNAL(currentTimeseriesChanged()));
@@ -134,6 +132,16 @@ void MVTemplatesView2::onCalculationFinished()
 void MVTemplatesView2::zoomAllTheWayOut()
 {
     d->m_panel_widget->setViewportGeometry(QRectF(0, 0, 1, 1));
+}
+
+void MVTemplatesView2::keyPressEvent(QKeyEvent* evt)
+{
+    if (evt->key() == Qt::Key_Up) {
+        slot_vertical_zoom_in();
+    }
+    if (evt->key() == Qt::Key_Down) {
+        slot_vertical_zoom_out();
+    }
 }
 
 void MVTemplatesView2::slot_update_panels()
@@ -190,18 +198,6 @@ void MVTemplatesView2::slot_vertical_zoom_in()
 void MVTemplatesView2::slot_vertical_zoom_out()
 {
     d->m_vscale_factor /= 1.1;
-    d->update_scale_factors();
-}
-
-void MVTemplatesView2::slot_horizontal_zoom_in()
-{
-    d->m_hscale_factor *= 1.1;
-    d->update_scale_factors();
-}
-
-void MVTemplatesView2::slot_horizontal_zoom_out()
-{
-    d->m_hscale_factor /= 1.1;
     d->update_scale_factors();
 }
 
@@ -317,6 +313,11 @@ void MVTemplatesView2Private::compute_total_time()
     m_total_time_sec = q->mvContext()->currentTimeseries().N2() / q->mvContext()->sampleRate();
 }
 
+double get_disksize_for_firing_rate(double firing_rate)
+{
+    return qMin(1.0, sqrt(firing_rate / 10));
+}
+
 void MVTemplatesView2Private::update_panels()
 {
     m_panel_widget->clearPanels(true);
@@ -325,7 +326,7 @@ void MVTemplatesView2Private::update_panels()
     {
         int M = m_cluster_data.value(0).template0.N1();
         for (int m = 0; m < M; m++) {
-            channel_colors << q->mvContext()->channelColor(m + 1);
+            channel_colors << q->mvContext()->channelColor(m);
         }
     }
     m_max_absval = 0;
@@ -341,6 +342,14 @@ void MVTemplatesView2Private::update_panels()
         panel->setTemplate(CD.template0);
         panel->setChannelColors(channel_colors);
         panel->setColors(q->mvContext()->colors());
+        panel->setTitle(QString::number(CD.k));
+        if (q->mvContext()->sampleRate()) {
+            double total_time_sec = q->mvContext()->currentTimeseries().N2() / q->mvContext()->sampleRate();
+            if (total_time_sec) {
+                double firing_rate = CD.num_events / total_time_sec;
+                panel->setFiringRateDiskDiameter(get_disksize_for_firing_rate(firing_rate));
+            }
+        }
         m_panel_widget->addPanel(i / num_cols, i % num_cols, panel);
         m_panels << panel;
     }
@@ -355,7 +364,6 @@ void MVTemplatesView2Private::update_scale_factors()
         vfactor /= m_max_absval;
     for (int i = 0; i < m_panels.count(); i++) {
         m_panels[i]->setVerticalScaleFactor(vfactor);
-        m_panels[i]->setHorizontalScaleFactor(m_hscale_factor);
     }
     q->update();
 }

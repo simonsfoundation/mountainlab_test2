@@ -704,7 +704,6 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
 
     QPen pen_frame;
     pen_frame.setWidth(1);
-    pen_frame.setColor(q->mvContext()->color("frame1"));
     if (m_selected)
         pen_frame.setColor(q->mvContext()->color("view_frame_selected"));
     else
@@ -795,7 +794,7 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
 
         QPen pen;
         pen.setWidth(1);
-        pen.setColor(Qt::darkBlue);
+        pen.setColor(q->mvContext()->color("cluster_label"));
         painter->setFont(font);
         painter->setPen(pen);
         painter->drawText(m_top_rect, Qt::AlignCenter | Qt::AlignBottom, txt);

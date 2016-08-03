@@ -26,14 +26,15 @@ public:
 
     void zoomAllTheWayOut();
 
+protected:
+    void keyPressEvent(QKeyEvent* evt);
+
 private slots:
     void slot_update_panels();
     void slot_update_highlighting();
     void slot_panel_clicked(int index, Qt::KeyboardModifiers modifiers);
     void slot_vertical_zoom_in();
     void slot_vertical_zoom_out();
-    void slot_horizontal_zoom_in();
-    void slot_horizontal_zoom_out();
 
 private:
     MVTemplatesView2Private* d;
