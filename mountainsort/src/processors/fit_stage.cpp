@@ -76,7 +76,7 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
                         score0 = 0; //the norm of the improvement needs to be at least 0.5 times the norm of the template
                         */
 
-                    double neglogprior = 30;
+                    double neglogprior = opts.neglogprior;
                     if (score0 > neglogprior) {
                         scores_to_try << score0;
                         times_to_try << t0;
@@ -162,15 +162,16 @@ QVector<int> find_events_to_use(const QVector<double>& times, const QVector<doub
     QVector<int> to_use;
     long L = times.count();
     for (long i = 0; i < L; i++)
-        to_use << 0;
+        to_use << 0; //start out not using any
     for (long i = 0; i < L; i++) {
-        if (scores[i] > 0) {
-            to_use[i] = 1;
+        if (scores[i] > 0) { //score has to at least be positive
+            to_use[i] = 1; //for now we say we are using it
             {
+                // but let's check nearby events that may have a larger score
                 long j = i;
                 while ((j >= 0) && (times[j] >= times[i] - opts.clip_size)) {
                     if ((i != j) && (scores[j] >= scores[i]))
-                        to_use[i] = 0;
+                        to_use[i] = 0; //actually not using it because there is something bigger to the left
                     j--;
                 }
             }
@@ -178,7 +179,7 @@ QVector<int> find_events_to_use(const QVector<double>& times, const QVector<doub
                 long j = i;
                 while ((j < times.count()) && (times[j] <= times[i] + opts.clip_size)) {
                     if (scores[j] > scores[i])
-                        to_use[i] = 0;
+                        to_use[i] = 0; //actually not using it because there is something bigger to the right
                     j++;
                 }
             }

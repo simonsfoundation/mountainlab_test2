@@ -15,6 +15,7 @@ struct fit_stage_opts {
     int clip_size;
     double shell_increment;
     int min_shell_size;
+    double neglogprior;
 };
 
 bool fit_stage(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts);

@@ -106,7 +106,7 @@ end;
 if opts.detectmeth==1
   mscmd_detect(pre2,detect,o_detect);
 elseif opts.detectmeth==3          % replace w/ mscmd_detect3 when ready:
-  printf('\n---- DETECT3 in MATLAB ----\n');
+  fprintf('\n---- DETECT3 in MATLAB ----\n');
   Y = readmda(pre2);          % for now use pure matlab...
   [times chans] = ms_detect3(Y,o_detect);
   writemda([chans;times], detect, 'float64');
