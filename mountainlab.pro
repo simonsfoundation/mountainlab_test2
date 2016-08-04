@@ -33,3 +33,4 @@ SUBDIRS += $$ifcomponent(mountainview,mountainview/src/mountainview.pro)
 
 
 
+CONFIG(debug, debug|release) { SUBDIRS += tests }
