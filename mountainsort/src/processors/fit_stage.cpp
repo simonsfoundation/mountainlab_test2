@@ -204,25 +204,27 @@ void subtract_scaled_template(long N, double* X, double* template0)
 }
 Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts)
 {
-
+    //The input is firings the output is the same except with new labels corresponding to subclusters
     QVector<int> labels, labels_new;
     for (long j = 0; j < firings.N2(); j++) {
-        labels << (int)firings.value(2, j);
-        labels_new << 0;
+        labels << (int)firings.value(2, j); //the old labels extracted out of the original firings array
+        labels_new << 0; //the new labels (start with all zeros)
     }
-    int K = MLCompute::max<int>(labels);
-    int k2 = 1;
+    int K = MLCompute::max<int>(labels); //K is the max original label
+    int k2 = 1; //this is the next sub-cluster label we will use
     for (int k = 1; k <= K; k++) {
-        QVector<long> inds_k = find_label_inds(labels, k);
-        QVector<double> peaks;
+        QVector<long> inds_k = find_label_inds(labels, k); //find all event indices corresponding to label k
+        QVector<double> peaks; //make a vector of the peaks corresponding to the events in this (original) cluster k
         for (long j = 0; j < inds_k.count(); j++) {
             peaks << firings.value(3, inds_k[j]);
         }
+        //define the shells (based on amplitude and #constraints of the opts)
         QList<Shell> shells = define_shells(peaks, opts);
+        //step through the shells
         for (int a = 0; a < shells.count(); a++) {
-            QList<long> s_inds = shells[a].inds;
+            QList<long> s_inds = shells[a].inds; //get the inds associated with this shell
             for (long b = 0; b < s_inds.count(); b++) {
-                labels[inds_k[s_inds[b]]] = k2;
+                labels_new[inds_k[s_inds[b]]] = k2; //set the sub-cluster label
             }
             k2++;
         }
@@ -230,7 +232,7 @@ Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts)
 
     Mda firings_ret = firings;
     for (long j = 0; j < firings.N2(); j++) {
-        firings_ret.setValue(labels[j], 2, j);
+        firings_ret.setValue(labels_new[j], 2, j);
     }
     return firings_ret;
 }

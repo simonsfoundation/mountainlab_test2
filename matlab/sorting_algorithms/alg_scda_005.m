@@ -55,6 +55,7 @@ def_opts.use_whitening=1;
 def_opts.use_mask_out_artifacts=1;
 def_opts.geom='';
 def_opts.detectmeth = 1;
+def_opts.neglogprior = 30;
 opts=ms_set_default_opts(opts,def_opts);
 
 raw=timeseries_fname;
@@ -70,7 +71,7 @@ o_branch_cluster=struct('clip_size',opts.clip_size,'min_shell_size',opts.min_she
 o_compute_outlier_scores=struct('clip_size',opts.clip_size,'shell_increment',opts.shell_increment,'min_shell_size',opts.min_shell_size);
 o_compute_detectability_scores=struct('clip_size',opts.clip_size,'shell_increment',opts.shell_increment,'min_shell_size',opts.min_shell_size);
 o_merge_across_channels=struct('min_peak_ratio',0.7,'max_dt',10,'min_coinc_frac',0.1,'min_coinc_num',10,'max_corr_stddev',3,'min_template_corr_coef',0.5,'clip_size',opts.clip_size);
-o_fit_stage=struct('clip_size',opts.clip_size+6.,'min_shell_size',opts.min_shell_size,'shell_increment',opts.shell_increment);
+o_fit_stage=struct('clip_size',opts.clip_size+6.,'min_shell_size',opts.min_shell_size,'shell_increment',opts.shell_increment,'neglogprior',opts.neglogprior);
 
 pre0=[output_dir,'/pre0.mda'];
 pre1=[output_dir,'/pre1.mda'];
