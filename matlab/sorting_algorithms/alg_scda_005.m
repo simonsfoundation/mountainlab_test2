@@ -24,7 +24,7 @@ function [firings,info]=alg_scda_005(timeseries_fname,output_dir,opts)
 %                   use_mask_out_artifacts=1;
 %                   geom=''; path of CSV file giving x,y coords of each electrode
 %                            (if absent or empty assumes full dense connectivity)
-%                   detectmeth = 1 or 3 (controls detection method)
+%                   detectmeth = 0, 3, or 4 (controls detection method)
 % Outputs:
 %    firingsfile - path to the firings.mda output file
 %    info - struct with fields:
@@ -54,7 +54,7 @@ def_opts.timerange=[-1,-1];
 def_opts.use_whitening=1;
 def_opts.use_mask_out_artifacts=1;
 def_opts.geom='';
-def_opts.detectmeth = 1;
+def_opts.detectmeth = 0;
 def_opts.neglogprior = 30;
 opts=ms_set_default_opts(opts,def_opts);
 
@@ -104,17 +104,24 @@ if (opts.use_whitening)
 else
     mscmd_normalize_channels(pre1b,pre2,struct);
 end;
-if opts.detectmeth==1
+if opts.detectmeth==0
   mscmd_detect(pre2,detect,o_detect);
 elseif opts.detectmeth==3          % replace w/ mscmd_detect3 when ready:
-  fprintf('\n---- DETECT3 in MATLAB ----\n');
+  %o_detect.beta=1;
+  fprintf('\n---- DETECT3 in MATLAB ----\n'); o_detect
   Y = readmda(pre2);          % for now use pure matlab...
   [times chans] = ms_detect3(Y,o_detect);
+  writemda([chans;times], detect, 'float64');
+elseif opts.detectmeth==4          % replace w/ mscmd_detect4 when ready ?
+  fprintf('\n---- DETECT4 in MATLAB ----\n'); o_detect
+  Y = readmda(pre2);          % for now use pure matlab...
+  [times chans] = ms_detect4(Y,o_detect);
   writemda([chans;times], detect, 'float64');
 else
   error('unknown opts.detectmeth');
 end
 mscmd_branch_cluster_v2(pre2,detect,adjacency_matrix,firings1,o_branch_cluster);
+%F=readmda(firings1); F=round(F); writemda(F,firings1,'float64'); % round times
 mscmd_merge_across_channels(pre2,firings1,firings2,o_merge_across_channels);
 mscmd_fit_stage(pre2,firings2,firings3,o_fit_stage);
 mscmd_compute_outlier_scores(pre2,firings3,firings4,o_compute_outlier_scores);
