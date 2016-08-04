@@ -240,7 +240,7 @@ double correlation_helper(const VD& data1, const VD& data2) {
     const double sum1 = std::accumulate(data1.constBegin(), data1.constEnd(), 0);
     const double mean1 = sum1/N;
     const double sumsqr1 = std::inner_product(data1.constBegin(), data1.constEnd(), data1.constBegin(), 0);
-    const double stdev1 = sqrt((sumsqr1 - sum1 * sum1 / N) / (N-1));
+    const double stdev1 = N > 1 ? sqrt((sumsqr1 - sum1 * sum1 / N) / (N-1)) : 0;
 
     const double sum2 = std::accumulate(data2.constBegin(), data2.constEnd(), 0);
     const double mean2 = sum2/N;
@@ -273,9 +273,11 @@ void correlation_parallel_helper(VD::const_iterator first,
     result.sum = std::accumulate(first, last, 0);
     result.mean = result.sum/N;
     result.sumsqr = std::inner_product(first, last, first, 0);
-    result.stdev = sqrt((result.sumsqr - result.sum * result.sum / N) / (N-1));
-    result.Y.reserve(N);
-    std::transform(first, last, result.Y.begin(), [result](double val) { return (val - result.mean)/result.stdev; });
+    result.stdev = N > 1 ? sqrt((result.sumsqr - result.sum * result.sum / N) / (N-1)) : 0;
+    if (result.stdev) {
+        result.Y.reserve(N);
+        std::transform(first, last, result.Y.begin(), [result](double val) { return (val - result.mean)/result.stdev; });
+    }
     accumulate_promise.set_value(result);  // Notify future
 }
 
