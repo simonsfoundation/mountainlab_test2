@@ -160,7 +160,11 @@ void DiskWriteMda::writeChunk(Mda& X, long i)
     if (i + size > this->totalSize())
         size = this->totalSize() - i;
     if (size > 0) {
-        mda_write_float64(X.dataPtr(), &d->m_header, size, d->m_file);
+        if (X.isDouble())
+            mda_write_float64(X.doublePtr(), &d->m_header, size, d->m_file);
+        else {
+            qWarning() << "Expected 64-bit mda" << __FUNCTION__ << __LINE__;
+        }
     }
 }
 

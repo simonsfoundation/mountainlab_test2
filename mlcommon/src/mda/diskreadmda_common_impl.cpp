@@ -173,7 +173,7 @@ QString compute_memory_checksum(long nbytes, void* ptr)
 
 QString compute_mda_checksum(Mda32& X)
 {
-    QString ret = compute_memory_checksum(X.totalSize() * sizeof(float), X.dataPtr());
+    QString ret = compute_memory_checksum(X.totalSize() * sizeof(float), X.floatPtr());
     ret += "-";
     for (int i = 0; i < X.ndims(); i++) {
         if (i > 0)
@@ -185,7 +185,11 @@ QString compute_mda_checksum(Mda32& X)
 
 QString compute_mda_checksum(Mda& X)
 {
-    QString ret = compute_memory_checksum(X.totalSize() * sizeof(double), X.dataPtr());
+    QString ret;
+    if (X.isFloat())
+        ret=compute_memory_checksum(X.totalSize() * sizeof(float), X.floatPtr());
+    else if (X.isDouble())
+        ret=compute_memory_checksum(X.totalSize() * sizeof(double), X.doublePtr());
     ret += "-";
     for (int i = 0; i < X.ndims(); i++) {
         if (i > 0)
@@ -333,13 +337,13 @@ bool DiskReadMda_Common_Impl::read_chunk_64(Mda& X, long i, long size)
 #endif
     if (!open_file_if_needed())
         return false;
-    X.allocate(size, 1);
+    X.allocate64(size, 1);
     long jA = qMax(i, 0L);
     long jB = qMin(i + size - 1, total_size() - 1);
     long size_to_read = jB - jA + 1;
     if (size_to_read > 0) {
         fseek(m_file, m_header.header_size + m_header.num_bytes_per_entry * (jA), SEEK_SET);
-        long bytes_read = mda_read_float64(&X.dataPtr()[jA - i], &m_header, size_to_read, m_file);
+        long bytes_read = mda_read_float64(&X.doublePtr()[jA - i], &m_header, size_to_read, m_file);
         TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", bytes_read);
         if (bytes_read != size_to_read) {
             printf("Warning problem reading chunk in diskreadmda: %ld<>%ld\n", bytes_read, size_to_read);
@@ -367,9 +371,9 @@ bool DiskReadMda_Common_Impl::read_chunk_64(Mda& X, long i1, long i2, long size1
         Mda tmp;
         if (!m_remote_mda.readChunk(tmp, i2 * size1, size1 * size2))
             return false;
-        X.allocate(size1, size2);
-        double* Xptr = X.dataPtr();
-        double* tmp_ptr = tmp.dataPtr();
+        X.allocate64(size1, size2);
+        double* Xptr = X.doublePtr();
+        double* tmp_ptr = tmp.doublePtr();
         for (long i = 0; i < size1 * size2; i++) {
             Xptr[i] = tmp_ptr[i];
         }
@@ -380,13 +384,13 @@ bool DiskReadMda_Common_Impl::read_chunk_64(Mda& X, long i1, long i2, long size1
         return false;
     if ((size1 == dim(1)) && (i1 == 0)) {
         //easy case
-        X.allocate(size1, size2);
+        X.allocate64(size1, size2);
         long jA = qMax(i2, 0L);
         long jB = qMin(i2 + size2 - 1, dim(2) - 1);
         long size2_to_read = jB - jA + 1;
         if (size2_to_read > 0) {
             fseek(m_file, m_header.header_size + m_header.num_bytes_per_entry * (i1 + dim(1) * jA), SEEK_SET);
-            long bytes_read = mda_read_float64(&X.dataPtr()[(jA - i2) * size1], &m_header, size1 * size2_to_read, m_file);
+            long bytes_read = mda_read_float64(&X.doublePtr()[(jA - i2) * size1], &m_header, size1 * size2_to_read, m_file);
             TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", bytes_read);
             if (bytes_read != size1 * size2_to_read) {
                 printf("Warning problem reading 2d chunk in diskreadmda: %ld<>%ld\n", bytes_read, size1 * size2);
@@ -425,9 +429,9 @@ bool DiskReadMda_Common_Impl::read_chunk_64(Mda& X, long i1, long i2, long i3, l
         Mda tmp;
         if (!m_remote_mda.readChunk(tmp, i3 * size1 * size2, size1 * size2 * size3))
             return false;
-        X.allocate(size1, size2, size3);
-        double* Xptr = X.dataPtr();
-        double* tmp_ptr = tmp.dataPtr();
+        X.allocate64(size1, size2, size3);
+        double* Xptr = X.doublePtr();
+        double* tmp_ptr = tmp.doublePtr();
         for (long i = 0; i < size1 * size2 * size3; i++) {
             Xptr[i] = tmp_ptr[i];
         }
@@ -438,13 +442,13 @@ bool DiskReadMda_Common_Impl::read_chunk_64(Mda& X, long i1, long i2, long i3, l
         return false;
     if ((size1 == dim(1)) && (size2 == dim(2))) {
         //easy case
-        X.allocate(size1, size2, size3);
+        X.allocate64(size1, size2, size3);
         long jA = qMax(i3, 0L);
         long jB = qMin(i3 + size3 - 1, dim(3) - 1);
         long size3_to_read = jB - jA + 1;
         if (size3_to_read > 0) {
             fseek(m_file, m_header.header_size + m_header.num_bytes_per_entry * (i1 + dim(1) * i2 + dim(1) * dim(2) * jA), SEEK_SET);
-            long bytes_read = mda_read_float64(&X.dataPtr()[(jA - i3) * size1 * size2], &m_header, size1 * size2 * size3_to_read, m_file);
+            long bytes_read = mda_read_float64(&X.doublePtr()[(jA - i3) * size1 * size2], &m_header, size1 * size2 * size3_to_read, m_file);
             TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", bytes_read);
             if (bytes_read != size1 * size2 * size3_to_read) {
                 printf("Warning problem reading 3d chunk in diskreadmda: %ld<>%ld\n", bytes_read, size1 * size2 * size3_to_read);

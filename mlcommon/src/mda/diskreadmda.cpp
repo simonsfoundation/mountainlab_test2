@@ -87,7 +87,8 @@ void DiskReadMda::setPath(const QString& file_path)
 #endif
     }
     else if ((file_path.endsWith(".txt")) || (file_path.endsWith(".csv"))) {
-        Mda X(file_path);
+        Mda X;
+        X.read64(file_path); ///FIX: hard-coded as 64-bit
         (*this) = X;
         return;
     }

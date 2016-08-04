@@ -144,7 +144,7 @@ QString compute_memory_checksum_32(long nbytes, void* ptr)
 
 QString compute_mda_checksum_32(Mda32& X)
 {
-    QString ret = compute_memory_checksum_32(X.totalSize() * sizeof(dtype32), X.dataPtr());
+    QString ret = compute_memory_checksum_32(X.totalSize() * sizeof(float), X.floatPtr());
     ret += "-";
     for (int i = 0; i < X.ndims(); i++) {
         if (i > 0)
@@ -336,7 +336,7 @@ bool DiskReadMda32::readChunk(Mda32& X, long i, long size) const
     long size_to_read = jB - jA + 1;
     if (size_to_read > 0) {
         fseek(d->m_file, d->m_header.header_size + d->m_header.num_bytes_per_entry * (jA), SEEK_SET);
-        long bytes_read = mda_read_float32(&X.dataPtr()[jA - i], &d->m_header, size_to_read, d->m_file);
+        long bytes_read = mda_read_float32(&X.floatPtr()[jA - i], &d->m_header, size_to_read, d->m_file);
         TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", bytes_read);
         if (bytes_read != size_to_read) {
             printf("Warning problem reading chunk in diskreadmda: %ld<>%ld\n", bytes_read, size_to_read);

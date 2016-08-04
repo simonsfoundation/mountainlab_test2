@@ -176,8 +176,8 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
     TaskProgress task(TaskProgress::Download, QString("Downloading %1 numbers - %2 (%3x%4x%5)").arg(format_num(size)).arg(d->m_remote_datatype).arg(N1()).arg(N2()).arg(N3()));
     task.log() << "Reading chunk:" << this->makePath() << i << size;
 
-    X.allocate(size, 1); //allocate the output array
-    double* Xptr = X.dataPtr(); //pointer to the output data
+    X.allocate64(size, 1); //allocate the output array
+    double* Xptr = X.doublePtr(); //pointer to the output data
     long ii1 = i; //start index of the remote array
     long ii2 = i + size - 1; //end index of the remote array
     long jj1 = ii1 / d->m_download_chunk_size; //start chunk index of the remote array
@@ -215,10 +215,10 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
             }
             DiskReadMda A(fname);
             if (jj == jj1) { //case 1/3, this is the first chunk
-                Mda tmp;
+                Mda64 tmp; //FIX: for now we only support 64-bit here
                 long size0 = (jj1 + 1) * d->m_download_chunk_size - ii1; //the size is going to be the difference between ii1 and the start index of the next chunk
                 A.readChunk(tmp, ii1 - jj1 * d->m_download_chunk_size, size0); //again we start reading at the offset of ii1 relative to the start index of the chunk
-                double* tmp_ptr = tmp.dataPtr(); //copy the data directly from tmp_ptr to Xptr
+                double* tmp_ptr = tmp.doublePtr(); //copy the data directly from tmp_ptr to Xptr
                 long b = 0;
                 for (long a = 0; a < size0; a++) {
                     Xptr[b] = tmp_ptr[a];

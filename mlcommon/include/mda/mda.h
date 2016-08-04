@@ -23,20 +23,22 @@ class Mda {
 public:
     friend class MdaPrivate;
     ///Construct an array of size N1xN2x...xN6
-    Mda(long N1 = 1, long N2 = 1, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
-    ///Construct an array and read the .mda file
-    Mda(const QString mda_filename);
+    Mda();
     ///Copy constructor
     Mda(const Mda& other);
     ///Assignment operator
     void operator=(const Mda& other);
     ///Destructor
     virtual ~Mda();
+    bool isFloat() const;
+    bool isDouble() const;
     ///Allocate an array of size N1xN2x...xN6
-    bool allocate(long N1, long N2, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
+    bool allocate32(long N1, long N2, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
+    bool allocate64(long N1, long N2, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
 #ifdef QT_CORE_LIB
     ///Create an array with content read from the .mda file specified by path
-    bool read(const QString& path);
+    bool read32(const QString& path);
+    bool read64(const QString& path);
     ///Write the array to the .mda file specified by path, with file format 8-bit integer (numbers should be integers between 0 and 255)
     bool write8(const QString& path) const;
     ///Write the array to the .mda file specified by path, with file format 32-bit float
@@ -45,7 +47,8 @@ public:
     bool write64(const QString& path) const;
 #endif
     ///Create an array with content read from the .mda file specified by path
-    bool read(const char* path);
+    bool read32(const char* path);
+    bool read64(const char* path);
     ///Write the array to the .mda file specified by path, with file format 8-bit integer (numbers should be integers between 0 and 255)
     bool write8(const char* path) const;
     ///Write the array to the .mda file specified by path, with file format 32-bit float
@@ -78,22 +81,32 @@ public:
     long size(int dimension_index) const; //zero-based
 
     ///The value of the ith entry of the vectorized array. For example get(3+N1()*4)==get(3,4). Use the slower value(i) to safely return 0 when i is out of bounds.
-    double get(long i) const;
+    float get32(long i) const;
     ///The value of the (i1,i2) entry of the array. Use the slower value(i1,i2) when either of the indices are out of bounds.
-    double get(long i1, long i2) const;
+    float get32(long i1, long i2) const;
     ///The value of the (i1,i2,i3) entry of the array. Use the slower value(i1,i2,i3) when any of the indices are out of bounds.
-    double get(long i1, long i2, long i3) const;
+    float get32(long i1, long i2, long i3) const;
     ///The value of the (i1,i2,...,i6) entry of the array. Use the slower value(i1,i2,...,i6) when any of the indices are out of bounds.
-    double get(long i1, long i2, long i3, long i4, long i5 = 0, long i6 = 0) const;
+    float get32(long i1, long i2, long i3, long i4, long i5 = 0, long i6 = 0) const;
+
+    double get64(long i) const;
+    double get64(long i1, long i2) const;
+    double get64(long i1, long i2, long i3) const;
+    double get64(long i1, long i2,long i3,long i4,long i5=0,long i6=0) const;
 
     ///Set the value of the ith entry of the vectorized array to val. For example set(0.4,3+N1()*4) is the same as set(0.4,3,4). Use the slower setValue(val,i) to safely handle the case when i is out of bounds.
-    void set(double val, long i);
+    void set32(float val, long i);
     ///Set the value of the (i1,i2) entry of the array to val. Use the slower setValue(val,i1,i2) to safely handle the case when either of the indices are out of bounds.
-    void set(double val, long i1, long i2);
+    void set32(float val, long i1, long i2);
     ///Set the value of the (i1,i2,i3) entry of the array to val. Use the slower setValue(val,i1,i2,i3) to safely handle the case when any of the indices are out of bounds.
-    void set(double val, long i1, long i2, long i3);
+    void set32(float val, long i1, long i2, long i3);
     ///Set the value of the (i1,i2,...,i6) entry of the array to val. Use the slower setValue(val,i1,i2,...,i6) to safely handle the case when any of the indices are out of bounds.
-    void set(double val, long i1, long i2, long i3, long i4, long i5 = 0, long i6 = 0);
+    void set32(float val, long i1, long i2, long i3, long i4, long i5 = 0, long i6 = 0);
+
+    void set64(double val, long i);
+    void set64(double val, long i1,long i2);
+    void set64(double val, long i1,long i2,long i3);
+    void set64(double val, long i1,long i2,long i3,long i4,long i5=0,long i6=0);
 
     ///Slower version of get(i), safely returning 0 when i is out of bounds.
     double value(long i) const;
