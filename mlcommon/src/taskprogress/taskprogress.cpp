@@ -498,11 +498,13 @@ public:
 
     void incrementQuantity(QString name, double val) override
     {
+        return; //disabling because not thread safe (jfm)
         m_quantities.insert(name, m_quantities.value(name, 0) + val);
         emit quantitiesChanged();
     }
     double getQuantity(QString name) const override
     {
+        return 0; //disabling because not thread safe (jfm)
         return m_quantities.value(name, 0);
     }
 

@@ -120,8 +120,8 @@ void MVPanelWidget::setMinimumPanelHeight(int h)
 
 void MVPanelWidget::setScrollable(bool h_scrollable, bool v_scrollable)
 {
-    d->m_h_scrollable=h_scrollable;
-    d->m_v_scrollable=v_scrollable;
+    d->m_h_scrollable = h_scrollable;
+    d->m_v_scrollable = v_scrollable;
 }
 
 int MVPanelWidget::currentPanelIndex() const

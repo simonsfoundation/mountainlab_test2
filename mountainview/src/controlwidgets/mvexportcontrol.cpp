@@ -52,20 +52,20 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
     }
     {
         QPushButton* B = new QPushButton("Export firings.mda");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_array()));
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_file()));
         flayout->addWidget(B);
     }
     {
         QPushButton* B = new QPushButton("Export cluster_annotation.mda");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_cluster_annotation_array()));
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_cluster_annotation_file()));
         flayout->addWidget(B);
     }
 
     connect(mw, SIGNAL(signalExportMVFile()), this, SLOT(slot_export_mv_document()));
     connect(mw, SIGNAL(signalExportStaticViews()), this, SLOT(slot_export_static_views()));
     connect(mw, SIGNAL(signalShareViewsOnWeb()), this, SLOT(slot_share_views_on_web()));
-    connect(mw, SIGNAL(signalExportFiringsFile()), this, SLOT(slot_export_firings_array()));
-    connect(mw, SIGNAL(signalExportClusterAnnotationFile()), this, SLOT(slot_export_cluster_annotation_array()));
+    connect(mw, SIGNAL(signalExportFiringsFile()), this, SLOT(slot_export_firings_file()));
+    connect(mw, SIGNAL(signalExportClusterAnnotationFile()), this, SLOT(slot_export_cluster_annotation_file()));
 
     updateControls();
 }
@@ -160,7 +160,7 @@ void export_file(QString source_path, QString dest_path, bool use_float64)
     C->startComputation();
 }
 
-void MVExportControl::slot_export_firings_array()
+void MVExportControl::slot_export_firings_file()
 {
     QSettings settings("SCDA", "MountainView");
     QString default_dir = settings.value("default_export_dir", "").toString();
@@ -175,7 +175,7 @@ void MVExportControl::slot_export_firings_array()
     export_file(firings.makePath(), fname, true);
 }
 
-void MVExportControl::slot_export_cluster_annotation_array()
+void MVExportControl::slot_export_cluster_annotation_file()
 {
     //first row is the cluster number
     //second row is 0 if not accepted, 1 if accepted

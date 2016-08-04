@@ -59,6 +59,7 @@ signals:
     void viewsChanged();
     void signalExportMVFile();
     void signalExportFiringsFile();
+    void signalExportClusterAnnotationFile();
     void signalExportStaticViews();
     void signalShareViewsOnWeb();
 

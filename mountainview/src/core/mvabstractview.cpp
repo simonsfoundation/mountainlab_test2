@@ -79,6 +79,11 @@ bool MVAbstractView::recalculateSuggested() const
     return ((!d->m_never_suggest_recalculate) && (d->m_recalculate_suggested));
 }
 
+void MVAbstractView::suggestRecalculate()
+{
+    d->set_recalculate_suggested(true);
+}
+
 void MVAbstractView::stopCalculation()
 {
     d->stop_calculation();
@@ -112,7 +117,7 @@ void MVAbstractView::loadStaticView(const QJsonObject& X)
         this->setTitle(X["title"].toString());
 }
 
-QList<QWidget *> MVAbstractView::toolbarControls()
+QList<QWidget*> MVAbstractView::toolbarControls()
 {
     return d->m_toolbar_controls;
 }
@@ -188,7 +193,7 @@ void MVAbstractView::contextMenuEvent(QContextMenuEvent* evt)
         requestContextMenu(mimeData, pt);
 }
 
-void MVAbstractView::addToolbarControl(QWidget *W)
+void MVAbstractView::addToolbarControl(QWidget* W)
 {
     W->setParent(this);
     d->m_toolbar_controls << W;
@@ -212,34 +217,21 @@ void MVAbstractView::neverSuggestRecalculate()
 
 void MVAbstractView::slot_do_calculation()
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->set_recalculate_suggested(false);
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     this->update();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     prepareCalculation();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_calculation_thread.start();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->m_calculation_scheduled = false;
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     this->update();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     emit this->calculationStarted();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 void MVAbstractView::slot_calculation_finished()
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     this->onCalculationFinished();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     this->update();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     d->set_recalculate_suggested(false);
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     emit this->calculationFinished();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 }
 
 void MVAbstractView::slot_context_option_changed(QString name)

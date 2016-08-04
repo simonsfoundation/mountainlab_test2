@@ -339,7 +339,6 @@ QVector<double> compute_cc_data3(const QVector<double>& times1_in, const QVector
         double estimated_data_size = estimate_cc_data_size(times1, times2, max_dt, exclude_matches);
         if (estimated_data_size > max_est_data_size) {
             double dsfactor = sqrt(estimated_data_size / max_est_data_size);
-            qDebug() << QString("Downsampling arrays by dsfactor: %1").arg(dsfactor);
             times1 = pseudorandomsample(times1, dsfactor);
             times2 = pseudorandomsample(times2, dsfactor);
         }

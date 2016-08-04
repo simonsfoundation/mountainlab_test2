@@ -45,6 +45,7 @@ private slots:
     void slot_export_static_view();
     void slot_brightness_slider_changed(int val);
     void slot_weight_slider_changed(int val);
+    void slot_set_max_spikes_per_label(int val);
 
 private:
     MVSpikeSprayViewPrivate* d;

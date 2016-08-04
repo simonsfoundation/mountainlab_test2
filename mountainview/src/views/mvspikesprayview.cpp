@@ -20,6 +20,8 @@
 #include "mlcommon.h"
 #include "actionfactory.h"
 #include <QFileDialog>
+#include <QLabel>
+#include <QSpinBox>
 
 /// TODO: (MEDIUM) spike spray should respond to mouse wheel and show current position with marker
 /// TODO: (MEDIUM) much more responsive rendering of spike spray
@@ -35,6 +37,7 @@ public:
     MVEventFilter filter;
     QSet<int> labels_to_use;
     int clip_size;
+    int max_per_label;
 
     //output
     Mda clips_to_render;
@@ -75,6 +78,7 @@ public:
     MVSpikeSprayView* q;
     MVContext* m_context;
     QSet<int> m_labels_to_use;
+    int m_max_spikes_per_label = 500;
 
     double m_amplitude_factor = 0; //zero triggers auto-calculation
     double m_brightness_factor = 1;
@@ -149,21 +153,34 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     }
 
     {
-        QSlider *S=new QSlider;
-        S->setRange(0,300);
+        QSlider* S = new QSlider;
+        S->setOrientation(Qt::Horizontal);
+        S->setRange(0, 300);
         S->setValue(100);
-        S->setMaximumWidth(100);
+        S->setMaximumWidth(150);
+        this->addToolbarControl(new QLabel("brightness:"));
         this->addToolbarControl(S);
-        QObject::connect(S,SIGNAL(valueChanged(int)),this,SLOT(slot_brightness_slider_changed(int)));
+        QObject::connect(S, SIGNAL(valueChanged(int)), this, SLOT(slot_brightness_slider_changed(int)));
     }
 
     {
-        QSlider *S=new QSlider;
-        S->setRange(0,1000);
+        QSlider* S = new QSlider;
+        S->setOrientation(Qt::Horizontal);
+        S->setRange(0, 200);
         S->setValue(100);
-        S->setMaximumWidth(100);
+        S->setMaximumWidth(150);
+        this->addToolbarControl(new QLabel("weight:"));
         this->addToolbarControl(S);
-        QObject::connect(S,SIGNAL(valueChanged(int)),this,SLOT(slot_weight_slider_changed(int)));
+        QObject::connect(S, SIGNAL(valueChanged(int)), this, SLOT(slot_weight_slider_changed(int)));
+    }
+
+    {
+        QSpinBox* SB = new QSpinBox;
+        SB->setRange(1, 10000);
+        SB->setValue(d->m_max_spikes_per_label);
+        QObject::connect(SB, SIGNAL(valueChanged(int)), this, SLOT(slot_set_max_spikes_per_label(int)));
+        this->addToolbarControl(new QLabel("Max. #spikes:"));
+        this->addToolbarControl(SB);
     }
 }
 
@@ -211,6 +228,7 @@ void MVSpikeSprayView::prepareCalculation()
     d->m_computer.firings = d->m_context->firings();
     d->m_computer.filter = d->m_context->eventFilter();
     d->m_computer.labels_to_use = d->m_labels_to_use;
+    d->m_computer.max_per_label = d->m_max_spikes_per_label;
     d->m_computer.clip_size = d->m_context->option("clip_size").toInt();
 
     d->m_amplitude_factor = 0;
@@ -343,14 +361,24 @@ void MVSpikeSprayView::slot_export_static_view()
 
 void MVSpikeSprayView::slot_brightness_slider_changed(int val)
 {
-    d->m_brightness_factor=val*1.0/100;
+    d->m_brightness_factor = val * 1.0 / 100;
     d->update_panel_factors();
 }
 
 void MVSpikeSprayView::slot_weight_slider_changed(int val)
 {
-    d->m_weight_factor=val*1.0/100;
+    //d->m_weight_factor=val*1.0/100;
+    d->m_weight_factor = exp((val * 1.0 - 100) / 20);
+    if (val == 200) {
+        d->m_weight_factor = 0;
+    }
     d->update_panel_factors();
+}
+
+void MVSpikeSprayView::slot_set_max_spikes_per_label(int val)
+{
+    d->m_max_spikes_per_label = val;
+    this->suggestRecalculate();
 }
 
 MVSpikeSprayPanel* MVSpikeSprayViewPrivate::add_panel()
@@ -386,8 +414,8 @@ double MVSpikeSprayViewPrivate::actual_panel_width()
 
 void MVSpikeSprayViewPrivate::update_panel_factors()
 {
-    for (int i=0; i<m_panels.count(); i++) {
-        MVSpikeSprayPanel *P=m_panels[i];
+    for (int i = 0; i < m_panels.count(); i++) {
+        MVSpikeSprayPanel* P = m_panels[i];
         P->setAmplitudeFactor(m_amplitude_factor);
         P->setBrightnessFactor(m_brightness_factor);
         P->setWeightFactor(m_weight_factor);
@@ -424,7 +452,7 @@ void MVSpikeSprayComputer::compute()
         QMap<QString, QVariant> params;
         params["firings"] = firings.makePath();
         params["labels"] = labels_str;
-        params["max_per_label"] = 512;
+        params["max_per_label"] = max_per_label;
         MT.setInputParameters(params);
         MT.setMLProxyUrl(mlproxy_url);
 

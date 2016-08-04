@@ -193,7 +193,8 @@ void MVTemplatesView2::slot_panel_clicked(int index, Qt::KeyboardModifiers modif
             }
             mvContext()->setSelectedClusters(set.toList());
         }
-    } else {
+    }
+    else {
         ClusterData2 CD = d->m_cluster_data.value(index);
         if (CD.k > 0) {
             mvContext()->clickCluster(CD.k, modifiers);

@@ -160,6 +160,11 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
                 QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportFiringsFile()));
             }
             {
+                QAction* A = new QAction("Export cluster annotation file", this);
+                menu->addAction(A);
+                QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportClusterAnnotationFile()));
+            }
+            {
                 QAction* A = new QAction("Export static views (.smv)", this);
                 menu->addAction(A);
                 QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportStaticViews()));

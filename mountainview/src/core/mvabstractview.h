@@ -31,6 +31,7 @@ public:
 
     bool isCalculating() const;
     bool recalculateSuggested() const;
+    void suggestRecalculate();
     void stopCalculation();
 
     QString title() const;
@@ -87,7 +88,7 @@ protected:
 
     void contextMenuEvent(QContextMenuEvent* evt);
 
-    void addToolbarControl(QWidget *W);
+    void addToolbarControl(QWidget* W);
 private slots:
     void slot_do_calculation();
     void slot_calculation_finished();

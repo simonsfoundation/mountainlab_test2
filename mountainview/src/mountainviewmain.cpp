@@ -124,7 +124,6 @@ int main(int argc, char* argv[])
 
     CLParams CLP(argc, argv);
 
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     QList<QColor> channel_colors;
     QStringList color_strings;
     color_strings
@@ -232,10 +231,8 @@ int main(int argc, char* argv[])
         //}
     }
 
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     QString mode = CLP.named_parameters.value("mode", "overview2").toString();
     if (mode == "overview2") {
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         /*
         MVFile mv_file;
         if (!mv_fname.isEmpty()) {
@@ -300,7 +297,6 @@ int main(int argc, char* argv[])
             context->setClustersSubset(clusters_subset.toSet());
         }
 
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         set_nice_size(W);
 
         W->show();
@@ -313,12 +309,9 @@ int main(int argc, char* argv[])
         W->addControl(new MVPrefsControl(context, W), false);
         W->addControl(new MVExportControl(context, W), false);
 
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         a.processEvents();
 
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
         W->setDefaultInitialization();
-        qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 
         return a.exec();
     }
