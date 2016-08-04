@@ -96,7 +96,7 @@ void MVSpikeSprayPanel::paintEvent(QPaintEvent* evt)
     painter.setRenderHint(QPainter::Antialiasing);
 
     /// TODO (LOW) this should be a configured color to match the cluster view
-    painter.fillRect(0, 0, width(), height(), QBrush(QColor(60, 60, 60)));
+    painter.fillRect(0, 0, width(), height(), QBrush(QColor(0, 0, 0)));
 
     if (d->m_start_render_required) {
         d->start_render();
