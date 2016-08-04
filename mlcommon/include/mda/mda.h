@@ -114,16 +114,20 @@ public:
     void setValue(double val, long i1, long i2, long i3, long i4, long i5 = 0, long i6 = 0);
 
     ///Return a pointer to the 1D raw data. The internal data may be efficiently read/written.
-    double* dataPtr();
-    const double* constDataPtr() const;
-    ///Return a pointer to the 1D raw data at the vectorized location i. The internal data may be efficiently read/written.
-    double* dataPtr(long i);
-    ///Return a pointer to the 1D raw data at the the location (i1,i2). The internal data may be efficiently read/written.
-    double* dataPtr(long i1, long i2);
-    ///Return a pointer to the 1D raw data at the the location (i1,i2,i3). The internal data may be efficiently read/written.
-    double* dataPtr(long i1, long i2, long i3);
-    ///Return a pointer to the 1D raw data at the the location (i1,i2,...,i6). The internal data may be efficiently read/written.
-    double* dataPtr(long i1, long i2, long i3, long i4, long i5 = 0, long i6 = 0);
+    ///
+    double* doublePtr();
+    double* doublePtr(long i);
+    double* doublePtr(long i1, long i2);
+    double* doublePtr(long i1, long i2, long i3);
+    double* doublePtr(long i1, long i2, long i3, long i4, long i5=0, long i6=0);
+    const double* constDoublePtr() const;
+
+    float* floatPtr();
+    float* floatPtr(long i);
+    float* floatPtr(long i1, long i2);
+    float* floatPtr(long i1, long i2, long i3);
+    float* floatPtr(long i1, long i2, long i3, long i4, long i5=0, long i6=0);
+    const float* constFloatPtr() const;
 
     ///Retrieve a chunk of the vectorized data of size 1xN starting at position i
     void getChunk(Mda& ret, long i, long N);
