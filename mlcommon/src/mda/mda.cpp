@@ -1,3 +1,5 @@
+/*
+
 #include "mda.h"
 #include "mdaio.h"
 #include <cachemanager.h>
@@ -878,3 +880,4 @@ bool MdaPrivate::write_to_text_file(const QString& path)
     }
     return TextFile::write(path, lines.join("\n"));
 }
+*/

@@ -10,11 +10,9 @@
 #include "diskreadmda.h"
 #include "diskreadmda32.h"
 
-Mda compute_templates_0(DiskReadMda& X, Mda& firings, int clip_size);
-Mda compute_templates_0(DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, int clip_size);
-void compute_templates_stdevs(Mda& ret_templates, Mda& ret_stdevs, DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, int clip_size);
+void compute_templates_stdevs(Mda32& ret_templates, Mda32& ret_stdevs, DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, int clip_size);
 
-Mda32 compute_templates_0(DiskReadMda32& X, Mda& firings, int clip_size);
+Mda32 compute_templates_0(DiskReadMda32& X, Mda64& firings, int clip_size);
 Mda32 compute_templates_0(DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, int clip_size);
 
 #endif // COMPUTE_TEMPLATES_0_H

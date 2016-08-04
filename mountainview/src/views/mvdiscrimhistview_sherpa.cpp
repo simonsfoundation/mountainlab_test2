@@ -18,7 +18,7 @@ class MVDiscrimHistViewSherpaComputer {
 public:
     //input
     QString mlproxy_url;
-    DiskReadMda timeseries;
+    DiskReadMda32 timeseries;
     DiskReadMda firings;
     MVEventFilter event_filter;
     int num_histograms;

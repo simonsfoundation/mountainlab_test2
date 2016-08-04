@@ -14,7 +14,7 @@
 
 struct TimeseriesStruct {
     QString name;
-    DiskReadMda data;
+    DiskReadMda32 data;
 };
 
 struct OptionChangedAction {
@@ -164,7 +164,7 @@ QMap<QString, TimeseriesStruct> object_to_timeseries_map(QJsonObject X)
     foreach (QString key, keys) {
         QJsonObject obj = X[key].toObject();
         TimeseriesStruct A;
-        A.data = DiskReadMda(obj["data"].toString());
+        A.data = DiskReadMda32(obj["data"].toString());
         A.name = obj["name"].toString();
         ret[key] = A;
     }
@@ -275,12 +275,12 @@ QList<QColor> MVContext::clusterColors() const
     return ret;
 }
 
-DiskReadMda MVContext::currentTimeseries() const
+DiskReadMda32 MVContext::currentTimeseries() const
 {
     return timeseries(d->m_current_timeseries_name);
 }
 
-DiskReadMda MVContext::timeseries(QString name) const
+DiskReadMda32 MVContext::timeseries(QString name) const
 {
     return d->m_timeseries.value(name).data;
 }
@@ -327,7 +327,7 @@ QStringList MVContext::timeseriesNames() const
     return d->m_timeseries.keys();
 }
 
-void MVContext::addTimeseries(QString name, DiskReadMda timeseries)
+void MVContext::addTimeseries(QString name, DiskReadMda32 timeseries)
 {
     TimeseriesStruct X;
     X.data = timeseries;

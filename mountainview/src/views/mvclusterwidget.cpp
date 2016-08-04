@@ -9,6 +9,7 @@
 #include <taskprogress.h>
 #include "mvclipsview.h"
 #include "mlcommon.h"
+#include "diskreadmda32.h"
 #include <QAction>
 #include <QSettings>
 #include <QThread>
@@ -22,7 +23,7 @@ public:
     //input
     QString mlproxy_url;
     MVEventFilter filter;
-    DiskReadMda timeseries;
+    DiskReadMda32 timeseries;
     DiskReadMda firings;
     int clip_size;
     QList<int> labels_to_use;
@@ -43,12 +44,12 @@ public:
 class ClipsViewThread : public QThread {
 public:
     //input
-    DiskReadMda timeseries;
+    DiskReadMda32 timeseries;
     QVector<double> times;
     int clip_size;
 
     //output
-    DiskReadMda clips;
+    DiskReadMda32 clips;
 
     void run();
 };
@@ -401,7 +402,7 @@ void MVClusterWidgetPrivate::update_clips_view()
         QVector<double> times;
         times << evt.time;
 
-        m_clips_view->setClips(Mda());
+        m_clips_view->setClips(Mda32());
         if (m_clips_view_thread.isRunning()) {
             m_clips_view_thread.requestInterruption();
             m_clips_view_thread.wait();
@@ -414,7 +415,7 @@ void MVClusterWidgetPrivate::update_clips_view()
         m_clips_view_thread.start();
     }
     else {
-        m_clips_view->setClips(Mda());
+        m_clips_view->setClips(Mda32());
     }
     //m_info_bar->setText(info_txt);
 }

@@ -45,7 +45,7 @@ bool extract_clips_features_Processor::run(const QMap<QString, QVariant>& params
     int clip_size = params["clip_size"].toInt();
     int num_features = params["num_features"].toInt();
 
-    DiskReadMda X(timeseries_path);
+    DiskReadMda32 X(timeseries_path);
     DiskReadMda F(firings_path);
     QVector<double> times;
     //QVector<int> labels;
@@ -53,16 +53,16 @@ bool extract_clips_features_Processor::run(const QMap<QString, QVariant>& params
         times << F.value(1, i);
         //labels << (int)F.value(2,i);
     }
-    Mda clips = extract_clips(X, times, clip_size);
+    Mda32 clips = extract_clips(X, times, clip_size);
     long M = clips.N1();
     long T = clips.N2();
     long L = clips.N3();
-    Mda clips_reshaped(M * T, L);
+    Mda32 clips_reshaped(M * T, L);
     long NNN = M * T * L;
     for (long iii = 0; iii < NNN; iii++) {
         clips_reshaped.set(clips.get(iii), iii);
     }
-    Mda CC, FF, sigma;
+    Mda32 CC, FF, sigma;
     pca(CC, FF, sigma, clips_reshaped, num_features);
     return FF.write32(features_path);
 

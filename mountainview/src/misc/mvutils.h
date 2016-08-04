@@ -7,6 +7,7 @@
 #define MVUTILS_H
 
 #include "diskreadmda.h"
+#include "diskreadmda32.h"
 #include <QList>
 #include <QColor>
 #include <math.h>

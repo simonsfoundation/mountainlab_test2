@@ -38,14 +38,11 @@ public:
     QDateTime fileLastModified() const;
 
     ///Retrieve a chunk of the vectorized data of size 1xN starting at position i
-    bool readChunk(Mda& X, long i, long size) const;
-    bool readChunk32(Mda32& X, long i, long size) const;
+    bool readChunk(Mda64& X, long i, long size) const;
+    bool readChunk(Mda32& X, long i, long size) const;
 
 private:
     RemoteReadMdaPrivate* d;
 };
-
-void unit_test_remote_read_mda_2(const QString& path);
-void unit_test_remote_read_mda();
 
 #endif // REMOTEREADMDA_H

@@ -7,7 +7,7 @@
 
 bool mv_compute_templates(const QString& timeseries_path, const QString& firings_path, const QString& templates_out_path, const QString& stdevs_out_path, int clip_size)
 {
-    DiskReadMda X(timeseries_path);
+    DiskReadMda32 X(timeseries_path);
     DiskReadMda firings(firings_path);
     QVector<double> times;
     QVector<int> labels;
@@ -15,7 +15,7 @@ bool mv_compute_templates(const QString& timeseries_path, const QString& firings
         times << firings.value(1, i);
         labels << (int)firings.value(2, i);
     }
-    Mda templates, stdevs;
+    Mda32 templates, stdevs;
     compute_templates_stdevs(templates, stdevs, X, times, labels, clip_size);
     templates.write32(templates_out_path);
     stdevs.write32(stdevs_out_path);

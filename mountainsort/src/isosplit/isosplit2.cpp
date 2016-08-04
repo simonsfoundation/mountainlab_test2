@@ -433,7 +433,7 @@ QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbos
         counts[ii] = 0;
     for (int i = 0; i < N; i++)
         counts[labels[i]]++;
-    dtype32* Cptr = centers.dataPtr();
+    float* Cptr = centers.dataPtr();
 
     AttemptedComparisons attempted_comparisons;
 
@@ -567,10 +567,10 @@ QVector<int> do_kmeans(Mda32& X, int K)
     int N = X.N2();
     if (N == 0)
         return QVector<int>(); //added 4/8/16 to prevent crash
-    dtype32* Xptr = X.dataPtr();
+    float* Xptr = X.dataPtr();
     Mda32 centroids_mda;
     centroids_mda.allocate(M, K);
-    dtype32* centroids = centroids_mda.dataPtr();
+    float* centroids = centroids_mda.dataPtr();
     QVector<int> labels;
     for (int i = 0; i < N; i++)
         labels << -1;

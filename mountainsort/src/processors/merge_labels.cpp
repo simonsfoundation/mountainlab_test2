@@ -11,11 +11,11 @@
 #include <math.h>
 #include <QDebug>
 
-double compute_template_similarity(int M, int T, double* template1, double* template2);
+double compute_template_similarity(int M, int T, float* template1, float* template2);
 
 bool merge_labels(QString timeseries_path, QString firings_path, QString firings_out_path, merge_labels_opts opts)
 {
-    DiskReadMda X(timeseries_path);
+    DiskReadMda32 X(timeseries_path);
     DiskReadMda F(firings_path);
 
     QVector<double> times;
@@ -25,12 +25,12 @@ bool merge_labels(QString timeseries_path, QString firings_path, QString firings
         labels << (int)F.value(2, i);
     }
 
-    Mda templates0 = compute_templates_0(X, times, labels, opts.clip_size);
+    Mda32 templates0 = compute_templates_0(X, times, labels, opts.clip_size);
     int M = templates0.N1();
     int T = templates0.N2();
     int K = templates0.N3();
 
-    Mda similarity_matrix(K, K);
+    Mda64 similarity_matrix(K, K);
     for (int k1 = 0; k1 < K; k1++) {
         for (int k2 = 0; k2 < K; k2++) {
             double similarity_score = compute_template_similarity(M, T, templates0.dataPtr(0, 0, k1), templates0.dataPtr(0, 0, k2));
@@ -38,7 +38,7 @@ bool merge_labels(QString timeseries_path, QString firings_path, QString firings
         }
     }
 
-    Mda merge_matrix(K, K);
+    Mda64 merge_matrix(K, K);
     for (int i = 0; i < K; i++) {
         for (int j = 0; j < K; j++) {
             if (similarity_matrix.value(i, j) > opts.merge_threshold) { //merge with an earlier guy
@@ -104,7 +104,7 @@ bool merge_labels(QString timeseries_path, QString firings_path, QString firings
         labels[i] = new_label;
     }
 
-    Mda firings_out(F.N1(), F.N2());
+    Mda64 firings_out(F.N1(), F.N2());
     for (long i = 0; i < F.N2(); i++) {
         for (int j = 0; j < F.N1(); j++) {
             firings_out.setValue(F.value(j, i), j, i);
@@ -117,7 +117,7 @@ bool merge_labels(QString timeseries_path, QString firings_path, QString firings
     return true;
 }
 
-double compute_template_similarity(int M, int T, double* template1, double* template2)
+double compute_template_similarity(int M, int T, float* template1, float* template2)
 {
     int N = M * T;
     double S1 = 0, S2 = 0;

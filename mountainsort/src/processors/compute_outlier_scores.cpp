@@ -10,7 +10,7 @@
 #include "msmisc.h"
 
 QVector<double> grab_sublist(const QVector<double>& X, const QVector<int>& inds);
-QVector<double> compute_outlier_scores(Mda& clips, Mda& random_clips);
+QVector<double> compute_outlier_scores(Mda32& clips, Mda32& random_clips);
 
 /*
 Email exchange with Jason on 5/16/2016
@@ -33,7 +33,7 @@ bool compute_outlier_scores(const QString& timeseries_path, const QString& firin
 
     Mda firings;
     firings.read(firings_path);
-    DiskReadMda X;
+    DiskReadMda32 X;
     X.setPath(timeseries_path);
     int N = X.N2();
     int L = firings.N2();
@@ -52,7 +52,7 @@ bool compute_outlier_scores(const QString& timeseries_path, const QString& firin
     QVector<double> ttt;
     for (int i = 0; i < N; i += interval)
         ttt << i;
-    Mda random_clips = extract_clips(X, ttt, opts.clip_size);
+    Mda32 random_clips = extract_clips(X, ttt, opts.clip_size);
 
     Define_Shells_Opts opts2;
     opts2.min_shell_size = opts.min_shell_size;
@@ -74,7 +74,7 @@ bool compute_outlier_scores(const QString& timeseries_path, const QString& firin
                 inds_ks << inds_k[shells[s].inds[j]];
             }
             QVector<double> times_ks = grab_sublist(times, inds_ks);
-            Mda clips_ks = extract_clips(X, times_ks, opts.clip_size);
+            Mda32 clips_ks = extract_clips(X, times_ks, opts.clip_size);
             QVector<double> scores_ks = compute_outlier_scores(clips_ks, random_clips);
             for (int j = 0; j < inds_ks.count(); j++) {
                 scores[inds_ks[j]] = scores_ks[j];
@@ -97,7 +97,7 @@ bool compute_outlier_scores(const QString& timeseries_path, const QString& firin
 
     return true;
 }
-Mda get_template_weights(Mda& template0, int num_pix)
+Mda64 get_template_weights(Mda32& template0, int num_pix)
 {
     int M = template0.N1();
     int T = template0.N2();
@@ -117,15 +117,15 @@ Mda get_template_weights(Mda& template0, int num_pix)
     return ret;
 }
 
-QVector<double> compute_outlier_scores(Mda& clips, Mda& random_clips)
+QVector<double> compute_outlier_scores(Mda32& clips, Mda32& random_clips)
 {
     int M = clips.N1();
     int T = clips.N2();
     int L = clips.N3();
     int num_random_clips = random_clips.N3();
-    Mda template0 = compute_mean_clip(clips);
-    Mda weights = get_template_weights(template0, 6);
-    Mda random_clips_weighted;
+    Mda32 template0 = compute_mean_clip(clips);
+    Mda64 weights = get_template_weights(template0, 6);
+    Mda32 random_clips_weighted;
     random_clips_weighted.allocate(M, T, num_random_clips);
     {
         int aaa = 0;
@@ -155,7 +155,7 @@ QVector<double> compute_outlier_scores(Mda& clips, Mda& random_clips)
             }
         }
     }
-    Mda template_weighted = template0;
+    Mda32 template_weighted = template0;
     for (int t = 0; t < T; t++) {
         for (int m = 0; m < M; m++) {
             template_weighted.set(template0.get(m, t) * weights.get(m, t), m, t);

@@ -144,7 +144,12 @@ QString compute_memory_checksum(long nbytes, void* ptr)
 
 QString compute_mda_checksum(Mda& X)
 {
-    QString ret = compute_memory_checksum(X.totalSize() * sizeof(double), X.dataPtr());
+    QString ret;
+    if (X.dataType()==MdaBase::Float)
+        ret=compute_memory_checksum(X.totalSize() * sizeof(double), X.dataPtr32());
+    else if (X.dataType()==MdaBase::Double)
+        ret=compute_memory_checksum(X.totalSize() * sizeof(double), X.dataPtr());
+
     ret += "-";
     for (int i = 0; i < X.ndims(); i++) {
         if (i > 0)
@@ -317,7 +322,7 @@ DiskReadMda DiskReadMda::reshaped(long N1b, long N2b, long N3b, long N4b, long N
     return ret;
 }
 
-bool DiskReadMda::readChunk(Mda& X, long i, long size) const
+bool DiskReadMda::readChunk(Mda64& X, long i, long size) const
 {
     if (d->m_use_memory_mda) {
         d->m_memory_mda.getChunk(X, i, size);
@@ -346,7 +351,7 @@ bool DiskReadMda::readChunk(Mda& X, long i, long size) const
     return true;
 }
 
-bool DiskReadMda::readChunk(Mda& X, long i1, long i2, long size1, long size2) const
+bool DiskReadMda::readChunk(Mda64& X, long i1, long i2, long size1, long size2) const
 {
     if (size2 == 0) {
         return readChunk(X, i1, size1);
@@ -398,7 +403,7 @@ bool DiskReadMda::readChunk(Mda& X, long i1, long i2, long size1, long size2) co
     }
 }
 
-bool DiskReadMda::readChunk(Mda& X, long i1, long i2, long i3, long size1, long size2, long size3) const
+bool DiskReadMda::readChunk(Mda64& X, long i1, long i2, long i3, long size1, long size2, long size3) const
 {
     if (size3 == 0) {
         if (size2 == 0) {

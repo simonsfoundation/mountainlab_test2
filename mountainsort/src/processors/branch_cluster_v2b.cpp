@@ -353,8 +353,8 @@ QVector<double> compute_dists_from_template_b(ClipsGroup clips, Mda32& template0
     long M = clips.clips->N1();
     long T = clips.clips->N2();
     long L = clips.inds.count();
-    dtype32* ptr1 = clips.clips->dataPtr();
-    dtype32* ptr2 = template0.dataPtr();
+    float* ptr1 = clips.clips->dataPtr();
+    float* ptr2 = template0.dataPtr();
     QVector<double> ret;
     for (long i = 0; i < L; i++) {
         long aaa = clips.inds[i] * M * T;

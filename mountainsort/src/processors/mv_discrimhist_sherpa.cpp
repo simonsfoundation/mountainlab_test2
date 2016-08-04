@@ -22,17 +22,17 @@ struct discrimhist_sherpa_data_comparer {
 
 /// TODO parallelize mv_distrimhist
 
-void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
-Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_sherpa_opts opts);
+void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda32& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
+Mda64 compute_distance_matrix(DiskReadMda32 timeseries, DiskReadMda firings, mv_discrimhist_sherpa_opts opts);
 void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda& distance_matrix, int num_histograms, QSet<int> clusters_to_exclude);
 double compute_separation_score(const QVector<double>& data1, const QVector<double>& data2);
 
 bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_sherpa_opts opts)
 {
-    DiskReadMda timeseries(timeseries_path);
+    DiskReadMda32 timeseries(timeseries_path);
     DiskReadMda firings(firings_path);
 
-    Mda distance_matrix = compute_distance_matrix(DiskReadMda(timeseries_path), DiskReadMda(firings_path), opts);
+    Mda64 distance_matrix = compute_distance_matrix(DiskReadMda32(timeseries_path), DiskReadMda(firings_path), opts);
     QVector<int> k1s, k2s;
     get_pairs_to_compare(k1s, k2s, distance_matrix, opts.num_histograms * 2, opts.clusters_to_exclude); //get more than we need to be reduced later after sorting
 
@@ -85,7 +85,7 @@ bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QStrin
     return true;
 }
 
-void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size)
+void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda32& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size)
 {
     QVector<double> times1, times2;
     for (long i = 0; i < firings.N2(); i++) {
@@ -97,24 +97,24 @@ void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, c
             times2 << firings.value(1, i);
         }
     }
-    Mda clips1 = extract_clips(timeseries, times1, clip_size);
-    Mda clips2 = extract_clips(timeseries, times2, clip_size);
+    Mda32 clips1 = extract_clips(timeseries, times1, clip_size);
+    Mda32 clips2 = extract_clips(timeseries, times2, clip_size);
 
-    Mda centroid1 = compute_mean_clip(clips1);
-    Mda centroid2 = compute_mean_clip(clips2);
+    Mda32 centroid1 = compute_mean_clip(clips1);
+    Mda32 centroid2 = compute_mean_clip(clips2);
 
-    Mda diff(centroid1.N1(), centroid1.N2());
+    Mda32 diff(centroid1.N1(), centroid1.N2());
     for (long i2 = 0; i2 < centroid1.N2(); i2++) {
         for (long i1 = 0; i1 < centroid1.N1(); i1++) {
             diff.setValue(centroid2.value(i1, i2) - centroid1.value(i1, i2), i1, i2);
         }
     }
 
-    double* ptr_clips1 = clips1.dataPtr();
-    double* ptr_clips2 = clips2.dataPtr();
+    float* ptr_clips1 = clips1.dataPtr();
+    float* ptr_clips2 = clips2.dataPtr();
 
     long N = centroid1.N1() * centroid1.N2();
-    double* ptr_diff = diff.dataPtr();
+    float* ptr_diff = diff.dataPtr();
     double norm0 = MLCompute::norm(N, ptr_diff);
     if (!norm0)
         norm0 = 1;
@@ -144,7 +144,7 @@ bool is_zero(const Mda& X)
     return ((X.minimum() == 0) && (X.maximum() == 0));
 }
 
-Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_sherpa_opts opts)
+Mda64 compute_distance_matrix(DiskReadMda32 timeseries, DiskReadMda firings, mv_discrimhist_sherpa_opts opts)
 {
     QVector<double> times;
     QVector<int> labels;
@@ -152,12 +152,12 @@ Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_disc
         times << firings.value(1, i);
         labels << (int)firings.value(2, i);
     }
-    Mda X = compute_templates_0(timeseries, times, labels, opts.clip_size);
+    Mda32 X = compute_templates_0(timeseries, times, labels, opts.clip_size);
     int M = X.N1();
     int T = X.N2();
     int K = X.N3();
 
-    Mda ret(K, K);
+    Mda64 ret(K, K);
     for (int k1 = 0; k1 < K; k1++) {
         Mda tmp1;
         X.getChunk(tmp1, 0, 0, k1, M, T, 1);

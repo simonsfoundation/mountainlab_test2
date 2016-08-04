@@ -201,16 +201,7 @@ int main(int argc, char* argv[])
 
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
-        if (arg2 == "remotereadmda") {
-            unit_test_remote_read_mda();
-            return 0;
-        }
-        else if (arg2 == "remotereadmda2") {
-            QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
-            unit_test_remote_read_mda_2(arg3);
-            return 0;
-        }
-        else if (arg2 == "taskprogressview") {
+        if (arg2 == "taskprogressview") {
             MVMainWindow* W = new MVMainWindow(new MVContext); //not that the view agent does not get deleted. :(
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));
@@ -261,17 +252,17 @@ int main(int argc, char* argv[])
         }
         if (CLP.named_parameters.contains("raw")) {
             QString raw_path = CLP.named_parameters["raw"].toString();
-            context->addTimeseries("Raw Data", DiskReadMda(raw_path));
+            context->addTimeseries("Raw Data", DiskReadMda32(raw_path));
             context->setCurrentTimeseriesName("Raw Data");
         }
         if (CLP.named_parameters.contains("filt")) {
             QString filt_path = CLP.named_parameters["filt"].toString();
-            context->addTimeseries("Filtered Data", DiskReadMda(filt_path));
+            context->addTimeseries("Filtered Data", DiskReadMda32(filt_path));
             context->setCurrentTimeseriesName("Filtered Data");
         }
         if (CLP.named_parameters.contains("pre")) {
             QString pre_path = CLP.named_parameters["pre"].toString();
-            context->addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
+            context->addTimeseries("Preprocessed Data", DiskReadMda32(pre_path));
             context->setCurrentTimeseriesName("Preprocessed Data");
         }
         if (CLP.named_parameters.contains("mlproxy_url")) {

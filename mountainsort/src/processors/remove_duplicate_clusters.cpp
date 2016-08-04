@@ -8,12 +8,12 @@
 #include "mlcommon.h"
 #include "mlcommon.h"
 
-bool probably_the_same(Mda& templates, int ch1, int k1, int ch2, int k2, const remove_duplicate_clusters_Opts& opts);
+bool probably_the_same(Mda32& templates, int ch1, int k1, int ch2, int k2, const remove_duplicate_clusters_Opts& opts);
 
 typedef QList<long> IntList;
 bool remove_duplicate_clusters(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const remove_duplicate_clusters_Opts& opts)
 {
-    DiskReadMda X(timeseries_path);
+    DiskReadMda32 X(timeseries_path);
     Mda F;
     F.read(firings_path);
     int T = opts.clip_size;
@@ -45,7 +45,7 @@ bool remove_duplicate_clusters(const QString& timeseries_path, const QString& fi
         clusters_to_use << 1;
 
     printf("Computing templates...\n");
-    Mda templates = compute_templates_0(X, F, opts.clip_size);
+    Mda32 templates = compute_templates_0(X, F, opts.clip_size);
     printf("Comparing templates...\n");
     for (int k1 = 0; k1 < K; k1++) {
         for (int k2 = 0; k2 < K; k2++) {
@@ -111,7 +111,7 @@ bool remove_duplicate_clusters(const QString& timeseries_path, const QString& fi
     return true;
 }
 
-bool probably_the_same(Mda& templates, int ch1, int k1, int ch2, int k2, const remove_duplicate_clusters_Opts& opts)
+bool probably_the_same(Mda32& templates, int ch1, int k1, int ch2, int k2, const remove_duplicate_clusters_Opts& opts)
 {
     Q_UNUSED(opts)
     int M = templates.N1();
@@ -149,8 +149,8 @@ bool probably_the_same(Mda& templates, int ch1, int k1, int ch2, int k2, const r
     }
     Mda resid(M, T);
     double* resid_ptr = resid.dataPtr();
-    double* ptr1 = templates.dataPtr(0, 0, k1);
-    double* ptr2 = templates.dataPtr(0, 0, k2);
+    float* ptr1 = templates.dataPtr(0, 0, k1);
+    float* ptr2 = templates.dataPtr(0, 0, k2);
     for (int t = 0; t < T; t++) {
         for (int m = 0; m < M; m++) {
             resid.setValue(templates.value(m, t, k1) - templates.value(m, t - best_shift, k2), m, t);

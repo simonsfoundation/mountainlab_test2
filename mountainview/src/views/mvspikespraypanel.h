@@ -14,7 +14,7 @@ public:
     MVSpikeSprayPanel(MVContext* context);
     virtual ~MVSpikeSprayPanel();
     void setLabelsToUse(const QSet<int>& labels);
-    void setClipsToRender(Mda* X);
+    void setClipsToRender(Mda32* X);
     void setLabelsToRender(const QVector<int>& X);
     void setAmplitudeFactor(double X);
     void setBrightnessFactor(double factor);
@@ -32,7 +32,7 @@ class MVSSRenderThread : public QThread {
     Q_OBJECT
 public:
     //input
-    Mda clips;
+    Mda32 clips;
     QList<QColor> colors;
     double amplitude_factor;
     int W, H;
@@ -44,7 +44,7 @@ public:
     QMutex image_in_progress_mutex;
 
     void run();
-    void render_clip(QPainter* painter, long M, long T, double* ptr, QColor col);
+    void render_clip(QPainter* painter, long M, long T, float* ptr, QColor col);
     QPointF coord2pix(int m, double t, double val);
 signals:
     void signalImageInProgressUpdated();

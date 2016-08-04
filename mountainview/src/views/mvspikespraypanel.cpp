@@ -16,7 +16,7 @@ public:
     QSet<int> m_labels_to_use;
     MVContext* m_context;
     double m_amplitude_factor = 1;
-    Mda* m_clips_to_render = 0;
+    Mda32* m_clips_to_render = 0;
     QVector<int> m_labels_to_render;
     bool m_legend_visible = true;
     MVSSRenderThread m_render_thread;
@@ -50,7 +50,7 @@ void MVSpikeSprayPanel::setLabelsToUse(const QSet<int>& labels)
     update();
 }
 
-void MVSpikeSprayPanel::setClipsToRender(Mda* X)
+void MVSpikeSprayPanel::setClipsToRender(Mda32* X)
 {
     d->m_clips_to_render = X;
     d->m_start_render_required = true;
@@ -241,7 +241,7 @@ void MVSSRenderThread::run()
         qWarning() << "Unexpected sizes: " << colors.count() << L;
         return;
     }
-    double* ptr = clips.dataPtr();
+    float* ptr = clips.dataPtr();
     QTime timer;
     timer.start();
     for (long i = 0; i < L; i++) {
@@ -265,7 +265,7 @@ void MVSSRenderThread::run()
     }
 }
 
-void MVSSRenderThread::render_clip(QPainter* painter, long M, long T, double* ptr, QColor col)
+void MVSSRenderThread::render_clip(QPainter* painter, long M, long T, float* ptr, QColor col)
 {
     QPen pen = painter->pen();
     pen.setColor(col);

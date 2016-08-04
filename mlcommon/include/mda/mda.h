@@ -6,6 +6,13 @@
 #ifndef MDA_H
 #define MDA_H
 
+#include "mda64.h"
+
+typedef Mda64 Mda;
+
+
+/*
+
 #ifdef QT_CORE_LIB
 #include <QString>
 #include <QDebug>
@@ -14,11 +21,6 @@
 extern void* allocate(const size_t nbytes);
 
 class MdaPrivate;
-/** \class Mda - a multi-dimensional array corresponding to the .mda file format
- * @brief The Mda class
- *
- * An object of type Mda is a multi-dimensional array, with up to 6 dimensions. All indexing is 0-based.
- */
 class Mda {
 public:
     friend class MdaPrivate;
@@ -146,5 +148,7 @@ public:
 private:
     MdaPrivate* d;
 };
+
+*/
 
 #endif // MDA_H

@@ -21,9 +21,9 @@ struct fit_stage_opts {
 bool fit_stage(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts);
 bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts);
 
-double compute_score(long N, double* X, double* template0);
+double compute_score(long N, float* X, float* template0);
 QVector<int> find_events_to_use(const QVector<double>& times, const QVector<double>& scores, const fit_stage_opts& opts);
-void subtract_scaled_template(long N, double* X, double* template0);
+void subtract_scaled_template(long N, float* X, float* template0);
 Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts);
 Mda sort_firings_by_time(const Mda& firings);
 

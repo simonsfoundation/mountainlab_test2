@@ -31,7 +31,7 @@
 class MVSpikeSprayComputer {
 public:
     //input
-    DiskReadMda timeseries;
+    DiskReadMda32 timeseries;
     DiskReadMda firings;
     QString mlproxy_url;
     MVEventFilter filter;
@@ -40,7 +40,7 @@ public:
     int max_per_label;
 
     //output
-    Mda clips_to_render;
+    Mda32 clips_to_render;
     QVector<int> labels_to_render;
 
     void compute();
@@ -85,7 +85,7 @@ public:
     double m_weight_factor = 1;
     int m_panel_width = 0;
 
-    Mda m_clips_to_render;
+    Mda32 m_clips_to_render;
     QVector<int> m_labels_to_render;
     MVSpikeSprayComputer m_computer;
 
@@ -494,7 +494,7 @@ void MVSpikeSprayComputer::compute()
     task.setProgress(0.5);
     task.log("clips_path: " + clips_path);
 
-    DiskReadMda clips0(clips_path);
+    DiskReadMda32 clips0(clips_path);
     clips0.readChunk(clips_to_render, 0, 0, 0, clips0.N1(), clips0.N2(), clips0.N3());
 
     task.setProgress(0.75);

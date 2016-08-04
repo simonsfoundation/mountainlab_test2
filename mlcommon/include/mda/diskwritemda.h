@@ -29,9 +29,9 @@ public:
     long N6();
     long totalSize();
 
-    void writeChunk(Mda& X, long i);
-    void writeChunk(Mda& X, long i1, long i2);
-    void writeChunk(Mda& X, long i1, long i2, long i3);
+    void writeChunk(Mda64& X, long i);
+    void writeChunk(Mda64& X, long i1, long i2);
+    void writeChunk(Mda64& X, long i1, long i2, long i3);
 
 private:
     DiskWriteMdaPrivate* d;

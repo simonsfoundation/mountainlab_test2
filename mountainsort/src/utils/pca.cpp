@@ -159,9 +159,9 @@ Mda32 mult_AB(Mda32& A, Mda32& B)
         abort();
     }
     Mda32 C(M, N);
-    dtype32* Aptr = A.dataPtr();
-    dtype32* Bptr = B.dataPtr();
-    dtype32* Cptr = C.dataPtr();
+    float* Aptr = A.dataPtr();
+    float* Bptr = B.dataPtr();
+    float* Cptr = C.dataPtr();
     long iC = 0;
     for (long n = 0; n < N; n++) {
         for (long m = 0; m < M; m++) {
@@ -208,9 +208,9 @@ Mda32 mult_AtransB(Mda32& A, Mda32& B)
         abort();
     }
     Mda32 C(M, N);
-    dtype32* Aptr = A.dataPtr();
-    dtype32* Bptr = B.dataPtr();
-    dtype32* Cptr = C.dataPtr();
+    float* Aptr = A.dataPtr();
+    float* Bptr = B.dataPtr();
+    float* Cptr = C.dataPtr();
     long iC = 0;
     for (long n = 0; n < N; n++) {
         for (long m = 0; m < M; m++) {
@@ -257,9 +257,9 @@ Mda32 mult_ABtrans(Mda32& A, Mda32& B)
         abort();
     }
     Mda32 C(M, N);
-    dtype32* Aptr = A.dataPtr();
-    dtype32* Bptr = B.dataPtr();
-    dtype32* Cptr = C.dataPtr();
+    float* Aptr = A.dataPtr();
+    float* Bptr = B.dataPtr();
+    float* Cptr = C.dataPtr();
     long iC = 0;
     for (long n = 0; n < N; n++) {
         for (long m = 0; m < M; m++) {
@@ -300,8 +300,8 @@ void subtract_out_rank_1(Mda32& X, Mda32& C)
         qCritical() << "Incorrect dimensions in subtract_out_rank_1" << M << N << C.N1() << C.N2();
         abort();
     }
-    dtype32* Xptr = X.dataPtr();
-    dtype32* Cptr = C.dataPtr();
+    float* Xptr = X.dataPtr();
+    float* Cptr = C.dataPtr();
     long iX = 0;
     for (long n = 0; n < N; n++) {
         double dp = MLCompute::dotProduct(M, &Xptr[iX], Cptr);
@@ -374,7 +374,7 @@ void normalize_vector(Mda& V)
 void normalize_vector(Mda32& V)
 {
     long N = V.totalSize();
-    dtype32* Vptr = V.dataPtr();
+    float* Vptr = V.dataPtr();
     double norm = MLCompute::norm(N, Vptr);
     if (!norm)
         return;

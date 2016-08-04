@@ -30,7 +30,7 @@ struct ImagePanel {
     long index;
     double amp_factor;
     QImage image;
-    Mda min_data, max_data;
+    Mda32 min_data, max_data;
     QString make_code();
 };
 
@@ -313,7 +313,7 @@ void MVTimeSeriesRenderManagerThread::run()
     long t1 = index * panel_num_points;
     long t2 = (index + 1) * panel_num_points;
 
-    Mda Xmin, Xmax;
+    Mda32 Xmin, Xmax;
     ts.getData(Xmin, Xmax, t1, t2, ds_factor);
 
     if (MLUtil::threadInterruptRequested())

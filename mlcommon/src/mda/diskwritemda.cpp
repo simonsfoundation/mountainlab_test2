@@ -151,7 +151,7 @@ long DiskWriteMda::totalSize()
     return N1() * N2() * N3() * N4() * N5() * N6();
 }
 
-void DiskWriteMda::writeChunk(Mda& X, long i)
+void DiskWriteMda::writeChunk(Mda64& X, long i)
 {
     if (!d->m_file)
         return;
@@ -160,7 +160,7 @@ void DiskWriteMda::writeChunk(Mda& X, long i)
     if (i + size > this->totalSize())
         size = this->totalSize() - i;
     if (size > 0) {
-        mda_write_float64(X.dataPtr(), &d->m_header, size, d->m_file);
+        mda_write_float64(X.dataPtr64(), &d->m_header, size, d->m_file);
     }
 }
 

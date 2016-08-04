@@ -16,10 +16,10 @@
 
 bool fit_stage(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts)
 {
-    Mda X(timeseries_path);
-    Mda firingsA;
+    Mda32 X(timeseries_path);
+    Mda64 firingsA;
     firingsA.read(firings_path);
-    Mda firings = sort_firings_by_time(firingsA);
+    Mda64 firings = sort_firings_by_time(firingsA);
 
     int M = X.N1();
     int T = opts.clip_size;
@@ -29,7 +29,7 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     Define_Shells_Opts define_shells_opts;
     define_shells_opts.min_shell_size = opts.min_shell_size;
     define_shells_opts.shell_increment = opts.shell_increment;
-    Mda firings_split = split_into_shells(firings, define_shells_opts);
+    Mda64 firings_split = split_into_shells(firings, define_shells_opts);
     //Mda firings_split = firings;
 
     QVector<double> times;
@@ -40,8 +40,8 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     }
     int K = MLCompute::max<int>(labels);
 
-    DiskReadMda X0(timeseries_path);
-    Mda templates = compute_templates_0(X0, firings_split, T); //MxNxK
+    DiskReadMda32 X0(timeseries_path);
+    Mda32 templates = compute_templates_0(X0, firings_split, T); //MxNxK
 
     QVector<double> template_norms;
     template_norms << 0;
@@ -146,7 +146,7 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
     return true;
 }
 
-double compute_score(long N, double* X, double* template0)
+double compute_score(long N, float* X, float* template0)
 {
     Mda resid(1, N);
     double* resid_ptr = resid.dataPtr();
@@ -188,7 +188,7 @@ QVector<int> find_events_to_use(const QVector<double>& times, const QVector<doub
     return to_use;
 }
 
-void subtract_scaled_template(long N, double* X, double* template0)
+void subtract_scaled_template(long N, float* X, float* template0)
 {
     double S12 = 0, S22 = 0;
     for (long i = 0; i < N; i++) {

@@ -13,10 +13,10 @@ struct discrimhist_data {
 
 /// TODO parallelize mv_distrimhist
 
-void get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
+void get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda32& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
 bool mv_discrimhist(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_opts opts)
 {
-    DiskReadMda timeseries(timeseries_path);
+    DiskReadMda32 timeseries(timeseries_path);
     DiskReadMda firings(firings_path);
 
     QList<discrimhist_data> datas;
@@ -65,7 +65,7 @@ bool mv_discrimhist(QString timeseries_path, QString firings_path, QString outpu
     return true;
 }
 
-double compute_dot_product(long N, double* v1, double* v2)
+double compute_dot_product(long N, float* v1, float* v2)
 {
     double ip = 0;
     for (int m = 0; m < N; m++)
@@ -73,7 +73,7 @@ double compute_dot_product(long N, double* v1, double* v2)
     return ip;
 }
 
-void get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size)
+void get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda32& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size)
 {
     QVector<double> times1, times2;
     for (long i = 0; i < firings.N2(); i++) {
@@ -85,24 +85,24 @@ void get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const Di
             times2 << firings.value(1, i);
         }
     }
-    Mda clips1 = extract_clips(timeseries, times1, clip_size);
-    Mda clips2 = extract_clips(timeseries, times2, clip_size);
+    Mda32 clips1 = extract_clips(timeseries, times1, clip_size);
+    Mda32 clips2 = extract_clips(timeseries, times2, clip_size);
 
-    Mda centroid1 = compute_mean_clip(clips1);
-    Mda centroid2 = compute_mean_clip(clips2);
+    Mda32 centroid1 = compute_mean_clip(clips1);
+    Mda32 centroid2 = compute_mean_clip(clips2);
 
-    Mda diff(centroid1.N1(), centroid1.N2());
+    Mda32 diff(centroid1.N1(), centroid1.N2());
     for (long i2 = 0; i2 < centroid1.N2(); i2++) {
         for (long i1 = 0; i1 < centroid1.N1(); i1++) {
             diff.setValue(centroid2.value(i1, i2) - centroid1.value(i1, i2), i1, i2);
         }
     }
 
-    double* ptr_clips1 = clips1.dataPtr();
-    double* ptr_clips2 = clips2.dataPtr();
+    float* ptr_clips1 = clips1.dataPtr();
+    float* ptr_clips2 = clips2.dataPtr();
 
     long N = centroid1.N1() * centroid1.N2();
-    double* ptr_diff = diff.dataPtr();
+    float* ptr_diff = diff.dataPtr();
     double norm0 = MLCompute::norm(N, ptr_diff);
     if (!norm0)
         norm0 = 1;

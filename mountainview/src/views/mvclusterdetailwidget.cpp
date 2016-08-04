@@ -59,7 +59,7 @@ public:
     //QString mscmdserver_url;
     QString mlproxy_url;
     MVEventFilter filter;
-    DiskReadMda timeseries;
+    DiskReadMda32 timeseries;
     DiskReadMda firings;
     int clip_size;
 

@@ -24,7 +24,7 @@ struct mvtsv_channel {
 class MVTimeSeriesView2Calculator {
 public:
     //input
-    DiskReadMda timeseries;
+    DiskReadMda32 timeseries;
     QString mlproxy_url;
 
     //output

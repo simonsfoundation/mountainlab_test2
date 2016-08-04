@@ -23,7 +23,7 @@ public:
     MVClipsView(MVContext* context);
     virtual ~MVClipsView();
 
-    void setClips(const DiskReadMda& clips);
+    void setClips(const DiskReadMda32& clips);
     /// TODO: (MEDIUM) in mvclipsview implement times/labels for purpose of current event and labeling
     //void setTimes(const QVector<double>& times);
     //void setLabels(const QVector<int>& labels);

@@ -17,7 +17,7 @@
 #include "msprefs.h"
 #include "omp.h"
 
-QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVector<int>& labels, const fit_stage_opts& opts);
+QList<long> fit_stage_kernel(Mda32& X, Mda32& templates, QVector<double>& times, QVector<int>& labels, const fit_stage_opts& opts);
 
 bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts)
 {
@@ -27,7 +27,7 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     QMap<QString, long> elapsed_times;
 
     //The timeseries data and the dimensions
-    DiskReadMda X(timeseries_path);
+    DiskReadMda32 X(timeseries_path);
     long M = X.N1();
     long N = X.N2();
     int T = opts.clip_size;
@@ -43,10 +43,10 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     define_shells_opts.shell_increment = opts.shell_increment;
 
     //Here we split into shells to handle amplitude variation
-    Mda firings_split = split_into_shells(firings, define_shells_opts);
+    Mda64 firings_split = split_into_shells(firings, define_shells_opts);
 
     //These are the templates corresponding to the sub-clusters (after shell splitting)
-    Mda templates = compute_templates_0(X, firings_split, T); //MxTxK (wrong: MxNxK)
+    Mda32 templates = compute_templates_0(X, firings_split, T); //MxTxK (wrong: MxNxK)
 
     //L is the number of events. Accumulate vectors of times and labels for convenience
     long L = firings.N2();
@@ -74,8 +74,8 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
 #pragma omp parallel for
         for (long timepoint = 0; timepoint < N; timepoint += chunk_size) {
             QMap<QString, long> elapsed_times_local;
-            Mda chunk; //this will be the chunk we are working on
-            Mda local_templates; //just a local copy of the templates
+            Mda32 chunk; //this will be the chunk we are working on
+            Mda32 local_templates; //just a local copy of the templates
             QVector<double> local_times; //the times that fall in this time range
             QVector<int> local_labels; //the corresponding labels
             QList<long> local_inds; //the corresponding event indices
@@ -159,7 +159,7 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     return true;
 }
 
-QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVector<int>& labels, const fit_stage_opts& opts)
+QList<long> fit_stage_kernel(Mda32& X, Mda32& templates, QVector<double>& times, QVector<int>& labels, const fit_stage_opts& opts)
 {
     int M = X.N1(); //the number of dimensions
     int T = opts.clip_size; //the clip size

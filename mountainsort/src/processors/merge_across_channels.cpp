@@ -20,12 +20,12 @@ QVector<int> remove_unused_labels(const QVector<int>& labels);
 
 bool merge_across_channels(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const merge_across_channels_opts& opts)
 {
-    DiskReadMda X(timeseries_path);
-    Mda firingsA;
+    DiskReadMda32 X(timeseries_path);
+    Mda64 firingsA;
     firingsA.read(firings_path);
 
     //sort the firings by time
-    Mda firings = sort_firings_by_time(firingsA);
+    Mda64 firings = sort_firings_by_time(firingsA);
 
     int M = X.N1();
     int T = opts.clip_size;
@@ -42,7 +42,7 @@ bool merge_across_channels(const QString& timeseries_path, const QString& firing
     }
     int K = MLCompute::max<int>(labels);
 
-    Mda templates = compute_templates_0(X, times, labels, opts.clip_size);
+    Mda32 templates = compute_templates_0(X, times, labels, opts.clip_size);
 
     //assemble the matrices S and best_dt
     //for now S is binary/boolean

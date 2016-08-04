@@ -53,11 +53,11 @@ public:
     bool readChunk(Mda32& X, long i1, long i2, long i3, long size1, long size2, long size3) const;
 
     ///A slow method to retrieve the value at location i of the vectorized array for example value(3+4*N1())==value(3,4). Consider using readChunk() instead
-    dtype32 value(long i) const;
+    float value(long i) const;
     ///A slow method to retrieve the value at location (i1,i2) of the array. Consider using readChunk() instead
-    dtype32 value(long i1, long i2) const;
+    float value(long i1, long i2) const;
     ///A slow method to retrieve the value at location (i1,i2,i3) of the array. Consider using readChunk() instead
-    dtype32 value(long i1, long i2, long i3) const;
+    float value(long i1, long i2, long i3) const;
 
 private:
     DiskReadMda32Private* d;
