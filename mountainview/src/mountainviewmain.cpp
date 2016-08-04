@@ -201,16 +201,7 @@ int main(int argc, char* argv[])
 
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
-        if (arg2 == "remotereadmda") {
-            unit_test_remote_read_mda();
-            return 0;
-        }
-        else if (arg2 == "remotereadmda2") {
-            QString arg3 = CLP.unnamed_parameters.value(2, "http://localhost:8000/firings.mda");
-            unit_test_remote_read_mda_2(arg3);
-            return 0;
-        }
-        else if (arg2 == "taskprogressview") {
+        if (arg2 == "taskprogressview") {
             MVMainWindow* W = new MVMainWindow(new MVContext); //not that the view agent does not get deleted. :(
             W->show();
             W->move(QApplication::desktop()->screen()->rect().topLeft() + QPoint(200, 200));

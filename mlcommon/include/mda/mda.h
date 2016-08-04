@@ -72,6 +72,7 @@ public:
     long N5() const;
     ///The size of the sixth dimension
     long N6() const;
+    long dim(int num) const; //1-based
     ///The product of N1() through N6()
     long totalSize() const;
     long size(int dimension_index) const; //zero-based

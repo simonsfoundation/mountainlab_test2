@@ -14,20 +14,16 @@ TEMPLATE = lib
 
 INCLUDEPATH += ../include
 VPATH += ../include
-HEADERS += mlcommon.h sumit.h \
-    ../include/mda/mda32.h \
-    ../include/mda/diskreadmda32.h
+HEADERS += mlcommon.h sumit.h
 
 SOURCES += \
-    mlcommon.cpp sumit.cpp \
-    mda/mda32.cpp \
-    mda/diskreadmda32.cpp
+    mlcommon.cpp sumit.cpp
 
 INCLUDEPATH += ../include/mda
 VPATH += ../include/mda
 VPATH += mda
-HEADERS += diskreadmda.h diskwritemda.h mda.h mdaio.h remotereadmda.h usagetracking.h
-SOURCES += diskreadmda.cpp diskwritemda.cpp mda.cpp mdaio.cpp remotereadmda.cpp usagetracking.cpp
+HEADERS += diskreadmda.h diskwritemda.h mda.h mdaio.h remotereadmda.h usagetracking.h mda32.h diskreadmda32.h diskreadmda_common_impl.h
+SOURCES += diskreadmda.cpp diskwritemda.cpp mda.cpp mdaio.cpp remotereadmda.cpp usagetracking.cpp mda32.cpp diskreadmda32.cpp diskreadmda_common_impl.cpp
 
 INCLUDEPATH += ../include/cachemanager
 VPATH += ../include/cachemanager

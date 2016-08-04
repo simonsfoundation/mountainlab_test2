@@ -134,7 +134,7 @@ long DiskReadMda32::downloadChunkSize()
 #endif
 }
 
-QString compute_memory_checksum32(long nbytes, void* ptr)
+QString compute_memory_checksum_32(long nbytes, void* ptr)
 {
     QByteArray X((char*)ptr, nbytes);
     QCryptographicHash hash(QCryptographicHash::Sha1);
@@ -142,9 +142,9 @@ QString compute_memory_checksum32(long nbytes, void* ptr)
     return QString(hash.result().toHex());
 }
 
-QString compute_mda_checksum(Mda32& X)
+QString compute_mda_checksum_32(Mda32& X)
 {
-    QString ret = compute_memory_checksum32(X.totalSize() * sizeof(dtype32), X.dataPtr());
+    QString ret = compute_memory_checksum_32(X.totalSize() * sizeof(dtype32), X.dataPtr());
     ret += "-";
     for (int i = 0; i < X.ndims(); i++) {
         if (i > 0)
@@ -157,7 +157,7 @@ QString compute_mda_checksum(Mda32& X)
 QString DiskReadMda32::makePath() const
 {
     if (d->m_use_memory_mda) {
-        QString checksum = compute_mda_checksum(d->m_memory_mda);
+        QString checksum = compute_mda_checksum_32(d->m_memory_mda);
         QString fname = CacheManager::globalInstance()->makeLocalFile(checksum + ".makePath.mda", CacheManager::ShortTerm);
         if (QFile::exists(fname))
             return fname;

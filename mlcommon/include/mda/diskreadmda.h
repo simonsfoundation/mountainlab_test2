@@ -9,6 +9,7 @@
 #include "mda.h"
 
 class DiskReadMdaPrivate;
+class DiskReadMda_Common_Impl;
 /**
  * \class DiskReadMda
  * @brief Read-only access to a .mda file, especially useful for huge arrays that cannot be practically loaded into memory.
@@ -61,9 +62,7 @@ public:
 
 private:
     DiskReadMdaPrivate* d;
+    DiskReadMda_Common_Impl* dc;
 };
-
-///Unit test
-void diskreadmda_unit_test();
 
 #endif // DISKREADMDA_H

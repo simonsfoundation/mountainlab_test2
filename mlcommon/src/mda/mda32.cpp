@@ -275,6 +275,15 @@ long Mda32::N6() const
     return d->m_dims[5];
 }
 
+long Mda32::dim(int num) const
+{
+    if (num <= 0)
+        return 0;
+    if (num >= MDAIO_MAX_DIMS)
+        return 1;
+    return d->m_dims[num - 1];
+}
+
 long Mda32::totalSize() const
 {
     return d->m_total_size;

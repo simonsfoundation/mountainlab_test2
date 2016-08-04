@@ -35,6 +35,7 @@ public:
     long N1() const;
     long N2() const;
     long N3() const;
+    long dim(int num) const; //1-based
     QDateTime fileLastModified() const;
 
     ///Retrieve a chunk of the vectorized data of size 1xN starting at position i
@@ -44,8 +45,5 @@ public:
 private:
     RemoteReadMdaPrivate* d;
 };
-
-void unit_test_remote_read_mda_2(const QString& path);
-void unit_test_remote_read_mda();
 
 #endif // REMOTEREADMDA_H

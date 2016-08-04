@@ -131,6 +131,18 @@ long RemoteReadMda::N3() const
     return d->m_info.N3;
 }
 
+long RemoteReadMda::dim(int num) const
+{
+    d->download_info_if_needed();
+    if (num == 1)
+        return d->m_info.N1;
+    if (num == 2)
+        return d->m_info.N2;
+    if (num == 3)
+        return d->m_info.N3;
+    return 1;
+}
+
 QDateTime RemoteReadMda::fileLastModified() const
 {
     d->download_info_if_needed();
@@ -467,33 +479,6 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         QFile::rename(mda_fname, fname);
     }
     return fname;
-}
-
-void unit_test_remote_read_mda()
-{
-    QString url = "http://localhost:8000/firings.mda";
-    RemoteReadMda X(url);
-    Mda chunk;
-    X.readChunk(chunk, 0, 100);
-    for (int j = 0; j < 10; j++) {
-        qDebug() << j << chunk.value(j); // unit_test
-    }
-}
-
-#include "diskreadmda.h"
-void unit_test_remote_read_mda_2(const QString& path)
-{
-    // run this test by calling
-    // > mountainview unit_test remotereadmda2
-
-    DiskReadMda X(path);
-    for (int j = 0; j < 20; j++) {
-        printf("%d: ", j);
-        for (int i = 0; i < X.N1(); i++) {
-            printf("%g, ", X.value(i, j));
-        }
-        printf("\n");
-    }
 }
 
 void unquantize8(Mda& X, double minval, double maxval)
