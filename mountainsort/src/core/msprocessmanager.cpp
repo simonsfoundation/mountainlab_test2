@@ -38,6 +38,7 @@
 #include "mv_discrimhist_processor.h"
 #include "mv_discrimhist_sherpa_processor.h"
 #include "firings_subset_processor.h"
+#include "quantize_processor.h"
 #include <sys/stat.h>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -103,6 +104,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new mv_discrimhist_Processor);
     loadProcessor(new mv_discrimhist_sherpa_Processor);
     loadProcessor(new firings_subset_Processor);
+    loadProcessor(new quantize_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString& processor_name) const

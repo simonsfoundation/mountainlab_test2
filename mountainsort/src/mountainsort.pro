@@ -80,7 +80,8 @@ HEADERS += \
     processors/normalize_channels_processor.h \
     processors/normalize_channels.h \
     utils/pca.h \
-    processors/firings_subset_processor.h
+    processors/firings_subset_processor.h \
+    processors/quantize_processor.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -141,7 +142,8 @@ SOURCES += \
     processors/normalize_channels.cpp \
     utils/pca.cpp \
     processors/firings_subset_processor.cpp \
-    processors/branch_cluster_v2b.cpp
+    processors/branch_cluster_v2b.cpp \
+    processors/quantize_processor.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \

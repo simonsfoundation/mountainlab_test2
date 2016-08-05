@@ -137,6 +137,94 @@ bool Mda::write64(const QString& path) const
     return write64(path.toLatin1().data());
 }
 
+bool Mda::write16ui(const QString &path) const
+{
+    FILE* output_file = fopen(path.toLatin1().data(), "wb");
+    if (!output_file) {
+        printf("Warning: Unable to open mda file for writing: %s\n", path.toLatin1().data());
+        return false;
+    }
+    MDAIO_HEADER H;
+    H.data_type = MDAIO_TYPE_UINT16;
+    H.num_bytes_per_entry = 2;
+    for (int i = 0; i < MDAIO_MAX_DIMS; i++)
+        H.dims[i] = 1;
+    for (int i = 0; i < MDA_MAX_DIMS; i++)
+        H.dims[i] = d->m_dims[i];
+    H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
+    mda_write_header(&H, output_file);
+    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    fclose(output_file);
+    return true;
+}
+
+bool Mda::write32ui(const QString &path) const
+{
+    FILE* output_file = fopen(path.toLatin1().data(), "wb");
+    if (!output_file) {
+        printf("Warning: Unable to open mda file for writing: %s\n", path.toLatin1().data());
+        return false;
+    }
+    MDAIO_HEADER H;
+    H.data_type = MDAIO_TYPE_UINT32;
+    H.num_bytes_per_entry = 4;
+    for (int i = 0; i < MDAIO_MAX_DIMS; i++)
+        H.dims[i] = 1;
+    for (int i = 0; i < MDA_MAX_DIMS; i++)
+        H.dims[i] = d->m_dims[i];
+    H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
+    mda_write_header(&H, output_file);
+    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    fclose(output_file);
+    return true;
+}
+
+bool Mda::write16i(const QString &path) const
+{
+    FILE* output_file = fopen(path.toLatin1().data(), "wb");
+    if (!output_file) {
+        printf("Warning: Unable to open mda file for writing: %s\n", path.toLatin1().data());
+        return false;
+    }
+    MDAIO_HEADER H;
+    H.data_type = MDAIO_TYPE_INT16;
+    H.num_bytes_per_entry = 2;
+    for (int i = 0; i < MDAIO_MAX_DIMS; i++)
+        H.dims[i] = 1;
+    for (int i = 0; i < MDA_MAX_DIMS; i++)
+        H.dims[i] = d->m_dims[i];
+    H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
+    mda_write_header(&H, output_file);
+    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    fclose(output_file);
+    return true;
+}
+
+bool Mda::write32i(const QString &path) const
+{
+    FILE* output_file = fopen(path.toLatin1().data(), "wb");
+    if (!output_file) {
+        printf("Warning: Unable to open mda file for writing: %s\n", path.toLatin1().data());
+        return false;
+    }
+    MDAIO_HEADER H;
+    H.data_type = MDAIO_TYPE_INT32;
+    H.num_bytes_per_entry = 4;
+    for (int i = 0; i < MDAIO_MAX_DIMS; i++)
+        H.dims[i] = 1;
+    for (int i = 0; i < MDA_MAX_DIMS; i++)
+        H.dims[i] = d->m_dims[i];
+    H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
+    mda_write_header(&H, output_file);
+    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    fclose(output_file);
+    return true;
+}
+
 bool Mda::read(const char* path)
 {
     if ((QString(path).endsWith(".txt")) || (QString(path).endsWith(".csv"))) {

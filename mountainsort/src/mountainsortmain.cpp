@@ -198,6 +198,7 @@ QJsonArray test_processor(MSProcessManager* PM, QString processor_name)
             obj["processor_version"] = processor_version;
             obj["test_number"] = test_num;
             obj["success"] = results.success;
+            obj["error"] = results.error_message;
             QJsonObject params;
             {
                 foreach (QString p, reqparams) {
