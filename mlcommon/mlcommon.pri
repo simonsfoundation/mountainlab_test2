@@ -1,8 +1,11 @@
 INCLUDEPATH += $$PWD/include $$PWD/include/cachemanager
-#jfm switched back to static lib
-LIBS += $$PWD/lib/libmlcommon.a
-#LIBS += -L$$PWD/lib -lmlcommon
+MLCOMMONLIB = $$PWD/lib/libmlcommon.a
+LIBS += -L$$PWD/lib $$MLCOMMONLIB
 
-QMAKE_CXXFLAGS8
+unix:PRE_TARGETDEPS += $$MLCOMMONLIB
 
-unix:PRE_TARGETDEPS += $$PWD/lib/libmlcommon.so
+#The old version was as follows
+#INCLUDEPATH += $$PWD/include $$PWD/include/cachemanager
+#LIBS += $$PWD/lib/libmlcommon.a
+#QMAKE_CXXFLAGS8
+#unix:PRE_TARGETDEPS += $$PWD/lib/libmlcommon.so
