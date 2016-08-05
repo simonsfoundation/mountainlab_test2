@@ -60,6 +60,8 @@ QStringList MSProcessor::optionalParameters() const
 
 MSProcessorTestResults MSProcessor::runTest(int test_number, const QMap<QString, QVariant>& file_params)
 {
+    Q_UNUSED(test_number)
+    Q_UNUSED(file_params)
     MSProcessorTestResults results;
     results.test_exists = false;
     return results;

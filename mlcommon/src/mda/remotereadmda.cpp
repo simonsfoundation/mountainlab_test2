@@ -179,7 +179,7 @@ bool RemoteReadMda::readChunk(Mda& X, long i, long size) const
                 TaskProgress errtask("Download chunk at index");
                 errtask.log() << QString("m_remote_data_type = %1, download chunk size = %2").arg(d->m_remote_datatype).arg(d->m_download_chunk_size);
                 errtask.log() << d->m_path;
-                errtask.error() << QString("Failed to download chunk at index %1").arg(jj1);
+                errtask.error() << QString("Failed to download chunk at index %1 *").arg(jj1);
                 d->m_download_failed = true;
             }
             return false;
@@ -286,7 +286,7 @@ bool RemoteReadMda::readChunk32(Mda32& X, long i, long size) const
                 TaskProgress errtask("Download chunk at index");
                 errtask.log(QString("m_remote_data_type = %1, download chunk size = %2").arg(d->m_remote_datatype).arg(d->m_download_chunk_size));
                 errtask.log(d->m_path);
-                errtask.error(QString("Failed to download chunk at index %1").arg(jj1));
+                errtask.error(QString("Failed to download chunk at index %1 -").arg(jj1));
                 d->m_download_failed = true;
             }
             return false;
@@ -410,16 +410,22 @@ void RemoteReadMdaPrivate::download_info_if_needed()
 void unquantize8(Mda& X, double minval, double maxval);
 QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
 {
+    TaskProgress task(QString("Download chunk at index %1 ---").arg(ii));
     download_info_if_needed();
     long Ntot = m_info.N1 * m_info.N2 * m_info.N3;
     long size = m_download_chunk_size;
     if (ii * m_download_chunk_size + size > Ntot) {
         size = Ntot - ii * m_download_chunk_size;
     }
-    if (size <= 0)
+    if (size <= 0) {
+        task.log() << m_info.N1 << m_info.N2 << m_info.N3 << Ntot << m_download_chunk_size << ii;
+        task.error() << "Size is:" << size;
         return "";
-    if (m_info.checksum.isEmpty())
+    }
+    if (m_info.checksum.isEmpty()) {
+        task.error() << "Info checksum is empty";
         return "";
+    }
     QString file_name = m_info.checksum + "-" + QString("%1-%2").arg(m_download_chunk_size).arg(ii);
     QString fname = CacheManager::globalInstance()->makeLocalFile(file_name, CacheManager::ShortTerm);
     if (QFile::exists(fname))
@@ -436,11 +442,13 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         binary_url = m_path.mid(0, ind) + "/mdaserver/" + binary_url;
     }
 
+    task.log() << "binary_url:" << binary_url;
     QString mda_fname = MLNetwork::httpGetBinaryFile(binary_url);
     if (mda_fname.isEmpty())
         return "";
     DiskReadMda tmp(mda_fname);
     if (tmp.totalSize() != size) {
+        task.error() << "Unexpected total size problem: " << tmp.totalSize() << size;
         qWarning() << "Unexpected total size problem: " << tmp.totalSize() << size;
         QFile::remove(mda_fname);
         return "";
@@ -449,22 +457,29 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         QString dynamic_range_fname = MLNetwork::httpGetBinaryFile(binary_url + ".q8");
         if (dynamic_range_fname.isEmpty()) {
             qWarning() << "problem downloading .q8 file: " + binary_url + ".q8";
+            task.error() << "problem downloading .q8 file: " + binary_url + ".q8";
             return "";
         }
         Mda dynamic_range(dynamic_range_fname);
         if (dynamic_range.totalSize() != 2) {
             qWarning() << QString("Problem in .q8 file. Unexpected size %1: ").arg(dynamic_range.totalSize()) + binary_url + ".q8";
+            task.error() << QString("Problem in .q8 file. Unexpected size %1: ").arg(dynamic_range.totalSize()) + binary_url + ".q8";
             return "";
         }
         Mda chunk(mda_fname);
         unquantize8(chunk, dynamic_range.value(0), dynamic_range.value(1));
         if (!chunk.write32(fname)) {
             qWarning() << "Unable to write file: " + fname;
+            task.error() << "Unable to write file: " + fname;
             return "";
         }
     }
     else {
-        QFile::rename(mda_fname, fname);
+        if (!QFile::rename(mda_fname, fname)) {
+            qWarning() << "Unable to rename file: " << mda_fname << fname;
+            task.error() << "Unable to rename file: " << mda_fname << fname;
+            return "";
+        }
     }
     return fname;
 }
