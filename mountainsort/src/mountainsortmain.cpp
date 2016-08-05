@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
         printf("\n");
         for (int i = 0; i < all_results.count(); i++) {
             QString procname = all_results[i].toObject()["processor_name"].toString();
+            QString procversion = all_results[i].toObject()["processor_version"].toString();
             bool success = all_results[i].toObject()["success"].toBool();
             QString input_code = all_results[i].toObject()["input_code"].toString();
             QString output_code = all_results[i].toObject()["output_code"].toString();
@@ -97,7 +98,7 @@ int main(int argc, char* argv[])
                 passed_str = "PASSED";
             else
                 passed_str = "FAILED";
-            printf("%s %s %d %s %s\n", passed_str.toLatin1().data(), procname.toLatin1().data(), i, input_code.toLatin1().data(), output_code.toLatin1().data());
+            printf("%s %s %s %d %s %s\n", passed_str.toLatin1().data(), procname.toLatin1().data(), procversion.toLatin1().data(), i, input_code.toLatin1().data(), output_code.toLatin1().data());
         }
         return 0;
     }
@@ -168,11 +169,13 @@ QJsonArray test_processor(MSProcessManager* PM, QString processor_name)
         QJsonArray ret;
         QJsonObject tmp;
         tmp["processor_name"] = processor_name;
+        tmp["processor_version"] = "";
         tmp["test_number"] = 0;
         tmp["success"] = false;
         tmp["error"] = "Unable to find processor: " + processor_name;
         return ret;
     }
+    QString processor_version = P->version();
     QStringList inparams = P->inputFileParameters();
     QStringList outparams = P->outputFileParameters();
     QStringList reqparams = P->requiredParameters();
@@ -192,6 +195,7 @@ QJsonArray test_processor(MSProcessManager* PM, QString processor_name)
         if (results.test_exists) {
             QJsonObject obj;
             obj["processor_name"] = processor_name;
+            obj["processor_version"] = processor_version;
             obj["test_number"] = test_num;
             obj["success"] = results.success;
             QJsonObject params;
@@ -226,6 +230,8 @@ QJsonArray test_processor(MSProcessManager* PM, QString processor_name)
             }
             {
                 QJsonObject obj_input;
+                obj_input["processor_name"] = processor_name;
+                obj_input["processor_version"] = processor_version;
                 obj_input["input_file_info"] = input_file_info;
                 obj_input["params"] = params;
                 QString json = QJsonDocument(obj_input).toJson(QJsonDocument::Compact);

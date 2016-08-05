@@ -83,7 +83,7 @@ MSProcessorTestResults copy_Processor::runTest(int test_number, const QMap<QStri
         }
         if (TextFile::read(output_path) != txt) {
             results.success = false;
-            results.error_message = "Error running processor";
+            results.error_message = "Text does not match.";
             return results;
         }
         results.success = true;
