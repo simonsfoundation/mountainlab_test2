@@ -120,8 +120,6 @@ int main(int argc, char* argv[])
     Q_UNUSED(monitor);
     CloseMeHandler::start();
 
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
-
     setbuf(stdout, 0);
 
     CLParams CLP(argc, argv);
@@ -142,7 +140,6 @@ int main(int argc, char* argv[])
     if (CLP.unnamed_parameters.value(0).endsWith(".mv")) {
         mv_fname = CLP.unnamed_parameters.value(0);
     }
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (CLP.unnamed_parameters.value(0).endsWith(".smv")) {
         MVContext* mvcontext = new MVContext;
         mvcontext->setChannelColors(channel_colors);
@@ -202,7 +199,6 @@ int main(int argc, char* argv[])
         return a.exec();
     }
 
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
         if (arg2 == "remotereadmda") {
