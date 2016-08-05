@@ -18,7 +18,7 @@ bool normalize_channels(const QString& input, const QString& output)
     long M = X.N1();
     long N = X.N2();
     if (!N) {
-        qWarning() << "Input file does not exist: "+input;
+        qWarning() << "Input file does not exist: " + input;
         return false;
     }
 
@@ -26,7 +26,7 @@ bool normalize_channels(const QString& input, const QString& output)
     for (int m = 0; m < M; m++)
         sumsqrs[m] = 0;
     long chunk_size = PROCESSING_CHUNK_SIZE;
-    if ((N)&&(N < PROCESSING_CHUNK_SIZE)) {
+    if ((N) && (N < PROCESSING_CHUNK_SIZE)) {
         chunk_size = N;
     }
 

@@ -48,7 +48,7 @@ bool fit_stage_Processor::run(const QMap<QString, QVariant>& params)
     opts.clip_size = clip_size;
     opts.min_shell_size = params["min_shell_size"].toInt();
     opts.shell_increment = params["shell_increment"].toDouble();
-    opts.neglogprior = params.value("neglogprior",30).toDouble();
+    opts.neglogprior = params.value("neglogprior", 30).toDouble();
     if (params["use_old"].toBool()) {
         return fit_stage(timeseries_path, firings_path, firings_out_path, opts);
     }

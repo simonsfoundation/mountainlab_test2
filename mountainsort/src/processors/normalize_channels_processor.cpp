@@ -38,38 +38,38 @@ bool normalize_channels_Processor::run(const QMap<QString, QVariant>& params)
     return normalize_channels(input, output);
 }
 
-MSProcessorTestResults normalize_channels_Processor::runTest(int test_number, const QMap<QString, QVariant> &file_params)
+MSProcessorTestResults normalize_channels_Processor::runTest(int test_number, const QMap<QString, QVariant>& file_params)
 {
     MSProcessorTestResults results;
-    QMap<QString,QVariant> params=file_params;
+    QMap<QString, QVariant> params = file_params;
 
     QString input = params["timeseries"].toString();
     QString output = params["timeseries_out"].toString();
 
-    if ((0<=test_number)&&(test_number<1)) {
-        results.test_exists=true;
+    if ((0 <= test_number) && (test_number < 1)) {
+        results.test_exists = true;
 
         //set input parameters here
 
-        results.params=params;
-        long M=32;
-        long N=10000;
-        Mda X(M,N);
-        for (long n=0; n<N; n++) {
-            for (long m=0; m<M; m++) {
-                X.setValue(sin(n+sin(m)),m,n);
+        results.params = params;
+        long M = 32;
+        long N = 10000;
+        Mda X(M, N);
+        for (long n = 0; n < N; n++) {
+            for (long m = 0; m < M; m++) {
+                X.setValue(sin(n + sin(m)), m, n);
             }
         }
         X.write32(input);
         if (!this->run(params)) {
-            results.success=false;
-            results.error_message="Error running processor";
+            results.success = false;
+            results.error_message = "Error running processor";
             return results;
         }
-        results.success=true;
+        results.success = true;
     }
     else {
-        results.test_exists=false;
+        results.test_exists = false;
     }
 
     return results;

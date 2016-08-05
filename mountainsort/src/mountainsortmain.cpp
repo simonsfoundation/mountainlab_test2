@@ -25,7 +25,7 @@
 void print_usage();
 void list_processors(const MSProcessManager* PM);
 bool run_process(MSProcessManager* PM, QJsonObject process);
-QJsonArray test_processor(MSProcessManager *PM,QString processor_name);
+QJsonArray test_processor(MSProcessManager* PM, QString processor_name);
 
 int main(int argc, char* argv[])
 {
@@ -69,33 +69,35 @@ int main(int argc, char* argv[])
         return 0;
     }
     else if (arg1 == "test") {
-        QString processor_name=arg2;
+        QString processor_name = arg2;
         QJsonArray all_results;
         if (!processor_name.isEmpty()) {
-            QJsonArray results=test_processor(PM,processor_name);
-            foreach (QJsonValue result,results) {
+            QJsonArray results = test_processor(PM, processor_name);
+            foreach (QJsonValue result, results) {
                 all_results.append(result.toObject());
             }
         }
         else {
-            QStringList names=PM->allProcessorNames();
-            foreach (QString name,names) {
-                QJsonArray results=test_processor(PM,name);
-                foreach (QJsonValue result,results) {
+            QStringList names = PM->allProcessorNames();
+            foreach (QString name, names) {
+                QJsonArray results = test_processor(PM, name);
+                foreach (QJsonValue result, results) {
                     all_results.append(result.toObject());
                 }
             }
         }
         printf("\n");
-        for (int i=0; i<all_results.count(); i++) {
-            QString procname=all_results[i].toObject()["processor_name"].toString();
-            bool success=all_results[i].toObject()["success"].toBool();
-            QString input_code=all_results[i].toObject()["input_code"].toString();
-            QString output_code=all_results[i].toObject()["output_code"].toString();
+        for (int i = 0; i < all_results.count(); i++) {
+            QString procname = all_results[i].toObject()["processor_name"].toString();
+            bool success = all_results[i].toObject()["success"].toBool();
+            QString input_code = all_results[i].toObject()["input_code"].toString();
+            QString output_code = all_results[i].toObject()["output_code"].toString();
             QString passed_str;
-            if (success) passed_str="PASSED";
-            else passed_str="FAILED";
-            printf("%s %s %d %s %s\n",passed_str.toLatin1().data(),procname.toLatin1().data(),i,input_code.toLatin1().data(),output_code.toLatin1().data());
+            if (success)
+                passed_str = "PASSED";
+            else
+                passed_str = "FAILED";
+            printf("%s %s %d %s %s\n", passed_str.toLatin1().data(), procname.toLatin1().data(), i, input_code.toLatin1().data(), output_code.toLatin1().data());
         }
         return 0;
     }
@@ -159,93 +161,93 @@ bool run_process(MSProcessManager* PM, QJsonObject process)
     return true;
 }
 
-QJsonArray test_processor(MSProcessManager *PM,QString processor_name) {
-    MSProcessor *P=PM->processor(processor_name);
+QJsonArray test_processor(MSProcessManager* PM, QString processor_name)
+{
+    MSProcessor* P = PM->processor(processor_name);
     if (!P) {
         QJsonArray ret;
         QJsonObject tmp;
-        tmp["processor_name"]=processor_name;
-        tmp["test_number"]=0;
-        tmp["success"]=false;
-        tmp["error"]="Unable to find processor: "+processor_name;
+        tmp["processor_name"] = processor_name;
+        tmp["test_number"] = 0;
+        tmp["success"] = false;
+        tmp["error"] = "Unable to find processor: " + processor_name;
         return ret;
     }
-    QStringList inparams=P->inputFileParameters();
-    QStringList outparams=P->outputFileParameters();
-    QStringList reqparams=P->requiredParameters();
-    QStringList optparams=P->optionalParameters();
-    QMap<QString,QVariant> file_params;
-    foreach (QString p,inparams) {
-        file_params[p]=CacheManager::globalInstance()->makeLocalFile("",CacheManager::ShortTerm);
+    QStringList inparams = P->inputFileParameters();
+    QStringList outparams = P->outputFileParameters();
+    QStringList reqparams = P->requiredParameters();
+    QStringList optparams = P->optionalParameters();
+    QMap<QString, QVariant> file_params;
+    foreach (QString p, inparams) {
+        file_params[p] = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
     }
-    foreach (QString p,outparams) {
-        file_params[p]=CacheManager::globalInstance()->makeLocalFile("",CacheManager::ShortTerm);
+    foreach (QString p, outparams) {
+        file_params[p] = CacheManager::globalInstance()->makeLocalFile("", CacheManager::ShortTerm);
     }
-    int test_num=0;
-    bool done=false;
+    int test_num = 0;
+    bool done = false;
     QJsonArray all_results;
     while (!done) {
-        MSProcessorTestResults results=P->runTest(test_num,file_params);
+        MSProcessorTestResults results = P->runTest(test_num, file_params);
         if (results.test_exists) {
             QJsonObject obj;
-            obj["processor_name"]=processor_name;
-            obj["test_number"]=test_num;
-            obj["success"]=results.success;
+            obj["processor_name"] = processor_name;
+            obj["test_number"] = test_num;
+            obj["success"] = results.success;
             QJsonObject params;
             {
-                foreach (QString p,reqparams) {
-                    params[p]=QJsonValue::fromVariant(results.params[p]);
+                foreach (QString p, reqparams) {
+                    params[p] = QJsonValue::fromVariant(results.params[p]);
                 }
-                foreach (QString p,optparams) {
-                    params[p]=QJsonValue::fromVariant(results.params[p]);
+                foreach (QString p, optparams) {
+                    params[p] = QJsonValue::fromVariant(results.params[p]);
                 }
-                obj["params"]=params;
+                obj["params"] = params;
             }
             QJsonArray input_file_info;
             {
-                foreach (QString p,inparams) {
+                foreach (QString p, inparams) {
                     QJsonObject info;
-                    info["parameter_name"]=p;
-                    info["checksum"]=MLUtil::computeSha1SumOfFile(file_params[p].toString());
+                    info["parameter_name"] = p;
+                    info["checksum"] = MLUtil::computeSha1SumOfFile(file_params[p].toString());
                     input_file_info.append(info);
                 }
-                obj["input_file_info"]=input_file_info;
+                obj["input_file_info"] = input_file_info;
             }
             QJsonArray output_file_info;
             {
-                foreach (QString p,outparams) {
+                foreach (QString p, outparams) {
                     QJsonObject info;
-                    info["parameter_name"]=p;
-                    info["checksum"]=MLUtil::computeSha1SumOfFile(file_params[p].toString());
+                    info["parameter_name"] = p;
+                    info["checksum"] = MLUtil::computeSha1SumOfFile(file_params[p].toString());
                     output_file_info.append(info);
                 }
-                obj["output_file_info"]=output_file_info;
+                obj["output_file_info"] = output_file_info;
             }
             {
                 QJsonObject obj_input;
-                obj_input["input_file_info"]=input_file_info;
-                obj_input["params"]=params;
-                QString json=QJsonDocument(obj_input).toJson(QJsonDocument::Compact);
-                obj["input_code"]=MLUtil::computeSha1SumOfString(json);
+                obj_input["input_file_info"] = input_file_info;
+                obj_input["params"] = params;
+                QString json = QJsonDocument(obj_input).toJson(QJsonDocument::Compact);
+                obj["input_code"] = MLUtil::computeSha1SumOfString(json);
             }
             {
                 QJsonObject obj_output;
-                obj_output["output_file_info"]=output_file_info;
-                QString json=QJsonDocument(obj_output).toJson(QJsonDocument::Compact);
-                obj["output_code"]=MLUtil::computeSha1SumOfString(json);
+                obj_output["output_file_info"] = output_file_info;
+                QString json = QJsonDocument(obj_output).toJson(QJsonDocument::Compact);
+                obj["output_code"] = MLUtil::computeSha1SumOfString(json);
             }
             {
                 printf("Results:\n");
-                QString json=QJsonDocument(obj).toJson(QJsonDocument::Indented);
-                printf("%s\n",json.toLatin1().data());
+                QString json = QJsonDocument(obj).toJson(QJsonDocument::Indented);
+                printf("%s\n", json.toLatin1().data());
                 all_results.append(obj);
                 test_num++;
             }
         }
         else {
-            done=true;
+            done = true;
         }
     }
     return all_results;
 }
-

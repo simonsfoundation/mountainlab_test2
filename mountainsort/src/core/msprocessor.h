@@ -11,10 +11,10 @@
 #include <QDebug>
 
 struct MSProcessorTestResults {
-    bool test_exists=false;
-    bool success=false;
+    bool test_exists = false;
+    bool success = false;
     QString error_message;
-    QMap<QString,QVariant> params;
+    QMap<QString, QVariant> params;
 };
 
 class MSProcessorPrivate;
@@ -34,7 +34,7 @@ public:
 
     virtual bool check(const QMap<QString, QVariant>& params) = 0;
     virtual bool run(const QMap<QString, QVariant>& params) = 0;
-    virtual MSProcessorTestResults runTest(int test_number, const QMap<QString,QVariant> &file_params);
+    virtual MSProcessorTestResults runTest(int test_number, const QMap<QString, QVariant>& file_params);
 
 protected:
     void setName(const QString& name);
