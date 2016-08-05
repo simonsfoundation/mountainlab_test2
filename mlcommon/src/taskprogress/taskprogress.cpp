@@ -498,14 +498,13 @@ public:
 
     void incrementQuantity(QString name, double val) override
     {
-        return;
         QWriteLocker locker(&m_quantitiesMutex);
         m_quantities.insert(name, m_quantities.value(name, 0) + val);
+        locker.unlock();
         emit quantitiesChanged();
     }
     double getQuantity(QString name) const override
     {
-        return 0;
         QReadLocker locker(&m_quantitiesMutex);
         return m_quantities.value(name, 0);
     }
