@@ -4,7 +4,7 @@ DEFINES += USE_REMOTE_READ_MDA
 
 CONFIG += c++11
 CONFIG -= app_bundle
-#CONFIG += staticlib
+CONFIG += staticlib
 
 DESTDIR = ../lib
 OBJECTS_DIR = ../build

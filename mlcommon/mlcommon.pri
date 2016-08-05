@@ -1,7 +1,6 @@
 INCLUDEPATH += $$PWD/include $$PWD/include/cachemanager
 MLCOMMONLIB = $$PWD/lib/libmlcommon.a
 LIBS += -L$$PWD/lib $$MLCOMMONLIB
-
 unix:PRE_TARGETDEPS += $$MLCOMMONLIB
 
 #The old version was as follows
