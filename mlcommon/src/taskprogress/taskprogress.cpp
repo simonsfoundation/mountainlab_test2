@@ -498,13 +498,13 @@ public:
 
     void incrementQuantity(QString name, double val) override
     {
-        return; //disabling because not thread safe (jfm)
+        QWriteLocker locker(&m_quantitiesMutex);
         m_quantities.insert(name, m_quantities.value(name, 0) + val);
         emit quantitiesChanged();
     }
     double getQuantity(QString name) const override
     {
-        return 0; //disabling because not thread safe (jfm)
+        QReadLocker locker(&m_quantitiesMutex);
         return m_quantities.value(name, 0);
     }
 
@@ -590,6 +590,7 @@ protected:
 
 private:
     TaskProgressModelPrivate* m_model;
+    mutable QReadWriteLock m_quantitiesMutex;
     QMap<QString, double> m_quantities;
     ChangeLog::Manager m_changeManager;
     int m_timerId = 0;
