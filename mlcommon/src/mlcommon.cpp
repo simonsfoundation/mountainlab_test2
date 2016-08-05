@@ -337,7 +337,7 @@ QString MLUtil::computeSha1SumOfString(const QString& str)
 
 double MLCompute::sum(long N, double* X)
 {
-    return std::accumulate(X, X+N, 0);
+    return std::accumulate(X, X+N, 0.0);
 }
 
 double MLCompute::mean(long N, double* X)
@@ -494,7 +494,7 @@ double MLCompute::max(long N, float* X)
 
 double MLCompute::sum(long N, float* X)
 {
-    return std::accumulate(X, X+N, 0);
+    return std::accumulate(X, X+N, 0.0);
 }
 
 double MLCompute::mean(long N, float* X)
