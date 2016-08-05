@@ -58,6 +58,13 @@ QStringList MSProcessor::optionalParameters() const
     return d->m_optional_parameters;
 }
 
+MSProcessorTestResults MSProcessor::runTest(int test_number, const QMap<QString, QVariant> &file_params)
+{
+    MSProcessorTestResults results;
+    results.test_exists=false;
+    return results;
+}
+
 void MSProcessor::setName(const QString& name)
 {
     d->m_name = name;

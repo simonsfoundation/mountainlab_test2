@@ -572,7 +572,7 @@ bool DiskReadMda32Private::open_file_if_needed()
         }
     }
     else {
-        printf("Failed to open diskreadmda file: %s\n", m_path.toLatin1().data());
+        printf("Failed to open diskreadmda32 file: %s\n", m_path.toLatin1().data());
         m_file_open_failed = true; //we don't want to try this more than once
         return false;
     }

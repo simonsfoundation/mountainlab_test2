@@ -2,6 +2,7 @@
 
 #include <QFile>
 #include <QFileInfo>
+#include "mlcommon.h"
 
 class copy_ProcessorPrivate {
 public:
@@ -53,4 +54,43 @@ bool copy_Processor::run(const QMap<QString, QVariant>& params)
         return false;
     }
     return true;
+}
+
+MSProcessorTestResults copy_Processor::runTest(int test_number, const QMap<QString,QVariant> &file_params)
+{
+    MSProcessorTestResults results;
+    QMap<QString,QVariant> params=file_params;
+
+    QString input_path = params["input"].toString();
+    QString output_path = params["output"].toString();
+
+    QStringList texts;
+    texts << "This is a test\nof the copy processor";
+    texts << "This is another test of the copy processor";
+
+    if ((0<=test_number)&&(test_number<texts.count())) {
+        results.test_exists=true;
+
+        //set input parameters here
+
+        results.params=params;
+        QString txt=texts.value(test_number-1);
+        TextFile::write(input_path,txt);
+        if (!this->run(params)) {
+            results.success=false;
+            results.error_message="Error running processor";
+            return results;
+        }
+        if (TextFile::read(output_path)!=txt) {
+            results.success=false;
+            results.error_message="Error running processor";
+            return results;
+        }
+        results.success=true;
+    }
+    else {
+        results.test_exists=false;
+    }
+
+    return results;
 }

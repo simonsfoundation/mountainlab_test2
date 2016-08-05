@@ -17,6 +17,7 @@ public:
 
     bool check(const QMap<QString, QVariant>& params);
     bool run(const QMap<QString, QVariant>& params);
+    MSProcessorTestResults runTest(int test_number, const QMap<QString,QVariant> &file_params) Q_DECL_OVERRIDE;
 
 private:
     copy_ProcessorPrivate* d;
