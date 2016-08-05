@@ -34,6 +34,8 @@ public:
 
     virtual bool check(const QMap<QString, QVariant>& params) = 0;
     virtual bool run(const QMap<QString, QVariant>& params) = 0;
+
+    //see info in comments of the .cpp file
     virtual MSProcessorTestResults runTest(int test_number, const QMap<QString, QVariant>& file_params);
 
 protected:
