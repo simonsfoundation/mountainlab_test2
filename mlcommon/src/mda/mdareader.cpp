@@ -2,6 +2,7 @@
 #include <QSaveFile>
 #include <QFile>
 #include <QtEndian>
+#include <QFileInfo>
 
 class MdaIOHandler {
 public:
@@ -11,6 +12,7 @@ public:
     }
     virtual ~MdaIOHandler() {}
     virtual bool canRead() const = 0;
+    virtual bool canWrite() const { return false; }
     virtual bool read(Mda*) = 0;
     virtual bool read(Mda32*) { return false; }
     virtual bool write(const Mda&) { return false; }
@@ -44,6 +46,25 @@ public:
         setDevice(d);
     }
     bool canRead() const
+    {
+        if (!device())
+            return false;
+        if (format().toLower() == "mda")
+            return true;
+        if (format().toLower().startsWith("mda."))
+            return true;
+        if (format().isEmpty()) {
+            // try to auto detect by file name
+            if(QFileDevice *f = qobject_cast<QFileDevice*>(device())) {
+                QFileInfo finfo(f->fileName());
+                if (finfo.suffix().toLower() == "mda")
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    bool canWrite() const
     {
         if (!device())
             return false;
@@ -398,6 +419,7 @@ bool MdaReader::read(Mda* mda)
     if (!device()->isOpen() && !device()->open(QIODevice::ReadOnly))
         return false;
     MdaIOHandlerMDA h(device(), format());
+    if (!h.canRead()) return false;
     return h.read(mda);
 }
 
@@ -406,6 +428,7 @@ bool MdaReader::read(Mda32 *mda)
     if (!device()->isOpen() && !device()->open(QIODevice::ReadOnly))
         return false;
     MdaIOHandlerMDA h(device(), format());
+    if (!h.canRead()) return false;
     return h.read(mda);
 }
 
@@ -475,7 +498,7 @@ MdaWriter::~MdaWriter()
 bool MdaWriter::canWrite() const
 {
     MdaIOHandlerMDA h(device(), format());
-    return h.canRead();
+    return h.canWrite();
 }
 
 QIODevice* MdaWriter::device() const
@@ -522,6 +545,7 @@ bool MdaWriter::write(const Mda& mda)
     if (!device()->isOpen() && !device()->open(QIODevice::WriteOnly | QIODevice::Truncate))
         return false;
     MdaIOHandlerMDA h(device(), format());
+    if (!h.canWrite()) return false;
     bool res = h.write(mda);
     if (QSaveFile *f = qobject_cast<QSaveFile*>(device()))
         f->commit();
@@ -536,6 +560,7 @@ bool MdaWriter::write(const Mda32 &mda)
     if (!device()->isOpen() && !device()->open(QIODevice::WriteOnly | QIODevice::Truncate))
         return false;
     MdaIOHandlerMDA h(device(), format());
+    if (!h.canWrite()) return false;
     bool res = h.write(mda);
     if (QSaveFile *f = qobject_cast<QSaveFile*>(device()))
         f->commit();
