@@ -2,6 +2,7 @@
 #define MDAREADER_H
 
 #include "mda/mda.h"
+#include "mda/mda32.h"
 
 class QIODevice;
 class MdaReaderPrivate;
@@ -16,7 +17,9 @@ public:
     QString fileName() const;
     QByteArray format() const;
     Mda read();
+    Mda32 read32();
     bool read(Mda*);
+    bool read(Mda32*mda);
     void setDevice(QIODevice*);
     void setFileName(const QString&);
 
@@ -38,6 +41,7 @@ public:
     void setDevice(QIODevice*);
     void setFileName(const QString& fileName);
     bool write(const Mda&);
+    bool write(const Mda32&);
 
 private:
     MdaWriterPrivate* d;
