@@ -6,9 +6,13 @@
 
 #include "synthesize1.h"
 #include "mda.h"
+#include <random>
+
+#include <mda32.h>
 
 double rand_uniform(double a, double b);
 long rand_int(long a, long b);
+void generate_randn(size_t N, float *X);
 
 bool synthesize1(const QString& waveforms_in_path, const QString& info_in_path, const QString& timeseries_out_path, const synthesize1_opts& opts)
 {
@@ -21,10 +25,12 @@ bool synthesize1(const QString& waveforms_in_path, const QString& info_in_path, 
     int T = W.N2();
     int K = W.N3();
 
-    Mda X(M, N);
+    Mda32 X(M, N);
+    generate_randn(X.totalSize(),X.dataPtr());
     for (long n = 0; n < N; n++) {
         for (long m = 0; m < M; m++) {
-            double val = rand_uniform(-1, 1) * noise_level;
+            double val=X.get(m,n);
+            val=val*noise_level;
             X.set(val, m, n);
         }
     }
@@ -56,4 +62,13 @@ double rand_uniform(double a, double b)
 {
     double val = (qrand() + 0.5) / RAND_MAX;
     return a + val * (b - a);
+}
+
+void generate_randn(size_t N, float *X) {
+    std::random_device rd; //to generate a non-deterministic integer (I believe)
+    std::mt19937 e2(rd()); //the random number generator, seeded by rd() (I believe)
+    std::normal_distribution<> dist(0, 1); //to generate random numbers from normal distribution
+    for (size_t n=0; n<N; n++) {
+        X[n]=dist(e2);
+    }
 }
