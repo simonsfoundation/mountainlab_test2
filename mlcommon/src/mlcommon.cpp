@@ -265,7 +265,6 @@ double MLCompute::mean(const QVector<double>& X)
     if (X.isEmpty())
         return 0;
     double s = sum(X);
-    qDebug() << s << X.count();
     return s / X.count();
 }
 
