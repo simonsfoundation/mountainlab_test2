@@ -1,5 +1,5 @@
 {
-        "clip_size":100,
+        "clip_size":50,
         "detect_threshold":4.5,
         "detect_interval":10,
         "shell_increment":3,
@@ -10,9 +10,10 @@
         "freq_max":10000,
         "num_fea":10,
         "adj_radius":5,
-        "channels":"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32",
+        "channels":"",
         "timerange":[-1,-1],
         "use_whitening":"true",
-	"use_mask_out_artifacts":"true"
+	"use_mask_out_artifacts":"true",
+        "cluster_num_threads":0
 }
 

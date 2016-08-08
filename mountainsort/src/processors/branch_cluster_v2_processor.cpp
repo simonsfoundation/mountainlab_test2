@@ -1,5 +1,6 @@
 #include "branch_cluster_v2_processor.h"
 #include "branch_cluster_v2.h"
+#include "omp.h"
 
 class branch_cluster_v2_ProcessorPrivate {
 public:
@@ -12,12 +13,13 @@ branch_cluster_v2_Processor::branch_cluster_v2_Processor()
     d->q = this;
 
     this->setName("branch_cluster_v2");
-    this->setVersion("0.16");
+    this->setVersion("0.17");
     this->setInputFileParameters("timeseries", "detect", "adjacency_matrix");
     this->setOutputFileParameters("firings_out");
     this->setRequiredParameters("clip_size", "min_shell_size", "shell_increment", "num_features");
     this->setRequiredParameters("detect_interval");
     this->setOptionalParameters("num_pca_representatives", "consolidation_factor");
+    this->setOptionalParameters("num_threads");
 }
 
 branch_cluster_v2_Processor::~branch_cluster_v2_Processor()
@@ -47,6 +49,11 @@ bool branch_cluster_v2_Processor::run(const QMap<QString, QVariant>& params)
     opts.detect_interval = params["detect_interval"].toInt();
     opts.num_pca_representatives = params.value("num_pca_representatives", 5000).toLongLong();
     opts.consolidation_factor = params.value("consolidation_factor", 0.9).toDouble();
+
+    int num_threads = params.value("num_threads", 0).toInt();
+    if (num_threads > 0) {
+        omp_set_num_threads(num_threads);
+    }
 
     //return branch_cluster_v2(timeseries_path, detect_path, adjacency_matrix_path, firings_path, opts);
     return branch_cluster_v2b(timeseries_path, detect_path, adjacency_matrix_path, firings_path, opts);
