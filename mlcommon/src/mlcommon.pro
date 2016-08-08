@@ -17,7 +17,8 @@ VPATH += ../include
 HEADERS += mlcommon.h sumit.h \
     ../include/mda/mda32.h \
     ../include/mda/diskreadmda32.h \
-    ../include/mda/mdareader.h
+    ../include/mda/mdareader.h \
+    ../include/mda/mdareader_p.h
 
 SOURCES += \
     mlcommon.cpp sumit.cpp \

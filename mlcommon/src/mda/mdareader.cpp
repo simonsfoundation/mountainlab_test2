@@ -1,484 +1,9 @@
 #include "mda/mdareader.h"
+#include "mda/mdareader_p.h"
 #include <QSaveFile>
 #include <QFile>
-#include <QtEndian>
 #include <QFileInfo>
 #include <QSharedPointer>
-
-class MdaIOHandler {
-public:
-    MdaIOHandler()
-        : dev(0)
-    {
-    }
-    virtual ~MdaIOHandler() {}
-    virtual bool canRead() const = 0;
-    virtual bool canWrite() const { return false; }
-    virtual bool read(Mda*) = 0;
-    virtual bool read(Mda32*) { return false; }
-    virtual bool write(const Mda&) { return false; }
-    virtual bool write(const Mda32&) { return false; }
-    QIODevice* device() const { return dev; }
-    void setDevice(QIODevice* d) { dev = d; }
-    QByteArray format() const { return fmt; }
-    void setFormat(const QByteArray& ba) { fmt = ba; }
-private:
-    QIODevice* dev;
-    QByteArray fmt;
-};
-
-class MdaIOHandlerFactory {
-public:
-    virtual ~MdaIOHandlerFactory() {}
-    virtual MdaIOHandler* create(QIODevice *device, const QByteArray &format = QByteArray()) const = 0;
-};
-
-class MdaIOHandlerMDA : public MdaIOHandler {
-public:
-    enum DataType {
-        Complex = -1,
-        Byte = -2,
-        Float32 = -3,
-        Int16 = -4,
-        Int32 = -5,
-        UInt16 = -6,
-        Float64 = -7,
-        UInt32 = -8
-    };
-
-    const int maxDims = 50;
-    MdaIOHandlerMDA(QIODevice* d, const QByteArray& fmt)
-    {
-        setFormat(fmt);
-        setDevice(d);
-    }
-    bool canRead() const
-    {
-        if (!device())
-            return false;
-        if (format().toLower() == "mda")
-            return true;
-        if (format().toLower().startsWith("mda."))
-            return true;
-        if (format().isEmpty()) {
-            // try to auto detect by file name
-            if(QFileDevice *f = qobject_cast<QFileDevice*>(device())) {
-                QFileInfo finfo(f->fileName());
-                if (finfo.suffix().toLower() == "mda")
-                    return true;
-            }
-        }
-        return false;
-    }
-
-    bool canWrite() const
-    {
-        if (!device())
-            return false;
-        if (format().toLower() == "mda")
-            return true;
-        if (format().toLower().startsWith("mda."))
-            return true;
-        return false;
-    }
-    bool read(Mda* mda)
-    {
-        Header header;
-        if (!readLE(&header.data_type))
-            return false;
-        if (!readLE(&header.num_bytes_per_entry))
-            return false;
-        if (!readLE(&header.num_dims))
-            return false;
-        if (header.num_dims <= 0 || header.num_dims > maxDims)
-            return false;
-        header.dims.resize(header.num_dims);
-        for (size_t i = 0; i < (size_t)header.num_dims; ++i) {
-            if (!readLE(header.dims.data() + i))
-                return false;
-        }
-        while (header.dims.size() < 6)
-            header.dims.append(1);
-        if (!mda->allocate(header.dims[0], header.dims[1], header.dims[2], header.dims[3], header.dims[4], header.dims[5]))
-            return false;
-        switch (header.data_type) {
-        case Byte:
-            return readData<unsigned char>(mda->dataPtr(), mda->totalSize());
-        case Float32:
-            return readData<float>(mda->dataPtr(), mda->totalSize());
-        case Int16:
-            return readData<int16_t>(mda->dataPtr(), mda->totalSize());
-        case Int32:
-            return readData<int32_t>(mda->dataPtr(), mda->totalSize());
-        case UInt16:
-            return readData<uint16_t>(mda->dataPtr(), mda->totalSize());
-        case Float64:
-            return readData<double>(mda->dataPtr(), mda->totalSize());
-        case UInt32:
-            return readData<uint32_t>(mda->dataPtr(), mda->totalSize());
-        default:
-            return false;
-        }
-        return true;
-    }
-    bool read(Mda32 *mda) {
-        Header header;
-        if (!readLE(&header.data_type))
-            return false;
-        if (!readLE(&header.num_bytes_per_entry))
-            return false;
-        if (!readLE(&header.num_dims))
-            return false;
-        if (header.num_dims <= 0 || header.num_dims > maxDims)
-            return false;
-        header.dims.resize(header.num_dims);
-        for (size_t i = 0; i < (size_t)header.num_dims; ++i) {
-            if (!readLE(header.dims.data() + i))
-                return false;
-        }
-        while (header.dims.size() < 6)
-            header.dims.append(1);
-        if (!mda->allocate(header.dims[0], header.dims[1], header.dims[2], header.dims[3], header.dims[4], header.dims[5]))
-            return false;
-        switch (header.data_type) {
-        case Byte:
-            return readData<unsigned char>(mda->dataPtr(), mda->totalSize());
-        case Float32:
-            return readData<float>(mda->dataPtr(), mda->totalSize());
-        case Int16:
-            return readData<int16_t>(mda->dataPtr(), mda->totalSize());
-        case Int32:
-            return readData<int32_t>(mda->dataPtr(), mda->totalSize());
-        case UInt16:
-            return readData<uint16_t>(mda->dataPtr(), mda->totalSize());
-        case Float64:
-            return readData<double>(mda->dataPtr(), mda->totalSize());
-        case UInt32:
-            return readData<uint32_t>(mda->dataPtr(), mda->totalSize());
-        default:
-            return false;
-        }
-        return true;
-    }
-
-    bool write(const Mda& mda)
-    {
-        Header header;
-        if (format().toLower().startsWith("mda.")) {
-            QByteArray subFormat = format().toLower().mid(4);
-            if (subFormat == "byte") {
-                header.data_type = Byte;
-                header.num_bytes_per_entry = 1;
-            } else if (subFormat == "float" || subFormat == "float32") {
-                header.data_type = Float32;
-                header.num_bytes_per_entry = 4;
-            } else if (subFormat == "int16") {
-                header.data_type = Int16;
-                header.num_bytes_per_entry = 2;
-            } else if (subFormat == "int" || subFormat == "int32") {
-                header.data_type = Int32;
-                header.num_bytes_per_entry = 4;
-            } else if (subFormat == "uint16") {
-                header.data_type = UInt16;
-                header.num_bytes_per_entry = 2;
-            } else if (subFormat == "double" || subFormat == "float64") {
-                header.data_type = Float64;
-                header.num_bytes_per_entry = 8;
-            } else if (subFormat == "uint" || subFormat == "uint32") {
-                header.data_type = UInt32;
-                header.num_bytes_per_entry = 4;
-            } else {
-                return false;
-            }
-        } else {
-            header.data_type = Float64;
-            header.num_bytes_per_entry = 8;
-        }
-        header.num_dims = mda.ndims();
-        header.dims.resize(header.num_dims);
-        for (int i = 0; i < header.num_dims; ++i) {
-            header.dims[i] = mda.size(i);
-        }
-        // commit the header
-        writeLE(header.data_type);
-        writeLE(header.num_bytes_per_entry);
-        writeLE(header.num_dims);
-        for (int32_t dim : header.dims)
-            writeLE(dim);
-
-        // commit data
-        switch (header.data_type) {
-        case Byte:
-            return writeData<unsigned char>(mda.constDataPtr(), mda.totalSize());
-        case Float32:
-            return writeData<float>(mda.constDataPtr(), mda.totalSize());
-        case Int16:
-            return writeData<int16_t>(mda.constDataPtr(), mda.totalSize());
-        case Int32:
-            return writeData<int32_t>(mda.constDataPtr(), mda.totalSize());
-        case UInt16:
-            return writeData<uint16_t>(mda.constDataPtr(), mda.totalSize());
-        case Float64:
-            return writeData<double>(mda.constDataPtr(), mda.totalSize());
-        case UInt32:
-            return writeData<uint32_t>(mda.constDataPtr(), mda.totalSize());
-        default:
-            return false;
-        }
-    }
-
-    bool write(const Mda32& mda)
-    {
-        Header header;
-        if (format().toLower().startsWith("mda.")) {
-            QByteArray subFormat = format().toLower().mid(4);
-            if (subFormat == "byte") {
-                header.data_type = Byte;
-                header.num_bytes_per_entry = 1;
-            } else if (subFormat == "float" || subFormat == "float32") {
-                header.data_type = Float32;
-                header.num_bytes_per_entry = 4;
-            } else if (subFormat == "int16") {
-                header.data_type = Int16;
-                header.num_bytes_per_entry = 2;
-            } else if (subFormat == "int" || subFormat == "int32") {
-                header.data_type = Int32;
-                header.num_bytes_per_entry = 4;
-            } else if (subFormat == "uint16") {
-                header.data_type = UInt16;
-                header.num_bytes_per_entry = 2;
-            } else if (subFormat == "double" || subFormat == "float64") {
-                header.data_type = Float64;
-                header.num_bytes_per_entry = 8;
-            } else if (subFormat == "uint" || subFormat == "uint32") {
-                header.data_type = UInt32;
-                header.num_bytes_per_entry = 4;
-            } else {
-                return false;
-            }
-        } else {
-            header.data_type = Float64;
-            header.num_bytes_per_entry = 8;
-        }
-        header.num_dims = mda.ndims();
-        header.dims.resize(header.num_dims);
-        for (int i = 0; i < header.num_dims; ++i) {
-            header.dims[i] = mda.size(i);
-        }
-        // commit the header
-        writeLE(header.data_type);
-        writeLE(header.num_bytes_per_entry);
-        writeLE(header.num_dims);
-        for (int32_t dim : header.dims)
-            writeLE(dim);
-
-        // commit data
-        switch (header.data_type) {
-        case Byte:
-            return writeData<unsigned char>(mda.constDataPtr(), mda.totalSize());
-        case Float32:
-            return writeData<float>(mda.constDataPtr(), mda.totalSize());
-        case Int16:
-            return writeData<int16_t>(mda.constDataPtr(), mda.totalSize());
-        case Int32:
-            return writeData<int32_t>(mda.constDataPtr(), mda.totalSize());
-        case UInt16:
-            return writeData<uint16_t>(mda.constDataPtr(), mda.totalSize());
-        case Float64:
-            return writeData<double>(mda.constDataPtr(), mda.totalSize());
-        case UInt32:
-            return writeData<uint32_t>(mda.constDataPtr(), mda.totalSize());
-        default:
-            return false;
-        }
-    }
-
-    struct Header {
-        int32_t data_type;
-        int32_t num_bytes_per_entry;
-        int32_t num_dims;
-        QVector<int32_t> dims;
-    };
-    template <typename T>
-    bool readLE(T* ptr)
-    {
-        if (device()->read((char*)ptr, sizeof(T)) != sizeof(T))
-            return false;
-        *ptr = qFromLittleEndian(*ptr);
-        return true;
-    }
-    template <typename T>
-    bool writeLE(T val)
-    {
-        val = qToLittleEndian(val);
-        return (device()->write((char*)&val, sizeof(T)) == sizeof(T));
-    }
-
-    template <typename src, typename dst>
-    bool readData(dst* ptr, size_t cnt = 1)
-    {
-        src val;
-        for (size_t i = 0; i < cnt; ++i) {
-            if (!readLE(&val))
-                return false;
-            *(ptr++) = val;
-        }
-        return true;
-    }
-    template <typename dst, typename src>
-    bool writeData(src* ptr, size_t cnt = 1)
-    {
-        dst val;
-        for (size_t i = 0; i < cnt; ++i) {
-            val = *(ptr++);
-            if (!writeLE(val))
-                return false;
-        }
-        return true;
-    }
-};
-
-class MdaIOHandlerMDAFactory : public MdaIOHandlerFactory {
-public:
-    MdaIOHandlerMDAFactory() {}
-    MdaIOHandler *create(QIODevice *device, const QByteArray &format) const {
-        return new MdaIOHandlerMDA(device, format);
-    }
-};
-
-class MdaIOHandlerCSV : public MdaIOHandler {
-public:
-    MdaIOHandlerCSV(QIODevice *device, const QByteArray &format) {
-        setDevice(device);
-        setFormat(format);
-    }
-
-    bool canRead() const {
-        if (!device())
-            return false;
-        if (format().toLower() == "csv")
-            return true;
-        if (format().isEmpty()) {
-            // try to auto detect by file name
-            if(QFileDevice *f = qobject_cast<QFileDevice*>(device())) {
-                QFileInfo finfo(f->fileName());
-                if (finfo.suffix().toLower() == "csv")
-                    return true;
-            }
-        }
-        return false;
-    }
-    bool canWrite() const {
-        if (!device())
-            return false;
-        if (format().toLower() == "csv")
-            return true;
-        return false;
-    }
-    bool read(Mda *mda) {
-        QVector<QVector<double> > data;
-
-        QTextStream stream(device());
-        while(!device()->atEnd()) {
-            QString line = stream.readLine().trimmed();
-            if(line.isEmpty()) continue;
-            /// TODO: handle header
-            if (line.startsWith('#'))
-                continue;
-            QStringList tokens = line.split(',', QString::SkipEmptyParts);
-            QVector<double> row;
-            foreach(const QString &token, tokens) {
-                row.append(token.toDouble());
-            }
-            data.append(row);
-        }
-        if (data.isEmpty())
-            return false;
-        const int columnCount = data.first().count();
-        const int rowCount = data.count();
-        if (!mda->allocate(columnCount, rowCount))
-            return false;
-        for (int r = 0; r < rowCount; ++r) {
-            const QVector<double> &row = data.at(r);
-            for (int c = 0; c < columnCount; ++c) {
-                double value = c < row.count() ? row.at(c) : 0.0;
-                mda->setValue(value, c, r);
-            }
-        }
-        return true;
-    }
-
-    bool read(Mda32 *mda) {
-        QVector<QVector<float> > data;
-
-        QTextStream stream(device());
-        while(!device()->atEnd()) {
-            QString line = stream.readLine().trimmed();
-            if(line.isEmpty()) continue;
-            /// TODO: handle header
-            if (line.startsWith('#'))
-                continue;
-            QStringList tokens = line.split(',', QString::SkipEmptyParts);
-            QVector<float> row;
-            foreach(const QString &token, tokens) {
-                row.append(token.toFloat());
-            }
-            data.append(row);
-        }
-        if (data.isEmpty())
-            return false;
-        const int columnCount = data.first().count();
-        const int rowCount = data.count();
-        if (!mda->allocate(columnCount, rowCount))
-            return false;
-        for (int r = 0; r < rowCount; ++r) {
-            const QVector<float> &row = data.at(r);
-            for (int c = 0; c < columnCount; ++c) {
-                float value = c < row.count() ? row.at(c) : 0.0;
-                mda->setValue(value, c, r);
-            }
-        }
-        return true;
-    }
-
-    bool write(const Mda &mda) {
-        QTextStream stream(device());
-        for (size_t r = 0; r < (size_t)mda.N2(); ++r) {
-            for (size_t c = 0; c < (size_t)mda.N1(); ++c) {
-                double value = mda.value(c, r);
-                if (c != 0) {
-                    stream << ", ";
-                }
-                stream << QString::number(value);
-            }
-            stream << endl;
-        }
-        return true;
-    }
-
-    bool write(const Mda32 &mda) {
-        QTextStream stream(device());
-        for (size_t r = 0; r < (size_t)mda.N2(); ++r) {
-            for (size_t c = 0; c < (size_t)mda.N1(); ++c) {
-                double value = mda.value(c, r);
-                if (c != 0) {
-                    stream << ", ";
-                }
-                stream << QString::number(value);
-            }
-            stream << endl;
-        }
-        return true;
-    }
-};
-
-class MdaIOHandlerCSVFactory : public MdaIOHandlerFactory {
-public:
-    MdaIOHandlerCSVFactory() {}
-    MdaIOHandler *create(QIODevice *device, const QByteArray &format) const {
-        return new MdaIOHandlerCSV(device, format);
-    }
-};
 
 Q_GLOBAL_STATIC(QList<QSharedPointer<MdaIOHandlerFactory> >, _mdaReaderFactories)
 
@@ -529,7 +54,7 @@ MdaReader::~MdaReader()
 
 bool MdaReader::canRead() const
 {
-    for(int i = 0; i < _mdaReaderFactories->size(); ++i) {
+    for (int i = 0; i < _mdaReaderFactories->size(); ++i) {
         MdaIOHandler* handler = _mdaReaderFactories->at(i)->create(device(), format());
         if (handler->canRead()) {
             delete handler;
@@ -748,4 +273,407 @@ bool MdaWriter::write(const Mda32 &mda)
         delete handler;
     }
     return false;
+}
+
+MdaIOHandler::MdaIOHandler()
+    : dev(0)
+{
+}
+
+bool MdaIOHandler::canWrite() const { return false; }
+
+bool MdaIOHandler::read(Mda32 *) { return false; }
+
+bool MdaIOHandler::write(const Mda &) { return false; }
+
+bool MdaIOHandler::write(const Mda32 &) { return false; }
+
+QIODevice *MdaIOHandler::device() const { return dev; }
+
+void MdaIOHandler::setDevice(QIODevice *d) { dev = d; }
+
+QByteArray MdaIOHandler::format() const { return fmt; }
+
+void MdaIOHandler::setFormat(const QByteArray &ba) { fmt = ba; }
+
+MdaIOHandlerMDA::MdaIOHandlerMDA(QIODevice *d, const QByteArray &fmt)
+{
+    setFormat(fmt);
+    setDevice(d);
+}
+
+bool MdaIOHandlerMDA::canRead() const
+{
+    if (!device())
+        return false;
+    if (format().toLower() == "mda")
+        return true;
+    if (format().toLower().startsWith("mda."))
+        return true;
+    if (format().isEmpty()) {
+        // try to auto detect by file name
+        if(QFileDevice *f = qobject_cast<QFileDevice*>(device())) {
+            QFileInfo finfo(f->fileName());
+            if (finfo.suffix().toLower() == "mda")
+                return true;
+        }
+    }
+    return false;
+}
+
+bool MdaIOHandlerMDA::canWrite() const
+{
+    if (!device())
+        return false;
+    if (format().toLower() == "mda")
+        return true;
+    if (format().toLower().startsWith("mda."))
+        return true;
+    return false;
+}
+
+bool MdaIOHandlerMDA::read(Mda *mda)
+{
+    Header header;
+    if (!readLE(&header.data_type))
+        return false;
+    if (!readLE(&header.num_bytes_per_entry))
+        return false;
+    if (!readLE(&header.num_dims))
+        return false;
+    if (header.num_dims <= 0 || header.num_dims > maxDims)
+        return false;
+    header.dims.resize(header.num_dims);
+    for (size_t i = 0; i < (size_t)header.num_dims; ++i) {
+        if (!readLE(header.dims.data() + i))
+            return false;
+    }
+    while (header.dims.size() < 6)
+        header.dims.append(1);
+    if (!mda->allocate(header.dims[0], header.dims[1], header.dims[2], header.dims[3], header.dims[4], header.dims[5]))
+        return false;
+    switch (header.data_type) {
+    case Byte:
+        return readData<unsigned char>(mda->dataPtr(), mda->totalSize());
+    case Float32:
+        return readData<float>(mda->dataPtr(), mda->totalSize());
+    case Int16:
+        return readData<int16_t>(mda->dataPtr(), mda->totalSize());
+    case Int32:
+        return readData<int32_t>(mda->dataPtr(), mda->totalSize());
+    case UInt16:
+        return readData<uint16_t>(mda->dataPtr(), mda->totalSize());
+    case Float64:
+        return readData<double>(mda->dataPtr(), mda->totalSize());
+    case UInt32:
+        return readData<uint32_t>(mda->dataPtr(), mda->totalSize());
+    default:
+        return false;
+    }
+    return true;
+}
+
+bool MdaIOHandlerMDA::read(Mda32 *mda) {
+    Header header;
+    if (!readLE(&header.data_type))
+        return false;
+    if (!readLE(&header.num_bytes_per_entry))
+        return false;
+    if (!readLE(&header.num_dims))
+        return false;
+    if (header.num_dims <= 0 || header.num_dims > maxDims)
+        return false;
+    header.dims.resize(header.num_dims);
+    for (size_t i = 0; i < (size_t)header.num_dims; ++i) {
+        if (!readLE(header.dims.data() + i))
+            return false;
+    }
+    while (header.dims.size() < 6)
+        header.dims.append(1);
+    if (!mda->allocate(header.dims[0], header.dims[1], header.dims[2], header.dims[3], header.dims[4], header.dims[5]))
+        return false;
+    switch (header.data_type) {
+    case Byte:
+        return readData<unsigned char>(mda->dataPtr(), mda->totalSize());
+    case Float32:
+        return readData<float>(mda->dataPtr(), mda->totalSize());
+    case Int16:
+        return readData<int16_t>(mda->dataPtr(), mda->totalSize());
+    case Int32:
+        return readData<int32_t>(mda->dataPtr(), mda->totalSize());
+    case UInt16:
+        return readData<uint16_t>(mda->dataPtr(), mda->totalSize());
+    case Float64:
+        return readData<double>(mda->dataPtr(), mda->totalSize());
+    case UInt32:
+        return readData<uint32_t>(mda->dataPtr(), mda->totalSize());
+    default:
+        return false;
+    }
+    return true;
+}
+
+bool MdaIOHandlerMDA::write(const Mda &mda)
+{
+    Header header;
+    if (format().toLower().startsWith("mda.")) {
+        QByteArray subFormat = format().toLower().mid(4);
+        if (subFormat == "byte") {
+            header.data_type = Byte;
+            header.num_bytes_per_entry = 1;
+        } else if (subFormat == "float" || subFormat == "float32") {
+            header.data_type = Float32;
+            header.num_bytes_per_entry = 4;
+        } else if (subFormat == "int16") {
+            header.data_type = Int16;
+            header.num_bytes_per_entry = 2;
+        } else if (subFormat == "int" || subFormat == "int32") {
+            header.data_type = Int32;
+            header.num_bytes_per_entry = 4;
+        } else if (subFormat == "uint16") {
+            header.data_type = UInt16;
+            header.num_bytes_per_entry = 2;
+        } else if (subFormat == "double" || subFormat == "float64") {
+            header.data_type = Float64;
+            header.num_bytes_per_entry = 8;
+        } else if (subFormat == "uint" || subFormat == "uint32") {
+            header.data_type = UInt32;
+            header.num_bytes_per_entry = 4;
+        } else {
+            return false;
+        }
+    } else {
+        header.data_type = Float64;
+        header.num_bytes_per_entry = 8;
+    }
+    header.num_dims = mda.ndims();
+    header.dims.resize(header.num_dims);
+    for (int i = 0; i < header.num_dims; ++i) {
+        header.dims[i] = mda.size(i);
+    }
+    // commit the header
+    writeLE(header.data_type);
+    writeLE(header.num_bytes_per_entry);
+    writeLE(header.num_dims);
+    for (int32_t dim : header.dims)
+        writeLE(dim);
+
+    // commit data
+    switch (header.data_type) {
+    case Byte:
+        return writeData<unsigned char>(mda.constDataPtr(), mda.totalSize());
+    case Float32:
+        return writeData<float>(mda.constDataPtr(), mda.totalSize());
+    case Int16:
+        return writeData<int16_t>(mda.constDataPtr(), mda.totalSize());
+    case Int32:
+        return writeData<int32_t>(mda.constDataPtr(), mda.totalSize());
+    case UInt16:
+        return writeData<uint16_t>(mda.constDataPtr(), mda.totalSize());
+    case Float64:
+        return writeData<double>(mda.constDataPtr(), mda.totalSize());
+    case UInt32:
+        return writeData<uint32_t>(mda.constDataPtr(), mda.totalSize());
+    default:
+        return false;
+    }
+}
+
+bool MdaIOHandlerMDA::write(const Mda32 &mda)
+{
+    Header header;
+    if (format().toLower().startsWith("mda.")) {
+        QByteArray subFormat = format().toLower().mid(4);
+        if (subFormat == "byte") {
+            header.data_type = Byte;
+            header.num_bytes_per_entry = 1;
+        } else if (subFormat == "float" || subFormat == "float32") {
+            header.data_type = Float32;
+            header.num_bytes_per_entry = 4;
+        } else if (subFormat == "int16") {
+            header.data_type = Int16;
+            header.num_bytes_per_entry = 2;
+        } else if (subFormat == "int" || subFormat == "int32") {
+            header.data_type = Int32;
+            header.num_bytes_per_entry = 4;
+        } else if (subFormat == "uint16") {
+            header.data_type = UInt16;
+            header.num_bytes_per_entry = 2;
+        } else if (subFormat == "double" || subFormat == "float64") {
+            header.data_type = Float64;
+            header.num_bytes_per_entry = 8;
+        } else if (subFormat == "uint" || subFormat == "uint32") {
+            header.data_type = UInt32;
+            header.num_bytes_per_entry = 4;
+        } else {
+            return false;
+        }
+    } else {
+        header.data_type = Float64;
+        header.num_bytes_per_entry = 8;
+    }
+    header.num_dims = mda.ndims();
+    header.dims.resize(header.num_dims);
+    for (int i = 0; i < header.num_dims; ++i) {
+        header.dims[i] = mda.size(i);
+    }
+    // commit the header
+    writeLE(header.data_type);
+    writeLE(header.num_bytes_per_entry);
+    writeLE(header.num_dims);
+    for (int32_t dim : header.dims)
+        writeLE(dim);
+
+    // commit data
+    switch (header.data_type) {
+    case Byte:
+        return writeData<unsigned char>(mda.constDataPtr(), mda.totalSize());
+    case Float32:
+        return writeData<float>(mda.constDataPtr(), mda.totalSize());
+    case Int16:
+        return writeData<int16_t>(mda.constDataPtr(), mda.totalSize());
+    case Int32:
+        return writeData<int32_t>(mda.constDataPtr(), mda.totalSize());
+    case UInt16:
+        return writeData<uint16_t>(mda.constDataPtr(), mda.totalSize());
+    case Float64:
+        return writeData<double>(mda.constDataPtr(), mda.totalSize());
+    case UInt32:
+        return writeData<uint32_t>(mda.constDataPtr(), mda.totalSize());
+    default:
+        return false;
+    }
+}
+
+MdaIOHandlerCSV::MdaIOHandlerCSV(QIODevice *device, const QByteArray &format) {
+    setDevice(device);
+    setFormat(format);
+}
+
+bool MdaIOHandlerCSV::canRead() const {
+    if (!device())
+        return false;
+    if (format().toLower() == "csv")
+        return true;
+    if (format().isEmpty()) {
+        // try to auto detect by file name
+        if(QFileDevice *f = qobject_cast<QFileDevice*>(device())) {
+            QFileInfo finfo(f->fileName());
+            if (finfo.suffix().toLower() == "csv")
+                return true;
+        }
+    }
+    return false;
+}
+
+bool MdaIOHandlerCSV::canWrite() const {
+    if (!device())
+        return false;
+    if (format().toLower() == "csv")
+        return true;
+    return false;
+}
+
+bool MdaIOHandlerCSV::read(Mda *mda) {
+    QVector<QVector<double> > data;
+
+    QTextStream stream(device());
+    while(!device()->atEnd()) {
+        QString line = stream.readLine().trimmed();
+        if(line.isEmpty()) continue;
+        /// TODO: handle header
+        if (line.startsWith('#'))
+            continue;
+        QStringList tokens = line.split(',', QString::SkipEmptyParts);
+        QVector<double> row;
+        foreach(const QString &token, tokens) {
+            row.append(token.toDouble());
+        }
+        data.append(row);
+    }
+    if (data.isEmpty())
+        return false;
+    const int columnCount = data.first().count();
+    const int rowCount = data.count();
+    if (!mda->allocate(columnCount, rowCount))
+        return false;
+    for (int r = 0; r < rowCount; ++r) {
+        const QVector<double> &row = data.at(r);
+        for (int c = 0; c < columnCount; ++c) {
+            double value = c < row.count() ? row.at(c) : 0.0;
+            mda->setValue(value, c, r);
+        }
+    }
+    return true;
+}
+
+bool MdaIOHandlerCSV::read(Mda32 *mda) {
+    QVector<QVector<float> > data;
+
+    QTextStream stream(device());
+    while(!device()->atEnd()) {
+        QString line = stream.readLine().trimmed();
+        if(line.isEmpty()) continue;
+        /// TODO: handle header
+        if (line.startsWith('#'))
+            continue;
+        QStringList tokens = line.split(',', QString::SkipEmptyParts);
+        QVector<float> row;
+        foreach(const QString &token, tokens) {
+            row.append(token.toFloat());
+        }
+        data.append(row);
+    }
+    if (data.isEmpty())
+        return false;
+    const int columnCount = data.first().count();
+    const int rowCount = data.count();
+    if (!mda->allocate(columnCount, rowCount))
+        return false;
+    for (int r = 0; r < rowCount; ++r) {
+        const QVector<float> &row = data.at(r);
+        for (int c = 0; c < columnCount; ++c) {
+            float value = c < row.count() ? row.at(c) : 0.0;
+            mda->setValue(value, c, r);
+        }
+    }
+    return true;
+}
+
+bool MdaIOHandlerCSV::write(const Mda &mda) {
+    QTextStream stream(device());
+    for (size_t r = 0; r < (size_t)mda.N2(); ++r) {
+        for (size_t c = 0; c < (size_t)mda.N1(); ++c) {
+            double value = mda.value(c, r);
+            if (c != 0) {
+                stream << ", ";
+            }
+            stream << QString::number(value);
+        }
+        stream << endl;
+    }
+    return true;
+}
+
+bool MdaIOHandlerCSV::write(const Mda32 &mda) {
+    QTextStream stream(device());
+    for (size_t r = 0; r < (size_t)mda.N2(); ++r) {
+        for (size_t c = 0; c < (size_t)mda.N1(); ++c) {
+            double value = mda.value(c, r);
+            if (c != 0) {
+                stream << ", ";
+            }
+            stream << QString::number(value);
+        }
+        stream << endl;
+    }
+    return true;
+}
+
+MdaIOHandler *MdaIOHandlerCSVFactory::create(QIODevice *device, const QByteArray &format) const {
+    return new MdaIOHandlerCSV(device, format);
+}
+
+MdaIOHandler *MdaIOHandlerMDAFactory::create(QIODevice *device, const QByteArray &format) const {
+    return new MdaIOHandlerMDA(device, format);
 }
