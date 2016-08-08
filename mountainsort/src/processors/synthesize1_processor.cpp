@@ -24,8 +24,8 @@ synthesize1_Processor::synthesize1_Processor()
     this->setName("synthesize1");
     this->setVersion("0.1");
     this->setInputFileParameters("waveforms", "info");
-    this->setOutputFileParameters("timeseries_out","firings_true");
-    this->setRequiredParameters("N","samplerate");
+    this->setOutputFileParameters("timeseries_out", "firings_true");
+    this->setRequiredParameters("N", "samplerate");
     this->setRequiredParameters("waveforms_oversamp");
     this->setOptionalParameters("noise_level");
 }
@@ -52,8 +52,8 @@ bool synthesize1_Processor::run(const QMap<QString, QVariant>& params)
     synthesize1_opts opts;
     opts.N = (long)params["N"].toDouble(); //we need to use double here because string might be something like 1e+6
     opts.noise_level = params.value("noise_level", 1).toDouble();
-    opts.waveforms_oversamp=params.value("waveforms_oversamp").toInt();
-    opts.samplerate=params.value("samplerate",30000).toDouble();
+    opts.waveforms_oversamp = params.value("waveforms_oversamp").toInt();
+    opts.samplerate = params.value("samplerate", 30000).toDouble();
 
     return synthesize1(waveforms_path, info_path, timeseries_out_path, firings_true_path, opts);
 }

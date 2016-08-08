@@ -10,10 +10,10 @@
 #include <QString>
 
 struct synthesize1_opts {
-    double samplerate=30000;
+    double samplerate = 30000;
     long N = 1000;
     double noise_level = 1;
-    int waveforms_oversamp=1;
+    int waveforms_oversamp = 1;
 };
 
 bool synthesize1(

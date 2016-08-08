@@ -4,8 +4,7 @@
 
 using VD = QVector<double>;
 
-class MdaTest : public QObject
-{
+class MdaTest : public QObject {
     Q_OBJECT
 
 public:
@@ -51,12 +50,12 @@ void MdaTest::mda_constructor()
     QCOMPARE(mda.size(4), N5);
     QCOMPARE(mda.size(5), N6);
 
-//    QEXPECT_FAIL("000000", "Needs to be fixed", Continue);
-//    QEXPECT_FAIL("negative", "Needs to be fixed", Continue);
-//    QEXPECT_FAIL("negative total size", "Needs to be fixed", Continue);
+    //    QEXPECT_FAIL("000000", "Needs to be fixed", Continue);
+    //    QEXPECT_FAIL("negative", "Needs to be fixed", Continue);
+    //    QEXPECT_FAIL("negative total size", "Needs to be fixed", Continue);
     QCOMPARE(mda.ndims(), ndims);
 
-//    QEXPECT_FAIL("negative", "Needs to be fixed", Continue);
+    //    QEXPECT_FAIL("negative", "Needs to be fixed", Continue);
     QCOMPARE(mda.totalSize(), totalSize);
     if (totalSize == 0) {
         QVERIFY2(mda.dataPtr() == nullptr, "For invalid dims no data should be allocated");
@@ -75,28 +74,28 @@ void MdaTest::mda_constructor_data()
     QTest::addColumn<long>("totalSize");
 
     QTest::newRow("111111")
-            << 1L << 1L << 1L << 1L << 1L << 1L
-            << 2 << 1L;
+        << 1L << 1L << 1L << 1L << 1L << 1L
+        << 2 << 1L;
     QTest::newRow("123456")
-            << 1L << 2L << 3L << 4L << 5L << 6L
-            << 6 << 720L;
+        << 1L << 2L << 3L << 4L << 5L << 6L
+        << 6 << 720L;
     QTest::newRow("123451")
-            << 1L << 2L << 3L << 4L << 5L << 1L
-            << 5 << 120L;
+        << 1L << 2L << 3L << 4L << 5L << 1L
+        << 5 << 120L;
     QTest::newRow("222212")
-            << 2L << 2L << 2L << 2L << 1L << 2L
-            << 6 << 32L;
+        << 2L << 2L << 2L << 2L << 1L << 2L
+        << 6 << 32L;
 
     // 0 and negative values do not make any sense, total size should be 0
     QTest::newRow("000000")
-            << 0L << 0L << 0L << 0L << 0L << 0L
-            << 0 << 0L;
+        << 0L << 0L << 0L << 0L << 0L << 0L
+        << 0 << 0L;
     QTest::newRow("negative")
-            << -1L << -1L << -1L << -1L << -1L << -1L
-            << 0 << 0L;
+        << -1L << -1L << -1L << -1L << -1L << -1L
+        << 0 << 0L;
     QTest::newRow("negative total size")
-            << 1L << 2L << 3L << -4L << 5L << 6L
-            << 0 << 0L;
+        << 1L << 2L << 3L << -4L << 5L << 6L
+        << 0 << 0L;
 }
 
 void MdaTest::allocate()
@@ -122,7 +121,6 @@ void MdaTest::allocate()
     QFETCH(int, ndims);
     QFETCH(long, totalSize);
 
-
     QCOMPARE(mda.allocate(N1, N2, N3, N4, N5, N6), true);
 
     QCOMPARE(mda.minimum(), 0.0); // check if data was initialized
@@ -142,9 +140,9 @@ void MdaTest::allocate()
     QCOMPARE(mda.size(4), N5);
     QCOMPARE(mda.size(5), N6);
 
-//    QEXPECT_FAIL("000000", "Needs to be fixed", Continue);
-//    QEXPECT_FAIL("negative", "Needs to be fixed", Continue);
-//    QEXPECT_FAIL("negative total size", "Needs to be fixed", Continue);
+    //    QEXPECT_FAIL("000000", "Needs to be fixed", Continue);
+    //    QEXPECT_FAIL("negative", "Needs to be fixed", Continue);
+    //    QEXPECT_FAIL("negative total size", "Needs to be fixed", Continue);
     QCOMPARE(mda.ndims(), ndims);
     QCOMPARE(mda.totalSize(), totalSize);
     if (totalSize == 0) {
@@ -163,53 +161,53 @@ void MdaTest::allocate_data()
     QTest::addColumn<int>("ndims");
     QTest::addColumn<long>("totalSize");
 
-//    QTest::newRow("111111")
-//            << 1L << 1L << 1L << 1L << 1L << 1L
-//            << 2 << 1L;
+    //    QTest::newRow("111111")
+    //            << 1L << 1L << 1L << 1L << 1L << 1L
+    //            << 2 << 1L;
     QTest::newRow("123456")
-            << 1L << 2L << 3L << 4L << 5L << 6L
-            << 6 << 720L;
+        << 1L << 2L << 3L << 4L << 5L << 6L
+        << 6 << 720L;
     QTest::newRow("123451")
-            << 1L << 2L << 3L << 4L << 5L << 1L
-            << 5 << 120L;
+        << 1L << 2L << 3L << 4L << 5L << 1L
+        << 5 << 120L;
     QTest::newRow("222212")
-            << 2L << 2L << 2L << 2L << 1L << 2L
-            << 6 << 32L;
+        << 2L << 2L << 2L << 2L << 1L << 2L
+        << 6 << 32L;
 
     // 0 and negative values do not make any sense, total size should be 0
     QTest::newRow("000000")
-            << 0L << 0L << 0L << 0L << 0L << 0L
-            << 0 << 0L;
+        << 0L << 0L << 0L << 0L << 0L << 0L
+        << 0 << 0L;
     QTest::newRow("negative")
-            << -1L << -1L << -1L << -1L << -1L << -1L
-            << 0 << 0L;
+        << -1L << -1L << -1L << -1L << -1L << -1L
+        << 0 << 0L;
     QTest::newRow("negative total size")
-            << 1L << 2L << 3L << -4L << 5L << 6L
-            << 0 << 0L;
+        << 1L << 2L << 3L << -4L << 5L << 6L
+        << 0 << 0L;
 }
 
 void MdaTest::get1()
 {
     Mda mda(2, 2, 2);
     QVERIFY2(mda.minimum() == mda.maximum()
-             && mda.minimum() == 0, "Data is initialized to 0");
+            && mda.minimum() == 0,
+        "Data is initialized to 0");
 
     for (int i = 0; i < mda.totalSize(); ++i) {
         QVERIFY2(mda.get(i) == 0, "get does not return proper value");
     }
     QFETCH(VD, input);
-    std::copy(input.constData(), input.constData()+mda.totalSize(), mda.dataPtr());
+    std::copy(input.constData(), input.constData() + mda.totalSize(), mda.dataPtr());
     for (int i = 0; i < mda.totalSize(); ++i) {
         QCOMPARE(mda.get(i), input.at(i));
     }
-
 }
 
 void MdaTest::get1_data()
 {
     QTest::addColumn<VD>("input");
-    QTest::newRow("12345678") << VD( { 1, 2, 3, 4, 5, 6, 7, 8 } );
-    QTest::newRow("negative") << VD( 8, -1 );
+    QTest::newRow("12345678") << VD({ 1, 2, 3, 4, 5, 6, 7, 8 });
+    QTest::newRow("negative") << VD(8, -1);
 }
 
 QTEST_APPLESS_MAIN(MdaTest)

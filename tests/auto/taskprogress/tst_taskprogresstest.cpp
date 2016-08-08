@@ -2,8 +2,7 @@
 #include <QtTest>
 #include "taskprogress/taskprogress.h"
 
-class TaskProgressTest : public QObject
-{
+class TaskProgressTest : public QObject {
     Q_OBJECT
 
 public:
@@ -12,7 +11,6 @@ public:
 private Q_SLOTS:
     void model_empty();
     void model_rowCount();
-
 
     void testCase1_data();
     void testCase1();
@@ -31,8 +29,7 @@ void TaskProgressTest::model_empty()
 
 void TaskProgressTest::model_rowCount()
 {
-    TaskManager::TaskProgressMonitor *monitor = TaskManager::TaskProgressMonitor::globalInstance();
-
+    TaskManager::TaskProgressMonitor* monitor = TaskManager::TaskProgressMonitor::globalInstance();
 }
 
 void TaskProgressTest::testCase1_data()
