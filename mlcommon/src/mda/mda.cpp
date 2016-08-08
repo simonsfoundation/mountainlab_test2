@@ -137,7 +137,7 @@ bool Mda::write64(const QString& path) const
     return write64(path.toLatin1().data());
 }
 
-bool Mda::write16ui(const QString &path) const
+bool Mda::write16ui(const QString& path) const
 {
     FILE* output_file = fopen(path.toLatin1().data(), "wb");
     if (!output_file) {
@@ -159,7 +159,7 @@ bool Mda::write16ui(const QString &path) const
     return true;
 }
 
-bool Mda::write32ui(const QString &path) const
+bool Mda::write32ui(const QString& path) const
 {
     FILE* output_file = fopen(path.toLatin1().data(), "wb");
     if (!output_file) {
@@ -181,7 +181,7 @@ bool Mda::write32ui(const QString &path) const
     return true;
 }
 
-bool Mda::write16i(const QString &path) const
+bool Mda::write16i(const QString& path) const
 {
     FILE* output_file = fopen(path.toLatin1().data(), "wb");
     if (!output_file) {
@@ -203,7 +203,7 @@ bool Mda::write16i(const QString &path) const
     return true;
 }
 
-bool Mda::write32i(const QString &path) const
+bool Mda::write32i(const QString& path) const
 {
     FILE* output_file = fopen(path.toLatin1().data(), "wb");
     if (!output_file) {

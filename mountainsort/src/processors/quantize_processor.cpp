@@ -35,7 +35,7 @@ bool quantize_Processor::check(const QMap<QString, QVariant>& params)
     return true;
 }
 
-bool quantize(QString input_path,QString output_path,QString output_format);
+bool quantize(QString input_path, QString output_path, QString output_format);
 bool quantize_Processor::run(const QMap<QString, QVariant>& params)
 {
     QString input_path = params["input"].toString();
@@ -45,47 +45,60 @@ bool quantize_Processor::run(const QMap<QString, QVariant>& params)
         qWarning() << "File does not exist:" << input_path;
         return false;
     }
-    return quantize(input_path,output_path,output_format);
+    return quantize(input_path, output_path, output_format);
 }
 
-bool quantize(QString input_path,QString output_path,QString output_format) {
+bool quantize(QString input_path, QString output_path, QString output_format)
+{
     /// TODO, do this in chunks
     Mda X(input_path);
-    Mda X_scaled(X.N1(),X.N2(),X.N3());
-    double minval=X.minimum();
-    double maxval=X.maximum();
-    double maxabs=qMax(qAbs(minval),qAbs(maxval));
-    if (maxabs==0) maxabs=1;
-    double dynamic_max=0;
-    if (output_format=="uint8") dynamic_max=256-1;
-    else if (output_format=="uint16") dynamic_max=256L*256-1;
-    else if (output_format=="uint32") dynamic_max=256L*256*256*256-1;
-    else if (output_format=="int16") dynamic_max=256L*256/2-1;
-    else if (output_format=="int32") dynamic_max=256L*256*256*256/2-1;
+    Mda X_scaled(X.N1(), X.N2(), X.N3());
+    double minval = X.minimum();
+    double maxval = X.maximum();
+    double maxabs = qMax(qAbs(minval), qAbs(maxval));
+    if (maxabs == 0)
+        maxabs = 1;
+    double dynamic_max = 0;
+    if (output_format == "uint8")
+        dynamic_max = 256 - 1;
+    else if (output_format == "uint16")
+        dynamic_max = 256L * 256 - 1;
+    else if (output_format == "uint32")
+        dynamic_max = 256L * 256 * 256 * 256 - 1;
+    else if (output_format == "int16")
+        dynamic_max = 256L * 256 / 2 - 1;
+    else if (output_format == "int32")
+        dynamic_max = 256L * 256 * 256 * 256 / 2 - 1;
     else {
-        qWarning() << "Unexpected output format: "+output_format;
+        qWarning() << "Unexpected output format: " + output_format;
         return false;
     }
-    double scale_factor=dynamic_max/maxabs;
-    bool is_unsigned=(output_format.startsWith("u"));
-    double *ptr1=X.dataPtr();
-    double *ptr2=X_scaled.dataPtr();
-    long N=X.totalSize();
-    for (long i=0; i<N; i++) {
-        ptr2[i]=ptr1[i]*scale_factor;
+    double scale_factor = dynamic_max / maxabs;
+    bool is_unsigned = (output_format.startsWith("u"));
+    double* ptr1 = X.dataPtr();
+    double* ptr2 = X_scaled.dataPtr();
+    long N = X.totalSize();
+    for (long i = 0; i < N; i++) {
+        ptr2[i] = ptr1[i] * scale_factor;
     }
     if (is_unsigned) {
-        for (long i=0; i<N; i++) {
-            if (ptr2[i]<0) ptr2[i]=0;
+        for (long i = 0; i < N; i++) {
+            if (ptr2[i] < 0)
+                ptr2[i] = 0;
         }
     }
-    if (output_format=="uint8") return X_scaled.write8(output_path);
-    else if (output_format=="uint16") return X_scaled.write16ui(output_path);
-    else if (output_format=="uint32") return X_scaled.write32ui(output_path);
-    else if (output_format=="int16") return X_scaled.write16i(output_path);
-    else if (output_format=="int32") return X_scaled.write32i(output_path);
+    if (output_format == "uint8")
+        return X_scaled.write8(output_path);
+    else if (output_format == "uint16")
+        return X_scaled.write16ui(output_path);
+    else if (output_format == "uint32")
+        return X_scaled.write32ui(output_path);
+    else if (output_format == "int16")
+        return X_scaled.write16i(output_path);
+    else if (output_format == "int32")
+        return X_scaled.write32i(output_path);
     else {
-        qWarning() << "Unexpected output format*: "+output_format;
+        qWarning() << "Unexpected output format*: " + output_format;
         return false;
     }
 }
@@ -102,11 +115,11 @@ MSProcessorTestResults quantize_Processor::runTest(int test_number, const QMap<Q
         results.test_exists = true;
 
         results.params = params;
-        results.params["output_format"]="uint8";
+        results.params["output_format"] = "uint8";
 
-        Mda X(3,3);
-        for (int j=0; j<X.totalSize(); j++) {
-            X.setValue(j*100,j);
+        Mda X(3, 3);
+        for (int j = 0; j < X.totalSize(); j++) {
+            X.setValue(j * 100, j);
         }
         X.write64(input_path);
         if (!this->run(results.params)) {
@@ -115,14 +128,14 @@ MSProcessorTestResults quantize_Processor::runTest(int test_number, const QMap<Q
             return results;
         }
         Mda Y(output_path);
-        if ((Y.minimum()!=0)||(Y.maximum()==255)) {
-            results.success=false;
-            results.error_message="Wrong min or max";
+        if ((Y.minimum() != 0) || (Y.maximum() == 255)) {
+            results.success = false;
+            results.error_message = "Wrong min or max";
             return results;
         }
-        if ((Y.N1()!=X.N1())||(Y.N2()!=X.N2())) {
-            results.success=false;
-            results.error_message="Wrong dimensions";
+        if ((Y.N1() != X.N1()) || (Y.N2() != X.N2())) {
+            results.success = false;
+            results.error_message = "Wrong dimensions";
             return results;
         }
         results.success = true;

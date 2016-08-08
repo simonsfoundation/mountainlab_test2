@@ -196,12 +196,12 @@ void MLComputeTest::mean_data()
     QTest::addColumn<VD>("data");
     QTest::addColumn<double>("result");
     QTest::newRow("empty") << VD() << 0.0;
-    QTest::newRow("single-zero") << VD( { 0 } ) << 0.0;
-    QTest::newRow("single-non-zero") << VD( { 1 } ) << 1.0;
-    QTest::newRow("same values") << VD( { 1, 1, 1, 1 } ) << 1.0;
-    QTest::newRow("opposite values") << VD( { 2, -2, 2, -2, 2, -2 } ) << 0.0;
-    QTest::newRow("integer") << VD( { 2, 4, 4, 4, 5, 5, 5, 7, 9 } ) << 5.0;
-    QTest::newRow("real") << VD( { 2.2, 4.7, 3.5, 4.1, 4.7, -5.2, 2.1, 0, -1, 0.9 } ) << 1.6;
+    QTest::newRow("single-zero") << VD({ 0 }) << 0.0;
+    QTest::newRow("single-non-zero") << VD({ 1 }) << 1.0;
+    QTest::newRow("same values") << VD({ 1, 1, 1, 1 }) << 1.0;
+    QTest::newRow("opposite values") << VD({ 2, -2, 2, -2, 2, -2 }) << 0.0;
+    QTest::newRow("integer") << VD({ 2, 4, 4, 4, 5, 5, 5, 7, 9 }) << 5.0;
+    QTest::newRow("real") << VD({ 2.2, 4.7, 3.5, 4.1, 4.7, -5.2, 2.1, 0, -1, 0.9 }) << 1.6;
 }
 
 void MLComputeTest::mean_benchmark()
@@ -239,9 +239,9 @@ void MLComputeTest::stdev_data()
     QTest::addColumn<VD>("data");
     QTest::addColumn<double>("result");
     QTest::newRow("empty") << VD() << 0.0;
-    QTest::newRow("single-zero") << VD( { 0 } ) << 0.0;
-    QTest::newRow("single-non-zero") << VD( { 1 } ) << 0.0;
-    QTest::newRow("integer") << VD( { 2, 4, 4, 4, 5, 5, 5, 7, 9 } ) << 2.0;
+    QTest::newRow("single-zero") << VD({ 0 }) << 0.0;
+    QTest::newRow("single-non-zero") << VD({ 1 }) << 0.0;
+    QTest::newRow("integer") << VD({ 2, 4, 4, 4, 5, 5, 5, 7, 9 }) << 2.0;
 }
 
 void MLComputeTest::stdev_benchmark()

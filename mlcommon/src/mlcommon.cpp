@@ -320,12 +320,12 @@ double MLCompute::norm(long N, double* X)
 
 double MLCompute::dotProduct(long N, double* X1, double* X2)
 {
-    return std::inner_product(X1, X1+N, X2, 0.0);
+    return std::inner_product(X1, X1 + N, X2, 0.0);
 }
 
 double MLCompute::dotProduct(long N, float* X1, float* X2)
 {
-    return std::inner_product(X1, X1+N, X2, 0.0);
+    return std::inner_product(X1, X1 + N, X2, 0.0);
 }
 
 QString MLUtil::computeSha1SumOfString(const QString& str)
@@ -337,7 +337,7 @@ QString MLUtil::computeSha1SumOfString(const QString& str)
 
 double MLCompute::sum(long N, double* X)
 {
-    return std::accumulate(X, X+N, 0.0);
+    return std::accumulate(X, X + N, 0.0);
 }
 
 double MLCompute::mean(long N, double* X)
@@ -349,12 +349,12 @@ double MLCompute::mean(long N, double* X)
 
 double MLCompute::max(long N, double* X)
 {
-    return N ? *std::max_element(X, X+N) : 0;
+    return N ? *std::max_element(X, X + N) : 0;
 }
 
 double MLCompute::min(long N, double* X)
 {
-    return N ? *std::min_element(X, X+N) : 0;
+    return N ? *std::min_element(X, X + N) : 0;
 }
 
 QList<int> MLUtil::stringListToIntList(const QStringList& list)
@@ -484,17 +484,17 @@ bool MLUtil::writeByteArray(const QString& path, const QByteArray& X)
 
 double MLCompute::min(long N, float* X)
 {
-    return N ? *std::min_element(X, X+N) : 0;
+    return N ? *std::min_element(X, X + N) : 0;
 }
 
 double MLCompute::max(long N, float* X)
 {
-    return N ? *std::max_element(X, X+N) : 0;
+    return N ? *std::max_element(X, X + N) : 0;
 }
 
 double MLCompute::sum(long N, float* X)
 {
-    return std::accumulate(X, X+N, 0.0);
+    return std::accumulate(X, X + N, 0.0);
 }
 
 double MLCompute::mean(long N, float* X)
