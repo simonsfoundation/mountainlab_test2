@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QtEndian>
 #include <QFileInfo>
+#include <QSharedPointer>
 
 class MdaIOHandler {
 public:
@@ -24,6 +25,12 @@ public:
 private:
     QIODevice* dev;
     QByteArray fmt;
+};
+
+class MdaIOHandlerFactory {
+public:
+    virtual ~MdaIOHandlerFactory() {}
+    virtual MdaIOHandler* create(QIODevice *device, const QByteArray &format = QByteArray()) const = 0;
 };
 
 class MdaIOHandlerMDA : public MdaIOHandler {
@@ -331,6 +338,150 @@ public:
     }
 };
 
+class MdaIOHandlerMDAFactory : public MdaIOHandlerFactory {
+public:
+    MdaIOHandlerMDAFactory() {}
+    MdaIOHandler *create(QIODevice *device, const QByteArray &format) const {
+        return new MdaIOHandlerMDA(device, format);
+    }
+};
+
+class MdaIOHandlerCSV : public MdaIOHandler {
+public:
+    MdaIOHandlerCSV(QIODevice *device, const QByteArray &format) {
+        setDevice(device);
+        setFormat(format);
+    }
+
+    bool canRead() const {
+        if (!device())
+            return false;
+        if (format().toLower() == "csv")
+            return true;
+        if (format().isEmpty()) {
+            // try to auto detect by file name
+            if(QFileDevice *f = qobject_cast<QFileDevice*>(device())) {
+                QFileInfo finfo(f->fileName());
+                if (finfo.suffix().toLower() == "csv")
+                    return true;
+            }
+        }
+        return false;
+    }
+    bool canWrite() const {
+        if (!device())
+            return false;
+        if (format().toLower() == "csv")
+            return true;
+        return false;
+    }
+    bool read(Mda *mda) {
+        QVector<QVector<double> > data;
+
+        QTextStream stream(device());
+        while(!device()->atEnd()) {
+            QString line = stream.readLine().trimmed();
+            if(line.isEmpty()) continue;
+            /// TODO: handle header
+            if (line.startsWith('#'))
+                continue;
+            QStringList tokens = line.split(',', QString::SkipEmptyParts);
+            QVector<double> row;
+            foreach(const QString &token, tokens) {
+                row.append(token.toDouble());
+            }
+            data.append(row);
+        }
+        if (data.isEmpty())
+            return false;
+        const int columnCount = data.first().count();
+        const int rowCount = data.count();
+        if (!mda->allocate(columnCount, rowCount))
+            return false;
+        for (int r = 0; r < rowCount; ++r) {
+            const QVector<double> &row = data.at(r);
+            for (int c = 0; c < columnCount; ++c) {
+                double value = c < row.count() ? row.at(c) : 0.0;
+                mda->setValue(value, c, r);
+            }
+        }
+        return true;
+    }
+
+    bool read(Mda32 *mda) {
+        QVector<QVector<float> > data;
+
+        QTextStream stream(device());
+        while(!device()->atEnd()) {
+            QString line = stream.readLine().trimmed();
+            if(line.isEmpty()) continue;
+            /// TODO: handle header
+            if (line.startsWith('#'))
+                continue;
+            QStringList tokens = line.split(',', QString::SkipEmptyParts);
+            QVector<float> row;
+            foreach(const QString &token, tokens) {
+                row.append(token.toFloat());
+            }
+            data.append(row);
+        }
+        if (data.isEmpty())
+            return false;
+        const int columnCount = data.first().count();
+        const int rowCount = data.count();
+        if (!mda->allocate(columnCount, rowCount))
+            return false;
+        for (int r = 0; r < rowCount; ++r) {
+            const QVector<float> &row = data.at(r);
+            for (int c = 0; c < columnCount; ++c) {
+                float value = c < row.count() ? row.at(c) : 0.0;
+                mda->setValue(value, c, r);
+            }
+        }
+        return true;
+    }
+
+    bool write(const Mda &mda) {
+        QTextStream stream(device());
+        for (size_t r = 0; r < (size_t)mda.N2(); ++r) {
+            for (size_t c = 0; c < (size_t)mda.N1(); ++c) {
+                double value = mda.value(c, r);
+                if (c != 0) {
+                    stream << ", ";
+                }
+                stream << QString::number(value);
+            }
+            stream << endl;
+        }
+        return true;
+    }
+
+    bool write(const Mda32 &mda) {
+        QTextStream stream(device());
+        for (size_t r = 0; r < (size_t)mda.N2(); ++r) {
+            for (size_t c = 0; c < (size_t)mda.N1(); ++c) {
+                double value = mda.value(c, r);
+                if (c != 0) {
+                    stream << ", ";
+                }
+                stream << QString::number(value);
+            }
+            stream << endl;
+        }
+        return true;
+    }
+};
+
+class MdaIOHandlerCSVFactory : public MdaIOHandlerFactory {
+public:
+    MdaIOHandlerCSVFactory() {}
+    MdaIOHandler *create(QIODevice *device, const QByteArray &format) const {
+        return new MdaIOHandlerCSV(device, format);
+    }
+};
+
+Q_GLOBAL_STATIC(QList<QSharedPointer<MdaIOHandlerFactory> >, _mdaReaderFactories)
+
 class MdaReaderPrivate {
 public:
     MdaReaderPrivate(MdaReader* qq, QIODevice* dev = 0)
@@ -338,6 +489,10 @@ public:
         , device(dev)
         , ownsDevice(false)
     {
+        if (_mdaReaderFactories->isEmpty()){
+            _mdaReaderFactories->append(QSharedPointer<MdaIOHandlerFactory>(new MdaIOHandlerMDAFactory));
+            _mdaReaderFactories->append(QSharedPointer<MdaIOHandlerFactory>(new MdaIOHandlerCSVFactory));
+        }
     }
 
     MdaReader* q;
@@ -374,8 +529,15 @@ MdaReader::~MdaReader()
 
 bool MdaReader::canRead() const
 {
-    MdaIOHandlerMDA h(device(), format());
-    return h.canRead();
+    for(int i = 0; i < _mdaReaderFactories->size(); ++i) {
+        MdaIOHandler* handler = _mdaReaderFactories->at(i)->create(device(), format());
+        if (handler->canRead()) {
+            delete handler;
+            return true;
+        }
+        delete handler;
+    }
+    return false;
 }
 
 QIODevice* MdaReader::device() const
@@ -418,9 +580,16 @@ bool MdaReader::read(Mda* mda)
 {
     if (!device()->isOpen() && !device()->open(QIODevice::ReadOnly))
         return false;
-    MdaIOHandlerMDA h(device(), format());
-    if (!h.canRead()) return false;
-    return h.read(mda);
+    for(int i = 0; i < _mdaReaderFactories->size(); ++i) {
+        MdaIOHandler* handler = _mdaReaderFactories->at(i)->create(device(), format());
+        if (handler->canRead()) {
+            bool result = handler->read(mda);
+            delete handler;
+            return result;
+        }
+        delete handler;
+    }
+    return false;
 }
 
 bool MdaReader::read(Mda32 *mda)
@@ -544,14 +713,20 @@ bool MdaWriter::write(const Mda& mda)
     bool closeAfterWrite = !device()->isOpen();
     if (!device()->isOpen() && !device()->open(QIODevice::WriteOnly | QIODevice::Truncate))
         return false;
-    MdaIOHandlerMDA h(device(), format());
-    if (!h.canWrite()) return false;
-    bool res = h.write(mda);
-    if (QSaveFile *f = qobject_cast<QSaveFile*>(device()))
-        f->commit();
-    else if (closeAfterWrite)
-        device()->close();
-    return res;
+    for(int i = 0; i < _mdaReaderFactories->size(); ++i) {
+        MdaIOHandler* handler = _mdaReaderFactories->at(i)->create(device(), format());
+        if (handler->canWrite()) {
+            bool result = handler->write(mda);
+            delete handler;
+            if (QSaveFile *f = qobject_cast<QSaveFile*>(device()))
+                f->commit();
+            else if (closeAfterWrite)
+                device()->close();
+            return result;
+        }
+        delete handler;
+    }
+    return false;
 }
 
 bool MdaWriter::write(const Mda32 &mda)
@@ -559,12 +734,18 @@ bool MdaWriter::write(const Mda32 &mda)
     bool closeAfterWrite = !device()->isOpen();
     if (!device()->isOpen() && !device()->open(QIODevice::WriteOnly | QIODevice::Truncate))
         return false;
-    MdaIOHandlerMDA h(device(), format());
-    if (!h.canWrite()) return false;
-    bool res = h.write(mda);
-    if (QSaveFile *f = qobject_cast<QSaveFile*>(device()))
-        f->commit();
-    else if (closeAfterWrite)
-        device()->close();
-    return res;
+    for(int i = 0; i < _mdaReaderFactories->size(); ++i) {
+        MdaIOHandler* handler = _mdaReaderFactories->at(i)->create(device(), format());
+        if (handler->canWrite()) {
+            bool result = handler->write(mda);
+            delete handler;
+            if (QSaveFile *f = qobject_cast<QSaveFile*>(device()))
+                f->commit();
+            else if (closeAfterWrite)
+                device()->close();
+            return result;
+        }
+        delete handler;
+    }
+    return false;
 }

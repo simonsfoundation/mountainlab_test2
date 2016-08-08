@@ -78,6 +78,8 @@ void MdaReaderTest::mda64()
     for(int i = 0; i < dat.size(); ++i) {
         QCOMPARE(mda.get(i), mda2.get(i));
     }
+    MdaWriter csvWriter(m_dir->path()+"/abc2.csv", "csv");
+    QVERIFY(csvWriter.write(mda2));
 }
 
 void MdaReaderTest::mda32()
