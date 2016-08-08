@@ -5,5 +5,5 @@ function X = arrayify(X)
 
 % Barnett 6/16/16
 
-if ischar(X) || isstring(X), X = readmda(X); end
+if ischar(X), X = readmda(X); end
 
