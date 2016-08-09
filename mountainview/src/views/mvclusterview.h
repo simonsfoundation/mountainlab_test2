@@ -24,20 +24,6 @@
  *  Several modes are available
  */
 
-/// TODO, maybe put this where it belongs
-struct FilterInfo {
-    FilterInfo()
-    {
-        use_filter = false;
-        min_detectability_score = 0;
-        max_outlier_score = 0;
-    }
-
-    bool use_filter;
-    double min_detectability_score;
-    double max_outlier_score;
-};
-
 class MVClusterViewPrivate;
 class MVClusterView : public QWidget {
     Q_OBJECT
@@ -51,16 +37,12 @@ public:
     void setLabels(const QVector<int>& labels);
     void setAmplitudes(const QVector<double>& amps);
 
-    void setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores);
-
     void setMode(int mode);
     void setCurrentEvent(MVEvent evt, bool do_emit = false);
     MVEvent currentEvent();
     int currentEventIndex();
     AffineTransformation transformation();
     void setTransformation(const AffineTransformation& T);
-
-    void setEventFilter(FilterInfo F);
 
     QSet<int> activeClusterNumbers() const;
     void setActiveClusterNumbers(const QSet<int>& A);

@@ -21,7 +21,6 @@ class MVClusterWidgetComputer {
 public:
     //input
     QString mlproxy_url;
-    MVEventFilter filter;
     DiskReadMda timeseries;
     DiskReadMda firings;
     int clip_size;
@@ -34,8 +33,6 @@ public:
     QVector<double> times;
     QVector<int> labels;
     QVector<double> amplitudes;
-    QVector<double> detectability_scores;
-    QVector<double> outlier_scores;
 
     void compute();
 };
@@ -61,7 +58,6 @@ public:
     QLabel* m_info_bar;
     Mda m_data;
     QList<int> m_labels_to_use;
-    QVector<double> m_outlier_scores;
     MVClusterWidgetComputer m_computer;
     QString m_feature_mode;
     QVector<int> m_channels;
@@ -212,7 +208,6 @@ MVClusterWidget::~MVClusterWidget()
 void MVClusterWidget::prepareCalculation()
 {
     d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
-    d->m_computer.filter = mvContext()->eventFilter();
     d->m_computer.timeseries = mvContext()->currentTimeseries();
     d->m_computer.firings = mvContext()->firings();
     d->m_computer.clip_size = mvContext()->option("clip_size").toInt();
@@ -236,7 +231,6 @@ void MVClusterWidget::onCalculationFinished()
     this->setTimes(d->m_computer.times);
     this->setLabels(merged_labels);
     this->setAmplitudes(d->m_computer.amplitudes);
-    this->setScores(d->m_computer.detectability_scores, d->m_computer.outlier_scores);
     this->setData(d->m_computer.data);
 }
 
@@ -280,13 +274,6 @@ void MVClusterWidget::setAmplitudes(const QVector<double>& amps)
 {
     foreach (MVClusterView* V, d->m_views) {
         V->setAmplitudes(amps);
-    }
-}
-
-void MVClusterWidget::setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores)
-{
-    foreach (MVClusterView* V, d->m_views) {
-        V->setScores(detectability_scores, outlier_scores);
     }
 }
 
@@ -439,9 +426,6 @@ void MVClusterWidgetComputer::compute()
 {
     TaskProgress task(TaskProgress::Calculate, "MVClusterWidgetComputer");
 
-    //firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
-    firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
-
     QString firings_out_path;
     {
         QString labels_str;
@@ -531,14 +515,10 @@ void MVClusterWidgetComputer::compute()
     times.clear();
     labels.clear();
     amplitudes.clear();
-    outlier_scores.clear();
-    detectability_scores.clear();
     for (long j = 0; j < F.N2(); j++) {
         times << F.value(1, j);
         labels << (int)F.value(2, j);
         amplitudes << F.value(3, j);
-        outlier_scores << F.value(4, j);
-        detectability_scores << F.value(5, j);
     }
 
     if (MLUtil::threadInterruptRequested()) {

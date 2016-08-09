@@ -44,7 +44,6 @@ public:
     QVector<double> m_times;
     double m_max_time;
     QVector<double> m_amplitudes; //absolute amplitudes, actually
-    QVector<double> m_detectability_scores, m_outlier_scores;
     double m_max_amplitude;
     QVector<int> m_labels;
     QSet<int> m_closest_inds_to_exclude;
@@ -69,7 +68,6 @@ public:
     void schedule_emit_transformation_changed();
     void do_paint(QPainter& painter, int W, int H);
     void export_image();
-    //bool exclude_based_on_filter(long ind);
 public slots:
     void slot_emit_transformation_changed();
 };
@@ -168,12 +166,6 @@ void MVClusterView::setAmplitudes(const QVector<double>& amps)
     update();
 }
 
-void MVClusterView::setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores)
-{
-    d->m_detectability_scores = detectability_scores;
-    d->m_outlier_scores = outlier_scores;
-}
-
 void MVClusterView::setMode(int mode)
 {
     d->m_mode = mode;
@@ -243,15 +235,6 @@ void MVClusterView::setActiveClusterNumbers(const QSet<int>& A)
     }
     */
 }
-
-/*
-void MVClusterView::setEventFilter(FilterInfo F)
-{
-    d->m_filter_info = F;
-    d->m_grid_update_needed = true;
-    update();
-}
-*/
 
 QImage MVClusterView::renderImage(int W, int H)
 {
@@ -923,123 +906,3 @@ void MVClusterViewPrivate::export_image()
     QImage img = q->renderImage(1000, 800);
     user_save_image(img);
 }
-
-/*
-void MVClusterLegend::setClusterColors(const QList<QColor>& colors)
-{
-    m_cluster_colors = colors;
-}
-
-void MVClusterLegend::setClusterNumbers(const QList<int>& numbers)
-{
-    m_cluster_numbers = numbers;
-}
-
-void MVClusterLegend::setParentWindowSize(QSize size)
-{
-    m_parent_window_size = size;
-}
-
-QColor MVClusterLegend::cluster_color(int k) const
-{
-    if (k <= 0)
-        return Qt::black;
-    if (m_cluster_colors.isEmpty())
-        return Qt::black;
-    return m_cluster_colors[(k - 1) % m_cluster_colors.count()];
-}
-
-void MVClusterLegend::draw(QPainter* painter)
-{
-    double spacing = 6;
-    double margin = 10;
-    double W = m_parent_window_size.width();
-    //double H = m_parent_window_size.height();
-    double text_height = qBound(12.0, W * 1.0 / 10, 25.0);
-    double y0 = margin;
-    QFont font = painter->font();
-    font.setPixelSize(text_height - 2);
-    painter->setFont(font);
-    m_cluster_number_rects.clear();
-    for (int i = 0; i < m_cluster_numbers.count(); i++) {
-        QString str = QString("%1").arg(m_cluster_numbers[i]);
-        double text_width = QFontMetrics(painter->font()).width(str);
-        QRectF rect(W - margin - text_width, y0, text_width, text_height);
-        QPen pen = painter->pen();
-
-        if (m_active_cluster_numbers.contains(m_cluster_numbers[i])) {
-            pen.setColor(cluster_color(m_cluster_numbers[i]));
-            if (m_cluster_numbers[i] == m_hovered_cluster_number) {
-                pen.setColor(Qt::white);
-            }
-        }
-        else {
-            pen.setColor(Qt::gray);
-            if (m_cluster_numbers[i] == m_hovered_cluster_number) {
-                pen.setColor(QColor(180, 180, 200));
-            }
-        }
-        painter->setPen(pen);
-        painter->drawText(rect, Qt::AlignRight, str);
-
-        m_cluster_number_rects << rect;
-        y0 += text_height + spacing;
-    }
-}
-
-int MVClusterLegend::hoveredClusterNumber() const
-{
-    return m_hovered_cluster_number;
-}
-
-void MVClusterLegend::setHoveredClusterNumber(int num)
-{
-    m_hovered_cluster_number = num;
-}
-
-QSet<int> MVClusterLegend::activeClusterNumbers() const
-{
-    return m_active_cluster_numbers;
-}
-
-void MVClusterLegend::setActiveClusterNumbers(const QSet<int>& A)
-{
-    m_active_cluster_numbers = A;
-}
-
-void MVClusterLegend::toggleActiveClusterNumber(int num)
-{
-    if (m_active_cluster_numbers.contains(num))
-        m_active_cluster_numbers.remove(num);
-    else
-        m_active_cluster_numbers.insert(num);
-}
-
-int MVClusterLegend::clusterNumberAt(QPointF pos) const
-{
-    for (int i = 0; i < m_cluster_number_rects.count(); i++) {
-        if (m_cluster_number_rects[i].contains(pos))
-            return m_cluster_numbers.value(i, -1);
-    }
-    return -1;
-}
-*/
-
-/*
-bool MVClusterViewPrivate::exclude_based_on_filter(long ind)
-{
-    if (m_filter_info.use_filter) {
-        double dscore = m_detectability_scores.value(ind);
-        double oscore = m_outlier_scores.value(ind);
-        if ((m_filter_info.min_detectability_score) && (dscore)) {
-            if (dscore < m_filter_info.min_detectability_score)
-                return true;
-        }
-        if ((m_filter_info.max_outlier_score) && (oscore)) {
-            if (oscore > m_filter_info.max_outlier_score)
-                return true;
-        }
-    }
-    return false;
-}
-*/

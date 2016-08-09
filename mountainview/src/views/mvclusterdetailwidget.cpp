@@ -58,7 +58,6 @@ public:
     //input
     //QString mscmdserver_url;
     QString mlproxy_url;
-    MVEventFilter filter;
     DiskReadMda timeseries;
     DiskReadMda firings;
     int clip_size;
@@ -228,7 +227,6 @@ void MVClusterDetailWidget::prepareCalculation()
         d->compute_total_time();
     }
     d->m_calculator.mlproxy_url = mvContext()->mlProxyUrl();
-    d->m_calculator.filter = mvContext()->eventFilter();
     d->m_calculator.timeseries = mvContext()->currentTimeseries();
     d->m_calculator.firings = mvContext()->firings();
     d->m_calculator.clip_size = mvContext()->option("clip_size", 100).toInt();
@@ -1144,8 +1142,6 @@ void MVClusterDetailWidgetCalculator::compute()
     QTime timer;
     timer.start();
     task.setProgress(0.1);
-
-    firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
 
     int M = timeseries.N1();
     //int N = timeseries.N2();

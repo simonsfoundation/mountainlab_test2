@@ -19,7 +19,6 @@ public:
     //input
     QString mlproxy_url;
     DiskReadMda firings;
-    MVEventFilter event_filter;
 
     //output
     QList<AmpHistogram> histograms;
@@ -70,7 +69,6 @@ void MVAmpHistView2::prepareCalculation()
 {
     d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
     d->m_computer.firings = mvContext()->firings();
-    d->m_computer.event_filter = mvContext()->eventFilter();
 }
 
 void MVAmpHistView2::runCalculation()
@@ -146,8 +144,6 @@ void MVAmpHistView2Computer::compute()
     TaskProgress task(TaskProgress::Calculate, QString("Amplitude AmpHistograms"));
 
     histograms.clear();
-
-    firings = compute_filtered_firings_locally(firings, event_filter);
 
     QVector<int> labels;
     QVector<double> amplitudes;

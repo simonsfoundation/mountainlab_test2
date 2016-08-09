@@ -36,7 +36,6 @@ public:
     //input
     QString mlproxy_url;
     DiskReadMda firings;
-    MVEventFilter event_filter;
     CrossCorrelogramOptions3 options;
     int max_dt;
     ClusterMerge cluster_merge;
@@ -118,7 +117,6 @@ void MVCrossCorrelogramsWidget3::prepareCalculation()
 {
     d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
     d->m_computer.firings = mvContext()->firings();
-    d->m_computer.event_filter = mvContext()->eventFilter();
     d->m_computer.options = d->m_options;
     d->m_computer.max_dt = mvContext()->option("cc_max_dt_msec", 100).toDouble() / 1000 * mvContext()->sampleRate();
     d->m_computer.cluster_merge.clear();
@@ -373,8 +371,6 @@ void MVCrossCorrelogramsWidget3Computer::compute()
     }
 
     correlograms.clear();
-
-    firings = compute_filtered_firings_locally(firings, event_filter);
 
     QVector<double> times;
     QVector<int> labels;

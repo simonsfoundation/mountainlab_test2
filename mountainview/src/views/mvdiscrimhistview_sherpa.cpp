@@ -20,7 +20,6 @@ public:
     QString mlproxy_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
-    MVEventFilter event_filter;
     int num_histograms;
     QSet<int> clusters_to_exclude;
 
@@ -81,7 +80,6 @@ void MVDiscrimHistViewSherpa::prepareCalculation()
     d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
     d->m_computer.timeseries = mvContext()->currentTimeseries();
     d->m_computer.firings = mvContext()->firings();
-    d->m_computer.event_filter = mvContext()->eventFilter();
     d->m_computer.num_histograms = d->m_num_histograms;
     d->m_computer.clusters_to_exclude = d->get_clusters_to_exclude();
 }
@@ -131,8 +129,6 @@ void MVDiscrimHistViewSherpaComputer::compute()
     TaskProgress task(TaskProgress::Calculate, QString("Discrim Histograms"));
 
     histograms.clear();
-
-    firings = compute_filtered_firings_remotely(mlproxy_url, firings, event_filter);
 
     MountainProcessRunner MPR;
     MPR.setMLProxyUrl(mlproxy_url);

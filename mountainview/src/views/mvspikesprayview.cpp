@@ -34,7 +34,6 @@ public:
     DiskReadMda timeseries;
     DiskReadMda firings;
     QString mlproxy_url;
-    MVEventFilter filter;
     QSet<int> labels_to_use;
     int clip_size;
     int max_per_label;
@@ -226,7 +225,6 @@ void MVSpikeSprayView::prepareCalculation()
     d->m_computer.mlproxy_url = d->m_context->mlProxyUrl();
     d->m_computer.timeseries = d->m_context->timeseries(timeseries_name);
     d->m_computer.firings = d->m_context->firings();
-    d->m_computer.filter = d->m_context->eventFilter();
     d->m_computer.labels_to_use = d->m_labels_to_use;
     d->m_computer.max_per_label = d->m_max_spikes_per_label;
     d->m_computer.clip_size = d->m_context->option("clip_size").toInt();
@@ -431,8 +429,6 @@ void MVSpikeSprayComputer::compute()
     }
 
     labels_to_render.clear();
-
-    firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
 
     QString firings_out_path;
     {

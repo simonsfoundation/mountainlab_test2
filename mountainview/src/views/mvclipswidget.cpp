@@ -26,7 +26,6 @@ public:
     DiskReadMda firings;
     DiskReadMda timeseries;
     QString mlproxy_url;
-    MVEventFilter filter;
     int clip_size;
     QList<int> labels_to_use;
 
@@ -89,7 +88,6 @@ MVClipsWidget::~MVClipsWidget()
 void MVClipsWidget::prepareCalculation()
 {
     d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
-    d->m_computer.filter = mvContext()->eventFilter();
     d->m_computer.firings = mvContext()->firings();
     d->m_computer.timeseries = mvContext()->currentTimeseries();
     d->m_computer.labels_to_use = d->m_labels_to_use;
@@ -136,10 +134,6 @@ void MVClipsWidgetComputer::compute()
     TaskProgress task(TaskProgress::Calculate, "Clips Widget Computer");
 
     /// TODO (LOW) think about how to automatically assemble a pipeline that gets sent to server in one shot
-
-    //need to compute remotely because of subsequent steps
-    firings = compute_filtered_firings_remotely(mlproxy_url, firings, filter);
-    //firings = compute_filtered_firings_locally(firings, filter);
 
     QString firings_out_path;
     {

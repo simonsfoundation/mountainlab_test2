@@ -22,7 +22,6 @@ class MVFiringEventViewCalculator {
 public:
     //input
     DiskReadMda firings;
-    MVEventFilter filter;
     QSet<int> labels_to_use;
 
     //output
@@ -137,7 +136,6 @@ void MVFiringEventView2::prepareCalculation()
 {
     d->m_calculator.labels_to_use = d->m_labels_to_use;
     d->m_calculator.firings = mvContext()->firings();
-    d->m_calculator.filter = mvContext()->eventFilter();
 }
 
 void MVFiringEventView2::runCalculation()
@@ -304,8 +302,6 @@ double MVFiringEventView2Private::ypix2val(double ypix)
 void MVFiringEventViewCalculator::compute()
 {
     TaskProgress task("Computing firing events");
-
-    firings = compute_filtered_firings_locally(firings, filter);
 
     long L = firings.N2();
     times.clear();

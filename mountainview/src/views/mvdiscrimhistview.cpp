@@ -20,7 +20,6 @@ public:
     QString mlproxy_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
-    MVEventFilter event_filter;
     QList<int> cluster_numbers;
 
     //output
@@ -81,7 +80,6 @@ void MVDiscrimHistView::prepareCalculation()
     d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
     d->m_computer.timeseries = mvContext()->currentTimeseries();
     d->m_computer.firings = mvContext()->firings();
-    d->m_computer.event_filter = mvContext()->eventFilter();
     d->m_computer.cluster_numbers = d->m_cluster_numbers;
 }
 
@@ -139,8 +137,6 @@ void MVDiscrimHistViewComputer::compute()
     TaskProgress task(TaskProgress::Calculate, QString("Discrim Histograms"));
 
     histograms.clear();
-
-    firings = compute_filtered_firings_remotely(mlproxy_url, firings, event_filter);
 
     MountainProcessRunner MPR;
     MPR.setMLProxyUrl(mlproxy_url);

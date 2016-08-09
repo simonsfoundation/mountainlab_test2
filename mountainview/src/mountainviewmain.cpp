@@ -106,7 +106,6 @@ QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColo
 #include "mvopenviewscontrol.h"
 #include "mvgeneralcontrol.h"
 #include "mvprefscontrol.h"
-#include "mveventfiltercontrol.h"
 #include "mvclustervisibilitycontrol.h"
 #include "mvexportcontrol.h"
 
@@ -303,7 +302,6 @@ int main(int argc, char* argv[])
 
         W->addControl(new MVOpenViewsControl(context, W), true);
         W->addControl(new MVGeneralControl(context, W), false);
-        W->addControl(new MVEventFilterControl(context, W), false);
         W->addControl(new MVClusterVisibilityControl(context, W), false);
         W->addControl(new MVMergeControl(context, W), false);
         W->addControl(new MVPrefsControl(context, W), false);

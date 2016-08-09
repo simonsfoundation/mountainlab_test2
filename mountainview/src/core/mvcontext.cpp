@@ -38,7 +38,6 @@ public:
     QString m_current_timeseries_name;
     DiskReadMda m_firings;
     DiskReadMda m_firings_subset;
-    MVEventFilter m_event_filter;
     double m_sample_rate = 0;
     QMap<QString, QVariant> m_options;
     QString m_mlproxy_url;
@@ -179,7 +178,6 @@ QJsonObject MVContext::toMVFileObject() const
     X["timeseries"] = timeseries_map_to_object(d->m_timeseries);
     X["current_timeseries_name"] = d->m_current_timeseries_name;
     X["firings"] = d->m_firings.makePath();
-    X["event_filter"] = d->m_event_filter.toJsonObject();
     X["samplerate"] = d->m_sample_rate;
     X["options"] = QJsonObject::fromVariantMap(d->m_options);
     X["mlproxy_url"] = d->m_mlproxy_url;
@@ -199,9 +197,6 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     d->m_timeseries = object_to_timeseries_map(X["timeseries"].toObject());
     this->setCurrentTimeseriesName(X["current_timeseries_name"].toString());
     this->setFirings(DiskReadMda(X["firings"].toString()));
-    if (X.contains("event_filter")) {
-        this->setEventFilter(MVEventFilter::fromJsonObject(X["event_filter"].toObject()));
-    }
     d->m_sample_rate = X["samplerate"].toDouble();
     if (X.contains("options")) {
         d->m_options = X["options"].toObject().toVariantMap();
@@ -218,7 +213,6 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     emit this->currentTimeseriesChanged();
     emit this->timeseriesNamesChanged();
     emit this->firingsChanged();
-    emit this->eventFilterChanged();
     emit this->clusterMergeChanged();
     emit this->clusterAttributesChanged(0);
     emit this->currentEventChanged();
@@ -369,23 +363,6 @@ void MVContext::setFirings(const DiskReadMda& F)
 {
     d->m_firings = F;
     emit firingsChanged();
-}
-
-MVEventFilter MVContext::eventFilter()
-{
-    return d->m_event_filter;
-}
-
-void MVContext::setEventFilter(const MVEventFilter& EF)
-{
-    if (d->m_event_filter == EF)
-        return;
-    if ((!d->m_event_filter.use_event_filter) && (!EF.use_event_filter)) {
-        //if we are not using event filter, don't bother to change the other parameters
-        return;
-    }
-    d->m_event_filter = EF;
-    emit eventFilterChanged();
 }
 
 void MVContext::setSampleRate(double sample_rate)
@@ -975,24 +952,6 @@ ClusterVisibilityRule ClusterVisibilityRule::fromJsonObject(const QJsonObject& X
     ret.use_subset = X["use_subset"].toBool();
     ret.subset = QSet<int>::fromList(json_array_to_intlist(X["subset"].toArray()));
     return ret;
-}
-
-MVEventFilter MVEventFilter::fromJsonObject(QJsonObject obj)
-{
-    MVEventFilter ret;
-    ret.use_event_filter = obj["use_event_filter"].toBool();
-    ret.min_detectability_score = obj["min_detectability_score"].toDouble();
-    ret.max_outlier_score = obj["max_outlier_score"].toDouble();
-    return ret;
-}
-
-QJsonObject MVEventFilter::toJsonObject() const
-{
-    QJsonObject obj;
-    obj["use_event_filter"] = this->use_event_filter;
-    obj["min_detectability_score"] = this->min_detectability_score;
-    obj["max_outlier_score"] = this->max_outlier_score;
-    return obj;
 }
 
 ClusterPair::ClusterPair(int k1, int k2)

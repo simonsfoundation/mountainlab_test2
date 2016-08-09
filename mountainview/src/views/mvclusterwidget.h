@@ -42,7 +42,6 @@ private:
     void setTimes(const QVector<double>& times);
     void setLabels(const QVector<int>& labels);
     void setAmplitudes(const QVector<double>& amps);
-    void setScores(const QVector<double>& detectability_scores, const QVector<double>& outlier_scores);
 
 signals:
 private slots:

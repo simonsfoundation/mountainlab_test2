@@ -36,7 +36,6 @@ class mvtsvb_calculator {
 public:
     //input
     DiskReadMda firings;
-    MVEventFilter filter;
     QSet<int> labels_to_use;
 
     //output
@@ -201,7 +200,6 @@ MVTimeSeriesViewBase::~MVTimeSeriesViewBase()
 void MVTimeSeriesViewBase::prepareCalculation()
 {
     d->m_calculator.firings = mvContext()->firings();
-    d->m_calculator.filter = mvContext()->eventFilter();
     d->m_calculator.labels_to_use = d->m_labels_to_view;
 }
 
@@ -693,8 +691,6 @@ void mvtsvb_calculator::compute()
 
     if (labels_to_use.isEmpty())
         return;
-
-    firings = compute_filtered_firings_locally(firings, filter);
 
     long L = firings.N2();
     for (long i = 0; i < L; i++) {
