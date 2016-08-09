@@ -1,7 +1,10 @@
 import numpy as np
 import struct
 
-def readmda(path):
+def readmda_memmap(path):
+	return readmda(path, memmap=True)
+
+def readmda(path,memmap=False):
 	ret=np.array([])
 	f=open(path,"rb")
 	try:
@@ -35,9 +38,12 @@ def readmda(path):
 		else:
 			print("Invalid data type code: {}".format(dt_code))
 			return ret
-		print(dims)
-		ret=np.fromfile(f,dtype=dt,count=dimprod)
-		ret=np.reshape(ret,dims)
+		#This is how I do the column-major order
+		if (memmap):
+			ret=np.memmap(path,mode='r',dtype=dt,offset=4*(3+num_dims))
+		else:
+			ret=np.fromfile(f,dtype=dt,count=dimprod)
+		ret=np.reshape(ret,dims,order='F')
 	finally:
 		f.close()
 	return ret
@@ -64,7 +70,6 @@ def writemda16ui(X,fname):
 	return _writemda(X,fname,'uint16')	
 
 def _writemda(X,fname,dt):
-	print("hello1")
 	dt_code=0
 	num_bytes_per_entry=0
 	if dt == 'uint8':
@@ -97,12 +102,14 @@ def _writemda(X,fname,dt):
 		_write_int32(f,dt_code)
 		_write_int32(f,num_bytes_per_entry)
 		_write_int32(f,X.ndim)
-		print(X.shape[0])
-		print(X.ndim)
 		for j in range(0,X.ndim):
 			_write_int32(f,X.shape[j])
-		print(X.data)
-		X.data.astype(dt).tofile(f)
+		print("hello")
+		#This is how I do column-major order
+		A=np.reshape(X,X.size,order='F').astype(dt)
+		A.tofile(f)
+	except Exception as e: # catch *all* exceptions
+		print(e)
 	finally:
 		f.close()
 		return True
