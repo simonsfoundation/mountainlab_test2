@@ -17,7 +17,7 @@
 #include "mvabstractviewfactory.h"
 #include "mvamphistview2.h"
 #include "mvdiscrimhistview.h"
-#include "sherpav1.h"
+#include "guidev1.h"
 
 #include <QApplication>
 #include <QProcess>
@@ -60,8 +60,8 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QMenu>
-#include <mvdiscrimhistview_sherpa.h>
-#include <sherpav2.h>
+#include <mvdiscrimhistview_guide.h>
+#include <guidev2.h>
 #include <firetrackview.h>
 #include <cachemanager.h>
 
@@ -91,8 +91,8 @@ public:
     MVAbstractView* openView(MVAbstractViewFactory* factory);
 
     ClusterAnnotationGuide* m_cluster_annotation_guide;
-    SherpaV1* m_sherpa_v1;
-    SherpaV2* m_sherpa_v2;
+    GuideV1* m_guide_v1;
+    GuideV2* m_guide_v2;
 
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
@@ -130,7 +130,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     registerViewFactory(new MVFiringEventsFactory(context, this));
     registerViewFactory(new MVAmplitudeHistogramsFactory(context, this));
     registerViewFactory(new MVDiscrimHistFactory(context, this));
-    registerViewFactory(new MVDiscrimHistSherpaFactory(context, this));
+    registerViewFactory(new MVDiscrimHistGuideFactory(context, this));
     registerViewFactory(new MVFireTrackFactory(context, this));
 
     registerContextMenuHandler(new MVClusterContextMenuHandler(context, this));
@@ -138,8 +138,8 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
 
     QToolBar* main_toolbar = new QToolBar;
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_context, this);
-    d->m_sherpa_v1 = new SherpaV1(d->m_context, this);
-    d->m_sherpa_v2 = new SherpaV2(d->m_context, this);
+    d->m_guide_v1 = new GuideV1(d->m_context, this);
+    d->m_guide_v2 = new GuideV2(d->m_context, this);
     {
 
         {
@@ -184,9 +184,9 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
             B->setPopupMode(QToolButton::InstantPopup);
             main_toolbar->addWidget(B);
             {
-                QAction* A = new QAction("Sherpa version 2", this);
+                QAction* A = new QAction("Guide version 2", this);
                 menu->addAction(A);
-                QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_sherpa_v2()));
+                QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_guide_v2()));
             }
         }
 
@@ -206,9 +206,9 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
 
         /*
         {
-            QAction* A = new QAction("Sherpa version 1", this);
+            QAction* A = new QAction("Guide version 1", this);
             menu->addAction(A);
-            QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_sherpa_v1()));
+            QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_guide_v1()));
         }
         {
             QAction* A = new QAction("Cluster annotation guide", this);
@@ -461,20 +461,20 @@ void MVMainWindow::slot_cluster_annotation_guide()
     d->m_cluster_annotation_guide->raise();
 }
 
-void MVMainWindow::slot_sherpa_v1()
+void MVMainWindow::slot_guide_v1()
 {
     this->closeAllViews();
-    d->m_sherpa_v1->show();
-    d->m_sherpa_v1->raise();
+    d->m_guide_v1->show();
+    d->m_guide_v1->raise();
 }
 
-void MVMainWindow::slot_sherpa_v2()
+void MVMainWindow::slot_guide_v2()
 {
     this->closeAllViews();
-    d->m_sherpa_v2->show();
-    d->m_sherpa_v2->raise();
+    d->m_guide_v2->show();
+    d->m_guide_v2->raise();
     //the following causes widget to break
-    //d->m_sherpa_v2->setWindowFlags(d->m_sherpa_v2->windowFlags()|Qt::WindowStaysOnTopHint);
+    //d->m_guide_v2->setWindowFlags(d->m_guide_v2->windowFlags()|Qt::WindowStaysOnTopHint);
 }
 
 void MVMainWindow::slot_open_view(QObject* o)

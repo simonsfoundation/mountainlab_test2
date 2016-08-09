@@ -14,14 +14,14 @@
         <file>images/vertical-zoom-out.png</file>
         <file>images/move-up.png</file>
         <file>images/move-down.png</file>
-        <file>guides/sherpav1/page_1.txt</file>
-        <file>guides/sherpav1/page_2.txt</file>
-        <file>guides/sherpav1/page_3.txt</file>
-        <file>guides/sherpav2/page_auto_correlograms.txt</file>
-        <file>guides/sherpav2/page_cluster_details.txt</file>
-        <file>guides/sherpav2/page_event_filter.txt</file>
-        <file>guides/sherpav2/page_discrim_hist.txt</file>
-        <file>guides/sherpav2/page_cross_correlograms.txt</file>
+        <file>guides/guidev1/page_1.txt</file>
+        <file>guides/guidev1/page_2.txt</file>
+        <file>guides/guidev1/page_3.txt</file>
+        <file>guides/guidev2/page_auto_correlograms.txt</file>
+        <file>guides/guidev2/page_cluster_details.txt</file>
+        <file>guides/guidev2/page_event_filter.txt</file>
+        <file>guides/guidev2/page_discrim_hist.txt</file>
+        <file>guides/guidev2/page_cross_correlograms.txt</file>
         <file>images/horizontal-zoom-out.png</file>
         <file>images/horizontal-zoom-in.png</file>
         <file>images/right.png</file>

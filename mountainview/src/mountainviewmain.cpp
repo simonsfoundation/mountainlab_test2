@@ -37,7 +37,6 @@
 /// TODO: (HIGH) Resort by populations, ampl, etc
 /// TODO: (MEDIUM) electrode view... (firetrack)
 /// TODO: (0.9.1) Go to timepoint ****
-/// TODO: (MEDIUM) Change sherpa to clusterguide throughout -- so as not to be politically incorrect
 
 class TaskProgressViewThread : public QRunnable {
 public:

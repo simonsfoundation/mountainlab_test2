@@ -1,16 +1,16 @@
-#ifndef MVDISCRIMHISTVIEW_SHERPA_H
-#define MVDISCRIMHISTVIEW_SHERPA_H
+#ifndef MVDISCRIMHISTVIEW_GUIDE_H
+#define MVDISCRIMHISTVIEW_GUIDE_H
 
 #include "mvabstractviewfactory.h"
 #include "mvhistogramgrid.h"
 
-class MVDiscrimHistViewSherpaPrivate;
-class MVDiscrimHistViewSherpa : public MVHistogramGrid {
+class MVDiscrimHistViewGuidePrivate;
+class MVDiscrimHistViewGuide : public MVHistogramGrid {
     Q_OBJECT
 public:
-    friend class MVDiscrimHistViewSherpaPrivate;
-    MVDiscrimHistViewSherpa(MVContext* context);
-    virtual ~MVDiscrimHistViewSherpa();
+    friend class MVDiscrimHistViewGuidePrivate;
+    MVDiscrimHistViewGuide(MVContext* context);
+    virtual ~MVDiscrimHistViewGuide();
 
     void setNumHistograms(int num);
 
@@ -29,13 +29,13 @@ private slots:
     void slot_pan_right(double units = 0.1);
 
 private:
-    MVDiscrimHistViewSherpaPrivate* d;
+    MVDiscrimHistViewGuidePrivate* d;
 };
 
-class MVDiscrimHistSherpaFactory : public MVAbstractViewFactory {
+class MVDiscrimHistGuideFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVDiscrimHistSherpaFactory(MVContext* context, QObject* parent = 0);
+    MVDiscrimHistGuideFactory(MVContext* context, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
@@ -44,4 +44,4 @@ private slots:
     void updateEnabled();
 };
 
-#endif // MVDISCRIMHISTVIEW_SHERPA_H
+#endif // MVDISCRIMHISTVIEW_GUIDE_H

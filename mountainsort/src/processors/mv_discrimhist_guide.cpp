@@ -1,4 +1,4 @@
-#include "mv_discrimhist_sherpa.h"
+#include "mv_discrimhist_guide.h"
 
 #include "diskreadmda.h"
 #include "extract_clips.h"
@@ -6,15 +6,15 @@
 #include "compute_templates_0.h"
 #include "msmisc.h"
 
-struct discrimhist_sherpa_data {
+struct discrimhist_guide_data {
     int k1 = 0, k2 = 0;
     QVector<double> data1;
     QVector<double> data2;
     double separation_score = 0;
 };
 
-struct discrimhist_sherpa_data_comparer {
-    bool operator()(const discrimhist_sherpa_data& a, const discrimhist_sherpa_data& b) const
+struct discrimhist_guide_data_comparer {
+    bool operator()(const discrimhist_guide_data& a, const discrimhist_guide_data& b) const
     {
         return (a.separation_score < b.separation_score);
     }
@@ -22,12 +22,12 @@ struct discrimhist_sherpa_data_comparer {
 
 /// TODO parallelize mv_distrimhist
 
-void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
-Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_sherpa_opts opts);
+void get_discrimhist_guide_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
+Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_guide_opts opts);
 void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda& distance_matrix, int num_histograms, QSet<int> clusters_to_exclude);
 double compute_separation_score(const QVector<double>& data1, const QVector<double>& data2);
 
-bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_sherpa_opts opts)
+bool mv_discrimhist_guide(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_guide_opts opts)
 {
     DiskReadMda timeseries(timeseries_path);
     DiskReadMda firings(firings_path);
@@ -36,19 +36,19 @@ bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QStrin
     QVector<int> k1s, k2s;
     get_pairs_to_compare(k1s, k2s, distance_matrix, opts.num_histograms * 2, opts.clusters_to_exclude); //get more than we need to be reduced later after sorting
 
-    QList<discrimhist_sherpa_data> datas;
+    QList<discrimhist_guide_data> datas;
     for (int ii = 0; ii < k1s.count(); ii++) {
         int k1 = k1s[ii];
         int k2 = k2s[ii];
-        discrimhist_sherpa_data DD;
+        discrimhist_guide_data DD;
         DD.k1 = k1;
         DD.k2 = k2;
-        get_discrimhist_sherpa_data(DD.data1, DD.data2, timeseries, firings, k1, k2, opts.clip_size);
+        get_discrimhist_guide_data(DD.data1, DD.data2, timeseries, firings, k1, k2, opts.clip_size);
         DD.separation_score = compute_separation_score(DD.data1, DD.data2);
         datas << DD;
     }
 
-    qSort(datas.begin(), datas.end(), discrimhist_sherpa_data_comparer());
+    qSort(datas.begin(), datas.end(), discrimhist_guide_data_comparer());
 
     datas = datas.mid(0, opts.num_histograms);
 
@@ -85,7 +85,7 @@ bool mv_discrimhist_sherpa(QString timeseries_path, QString firings_path, QStrin
     return true;
 }
 
-void get_discrimhist_sherpa_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size)
+void get_discrimhist_guide_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size)
 {
     QVector<double> times1, times2;
     for (long i = 0; i < firings.N2(); i++) {
@@ -144,7 +144,7 @@ bool is_zero(const Mda& X)
     return ((X.minimum() == 0) && (X.maximum() == 0));
 }
 
-Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_sherpa_opts opts)
+Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_guide_opts opts)
 {
     QVector<double> times;
     QVector<int> labels;

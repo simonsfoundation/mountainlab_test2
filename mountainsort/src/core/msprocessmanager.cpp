@@ -36,7 +36,7 @@
 #include "create_multiscale_timeseries_processor.h"
 #include "extract_channel_values_processor.h"
 #include "mv_discrimhist_processor.h"
-#include "mv_discrimhist_sherpa_processor.h"
+#include "mv_discrimhist_guide_processor.h"
 #include "firings_subset_processor.h"
 #include "quantize_processor.h"
 #include "synthesize1_processor.h"
@@ -103,7 +103,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new create_multiscale_timeseries_Processor);
     loadProcessor(new extract_channel_values_Processor);
     loadProcessor(new mv_discrimhist_Processor);
-    loadProcessor(new mv_discrimhist_sherpa_Processor);
+    loadProcessor(new mv_discrimhist_guide_Processor);
     loadProcessor(new firings_subset_Processor);
     loadProcessor(new quantize_Processor);
     loadProcessor(new synthesize1_Processor);

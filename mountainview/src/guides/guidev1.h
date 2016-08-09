@@ -4,28 +4,29 @@
 ** Created: 7/5/2016
 *******************************************************/
 
-#ifndef SHERPAV2
-#define SHERPAV2
+#ifndef GUIDEV1
+#define GUIDEV1
 
 #include <QWizard>
 #include <mvcontext.h>
 #include <mvmainwindow.h>
 
-class SherpaV2Private;
-class SherpaV2 : public QWizard {
+class GuideV1Private;
+class GuideV1 : public QWizard {
     Q_OBJECT
 public:
-    friend class SherpaV2Private;
-    SherpaV2(MVContext* mvcontext, MVMainWindow* mw);
-    virtual ~SherpaV2();
+    friend class GuideV1Private;
+    GuideV1(MVContext* mvcontext, MVMainWindow* mw);
+    virtual ~GuideV1();
 
 private slots:
     void slot_button_clicked();
-    void slot_select_merge_candidates();
-    void slot_merge_all_merge_candidates();
+    void slot_next_channel(int offset = 1);
+    void slot_previous_channel();
+    void slot_cluster_channel_matrix_computed();
 
 private:
-    SherpaV2Private* d;
+    GuideV1Private* d;
 };
 
-#endif // SHERPAV2
+#endif // GUIDEV1

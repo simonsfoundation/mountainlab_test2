@@ -57,8 +57,8 @@ mvcontext.cpp tabber.cpp tabberframe.cpp taskprogressview.cpp actionfactory.cpp
 HEADERS += computationthread.h
 SOURCES += computationthread.cpp
 
-HEADERS += guides/sherpav1.h guides/sherpav2.h
-SOURCES += guides/sherpav1.cpp guides/sherpav2.cpp
+HEADERS += guides/guidev1.h guides/guidev2.h
+SOURCES += guides/guidev1.cpp guides/guidev2.cpp
 
 INCLUDEPATH += misc
 VPATH += misc
@@ -77,7 +77,7 @@ mvclipsview.h mvclipswidget.h mvclusterdetailwidget.h \
 mvclusterview.h mvclusterwidget.h mvcrosscorrelogramswidget3.h \
 mvdiscrimhistview.h mvfiringeventview2.h mvhistogramgrid.h \
 mvspikesprayview.h mvtimeseriesrendermanager.h mvtimeseriesview2.h \
-mvtimeseriesviewbase.h spikespywidget.h mvdiscrimhistview_sherpa.h \
+mvtimeseriesviewbase.h spikespywidget.h mvdiscrimhistview_guide.h \
 mvclusterlegend.h
 SOURCES += \
 correlationmatrixview.cpp histogramview.cpp mvamphistview2.cpp \
@@ -85,7 +85,7 @@ mvclipsview.cpp mvclipswidget.cpp mvclusterdetailwidget.cpp \
 mvclusterview.cpp mvclusterwidget.cpp mvcrosscorrelogramswidget3.cpp \
 mvdiscrimhistview.cpp mvfiringeventview2.cpp mvhistogramgrid.cpp \
 mvspikesprayview.cpp mvtimeseriesrendermanager.cpp mvtimeseriesview2.cpp \
-mvtimeseriesviewbase.cpp spikespywidget.cpp mvdiscrimhistview_sherpa.cpp \
+mvtimeseriesviewbase.cpp spikespywidget.cpp mvdiscrimhistview_guide.cpp \
 mvclusterlegend.cpp
 
 INCLUDEPATH += controlwidgets

@@ -42,7 +42,7 @@ IndividualMergeDecisionPage::IndividualMergeDecisionPage(MVContext* context, MVM
 
     QVBoxLayout* layout = new QVBoxLayout;
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_individual_merge_decisions.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev2/page_individual_merge_decisions.txt"));
     label->setWordWrap(true);
     layout->addWidget(label);
 

@@ -13,13 +13,13 @@
 #include <mountainprocessrunner.h>
 #include <taskprogress.h>
 #include <QThread>
-#include "sherpav1.h"
+#include "guidev1.h"
 
 #include "mv_compute_templates.h"
 
-class SherpaV1Private {
+class GuideV1Private {
 public:
-    SherpaV1* q;
+    GuideV1* q;
 
     MVContext* m_context;
     MVMainWindow* m_main_window;
@@ -43,9 +43,9 @@ public:
     void update_buttons();
 };
 
-SherpaV1::SherpaV1(MVContext* mvcontext, MVMainWindow* mw)
+GuideV1::GuideV1(MVContext* mvcontext, MVMainWindow* mw)
 {
-    d = new SherpaV1Private;
+    d = new GuideV1Private;
     d->q = this;
     d->m_context = mvcontext;
     d->m_main_window = mw;
@@ -57,15 +57,15 @@ SherpaV1::SherpaV1(MVContext* mvcontext, MVMainWindow* mw)
 
     this->resize(800, 600);
 
-    this->setWindowTitle("Sherpa Version 1");
+    this->setWindowTitle("Guide Version 1");
 }
 
-SherpaV1::~SherpaV1()
+GuideV1::~GuideV1()
 {
     delete d;
 }
 
-void SherpaV1::slot_button_clicked()
+void GuideV1::slot_button_clicked()
 {
     QString action = sender()->property("action").toString();
     if (action == "open_view") {
@@ -99,7 +99,7 @@ QSet<int> find_clusters_to_use(int ch, const DiskReadMda& cluster_channel_matrix
     return ret;
 }
 
-void SherpaV1::slot_next_channel(int offset)
+void GuideV1::slot_next_channel(int offset)
 {
     if (!d->m_cluster_channel_matrix_computed) {
         d->m_channel_edit->setText("Calculating....");
@@ -118,17 +118,17 @@ void SherpaV1::slot_next_channel(int offset)
     d->update_buttons();
 }
 
-void SherpaV1::slot_previous_channel()
+void GuideV1::slot_previous_channel()
 {
     slot_next_channel(-1);
 }
 
-QWizardPage* SherpaV1Private::make_page_1()
+QWizardPage* GuideV1Private::make_page_1()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cluster detail view");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav1/page_1.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev1/page_1.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -142,12 +142,12 @@ QWizardPage* SherpaV1Private::make_page_1()
     return page;
 }
 
-QWizardPage* SherpaV1Private::make_page_2()
+QWizardPage* GuideV1Private::make_page_2()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Event Filter");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav1/page_2.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev1/page_2.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -161,12 +161,12 @@ QWizardPage* SherpaV1Private::make_page_2()
     return page;
 }
 
-QWizardPage* SherpaV1Private::make_page_3()
+QWizardPage* GuideV1Private::make_page_3()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Auto-Correlograms");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav1/page_3.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev1/page_3.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -180,13 +180,13 @@ QWizardPage* SherpaV1Private::make_page_3()
     return page;
 }
 
-QWizardPage* SherpaV1Private::make_page_4()
+QWizardPage* GuideV1Private::make_page_4()
 {
     /// TODO, page_4 should be it's own class
     QWizardPage* page = new QWizardPage;
     page->setTitle("Channel Groups");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav1/page_4.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev1/page_4.txt"));
     label->setWordWrap(true);
 
     QHBoxLayout* hlayout = new QHBoxLayout;
@@ -231,7 +231,7 @@ QWizardPage* SherpaV1Private::make_page_4()
     return page;
 }
 
-QAbstractButton* SherpaV1Private::make_instructions_button(QString text, QString instructions)
+QAbstractButton* GuideV1Private::make_instructions_button(QString text, QString instructions)
 {
     QPushButton* B = new QPushButton(text);
     B->setProperty("action", "show_instructions");
@@ -240,7 +240,7 @@ QAbstractButton* SherpaV1Private::make_instructions_button(QString text, QString
     return B;
 }
 
-QAbstractButton* SherpaV1Private::make_open_view_button(QString text, QString view_id, QString container_name)
+QAbstractButton* GuideV1Private::make_open_view_button(QString text, QString view_id, QString container_name)
 {
     QPushButton* B = new QPushButton(text);
     B->setProperty("action", "open_view");
@@ -250,7 +250,7 @@ QAbstractButton* SherpaV1Private::make_open_view_button(QString text, QString vi
     return B;
 }
 
-void SherpaV1Private::show_instructions(QString title, QString instructions)
+void GuideV1Private::show_instructions(QString title, QString instructions)
 {
     QMessageBox::information(q, title, instructions);
 }
@@ -270,7 +270,7 @@ public:
     void run();
 };
 
-void SherpaV1Private::compute_cluster_channel_matrix()
+void GuideV1Private::compute_cluster_channel_matrix()
 {
     compute_cluster_channel_matrix_thread* T = new compute_cluster_channel_matrix_thread;
     QObject::connect(T, SIGNAL(finished()), q, SLOT(slot_cluster_channel_matrix_computed()));
@@ -283,14 +283,14 @@ void SherpaV1Private::compute_cluster_channel_matrix()
     T->start();
 }
 
-void SherpaV1Private::update_buttons()
+void GuideV1Private::update_buttons()
 {
     int ch = m_channel_edit->text().toInt();
     m_prev_channel_button->setEnabled(ch > 1);
     m_next_channel_button->setEnabled((ch == 0) || (ch + 1 <= m_cluster_channel_matrix.N2()));
 }
 
-void SherpaV1::slot_cluster_channel_matrix_computed()
+void GuideV1::slot_cluster_channel_matrix_computed()
 {
     compute_cluster_channel_matrix_thread* T = (compute_cluster_channel_matrix_thread*)qobject_cast<QThread*>(sender());
     if (!T)

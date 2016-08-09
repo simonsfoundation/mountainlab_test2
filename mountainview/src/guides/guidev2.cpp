@@ -13,14 +13,14 @@
 #include <mountainprocessrunner.h>
 #include <taskprogress.h>
 #include <QThread>
-#include "sherpav2.h"
+#include "guidev2.h"
 
 #include "mv_compute_templates.h"
 #include "individualmergedecisionpage.h"
 
-class SherpaV2Private {
+class GuideV2Private {
 public:
-    SherpaV2* q;
+    GuideV2* q;
 
     MVContext* m_context;
     MVMainWindow* m_main_window;
@@ -38,9 +38,9 @@ public:
     void show_instructions(QString title, QString instructions);
 };
 
-SherpaV2::SherpaV2(MVContext* mvcontext, MVMainWindow* mw)
+GuideV2::GuideV2(MVContext* mvcontext, MVMainWindow* mw)
 {
-    d = new SherpaV2Private;
+    d = new GuideV2Private;
     d->q = this;
     d->m_context = mvcontext;
     d->m_main_window = mw;
@@ -55,15 +55,15 @@ SherpaV2::SherpaV2(MVContext* mvcontext, MVMainWindow* mw)
 
     this->resize(800, 600);
 
-    this->setWindowTitle("Sherpa Version 2");
+    this->setWindowTitle("Guide Version 2");
 }
 
-SherpaV2::~SherpaV2()
+GuideV2::~GuideV2()
 {
     delete d;
 }
 
-void SherpaV2::slot_button_clicked()
+void GuideV2::slot_button_clicked()
 {
     QString action = sender()->property("action").toString();
     if (action == "open_view") {
@@ -75,7 +75,7 @@ void SherpaV2::slot_button_clicked()
     }
 }
 
-void SherpaV2::slot_select_merge_candidates()
+void GuideV2::slot_select_merge_candidates()
 {
     QSet<ClusterPair> pairs;
     QList<ClusterPair> keys = d->m_context->clusterPairAttributesKeys();
@@ -87,7 +87,7 @@ void SherpaV2::slot_select_merge_candidates()
     d->m_context->setSelectedClusterPairs(pairs);
 }
 
-void SherpaV2::slot_merge_all_merge_candidates()
+void GuideV2::slot_merge_all_merge_candidates()
 {
     QSet<ClusterPair> pairs;
     QList<ClusterPair> keys = d->m_context->clusterPairAttributesKeys();
@@ -105,12 +105,12 @@ void SherpaV2::slot_merge_all_merge_candidates()
     d->m_context->setViewMerged(true);
 }
 
-QWizardPage* SherpaV2Private::make_page_1()
+QWizardPage* GuideV2Private::make_page_1()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cluster detail view");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_cluster_details.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev2/page_cluster_details.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -124,12 +124,12 @@ QWizardPage* SherpaV2Private::make_page_1()
     return page;
 }
 
-QWizardPage* SherpaV2Private::make_page_2()
+QWizardPage* GuideV2Private::make_page_2()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Event Filter");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_event_filter.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev2/page_event_filter.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -143,12 +143,12 @@ QWizardPage* SherpaV2Private::make_page_2()
     return page;
 }
 
-QWizardPage* SherpaV2Private::make_page_3()
+QWizardPage* GuideV2Private::make_page_3()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cluster detail view");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_auto_correlograms.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev2/page_auto_correlograms.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -162,12 +162,12 @@ QWizardPage* SherpaV2Private::make_page_3()
     return page;
 }
 
-QWizardPage* SherpaV2Private::make_page_4()
+QWizardPage* GuideV2Private::make_page_4()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Discrimination histograms");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_discrim_hist.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev2/page_discrim_hist.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -175,18 +175,18 @@ QWizardPage* SherpaV2Private::make_page_4()
     page->setLayout(layout);
 
     FlowLayout* flayout = new FlowLayout;
-    flayout->addWidget(make_open_view_button("Discrimination histograms", "open-discrim-histograms-sherpa", "south"));
+    flayout->addWidget(make_open_view_button("Discrimination histograms", "open-discrim-histograms-guide", "south"));
     layout->addLayout(flayout);
 
     return page;
 }
 
-QWizardPage* SherpaV2Private::make_page_5()
+QWizardPage* GuideV2Private::make_page_5()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Cross-correlograms");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/page_cross_correlograms.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev2/page_cross_correlograms.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -205,12 +205,12 @@ QWizardPage* SherpaV2Private::make_page_5()
     return page;
 }
 
-QWizardPage* SherpaV2Private::make_page_7()
+QWizardPage* GuideV2Private::make_page_7()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Merge");
 
-    QLabel* label = new QLabel(TextFile::read(":/guides/sherpav2/merge.txt"));
+    QLabel* label = new QLabel(TextFile::read(":/guides/guidev2/merge.txt"));
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -229,7 +229,7 @@ QWizardPage* SherpaV2Private::make_page_7()
     return page;
 }
 
-QAbstractButton* SherpaV2Private::make_instructions_button(QString text, QString instructions)
+QAbstractButton* GuideV2Private::make_instructions_button(QString text, QString instructions)
 {
     QPushButton* B = new QPushButton(text);
     B->setProperty("action", "show_instructions");
@@ -238,7 +238,7 @@ QAbstractButton* SherpaV2Private::make_instructions_button(QString text, QString
     return B;
 }
 
-QAbstractButton* SherpaV2Private::make_open_view_button(QString text, QString view_id, QString container_name)
+QAbstractButton* GuideV2Private::make_open_view_button(QString text, QString view_id, QString container_name)
 {
     QPushButton* B = new QPushButton(text);
     B->setProperty("action", "open_view");
@@ -248,7 +248,7 @@ QAbstractButton* SherpaV2Private::make_open_view_button(QString text, QString vi
     return B;
 }
 
-void SherpaV2Private::show_instructions(QString title, QString instructions)
+void GuideV2Private::show_instructions(QString title, QString instructions)
 {
     QMessageBox::information(q, title, instructions);
 }

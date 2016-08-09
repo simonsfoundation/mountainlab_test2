@@ -75,8 +75,8 @@ HEADERS += \
     processors/extract_channel_values_processor.h \
     processors/mv_discrimhist_processor.h \
     processors/mv_discrimhist.h \
-    processors/mv_discrimhist_sherpa_processor.h \
-    processors/mv_discrimhist_sherpa.h \
+    processors/mv_discrimhist_guide_processor.h \
+    processors/mv_discrimhist_guide.h \
     processors/normalize_channels_processor.h \
     processors/normalize_channels.h \
     utils/pca.h \
@@ -138,8 +138,8 @@ SOURCES += \
     processors/extract_channel_values_processor.cpp \
     processors/mv_discrimhist_processor.cpp \
     processors/mv_discrimhist.cpp \
-    processors/mv_discrimhist_sherpa_processor.cpp \
-    processors/mv_discrimhist_sherpa.cpp \
+    processors/mv_discrimhist_guide_processor.cpp \
+    processors/mv_discrimhist_guide.cpp \
     processors/normalize_channels_processor.cpp \
     processors/normalize_channels.cpp \
     utils/pca.cpp \
