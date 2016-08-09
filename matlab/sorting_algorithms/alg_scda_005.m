@@ -25,6 +25,7 @@ function [firings,info]=alg_scda_005(timeseries_fname,output_dir,opts)
 %                   geom=''; path of CSV file giving x,y coords of each electrode
 %                            (if absent or empty assumes full dense connectivity)
 %                   detectmeth = 0, 3, or 4 (controls detection method)
+%                   neglogprior = 30;
 % Outputs:
 %    firingsfile - path to the firings.mda output file
 %    info - struct with fields:
@@ -107,7 +108,7 @@ end;
 if opts.detectmeth==0
   mscmd_detect(pre2,detect,o_detect);
 elseif opts.detectmeth==3          % replace w/ mscmd_detect3 when ready:
-  %o_detect.beta=1;
+  %o_detect.beta=5;
   fprintf('\n---- DETECT3 in MATLAB ----\n'); o_detect
   Y = readmda(pre2);          % for now use pure matlab...
   [times chans] = ms_detect3(Y,o_detect);
@@ -120,8 +121,8 @@ elseif opts.detectmeth==4          % replace w/ mscmd_detect4 when ready ?
 else
   error('unknown opts.detectmeth');
 end
+%F=readmda(detect); F(2,:)=floor(+F(2,:)); writemda(F,detect,'float64'); % for debugging: round times
 mscmd_branch_cluster_v2(pre2,detect,adjacency_matrix,firings1,o_branch_cluster);
-%F=readmda(firings1); F=round(F); writemda(F,firings1,'float64'); % round times
 mscmd_merge_across_channels(pre2,firings1,firings2,o_merge_across_channels);
 mscmd_fit_stage(pre2,firings2,firings3,o_fit_stage);
 mscmd_compute_outlier_scores(pre2,firings3,firings4,o_compute_outlier_scores);
