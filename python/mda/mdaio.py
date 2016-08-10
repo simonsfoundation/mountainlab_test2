@@ -9,15 +9,29 @@ class MdaHeader:
 	dimprod=1
 	dims=[]
 	header_size=0
+	def __init__(self, dt0, dims0):
+		self.dt_code=_dt_code_from_dt(dt0)
+		self.dt=dt0
+		self.num_bytes_per_entry=_num_bytes_per_entry_from_dt(dt0)
+		self.num_dims=len(dims0)
+		self.dimprod=np.prod(dims0)
+		self.dims=dims0
+		self.header_size=(3+len(dims0))*4
 
 class DiskReadMda:
 	_path=''
-	_header=MdaHeader()
+	_header=None
 	def __init__(self,path):
 		self._path=path
 		self._header=_read_header(self._path)
 	def dims(self):
 		return self._header.dims
+	def N1(self):
+		return self._header.dims[0]
+	def N2(self):
+		return self._header.dims[1]
+	def N3(self):
+		return self._header.dims[2]
 	def readChunk(self,i1=-1,i2=-1,i3=-1,N1=1,N2=1,N3=1):
 		if (i2<0):
 			return self._read_chunk_1d(i1,N1)
@@ -49,6 +63,113 @@ class DiskReadMda:
 			f.close()
 			return None
 
+class DiskWriteMda:
+	_path=''
+	_header=None
+	def __init__(self,path,dims,dt='float64'):
+		self._path=path
+		self._header=MdaHeader(dt,dims)
+		_write_header(path, self._header)
+	def N1(self):
+		return self._header.dims[0]
+	def N2(self):
+		return self._header.dims[1]
+	def N3(self):
+		return self._header.dims[2]
+	def writeChunk(self,X,i1=-1,i2=-1,i3=-1):
+		if (len(X.shape)>=2):
+			N1=X.shape[0]
+		else:
+			N1=1
+		if (len(X.shape)>=2):
+			N2=X.shape[1]
+		else:
+			N2=1
+		if (len(X.shape)>=3):
+			N3=X.shape[2]
+		else:
+			N3=1
+		if (i2<0):
+			return self._write_chunk_1d(X,i1)
+		elif (i3<0):
+			if N1 != self._header.dims[0]:
+				print("Unable to support DiskWriteMda N1 {} != {}".format(N1,self._header.dims[0]))
+				return None
+			return self._write_chunk_1d(X.ravel(order='F'),i1+N1*i2)
+		else:
+			if N1 != self._header.dims[0]:
+				print("Unable to support DiskWriteMda N1 {} != {}".format(N1,self._header.dims[0]))
+				return None
+			if N2 != self._header.dims[1]:
+				print("Unable to support DiskWriteMda N2 {} != {}".format(N2,self._header.dims[1]))
+				return None
+			return self._write_chunk_1d(X.ravel(order='F'),i1+N1*i2+N1*N2*i3)
+	def _write_chunk_1d(self,X,i):
+		N=X.size
+		f=open(self._path,"ab")
+		try:
+			f.seek(self._header.header_size+self._header.num_bytes_per_entry*i)
+			X.astype(self._header.dt).tofile(f)
+			f.close()
+			return True
+		except Exception as e: # catch *all* exceptions
+			print(e)
+			f.close()
+			return False
+
+def _dt_from_dt_code(dt_code):
+	if dt_code == -2:
+		dt='uint8'
+	elif dt_code == -3:
+		dt='float32'
+	elif dt_code == -4:
+		dt='int16'
+	elif dt_code == -5:
+		dt='int32'
+	elif dt_code == -6:
+		dt='uint16'
+	elif dt_code == -7:
+		dt='float64'
+	elif dt_code == -8:
+		dt='uint32'
+	else:
+		dt=None
+	return dt
+
+def _dt_code_from_dt(dt):
+	if dt == 'uint8':
+		return -2
+	if dt == 'float32':
+		return -3
+	if dt == 'int16':
+		return -4
+	if dt == 'int32':
+		return -5
+	if dt == 'uint16':
+		return -6
+	if dt == 'float64':
+		return -7
+	if dt == 'uint32':
+		return -8
+	return None
+
+def _num_bytes_per_entry_from_dt(dt):
+	if dt == 'uint8':
+		return 1
+	if dt == 'float32':
+		return 4
+	if dt == 'int16':
+		return 2
+	if dt == 'int32':
+		return 4
+	if dt == 'uint16':
+		return 2
+	if dt == 'float64':
+		return 8
+	if dt == 'uint32':
+		return 4
+	return None
+
 def _read_header(path):
 	f=open(path,"rb")
 	try:
@@ -58,48 +179,46 @@ def _read_header(path):
 		if (num_dims<2) or (num_dims>6):
 			print("Invalid number of dimensions: {}".format(num_dims))
 			return None
-		dims=[];
+		dims=[]
 		dimprod=1
-
 		for j in range(0,num_dims):
 			tmp0=_read_int32(f)
 			dimprod=dimprod*tmp0
 			dims.append(tmp0)
-		if dt_code == -2:
-			dt='uint8'
-		elif dt_code == -3:
-			dt='float32'
-		elif dt_code == -4:
-			dt='int16'
-		elif dt_code == -5:
-			dt='int32'
-		elif dt_code == -6:
-			dt='uint16'
-		elif dt_code == -7:
-			dt='float64'
-		elif dt_code == -8:
-			dt='uint32'
-		else:
+		dt=_dt_from_dt_code(dt_code)
+		if dt is None:
 			print("Invalid data type code: {}".format(dt_code))
 			return None
-		H=MdaHeader()
-		H.dt_code=dt_code
-		H.dt=dt
-		H.num_bytes_per_entry=num_bytes_per_entry
-		H.num_dims=num_dims
-		H.dimprod=dimprod
-		H.dims=dims
-		H.header_size=4*(3+H.num_dims)
+		print(dt)
+		print(dims)
+		H=MdaHeader(dt,dims)
+		print('test')
 		f.close()
-		return H;
+		return H
 	except Exception as e: # catch *all* exceptions
 		print(e)
 		f.close()
 		return None
 
+def _write_header(path,H):
+	f=open(path,"wb")
+	try:
+		_write_int32(f,H.dt_code)
+		_write_int32(f,H.num_bytes_per_entry)
+		_write_int32(f,H.num_dims)
+		for j in range(0,H.num_dims):
+			_write_int32(f,H.dims[j])
+		f.close()
+		return True
+	except Exception as e: # catch *all* exceptions
+		print(e)
+		f.close()
+		return False
+
 def readmda(path):
 	H=_read_header(path)
 	if (H is None):
+		print("Problem reading header of: {}".format(path))
 		return None
 	ret=np.array([])
 	f=open(path,"rb")
@@ -139,28 +258,8 @@ def writemda16ui(X,fname):
 def _writemda(X,fname,dt):
 	dt_code=0
 	num_bytes_per_entry=0
-	if dt == 'uint8':
-		dt_code=-2
-		num_bytes_per_entry=1
-	elif dt == 'float32':
-		dt_code=-3
-		num_bytes_per_entry=4
-	elif dt == 'int16':
-		dt_code=-4
-		num_bytes_per_entry=2
-	elif dt == 'int32':
-		dt_code=-5
-		num_bytes_per_entry=4
-	elif dt == 'uint16':
-		dt_code=-6
-		num_bytes_per_entry=2
-	elif dt == 'float64':
-		dt_code=-7
-		num_bytes_per_entry=8
-	elif dt == 'uint32':
-		dt_code=-8
-		num_bytes_per_entry=4
-	else:
+	dt_code=_dt_code_from_dt(dt)
+	if dt_code is None:
 		print("Unexpected data type: {}".format(dt))
 		return False
 
@@ -181,7 +280,7 @@ def _writemda(X,fname,dt):
 		return True
 
 def _read_int32(f):
-	return struct.unpack('<i',f.read(4))[0];
+	return struct.unpack('<i',f.read(4))[0]
 
 def _write_int32(f,val):
 	f.write(struct.pack('<i',val))
@@ -195,8 +294,15 @@ def mdaio_test():
 			X[m,n]=n*10+m
 	writemda32(X,'tmp1.mda')
 	Y=readmda('tmp1.mda')
+	print(Y)
 	print(np.absolute(X-Y).max())
 	Z=DiskReadMda('tmp1.mda')
 	print(Z.readChunk(i1=0,i2=4,N1=M,N2=N-4))
+
+	A=DiskWriteMda('tmpA.mda',(M,N))
+	A.writeChunk(Y,i1=0,i2=0)
+	B=readmda('tmpA.mda')
+	print(B.shape)
+	print(B)
 
 mdaio_test()
