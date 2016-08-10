@@ -27,9 +27,7 @@ SOURCES += mountainviewmain.cpp \
     controlwidgets/mvprefscontrol.cpp \
     views/mvpanelwidget.cpp \
     views/mvtemplatesview2.cpp \
-    views/mvtemplatesview2panel.cpp \
-    views/mvamphistview3.cpp \
-    views/histogramlayer.cpp
+    views/mvtemplatesview2panel.cpp
 
 INCLUDEPATH += core
 VPATH += core
@@ -47,9 +45,7 @@ mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
     controlwidgets/mvprefscontrol.h \
     views/mvpanelwidget.h \
     views/mvtemplatesview2.h \
-    views/mvtemplatesview2panel.h \
-    views/mvamphistview3.h \
-    views/histogramlayer.h
+    views/mvtemplatesview2panel.h
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
@@ -61,8 +57,8 @@ mvcontext.cpp tabber.cpp tabberframe.cpp taskprogressview.cpp actionfactory.cpp
 HEADERS += computationthread.h
 SOURCES += computationthread.cpp
 
-HEADERS += guides/guidev1.h guides/guidev2.h
-SOURCES += guides/guidev1.cpp guides/guidev2.cpp
+HEADERS += guides/sherpav1.h guides/sherpav2.h
+SOURCES += guides/sherpav1.cpp guides/sherpav2.cpp
 
 INCLUDEPATH += misc
 VPATH += misc
@@ -81,7 +77,7 @@ mvclipsview.h mvclipswidget.h mvclusterdetailwidget.h \
 mvclusterview.h mvclusterwidget.h mvcrosscorrelogramswidget3.h \
 mvdiscrimhistview.h mvfiringeventview2.h mvhistogramgrid.h \
 mvspikesprayview.h mvtimeseriesrendermanager.h mvtimeseriesview2.h \
-mvtimeseriesviewbase.h spikespywidget.h mvdiscrimhistview_guide.h \
+mvtimeseriesviewbase.h spikespywidget.h mvdiscrimhistview_sherpa.h \
 mvclusterlegend.h
 SOURCES += \
 correlationmatrixview.cpp histogramview.cpp mvamphistview2.cpp \
@@ -89,16 +85,16 @@ mvclipsview.cpp mvclipswidget.cpp mvclusterdetailwidget.cpp \
 mvclusterview.cpp mvclusterwidget.cpp mvcrosscorrelogramswidget3.cpp \
 mvdiscrimhistview.cpp mvfiringeventview2.cpp mvhistogramgrid.cpp \
 mvspikesprayview.cpp mvtimeseriesrendermanager.cpp mvtimeseriesview2.cpp \
-mvtimeseriesviewbase.cpp spikespywidget.cpp mvdiscrimhistview_guide.cpp \
+mvtimeseriesviewbase.cpp spikespywidget.cpp mvdiscrimhistview_sherpa.cpp \
 mvclusterlegend.cpp
 
 INCLUDEPATH += controlwidgets
 VPATH += controlwidgets
 HEADERS += \
-mvclustervisibilitycontrol.h \
+mvclustervisibilitycontrol.h mveventfiltercontrol.h \
 mvexportcontrol.h mvgeneralcontrol.h mvopenviewscontrol.h
 SOURCES += \
-mvclustervisibilitycontrol.cpp \
+mvclustervisibilitycontrol.cpp mveventfiltercontrol.cpp \
 mvexportcontrol.cpp mvgeneralcontrol.cpp mvopenviewscontrol.cpp
 
 INCLUDEPATH += guides

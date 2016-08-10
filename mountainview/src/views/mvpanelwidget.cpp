@@ -304,8 +304,10 @@ void MVPanelWidgetPrivate::zoom(double factor)
     if ((m_current_panel_index >= 0) && (m_current_panel_index < m_panels.count())) {
         new_current_panel_geom = m_panels[m_current_panel_index].geom;
     }
-    double dx = new_current_panel_geom.center().x() - current_panel_geom.center().x();
-    double dy = new_current_panel_geom.center().y() - current_panel_geom.center().y();
+    //double dx = new_current_panel_geom.center().x() - current_panel_geom.center().x();
+    //double dy = new_current_panel_geom.center().y() - current_panel_geom.center().y();
+    double dx = new_current_panel_geom.left() - current_panel_geom.left();
+    double dy = new_current_panel_geom.top() - current_panel_geom.top();
     if ((dx) || (dy)) {
         m_viewport_geom.translate(-dx / q->width(), 0);
         m_viewport_geom.translate(0, -dy / q->height());
