@@ -245,7 +245,7 @@ QString MVAmplitudeHistogramsFactory::id() const
 
 QString MVAmplitudeHistogramsFactory::name() const
 {
-    return tr("Amplitude Histograms");
+    return tr("Amplitude Histograms (old)");
 }
 
 QString MVAmplitudeHistogramsFactory::title() const

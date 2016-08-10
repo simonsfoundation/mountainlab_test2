@@ -16,6 +16,7 @@
 #include "mlcommon.h"
 #include "mvabstractviewfactory.h"
 #include "mvamphistview2.h"
+#include "mvamphistview3.h"
 #include "mvdiscrimhistview.h"
 #include "guidev1.h"
 
@@ -129,6 +130,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     registerViewFactory(new MVSpikeSprayFactory(context, this));
     registerViewFactory(new MVFiringEventsFactory(context, this));
     registerViewFactory(new MVAmplitudeHistogramsFactory(context, this));
+    registerViewFactory(new MVAmplitudeHistograms3Factory(context, this));
     registerViewFactory(new MVDiscrimHistFactory(context, this));
     registerViewFactory(new MVDiscrimHistGuideFactory(context, this));
     registerViewFactory(new MVFireTrackFactory(context, this));

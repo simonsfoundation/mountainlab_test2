@@ -27,6 +27,7 @@ public:
     void setMinimumPanelWidth(int w);
     void setMinimumPanelHeight(int h);
     void setScrollable(bool h_scrollable, bool v_scrollable);
+    void setZoomOnWheel(bool val);
 
     int currentPanelIndex() const;
     void setCurrentPanelIndex(int index); //for zooming
@@ -42,10 +43,12 @@ protected:
     void wheelEvent(QWheelEvent* evt);
     void mousePressEvent(QMouseEvent* evt);
     void mouseReleaseEvent(QMouseEvent* evt);
+    void mouseDoubleClickEvent(QMouseEvent* evt);
     void mouseMoveEvent(QMouseEvent* evt);
 
 signals:
     void signalPanelClicked(int index, Qt::KeyboardModifiers modifiers);
+    void signalPanelActivated(int index);
 
 private:
     MVPanelWidgetPrivate* d;

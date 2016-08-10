@@ -27,7 +27,9 @@ SOURCES += mountainviewmain.cpp \
     controlwidgets/mvprefscontrol.cpp \
     views/mvpanelwidget.cpp \
     views/mvtemplatesview2.cpp \
-    views/mvtemplatesview2panel.cpp
+    views/mvtemplatesview2panel.cpp \
+    views/mvamphistview3.cpp \
+    views/histogramlayer.cpp
 
 INCLUDEPATH += core
 VPATH += core
@@ -45,7 +47,9 @@ mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
     controlwidgets/mvprefscontrol.h \
     views/mvpanelwidget.h \
     views/mvtemplatesview2.h \
-    views/mvtemplatesview2panel.h
+    views/mvtemplatesview2panel.h \
+    views/mvamphistview3.h \
+    views/histogramlayer.h
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
