@@ -76,7 +76,7 @@ bool whiten(const QString& input, const QString& output)
 
     //Mda AA = get_whitening_matrix(COV);
     Mda WW;
-    whitening_matrix_from_XXt(WW, XXt);
+    whitening_matrix_from_XXt(WW, XXt);   // the result is symmetric (assumed below)
     double* WWptr = WW.dataPtr();
 
     DiskWriteMda Y;
@@ -95,13 +95,13 @@ bool whiten(const QString& input, const QString& output)
             double* chunk_in_ptr = chunk_in.dataPtr();
             Mda chunk_out(M, chunk_in.N2());
             double* chunk_out_ptr = chunk_out.dataPtr();
-            for (long i = 0; i < chunk_in.N2(); i++) { // explicitly do mat-mat mult
+            for (long i = 0; i < chunk_in.N2(); i++) { // explicitly do mat-mat mult ... TODO replace w/ BLAS3
                 long aa = M * i;
                 long bb = 0;
                 for (int m1 = 0; m1 < M; m1++) {
                     for (int m2 = 0; m2 < M; m2++) {
-                        chunk_out_ptr[aa + m1] += chunk_in_ptr[aa + m2] * WWptr[bb];
-                        bb++;
+		      chunk_out_ptr[aa + m1] += chunk_in_ptr[aa + m2] * WWptr[bb];   // actually this does dgemm w/ WW^T
+		      bb++;                                                       // but since symmetric, doesn't matter.
                     }
                 }
             }

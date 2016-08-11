@@ -124,7 +124,7 @@ void pca_from_XXt(Mda32& C, Mda32& sigma, Mda32& XXt, int num_features)
     }
 }
 
-Mda mult_AB(Mda& A, Mda& B)
+Mda mult_AB(Mda& A, Mda& B)         // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N1();
     long L = A.N2();
@@ -149,7 +149,7 @@ Mda mult_AB(Mda& A, Mda& B)
     return C;
 }
 
-Mda32 mult_AB(Mda32& A, Mda32& B)
+Mda32 mult_AB(Mda32& A, Mda32& B)        // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N1();
     long L = A.N2();
@@ -174,7 +174,7 @@ Mda32 mult_AB(Mda32& A, Mda32& B)
     return C;
 }
 
-Mda mult_AtransB(Mda& A, Mda& B)
+Mda mult_AtransB(Mda& A, Mda& B)    // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N2();
     long L = A.N1();
@@ -198,7 +198,7 @@ Mda mult_AtransB(Mda& A, Mda& B)
     return C;
 }
 
-Mda32 mult_AtransB(Mda32& A, Mda32& B)
+Mda32 mult_AtransB(Mda32& A, Mda32& B)    // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N2();
     long L = A.N1();
@@ -222,7 +222,7 @@ Mda32 mult_AtransB(Mda32& A, Mda32& B)
     return C;
 }
 
-Mda mult_ABtrans(Mda& A, Mda& B)
+Mda mult_ABtrans(Mda& A, Mda& B)    // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N1();
     long L = A.N2();
@@ -247,7 +247,7 @@ Mda mult_ABtrans(Mda& A, Mda& B)
     return C;
 }
 
-Mda32 mult_ABtrans(Mda32& A, Mda32& B)
+Mda32 mult_ABtrans(Mda32& A, Mda32& B)    // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N1();
     long L = A.N2();
@@ -382,7 +382,7 @@ void normalize_vector(Mda32& V)
         Vptr[n] /= norm;
 }
 
-void matvec(long M, long N, double* ret, double* A, double* x)
+void matvec(long M, long N, double* ret, double* A, double* x)   // really this should be BLAS2 call
 {
     for (long m = 0; m < M; m++)
         ret[m] = 0;
@@ -396,7 +396,7 @@ void matvec(long M, long N, double* ret, double* A, double* x)
     }
 }
 
-void matvec(long M, long N, float* ret, float* A, float* x)
+void matvec(long M, long N, float* ret, float* A, float* x)   // really this should be BLAS2 call
 {
     for (long m = 0; m < M; m++)
         ret[m] = 0;
@@ -416,7 +416,7 @@ void iterate_to_get_top_component(Mda& C, double& sigma, Mda& X, int num_iterati
     long N = X.N2();
     C.allocate(M, 1);
     for (int i = 0; i < M; i++) {
-        C.set(sin(i), i); //pseudo-random
+        C.set(sin(i+1), i); //pseudo-random  - ahb fixed so the M=1 case isn't the zero vector
     }
     normalize_vector(C);
     for (int it = 0; it < num_iterations; it++) {
@@ -434,7 +434,7 @@ void iterate_to_get_top_component(Mda32& C, double& sigma, Mda32& X, int num_ite
     long N = X.N2();
     C.allocate(M, 1);
     for (int i = 0; i < M; i++) {
-        C.set(sin(i), i); //pseudo-random
+        C.set(sin(i+1), i); //pseudo-random  - ahb fixed so the M=1 case isn't the zero vector
     }
     normalize_vector(C);
     for (int it = 0; it < num_iterations; it++) {
@@ -451,7 +451,7 @@ void iterate_XXt_to_get_top_component(Mda& C, double& sigma, Mda& XXt, int num_i
     long M = XXt.N1();
     C.allocate(M, 1);
     for (int i = 0; i < M; i++) {
-        C.set(sin(i), i); //pseudo-random
+        C.set(sin(i+1), i); //pseudo-random  - ahb fixed so the M=1 case isn't the zero vector
     }
     normalize_vector(C);
     for (int it = 0; it < num_iterations; it++) {
@@ -469,7 +469,7 @@ void iterate_XXt_to_get_top_component(Mda32& C, double& sigma, Mda32& XXt, int n
     long M = XXt.N1();
     C.allocate(M, 1);
     for (int i = 0; i < M; i++) {
-        C.set(sin(i), i); //pseudo-random
+        C.set(sin(i+1), i); //pseudo-random  - ahb fixed so the M=1 case isn't the zero vector
     }
     normalize_vector(C);
     for (int it = 0; it < num_iterations; it++) {
@@ -543,9 +543,9 @@ void whitening_matrix_from_XXt(Mda& W, Mda& XXt)
 {
     int M = XXt.N1();
     Mda components, sigma;
-    pca_from_XXt(components, sigma, XXt, M);
+    pca_from_XXt(components, sigma, XXt, M);  // sigma is list of eigenvalues of XXt (really sigma^2 for SVD of X)
 
-    Mda D(M, M);
+    Mda D(M, M);       // build a diagonal matrix D = 1/sqrt(eigvals)
     for (int i = 0; i < M; i++) {
         double val = 0;
         if (sigma.get(i))
@@ -554,16 +554,16 @@ void whitening_matrix_from_XXt(Mda& W, Mda& XXt)
     }
 
     Mda tmp = mult_AB(components, D);
-    W = mult_ABtrans(tmp, components);z
+    W = mult_ABtrans(tmp, components);     // output U.D.U^T is symmetric
 }
 
 void whitening_matrix_from_XXt(Mda32& W, Mda32& XXt)
 {
     int M = XXt.N1();
     Mda32 components, sigma;
-    pca_from_XXt(components, sigma, XXt, M);
+    pca_from_XXt(components, sigma, XXt, M);  // sigma is list of eigenvalues of XXt (really sigma^2 for SVD of X)
 
-    Mda32 D(M, M);
+    Mda32 D(M, M);                    // build a diagonal matrix D = 1/sqrt(eigvals)
     for (int i = 0; i < M; i++) {
         double val = 0;
         if (sigma.get(i))
@@ -572,5 +572,5 @@ void whitening_matrix_from_XXt(Mda32& W, Mda32& XXt)
     }
 
     Mda32 tmp = mult_AB(components, D);
-    W = mult_ABtrans(tmp, components);
+    W = mult_ABtrans(tmp, components);      // output U.D.U^T is symmetric
 }
