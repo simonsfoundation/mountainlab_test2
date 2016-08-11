@@ -312,17 +312,17 @@ double MLCompute::correlation(const QVector<double>& X1, const QVector<double>& 
     return dotProduct(Y1, Y2);
 }
 
-double MLCompute::norm(long N, double* X)
+double MLCompute::norm(long N, const double* X)
 {
     return sqrt(dotProduct(N, X, X));
 }
 
-double MLCompute::dotProduct(long N, double* X1, double* X2)
+double MLCompute::dotProduct(long N, const double* X1, const double* X2)
 {
     return std::inner_product(X1, X1 + N, X2, 0.0);
 }
 
-double MLCompute::dotProduct(long N, float* X1, float* X2)
+double MLCompute::dotProduct(long N, const float* X1, const float* X2)
 {
     return std::inner_product(X1, X1 + N, X2, 0.0);
 }
@@ -334,24 +334,24 @@ QString MLUtil::computeSha1SumOfString(const QString& str)
     return QString(hash.result().toHex());
 }
 
-double MLCompute::sum(long N, double* X)
+double MLCompute::sum(long N, const double* X)
 {
     return std::accumulate(X, X + N, 0.0);
 }
 
-double MLCompute::mean(long N, double* X)
+double MLCompute::mean(long N, const double* X)
 {
     if (!N)
         return 0;
     return sum(N, X) / N;
 }
 
-double MLCompute::max(long N, double* X)
+double MLCompute::max(long N, const double* X)
 {
     return N ? *std::max_element(X, X + N) : 0;
 }
 
-double MLCompute::min(long N, double* X)
+double MLCompute::min(long N, const double* X)
 {
     return N ? *std::min_element(X, X + N) : 0;
 }
@@ -481,29 +481,29 @@ bool MLUtil::writeByteArray(const QString& path, const QByteArray& X)
     return true;
 }
 
-double MLCompute::min(long N, float* X)
+double MLCompute::min(long N, const float* X)
 {
     return N ? *std::min_element(X, X + N) : 0;
 }
 
-double MLCompute::max(long N, float* X)
+double MLCompute::max(long N, const float* X)
 {
     return N ? *std::max_element(X, X + N) : 0;
 }
 
-double MLCompute::sum(long N, float* X)
+double MLCompute::sum(long N, const float* X)
 {
     return std::accumulate(X, X + N, 0.0);
 }
 
-double MLCompute::mean(long N, float* X)
+double MLCompute::mean(long N, const float* X)
 {
     if (!N)
         return 0;
     return sum(N, X) / N;
 }
 
-double MLCompute::norm(long N, float* X)
+double MLCompute::norm(long N, const float* X)
 {
     return sqrt(dotProduct(N, X, X));
 }

@@ -13,7 +13,7 @@
 #include <QMessageBox>
 #endif
 
-Mda compute_mean_clip(Mda& clips)
+Mda compute_mean_clip(const Mda& clips)
 {
     int M = clips.N1();
     int T = clips.N2();
@@ -41,7 +41,7 @@ Mda compute_mean_clip(Mda& clips)
     return ret;
 }
 
-Mda32 compute_mean_clip(Mda32& clips)
+Mda32 compute_mean_clip(const Mda32& clips)
 {
     int M = clips.N1();
     int T = clips.N2();
@@ -69,7 +69,7 @@ Mda32 compute_mean_clip(Mda32& clips)
     return ret;
 }
 
-Mda grab_clips_subset(Mda& clips, const QVector<int>& inds)
+Mda grab_clips_subset(const Mda& clips, const QVector<int>& inds)
 {
     int M = clips.N1();
     int T = clips.N2();
@@ -88,7 +88,7 @@ Mda grab_clips_subset(Mda& clips, const QVector<int>& inds)
     return ret;
 }
 
-Mda32 grab_clips_subset(Mda32& clips, const QVector<int>& inds)
+Mda32 grab_clips_subset(const Mda32& clips, const QVector<int>& inds)
 {
     int M = clips.N1();
     int T = clips.N2();

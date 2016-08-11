@@ -18,7 +18,7 @@ struct fit_stage_opts {
     double neglogprior;
 };
 
-bool fit_stage(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts);
+//bool fit_stage(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts);
 bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts);
 
 double compute_score(long N, double* X, double* template0);

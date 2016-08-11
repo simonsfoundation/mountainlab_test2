@@ -54,18 +54,18 @@ double correlation(const QVector<double>& X1, const QVector<double>& X2);
 
 template <typename T>
 T max(const QVector<T>& X);
-double min(long N, double* X);
-double max(long N, double* X);
-double sum(long N, double* X);
-double mean(long N, double* X);
-double dotProduct(long N, double* X1, double* X2);
-double norm(long N, double* X);
-double min(long N, float* X);
-double max(long N, float* X);
-double sum(long N, float* X);
-double mean(long N, float* X);
-double dotProduct(long N, float* X1, float* X2);
-double norm(long N, float* X);
+double min(long N, const double* X);
+double max(long N, const double* X);
+double sum(long N, const double* X);
+double mean(long N, const double* X);
+double dotProduct(long N, const double* X1, const double* X2);
+double norm(long N, const double* X);
+double min(long N, const float* X);
+double max(long N, const float* X);
+double sum(long N, const float* X);
+double mean(long N, const float* X);
+double dotProduct(long N, const float* X1, const float* X2);
+double norm(long N, const float* X);
 }
 
 class CLParams {

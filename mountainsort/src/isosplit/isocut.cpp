@@ -93,7 +93,7 @@ void quick_sort(double* a, int n)
     quick_sort(&a[i], n - i);
 }
 
-void sort(int N, double* out, double* in)
+void sort(int N, double* out, const double* in)
 {
     for (int i = 0; i < N; i++)
         out[i] = in[i];
@@ -108,12 +108,12 @@ void sort(int N, double* out, double* in)
 //    return isocut(N,cutpoint,samples_in,1.4,4);
 //}
 
-bool isocut(int N, double* cutpoint, double* samples_in, double threshold)
+bool isocut(int N, double* cutpoint, const double* samples_in, double threshold)
 {
     return isocut(N, cutpoint, samples_in, threshold, 4);
 }
 
-bool isocut(int N, double* cutpoint, double* samples_in, double threshold, int minsize)
+bool isocut(int N, double* cutpoint, const double* samples_in, double threshold, int minsize)
 {
     *cutpoint = 0;
     double* samples = (double*)malloc(sizeof(double) * N);

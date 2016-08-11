@@ -14,6 +14,7 @@
 #include "compute_detectability_scores.h"
 #include "get_sort_indices.h"
 
+/*
 bool fit_stage(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts)
 {
     Mda X(timeseries_path);
@@ -69,12 +70,7 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
                 int k0 = labels[i];
                 if (k0 > 0) {
                     long tt = (long)(t0 - Tmid + 0.5);
-                    double score0 = compute_score(M * T, X.dataPtr(0, tt), templates.dataPtr(0, 0, k0 - 1));
-
-                    /*
-                    if (score0 < template_norms[k0] * template_norms[k0] * 0.1)
-                        score0 = 0; //the norm of the improvement needs to be at least 0.5 times the norm of the template
-                        */
+                    double score0 = compute_score(M, T, X.dataPtr(0, tt), templates.dataPtr(0, 0, k0 - 1), );
 
                     double neglogprior = opts.neglogprior;
                     if (score0 > neglogprior) {
@@ -145,17 +141,7 @@ bool fit_stage(const QString& timeseries_path, const QString& firings_path, cons
 
     return true;
 }
-
-double compute_score(long N, double* X, double* template0)
-{
-    Mda resid(1, N);
-    double* resid_ptr = resid.dataPtr();
-    for (long i = 0; i < N; i++)
-        resid_ptr[i] = X[i] - template0[i];
-    double norm1 = MLCompute::norm(N, X);
-    double norm2 = MLCompute::norm(N, resid_ptr);
-    return norm1 * norm1 - norm2 * norm2;
-}
+*/
 
 QVector<int> find_events_to_use(const QVector<double>& times, const QVector<double>& scores, const fit_stage_opts& opts)
 {
@@ -188,20 +174,7 @@ QVector<int> find_events_to_use(const QVector<double>& times, const QVector<doub
     return to_use;
 }
 
-void subtract_scaled_template(long N, double* X, double* template0)
-{
-    double S12 = 0, S22 = 0;
-    for (long i = 0; i < N; i++) {
-        S22 += template0[i] * template0[i];
-        S12 += X[i] * template0[i];
-    }
-    double alpha = 1;
-    if (S22)
-        alpha = S12 / S22;
-    for (long i = 0; i < N; i++) {
-        X[i] -= alpha * template0[i];
-    }
-}
+
 Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts)
 {
     //The input is firings the output is the same except with new labels corresponding to subclusters
