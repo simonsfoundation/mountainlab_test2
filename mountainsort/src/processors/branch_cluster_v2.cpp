@@ -469,7 +469,8 @@ QVector<int> do_branch_cluster_v2(Mda& clips, const Branch_Cluster_V2_Opts& opts
             Mda clips_k = grab_clips_subset(clips, inds_k);
             QVector<int> labels_k = do_branch_cluster_v2(clips_k, opts, channel_for_display);
             for (long a = 0; a < inds_k.count(); a++) {
-                labels[inds_k[a]] = labels_k[a] + kk_offset;
+                if (labels_k[a])
+                    labels[inds_k[a]] = labels_k[a] + kk_offset;
             }
             kk_offset += MLCompute::max<int>(labels_k);
         }

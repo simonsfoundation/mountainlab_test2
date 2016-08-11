@@ -554,7 +554,7 @@ void whitening_matrix_from_XXt(Mda& W, Mda& XXt)
     }
 
     Mda tmp = mult_AB(components, D);
-    W = mult_ABtrans(tmp, components);
+    W = mult_ABtrans(tmp, components);z
 }
 
 void whitening_matrix_from_XXt(Mda32& W, Mda32& XXt)

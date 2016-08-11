@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 
 import sys
 from mlprocessorlibrary import MLProcessorLibrary
@@ -22,9 +22,9 @@ class normalize_channels:
 			row=X[m,:]
 			print(row.shape)
 			stdev0=np.std(row)
-			row=row/stdev0
+			row=row*(1/stdev0)
 			X[m,:]=row
-		writemda32(X,output_path) #write
+		writemda64(X,output_path) #write
 		return True
 
 PL=MLProcessorLibrary()
