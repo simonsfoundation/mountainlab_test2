@@ -6,6 +6,7 @@
 #include "histogramview.h"
 #include <QWheelEvent>
 #include "actionfactory.h"
+#include "get_sort_indices.h"
 
 /// TODO: (MEDIUM) vertical zoom on all histograms
 
@@ -178,6 +179,18 @@ void MVAmpHistView2Computer::compute()
             i--;
         }
     }
+
+    //sort by abs medium value
+    QVector<double> abs_medians(histograms.count());
+    for (int i=0; i<histograms.count(); i++) {
+        abs_medians[i]=qAbs(MLCompute::median(histograms[i].data));
+    }
+    QList<long> inds=get_sort_indices(abs_medians);
+    QList<AmpHistogram> hist_new;
+    for (int i=0; i<inds.count(); i++) {
+        hist_new << histograms[inds[i]];
+    }
+    histograms=hist_new;
 }
 
 void MVAmpHistView2::wheelEvent(QWheelEvent* evt)

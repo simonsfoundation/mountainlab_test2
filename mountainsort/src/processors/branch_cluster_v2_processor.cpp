@@ -13,7 +13,7 @@ branch_cluster_v2_Processor::branch_cluster_v2_Processor()
     d->q = this;
 
     this->setName("branch_cluster_v2");
-    this->setVersion("0.17");
+    this->setVersion("0.19");
     this->setInputFileParameters("timeseries", "detect", "adjacency_matrix");
     this->setOutputFileParameters("firings_out");
     this->setRequiredParameters("clip_size", "min_shell_size", "shell_increment", "num_features");

@@ -508,7 +508,7 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
         }
         remove_system_parameters(params);
         PP.parameters = params;
-        PP.prtype = ScriptType;
+        PP.prtype = ScriptType;ht
     }
     else {
         PP.parameters = CLP.named_parameters;

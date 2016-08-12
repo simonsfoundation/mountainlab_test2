@@ -507,3 +507,16 @@ double MLCompute::norm(long N, const float* X)
 {
     return sqrt(dotProduct(N, X, X));
 }
+
+double MLCompute::median(const QVector<double> &X)
+{
+    if (X.isEmpty()) return 0;
+    QVector<double> Y=X;
+    qSort(Y);
+    if (Y.count()%2==0) {
+        return (Y[Y.count()/2-1]+Y[Y.count()/2])/2;
+    }
+    else {
+        return Y[Y.count()/2];
+    }
+}

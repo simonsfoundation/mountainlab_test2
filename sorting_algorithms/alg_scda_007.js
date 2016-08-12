@@ -20,7 +20,9 @@ function run_algorithm(params) {
 	params.timerange=params.timerange||[-1,-1];
 	params.use_whitening=params.use_whitening||'true';
 	params.use_mask_out_artifacts=params.use_mask_out_artifacts||'true';
+	params.mask_threshold=params.mask_threshold||6;
 	params.cluster_num_threads=params.cluster_num_threads||0;
+
 
 	var raw=params.raw;
 	var geom=params.geom;
@@ -41,7 +43,7 @@ function run_algorithm(params) {
 		freq_max:params.freq_max
 	};
 	var o_mask_out_artifacts={
-		threshold:3,
+		threshold:params.mask_threshold,
 		interval_size:200
 	};
 	var o_whiten={
@@ -66,11 +68,6 @@ function run_algorithm(params) {
 		clip_size:params.clip_size+6, //why +6?
 		min_shell_size:params.min_shell_size,
 		shell_increment:params.shell_increment
-	};
-	var o_merge_stage={
-		clip_size:params.clip_size,
-		min_peak_ratio:0.7,
-		min_template_corr_coef:0.5
 	};
 
 	initialize_pipeline();
@@ -98,14 +95,12 @@ function run_algorithm(params) {
 	branch_cluster_v2('@pre2','@detect',adjacency_matrix,'@firings1',o_branch_cluster);
 
 	fit_stage('@pre2','@firings1','@firings2',o_fit_stage);
-	merge_stage('@pre2','@firings2','@firings3',o_merge_stage);
 
 	copy('@pre0',outpath+'/pre0.mda');
 	copy('@pre1b',outpath+'/pre1b.mda');
 	copy('@pre2',outpath+'/pre2.mda');
 	copy('@firings1',outpath+'/firings_before_fit.mda');
-	copy('@firings2',outpath+'/firings_before_merge.mda');
-	copy('@firings3',outpath+'/firings.mda');
+	copy('@firings2',outpath+'/firings.mda');
 
 	run_pipeline();
 }

@@ -555,12 +555,13 @@ void MVClusterDetailWidget::slot_vertical_zoom_out()
 
 void MVClusterDetailWidget::slot_export_static_view()
 {
-    QSettings settings("SCDA", "MountainView");
-    QString default_dir = settings.value("default_export_dir", "").toString();
+    //QSettings settings("SCDA", "MountainView");
+    //QString default_dir = settings.value("default_export_dir", "").toString();
+    QString default_dir=QDir::currentPath();
     QString fname = QFileDialog::getSaveFileName(this, "Export static cluster details view", default_dir, "*.smv");
     if (fname.isEmpty())
         return;
-    settings.setValue("default_export_dir", QFileInfo(fname).path());
+    //settings.setValue("default_export_dir", QFileInfo(fname).path());
     if (QFileInfo(fname).suffix() != "smv")
         fname = fname + ".smv";
     QJsonObject obj = exportStaticView();

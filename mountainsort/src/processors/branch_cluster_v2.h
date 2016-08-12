@@ -16,6 +16,7 @@ struct Branch_Cluster_V2_Opts {
     int detect_interval;
     long num_pca_representatives;
     double consolidation_factor;
+    bool split_clusters_at_end=true;
 };
 
 bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_path, const QString& adjacency_matrix_path, const QString& output_firings_path, const Branch_Cluster_V2_Opts& opts);

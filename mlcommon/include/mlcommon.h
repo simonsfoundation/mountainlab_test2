@@ -47,6 +47,7 @@ double min(const QVector<double>& X);
 double max(const QVector<double>& X);
 double sum(const QVector<double>& X);
 double mean(const QVector<double>& X);
+double median(const QVector<double>& X);
 double stdev(const QVector<double>& X);
 double norm(const QVector<double>& X);
 double dotProduct(const QVector<double>& X1, const QVector<double>& X2);

@@ -2,6 +2,8 @@
 #include "actionfactory.h"
 #include "histogramlayer.h"
 #include "mvpanelwidget.h"
+#include "get_sort_indices.h"
+/// TODO get_sort_indices should be put into MLCompute
 
 #include <QLabel>
 #include <QSpinBox>
@@ -257,6 +259,18 @@ void MVAmpHistView3Computer::compute()
             i--;
         }
     }
+
+    //sort by medium value
+    QVector<double> abs_medians(histograms.count());
+    for (int i=0; i<histograms.count(); i++) {
+        abs_medians[i]=qAbs(MLCompute::median(histograms[i].data));
+    }
+    QList<long> inds=get_sort_indices(abs_medians);
+    QList<AmpHistogram3> hist_new;
+    for (int i=0; i<inds.count(); i++) {
+        hist_new << histograms[inds[i]];
+    }
+    histograms=hist_new;
 }
 
 double compute_min3(const QList<AmpHistogram3>& data0)
