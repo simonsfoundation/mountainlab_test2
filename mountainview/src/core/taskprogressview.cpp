@@ -152,6 +152,8 @@ public:
         //        connect(m_showLogs, SIGNAL(toggled(bool)), this, SLOT(updateLogsMode(bool)));
     }
 
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+
     void setCompleteTasksMode(CompleteTasksMode m)
     {
         if (m == m_cMode)
@@ -404,4 +406,15 @@ QString TaskProgressViewPrivate::shortened(QString txt, int maxlen)
     }
     else
         return txt;
+}
+
+QVariant TaskProgressViewModeProxy::data(const QModelIndex &index, int role) const
+{
+    // not the best place to do this however since TaskProgressModel can't use QColor
+    // this is the second best place to put this code
+    if (index.parent().isValid() && role == Qt::ForegroundRole) {
+        if (index.data(TaskManager::TaskProgressModel::LogTypeRole).toInt() == TaskManager::TaskProgressModel::Error)
+            return QColor(Qt::red);
+    }
+    return QSortFilterProxyModel::data(index, role);
 }

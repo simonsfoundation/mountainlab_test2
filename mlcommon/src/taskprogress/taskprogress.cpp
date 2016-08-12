@@ -18,6 +18,14 @@
 Q_DECLARE_METATYPE(QSet<QString>)
 namespace TaskManager {
 
+TaskProgressModel::LogType logType(TaskProgressLogMessage::Type t) {
+    switch (t) {
+    case TaskProgressLogMessage::Log: return TaskProgressModel::Log;
+    case TaskProgressLogMessage::Error: return TaskProgressModel::Error;
+    default: return TaskProgressModel::Log;
+    }
+}
+
 class TaskProgressAgentPrivate : public TaskProgressAgent {
 public:
     TaskProgressAgentPrivate(int id, const TaskInfo& info)
@@ -117,7 +125,7 @@ public:
         if (!task)
             return;
         beginInsertRows(idx, 0, 0);
-        task->m_info.log_messages.append(TaskProgressLogMessage(dt, tr("Error: %1").arg(message)));
+        task->m_info.log_messages.append(TaskProgressLogMessage(dt, tr("Error: %1").arg(message), TaskProgressLogMessage::Error));
         task->m_info.error = message;
         endInsertRows();
         task->emitChanged();
@@ -849,6 +857,8 @@ QVariant TaskProgressModel::logData(const QModelIndex& index, int role) const
         return singleLog(logMessage);
     case IndentedLogRole:
         return singleLog(logMessage, "\t");
+    case LogTypeRole:
+        return logType(logMessage.type);
     default:
         return QVariant();
     }
