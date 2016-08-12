@@ -31,6 +31,9 @@
 
 class TaskProgressViewDelegate : public QStyledItemDelegate {
 public:
+    const int roundSecondsThreshold = 5; // the delegate rounds to the nearest
+                                         // full second if duration exceeds
+                                         // this amount of time (in secs)
     TaskProgressViewDelegate(QObject* parent = 0)
         : QStyledItemDelegate(parent)
     {
@@ -100,7 +103,7 @@ public:
             r.setRight(r.left() + elapsedWidth);
 
             qreal duration = index.data(Qt::UserRole + 1).toDateTime().msecsTo(QDateTime::currentDateTime()) / 1000.0;
-            if (duration < 100)
+            if (duration < roundSecondsThreshold)
                 painter->drawText(r, Qt::AlignRight | Qt::AlignVCenter, QString("%1s").arg(duration, 0, 'f', 2));
             else
                 painter->drawText(r, Qt::AlignRight | Qt::AlignVCenter, QString("%1s").arg(qRound(duration)));
