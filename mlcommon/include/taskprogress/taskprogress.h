@@ -15,17 +15,25 @@
 #include <QReadWriteLock>
 
 struct TaskProgressLogMessage {
+    enum Type {
+        Log,
+        Error
+    };
+
     QString message;
     QDateTime time;
-    TaskProgressLogMessage() {}
-    TaskProgressLogMessage(const QString& msg)
+    Type type;
+    TaskProgressLogMessage(): type(Log) {}
+    TaskProgressLogMessage(const QString& msg, Type t = Log)
         : message(msg)
         , time(QDateTime::currentDateTime())
+        , type(t)
     {
     }
-    TaskProgressLogMessage(const QDateTime& dt, const QString& msg)
+    TaskProgressLogMessage(const QDateTime& dt, const QString& msg, Type t = Log)
         : message(msg)
         , time(dt)
+        , type(t)
     {
     }
 };
@@ -154,6 +162,7 @@ public:
         LogRole,
         IndentedLogRole,
         StatusRole,
+        LogTypeRole
     };
 
     enum Status {
@@ -161,6 +170,12 @@ public:
         Canceled,
         Finished
     };
+
+    enum LogType {
+        Log,
+        Error
+    };
+    Q_ENUM(LogType)
 
     TaskProgressModel(QObject* parent = 0);
     ~TaskProgressModel();
