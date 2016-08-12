@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
             if (str.endsWith(".js")) { //must be a javascript source file
                 script_fnames << str;
             }
-            if (str.endsWith(".par")) { // note that we can have multiple parameter files! the later ones override the earlier ones.
+            if ((str.endsWith(".par"))||(str.endsWith(".json"))) { // note that we can have multiple parameter files! the later ones override the earlier ones.
                 if (!load_parameter_file(params, str)) {
                     return -1;
                 }
@@ -495,7 +495,7 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
                 PP.script_paths << str;
                 PP.script_path_checksums << MLUtil::computeSha1SumOfFile(str);
             }
-            if (str.endsWith(".par")) { // note that we can have multiple parameter files! the later ones override the earlier ones.
+            if ((str.endsWith(".par"))||(str.endsWith(".json"))) { // note that we can have multiple parameter files! the later ones override the earlier ones.
                 if (!load_parameter_file(params, str)) {
                     qWarning() << "Error loading parameter file" << str;
                     return false;
