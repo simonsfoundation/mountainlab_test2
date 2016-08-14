@@ -389,19 +389,22 @@ QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isoc
             val += X2.value(m, i) * V[m];
         XX << val;
     }
-
+#if 0
     QVector<double> XXs = XX;
     qSort(XXs);
-    double* XXX = (double*)malloc(sizeof(double) * (N1 + N2));
-    for (int i = 0; i < N1 + N2; i++)
-        XXX[i] = XXs[i];
+
+    const double* XXX = XXs.constData();
+
 
     double cutpoint;
     bool do_cut = isocut(N1 + N2, &cutpoint, XXX, isocut_threshold, 5);
-    free(XXX);
+#else
+    double cutpoint;
+    bool do_cut = isocut(N1 + N2, &cutpoint, XX.constData(), isocut_threshold, 5);
+#endif
 
     if (do_cut) {
-        do_merge = 0;
+        do_merge = false;
         for (int i = 0; i < N1 + N2; i++) {
             if (XX[i] <= cutpoint)
                 ret[i] = 1;
