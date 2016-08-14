@@ -29,7 +29,7 @@ QList<long> find_inds(const QVector<int>& labels, int k)
     return ret;
 }
 
-void geometric_median(int M, int N, double* ret, double* X)
+void geometric_median(int M, int N, double* ret, const double* X)
 {
     int num_iterations = 10;
     if (N == 0)
@@ -93,7 +93,7 @@ QVector<double> compute_center(Mda32& X, const QList<long>& inds)
     if (NN == 0) {
         return QVector<double>(M, 0);
     }
-    double* XX = (double*)malloc(sizeof(double) * M * NN);
+    QVector<double> XX(M*NN);
     int aa = 0;
     for (int n = 0; n < NN; n++) {
         for (int m = 0; m < M; m++) {
@@ -101,14 +101,16 @@ QVector<double> compute_center(Mda32& X, const QList<long>& inds)
             aa++;
         }
     }
-    double* result = (double*)malloc(sizeof(double) * M);
-    geometric_median(M, NN, result, XX);
-    QVector<double> ret;
-    for (int m = 0; m < M; m++)
-        ret << result[m];
-    free(result);
-    free(XX);
-    return ret;
+    if (NN == 1) {
+        // for NN = 1 geometric_median() returns the original data
+        // but it copies it to the target vector.
+        // We can avoid it by returning the original vector
+        XX.resize(M); // it's already M but let's explicitly make sure of that
+        return XX;
+    }
+    QVector<double> result(M);
+    geometric_median(M, NN, result.data(), XX.constData());
+    return result;
 }
 
 Mda32 compute_centers(Mda32& X, const QVector<int>& labels, int K)
