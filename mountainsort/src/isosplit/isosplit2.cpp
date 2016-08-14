@@ -514,10 +514,9 @@ QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbos
         if (verbose)
             printf("compare %d(%d),%d(%d) --- ", k1, counts[k1], k2, counts[k2]);
 
-        QList<long> inds1 = find_inds(labels, k1);
-        QList<long> inds2 = find_inds(labels, k2);
-        QList<long> inds12 = inds1;
-        inds12.append(inds2);
+        const QList<long> inds1 = find_inds(labels, k1);
+        const QList<long> inds2 = find_inds(labels, k2);
+        QList<long> inds12 = inds1 + inds2;
         for (int m = 0; m < M; m++) {
             attempted_comparisons.centers1 << Cptr[m + k1 * M];
             attempted_comparisons.centers2 << Cptr[m + k2 * M];
@@ -569,17 +568,13 @@ QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbos
             }
             if (verbose)
                 printf("redistributing sizes=(%d,%d).\n", indsA.count(), indsB.count());
-            {
-                QVector<double> ctr = compute_center(X, indsA);
-                for (int m = 0; m < M; m++) {
-                    centers.setValue(ctr[m], m, k1);
-                }
+            QVector<double> ctr = compute_center(X, indsA);
+            for (int m = 0; m < M; m++) {
+                centers.setValue(ctr[m], m, k1);
             }
-            {
-                QVector<double> ctr = compute_center(X, indsB);
-                for (int m = 0; m < M; m++) {
-                    centers.setValue(ctr[m], m, k2);
-                }
+            ctr = compute_center(X, indsB);
+            for (int m = 0; m < M; m++) {
+                centers.setValue(ctr[m], m, k2);
             }
             counts[k1] = indsA.count();
             counts[k2] = indsB.count();
