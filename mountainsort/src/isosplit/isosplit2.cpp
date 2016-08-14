@@ -202,10 +202,11 @@ bool was_already_attempted(int M, const AttemptedComparisons& attempted_comparis
 void find_next_comparison(int M, int K, int& k1, int& k2, const bool* active_labels, float* Cptr, int* counts, const AttemptedComparisons& attempted_comparisons, double repeat_tolerance)
 {
     QVector<int> active_inds;
+    active_inds.reserve(1+K/2); // just in case => going to realloc at most once
     for (int k = 0; k < K; k++)
         if (active_labels[k])
             active_inds << k;
-    if (active_inds.count() == 0) {
+    if (active_inds.isEmpty()) {
         k1 = -1;
         k2 = -1;
         return;
@@ -375,6 +376,7 @@ QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isoc
 
     //project onto line connecting the centers
     QVector<double> XX;
+    XX.reserve(N1+N2);
     for (int i = 0; i < N1; i++) {
         double val = 0;
         for (int m = 0; m < M; m++)
@@ -515,6 +517,8 @@ QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbos
             QList<long> indsA0 = find_inds(labels0, 1);
             QList<long> indsB0 = find_inds(labels0, 2);
             QList<long> indsA, indsB;
+            indsA.reserve(indsA0.count());
+            indsB.reserve(indsB0.count());
             for (int i = 0; i < indsA0.count(); i++)
                 indsA << inds12[indsA0[i]];
             for (int i = 0; i < indsB0.count(); i++)
@@ -555,6 +559,7 @@ QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbos
         }
     }
     QVector<int> ret;
+    ret.reserve(N);
     for (int i = 0; i < N; i++) {
         ret << labels_map[labels[i]];
     }
