@@ -12,8 +12,13 @@
  * SOURCES isocut.cpp mda.cpp jisotonic.cpp
  * HEADERS isocut.h
  */
+<<<<<<< HEAD
 bool isocut(int N, double* cutpoint, const double* X, double threshold);
 bool isocut(int N, double* cutpoint, const double* X, double threshold, int minsize);
+=======
+bool isocut(int N, double* cutpoint, double* X, double threshold);
+bool isocut(int N, double* cutpoint, const double *X, double threshold, int minsize);
+>>>>>>> ML-143: Prototype modifications for isocut
 //return true if split is statistically significant
 
 #endif
