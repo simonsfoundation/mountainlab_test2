@@ -393,8 +393,7 @@ long Mda::size(int dimension_index) const
 
 double Mda::get(long i) const
 {
-    double val = d->at(i);
-    return val;
+    return d->at(i);
 }
 
 double Mda::get(long i1, long i2) const
