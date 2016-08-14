@@ -441,9 +441,7 @@ QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbos
     int N = X.N2();
     QVector<int> labels = do_kmeans(X, K_init);
 
-    bool active_labels[K_init];
-    for (int ii = 0; ii < K_init; ii++)
-        active_labels[ii] = true;
+    QVector<bool> active_labels(K_init, true);
     Mda32 centers = compute_centers(X, labels, K_init); //M x K_init
     int counts[K_init];
     for (int ii = 0; ii < K_init; ii++)
@@ -460,9 +458,8 @@ QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbos
         num_iterations++;
         if (verbose)
             printf("isosplit2: iteration %d\n", num_iterations);
-        QVector<int> old_labels = labels;
         int k1, k2;
-        find_next_comparison(M, K_init, k1, k2, active_labels, Cptr, counts, attempted_comparisons, repeat_tolerance);
+        find_next_comparison(M, K_init, k1, k2, active_labels.constData(), Cptr, counts, attempted_comparisons, repeat_tolerance);
         if (k1 < 0)
             break;
         if (verbose)
