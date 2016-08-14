@@ -1,6 +1,8 @@
 #include <QString>
 #include <QtTest>
 #include "mda/mda.h"
+#include "mda/mda32.h"
+#include "taskprogress/taskprogress.h"
 
 using VD = QVector<double>;
 
@@ -15,8 +17,11 @@ private Q_SLOTS:
     void mda_constructor_data();
     void allocate();
     void allocate_data();
+    void allocate_benchmark();
     void get1();
     void get1_data();
+    void copy();
+    void copy_benchmark();
 };
 
 MdaTest::MdaTest()
@@ -50,12 +55,8 @@ void MdaTest::mda_constructor()
     QCOMPARE(mda.size(4), N5);
     QCOMPARE(mda.size(5), N6);
 
-    //    QEXPECT_FAIL("000000", "Needs to be fixed", Continue);
-    //    QEXPECT_FAIL("negative", "Needs to be fixed", Continue);
-    //    QEXPECT_FAIL("negative total size", "Needs to be fixed", Continue);
     QCOMPARE(mda.ndims(), ndims);
 
-    //    QEXPECT_FAIL("negative", "Needs to be fixed", Continue);
     QCOMPARE(mda.totalSize(), totalSize);
     if (totalSize == 0) {
         QVERIFY2(mda.dataPtr() == nullptr, "For invalid dims no data should be allocated");
@@ -186,6 +187,14 @@ void MdaTest::allocate_data()
         << 0 << 0L;
 }
 
+void MdaTest::allocate_benchmark()
+{
+    Mda mda;
+    QBENCHMARK {
+        mda.allocate(100, 100);
+    }
+}
+
 void MdaTest::get1()
 {
     Mda mda(2, 2, 2);
@@ -208,6 +217,37 @@ void MdaTest::get1_data()
     QTest::addColumn<VD>("input");
     QTest::newRow("12345678") << VD({ 1, 2, 3, 4, 5, 6, 7, 8 });
     QTest::newRow("negative") << VD(8, -1);
+}
+
+void MdaTest::copy()
+{
+    Mda mda(2, 2);
+    mda.setValue(42, 0, 0);
+    mda.setValue(43, 1, 1);
+    long long all = TaskManager::TaskProgressMonitor::globalInstance()->getQuantity("bytes_allocated");
+    Mda mda2 = mda;
+    long long all2 = TaskManager::TaskProgressMonitor::globalInstance()->getQuantity("bytes_allocated");
+    QVERIFY2(all == all2, "Allocated data count unequal - implicit sharing failed");
+    QCOMPARE(mda.constDataPtr(), mda2.constDataPtr());
+    QCOMPARE(mda.value(0), mda2.value(0));
+    QCOMPARE(mda.value(1), mda2.value(1));
+    QCOMPARE(mda.value(2), mda2.value(2));
+    QCOMPARE(mda.value(3), mda2.value(3));
+    mda2.setValue(-10, 0, 0);
+    all2 = TaskManager::TaskProgressMonitor::globalInstance()->getQuantity("bytes_allocated");
+    QVERIFY2(all2 > all, "Object didn't detach");
+    QVERIFY(mda.constDataPtr() != mda2.constDataPtr());
+    QCOMPARE(mda.value(0), 42.0);
+    QCOMPARE(mda2.value(0), -10.0);
+}
+
+void MdaTest::copy_benchmark()
+{
+    Mda mda(1000, 1000);
+    Mda mda2;
+    QBENCHMARK {
+        mda2 = mda;
+    }
 }
 
 QTEST_APPLESS_MAIN(MdaTest)
