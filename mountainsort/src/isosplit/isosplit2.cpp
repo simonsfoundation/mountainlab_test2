@@ -75,9 +75,7 @@ QVector<double> compute_centroid(Mda32& X)
 {
     int M = X.N1();
     int N = X.N2();
-    QVector<double> ret;
-    for (int i = 0; i < M; i++)
-        ret << 0;
+    QVector<double> ret(M, 0);
     for (int n = 0; n < N; n++) {
         for (int m = 0; m < M; m++) {
             ret[m] += X.value(m, n);
@@ -93,10 +91,7 @@ QVector<double> compute_center(Mda32& X, const QList<long>& inds)
     int M = X.N1();
     int NN = inds.count();
     if (NN == 0) {
-        QVector<double> ret;
-        for (int i = 0; i < M; i++)
-            ret << 0;
-        return ret;
+        return QVector<double>(M, 0);
     }
     double* XX = (double*)malloc(sizeof(double) * M * NN);
     int aa = 0;
@@ -327,9 +322,7 @@ QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isoc
     int M = X1.N1();
     int N1 = X1.N2();
     int N2 = X2.N2();
-    QVector<int> ret;
-    for (int i = 0; i < N1 + N2; i++)
-        ret << 1;
+    QVector<int> ret(N1+N2, 1);
     do_merge = true;
     double V[M];
     whiten_two_clusters(V, X1, X2);
@@ -570,9 +563,7 @@ QVector<int> do_kmeans(Mda32& X, int K)
     Mda32 centroids_mda;
     centroids_mda.allocate(M, K);
     dtype32* centroids = centroids_mda.dataPtr();
-    QVector<int> labels;
-    for (int i = 0; i < N; i++)
-        labels << -1;
+    QVector<int> labels(N, -1);
     int* counts = (int*)malloc(sizeof(int) * K);
 
     //initialize the centroids
