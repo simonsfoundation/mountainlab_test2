@@ -409,7 +409,12 @@ double Mda::get(long i1, long i2, long i3) const
 
 double Mda::get(long i1, long i2, long i3, long i4, long i5, long i6) const
 {
-    return d->at(i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3 + d->dims(0) * d->dims(1) * d->dims(2) * i4 + d->dims(0) * d->dims(1) * d->dims(2) * d->dims(3) * i5 + d->dims(0) * d->dims(1) * d->dims(2) * d->dims(3) * d->dims(4) * i6);
+    const long d01 = d->dims(0)*d->dims(1);
+    const long d02 = d01 * d->dims(2);
+    const long d03 = d02 * d->dims(3);
+    const long d04 = d03 * d->dims(4);
+
+    return d->at(i1 + d->dims(0) * i2 + d01 * i3 + d02 * i4 + d03 * i5 + d04 * i6);
 }
 
 double Mda::value(long i) const
@@ -480,22 +485,27 @@ const double* Mda::constDataPtr() const
 
 double* Mda::dataPtr(long i)
 {
-    return &d->data()[i];
+    return d->data()+i;
 }
 
 double* Mda::dataPtr(long i1, long i2)
 {
-    return &d->data()[i1 + N1() * i2];
+    return d->data()+(i1 + N1() * i2);
 }
 
 double* Mda::dataPtr(long i1, long i2, long i3)
 {
-    return &d->data()[i1 + N1() * i2 + N1() * N2() * i3];
+    return d->data()+(i1 + N1() * i2 + N1() * N2() * i3);
 }
 
 double* Mda::dataPtr(long i1, long i2, long i3, long i4, long i5, long i6)
 {
-    return &d->data()[i1 + N1() * i2 + N1() * N2() * i3 + N1() * N2() * N3() * i4 + N1() * N2() * N3() * N4() * i5 + N1() * N2() * N3() * N4() * N5() * i6];
+    const long N12 = N1()*N2();
+    const long N13 = N12*N3();
+    const long N14 = N13*N4();
+    const long N15 = N14*N5();
+
+    return d->data()+(i1 + N1() * i2 + N12 * i3 + N13 * i4 + N14 * i5 + N15 * i6);
 }
 
 void Mda::getChunk(Mda& ret, long i, long size) const
