@@ -652,6 +652,7 @@ void Mda::setChunk(Mda& X, long i)
     long ii = 0;
     for (long a = a_begin; a <= a_end; a++) {
         ptr1[a_begin + ii] = ptr2[x_begin + ii];
+        ii++;
     }
 }
 
