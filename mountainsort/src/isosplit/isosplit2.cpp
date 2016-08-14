@@ -415,15 +415,13 @@ QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isoc
 QVector<int> test_redistribute(bool& do_merge, Mda32& X, const QList<long>& inds1, const QList<long>& inds2, double isocut_threshold)
 {
     int M = X.N1();
-    Mda32 X1;
-    X1.allocate(M, inds1.count());
+    Mda32 X1(M, inds1.count());
     for (int i = 0; i < inds1.count(); i++) {
         for (int m = 0; m < M; m++) {
             X1.setValue(X.value(m, inds1[i]), m, i);
         }
     }
-    Mda32 X2;
-    X2.allocate(M, inds2.count());
+    Mda32 X2(M, inds2.count());
     for (int i = 0; i < inds2.count(); i++) {
         for (int m = 0; m < M; m++) {
             X2.setValue(X.value(m, inds2[i]), m, i);
