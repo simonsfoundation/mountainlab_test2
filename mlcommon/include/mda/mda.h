@@ -6,14 +6,13 @@
 #ifndef MDA_H
 #define MDA_H
 
-#ifdef QT_CORE_LIB
 #include <QString>
 #include <QDebug>
-#endif
+#include <QSharedDataPointer>
 
 extern void* allocate(const size_t nbytes);
 
-class MdaPrivate;
+class MdaData;
 /** \class Mda - a multi-dimensional array corresponding to the .mda file format
  * @brief The Mda class
  *
@@ -25,7 +24,7 @@ public:
     ///Construct an array of size N1xN2x...xN6
     Mda(long N1 = 1, long N2 = 1, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
     ///Construct an array and read the .mda file
-    Mda(const QString mda_filename);
+    Mda(const QString &mda_filename);
     ///Copy constructor
     Mda(const Mda& other);
     ///Assignment operator
@@ -34,7 +33,7 @@ public:
     virtual ~Mda();
     ///Allocate an array of size N1xN2x...xN6
     bool allocate(long N1, long N2, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
-#ifdef QT_CORE_LIB
+    bool allocateFill(double value, long N1, long N2, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
     ///Create an array with content read from the .mda file specified by path
     bool read(const QString& path);
     ///Write the array to the .mda file specified by path, with file format 8-bit integer (numbers should be integers between 0 and 255)
@@ -47,7 +46,6 @@ public:
     bool write32ui(const QString& path) const;
     bool write16i(const QString& path) const;
     bool write32i(const QString& path) const;
-#endif
     ///Create an array with content read from the .mda file specified by path
     bool read(const char* path);
     ///Write the array to the .mda file specified by path, with file format 8-bit integer (numbers should be integers between 0 and 255)
@@ -129,11 +127,11 @@ public:
     double* dataPtr(long i1, long i2, long i3, long i4, long i5 = 0, long i6 = 0);
 
     ///Retrieve a chunk of the vectorized data of size 1xN starting at position i
-    void getChunk(Mda& ret, long i, long N);
+    void getChunk(Mda& ret, long i, long N) const;
     ///Retrieve a chunk of the vectorized data of size N1xN2 starting at position (i1,i2)
-    void getChunk(Mda& ret, long i1, long i2, long N1, long N2);
+    void getChunk(Mda& ret, long i1, long i2, long N1, long N2) const;
     ///Retrieve a chunk of the vectorized data of size N1xN2xN3 starting at position (i1,i2,i3)
-    void getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, long size3);
+    void getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, long size3) const;
 
     ///Set a chunk of the vectorized data starting at position i
     void setChunk(Mda& X, long i);
@@ -147,8 +145,9 @@ public:
 
     bool reshape(int N1b, int N2b, int N3b = 1, int N4b = 1, int N5b = 1, int N6b = 1);
 
+    void detach();
 private:
-    MdaPrivate* d;
+    QSharedDataPointer<MdaData> d;
 };
 
 #endif // MDA_H

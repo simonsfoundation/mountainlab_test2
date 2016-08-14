@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include "mlcommon.h"
 #include "taskprogress.h"
+#include <QSharedData>
+#include <cstring>
 
 #define MDA_MAX_DIMS 6
 
@@ -30,91 +32,80 @@ void* allocate(const size_t nbytes)
 #endif
 }
 
-class MdaPrivate {
+class MdaData : public QSharedData {
 public:
-    Mda* q;
-    double* m_data;
-    long m_dims[MDA_MAX_DIMS];
-    long m_total_size;
+    MdaData();
+    MdaData(const MdaData &other);
+    ~MdaData();
+    bool allocate(double value, long N1, long N2, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
 
-    void do_construct();
-    void copy_from(const Mda& other);
-    int determine_num_dims(long N1, long N2, long N3, long N4, long N5, long N6);
-    bool safe_index(long i);
-    bool safe_index(long i1, long i2);
-    bool safe_index(long i1, long i2, long i3);
-    bool safe_index(long i1, long i2, long i3, long i4, long i5, long i6);
+    inline long dim(size_t idx) const;
+    inline long N1() const;
+    inline long N2() const;
+
+    void allocate(size_t size);
+    void deallocate();
+    inline size_t totalSize() const;
+    inline void setTotalSize(size_t ts);
+    inline double* data();
+    inline const double* constData() const;
+    inline double at(size_t idx) const;
+    inline double at(size_t i1, size_t i2) const;
+    inline void set(double val, size_t idx);
+    inline void set(double val, size_t i1, size_t i2);
+
+    inline long dims(size_t idx) const;
+    void setDims(long n1, long n2, long n3, long n4, long n5, long n6);
+
+    int determine_num_dims(long N1, long N2, long N3, long N4, long N5, long N6) const;
+    bool safe_index(size_t i) const;
+    bool safe_index(size_t i1, size_t i2) const;
+    bool safe_index(size_t i1, size_t i2, size_t i3) const;
+    bool safe_index(long i1, long i2, long i3, long i4, long i5, long i6) const;
 
     bool read_from_text_file(const QString& path);
-    bool write_to_text_file(const QString& path);
+    bool write_to_text_file(const QString& path) const;
+
+private:
+    double *m_data;
+    std::vector<long> m_dims;
+    size_t total_size;
 };
 
 Mda::Mda(long N1, long N2, long N3, long N4, long N5, long N6)
 {
-    d = new MdaPrivate;
-    d->q = this;
-    d->do_construct();
+    d = new MdaData;
     this->allocate(N1, N2, N3, N4, N5, N6);
 }
 
-Mda::Mda(const QString mda_filename)
+Mda::Mda(const QString &mda_filename)
 {
-    d = new MdaPrivate;
-    d->q = this;
-    d->do_construct();
+    d = new MdaData;
     this->read(mda_filename);
 }
 
 Mda::Mda(const Mda& other)
 {
-    d = new MdaPrivate;
-    d->q = this;
-    d->do_construct();
-    d->copy_from(other);
+    d = other.d;
 }
 
 void Mda::operator=(const Mda& other)
 {
-    d->copy_from(other);
+    d = other.d;
 }
 
 Mda::~Mda()
 {
-    if (d->m_data) {
-        free(d->m_data);
-        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", d->m_total_size);
-    }
-    delete d;
 }
 
 bool Mda::allocate(long N1, long N2, long N3, long N4, long N5, long N6)
 {
-    if (d->m_data) {
-        free(d->m_data);
-        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", d->m_total_size);
-    }
+    return d->allocate(0, N1, N2, N3, N4, N5, N6);
+}
 
-    d->m_dims[0] = N1;
-    d->m_dims[1] = N2;
-    d->m_dims[2] = N3;
-    d->m_dims[3] = N4;
-    d->m_dims[4] = N5;
-    d->m_dims[5] = N6;
-    d->m_total_size = N1 * N2 * N3 * N4 * N5 * N6;
-
-    d->m_data = 0;
-    if (d->m_total_size > 0) {
-        d->m_data = (double*)::allocate(sizeof(double) * d->m_total_size);
-        if (!d->m_data) {
-            qCritical() << QString("Unable to allocate Mda of size %1x%2x%3x%4x%5x%6 (total=%7)").arg(N1).arg(N2).arg(N3).arg(N4).arg(N5).arg(N6).arg(d->m_total_size);
-            exit(-1);
-        }
-        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", d->m_total_size);
-        for (long i = 0; i < d->m_total_size; i++)
-            d->m_data[i] = 0;
-    }
-
-    return true;
+bool Mda::allocateFill(double value, long N1, long N2, long N3, long N4, long N5, long N6)
+{
+    return d->allocate(value, N1, N2, N3, N4, N5, N6);
 }
 
 bool Mda::read(const QString& path)
@@ -150,11 +141,11 @@ bool Mda::write16ui(const QString& path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float64((double*)d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -172,11 +163,11 @@ bool Mda::write32ui(const QString& path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float64((double*)d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -194,11 +185,11 @@ bool Mda::write16i(const QString& path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float64((double*)d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -216,11 +207,11 @@ bool Mda::write32i(const QString& path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float64((double*)d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -242,8 +233,8 @@ bool Mda::read(const char* path)
         return false;
     }
     this->allocate(H.dims[0], H.dims[1], H.dims[2], H.dims[3], H.dims[4], H.dims[5]);
-    mda_read_float64(d->m_data, &H, d->m_total_size, input_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", d->m_total_size * H.num_bytes_per_entry);
+    mda_read_float64(d->data(), &H, d->totalSize(), input_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", d->totalSize() * H.num_bytes_per_entry);
     fclose(input_file);
     return true;
 }
@@ -264,11 +255,11 @@ bool Mda::write8(const char* path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float64((double*)d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -289,11 +280,11 @@ bool Mda::write32(const char* path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float64((double*)d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -314,11 +305,11 @@ bool Mda::write64(const char* path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float64(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float64((double*)d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -358,37 +349,37 @@ int Mda::ndims() const
 
 long Mda::N1() const
 {
-    return d->m_dims[0];
+    return d->dims(0);
 }
 
 long Mda::N2() const
 {
-    return d->m_dims[1];
+    return d->dims(1);
 }
 
 long Mda::N3() const
 {
-    return d->m_dims[2];
+    return d->dims(2);
 }
 
 long Mda::N4() const
 {
-    return d->m_dims[3];
+    return d->dims(3);
 }
 
 long Mda::N5() const
 {
-    return d->m_dims[4];
+    return d->dims(4);
 }
 
 long Mda::N6() const
 {
-    return d->m_dims[5];
+    return d->dims(5);
 }
 
 long Mda::totalSize() const
 {
-    return d->m_total_size;
+    return d->totalSize();
 }
 
 long Mda::size(int dimension_index) const
@@ -397,27 +388,28 @@ long Mda::size(int dimension_index) const
         return 0;
     if (dimension_index >= MDA_MAX_DIMS)
         return 1;
-    return d->m_dims[dimension_index];
+    return d->dims(dimension_index);
 }
 
 double Mda::get(long i) const
 {
-    return d->m_data[i];
+    double val = d->at(i);
+    return val;
 }
 
 double Mda::get(long i1, long i2) const
 {
-    return d->m_data[i1 + d->m_dims[0] * i2];
+    return d->at(i1 + d->dims(0) * i2);
 }
 
 double Mda::get(long i1, long i2, long i3) const
 {
-    return d->m_data[i1 + d->m_dims[0] * i2 + d->m_dims[0] * d->m_dims[1] * i3];
+    return d->at(i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3);
 }
 
 double Mda::get(long i1, long i2, long i3, long i4, long i5, long i6) const
 {
-    return d->m_data[i1 + d->m_dims[0] * i2 + d->m_dims[0] * d->m_dims[1] * i3 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * i4 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * d->m_dims[3] * i5 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * d->m_dims[3] * d->m_dims[4] * i6];
+    return d->at(i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3 + d->dims(0) * d->dims(1) * d->dims(2) * i4 + d->dims(0) * d->dims(1) * d->dims(2) * d->dims(3) * i5 + d->dims(0) * d->dims(1) * d->dims(2) * d->dims(3) * d->dims(4) * i6);
 }
 
 double Mda::value(long i) const
@@ -478,35 +470,35 @@ void Mda::setValue(double val, long i1, long i2, long i3, long i4, long i5, long
 
 double* Mda::dataPtr()
 {
-    return d->m_data;
+    return d->data();
 }
 
 const double* Mda::constDataPtr() const
 {
-    return d->m_data;
+    return d->constData();
 }
 
 double* Mda::dataPtr(long i)
 {
-    return &d->m_data[i];
+    return &d->data()[i];
 }
 
 double* Mda::dataPtr(long i1, long i2)
 {
-    return &d->m_data[i1 + N1() * i2];
+    return &d->data()[i1 + N1() * i2];
 }
 
 double* Mda::dataPtr(long i1, long i2, long i3)
 {
-    return &d->m_data[i1 + N1() * i2 + N1() * N2() * i3];
+    return &d->data()[i1 + N1() * i2 + N1() * N2() * i3];
 }
 
 double* Mda::dataPtr(long i1, long i2, long i3, long i4, long i5, long i6)
 {
-    return &d->m_data[i1 + N1() * i2 + N1() * N2() * i3 + N1() * N2() * N3() * i4 + N1() * N2() * N3() * N4() * i5 + N1() * N2() * N3() * N4() * N5() * i6];
+    return &d->data()[i1 + N1() * i2 + N1() * N2() * i3 + N1() * N2() * N3() * i4 + N1() * N2() * N3() * N4() * i5 + N1() * N2() * N3() * N4() * N5() * i6];
 }
 
-void Mda::getChunk(Mda& ret, long i, long size)
+void Mda::getChunk(Mda& ret, long i, long size) const
 {
     // A lot of bugs fixed on 5/31/16
     long a_begin = i;
@@ -518,14 +510,14 @@ void Mda::getChunk(Mda& ret, long i, long size)
         x_begin += 0 - a_begin;
         a_begin += 0 - a_begin;
     }
-    if (a_end >= d->m_total_size) {
-        x_end += d->m_total_size - 1 - a_end;
-        a_end += d->m_total_size - 1 - a_end;
+    if (a_end >= (long)d->totalSize()) {
+        x_end += (long)d->totalSize() - 1 - a_end;
+        a_end += (long)d->totalSize() - 1 - a_end;
     }
 
     ret.allocate(1, size);
 
-    double* ptr1 = this->dataPtr();
+    const double* ptr1 = this->constDataPtr();
     double* ptr2 = ret.dataPtr();
 
     long ii = 0;
@@ -535,7 +527,7 @@ void Mda::getChunk(Mda& ret, long i, long size)
     }
 }
 
-void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2)
+void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2) const
 {
     // A lot of bugs fixed on 5/31/16
     long a1_begin = i1;
@@ -566,7 +558,7 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2)
 
     ret.allocate(size1, size2);
 
-    double* ptr1 = this->dataPtr();
+    const double* ptr1 = this->constDataPtr();
     double* ptr2 = ret.dataPtr();
 
     for (long ind2 = 0; ind2 <= a2_end - a2_begin; ind2++) {
@@ -580,7 +572,7 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2)
     }
 }
 
-void Mda::getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, long size3)
+void Mda::getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, long size3) const
 {
     // A lot of bugs fixed on 5/31/16
     long a1_begin = i1;
@@ -624,7 +616,7 @@ void Mda::getChunk(Mda& ret, long i1, long i2, long i3, long size1, long size2, 
 
     ret.allocate(size1, size2, size3);
 
-    double* ptr1 = this->dataPtr();
+    const double* ptr1 = this->constDataPtr();
     double* ptr2 = ret.dataPtr();
 
     for (long ind3 = 0; ind3 <= a3_end - a3_begin; ind3++) {
@@ -653,9 +645,9 @@ void Mda::setChunk(Mda& X, long i)
         a_begin += 0 - a_begin;
         x_begin += 0 - a_begin;
     }
-    if (a_end >= d->m_total_size) {
-        a_end += d->m_total_size - 1 - a_end;
-        x_end += d->m_total_size - 1 - a_end;
+    if (a_end >= (long)d->totalSize()) {
+        a_end += (long)d->totalSize() - 1 - a_end;
+        x_end += (long)d->totalSize() - 1 - a_end;
     }
 
     double* ptr1 = this->dataPtr();
@@ -811,71 +803,122 @@ bool Mda::reshape(int N1b, int N2b, int N3b, int N4b, int N5b, int N6b)
         qWarning() << N1() << N2() << N3() << N4() << N5() << N6();
         return false;
     }
-    d->m_dims[0] = N1b;
-    d->m_dims[1] = N2b;
-    d->m_dims[2] = N3b;
-    d->m_dims[3] = N4b;
-    d->m_dims[4] = N5b;
-    d->m_dims[5] = N6b;
+    d->setDims(N1b, N2b, N3b, N4b, N5b, N6b);
     return true;
+}
+
+void Mda::detach()
+{
+    d.detach();
 }
 
 void Mda::set(double val, long i)
 {
-    d->m_data[i] = val;
+    d->data()[i] = val;
 }
 
 void Mda::set(double val, long i1, long i2)
 {
-    d->m_data[i1 + d->m_dims[0] * i2] = val;
+    d->data()[i1 + d->dims(0) * i2] = val;
 }
 
 void Mda::set(double val, long i1, long i2, long i3)
 {
-    d->m_data[i1 + d->m_dims[0] * i2 + d->m_dims[0] * d->m_dims[1] * i3] = val;
+    d->data()[i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3] = val;
 }
 
 void Mda::set(double val, long i1, long i2, long i3, long i4, long i5, long i6)
 {
-    d->m_data[i1 + d->m_dims[0] * i2 + d->m_dims[0] * d->m_dims[1] * i3 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * i4 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * d->m_dims[3] * i5 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * d->m_dims[3] * d->m_dims[4] * i6]
+    d->data()[i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3 + d->dims(0) * d->dims(1) * d->dims(2) * i4 + d->dims(0) * d->dims(1) * d->dims(2) * d->dims(3) * i5 + d->dims(0) * d->dims(1) * d->dims(2) * d->dims(3) * d->dims(4) * i6]
         = val;
 }
 
-void MdaPrivate::do_construct()
-{
-    m_data = (double*)::allocate(sizeof(double) * 1);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", 1);
-    for (int i = 0; i < MDA_MAX_DIMS; i++) {
-        m_dims[i] = 1;
-    }
-    m_total_size = 1;
+MdaData::MdaData() : QSharedData(), m_data(0), total_size(0) {}
+
+MdaData::MdaData(const MdaData &other) : QSharedData(other), m_data(0), m_dims(other.m_dims), total_size(other.total_size) {
+    allocate(total_size);
+    std::copy(other.m_data, other.m_data+other.totalSize(), m_data);
 }
 
-void MdaPrivate::copy_from(const Mda& other)
-{
-    const bool needResize = m_total_size != other.d->m_total_size;
-    if (needResize && m_data) {
-        free(m_data);
-        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", m_total_size);
-        m_data = 0;
-    }
-    m_total_size = other.d->m_total_size;
-    memcpy(m_dims, other.d->m_dims, MDA_MAX_DIMS * sizeof(m_dims[0]));
-    if (m_total_size > 0) {
-        if (needResize) {
-            m_data = (double*)::allocate(sizeof(double) * m_total_size);
-            TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", m_total_size);
+MdaData::~MdaData() {
+    deallocate();
+}
+
+bool MdaData::allocate(double value, long N1, long N2, long N3, long N4, long N5, long N6) {
+    deallocate();
+    setDims(N1, N2, N3, N4, N5, N6);
+    if (N1 > 0 && N2 > 0 && N3 > 0 && N4 > 0 && N5 > 0 && N6 > 0)
+        setTotalSize(N1 * N2 * N3 * N4 * N5 * N6);
+    else setTotalSize(0);
+
+    if (totalSize() > 0) {
+        allocate(totalSize());
+        if (!constData()) {
+            qCritical() << QString("Unable to allocate Mda of size %1x%2x%3x%4x%5x%6 (total=%7)").arg(N1).arg(N2).arg(N3).arg(N4).arg(N5).arg(N6).arg(totalSize());
+            exit(-1);
         }
-        memcpy(m_data, other.d->m_data, sizeof(double) * m_total_size);
+        if (value == 0.0) {
+            std::memset(data(), 0, totalSize()*sizeof(double));
+        } else
+            std::fill(data(), data()+totalSize(), value);
     }
+    return true;
 }
 
-int MdaPrivate::determine_num_dims(long N1, long N2, long N3, long N4, long N5, long N6)
+long MdaData::dim(size_t idx) const { return m_dims.at(idx); }
+
+long MdaData::N1() const { return dim(0); }
+
+long MdaData::N2() const { return dim(1); }
+
+void MdaData::allocate(size_t size) {
+    m_data = (double*)::allocate(size*sizeof(double));
+    if (!m_data) return;
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", totalSize());
+}
+
+void MdaData::deallocate() {
+    if (!m_data) return;
+    free(m_data);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", totalSize());
+    m_data = 0;
+}
+
+size_t MdaData::totalSize() const { return total_size; }
+
+void MdaData::setTotalSize(size_t ts) { total_size = ts; }
+
+double *MdaData::data() { return m_data; }
+
+const double *MdaData::constData() const { return m_data; }
+
+double MdaData::at(size_t idx) const { return *(constData()+idx); }
+
+double MdaData::at(size_t i1, size_t i2) const { return at(i1 + dim(0) * i2); }
+
+void MdaData::set(double val, size_t idx) { m_data[idx] = val; }
+
+void MdaData::set(double val, size_t i1, size_t i2) { set(val, i1 + dim(0) * i2); }
+
+long MdaData::dims(size_t idx) const
 {
-#ifdef QT_CORE_LIB
-    Q_UNUSED(N1)
-    Q_UNUSED(N2)
-#endif
+    return m_dims.at(idx);
+}
+
+void MdaData::setDims(long n1, long n2, long n3, long n4, long n5, long n6)
+{
+    m_dims.resize(MDA_MAX_DIMS);
+    m_dims[0] = n1;
+    m_dims[1] = n2;
+    m_dims[2] = n3;
+    m_dims[3] = n4;
+    m_dims[4] = n5;
+    m_dims[5] = n6;
+}
+
+int MdaData::determine_num_dims(long N1, long N2, long N3, long N4, long N5, long N6) const
+{
+    if (!(N6 > 0 && N5 > 0 && N4 > 0 && N3 > 0 && N2 > 0 && N1 > 0)) return 0;
     if (N6 > 1)
         return 6;
     if (N5 > 1)
@@ -887,28 +930,34 @@ int MdaPrivate::determine_num_dims(long N1, long N2, long N3, long N4, long N5, 
     return 2;
 }
 
-bool MdaPrivate::safe_index(long i)
+bool MdaData::safe_index(size_t i) const
 {
-    return ((0 <= i) && (i < m_total_size));
+    return (i < totalSize());
 }
 
-bool MdaPrivate::safe_index(long i1, long i2)
+bool MdaData::safe_index(size_t i1, size_t i2) const
 {
-    return ((0 <= i1) && (i1 < m_dims[0]) && (0 <= i2) && (i2 < m_dims[1]));
+    return (((long)i1 < dims(0)) && ((long)i2 < dims(1)));
 }
 
-bool MdaPrivate::safe_index(long i1, long i2, long i3)
+bool MdaData::safe_index(size_t i1, size_t i2, size_t i3) const
 {
-    return ((0 <= i1) && (i1 < m_dims[0]) && (0 <= i2) && (i2 < m_dims[1]) && (0 <= i3) && (i3 < m_dims[2]));
+    return (((long)i1 < dims(0)) && ((long)i2 < dims(1)) && ((long)i3 < dims(2)));
 }
 
-bool MdaPrivate::safe_index(long i1, long i2, long i3, long i4, long i5, long i6)
+bool MdaData::safe_index(long i1, long i2, long i3, long i4, long i5, long i6) const
 {
     return (
-        (0 <= i1) && (i1 < m_dims[0]) && (0 <= i2) && (i2 < m_dims[1]) && (0 <= i3) && (i3 < m_dims[2]) && (0 <= i4) && (i4 < m_dims[3]) && (0 <= i5) && (i5 < m_dims[4]) && (0 <= i6) && (i6 < m_dims[5]));
+               (0 <= i1) && (i1 < dims(0))
+            && (0 <= i2) && (i2 < dims(1))
+            && (0 <= i3) && (i3 < dims(2))
+            && (0 <= i4) && (i4 < dims(3))
+            && (0 <= i5) && (i5 < dims(4))
+            && (0 <= i6) && (i6 < dims(5))
+    );
 }
 
-bool MdaPrivate::read_from_text_file(const QString& path)
+bool MdaData::read_from_text_file(const QString& path)
 {
     QString txt = TextFile::read(path);
     QStringList lines = txt.split("\n", QString::SkipEmptyParts);
@@ -936,30 +985,30 @@ bool MdaPrivate::read_from_text_file(const QString& path)
         line = line.split(",", QString::SkipEmptyParts).join(" ");
         QList<QString> vals = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
         if (i == 0) {
-            q->allocate(vals.count(), lines2.count());
+            allocate(0, vals.count(), lines2.count());
         }
         for (int j = 0; j < vals.count(); j++) {
-            q->setValue(vals[j].toDouble(), j, i);
+            set(vals[j].toDouble(), j, i);
         }
     }
     return true;
 }
 
-bool MdaPrivate::write_to_text_file(const QString& path)
+bool MdaData::write_to_text_file(const QString& path) const
 {
     char sep = ' ';
     if (path.endsWith(".csv"))
         sep = ',';
     long max_num_entries = 1e6;
-    if (q->N1() * q->N2() == max_num_entries) {
+    if (N1() * N2() == max_num_entries) {
         qWarning() << "mda is too large to write text file";
         return false;
     }
     QList<QString> lines;
-    for (long i = 0; i < q->N2(); i++) {
+    for (long i = 0; i < N2(); i++) {
         QStringList vals;
-        for (long j = 0; j < q->N1(); j++) {
-            vals << QString("%1").arg(q->value(j, i));
+        for (long j = 0; j < N1(); j++) {
+            vals << QString("%1").arg(at(j, i));
         }
         QString line = vals.join(sep);
         lines << line;
