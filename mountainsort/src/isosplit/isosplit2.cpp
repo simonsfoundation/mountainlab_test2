@@ -138,6 +138,26 @@ double distance_between_vectors(int M, float* v1, float* v2)
 }
 
 bool was_already_attempted(int M, AttemptedComparisons& attempted_comparisons, float* center1, float* center2, int count1, int count2, double repeat_tolerance)
+double distance_between_vectors(int M, const double* v1, const double* v2)
+{
+    double sumsqr = 0;
+    for (int i = 0; i < M; i++) {
+        double val = v1[i] - v2[i];
+        sumsqr += val * val;
+    }
+    return sqrt(sumsqr);
+}
+
+double distance_between_vectors(int M, const double* v1, const float* v2)
+{
+    double sumsqr = 0;
+    for (int i = 0; i < M; i++) {
+        double val = v1[i] - v2[i];
+        sumsqr += val * val;
+    }
+    return sqrt(sumsqr);
+}
+
 {
     double tol = repeat_tolerance;
     for (int i = 0; i < attempted_comparisons.counts1.count(); i++) {
@@ -147,16 +167,26 @@ bool was_already_attempted(int M, AttemptedComparisons& attempted_comparisons, f
             double diff_count2 = fabs(attempted_comparisons.counts2[i] - count2);
             double avg_count2 = (attempted_comparisons.counts2[i] + count2) / 2;
             if (diff_count2 <= tol * avg_count2) {
+#if 0
                 float C1[M];
                 for (int m = 0; m < M; m++)
                     C1[m] = attempted_comparisons.centers1[i * M + m];
                 float C2[M];
                 for (int m = 0; m < M; m++)
                     C2[m] = attempted_comparisons.centers2[i * M + m];
-                double dist0 = distance_between_vectors(M, C1, C2);
-                double dist1 = distance_between_vectors(M, C1, center1);
-                double dist2 = distance_between_vectors(M, C2, center2);
+#else
+                // We don't have to copy into C1 and C2
+                // attempted_comparisons.centers{1,2} already contain all the data we need
+                // we just need to point to the proper section of the data
+                // the only problem is these are doubles and not floats
+                // but this shouldn't affect speed that much
+                const double *C1 = attempted_comparisons.centers1.constData()+(i*M);
+                const double *C2 = attempted_comparisons.centers2.constData()+(i*M);
+#endif
+                const double dist0 = distance_between_vectors(M, C1, C2);
                 if (dist0 > 0) {
+                    double dist1 = distance_between_vectors(M, C1, center1);
+                    double dist2 = distance_between_vectors(M, C2, center2);
                     double frac1 = dist1 / dist0;
                     double frac2 = dist2 / dist0;
                     if ((frac1 <= tol * 1 / sqrt(count1)) && (frac2 <= tol * 1 / sqrt(count2))) {
