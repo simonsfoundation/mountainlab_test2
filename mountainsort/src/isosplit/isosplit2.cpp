@@ -15,6 +15,10 @@ struct AttemptedComparisons {
     QVector<int> counts1, counts2;
 };
 
+/*!
+ * \brief returns list of indices in the vector equal to \a k
+ *
+ */
 QList<long> find_inds(const QVector<int>& labels, int k)
 {
     QList<long> ret;
@@ -31,15 +35,12 @@ void geometric_median(int M, int N, double* ret, double* X)
     if (N == 0)
         return;
     if (N == 1) {
-        for (int m = 0; m < M; m++)
-            ret[m] = X[m];
+        std::copy(X, X+M, ret);
         return;
     }
     std::vector<double> weights(N, 1);
     for (int it = 1; it <= num_iterations; it++) {
-        double sum_weights = 0;
-        for (int i = 0; i < N; i++)
-            sum_weights += weights[i];
+        double sum_weights = std::accumulate(weights.begin(), weights.end(), 0.0);
         if (sum_weights) {
             for (int i = 0; i < N; i++)
                 weights[i] /= sum_weights;
