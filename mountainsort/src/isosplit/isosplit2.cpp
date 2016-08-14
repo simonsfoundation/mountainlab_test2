@@ -117,13 +117,12 @@ Mda32 compute_centers(Mda32& X, const QVector<int>& labels, int K)
 {
     int M = X.N1();
     //int N=X.N2();
-    Mda32 ret;
-    ret.allocate(M, K);
+    Mda32 ret(M, K);
     for (int k = 0; k < K; k++) {
         QList<long> inds = find_inds(labels, k);
         QVector<double> ctr = compute_center(X, inds);
         for (int m = 0; m < M; m++)
-            ret.setValue(ctr[m], m, k);
+            ret.set(ctr[m], m, k);
     }
     return ret;
 }
