@@ -137,7 +137,6 @@ double distance_between_vectors(int M, float* v1, float* v2)
     return sqrt(sumsqr);
 }
 
-bool was_already_attempted(int M, AttemptedComparisons& attempted_comparisons, float* center1, float* center2, int count1, int count2, double repeat_tolerance)
 double distance_between_vectors(int M, const double* v1, const double* v2)
 {
     double sumsqr = 0;
@@ -158,6 +157,7 @@ double distance_between_vectors(int M, const double* v1, const float* v2)
     return sqrt(sumsqr);
 }
 
+bool was_already_attempted(int M, const AttemptedComparisons& attempted_comparisons, float* center1, float* center2, int count1, int count2, double repeat_tolerance)
 {
     double tol = repeat_tolerance;
     for (int i = 0; i < attempted_comparisons.counts1.count(); i++) {
@@ -199,7 +199,7 @@ double distance_between_vectors(int M, const double* v1, const float* v2)
     return false;
 }
 
-void find_next_comparison(int M, int K, int& k1, int& k2, bool* active_labels, float* Cptr, int* counts, AttemptedComparisons& attempted_comparisons, double repeat_tolerance)
+void find_next_comparison(int M, int K, int& k1, int& k2, const bool* active_labels, float* Cptr, int* counts, const AttemptedComparisons& attempted_comparisons, double repeat_tolerance)
 {
     QVector<int> active_inds;
     for (int k = 0; k < K; k++)
