@@ -769,12 +769,7 @@ double Mda::minimum() const
     if ((!NN) || (!ptr)) {
         return 0;
     }
-    double ret = ptr[0];
-    for (long i = 0; i < NN; i++) {
-        if (ptr[i] < ret)
-            ret = ptr[i];
-    }
-    return ret;
+    return *std::min_element(ptr, ptr+NN);
 }
 
 double Mda::maximum() const
@@ -784,12 +779,7 @@ double Mda::maximum() const
     if ((!NN) || (!ptr)) {
         return 0;
     }
-    double ret = ptr[0];
-    for (long i = 0; i < NN; i++) {
-        if (ptr[i] > ret)
-            ret = ptr[i];
-    }
-    return ret;
+    return *std::max_element(ptr, ptr+NN);
 }
 
 bool Mda::reshape(int N1b, int N2b, int N3b, int N4b, int N5b, int N6b)
@@ -811,23 +801,27 @@ void Mda::detach()
 
 void Mda::set(double val, long i)
 {
-    d->data()[i] = val;
+    d->set(val, i);
 }
 
 void Mda::set(double val, long i1, long i2)
 {
-    d->data()[i1 + d->dims(0) * i2] = val;
+    d->set(val, i1 + d->dims(0) * i2);
 }
 
 void Mda::set(double val, long i1, long i2, long i3)
 {
-    d->data()[i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3] = val;
+    d->set(val, i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3);
 }
 
 void Mda::set(double val, long i1, long i2, long i3, long i4, long i5, long i6)
 {
-    d->data()[i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3 + d->dims(0) * d->dims(1) * d->dims(2) * i4 + d->dims(0) * d->dims(1) * d->dims(2) * d->dims(3) * i5 + d->dims(0) * d->dims(1) * d->dims(2) * d->dims(3) * d->dims(4) * i6]
-        = val;
+    const long d01 = d->dims(0)*d->dims(1);
+    const long d02 = d01 * d->dims(2);
+    const long d03 = d02*d->dims(3);
+    const long d04 = d03*d->dims(4);
+
+    d->set(val, i1 + d->dims(0) * i2 + d01 * i3 + d02 * i4 + d03 * i5 + d04 * i6);
 }
 
 MdaData::MdaData()
