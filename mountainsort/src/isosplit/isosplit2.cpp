@@ -600,7 +600,7 @@ QVector<int> do_kmeans(Mda32& X, int K)
     centroids_mda.allocate(M, K);
     dtype32* centroids = centroids_mda.dataPtr();
     QVector<int> labels(N, -1);
-    int* counts = (int*)malloc(sizeof(int) * K);
+    QVector<int> counts(K);
 
     //initialize the centroids
     QVector<int> initial = choose_random_indices(N, K);
@@ -665,8 +665,6 @@ QVector<int> do_kmeans(Mda32& X, int K)
             }
         }
     }
-
-    free(counts);
 
     return labels;
 }
