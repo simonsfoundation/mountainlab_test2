@@ -433,15 +433,6 @@ QVector<int> test_redistribute(bool& do_merge, Mda32& X, const QList<long>& inds
     return test_redistribute(do_merge, X1, X2, isocut_threshold);
 }
 
-int max_00(const QVector<int>& X)
-{
-    int ret = X.value(0);
-    for (int i = 0; i < X.count(); i++)
-        if (X[i] > ret)
-            ret = X[i];
-    return ret;
-}
-
 QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbose)
 {
     double repeat_tolerance = 0.2;
@@ -497,7 +488,7 @@ QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbos
         bool do_merge;
 
         QVector<int> labels0 = test_redistribute(do_merge, X, inds1, inds2, isocut_threshold);
-        int max_label = max_00(labels0);
+        int max_label = *std::max_element(labels0.constBegin(), labels0.constEnd());
         if ((do_merge) || (max_label == 1)) {
             if (verbose)
                 printf("merging size=%d.\n", inds12.count());
