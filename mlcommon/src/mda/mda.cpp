@@ -504,14 +504,14 @@ void Mda::getChunk(Mda& ret, long i, long size) const
     long a_begin = i;
     long x_begin = 0;
     long a_end = i + size - 1;
-    long x_end = size - 1;
+//    long x_end = size - 1;  // unused?
 
     if (a_begin < 0) {
         x_begin += 0 - a_begin;
         a_begin += 0 - a_begin;
     }
     if (a_end >= (long)d->totalSize()) {
-        x_end += (long)d->totalSize() - 1 - a_end;
+//        x_end += (long)d->totalSize() - 1 - a_end; // unused?
         a_end += (long)d->totalSize() - 1 - a_end;
     }
 
@@ -520,11 +520,7 @@ void Mda::getChunk(Mda& ret, long i, long size) const
     const double* ptr1 = this->constDataPtr();
     double* ptr2 = ret.dataPtr();
 
-    long ii = 0;
-    for (long a = a_begin; a <= a_end; a++) {
-        ptr2[x_begin + ii] = ptr1[a_begin + ii];
-        ii++; //it was a bug that this was left out, fixed on 5/31/16 by jfm
-    }
+    std::copy(ptr1+a_begin, ptr1+a_end+1, ptr2+x_begin);
 }
 
 void Mda::getChunk(Mda& ret, long i1, long i2, long size1, long size2) const
