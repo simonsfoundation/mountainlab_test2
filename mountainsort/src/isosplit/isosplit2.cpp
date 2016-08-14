@@ -35,9 +35,7 @@ void geometric_median(int M, int N, double* ret, double* X)
             ret[m] = X[m];
         return;
     }
-    double* weights = (double*)malloc(sizeof(double) * N);
-    for (int i = 0; i < N; i++)
-        weights[i] = 1;
+    std::vector<double> weights(N, 1);
     for (int it = 1; it <= num_iterations; it++) {
         double sum_weights = 0;
         for (int i = 0; i < N; i++)
