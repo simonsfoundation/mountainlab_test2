@@ -254,6 +254,7 @@ void find_next_comparison(int M, int K, int& k1, int& k2, const bool* active_lab
     k2 = -1;
 }
 
+#if 0
 Mda32 matrix_transpose_isosplit(const Mda32& A)
 {
     Mda32 ret(A.N2(), A.N1());
@@ -264,6 +265,7 @@ Mda32 matrix_transpose_isosplit(const Mda32& A)
     }
     return ret;
 }
+#endif
 
 Mda32 matrix_multiply_isosplit(const Mda32& A, const Mda32& B)
 {
@@ -288,6 +290,44 @@ Mda32 matrix_multiply_isosplit(const Mda32& A, const Mda32& B)
     return ret;
 }
 
+#if 0
+Mda32 matrix_multiply_transposed_isosplit(const Mda32 &A)
+{
+    int N1 = A.N1();
+    int N2 = A.N2();
+
+    Mda32 ret(N1, N1);
+    for (int i = 0; i < N1; i++) {
+        for (int j = 0; j < N1; j++) {
+            double val = 0;
+            for (int k = 0; k < N2; k++) {
+                val += A.get(i, k) * A.get(j, k);
+            }
+            ret.set(val, i, j);
+        }
+    }
+    return ret;
+}
+#else
+Mda32 matrix_multiply_transposed_isosplit(const Mda32 &A)
+{
+    int N1 = A.N1();
+    int N2 = A.N2();
+
+    Mda32 ret(N1, N1);
+    for (int j = 0; j < N1; j++) {
+        for (int i = 0; i < j+1; i++) {
+            double val = 0;
+            for (int k = 0; k < N2; k++) {
+                val += A.get(i, k) * A.get(j, k);
+            }
+            ret.set(val, i, j);
+            ret.set(val, j, i); // resulting matrix is symmetric
+        }
+    }
+    return ret;
+}
+#endif
 /*
 Mda32 get_whitening_matrix_isosplit(Mda32& COV)
 {
@@ -328,8 +368,17 @@ void whiten_two_clusters(double* V, Mda32& X1, Mda32& X2)
                 XX.set(X2.get(j, i) - center2[j], j, i + N1);
             }
         }
-
+        /// TODO: This can definitely be optimized as it should be perfectly possible
+        ///       to multiply a matrix with a transposed matrix without precalculating
+        ///       the transposed matrix.
+        ///
+        ///       (AA^T)^T = AA^T (the matrix is symmetric) therefore we can calculate
+        ///                       just half of the resulting matrix
+#if 0
         Mda32 XXt = matrix_multiply_isosplit(XX, matrix_transpose_isosplit(XX));
+#else
+        Mda32 XXt = matrix_multiply_transposed_isosplit(XX);
+#endif
         //Mda32 W = get_whitening_matrix_isosplit(COV);
         Mda32 W;
         whitening_matrix_from_XXt(W, XXt);
