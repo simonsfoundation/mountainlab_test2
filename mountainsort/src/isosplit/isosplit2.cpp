@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <QDebug>
 #include "mlcommon.h"
+#include "mliterator.h"
 #include "pca.h" //for whitening
 
 QVector<int> do_kmeans(Mda32& X, int K);
@@ -602,15 +603,27 @@ QVector<int> isosplit2(Mda32& X, float isocut_threshold, int K_init, bool verbos
 //choose K distinct (sorted) integers between 0 and N-1. If K>N then it will repeat the last integer a suitable number of times
 QVector<int> choose_random_indices(int N, int K)
 {
-    ;
     QVector<int> ret;
+    ret.reserve(K);
     if (K >= N) {
+#if 1
         for (int i = 0; i < N; i++)
             ret << i;
         while (ret.count() < K)
             ret << N - 1;
         return ret;
+#else
+        QVector<int> ret;
+        std::copy(ML::counting_iterator<int>(0),
+                  ML::counting_iterator<int>(N),
+                  std::back_inserter(ret));
+        while(ret.size() < K) ret << N-1;
+        return ret;
+#endif
     }
+#if 0
+    /// TODO: This can actually starve the function
+    ///       better make it deterministic
     QSet<int> theset;
     while (theset.count() < K) {
         int ind = (qrand() % N);
@@ -619,6 +632,19 @@ QVector<int> choose_random_indices(int N, int K)
     ret = theset.toList().toVector();
     qSort(ret);
     return ret;
+#else
+    // fill vector with numbers [0, N-1]
+    // shuffle vector getting a random permutation
+    // return first K elements
+    ret.reserve(N);
+    std::copy(ML::counting_iterator<int>(0),
+              ML::counting_iterator<int>(N),
+              std::back_inserter(ret));
+    std::random_shuffle(ret.begin(), ret.end());
+    ret.resize(K); // truncate to K
+    qSort(ret);
+    return ret;
+#endif
 }
 
 //do k-means with K clusters -- X is MxN representing N points in M-dimensional space. Returns a labels vector of size N.
