@@ -13,7 +13,7 @@
  * HEADERS isocut.h
  */
 bool isocut(int N, double* cutpoint, double* X, double threshold);
-bool isocut(int N, double* cutpoint, double* X, double threshold, int minsize);
+bool isocut(int N, double* cutpoint, const double *X, double threshold, int minsize);
 //return true if split is statistically significant
 
 #endif

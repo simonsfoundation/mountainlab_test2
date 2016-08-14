@@ -72,7 +72,7 @@ void jisotonic_downup(int N, double* out, double* in, double* weights)
 }
 
 
-void sort(int N, double* out, double* in)
+void sort(int N, double* out, const double* in)
 {
     std::copy(in, in+N, out);
     std::sort(out, out+N);
@@ -91,7 +91,7 @@ bool isocut(int N, double* cutpoint, double* samples_in, double threshold)
     return isocut(N, cutpoint, samples_in, threshold, 4);
 }
 
-bool isocut(int N, double* cutpoint, double* samples_in, double threshold, int minsize)
+bool isocut(int N, double* cutpoint, const double* samples_in, double threshold, int minsize)
 {
     *cutpoint = 0;
     double* samples = (double*)malloc(sizeof(double) * N);
