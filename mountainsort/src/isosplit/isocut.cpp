@@ -71,33 +71,11 @@ void jisotonic_downup(int N, double* out, double* in, double* weights)
     free(in_neg);
 }
 
-void quick_sort(double* a, int n)
-{
-    int i, j;
-    double p, t;
-    if (n < 2)
-        return;
-    p = a[n / 2];
-    for (i = 0, j = n - 1;; i++, j--) {
-        while (a[i] < p)
-            i++;
-        while (p < a[j])
-            j--;
-        if (i >= j)
-            break;
-        t = a[i];
-        a[i] = a[j];
-        a[j] = t;
-    }
-    quick_sort(a, i);
-    quick_sort(&a[i], n - i);
-}
 
 void sort(int N, double* out, double* in)
 {
-    for (int i = 0; i < N; i++)
-        out[i] = in[i];
-    quick_sort(out, N);
+    std::copy(in, in+N, out);
+    std::sort(out, out+N);
     //	QVector<double> in0(N);
     //	for (int j=0; j<N; j++) in0[j]=in[j];
     //	qSort(in0);
@@ -200,9 +178,8 @@ double compute_ks(int N1, int N2, double* samples1, double* samples2)
     for (int j = 0; j < N2; j++) {
         while ((ii + 1 < N1) && (samples1[ii + 1] <= samples2[j]))
             ii++;
-        double dist = fabs(j * 1.0 / N2 - ii * 1.0 / N1);
-        if (dist > max_dist)
-            max_dist = dist;
+        const double dist = fabs(j * 1.0 / N2 - ii * 1.0 / N1);
+        max_dist = std::max(max_dist, dist);
     }
     return max_dist;
 }

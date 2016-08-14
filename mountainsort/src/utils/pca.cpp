@@ -6,6 +6,7 @@
 
 #include "pca.h"
 #include "mlcommon.h"
+#include <cstring>
 
 void iterate_to_get_top_component(Mda& C, double& sigma, Mda& X, int num_iterations);
 void iterate_to_get_top_component(Mda32& C, double& sigma, Mda32& X, int num_iterations);
@@ -398,8 +399,7 @@ void matvec(long M, long N, double* ret, double* A, double* x)   // really this 
 
 void matvec(long M, long N, float* ret, float* A, float* x)   // really this should be BLAS2 call
 {
-    for (long m = 0; m < M; m++)
-        ret[m] = 0;
+    std::memset(ret, 0, sizeof(float)*M);
     long iA = 0;
     for (long n = 0; n < N; n++) {
         double xval = x[n];

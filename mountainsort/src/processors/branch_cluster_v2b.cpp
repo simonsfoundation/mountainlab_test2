@@ -120,9 +120,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
             labels << k;
         }
         K = MLCompute::max<int>(labels);
-        QVector<int> channels;
-        for (long k = 0; k < K; k++)
-            channels << 0;
+        QVector<int> channels(K, 0);
         for (long i = 0; i < L; i++) {
             long k = (int)firings.value(2, i);
             if (k >= 1) {
@@ -142,9 +140,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
             }
         }
         QList<long> sort_inds = get_sort_indices_b(channels, template_peaks);
-        QList<long> label_map;
-        for (long k = 0; k <= K; k++)
-            label_map << 0;
+        QVector<long> label_map(K+1, 0);
         for (long j = 0; j < sort_inds.count(); j++)
             label_map[sort_inds[j] + 1] = j + 1;
         for (long i = 0; i < L; i++) {

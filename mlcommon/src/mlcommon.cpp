@@ -324,6 +324,7 @@ double MLCompute::dotProduct(long N, double* X1, double* X2)
 
 double MLCompute::dotProduct(long N, float* X1, float* X2)
 {
+
     return std::inner_product(X1, X1 + N, X2, 0.0);
 }
 
