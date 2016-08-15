@@ -67,6 +67,8 @@ HEADERS += \
     processors/extract_raw_processor.h \
     processors/merge_across_channels.h \
     processors/merge_across_channels_processor.h \
+    processors/merge_across_channels_v2.h \
+    processors/merge_across_channels_v2_processor.h \
     processors/merge_stage.h \
     processors/merge_stage.h \
     processors/geom2adj_processor.h \
@@ -132,6 +134,8 @@ SOURCES += \
     processors/fit_stage_new.cpp \
     processors/merge_across_channels.cpp \
     processors/merge_across_channels_processor.cpp \
+    processors/merge_across_channels_v2.cpp \
+    processors/merge_across_channels_v2_processor.cpp \
     processors/merge_stage.cpp \
     processors/merge_stage_processor.cpp \
     processors/geom2adj_processor.cpp \
