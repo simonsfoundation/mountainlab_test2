@@ -20,8 +20,8 @@ bool check_if_merge_candidate(double& best_dt0, Mda& template1, Mda& template2, 
 void make_reflexive_and_transitive_2(Mda& S, Mda& best_dt);
 Mda remove_redundant_events_2(Mda& firings, int maxdt);
 QVector<int> remove_unused_labels_2(const QVector<int>& labels);
-bool test_for_merge(const QVector<double> &X1, const QVector<double> &X2);
-bool test_for_merge(const Mda &clips1, const Mda &clips2);
+bool test_for_merge(const QVector<double>& X1, const QVector<double>& X2);
+bool test_for_merge(const Mda& clips1, const Mda& clips2);
 
 bool merge_stage(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const merge_stage_opts& opts)
 {
@@ -51,7 +51,7 @@ bool merge_stage(const QString& timeseries_path, const QString& firings_path, co
     Mda merge_matrix(K, K);
     Mda best_dt(K, K);
     for (int k1 = 1; k1 <= K; k1++) {
-        for (int k2 = k1+1; k2 <= K; k2++) {
+        for (int k2 = k1 + 1; k2 <= K; k2++) {
             QList<long> inds1 = find_inds(labels, k1);
             QList<long> inds2 = find_inds(labels, k2);
             if ((!inds1.isEmpty()) && (!inds2.isEmpty())) {
@@ -61,16 +61,16 @@ bool merge_stage(const QString& timeseries_path, const QString& firings_path, co
                 int peakchan1 = peakchans[inds1[0]];
                 int peakchan2 = peakchans[inds2[0]];
                 double best_dt0;
-                if (check_if_merge_candidate(best_dt0,template1,template2,peakchan1,peakchan2,opts)) {
-                    printf("Candidate: (%d,%d) dt=%g\n",k1,k2,best_dt0);
+                if (check_if_merge_candidate(best_dt0, template1, template2, peakchan1, peakchan2, opts)) {
+                    printf("Candidate: (%d,%d) dt=%g\n", k1, k2, best_dt0);
                     QVector<double> times1, times2;
                     for (long a = 0; a < inds1.count(); a++)
                         times1 << times[inds1[a]];
                     for (long a = 0; a < inds2.count(); a++)
                         times2 << times[inds2[a]] - best_dt0; //do the time correction (very important)
-                    Mda clips1=extract_clips(X,times1,opts.clip_size);
-                    Mda clips2=extract_clips(X,times2,opts.clip_size);
-                    if (test_for_merge(clips1,clips2)) {
+                    Mda clips1 = extract_clips(X, times1, opts.clip_size);
+                    Mda clips2 = extract_clips(X, times2, opts.clip_size);
+                    if (test_for_merge(clips1, clips2)) {
                         merge_matrix.setValue(1, k1 - 1, k2 - 1);
                         best_dt.setValue(best_dt0, k1 - 1, k2 - 1);
                     }
@@ -86,7 +86,7 @@ bool merge_stage(const QString& timeseries_path, const QString& firings_path, co
     QVector<int> new_labels = labels;
     QVector<double> new_times = times;
     for (int k1 = 1; k1 <= K; k1++) {
-        for (int k2 = k1+1; k2 <= K; k2++) {
+        for (int k2 = k1 + 1; k2 <= K; k2++) {
             if (merge_matrix.value(k1 - 1, k2 - 1)) {
                 //now we merge
                 QList<long> inds_k2 = find_inds(new_labels, k2);
@@ -294,41 +294,44 @@ QVector<int> remove_unused_labels_2(const QVector<int>& labels)
     return labels_out;
 }
 
-QVector<double> everything_below(const QVector<double> &X,double val) {
+QVector<double> everything_below(const QVector<double>& X, double val)
+{
     QVector<double> ret;
-    for (long i=0; i<X.count(); i++) {
-        if (X[i]<val)
+    for (long i = 0; i < X.count(); i++) {
+        if (X[i] < val)
             ret << X[i];
     }
     return ret;
 }
 
-QVector<double> everything_above(const QVector<double> &X,double val) {
+QVector<double> everything_above(const QVector<double>& X, double val)
+{
     QVector<double> ret;
-    for (long i=0; i<X.count(); i++) {
-        if (X[i]>=val)
+    for (long i = 0; i < X.count(); i++) {
+        if (X[i] >= val)
             ret << X[i];
     }
     return ret;
 }
 
-bool test_for_merge(const QVector<double> &X1, const QVector<double> &X2) {
+bool test_for_merge(const QVector<double>& X1, const QVector<double>& X2)
+{
 
-    double mean1=MLCompute::mean(X1);
-    double mean2=MLCompute::mean(X2);
-    if (mean2<mean1) {
+    double mean1 = MLCompute::mean(X1);
+    double mean2 = MLCompute::mean(X2);
+    if (mean2 < mean1) {
         //let's guarantee that mean1<mean2
-        return test_for_merge(X2,X1);
+        return test_for_merge(X2, X1);
     }
 
     QVector<double> X;
     X.append(X1);
     X.append(X2);
     qSort(X);
-    double isocut_threshold=1.5;
-    int minsize=5;
+    double isocut_threshold = 1.5;
+    int minsize = 5;
     double cutpoint;
-    if (!isocut(X.count(),&cutpoint,X.data(),isocut_threshold,minsize)) {
+    if (!isocut(X.count(), &cutpoint, X.data(), isocut_threshold, minsize)) {
         //No split, therefore we will merge
         printf("Test for merge: *********************** MERGE **********************\n");
         return true;
@@ -336,50 +339,51 @@ bool test_for_merge(const QVector<double> &X1, const QVector<double> &X2) {
 
     //Otherwise, we need to test the individual distributions to see if they split on their own...
     double cutpoint1;
-    if (isocut(X1.count(),&cutpoint1,X1.data(),isocut_threshold,minsize)) {
+    if (isocut(X1.count(), &cutpoint1, X1.data(), isocut_threshold, minsize)) {
         //the first cluster is not unimodal! So let's cut out the lower part and repeat
-        QVector<double> X1_above=everything_above(X1,cutpoint1);
-        QVector<double> X2_above=everything_above(X2,cutpoint1);
+        QVector<double> X1_above = everything_above(X1, cutpoint1);
+        QVector<double> X2_above = everything_above(X2, cutpoint1);
         printf("Test for merge: TRY AGAIN +\n");
-        return test_for_merge(X1_above,X2_above);
+        return test_for_merge(X1_above, X2_above);
     }
     double cutpoint2;
-    if (isocut(X2.count(),&cutpoint2,X2.data(),isocut_threshold,minsize)) {
+    if (isocut(X2.count(), &cutpoint2, X2.data(), isocut_threshold, minsize)) {
         //the second cluster is not unimodal! So let's cut out the upper part and repeat
-        QVector<double> X1_above=everything_above(X1,cutpoint2);
-        QVector<double> X2_above=everything_above(X2,cutpoint2);
+        QVector<double> X1_above = everything_above(X1, cutpoint2);
+        QVector<double> X2_above = everything_above(X2, cutpoint2);
         printf("Test for merge: TRY AGAIN -\n");
-        return test_for_merge(X1_above,X2_above);
+        return test_for_merge(X1_above, X2_above);
     }
     //It seems that the two clusters were individually unimodal, so we stand by the split
     return false;
 }
 
-bool test_for_merge(const Mda &clips1, const Mda &clips2) {
-    int M=clips1.N1();
-    int T=clips1.N2();
-    long L1=clips1.N3();
-    long L2=clips2.N3();
+bool test_for_merge(const Mda& clips1, const Mda& clips2)
+{
+    int M = clips1.N1();
+    int T = clips1.N2();
+    long L1 = clips1.N3();
+    long L2 = clips2.N3();
 
-    Mda W1=compute_mean_clip(clips1);
-    Mda W2=compute_mean_clip(clips2);
-    Mda Wdiff(M,T);
-    for (long ii=0; ii<M*T; ii++) {
-        Wdiff.setValue(W2.value(ii)-W1.value(ii),ii);
+    Mda W1 = compute_mean_clip(clips1);
+    Mda W2 = compute_mean_clip(clips2);
+    Mda Wdiff(M, T);
+    for (long ii = 0; ii < M * T; ii++) {
+        Wdiff.setValue(W2.value(ii) - W1.value(ii), ii);
     }
 
-    const double *ptr1=clips1.constDataPtr();
-    const double *ptr2=clips2.constDataPtr();
-    const double *Wdiff_ptr=Wdiff.dataPtr();
+    const double* ptr1 = clips1.constDataPtr();
+    const double* ptr2 = clips2.constDataPtr();
+    const double* Wdiff_ptr = Wdiff.dataPtr();
 
     QVector<double> inner_products_1(L1);
-    for (long i=0; i<L1; i++) {
-        inner_products_1[i]=MLCompute::dotProduct(M*T,Wdiff_ptr,&ptr1[M*T*i]);
+    for (long i = 0; i < L1; i++) {
+        inner_products_1[i] = MLCompute::dotProduct(M * T, Wdiff_ptr, &ptr1[M * T * i]);
     }
     QVector<double> inner_products_2(L2);
-    for (long i=0; i<L2; i++) {
-        inner_products_2[i]=MLCompute::dotProduct(M*T,Wdiff_ptr,&ptr2[M*T*i]);
+    for (long i = 0; i < L2; i++) {
+        inner_products_2[i] = MLCompute::dotProduct(M * T, Wdiff_ptr, &ptr2[M * T * i]);
     }
 
-    return test_for_merge(inner_products_1,inner_products_2);
+    return test_for_merge(inner_products_1, inner_products_2);
 }

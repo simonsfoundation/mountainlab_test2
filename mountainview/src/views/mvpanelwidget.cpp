@@ -31,7 +31,7 @@ public:
     bool m_v_scrollable = true;
     double m_minimum_panel_width = 0;
     double m_minimum_panel_height = 0;
-    bool m_zoom_on_wheel=true;
+    bool m_zoom_on_wheel = true;
 
     QPointF m_press_anchor = QPointF(-1, -1);
     QRectF m_press_anchor_viewport_geom = QRectF(0, 0, 1, 1);
@@ -74,7 +74,7 @@ void MVPanelWidget::addPanel(int row, int col, PaintLayer* layer)
     panel.col = col;
     panel.layer = layer;
     d->m_panels << panel;
-    QObject::connect(layer,SIGNAL(repaintNeeded()),this,SLOT(update()));
+    QObject::connect(layer, SIGNAL(repaintNeeded()), this, SLOT(update()));
     update();
 }
 
@@ -128,7 +128,7 @@ void MVPanelWidget::setScrollable(bool h_scrollable, bool v_scrollable)
 
 void MVPanelWidget::setZoomOnWheel(bool val)
 {
-    d->m_zoom_on_wheel=val;
+    d->m_zoom_on_wheel = val;
 }
 
 int MVPanelWidget::currentPanelIndex() const
@@ -173,8 +173,8 @@ void MVPanelWidget::paintEvent(QPaintEvent* evt)
         double x1 = geom.left();
         double y1 = geom.top();
         painter.translate(QPointF(x1, y1));
-        QRegion hold_region=painter.clipRegion();
-        painter.setClipRect(0,0,geom.width(),geom.height());
+        QRegion hold_region = painter.clipRegion();
+        painter.setClipRect(0, 0, geom.width(), geom.height());
         d->m_panels[i].layer->paint(&painter);
         painter.translate(QPointF(-x1, -y1));
         painter.setClipRegion(hold_region);
@@ -213,14 +213,14 @@ void MVPanelWidget::mouseReleaseEvent(QMouseEvent* evt)
     if (!d->m_is_dragging) {
         int index = d->panel_index_at_pt(evt->pos());
         if (index >= 0) {
-            if (evt->button()==Qt::LeftButton)
+            if (evt->button() == Qt::LeftButton)
                 emit this->signalPanelClicked(index, evt->modifiers());
         }
     }
     d->m_is_dragging = false;
 }
 
-void MVPanelWidget::mouseDoubleClickEvent(QMouseEvent *evt)
+void MVPanelWidget::mouseDoubleClickEvent(QMouseEvent* evt)
 {
     int index = d->panel_index_at_pt(evt->pos());
     if (index >= 0) {

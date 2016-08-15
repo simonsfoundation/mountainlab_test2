@@ -5,12 +5,11 @@
 #include "mvabstractviewfactory.h"
 
 class MVAmpHistView3Private;
-class MVAmpHistView3 : public MVAbstractView
-{
+class MVAmpHistView3 : public MVAbstractView {
     Q_OBJECT
 public:
     friend class MVAmpHistView3Private;
-    MVAmpHistView3(MVContext *context);
+    MVAmpHistView3(MVContext* context);
     virtual ~MVAmpHistView3();
 
     void prepareCalculation() Q_DECL_OVERRIDE;
@@ -18,9 +17,9 @@ public:
     void onCalculationFinished() Q_DECL_OVERRIDE;
 
 protected:
-    void wheelEvent(QWheelEvent *evt);
+    void wheelEvent(QWheelEvent* evt);
     void prepareMimeData(QMimeData& mimeData, const QPoint& pos);
-    void keyPressEvent(QKeyEvent *evt);
+    void keyPressEvent(QKeyEvent* evt);
 
 private slots:
     void slot_zoom_in_horizontal(double factor = 1.2);
@@ -33,7 +32,7 @@ private slots:
     void slot_update_bins();
 
 private:
-    MVAmpHistView3Private *d;
+    MVAmpHistView3Private* d;
 };
 
 class MVAmplitudeHistograms3Factory : public MVAbstractViewFactory {
@@ -45,7 +44,6 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
-
 };
 
 #endif // MVAMPHISTVIEW3_H

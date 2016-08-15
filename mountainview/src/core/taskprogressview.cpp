@@ -32,8 +32,8 @@
 class TaskProgressViewDelegate : public QStyledItemDelegate {
 public:
     const int roundSecondsThreshold = 5; // the delegate rounds to the nearest
-                                         // full second if duration exceeds
-                                         // this amount of time (in secs)
+    // full second if duration exceeds
+    // this amount of time (in secs)
     TaskProgressViewDelegate(QObject* parent = 0)
         : QStyledItemDelegate(parent)
     {
@@ -155,7 +155,7 @@ public:
         //        connect(m_showLogs, SIGNAL(toggled(bool)), this, SLOT(updateLogsMode(bool)));
     }
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
 
     void setCompleteTasksMode(CompleteTasksMode m)
     {
@@ -411,7 +411,7 @@ QString TaskProgressViewPrivate::shortened(QString txt, int maxlen)
         return txt;
 }
 
-QVariant TaskProgressViewModeProxy::data(const QModelIndex &index, int role) const
+QVariant TaskProgressViewModeProxy::data(const QModelIndex& index, int role) const
 {
     // not the best place to do this however since TaskProgressModel can't use QColor
     // this is the second best place to put this code

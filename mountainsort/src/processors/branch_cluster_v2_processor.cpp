@@ -13,7 +13,7 @@ branch_cluster_v2_Processor::branch_cluster_v2_Processor()
     d->q = this;
 
     this->setName("branch_cluster_v2");
-    this->setVersion("0.19");
+    this->setVersion("0.25");
     this->setInputFileParameters("timeseries", "detect", "adjacency_matrix");
     this->setOutputFileParameters("firings_out");
     this->setRequiredParameters("clip_size", "min_shell_size", "shell_increment", "num_features");
@@ -56,5 +56,6 @@ bool branch_cluster_v2_Processor::run(const QMap<QString, QVariant>& params)
     }
 
     //return branch_cluster_v2(timeseries_path, detect_path, adjacency_matrix_path, firings_path, opts);
-    return branch_cluster_v2b(timeseries_path, detect_path, adjacency_matrix_path, firings_path, opts);
+    //return branch_cluster_v2b(timeseries_path, detect_path, adjacency_matrix_path, firings_path, opts);
+    return branch_cluster_v2c(timeseries_path, detect_path, adjacency_matrix_path, firings_path, opts);
 }

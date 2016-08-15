@@ -53,6 +53,6 @@ bool fit_stage_Processor::run(const QMap<QString, QVariant>& params)
     //    return fit_stage(timeseries_path, firings_path, firings_out_path, opts);
     //}
     //else {
-        return fit_stage_new(timeseries_path, firings_path, firings_out_path, opts);
+    return fit_stage_new(timeseries_path, firings_path, firings_out_path, opts);
     //}
 }

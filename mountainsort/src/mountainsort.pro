@@ -151,7 +151,8 @@ SOURCES += \
     processors/branch_cluster_v2b.cpp \
     processors/quantize_processor.cpp \
     processors/synthesize1_processor.cpp \
-    processors/synthesize1.cpp
+    processors/synthesize1.cpp \
+    processors/branch_cluster_v2c.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \

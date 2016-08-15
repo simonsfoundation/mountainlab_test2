@@ -283,7 +283,7 @@ void MVCrossCorrelogramsWidget3::slot_export_static_view()
 {
     //QSettings settings("SCDA", "MountainView");
     //QString default_dir = settings.value("default_export_dir", "").toString();
-    QString default_dir=QDir::currentPath();
+    QString default_dir = QDir::currentPath();
     QString fname = QFileDialog::getSaveFileName(this, "Export static cross-correlogram view", default_dir, "*.smv");
     if (fname.isEmpty())
         return;

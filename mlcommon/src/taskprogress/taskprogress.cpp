@@ -18,11 +18,15 @@
 Q_DECLARE_METATYPE(QSet<QString>)
 namespace TaskManager {
 
-TaskProgressModel::LogType logType(TaskProgressLogMessage::Type t) {
+TaskProgressModel::LogType logType(TaskProgressLogMessage::Type t)
+{
     switch (t) {
-    case TaskProgressLogMessage::Log: return TaskProgressModel::Log;
-    case TaskProgressLogMessage::Error: return TaskProgressModel::Error;
-    default: return TaskProgressModel::Log;
+    case TaskProgressLogMessage::Log:
+        return TaskProgressModel::Log;
+    case TaskProgressLogMessage::Error:
+        return TaskProgressModel::Error;
+    default:
+        return TaskProgressModel::Log;
     }
 }
 

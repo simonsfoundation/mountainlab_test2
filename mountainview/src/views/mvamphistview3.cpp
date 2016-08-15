@@ -35,16 +35,17 @@ public:
     QList<AmpHistogram3> m_histograms;
     MVPanelWidget* m_panel_widget;
     QList<HistogramLayer*> m_views;
-    QSpinBox *m_num_bins_control;
+    QSpinBox* m_num_bins_control;
     double m_zoom_factor = 1;
 
     void set_views();
 };
 
-MVAmpHistView3::MVAmpHistView3(MVContext *context) : MVAbstractView(context)
+MVAmpHistView3::MVAmpHistView3(MVContext* context)
+    : MVAbstractView(context)
 {
-    d=new MVAmpHistView3Private;
-    d->q=this;
+    d = new MVAmpHistView3Private;
+    d->q = this;
 
     QVBoxLayout* layout = new QVBoxLayout;
     this->setLayout(layout);
@@ -63,13 +64,13 @@ MVAmpHistView3::MVAmpHistView3(MVContext *context) : MVAbstractView(context)
     ActionFactory::addToToolbar(ActionFactory::ActionType::PanRight, this, SLOT(slot_pan_right()));
 
     {
-        d->m_num_bins_control=new QSpinBox();
-        d->m_num_bins_control->setRange(1,2000);
+        d->m_num_bins_control = new QSpinBox();
+        d->m_num_bins_control->setRange(1, 2000);
         d->m_num_bins_control->setSingleStep(20);
         d->m_num_bins_control->setValue(100);
         this->addToolbarControl(new QLabel(" #bins:"));
         this->addToolbarControl(d->m_num_bins_control);
-        QObject::connect(d->m_num_bins_control,SIGNAL(valueChanged(int)),this,SLOT(slot_update_bins()));
+        QObject::connect(d->m_num_bins_control, SIGNAL(valueChanged(int)), this, SLOT(slot_update_bins()));
     }
 
     QObject::connect(context, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_highlighting_and_captions()));
@@ -87,7 +88,8 @@ MVAmpHistView3::MVAmpHistView3(MVContext *context) : MVAbstractView(context)
     this->recalculate();
 }
 
-MVAmpHistView3::~MVAmpHistView3() {
+MVAmpHistView3::~MVAmpHistView3()
+{
     this->stopCalculation();
     delete d;
 }
@@ -110,7 +112,7 @@ void MVAmpHistView3::onCalculationFinished()
     d->set_views();
 }
 
-void MVAmpHistView3::wheelEvent(QWheelEvent *evt)
+void MVAmpHistView3::wheelEvent(QWheelEvent* evt)
 {
     int delta = evt->delta();
     if (delta > 0)
@@ -173,7 +175,7 @@ void MVAmpHistView3::slot_panel_clicked(int index, Qt::KeyboardModifiers modifie
     else {
         if (d->m_views.value(index)) {
             int k = d->m_views.value(index)->property("k").toInt();
-            if (k>0) {
+            if (k > 0) {
                 mvContext()->clickCluster(k, modifiers);
             }
         }
@@ -211,10 +213,10 @@ void MVAmpHistView3::slot_update_highlighting_and_captions()
 
 void MVAmpHistView3::slot_current_cluster_changed()
 {
-    int k=mvContext()->currentCluster();
-    for (int i=0; i<d->m_views.count(); i++) {
-        HistogramLayer *HV=d->m_views[i];
-        if (HV->property("k").toInt()==k) {
+    int k = mvContext()->currentCluster();
+    for (int i = 0; i < d->m_views.count(); i++) {
+        HistogramLayer* HV = d->m_views[i];
+        if (HV->property("k").toInt() == k) {
             d->m_panel_widget->setCurrentPanelIndex(i); //for purpose of zooming
         }
     }
@@ -262,15 +264,15 @@ void MVAmpHistView3Computer::compute()
 
     //sort by medium value
     QVector<double> abs_medians(histograms.count());
-    for (int i=0; i<histograms.count(); i++) {
-        abs_medians[i]=qAbs(MLCompute::median(histograms[i].data));
+    for (int i = 0; i < histograms.count(); i++) {
+        abs_medians[i] = qAbs(MLCompute::median(histograms[i].data));
     }
-    QList<long> inds=get_sort_indices(abs_medians);
+    QList<long> inds = get_sort_indices(abs_medians);
     QList<AmpHistogram3> hist_new;
-    for (int i=0; i<inds.count(); i++) {
+    for (int i = 0; i < inds.count(); i++) {
         hist_new << histograms[inds[i]];
     }
-    histograms=hist_new;
+    histograms = hist_new;
 }
 
 double compute_min3(const QList<AmpHistogram3>& data0)
@@ -305,9 +307,9 @@ void MVAmpHistView3::slot_update_bins()
     double bin_max = max3(d->m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
     int num_bins = d->m_num_bins_control->value();
-    for (int i=0; i<d->m_views.count(); i++) {
-        d->m_views[i]->setBinInfo(bin_min,bin_max,num_bins);
-        d->m_views[i]->setXRange(MVRange(-max00*0.8,max00*0.8));
+    for (int i = 0; i < d->m_views.count(); i++) {
+        d->m_views[i]->setBinInfo(bin_min, bin_max, num_bins);
+        d->m_views[i]->setXRange(MVRange(-max00 * 0.8, max00 * 0.8));
         d->m_views[i]->autoCenterXRange();
     }
 }
@@ -330,8 +332,8 @@ void MVAmpHistView3Private::set_views()
             HV->setDrawVerticalAxisAtZero(true);
             if (amp_thresh) {
                 QList<double> vals;
-                for (int i=1; i<=50; i++) {
-                    vals << -amp_thresh*i << amp_thresh*i;
+                for (int i = 1; i <= 50; i++) {
+                    vals << -amp_thresh* i << amp_thresh* i;
                 }
                 HV->setVerticalLines(vals);
             }
@@ -340,11 +342,11 @@ void MVAmpHistView3Private::set_views()
         }
     }
 
-    int num_rows=qMax(1.0,sqrt(views.count()));
-    int num_cols=ceil(views.count()*1.0/num_rows);
-    m_views=views;
-    for (int i=0; i<views.count(); i++) {
-        m_panel_widget->addPanel(i/num_cols,i%num_cols,views[i]);
+    int num_rows = qMax(1.0, sqrt(views.count()));
+    int num_cols = ceil(views.count() * 1.0 / num_rows);
+    m_views = views;
+    for (int i = 0; i < views.count(); i++) {
+        m_panel_widget->addPanel(i / num_cols, i % num_cols, views[i]);
     }
 
     q->slot_update_highlighting_and_captions();
@@ -360,7 +362,7 @@ void MVAmpHistView3::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
     MVAbstractView::prepareMimeData(mimeData, pos);
 }
 
-void MVAmpHistView3::keyPressEvent(QKeyEvent *evt)
+void MVAmpHistView3::keyPressEvent(QKeyEvent* evt)
 {
     if (evt->matches(QKeySequence::SelectAll)) {
         QList<int> all_ks;
@@ -397,4 +399,3 @@ MVAbstractView* MVAmplitudeHistograms3Factory::createView(QWidget* parent)
     MVAmpHistView3* X = new MVAmpHistView3(mvContext());
     return X;
 }
-

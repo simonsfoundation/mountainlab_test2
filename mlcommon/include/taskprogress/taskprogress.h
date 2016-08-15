@@ -23,7 +23,10 @@ struct TaskProgressLogMessage {
     QString message;
     QDateTime time;
     Type type;
-    TaskProgressLogMessage(): type(Log) {}
+    TaskProgressLogMessage()
+        : type(Log)
+    {
+    }
     TaskProgressLogMessage(const QString& msg, Type t = Log)
         : message(msg)
         , time(QDateTime::currentDateTime())

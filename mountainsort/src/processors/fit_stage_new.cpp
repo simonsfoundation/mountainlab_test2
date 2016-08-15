@@ -163,30 +163,33 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
 
 typedef QList<int> IntList;
 
-QList<int> get_channel_mask(Mda template0, int num) {
-    int M=template0.N1();
-    int T=template0.N2();
+QList<int> get_channel_mask(Mda template0, int num)
+{
+    int M = template0.N1();
+    int T = template0.N2();
     QVector<double> maxabs;
-    for (int m=0; m<M; m++) {
-        double val=0;
-        for (int t=0; t<T; t++) {
-            val=qMax(val,qAbs(template0.value(m,t)));
+    for (int m = 0; m < M; m++) {
+        double val = 0;
+        for (int t = 0; t < T; t++) {
+            val = qMax(val, qAbs(template0.value(m, t)));
         }
         maxabs << val;
     }
-    QList<long> inds=get_sort_indices(maxabs);
+    QList<long> inds = get_sort_indices(maxabs);
     QList<int> ret;
-    for (int i=0; i<num; i++) {
-        if (i<inds.count()) {
-            ret << inds[inds.count()-1-i];
+    for (int i = 0; i < num; i++) {
+        if (i < inds.count()) {
+            ret << inds[inds.count() - 1 - i];
         }
     }
     return ret;
 }
 
-bool is_dirty(const Mda &dirty, long t0, const QList<int> &chmask) {
-    for (int i=0; i<chmask.count(); i++) {
-        if (dirty.value(chmask[i],t0)) return true;
+bool is_dirty(const Mda& dirty, long t0, const QList<int>& chmask)
+{
+    for (int i = 0; i < chmask.count(); i++) {
+        if (dirty.value(chmask[i], t0))
+            return true;
     }
     return false;
 }
@@ -202,21 +205,21 @@ double compute_score(long N, double* X, double* template0)
     return norm1 * norm1 - norm2 * norm2;
 }
 
-double compute_score(int M, int T, double* X, double* template0, const QList<int> &chmask)
+double compute_score(int M, int T, double* X, double* template0, const QList<int>& chmask)
 {
-    double before_sumsqr=0;
-    double after_sumsqr=0;
-    for (int t=0; t<T; t++) {
-        for (int i=0; i<chmask.count(); i++) {
-            int m=chmask[i];
-            double val=X[m+t*M];
-            before_sumsqr+=val*val;
-            val-=template0[m+t*M];
-            after_sumsqr+=val*val;
+    double before_sumsqr = 0;
+    double after_sumsqr = 0;
+    for (int t = 0; t < T; t++) {
+        for (int i = 0; i < chmask.count(); i++) {
+            int m = chmask[i];
+            double val = X[m + t * M];
+            before_sumsqr += val * val;
+            val -= template0[m + t * M];
+            after_sumsqr += val * val;
         }
     }
 
-    return before_sumsqr-after_sumsqr;
+    return before_sumsqr - after_sumsqr;
 }
 
 void subtract_scaled_template(long N, double* X, double* template0)
@@ -234,13 +237,13 @@ void subtract_scaled_template(long N, double* X, double* template0)
     }
 }
 
-void subtract_scaled_template(int M, int T, double* X, double* template0, const QList<int> &chmask)
+void subtract_scaled_template(int M, int T, double* X, double* template0, const QList<int>& chmask)
 {
     double S12 = 0, S22 = 0;
-    for (int t=0; t<T; t++) {
-        for (int j=0; j<chmask.count(); j++) {
-            int m=chmask[j];
-            int i=m+M*t;
+    for (int t = 0; t < T; t++) {
+        for (int j = 0; j < chmask.count(); j++) {
+            int m = chmask[j];
+            int i = m + M * t;
             S22 += template0[i] * template0[i];
             S12 += X[i] * template0[i];
         }
@@ -248,15 +251,14 @@ void subtract_scaled_template(int M, int T, double* X, double* template0, const 
     double alpha = 1;
     if (S22)
         alpha = S12 / S22;
-    for (int t=0; t<T; t++) {
-        for (int j=0; j<chmask.count(); j++) {
-            int m=chmask[j];
-            int i=m+M*t;
+    for (int t = 0; t < T; t++) {
+        for (int j = 0; j < chmask.count(); j++) {
+            int m = chmask[j];
+            int i = m + M * t;
             X[i] -= alpha * template0[i];
         }
     }
 }
-
 
 QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVector<int>& labels, const fit_stage_opts& opts)
 {
@@ -282,20 +284,21 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVe
     //while ((something_changed)&&(num_passes<2)) {
 
     QVector<double> scores(L);
-    Mda dirty(X.N1(),X.N2()); //timepoints/channels for which we need to recompute the score if a clip was centered here
-    for (long ii=0; ii<dirty.totalSize(); ii++) {
-        dirty.setValue(1,ii);
+    Mda dirty(X.N1(), X.N2()); //timepoints/channels for which we need to recompute the score if a clip was centered here
+    for (long ii = 0; ii < dirty.totalSize(); ii++) {
+        dirty.setValue(1, ii);
     }
 
     QList<IntList> channel_mask;
-    for (int i=0; i<K; i++) {
+    for (int i = 0; i < K; i++) {
         Mda template0;
-        templates.getChunk(template0,0,0,i,M,T,1);
+        templates.getChunk(template0, 0, 0, i, M, T, 1);
         channel_mask << get_channel_mask(template0, 8); //use only the 8 channels with highest maxval
     }
 
     while (something_changed) {
-        QTime timer0; timer0.start();
+        QTime timer0;
+        timer0.start();
         num_passes++;
         QVector<double> scores_to_try;
         QVector<double> times_to_try;
@@ -309,10 +312,10 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVe
                 if (k0 > 0) { //make sure we have a positive label (don't know why we wouldn't)
                     long tt = (long)(t0 - Tmid + 0.5); //start time of clip
                     double score0 = 0;
-                    IntList chmask=channel_mask[k0-1];
-                    if (!is_dirty(dirty,t0,chmask)) {
+                    IntList chmask = channel_mask[k0 - 1];
+                    if (!is_dirty(dirty, t0, chmask)) {
                         // we don't need to recompute the score
-                        score0=scores[i];
+                        score0 = scores[i];
                     }
                     else {
                         //we do need to recompute it.
@@ -346,8 +349,8 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVe
         QVector<int> to_use = find_events_to_use(times_to_try, scores_to_try, opts);
 
         //at this point, nothing is dirty
-        for (long i=0; i<dirty.totalSize(); i++) {
-            dirty.set(0,i);
+        for (long i = 0; i < dirty.totalSize(); i++) {
+            dirty.set(0, i);
         }
 
         //for all those we are going to "use", we want to subtract out the corresponding templates from the timeseries data
@@ -355,15 +358,15 @@ QList<long> fit_stage_kernel(Mda& X, Mda& templates, QVector<double>& times, QVe
         long num_added = 0;
         for (long i = 0; i < to_use.count(); i++) {
             if (to_use[i] == 1) {
-                IntList chmask=channel_mask[labels_to_try[i]-1];
+                IntList chmask = channel_mask[labels_to_try[i] - 1];
                 something_changed = true;
                 num_added++;
                 long tt = (long)(times_to_try[i] - Tmid + 0.5);
                 subtract_scaled_template(M, T, X.dataPtr(0, tt), templates.dataPtr(0, 0, labels_to_try[i] - 1), chmask);
-                for (int aa=tt-T/2-1; aa<=tt+T+T/2+1; aa++) {
-                    if ((aa>=0)&&(aa<X.N2())) {
-                        for (int k=0; k<chmask.count(); k++) {
-                            dirty.setValue(1,chmask[k],aa);
+                for (int aa = tt - T / 2 - 1; aa <= tt + T + T / 2 + 1; aa++) {
+                    if ((aa >= 0) && (aa < X.N2())) {
+                        for (int k = 0; k < chmask.count(); k++) {
+                            dirty.setValue(1, chmask[k], aa);
                         }
                     }
                 }
@@ -472,4 +475,3 @@ QList<long> fit_stage_kernel_old(Mda& X, Mda& templates, QVector<double>& times,
 
     return inds_to_use;
 }
-

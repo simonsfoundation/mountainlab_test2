@@ -57,7 +57,8 @@ public:
     void set_bins();
 };
 
-HistogramLayer::HistogramLayer(QObject *parent) : PaintLayer(parent)
+HistogramLayer::HistogramLayer(QObject* parent)
+    : PaintLayer(parent)
 {
     d = new HistogramLayerPrivate;
     d->q = this;
@@ -222,7 +223,7 @@ void HistogramLayer::setSelected(bool val)
     }
 }
 
-void HistogramLayer::paint(QPainter *painter)
+void HistogramLayer::paint(QPainter* painter)
 {
     d->do_paint(*painter, this->windowSize().width(), this->windowSize().height());
 }
@@ -265,7 +266,7 @@ void HistogramLayer::mousePressEvent(QMouseEvent* evt)
     //    emit rightClicked(evt->modifiers());
 }
 
-void HistogramLayer::mouseReleaseEvent(QMouseEvent *evt)
+void HistogramLayer::mouseReleaseEvent(QMouseEvent* evt)
 {
     Q_UNUSED(evt);
 }
@@ -512,15 +513,15 @@ void HistogramLayerPrivate::do_paint(QPainter& painter, int W, int H)
 
     {
         //horizontal axis
-        QPointF pt0=coord2pix(QPointF(0,0));
-        QPointF pt1=QPointF(0,pt0.y());
-        QPointF pt2=QPointF(q->windowSize().width(),pt0.y());
+        QPointF pt0 = coord2pix(QPointF(0, 0));
+        QPointF pt1 = QPointF(0, pt0.y());
+        QPointF pt2 = QPointF(q->windowSize().width(), pt0.y());
         QPen pen = painter.pen();
         pen.setColor(Qt::black);
         pen.setStyle(Qt::SolidLine);
         pen.setWidth(1);
         painter.setPen(pen);
-        painter.drawLine(pt1,pt2);
+        painter.drawLine(pt1, pt2);
     }
 
     for (int pass = 1; pass <= 2; pass++) {

@@ -76,7 +76,7 @@ bool whiten(const QString& input, const QString& output)
 
     //Mda AA = get_whitening_matrix(COV);
     Mda WW;
-    whitening_matrix_from_XXt(WW, XXt);   // the result is symmetric (assumed below)
+    whitening_matrix_from_XXt(WW, XXt); // the result is symmetric (assumed below)
     double* WWptr = WW.dataPtr();
 
     DiskWriteMda Y;
@@ -100,8 +100,8 @@ bool whiten(const QString& input, const QString& output)
                 long bb = 0;
                 for (int m1 = 0; m1 < M; m1++) {
                     for (int m2 = 0; m2 < M; m2++) {
-		      chunk_out_ptr[aa + m1] += chunk_in_ptr[aa + m2] * WWptr[bb];   // actually this does dgemm w/ WW^T
-		      bb++;                                                       // but since symmetric, doesn't matter.
+                        chunk_out_ptr[aa + m1] += chunk_in_ptr[aa + m2] * WWptr[bb]; // actually this does dgemm w/ WW^T
+                        bb++; // but since symmetric, doesn't matter.
                     }
                 }
             }

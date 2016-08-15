@@ -1,3 +1,9 @@
+/******************************************************
+** See the accompanying README and LICENSE files
+** Author(s): Jeremy Magland
+** Created: 8/12/2016
+*******************************************************/
+
 #include "branch_cluster_v2.h"
 #include "diskreadmda.h"
 #include <stdio.h>
@@ -14,18 +20,34 @@
 #include "msmisc.h"
 #include "diskreadmda32.h"
 
+#define CORRELATION_THRESHOLD 0.7
+
 struct ClipsGroup {
     Mda32* clips;
     QList<long> inds;
 };
 
-QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display);
-QVector<double> compute_peaks_v2b(ClipsGroup clips, long ch);
-QVector<int> consolidate_labels_v2b(DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor);
-QList<long> get_sort_indices_b(const QVector<int>& channels, const QVector<double>& template_peaks);
-QVector<int> split_clusters(ClipsGroup clips, const QVector<int>& original_labels, const Branch_Cluster_V2_Opts& opts, int channel_for_display);
+struct ClusterResult {
+    int m = -1;
+    int k = 0;
+    QVector<long> inds;
+    Mda32 template0;
+    QVector<double> abs_peaks; //on channels
+    int use_it = -1; //0=no, 1=yes, -1=undecided
+};
 
-bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_path, const QString& adjacency_matrix_path, const QString& output_firings_path, const Branch_Cluster_V2_Opts& opts)
+QVector<int> do_branch_cluster_v2c(ClipsGroup clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display);
+QVector<double> compute_peaks_v2c(ClipsGroup clips, long ch);
+QVector<int> consolidate_labels_v2c(DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor);
+QList<long> get_sort_indices_c(const QVector<int>& channels, const QVector<double>& template_peaks);
+QVector<int> split_clusters_c(ClipsGroup clips, const QVector<int>& original_labels, const Branch_Cluster_V2_Opts& opts, int channel_for_display);
+ClipsGroup grab_clips_subset_c(ClipsGroup clips, const QVector<long>& inds);
+Mda32 compute_mean_clip_c(ClipsGroup clips);
+QVector<double> compute_abs_peaks(const Mda32& template0);
+int find_cluster_result_with_similar_template_on_channel(const QList<ClusterResult>& cluster_results, const Mda32& template0, int m);
+double compute_template_correlation(const Mda32& template1, const Mda32& template2);
+
+bool branch_cluster_v2c(const QString& timeseries_path, const QString& detect_path, const QString& adjacency_matrix_path, const QString& output_firings_path, const Branch_Cluster_V2_Opts& opts)
 {
     printf("Starting branch_cluster_v2 --------------------\n");
     DiskReadMda32 X;
@@ -55,15 +77,13 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
         return false;
     }
 
-    Mda firings0;
-    firings0.allocate(5, L); //L is the max it could be
+    QList<ClusterResult> cluster_results;
 
-    long jjjj = 0;
-    long k_offset = 0;
 #pragma omp parallel for
     for (long m = 0; m < M; m++) {
         Mda32 clips;
         QVector<double> times;
+        QVector<long> inds_m;
 #pragma omp critical
         {
             QVector<int> neighborhood;
@@ -73,6 +93,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
                     neighborhood << a;
             for (long i = 0; i < L; i++) {
                 if (detect.value(0, i) == (m + 1)) {
+                    inds_m << i;
                     times << detect.value(1, i) - 1; //convert to 0-based indexing
                 }
             }
@@ -83,37 +104,128 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
         clips_group.clips = &clips;
         for (long i = 0; i < clips.N3(); i++)
             clips_group.inds << i;
-        QVector<int> labels = do_branch_cluster_v2b(clips_group, opts, m);
+        QVector<int> labels = do_branch_cluster_v2c(clips_group, opts, m);
         if (opts.split_clusters_at_end) {
-            labels = split_clusters(clips_group, labels, opts, m);
+            labels = split_clusters_c(clips_group, labels, opts, m);
+        }
+        int K0 = MLCompute::max(labels);
+
+        QList<ClusterResult> cluster_results0;
+        for (int k = 1; k <= K0; k++) {
+            ClusterResult CR0;
+            CR0.k = k;
+            CR0.m = m;
+            CR0.use_it = -1;
+            QVector<long> inds_k;
+            for (long a = 0; a < labels.count(); a++) {
+                if (labels[a] == k)
+                    inds_k << a;
+            }
+            ClipsGroup clips_k = grab_clips_subset_c(clips_group, inds_k);
+            for (long bb = 0; bb < inds_k.count(); bb++) {
+                CR0.inds << inds_m[inds_k[bb]];
+            }
+            CR0.template0 = compute_mean_clip_c(clips_k);
+            CR0.abs_peaks = compute_abs_peaks(CR0.template0);
+            cluster_results0 << CR0;
         }
 #pragma omp critical
         {
-            labels = consolidate_labels_v2b(X, times, labels, m, opts.clip_size, opts.detect_interval, opts.consolidation_factor);
-            QVector<double> peaks = compute_peaks_v2b(clips_group, 0);
 
-            for (long i = 0; i < times.count(); i++) {
-                if (labels[i]) {
-                    firings0.setValue(m + 1, 0, jjjj); //channel
-                    firings0.setValue(times[i] + 1, 1, jjjj); //times //convert back to 1-based indexing
-                    firings0.setValue(labels[i] + k_offset, 2, jjjj); //labels
-                    firings0.setValue(peaks[i], 3, jjjj); //peaks
-                    jjjj++;
+            cluster_results.append(cluster_results0);
+            printf("Channel %ld: total of %d clusters.\n", m + 1, K0);
+        }
+    }
+
+    long num_clusters_safely_included = 0;
+    long num_clusters_safely_excluded = 0;
+    long num_clusters_pretty_safely_excluded = 0;
+    long num_clusters_pretty_safely_included = 0;
+    QVector<double> abs_peaks_on_own_channels;
+    for (int i = 0; i < cluster_results.count(); i++) {
+        abs_peaks_on_own_channels << cluster_results[i].abs_peaks[cluster_results[i].m];
+    }
+    QList<long> inds1 = get_sort_indices(abs_peaks_on_own_channels);
+    for (int jj = 0; jj < inds1.count(); jj++) {
+        int ii = inds1[jj];
+        ClusterResult* CR = &cluster_results[ii];
+        QVector<double> other_abs_peaks = CR->abs_peaks;
+        other_abs_peaks[CR->m] = 0;
+        double max_other_abs_peaks = MLCompute::max(other_abs_peaks);
+        if (CR->abs_peaks[CR->m] * opts.consolidation_factor > max_other_abs_peaks) {
+            //we are safe to use this one because...
+            //the peak for this template on its own channel is sufficiently larger than
+            //the peak for this template on any other channel
+            CR->use_it = 1;
+            num_clusters_safely_included++;
+        }
+        else if (CR->abs_peaks[CR->m] < max_other_abs_peaks * opts.consolidation_factor) {
+            //we are safe to not use this one because...
+            //the peak for this template on its own channel is sufficiently smaller than
+            //the peak for this template on some other channel
+            //so we assume it will be covered by that other channel
+            CR->use_it = 0;
+            num_clusters_safely_excluded++;
+        }
+    }
+    for (int jj = 0; jj < inds1.count(); jj++) {
+        int ii = inds1[jj];
+        ClusterResult* CR = &cluster_results[ii];
+        if (CR->use_it == -1) { //still undecided
+            for (int m2 = 0; m2 < M; m2++) {
+                if (m2 != CR->m) {
+                    if (CR->abs_peaks[m2] >= CR->abs_peaks[CR->m] * opts.consolidation_factor) {
+                        int ii2 = find_cluster_result_with_similar_template_on_channel(cluster_results, CR->template0, m2);
+                        if (ii2 >= 0) {
+                            if (cluster_results[ii2].use_it) {
+                                //we are already using a cluster on channel m2 with a similar template
+                                //and the peak amplitude of our cluster is higher on channel m2
+                                //so it is safe to not use this one.
+                                CR->use_it = 0;
+                                num_clusters_pretty_safely_excluded++;
+                            }
+                        }
+                    }
                 }
             }
-            k_offset += MLCompute::max<int>(labels);
+        }
+        if (CR->use_it == -1) { //still undecided
+            CR->use_it = 1;
+            num_clusters_pretty_safely_included++;
         }
     }
 
-    long L_true = jjjj;
-    Mda firings;
-    firings.allocate(firings0.N1(), L_true);
-    for (long i = 0; i < L_true; i++) {
-        for (long j = 0; j < firings0.N1(); j++) {
-            firings.setValue(firings0.value(j, i), j, i);
+    printf("Clusters safely included/excluded: %ld/%ld\nClusters pretty safely included/excluded: %ld/%ld\n", num_clusters_safely_included, num_clusters_safely_excluded, num_clusters_pretty_safely_included, num_clusters_pretty_safely_excluded);
+
+    QVector<int> channels00;
+    QVector<double> times00;
+    QVector<int> labels00;
+
+    int kk = 1;
+    for (int ii = 0; ii < cluster_results.count(); ii++) {
+        ClusterResult* CR = &cluster_results[ii];
+        //if (CR->use_it==1) {
+        if (1) {
+            for (long j = 0; j < CR->inds.count(); j++) {
+                long ind = CR->inds[j];
+                channels00 << detect.value(0, ind);
+                times00 << detect.value(1, ind);
+                labels00 << kk;
+            }
+            kk++;
         }
     }
 
+    QList<long> sort_inds = get_sort_indices(times00);
+    Mda firings(3, sort_inds.count());
+    for (long jj = 0; jj < sort_inds.count(); jj++) {
+        firings.setValue(channels00[sort_inds[jj]], 0, jj);
+        firings.setValue(times00[sort_inds[jj]], 1, jj);
+        firings.setValue(labels00[sort_inds[jj]], 2, jj);
+    }
+    long K = MLCompute::max(labels00);
+
+    /*
     //Now reorder the labels
     long K;
     {
@@ -145,7 +257,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
                 template_peaks << 0;
             }
         }
-        QList<long> sort_inds = get_sort_indices_b(channels, template_peaks);
+        QList<long> sort_inds = get_sort_indices_c(channels, template_peaks);
         QList<long> label_map;
         for (long k = 0; k <= K; k++)
             label_map << 0;
@@ -159,6 +271,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
             }
         }
     }
+    */
 
     firings.write64(output_firings_path);
 
@@ -190,7 +303,7 @@ struct template_comparer {
     }
 };
 
-QList<long> get_sort_indices_b(const QVector<int>& channels, const QVector<double>& template_peaks)
+QList<long> get_sort_indices_c(const QVector<int>& channels, const QVector<double>& template_peaks)
 {
     QList<template_comparer_struct> list;
     for (long i = 0; i < channels.count(); i++) {
@@ -208,7 +321,7 @@ QList<long> get_sort_indices_b(const QVector<int>& channels, const QVector<doubl
     return ret;
 }
 
-QVector<int> consolidate_labels_v2b(DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor)
+QVector<int> consolidate_labels_v2c(DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor)
 {
     long M = X.N1();
     long T = clip_size;
@@ -271,7 +384,7 @@ QVector<int> consolidate_labels_v2b(DiskReadMda32& X, const QVector<double>& tim
     return ret;
 }
 
-QVector<double> compute_peaks_v2b(ClipsGroup clips, long ch)
+QVector<double> compute_peaks_v2c(ClipsGroup clips, long ch)
 {
     long T = clips.clips->N2();
     long L = clips.inds.count();
@@ -283,7 +396,7 @@ QVector<double> compute_peaks_v2b(ClipsGroup clips, long ch)
     return ret;
 }
 
-QVector<double> compute_abs_peaks_v2b(ClipsGroup clips, long ch)
+QVector<double> compute_abs_peaks_v2c(ClipsGroup clips, long ch)
 {
     long T = clips.clips->N2();
     long L = clips.inds.count();
@@ -295,7 +408,7 @@ QVector<double> compute_abs_peaks_v2b(ClipsGroup clips, long ch)
     return ret;
 }
 
-QVector<long> find_peaks_below_threshold_v2b(QVector<double>& peaks, double threshold)
+QVector<long> find_peaks_below_threshold_v2c(QVector<double>& peaks, double threshold)
 {
     QVector<long> ret;
     for (long i = 0; i < peaks.count(); i++) {
@@ -305,7 +418,7 @@ QVector<long> find_peaks_below_threshold_v2b(QVector<double>& peaks, double thre
     return ret;
 }
 
-QVector<long> find_peaks_above_threshold_v2b(QVector<double>& peaks, double threshold)
+QVector<long> find_peaks_above_threshold_v2c(QVector<double>& peaks, double threshold)
 {
     QVector<long> ret;
     for (long i = 0; i < peaks.count(); i++) {
@@ -315,7 +428,7 @@ QVector<long> find_peaks_above_threshold_v2b(QVector<double>& peaks, double thre
     return ret;
 }
 
-QVector<int> do_cluster_without_normalized_features_b(ClipsGroup clips, const Branch_Cluster_V2_Opts& opts)
+QVector<int> do_cluster_without_normalized_features_c(ClipsGroup clips, const Branch_Cluster_V2_Opts& opts)
 {
     QTime timer;
     timer.start();
@@ -352,7 +465,7 @@ QVector<int> do_cluster_without_normalized_features_b(ClipsGroup clips, const Br
     return ret;
 }
 
-QVector<double> compute_dists_from_template_b(ClipsGroup clips, Mda32& template0)
+QVector<double> compute_dists_from_template_c(ClipsGroup clips, Mda32& template0)
 {
     long M = clips.clips->N1();
     long T = clips.clips->N2();
@@ -377,7 +490,7 @@ QVector<double> compute_dists_from_template_b(ClipsGroup clips, Mda32& template0
     return ret;
 }
 
-Mda32 compute_mean_clip_b(ClipsGroup clips)
+Mda32 compute_mean_clip_c(ClipsGroup clips)
 {
     int M = clips.clips->N1();
     int T = clips.clips->N2();
@@ -405,7 +518,7 @@ Mda32 compute_mean_clip_b(ClipsGroup clips)
     return ret;
 }
 
-ClipsGroup grab_clips_subset(ClipsGroup clips, const QVector<long>& inds)
+ClipsGroup grab_clips_subset_c(ClipsGroup clips, const QVector<long>& inds)
 {
     ClipsGroup ret;
     ret.clips = clips.clips;
@@ -415,7 +528,7 @@ ClipsGroup grab_clips_subset(ClipsGroup clips, const QVector<long>& inds)
     return ret;
 }
 
-QVector<int> split_clusters(ClipsGroup clips, const QVector<int>& original_labels, const Branch_Cluster_V2_Opts& opts, int channel_for_display)
+QVector<int> split_clusters_c(ClipsGroup clips, const QVector<int>& original_labels, const Branch_Cluster_V2_Opts& opts, int channel_for_display)
 {
     printf("Splitting clusters for channel %d\n", channel_for_display + 1);
     int K = MLCompute::max(original_labels);
@@ -427,8 +540,8 @@ QVector<int> split_clusters(ClipsGroup clips, const QVector<int>& original_label
             if (original_labels[a] == k)
                 inds_k << a;
         }
-        ClipsGroup clips_k = grab_clips_subset(clips, inds_k);
-        QVector<int> labels0 = do_cluster_without_normalized_features_b(clips_k, opts);
+        ClipsGroup clips_k = grab_clips_subset_c(clips, inds_k);
+        QVector<int> labels0 = do_cluster_without_normalized_features_c(clips_k, opts);
         int K0 = MLCompute::max(labels0);
         for (long ii = 0; ii < inds_k.count(); ii++) {
             if (labels0[ii]) {
@@ -441,14 +554,14 @@ QVector<int> split_clusters(ClipsGroup clips, const QVector<int>& original_label
     return new_labels;
 }
 
-QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display)
+QVector<int> do_branch_cluster_v2c(ClipsGroup clips, const Branch_Cluster_V2_Opts& opts, long channel_for_display)
 {
     printf("do_branch_cluster_v2 %ldx%ldx%d (channel %ld)\n", clips.clips->N1(), clips.clips->N2(), clips.inds.count(), channel_for_display + 1);
     long M = clips.clips->N1();
     long T = clips.clips->N2();
     long L = clips.inds.count();
-    QVector<double> peaks = compute_peaks_v2b(clips, 0);
-    QVector<double> abs_peaks = compute_abs_peaks_v2b(clips, 0);
+    QVector<double> peaks = compute_peaks_v2c(clips, 0);
+    QVector<double> abs_peaks = compute_abs_peaks_v2c(clips, 0);
 
     //In the case we have both positive and negative peaks, just split into two tasks!
     double min0 = MLCompute::min(peaks);
@@ -464,14 +577,14 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
         }
 
         //grab the negative and positive clips
-        ClipsGroup clips_neg = grab_clips_subset(clips, inds_neg);
-        ClipsGroup clips_pos = grab_clips_subset(clips, inds_pos);
+        ClipsGroup clips_neg = grab_clips_subset_c(clips, inds_neg);
+        ClipsGroup clips_pos = grab_clips_subset_c(clips, inds_pos);
 
         //cluster the negatives and positives separately
         printf("Channel %ld: NEGATIVES (%d)\n", channel_for_display + 1, inds_neg.count());
-        QVector<int> labels_neg = do_branch_cluster_v2b(clips_neg, opts, channel_for_display);
+        QVector<int> labels_neg = do_branch_cluster_v2c(clips_neg, opts, channel_for_display);
         printf("Channel %ld: POSITIVES (%d)\n", channel_for_display + 1, inds_pos.count());
-        QVector<int> labels_pos = do_branch_cluster_v2b(clips_pos, opts, channel_for_display);
+        QVector<int> labels_pos = do_branch_cluster_v2c(clips_pos, opts, channel_for_display);
 
         //Combine them together
         long K_neg = MLCompute::max<int>(labels_neg);
@@ -494,7 +607,7 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
     //QVector<int> labels0=do_cluster_with_normalized_features(clips,opts);
     QTime timer;
     timer.start();
-    QVector<int> labels0 = do_cluster_without_normalized_features_b(clips, opts);
+    QVector<int> labels0 = do_cluster_without_normalized_features_c(clips, opts);
     long K0 = MLCompute::max<int>(labels0);
 
     if (K0 > 1) {
@@ -511,8 +624,8 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
                 if (labels0[a] == k)
                     inds_k << a;
             }
-            ClipsGroup clips_k = grab_clips_subset(clips, inds_k);
-            QVector<int> labels_k = do_branch_cluster_v2b(clips_k, opts, channel_for_display);
+            ClipsGroup clips_k = grab_clips_subset_c(clips, inds_k);
+            QVector<int> labels_k = do_branch_cluster_v2c(clips_k, opts, channel_for_display);
             for (long a = 0; a < inds_k.count(); a++) {
                 labels[inds_k[a]] = labels_k[a] + kk_offset;
             }
@@ -528,7 +641,7 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
 
         //increase abs_peak_threshold by opts.shell_increment until we have at least opts.min_shell_size below and above the threshold
         while (true) {
-            QVector<long> inds_below = find_peaks_below_threshold_v2b(abs_peaks, abs_peak_threshold);
+            QVector<long> inds_below = find_peaks_below_threshold_v2c(abs_peaks, abs_peak_threshold);
             if ((inds_below.count() >= opts.min_shell_size) && (L - inds_below.count() >= opts.min_shell_size)) {
                 break;
             }
@@ -546,13 +659,13 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
         }
         else {
             //we now split things into two categories based on abs_peak_threshold
-            QVector<long> inds_below = find_peaks_below_threshold_v2b(abs_peaks, abs_peak_threshold);
-            QVector<long> inds_above = find_peaks_above_threshold_v2b(abs_peaks, abs_peak_threshold);
-            ClipsGroup clips_above = grab_clips_subset(clips, inds_above);
-            ClipsGroup clips_below = grab_clips_subset(clips, inds_below);
+            QVector<long> inds_below = find_peaks_below_threshold_v2c(abs_peaks, abs_peak_threshold);
+            QVector<long> inds_above = find_peaks_above_threshold_v2c(abs_peaks, abs_peak_threshold);
+            ClipsGroup clips_above = grab_clips_subset_c(clips, inds_above);
+            ClipsGroup clips_below = grab_clips_subset_c(clips, inds_below);
 
             //Apply the procedure to the events above the threshold
-            QVector<int> labels_above = do_branch_cluster_v2b(clips_above, opts, channel_for_display);
+            QVector<int> labels_above = do_branch_cluster_v2c(clips_above, opts, channel_for_display);
             long K_above = MLCompute::max<int>(labels_above);
 
             if (K_above <= 1) {
@@ -568,8 +681,8 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
                 QVector<double> abs_peaks_above;
                 for (long i = 0; i < inds_above.count(); i++)
                     abs_peaks_above << abs_peaks[inds_above[i]];
-                QVector<long> inds_next_shell = find_peaks_below_threshold_v2b(abs_peaks_above, abs_peak_threshold + opts.shell_increment);
-                ClipsGroup clips_next_shell = grab_clips_subset(clips_above, inds_next_shell);
+                QVector<long> inds_next_shell = find_peaks_below_threshold_v2c(abs_peaks_above, abs_peak_threshold + opts.shell_increment);
+                ClipsGroup clips_next_shell = grab_clips_subset_c(clips_above, inds_next_shell);
                 QVector<int> labels_next_shell;
                 for (long i = 0; i < inds_next_shell.count(); i++)
                     labels_next_shell << labels_above[inds_next_shell[i]];
@@ -583,8 +696,8 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
                         if (labels_next_shell[i] == kk)
                             inds_kk << i;
                     }
-                    ClipsGroup clips_kk = grab_clips_subset(clips_next_shell, inds_kk);
-                    Mda32 centroid0 = compute_mean_clip_b(clips_kk);
+                    ClipsGroup clips_kk = grab_clips_subset_c(clips_next_shell, inds_kk);
+                    Mda32 centroid0 = compute_mean_clip_c(clips_kk);
                     for (long t = 0; t < T; t++) {
                         for (long m = 0; m < M; m++) {
                             centroids.setValue(centroid0.value(m, t), m, t, kk - 1);
@@ -607,7 +720,7 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
                     QVector<int> tmp;
                     tmp << k - 1;
                     Mda32 centroid0 = grab_clips_subset(centroids, tmp);
-                    QVector<double> dists = compute_dists_from_template_b(clips_below, centroid0);
+                    QVector<double> dists = compute_dists_from_template_c(clips_below, centroid0);
                     for (long i = 0; i < inds_below.count(); i++) {
                         distances.setValue(dists[i], i, k - 1);
                     }
@@ -630,4 +743,47 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
             }
         }
     }
+}
+
+QVector<double> compute_abs_peaks(const Mda32& template0)
+{
+    int M = template0.N1();
+    int T = template0.N2();
+    QVector<double> abs_peaks(M);
+    for (int t = 0; t < T; t++) {
+        for (int m = 0; m < M; m++) {
+            abs_peaks[m] = qMax(abs_peaks[m], qAbs(template0.value(m, t) * 1.0));
+        }
+    }
+    return abs_peaks;
+}
+
+int find_cluster_result_with_similar_template_on_channel(const QList<ClusterResult>& cluster_results, const Mda32& template0, int m)
+{
+    int best_ind = 0;
+    double best_cor = -1;
+    for (int i = 0; i < cluster_results.count(); i++) {
+        const ClusterResult* CR = &cluster_results[i];
+        if (CR->m == m) {
+            double cor = compute_template_correlation(template0, CR->template0);
+            if (cor >= best_cor) {
+                best_ind = i;
+                best_cor = cor;
+            }
+        }
+    }
+    if (best_cor > CORRELATION_THRESHOLD) {
+        return best_ind;
+    }
+    return -1;
+}
+
+double compute_template_correlation(const Mda32& template1, const Mda32& template2)
+{
+    QVector<double> X1, X2;
+    for (int i = 0; i < template1.totalSize(); i++)
+        X1 << template1.value(i);
+    for (int i = 0; i < template2.totalSize(); i++)
+        X2 << template2.value(i);
+    return MLCompute::correlation(X1, X2);
 }
