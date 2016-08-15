@@ -190,7 +190,8 @@ void MdaTest::allocate_data()
 void MdaTest::allocate_benchmark()
 {
     Mda mda;
-    QBENCHMARK {
+    QBENCHMARK
+    {
         mda.allocate(100, 100);
     }
 }
@@ -245,7 +246,8 @@ void MdaTest::copy_benchmark()
 {
     Mda mda(1000, 1000);
     Mda mda2;
-    QBENCHMARK {
+    QBENCHMARK
+    {
         mda2 = mda;
     }
 }

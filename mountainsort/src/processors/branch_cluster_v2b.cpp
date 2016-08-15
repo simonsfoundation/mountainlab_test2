@@ -144,7 +144,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
             }
         }
         QList<long> sort_inds = get_sort_indices_b(channels, template_peaks);
-        QVector<long> label_map(K+1, 0);
+        QVector<long> label_map(K + 1, 0);
         for (long j = 0; j < sort_inds.count(); j++)
             label_map[sort_inds[j] + 1] = j + 1;
         for (long i = 0; i < L; i++) {

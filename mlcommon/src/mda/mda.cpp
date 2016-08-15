@@ -35,7 +35,7 @@ void* allocate(const size_t nbytes)
 class MdaData : public QSharedData {
 public:
     MdaData();
-    MdaData(const MdaData &other);
+    MdaData(const MdaData& other);
     ~MdaData();
     bool allocate(double value, long N1, long N2, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
 
@@ -67,7 +67,7 @@ public:
     bool write_to_text_file(const QString& path) const;
 
 private:
-    double *m_data;
+    double* m_data;
     std::vector<long> m_dims;
     size_t total_size;
 };
@@ -78,7 +78,7 @@ Mda::Mda(long N1, long N2, long N3, long N4, long N5, long N6)
     this->allocate(N1, N2, N3, N4, N5, N6);
 }
 
-Mda::Mda(const QString &mda_filename)
+Mda::Mda(const QString& mda_filename)
 {
     d = new MdaData;
     this->read(mda_filename);
@@ -832,23 +832,36 @@ void Mda::set(double val, long i1, long i2, long i3, long i4, long i5, long i6)
         = val;
 }
 
-MdaData::MdaData() : QSharedData(), m_data(0), total_size(0) {}
-
-MdaData::MdaData(const MdaData &other) : QSharedData(other), m_data(0), m_dims(other.m_dims), total_size(other.total_size) {
-    allocate(total_size);
-    std::copy(other.m_data, other.m_data+other.totalSize(), m_data);
+MdaData::MdaData()
+    : QSharedData()
+    , m_data(0)
+    , total_size(0)
+{
 }
 
-MdaData::~MdaData() {
+MdaData::MdaData(const MdaData& other)
+    : QSharedData(other)
+    , m_data(0)
+    , m_dims(other.m_dims)
+    , total_size(other.total_size)
+{
+    allocate(total_size);
+    std::copy(other.m_data, other.m_data + other.totalSize(), m_data);
+}
+
+MdaData::~MdaData()
+{
     deallocate();
 }
 
-bool MdaData::allocate(double value, long N1, long N2, long N3, long N4, long N5, long N6) {
+bool MdaData::allocate(double value, long N1, long N2, long N3, long N4, long N5, long N6)
+{
     deallocate();
     setDims(N1, N2, N3, N4, N5, N6);
     if (N1 > 0 && N2 > 0 && N3 > 0 && N4 > 0 && N5 > 0 && N6 > 0)
         setTotalSize(N1 * N2 * N3 * N4 * N5 * N6);
-    else setTotalSize(0);
+    else
+        setTotalSize(0);
 
     if (totalSize() > 0) {
         allocate(totalSize());
@@ -857,9 +870,10 @@ bool MdaData::allocate(double value, long N1, long N2, long N3, long N4, long N5
             exit(-1);
         }
         if (value == 0.0) {
-            std::memset(data(), 0, totalSize()*sizeof(double));
-        } else
-            std::fill(data(), data()+totalSize(), value);
+            std::memset(data(), 0, totalSize() * sizeof(double));
+        }
+        else
+            std::fill(data(), data() + totalSize(), value);
     }
     return true;
 }
@@ -870,14 +884,18 @@ long MdaData::N1() const { return dim(0); }
 
 long MdaData::N2() const { return dim(1); }
 
-void MdaData::allocate(size_t size) {
-    m_data = (double*)::allocate(size*sizeof(double));
-    if (!m_data) return;
+void MdaData::allocate(size_t size)
+{
+    m_data = (double*)::allocate(size * sizeof(double));
+    if (!m_data)
+        return;
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", totalSize());
 }
 
-void MdaData::deallocate() {
-    if (!m_data) return;
+void MdaData::deallocate()
+{
+    if (!m_data)
+        return;
     free(m_data);
     TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", totalSize());
     m_data = 0;
@@ -887,11 +905,11 @@ size_t MdaData::totalSize() const { return total_size; }
 
 void MdaData::setTotalSize(size_t ts) { total_size = ts; }
 
-double *MdaData::data() { return m_data; }
+double* MdaData::data() { return m_data; }
 
-const double *MdaData::constData() const { return m_data; }
+const double* MdaData::constData() const { return m_data; }
 
-double MdaData::at(size_t idx) const { return *(constData()+idx); }
+double MdaData::at(size_t idx) const { return *(constData() + idx); }
 
 double MdaData::at(size_t i1, size_t i2) const { return at(i1 + dim(0) * i2); }
 
@@ -917,7 +935,8 @@ void MdaData::setDims(long n1, long n2, long n3, long n4, long n5, long n6)
 
 int MdaData::determine_num_dims(long N1, long N2, long N3, long N4, long N5, long N6) const
 {
-    if (!(N6 > 0 && N5 > 0 && N4 > 0 && N3 > 0 && N2 > 0 && N1 > 0)) return 0;
+    if (!(N6 > 0 && N5 > 0 && N4 > 0 && N3 > 0 && N2 > 0 && N1 > 0))
+        return 0;
     if (N6 > 1)
         return 6;
     if (N5 > 1)
@@ -947,13 +966,12 @@ bool MdaData::safe_index(size_t i1, size_t i2, size_t i3) const
 bool MdaData::safe_index(long i1, long i2, long i3, long i4, long i5, long i6) const
 {
     return (
-               (0 <= i1) && (i1 < dims(0))
-            && (0 <= i2) && (i2 < dims(1))
-            && (0 <= i3) && (i3 < dims(2))
-            && (0 <= i4) && (i4 < dims(3))
-            && (0 <= i5) && (i5 < dims(4))
-            && (0 <= i6) && (i6 < dims(5))
-    );
+        (0 <= i1) && (i1 < dims(0))
+        && (0 <= i2) && (i2 < dims(1))
+        && (0 <= i3) && (i3 < dims(2))
+        && (0 <= i4) && (i4 < dims(3))
+        && (0 <= i5) && (i5 < dims(4))
+        && (0 <= i6) && (i6 < dims(5)));
 }
 
 bool MdaData::read_from_text_file(const QString& path)

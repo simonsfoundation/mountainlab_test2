@@ -399,7 +399,7 @@ void matvec(long M, long N, double* ret, double* A, double* x) // really this sh
 
 void matvec(long M, long N, float* ret, float* A, float* x) // really this should be BLAS2 call
 {
-    std::memset(ret, 0, sizeof(float)*M);
+    std::memset(ret, 0, sizeof(float) * M);
     long iA = 0;
     for (long n = 0; n < N; n++) {
         double xval = x[n];

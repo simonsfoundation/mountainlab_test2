@@ -71,11 +71,10 @@ void jisotonic_downup(int N, double* out, double* in, double* weights)
     free(in_neg);
 }
 
-
 void sort(int N, double* out, const double* in)
 {
-    std::copy(in, in+N, out);
-    std::sort(out, out+N);
+    std::copy(in, in + N, out);
+    std::sort(out, out + N);
     //	QVector<double> in0(N);
     //	for (int j=0; j<N; j++) in0[j]=in[j];
     //	qSort(in0);

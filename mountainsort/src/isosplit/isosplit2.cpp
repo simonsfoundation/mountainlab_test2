@@ -36,7 +36,7 @@ void geometric_median(int M, int N, double* ret, const double* X)
     if (N == 0)
         return;
     if (N == 1) {
-        std::copy(X, X+M, ret);
+        std::copy(X, X + M, ret);
         return;
     }
     std::vector<double> weights(N, 1);
@@ -94,7 +94,7 @@ QVector<double> compute_center(Mda32& X, const QList<long>& inds)
     if (NN == 0) {
         return QVector<double>(M, 0);
     }
-    QVector<double> XX(M*NN);
+    QVector<double> XX(M * NN);
     int aa = 0;
     for (int n = 0; n < NN; n++) {
         for (int m = 0; m < M; m++) {
@@ -181,8 +181,8 @@ bool was_already_attempted(int M, const AttemptedComparisons& attempted_comparis
                 // we just need to point to the proper section of the data
                 // the only problem is these are doubles and not floats
                 // but this shouldn't affect speed that much
-                const double *C1 = attempted_comparisons.centers1.constData()+(i*M);
-                const double *C2 = attempted_comparisons.centers2.constData()+(i*M);
+                const double* C1 = attempted_comparisons.centers1.constData() + (i * M);
+                const double* C2 = attempted_comparisons.centers2.constData() + (i * M);
 #endif
                 const double dist0 = distance_between_vectors(M, C1, C2);
                 if (dist0 > 0) {
@@ -203,7 +203,7 @@ bool was_already_attempted(int M, const AttemptedComparisons& attempted_comparis
 void find_next_comparison(int M, int K, int& k1, int& k2, const bool* active_labels, float* Cptr, int* counts, const AttemptedComparisons& attempted_comparisons, double repeat_tolerance)
 {
     QVector<int> active_inds;
-    active_inds.reserve(1+K/2); // just in case => going to realloc at most once
+    active_inds.reserve(1 + K / 2); // just in case => going to realloc at most once
     for (int k = 0; k < K; k++)
         if (active_labels[k])
             active_inds << k;
@@ -310,14 +310,14 @@ Mda32 matrix_multiply_transposed_isosplit(const Mda32 &A)
     return ret;
 }
 #else
-Mda32 matrix_multiply_transposed_isosplit(const Mda32 &A)
+Mda32 matrix_multiply_transposed_isosplit(const Mda32& A)
 {
     int N1 = A.N1();
     int N2 = A.N2();
 
     Mda32 ret(N1, N1);
     for (int j = 0; j < N1; j++) {
-        for (int i = 0; i < j+1; i++) {
+        for (int i = 0; i < j + 1; i++) {
             double val = 0;
             for (int k = 0; k < N2; k++) {
                 val += A.get(i, k) * A.get(j, k);
@@ -369,12 +369,12 @@ void whiten_two_clusters(double* V, Mda32& X1, Mda32& X2)
                 XX.set(X2.get(j, i) - center2[j], j, i + N1);
             }
         }
-        /// TODO: This can definitely be optimized as it should be perfectly possible
-        ///       to multiply a matrix with a transposed matrix without precalculating
-        ///       the transposed matrix.
-        ///
-        ///       (AA^T)^T = AA^T (the matrix is symmetric) therefore we can calculate
-        ///                       just half of the resulting matrix
+/// TODO: This can definitely be optimized as it should be perfectly possible
+///       to multiply a matrix with a transposed matrix without precalculating
+///       the transposed matrix.
+///
+///       (AA^T)^T = AA^T (the matrix is symmetric) therefore we can calculate
+///                       just half of the resulting matrix
 #if 0
         Mda32 XXt = matrix_multiply_isosplit(XX, matrix_transpose_isosplit(XX));
 #else
@@ -404,7 +404,7 @@ QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isoc
     int M = X1.N1();
     int N1 = X1.N2();
     int N2 = X2.N2();
-    QVector<int> ret(N1+N2, 1);
+    QVector<int> ret(N1 + N2, 1);
     do_merge = true;
     double V[M];
     whiten_two_clusters(V, X1, X2);
@@ -426,7 +426,7 @@ QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isoc
 
     //project onto line connecting the centers
     QVector<double> XX;
-    XX.reserve(N1+N2);
+    XX.reserve(N1 + N2);
     for (int i = 0; i < N1; i++) {
         double val = 0;
         for (int m = 0; m < M; m++)
@@ -615,9 +615,10 @@ QVector<int> choose_random_indices(int N, int K)
 #else
         QVector<int> ret;
         std::copy(ML::counting_iterator<int>(0),
-                  ML::counting_iterator<int>(N),
-                  std::back_inserter(ret));
-        while(ret.size() < K) ret << N-1;
+            ML::counting_iterator<int>(N),
+            std::back_inserter(ret));
+        while (ret.size() < K)
+            ret << N - 1;
         return ret;
 #endif
     }
@@ -638,8 +639,8 @@ QVector<int> choose_random_indices(int N, int K)
     // return first K elements
     ret.reserve(N);
     std::copy(ML::counting_iterator<int>(0),
-              ML::counting_iterator<int>(N),
-              std::back_inserter(ret));
+        ML::counting_iterator<int>(N),
+        std::back_inserter(ret));
     std::random_shuffle(ret.begin(), ret.end());
     ret.resize(K); // truncate to K
     qSort(ret);

@@ -24,7 +24,7 @@ public:
     ///Construct an array of size N1xN2x...xN6
     Mda(long N1 = 1, long N2 = 1, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
     ///Construct an array and read the .mda file
-    Mda(const QString &mda_filename);
+    Mda(const QString& mda_filename);
     ///Copy constructor
     Mda(const Mda& other);
     ///Assignment operator
@@ -146,6 +146,7 @@ public:
     bool reshape(int N1b, int N2b, int N3b = 1, int N4b = 1, int N5b = 1, int N6b = 1);
 
     void detach();
+
 private:
     QSharedDataPointer<MdaData> d;
 };
