@@ -1,4 +1,5 @@
 #include "mda32.h"
+#include "mda_p.h"
 #include "mdaio.h"
 #include <cachemanager.h>
 #include <stdio.h>
@@ -7,6 +8,9 @@
 
 #define MDA_MAX_DIMS 6
 
+class MdaDataFloat : public MdaData<float> {};
+
+/*
 class Mda32Private {
 public:
     Mda32* q;
@@ -25,73 +29,38 @@ public:
     bool read_from_text_file(const QString& path);
     bool write_to_text_file(const QString& path);
 };
+*/
 
 Mda32::Mda32(long N1, long N2, long N3, long N4, long N5, long N6)
 {
-    d = new Mda32Private;
-    d->q = this;
-    d->do_construct();
+    d = new MdaDataFloat;
     this->allocate(N1, N2, N3, N4, N5, N6);
 }
 
 Mda32::Mda32(const QString mda_filename)
 {
-    d = new Mda32Private;
-    d->q = this;
-    d->do_construct();
+    d = new MdaDataFloat;
     this->read(mda_filename);
 }
 
 Mda32::Mda32(const Mda32& other)
 {
-    d = new Mda32Private;
-    d->q = this;
-    d->do_construct();
-    d->copy_from(other);
+    d = other.d;
 }
 
 void Mda32::operator=(const Mda32& other)
 {
-    d->copy_from(other);
+    d = other.d;
 }
 
 Mda32::~Mda32()
 {
-    if (d->m_data) {
-        free(d->m_data);
-        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", d->m_total_size);
-    }
-    delete d;
 }
 
 bool Mda32::allocate(long N1, long N2, long N3, long N4, long N5, long N6)
 {
-    if (d->m_data) {
-        free(d->m_data);
-        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", d->m_total_size);
-    }
 
-    d->m_dims[0] = N1;
-    d->m_dims[1] = N2;
-    d->m_dims[2] = N3;
-    d->m_dims[3] = N4;
-    d->m_dims[4] = N5;
-    d->m_dims[5] = N6;
-    d->m_total_size = N1 * N2 * N3 * N4 * N5 * N6;
-
-    d->m_data = 0;
-    if (d->m_total_size > 0) {
-        d->m_data = (dtype32*)::allocate(sizeof(dtype32) * d->m_total_size);
-        if (!d->m_data) {
-            qCritical() << QString("Unable to allocate Mda32 of size %1x%2x%3x%4x%5x%6 (total=%7)").arg(N1).arg(N2).arg(N3).arg(N4).arg(N5).arg(N6).arg(d->m_total_size);
-            exit(-1);
-        }
-        TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", d->m_total_size);
-        for (long i = 0; i < d->m_total_size; i++)
-            d->m_data[i] = 0;
-    }
-
-    return true;
+    return d->allocate((float)0, N1, N2, N3, N4, N5, N6);
 }
 
 bool Mda32::read(const QString& path)
@@ -131,8 +100,8 @@ bool Mda32::read(const char* path)
         return false;
     }
     this->allocate(H.dims[0], H.dims[1], H.dims[2], H.dims[3], H.dims[4], H.dims[5]);
-    mda_read_float32(d->m_data, &H, d->m_total_size, input_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", d->m_total_size * H.num_bytes_per_entry);
+    mda_read_float32(d->data(), &H, d->totalSize(), input_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_read", d->totalSize() * H.num_bytes_per_entry);
     fclose(input_file);
     return true;
 }
@@ -153,11 +122,11 @@ bool Mda32::write8(const char* path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float32(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float32(d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -178,11 +147,11 @@ bool Mda32::write32(const char* path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float32(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float32(d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -203,11 +172,11 @@ bool Mda32::write64(const char* path) const
     for (int i = 0; i < MDAIO_MAX_DIMS; i++)
         H.dims[i] = 1;
     for (int i = 0; i < MDA_MAX_DIMS; i++)
-        H.dims[i] = d->m_dims[i];
+        H.dims[i] = d->dims(i);
     H.num_dims = d->determine_num_dims(N1(), N2(), N3(), N4(), N5(), N6());
     mda_write_header(&H, output_file);
-    mda_write_float32(d->m_data, &H, d->m_total_size, output_file);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->m_total_size * H.num_bytes_per_entry);
+    mda_write_float32(d->constData(), &H, d->totalSize(), output_file);
+    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_written", d->totalSize() * H.num_bytes_per_entry);
     fclose(output_file);
     return true;
 }
@@ -247,37 +216,37 @@ int Mda32::ndims() const
 
 long Mda32::N1() const
 {
-    return d->m_dims[0];
+    return d->dims(0);
 }
 
 long Mda32::N2() const
 {
-    return d->m_dims[1];
+    return d->dims(1);
 }
 
 long Mda32::N3() const
 {
-    return d->m_dims[2];
+    return d->dims(2);
 }
 
 long Mda32::N4() const
 {
-    return d->m_dims[3];
+    return d->dims(3);
 }
 
 long Mda32::N5() const
 {
-    return d->m_dims[4];
+    return d->dims(4);
 }
 
 long Mda32::N6() const
 {
-    return d->m_dims[5];
+    return d->dims(5);
 }
 
 long Mda32::totalSize() const
 {
-    return d->m_total_size;
+    return d->totalSize();
 }
 
 long Mda32::size(int dimension_index) const
@@ -286,27 +255,32 @@ long Mda32::size(int dimension_index) const
         return 0;
     if (dimension_index >= MDA_MAX_DIMS)
         return 1;
-    return d->m_dims[dimension_index];
+    return d->dims(dimension_index);
 }
 
 dtype32 Mda32::get(long i) const
 {
-    return d->m_data[i];
+    return d->at(i);
 }
 
 dtype32 Mda32::get(long i1, long i2) const
 {
-    return d->m_data[i1 + d->m_dims[0] * i2];
+    return d->at(i1 + d->dims(0) * i2);
 }
 
 dtype32 Mda32::get(long i1, long i2, long i3) const
 {
-    return d->m_data[i1 + d->m_dims[0] * i2 + d->m_dims[0] * d->m_dims[1] * i3];
+    return d->at(i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3);
 }
 
 dtype32 Mda32::get(long i1, long i2, long i3, long i4, long i5, long i6) const
 {
-    return d->m_data[i1 + d->m_dims[0] * i2 + d->m_dims[0] * d->m_dims[1] * i3 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * i4 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * d->m_dims[3] * i5 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * d->m_dims[3] * d->m_dims[4] * i6];
+    const long d01 = d->dims(0)*d->dims(1);
+    const long d02 = d01 * d->dims(2);
+    const long d03 = d02 * d->dims(3);
+    const long d04 = d03 * d->dims(4);
+
+    return d->at(i1 + d->dims(0) * i2 + d01 * i3 + d02 * i4 + d03 * i5 + d04 * i6);
 }
 
 dtype32 Mda32::value(long i) const
@@ -367,32 +341,37 @@ void Mda32::setValue(dtype32 val, long i1, long i2, long i3, long i4, long i5, l
 
 dtype32* Mda32::dataPtr()
 {
-    return d->m_data;
+    return d->data();
 }
 
 const dtype32* Mda32::constDataPtr() const
 {
-    return d->m_data;
+    return d->constData();
 }
 
 dtype32* Mda32::dataPtr(long i)
 {
-    return &d->m_data[i];
+    return d->data()+i;
 }
 
 dtype32* Mda32::dataPtr(long i1, long i2)
 {
-    return &d->m_data[i1 + N1() * i2];
+    return d->data()+(i1 + N1() * i2);
 }
 
 dtype32* Mda32::dataPtr(long i1, long i2, long i3)
 {
-    return &d->m_data[i1 + N1() * i2 + N1() * N2() * i3];
+    return d->data()+(i1 + N1() * i2 + N1() * N2() * i3);
 }
 
 dtype32* Mda32::dataPtr(long i1, long i2, long i3, long i4, long i5, long i6)
 {
-    return &d->m_data[i1 + N1() * i2 + N1() * N2() * i3 + N1() * N2() * N3() * i4 + N1() * N2() * N3() * N4() * i5 + N1() * N2() * N3() * N4() * N5() * i6];
+    const long N12 = N1()*N2();
+    const long N13 = N12*N3();
+    const long N14 = N13*N4();
+    const long N15 = N14*N5();
+
+    return d->data()+(i1 + N1() * i2 + N12 * i3 + N13 * i4 + N14 * i5 + N15 * i6);
 }
 
 void Mda32::getChunk(Mda32& ret, long i, long size)
@@ -401,27 +380,23 @@ void Mda32::getChunk(Mda32& ret, long i, long size)
     long a_begin = i;
     long x_begin = 0;
     long a_end = i + size - 1;
-    long x_end = size - 1;
+//    long x_end = size - 1;  // unused?
 
     if (a_begin < 0) {
         x_begin += 0 - a_begin;
         a_begin += 0 - a_begin;
     }
-    if (a_end >= d->m_total_size) {
-        x_end += d->m_total_size - 1 - a_end;
-        a_end += d->m_total_size - 1 - a_end;
+    if (a_end >= (long)d->totalSize()) {
+//        x_end += (long)d->totalSize() - 1 - a_end; // unused?
+        a_end += (long)d->totalSize() - 1 - a_end;
     }
 
     ret.allocate(1, size);
 
-    dtype32* ptr1 = this->dataPtr();
-    dtype32* ptr2 = ret.dataPtr();
+    const float* ptr1 = this->constDataPtr();
+    float* ptr2 = ret.dataPtr();
 
-    long ii = 0;
-    for (long a = a_begin; a <= a_end; a++) {
-        ptr2[x_begin + ii] = ptr1[a_begin + ii];
-        ii++; //it was a bug that this was left out, fixed on 5/31/16 by jfm
-    }
+    std::copy(ptr1+a_begin, ptr1+a_end+1, ptr2+x_begin);
 }
 
 void Mda32::getChunk(Mda32& ret, long i1, long i2, long size1, long size2)
@@ -455,8 +430,8 @@ void Mda32::getChunk(Mda32& ret, long i1, long i2, long size1, long size2)
 
     ret.allocate(size1, size2);
 
-    dtype32* ptr1 = this->dataPtr();
-    dtype32* ptr2 = ret.dataPtr();
+    const float* ptr1 = this->constDataPtr();
+    float* ptr2 = ret.dataPtr();
 
     for (long ind2 = 0; ind2 <= a2_end - a2_begin; ind2++) {
         long ii_out = (ind2 + x2_begin) * size1 + x1_begin; //bug fixed on 5/31/16 by jfm
@@ -513,8 +488,8 @@ void Mda32::getChunk(Mda32& ret, long i1, long i2, long i3, long size1, long siz
 
     ret.allocate(size1, size2, size3);
 
-    dtype32* ptr1 = this->dataPtr();
-    dtype32* ptr2 = ret.dataPtr();
+    const float* ptr1 = this->constDataPtr();
+    float* ptr2 = ret.dataPtr();
 
     for (long ind3 = 0; ind3 <= a3_end - a3_begin; ind3++) {
         for (long ind2 = 0; ind2 <= a2_end - a2_begin; ind2++) {
@@ -542,17 +517,18 @@ void Mda32::setChunk(Mda32& X, long i)
         a_begin += 0 - a_begin;
         x_begin += 0 - a_begin;
     }
-    if (a_end >= d->m_total_size) {
-        a_end += d->m_total_size - 1 - a_end;
-        x_end += d->m_total_size - 1 - a_end;
+    if (a_end >= (long)d->totalSize()) {
+        a_end += (long)d->totalSize() - 1 - a_end;
+        x_end += (long)d->totalSize() - 1 - a_end;
     }
 
-    dtype32* ptr1 = this->dataPtr();
-    dtype32* ptr2 = X.dataPtr();
+    float* ptr1 = this->dataPtr();
+    float* ptr2 = X.dataPtr();
 
     long ii = 0;
     for (long a = a_begin; a <= a_end; a++) {
         ptr1[a_begin + ii] = ptr2[x_begin + ii];
+        ii++;
     }
 }
 
@@ -669,12 +645,7 @@ dtype32 Mda32::minimum() const
     if ((!NN) || (!ptr)) {
         return 0;
     }
-    dtype32 ret = ptr[0];
-    for (long i = 0; i < NN; i++) {
-        if (ptr[i] < ret)
-            ret = ptr[i];
-    }
-    return ret;
+    return *std::min_element(ptr, ptr+NN);
 }
 
 dtype32 Mda32::maximum() const
@@ -684,12 +655,7 @@ dtype32 Mda32::maximum() const
     if ((!NN) || (!ptr)) {
         return 0;
     }
-    dtype32 ret = ptr[0];
-    for (long i = 0; i < NN; i++) {
-        if (ptr[i] > ret)
-            ret = ptr[i];
-    }
-    return ret;
+    return *std::max_element(ptr, ptr+NN);
 }
 
 bool Mda32::reshape(int N1b, int N2b, int N3b, int N4b, int N5b, int N6b)
@@ -700,36 +666,35 @@ bool Mda32::reshape(int N1b, int N2b, int N3b, int N4b, int N5b, int N6b)
         qWarning() << N1() << N2() << N3() << N4() << N5() << N6();
         return false;
     }
-    d->m_dims[0] = N1b;
-    d->m_dims[1] = N2b;
-    d->m_dims[2] = N3b;
-    d->m_dims[3] = N4b;
-    d->m_dims[4] = N5b;
-    d->m_dims[5] = N6b;
+    d->setDims(N1b, N2b, N3b, N4b, N5b, N6b);
     return true;
 }
 
 void Mda32::set(dtype32 val, long i)
 {
-    d->m_data[i] = val;
+    d->set(val, i);
 }
 
 void Mda32::set(dtype32 val, long i1, long i2)
 {
-    d->m_data[i1 + d->m_dims[0] * i2] = val;
+    d->set(val, i1 + d->dims(0) * i2);
 }
 
 void Mda32::set(dtype32 val, long i1, long i2, long i3)
 {
-    d->m_data[i1 + d->m_dims[0] * i2 + d->m_dims[0] * d->m_dims[1] * i3] = val;
+    d->set(val, i1 + d->dims(0) * i2 + d->dims(0) * d->dims(1) * i3);
 }
 
 void Mda32::set(dtype32 val, long i1, long i2, long i3, long i4, long i5, long i6)
 {
-    d->m_data[i1 + d->m_dims[0] * i2 + d->m_dims[0] * d->m_dims[1] * i3 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * i4 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * d->m_dims[3] * i5 + d->m_dims[0] * d->m_dims[1] * d->m_dims[2] * d->m_dims[3] * d->m_dims[4] * i6]
-        = val;
-}
+    const long d01 = d->dims(0)*d->dims(1);
+    const long d02 = d01 * d->dims(2);
+    const long d03 = d02*d->dims(3);
+    const long d04 = d03*d->dims(4);
 
+    d->set(val, i1 + d->dims(0) * i2 + d01 * i3 + d02 * i4 + d03 * i5 + d04 * i6);
+}
+/*
 void Mda32Private::do_construct()
 {
     m_data = (dtype32*)::allocate(sizeof(dtype32) * 1);
@@ -855,3 +820,4 @@ bool Mda32Private::write_to_text_file(const QString& path)
     }
     return TextFile::write(path, lines.join("\n"));
 }
+*/
