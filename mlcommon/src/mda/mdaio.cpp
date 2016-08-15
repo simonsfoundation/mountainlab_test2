@@ -261,7 +261,7 @@ long mda_write_byte(unsigned char* data, struct MDAIO_HEADER* H, long n, FILE* o
     return mdaWriteData(data, n, H, output_file);
 }
 
-long mda_write_float32(float* data, struct MDAIO_HEADER* H, long n, FILE* output_file)
+long mda_write_float32(const float* data, struct MDAIO_HEADER* H, long n, FILE* output_file)
 {
     return mdaWriteData(data, n, H, output_file);
 }

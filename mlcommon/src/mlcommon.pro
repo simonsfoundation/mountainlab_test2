@@ -16,7 +16,8 @@ INCLUDEPATH += ../include
 VPATH += ../include
 HEADERS += mlcommon.h sumit.h \
     ../include/mda/mda32.h \
-    ../include/mda/diskreadmda32.h
+    ../include/mda/diskreadmda32.h \
+    ../include/mda/mda_p.h
 
 SOURCES += \
     mlcommon.cpp sumit.cpp \
