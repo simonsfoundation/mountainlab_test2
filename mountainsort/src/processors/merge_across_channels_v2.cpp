@@ -14,8 +14,10 @@
 #include <math.h>
 #include "get_sort_indices.h"
 
-bool peaks_are_within_range_to_consider(double p1, double p2);
-bool cluster_is_already_being_used(const QVector<double>& times, const QVector<double>& other_times);
+bool peaks_are_within_range_to_consider(double p1, double p2, merge_across_channels_v2_opts opts);
+bool peaks_are_within_range_to_consider(double p11, double p12, double p21, double p22, merge_across_channels_v2_opts opts);
+bool cluster_is_already_being_used(const QVector<double>& times_in, const QVector<double>& other_times_in, merge_across_channels_v2_opts opts);
+QList<long> reverse_order(const QList<long>& inds);
 
 bool merge_across_channels_v2(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const merge_across_channels_v2_opts& opts)
 {
@@ -75,8 +77,9 @@ bool merge_across_channels_v2(const QString& timeseries_path, const QString& fir
                         double val12 = channel_peaks.value(peakchan2 - 1, k1);
                         double val21 = channel_peaks.value(peakchan1 - 1, k2);
                         double val22 = channel_peaks.value(peakchan2 - 1, k2);
-                        if ((peaks_are_within_range_to_consider(val11, val21)) && (peaks_are_within_range_to_consider(val12, val22))) {
-                            candidate_pairs.setValue(k1, k2);
+                        if (peaks_are_within_range_to_consider(val11, val12, val21, val22, opts)) {
+                            printf("Within range to consider: m=(%d,%d) k=(%d,%d) %g,%g,%g,%g\n", peakchan1, peakchan2, k1, k2, val11, val12, val21, val22);
+                            candidate_pairs.setValue(1, k1, k2);
                         }
                     }
                 }
@@ -90,7 +93,9 @@ bool merge_across_channels_v2(const QString& timeseries_path, const QString& fir
         abs_peaks_on_own_channels << channel_peaks.value(peakchans[k] - 1, k);
     }
     QList<long> inds1 = get_sort_indices(abs_peaks_on_own_channels);
+    inds1 = reverse_order(inds1);
 
+    int num_removed = 0;
     QList<bool> clusters_to_use;
     for (int k = 0; k < K; k++)
         clusters_to_use << false;
@@ -104,7 +109,8 @@ bool merge_across_channels_v2(const QString& timeseries_path, const QString& fir
         QVector<double> other_times;
         for (int ik2 = 0; ik2 < K; ik2++) {
             if (candidate_pairs.value(ik, ik2)) {
-                if (clusters_to_use[ik2]) { //we are using the other one
+                printf("Merge candidate pair: %d,%d\n", ik + 1, ik2 + 1);
+                if (clusters_to_use[ik2]) { //we are already using the other one
                     QVector<long> inds_k2 = find_label_inds(labels, ik2 + 1);
                     for (long a = 0; a < inds_k2.count(); a++) {
                         other_times << times[inds_k2[a]];
@@ -112,8 +118,9 @@ bool merge_across_channels_v2(const QString& timeseries_path, const QString& fir
                 }
             }
         }
-        if (cluster_is_already_being_used(times_k, other_times)) {
+        if (cluster_is_already_being_used(times_k, other_times, opts)) {
             clusters_to_use[ik] = false;
+            num_removed++;
         }
         else {
             clusters_to_use[ik] = true;
@@ -137,24 +144,87 @@ bool merge_across_channels_v2(const QString& timeseries_path, const QString& fir
         }
     }
 
-    printf("Using %ld of %ld events\n", firings_out.N2(), firings.N2());
+    printf("Using %ld of %ld events after %d redundant clusters removed\n", firings_out.N2(), firings.N2(), num_removed);
 
     firings_out.write64(firings_out_path);
 
     return true;
 }
 
-bool peaks_are_within_range_to_consider(double p1, double p2)
+bool peaks_are_within_range_to_consider(double p1, double p2, merge_across_channels_v2_opts opts)
 {
     if ((!p1) || (!p2))
         return false;
     double ratio = p1 / p2;
     if (ratio > 1)
         ratio = 1 / ratio;
-    return (ratio > 0.7); //arbitrary choice 0.7
+    if (ratio < 0)
+        return false;
+    return (ratio > opts.min_peak_ratio_to_consider);
 }
 
-bool cluster_is_already_being_used(const QVector<double>& times, const QVector<double>& other_times)
+bool peaks_are_within_range_to_consider(double p11, double p12, double p21, double p22, merge_across_channels_v2_opts opts)
 {
-    //FINISH!!!
+    return (
+        (peaks_are_within_range_to_consider(p11, p12, opts)) && (peaks_are_within_range_to_consider(p21, p22, opts)) && (peaks_are_within_range_to_consider(p11, p21, opts)) && (peaks_are_within_range_to_consider(p12, p22, opts)));
+}
+
+bool cluster_is_already_being_used(const QVector<double>& times_in, const QVector<double>& other_times_in, merge_across_channels_v2_opts opts)
+{
+    if (times_in.isEmpty())
+        return false;
+    if (other_times_in.isEmpty())
+        return false;
+    int T = opts.clip_size;
+    QVector<double> times = times_in;
+    QVector<double> other_times = other_times_in;
+    qSort(times);
+    qSort(other_times);
+    QList<int> counts; //size = 2*T+1
+    for (int a = 0; a < 2 * T + 1; a++) {
+        counts << 0;
+    }
+    long ii_other = 0;
+    for (long ii = 0; ii < times.count(); ii++) {
+        double t0 = times[ii];
+        while ((ii_other + 1 < other_times.count()) && (other_times[ii_other] < t0 - T))
+            ii_other++;
+        while ((ii_other < other_times.count()) && (other_times[ii_other] <= t0 + T)) {
+            long diff = (long)(other_times[ii_other] - t0);
+            if ((-T <= diff) && (diff <= T)) {
+                counts[diff + T]++;
+            }
+            ii_other++;
+        }
+    }
+    //look at +/- 3 timepoints
+    int max_dt = 3;
+    double best_frac = 0;
+    int best_t = 0;
+    for (int t = max_dt; t + max_dt < 2 * T + 1; t++) {
+        long count0 = 0;
+        for (int t2 = t - max_dt; t2 <= t + max_dt; t2++) {
+            count0 += counts[t2];
+        }
+        double frac = count0 * 1.0 / times.count();
+        if (frac > best_frac) {
+            best_frac = frac;
+            best_t = t;
+        }
+    }
+    if (best_frac >= opts.event_fraction_threshold) {
+        printf("Cluster is already being used: frac=%g, dt=%d!\n", best_frac, best_t - T);
+        qDebug() << counts.mid(best_t - max_dt, max_dt * 2 + 1);
+        return true;
+    }
+    return false;
+}
+
+QList<long> reverse_order(const QList<long>& inds)
+{
+    QList<long> ret;
+    for (long i = 0; i < inds.count(); i++) {
+        ret << inds[inds.count() - 1 - i];
+    }
+    return ret;
 }

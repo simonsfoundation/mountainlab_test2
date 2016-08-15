@@ -22,7 +22,7 @@ synthesize1_Processor::synthesize1_Processor()
     d->q = this;
 
     this->setName("synthesize1");
-    this->setVersion("0.1");
+    this->setVersion("0.11");
     this->setInputFileParameters("waveforms", "info");
     this->setOutputFileParameters("timeseries_out", "firings_true");
     this->setRequiredParameters("N", "samplerate");

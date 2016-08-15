@@ -9,6 +9,7 @@
         "freq_min":300,
         "freq_max":10000,
         "num_fea":10,
+	"num_fea2":10,
         "adj_radius":5,
         "channels":"",
         "timerange":[-1,-1],

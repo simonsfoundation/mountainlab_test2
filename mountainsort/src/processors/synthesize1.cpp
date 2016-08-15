@@ -37,8 +37,44 @@ bool synthesize1(const QString& waveforms_in_path, const QString& info_in_path, 
 
     int T = T0 / waveforms_oversamp;
 
-    Mda32 X(M, N);
+    //define true times and labels
+    QVector<double> times;
+    QVector<int> labels;
+    QVector<double> hscales, vscales;
+    for (int k = 0; k < K; k++) {
+        long pop = (long)(info.value(0, k) / samplerate * N);
+        double refractory_period = info.value(1, k);
+        double vscale1 = info.value(2, k);
+        double vscale2 = info.value(3, k);
+        double hscale1 = info.value(4, k);
+        double hscale2 = info.value(5, k);
+        printf("k=%d, pop=%ld, refr=%g ms (%g timepoints)\n", k, pop, refractory_period, refractory_period / 1000 * samplerate);
+        QVector<double> times_k;
+        for (long a = 0; a < pop; a++) {
+            double t0 = rand_uniform(T + 1, N - T - 1);
+            times_k << t0;
+        }
+        qSort(times_k);
+        double last_t0 = 0;
+        for (long i = 0; i < times_k.count(); i++) {
+            double t0 = times_k[i];
+            if (t0 >= last_t0 + refractory_period / 1000 * samplerate) {
+                last_t0 = t0;
+                double vscale0 = 1;
+                if ((vscale1) || (vscale2))
+                    vscale0 = rand_uniform(vscale1, vscale2);
+                double hscale0 = 1;
+                if ((hscale1) || (hscale2))
+                    hscale0 = rand_uniform(hscale1, hscale2);
+                times << times_k[i];
+                labels << k + 1;
+                hscales << hscale0;
+                vscales << vscale0;
+            }
+        }
+    }
 
+    Mda32 X(M, N);
     // Random noise
     generate_randn(X.totalSize(), X.dataPtr());
     for (long n = 0; n < N; n++) {
@@ -46,35 +82,6 @@ bool synthesize1(const QString& waveforms_in_path, const QString& info_in_path, 
             double val = X.get(m, n);
             val = val * noise_level;
             X.set(val, m, n);
-        }
-    }
-
-    //insert spikes
-    QVector<double> times;
-    QVector<int> labels;
-    for (int k = 0; k < K; k++) {
-        long pop = (long)(info.value(0, k) / samplerate * N);
-        double vscale1 = info.value(1, k);
-        double vscale2 = info.value(2, k);
-        double hscale1 = info.value(3, k);
-        double hscale2 = info.value(4, k);
-        printf("k=%d, pop=%ld\n", k, pop);
-        for (long a = 0; a < pop; a++) {
-            double t0 = rand_uniform(T + 1, N - T - 1);
-            double vscale0 = 1;
-            if ((vscale1) || (vscale2))
-                vscale0 = rand_uniform(vscale1, vscale2);
-            double hscale0 = 1;
-            if ((hscale1) || (hscale2))
-                hscale0 = rand_uniform(hscale1, hscale2);
-            for (int t = (long)t0 - T / 2; t < (long)t0 + T / 2; t++) {
-                for (int m = 0; m < M; m++) {
-                    double val = vscale0 * eval_waveform(W, m, (t - t0) * hscale0, k, waveforms_oversamp);
-                    X.setValue(X.value(m, t) + val, m, t);
-                }
-            }
-            times << t0;
-            labels << k + 1;
         }
     }
 
@@ -88,8 +95,18 @@ bool synthesize1(const QString& waveforms_in_path, const QString& info_in_path, 
 
     Mda firings(3, times2.count());
     for (long i = 0; i < times2.count(); i++) {
-        firings.setValue(times2[i], 1, i);
-        firings.setValue(labels2[i], 2, i);
+        double t0 = times2[i];
+        double k0 = labels2[i];
+        double hscale0 = hscales[i];
+        double vscale0 = vscales[i];
+        firings.setValue(t0, 1, i);
+        firings.setValue(k0, 2, i);
+        for (int t = (long)t0 - T / 2; t < (long)t0 + T / 2; t++) {
+            for (int m = 0; m < M; m++) {
+                double val = vscale0 * eval_waveform(W, m, (t - t0) * hscale0, k0 - 1, waveforms_oversamp);
+                X.setValue(X.value(m, t) + val, m, t);
+            }
+        }
     }
     firings.write64(firings_true_path);
 

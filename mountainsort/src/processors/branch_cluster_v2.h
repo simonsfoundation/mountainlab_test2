@@ -13,6 +13,7 @@ struct Branch_Cluster_V2_Opts {
     int min_shell_size;
     double shell_increment;
     int num_features;
+    int num_features2 = 0;
     int detect_interval;
     long num_pca_representatives;
     double consolidation_factor;

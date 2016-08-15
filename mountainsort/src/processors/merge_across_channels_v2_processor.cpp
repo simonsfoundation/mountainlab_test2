@@ -18,7 +18,7 @@ merge_across_channels_v2_Processor::merge_across_channels_v2_Processor()
     d->q = this;
 
     this->setName("merge_across_channels_v2");
-    this->setVersion("0.1");
+    this->setVersion("0.19");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("firings_out");
     this->setRequiredParameters("clip_size");
