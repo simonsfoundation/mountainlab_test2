@@ -1,13 +1,9 @@
 #include "mda.h"
+#include "mda_p.h"
 #include "mdaio.h"
 #include <cachemanager.h>
 #include <stdio.h>
-#include "mlcommon.h"
-#include "taskprogress.h"
-#include <QSharedData>
-#include <cstring>
 
-#define MDA_MAX_DIMS 6
 
 #ifdef USE_SSE2
 static void* malloc_aligned(const long alignValue, const long nbytes)
@@ -32,56 +28,18 @@ void* allocate(unsigned long nbytes)
 #endif
 }
 
-class MdaData : public QSharedData {
-public:
-    MdaData();
-    MdaData(const MdaData& other);
-    ~MdaData();
-    bool allocate(double value, long N1, long N2, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
 
-    inline long dim(long idx) const;
-    inline long N1() const;
-    inline long N2() const;
-
-    void allocate(long size);
-    void deallocate();
-    inline long totalSize() const;
-    inline void setTotalSize(long ts);
-    inline double* data();
-    inline const double* constData() const;
-    inline double at(long idx) const;
-    inline double at(long i1, long i2) const;
-    inline void set(double val, long idx);
-    inline void set(double val, long i1, long i2);
-
-    inline long dims(long idx) const;
-    void setDims(long n1, long n2, long n3, long n4, long n5, long n6);
-
-    int determine_num_dims(long N1, long N2, long N3, long N4, long N5, long N6) const;
-    bool safe_index(long i) const;
-    bool safe_index(long i1, long i2) const;
-    bool safe_index(long i1, long i2, long i3) const;
-    bool safe_index(long i1, long i2, long i3, long i4, long i5, long i6) const;
-
-    bool read_from_text_file(const QString& path);
-    bool write_to_text_file(const QString& path) const;
-
-private:
-    double* m_data;
-    //std::vector<long> m_dims;
-    QVector<long> m_dims;
-    long total_size;
-};
+class MdaDataDouble : public MdaData<double> {};
 
 Mda::Mda(long N1, long N2, long N3, long N4, long N5, long N6)
 {
-    d = new MdaData;
+    d = new MdaDataDouble;
     this->allocate(N1, N2, N3, N4, N5, N6);
 }
 
 Mda::Mda(const QString& mda_filename)
 {
-    d = new MdaData;
+    d = new MdaDataDouble;
     this->read(mda_filename);
 }
 
@@ -834,203 +792,3 @@ void Mda::set(double val, long i1, long i2, long i3, long i4, long i5, long i6)
     d->set(val, i1 + d->dims(0) * i2 + d01 * i3 + d02 * i4 + d03 * i5 + d04 * i6);
 }
 
-MdaData::MdaData()
-    : QSharedData()
-    , m_data(0)
-    , total_size(0)
-{
-}
-
-MdaData::MdaData(const MdaData& other)
-    : QSharedData(other)
-    , m_data(0)
-    , m_dims(other.m_dims)
-    , total_size(other.total_size)
-{
-    allocate(total_size);
-    std::copy(other.m_data, other.m_data + other.totalSize(), m_data);
-}
-
-MdaData::~MdaData()
-{
-    deallocate();
-}
-
-bool MdaData::allocate(double value, long N1, long N2, long N3, long N4, long N5, long N6)
-{
-    deallocate();
-    setDims(N1, N2, N3, N4, N5, N6);
-    if (N1 > 0 && N2 > 0 && N3 > 0 && N4 > 0 && N5 > 0 && N6 > 0)
-        setTotalSize(N1 * N2 * N3 * N4 * N5 * N6);
-    else
-        setTotalSize(0);
-
-    if (totalSize() > 0) {
-        allocate(totalSize());
-        if (!constData()) {
-            qCritical() << QString("Unable to allocate Mda of size %1x%2x%3x%4x%5x%6 (total=%7)").arg(N1).arg(N2).arg(N3).arg(N4).arg(N5).arg(N6).arg(totalSize());
-            exit(-1);
-        }
-        if (value == 0.0) {
-            std::memset(data(), 0, totalSize() * sizeof(double));
-        }
-        else
-            std::fill(data(), data() + totalSize(), value);
-    }
-    return true;
-}
-
-long MdaData::dim(long idx) const { return m_dims.value(idx); }
-
-long MdaData::N1() const { return dim(0); }
-
-long MdaData::N2() const { return dim(1); }
-
-void MdaData::allocate(long size)
-{
-    m_data = (double*)::allocate(size * sizeof(double));
-    if (!m_data)
-        return;
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_allocated", totalSize());
-}
-
-void MdaData::deallocate()
-{
-    if (!m_data)
-        return;
-    free(m_data);
-    TaskManager::TaskProgressMonitor::globalInstance()->incrementQuantity("bytes_freed", totalSize());
-    m_data = 0;
-}
-
-long MdaData::totalSize() const { return total_size; }
-
-void MdaData::setTotalSize(long ts) { total_size = ts; }
-
-double* MdaData::data() { return m_data; }
-
-const double* MdaData::constData() const { return m_data; }
-
-double MdaData::at(long idx) const { return *(constData() + idx); }
-
-double MdaData::at(long i1, long i2) const { return at(i1 + dim(0) * i2); }
-
-void MdaData::set(double val, long idx) { m_data[idx] = val; }
-
-void MdaData::set(double val, long i1, long i2) { set(val, i1 + dim(0) * i2); }
-
-long MdaData::dims(long idx) const
-{
-    return m_dims.at(idx);
-}
-
-void MdaData::setDims(long n1, long n2, long n3, long n4, long n5, long n6)
-{
-    m_dims.resize(MDA_MAX_DIMS);
-    m_dims[0] = n1;
-    m_dims[1] = n2;
-    m_dims[2] = n3;
-    m_dims[3] = n4;
-    m_dims[4] = n5;
-    m_dims[5] = n6;
-}
-
-int MdaData::determine_num_dims(long N1, long N2, long N3, long N4, long N5, long N6) const
-{
-    if (!(N6 > 0 && N5 > 0 && N4 > 0 && N3 > 0 && N2 > 0 && N1 > 0))
-        return 0;
-    if (N6 > 1)
-        return 6;
-    if (N5 > 1)
-        return 5;
-    if (N4 > 1)
-        return 4;
-    if (N3 > 1)
-        return 3;
-    return 2;
-}
-
-bool MdaData::safe_index(long i) const
-{
-    return ((i >= 0) && (i < totalSize()));
-}
-
-bool MdaData::safe_index(long i1, long i2) const
-{
-    return ((i1 >= 0) && (i2 >= 0) && (i1 < dims(0)) && (i2 < dims(1)));
-}
-
-bool MdaData::safe_index(long i1, long i2, long i3) const
-{
-    return ((i1 >= 0) && (i2 >= 0) && (i3 >= 0) && (i1 < dims(0)) && (i2 < dims(1)) && (i3 < dims(2)));
-}
-
-bool MdaData::safe_index(long i1, long i2, long i3, long i4, long i5, long i6) const
-{
-    return (
-        (0 <= i1) && (i1 < dims(0))
-        && (0 <= i2) && (i2 < dims(1))
-        && (0 <= i3) && (i3 < dims(2))
-        && (0 <= i4) && (i4 < dims(3))
-        && (0 <= i5) && (i5 < dims(4))
-        && (0 <= i6) && (i6 < dims(5)));
-}
-
-bool MdaData::read_from_text_file(const QString& path)
-{
-    QString txt = TextFile::read(path);
-    QStringList lines = txt.split("\n", QString::SkipEmptyParts);
-    QStringList lines2;
-    for (int i = 0; i < lines.count(); i++) {
-        QString line = lines[i].trimmed();
-        if (!line.isEmpty()) {
-            if (i == 0) {
-                //check whether this is a header line, if so, don't include it
-                line = line.split(",", QString::SkipEmptyParts).join(" ");
-                QList<QString> vals = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-                bool ok;
-                vals.value(0).toDouble(&ok);
-                if (ok) {
-                    lines2 << line;
-                }
-            }
-            else {
-                lines2 << line;
-            }
-        }
-    }
-    for (int i = 0; i < lines2.count(); i++) {
-        QString line = lines2[i].trimmed();
-        line = line.split(",", QString::SkipEmptyParts).join(" ");
-        QList<QString> vals = line.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        if (i == 0) {
-            allocate(0, vals.count(), lines2.count());
-        }
-        for (int j = 0; j < vals.count(); j++) {
-            set(vals[j].toDouble(), j, i);
-        }
-    }
-    return true;
-}
-
-bool MdaData::write_to_text_file(const QString& path) const
-{
-    char sep = ' ';
-    if (path.endsWith(".csv"))
-        sep = ',';
-    long max_num_entries = 1e6;
-    if (N1() * N2() == max_num_entries) {
-        qWarning() << "mda is too large to write text file";
-        return false;
-    }
-    QList<QString> lines;
-    for (long i = 0; i < N2(); i++) {
-        QStringList vals;
-        for (long j = 0; j < N1(); j++) {
-            vals << QString("%1").arg(at(j, i));
-        }
-        QString line = vals.join(sep);
-        lines << line;
-    }
-    return TextFile::write(path, lines.join("\n"));
-}

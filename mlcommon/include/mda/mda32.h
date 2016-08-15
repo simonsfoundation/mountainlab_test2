@@ -15,7 +15,8 @@ typedef float dtype32;
 
 extern void* allocate(const size_t nbytes);
 
-class Mda32Private;
+class MdaDataFloat;
+
 /** \class Mda32 - a multi-dimensional array corresponding to the .mda file format
  * @brief The Mda32 class
  *
@@ -23,7 +24,6 @@ class Mda32Private;
  */
 class Mda32 {
 public:
-    friend class Mda32Private;
     ///Construct an array of size N1xN2x...xN6
     Mda32(long N1 = 1, long N2 = 1, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
     ///Construct an array and read the .mda file
@@ -146,7 +146,7 @@ public:
     bool reshape(int N1b, int N2b, int N3b = 1, int N4b = 1, int N5b = 1, int N6b = 1);
 
 private:
-    Mda32Private* d;
+    QSharedDataPointer<MdaDataFloat> d;
 };
 
 #endif // MDA_H

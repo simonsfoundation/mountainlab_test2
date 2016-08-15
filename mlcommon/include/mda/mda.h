@@ -12,7 +12,7 @@
 
 extern void* allocate(unsigned long nbytes);
 
-class MdaData;
+class MdaDataDouble;
 /** \class Mda - a multi-dimensional array corresponding to the .mda file format
  * @brief The Mda class
  *
@@ -20,7 +20,6 @@ class MdaData;
  */
 class Mda {
 public:
-    friend class MdaPrivate;
     ///Construct an array of size N1xN2x...xN6
     Mda(long N1 = 1, long N2 = 1, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
     ///Construct an array and read the .mda file
@@ -148,7 +147,7 @@ public:
     void detach();
 
 private:
-    QSharedDataPointer<MdaData> d;
+    QSharedDataPointer<MdaDataDouble> d;
 };
 
 #endif // MDA_H
