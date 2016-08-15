@@ -40,6 +40,7 @@
 #include "firings_subset_processor.h"
 #include "quantize_processor.h"
 #include "merge_stage_processor.h"
+#include "synthesize1_processor.h"
 #include <sys/stat.h>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -107,6 +108,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new firings_subset_Processor);
     loadProcessor(new quantize_Processor);
     loadProcessor(new merge_stage_Processor);
+    loadProcessor(new synthesize1_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString& processor_name) const
