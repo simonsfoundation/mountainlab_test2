@@ -48,7 +48,7 @@ bool branch_cluster_v2_Processor::run(const QMap<QString, QVariant>& params)
     opts.num_features = params["num_features"].toInt();
     opts.num_features2 = params.value("num_features2", 0).toInt();
     opts.detect_interval = params["detect_interval"].toInt();
-    opts.num_pca_representatives = params.value("num_pca_representatives", 5000).toLongLong();
+    opts.num_pca_representatives = (long)params.value("num_pca_representatives", 5000).toDouble();
     opts.consolidation_factor = params.value("consolidation_factor", 0.9).toDouble();
 
     int num_threads = params.value("num_threads", 0).toInt();

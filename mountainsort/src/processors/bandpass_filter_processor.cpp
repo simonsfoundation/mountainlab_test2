@@ -39,8 +39,8 @@ bool bandpass_filter_Processor::run(const QMap<QString, QVariant>& params)
     double freq_min = params["freq_min"].toDouble();
     double freq_max = params["freq_max"].toDouble();
     double freq_wid = params.value("freq_wid", 1000).toDouble();
-    const long chunkSize = params.value("processing_chunk_size", -1).toLongLong();
-    const long overlapSize = params.value("chunk_overlap_size", -1).toLongLong();
+    const long chunkSize = (long)params.value("processing_chunk_size", -1).toDouble();
+    const long overlapSize = (long)params.value("chunk_overlap_size", -1).toDouble();
     if (!freq_wid)
         freq_wid = 1000; //added on 6/21/16
     return bandpass_filter0(input, output, samplerate, freq_min, freq_max, freq_wid, chunkSize, overlapSize);

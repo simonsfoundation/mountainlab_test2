@@ -67,8 +67,6 @@ int main(int argc, char* argv[])
     QCoreApplication app(argc, argv);
     CLParams CLP(argc, argv);
 
-    CacheManager::globalInstance()->setLocalBasePath(MLUtil::tempPath());
-
     /// TODO don't need to always load the process manager?
 
     /// TODO get rid of mlConfigPath()
@@ -86,6 +84,12 @@ int main(int argc, char* argv[])
         }
     }
     QString log_path = MLUtil::mlLogPath() + "/mountainprocess";
+    QString tmp_path = MLUtil::tempPath();
+    if (config.contains("temporary_path")) {
+        tmp_path = config["temporary_path"].toString();
+    }
+    qDebug() << "Setting temporary path: " << tmp_path;
+    CacheManager::globalInstance()->setLocalBasePath(tmp_path);
 
     ProcessManager* PM = ProcessManager::globalInstance();
     QStringList server_urls = json_array_to_stringlist(config["server_urls"].toArray());
@@ -206,10 +210,24 @@ int main(int argc, char* argv[])
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString str = CLP.unnamed_parameters[i];
             if (str.endsWith(".js")) { //must be a javascript source file
-                script_fnames << str;
+                if (!QFile::exists(str)) {
+                    QString str2 = MLUtil::mountainlabBasePath() + "/mountainprocess/scripts/" + str;
+                    if (QFile::exists(str2)) {
+                        str = str2;
+                    }
+                }
+                if (QFile::exists(str)) {
+                    script_fnames << str;
+                }
+                else {
+                    qWarning() << "Unable to find script file: " + str;
+                    return -1;
+                }
             }
             if ((str.endsWith(".par")) || (str.endsWith(".json"))) { // note that we can have multiple parameter files! the later ones override the earlier ones.
+                qDebug() << "Loading parameter file: " + str;
                 if (!load_parameter_file(params, str)) {
+                    qWarning() << "Unable to load parameter file: " + str;
                     return -1;
                 }
             }

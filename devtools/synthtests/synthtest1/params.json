@@ -1,6 +1,6 @@
 {
-        "clip_size":100,
-        "detect_threshold":3,
+        "clip_size":50,
+        "detect_threshold":4,
         "detect_interval":10,
         "shell_increment":3,
         "min_shell_size":150,
@@ -8,12 +8,11 @@
         "sign":0,
         "freq_min":300,
         "freq_max":10000,
-        "num_fea":10,
-	"num_fea2":10,
+        "num_features":10,
+	"num_features2":10,
         "adj_radius":5,
         "channels":"",
         "timerange":[-1,-1],
         "use_whitening":"true",
 	"use_mask_out_artifacts":"true"
 }
-

@@ -5,7 +5,7 @@ function main(params) {
 function run_algorithm(params) {
 	display_parameters(params);
 
-	params.clip_size=params.clip_size||100;
+	params.clip_size=params.clip_size||50;
 	params.detect_threshold=params.detect_threshold||4.0;
 	params.detect_interval=params.detect_interval||10;
 	params.shell_increment=params.shell_increment||3;
@@ -13,13 +13,14 @@ function run_algorithm(params) {
 	params.samplerate=params.samplerate||30000;
 	params.sign=params.sign||0;
 	params.freq_min=params.freq_min||300;
-	params.freq_max=params.freq_max||10000;
-	params.num_fea=params.num_fea||10;
+	params.freq_max=params.freq_max||8000;
+	params.num_features=params.num_features||10;
+	params.num_features2=params.num_features2||10;
 	params.adj_radius=params.adj_radius||0;
 	params.channels=params.channels||'';
 	params.timerange=params.timerange||[-1,-1];
 	params.use_whitening=params.use_whitening||'true';
-	params.use_mask_out_artifacts=params.use_mask_out_artifacts||'true';
+	params.mask_threshold=params.mask_threshold||6; //to mask out artifacts. Use 0 to not mask out artifacts
 	params.cluster_num_threads=params.cluster_num_threads||0;
 
 	var raw=params.raw;
@@ -41,7 +42,7 @@ function run_algorithm(params) {
 		freq_max:params.freq_max
 	};
 	var o_mask_out_artifacts={
-		threshold:3,
+		threshold:params.mask_threshold,
 		interval_size:200
 	};
 	var o_whiten={
@@ -57,32 +58,17 @@ function run_algorithm(params) {
 		clip_size:params.clip_size,
 		min_shell_size:params.min_shell_size,
 		shell_increment:params.shell_increment,
-		num_features:params.num_fea,
+		num_features:params.num_features,
+		num_features2:params.num_features2,
 		detect_interval:params.detect_interval,
 		consolidation_factor:0.9,
 		num_threads:params.cluster_num_threads
 	};
-	var o_compute_detectability_scores={
-		clip_size:params.clip_size,
-		shell_increment:params.shell_increment,
-		min_shell_size:params.min_shell_size,
-	};
-	var o_compute_outlier_scores={
-		clip_size:params.clip_size,
-		shell_increment:params.shell_increment,
-		min_shell_size:params.min_shell_size
-	};
-	var o_merge_across_channels={
-		min_peak_ratio:0.7,
-		max_dt:10,
-		min_coinc_frac:0.1,
-		min_coinc_num:10,
-		max_corr_stddev:3,
-		min_template_corr_coef:0.5,
+	var o_merge_across_channels_v2={
 		clip_size:params.clip_size
-	}
+	};
 	var o_fit_stage={
-		clip_size:params.clip_size+6,
+		clip_size:params.clip_size,
 		min_shell_size:params.min_shell_size,
 		shell_increment:params.shell_increment
 	};
@@ -96,7 +82,7 @@ function run_algorithm(params) {
 	}
 
 	extract_raw(raw,'@pre0',o_extract_raw);
-	if (params.use_mask_out_artifacts=='true') {
+	if (params.mask_threshold) {
 		bandpass_filter('@pre0','@pre1',o_filter);
 		mask_out_artifacts('@pre1','@pre1b',o_mask_out_artifacts);
 	}
@@ -110,15 +96,15 @@ function run_algorithm(params) {
 
 	detect('@pre2','@detect',o_detect);
 	branch_cluster_v2('@pre2','@detect',adjacency_matrix,'@firings1',o_branch_cluster);
-	merge_across_channels('@pre2','@firings1','@firings2',o_merge_across_channels);
+	merge_across_channels_v2('@pre2','@firings1','@firings2',o_merge_across_channels_v2);
 	fit_stage('@pre2','@firings2','@firings3',o_fit_stage);
-	compute_outlier_scores('@pre2','@firings3','@firings4',o_compute_outlier_scores);
-	compute_detectability_scores('@pre2','@firings4','@firings5',o_compute_detectability_scores);
 
 	copy('@pre0',outpath+'/pre0.mda');
 	copy('@pre1b',outpath+'/pre1b.mda');
 	copy('@pre2',outpath+'/pre2.mda');
-	copy('@firings5',outpath+'/firings.mda');
+	copy('@firings1',outpath+'/firings_before_merge_across_channels.mda');
+	copy('@firings2',outpath+'/firings_before_fit.mda');
+	copy('@firings3',outpath+'/firings.mda');
 
 	run_pipeline();
 }
@@ -204,9 +190,27 @@ function merge_across_channels(timeseries,firings,firings_out,opts) {
 	PIPELINE.addProcess(ret);
 }
 
+function merge_across_channels_v2(timeseries,firings,firings_out,opts) {
+	var ret={};
+	ret.processor_name='merge_across_channels_v2';
+	ret.inputs={timeseries:timeseries,firings:firings};
+	ret.outputs={firings_out:firings_out};
+	ret.parameters=clone(opts);
+	PIPELINE.addProcess(ret);
+}
+
 function fit_stage(timeseries,firings,firings_out,opts) {
 	var ret={};
 	ret.processor_name='fit_stage';
+	ret.inputs={timeseries:timeseries,firings:firings};
+	ret.outputs={firings_out:firings_out};
+	ret.parameters=clone(opts);
+	PIPELINE.addProcess(ret);
+}
+
+function merge_stage(timeseries,firings,firings_out,opts) {
+	var ret={};
+	ret.processor_name='merge_stage';
 	ret.inputs={timeseries:timeseries,firings:firings};
 	ret.outputs={firings_out:firings_out};
 	ret.parameters=clone(opts);

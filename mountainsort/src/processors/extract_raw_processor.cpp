@@ -56,8 +56,8 @@ bool extract_raw_Processor::run(const QMap<QString, QVariant>& params)
 {
     QString timeseries_path = params["timeseries"].toString();
     QString timeseries_out_path = params["timeseries_out"].toString();
-    long t1 = params.value("t1", "-1").toLongLong();
-    long t2 = params.value("t2", "-1").toLongLong();
+    long t1 = (long)params.value("t1", "-1").toDouble();
+    long t2 = (long)params.value("t2", "-1").toDouble();
     QString channels_str = params["channels"].toString();
     QVector<int> channels = str_to_intlist(channels_str);
 

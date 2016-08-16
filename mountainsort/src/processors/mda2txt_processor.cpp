@@ -46,8 +46,8 @@ bool mda2txt_Processor::run(const QMap<QString, QVariant>& params)
     QString mda_path = params["mda_file"].toString();
     QString txt_path = params["txt_file"].toString();
     int transpose = params.value("transpose", 1).toInt();
-    long max_rows = params.value("max_rows", 1e9).toLongLong();
-    long max_cols = params.value("max_cols", 2000).toLongLong();
+    long max_rows = (long)params.value("max_rows", 1e9).toDouble();
+    long max_cols = (long)params.value("max_cols", 2000).toDouble();
     QString delimiter = params.value("delimeter", "tab").toString();
 
     if (delimiter == "tab")

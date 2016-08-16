@@ -1,0 +1,18 @@
+{
+        "clip_size":50,
+        "samplerate":30000,
+        "sign":0,
+        "detect_threshold":3.5,
+        "freq_min":300,
+        "freq_max":8000,
+        "adj_radius":0,
+        "use_whitening":"true",
+        "mask_threshold":6,
+        "detect_interval":null,
+        "shell_increment":null,
+        "min_shell_size":null,
+        "num_features":null,
+        "num_features2":null,
+        "channels":null,
+        "timerange":null
+}
