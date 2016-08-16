@@ -11,16 +11,16 @@
 #include <QWidget>
 
 struct PanelWidget2Behavior {
-    bool h_scrollable=true;
-    bool v_scrollable=true;
+    bool h_scrollable = true;
+    bool v_scrollable = true;
 
-    int minimum_panel_width=0;
-    int minimum_panel_height=0;
+    int minimum_panel_width = 0;
+    int minimum_panel_height = 0;
 
-    int preferred_panel_width=300;
-    int preferred_panel_height=300;
+    int preferred_panel_width = 300;
+    int preferred_panel_height = 300;
 
-    bool adjust_layout_to_preferred_size=false;
+    bool adjust_layout_to_preferred_size = false;
 };
 
 class MVPanelWidget2Private;
@@ -31,7 +31,7 @@ public:
     MVPanelWidget2();
     virtual ~MVPanelWidget2();
 
-    void setBehavior(const PanelWidget2Behavior &behavior);
+    void setBehavior(const PanelWidget2Behavior& behavior);
 
     void clearPanels(bool delete_layers);
     void addPanel(int row, int col, PaintLayer* layer);

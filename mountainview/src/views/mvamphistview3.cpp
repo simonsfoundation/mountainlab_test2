@@ -52,14 +52,14 @@ MVAmpHistView3::MVAmpHistView3(MVContext* context)
 
     d->m_panel_widget = new MVPanelWidget2;
     PanelWidget2Behavior B;
-    B.h_scrollable=false;
-    B.v_scrollable=true;
-    B.preferred_panel_width=300;
-    B.preferred_panel_height=300;
-    B.adjust_layout_to_preferred_size=true;
+    B.h_scrollable = false;
+    B.v_scrollable = true;
+    B.preferred_panel_width = 300;
+    B.preferred_panel_height = 300;
+    B.adjust_layout_to_preferred_size = true;
     d->m_panel_widget->setBehavior(B);
-    d->m_panel_widget->setSpacing(14,14);
-    d->m_panel_widget->setMargins(14,14);
+    d->m_panel_widget->setSpacing(14, 14);
+    d->m_panel_widget->setMargins(14, 14);
     //d->m_panel_widget->setZoomOnWheel(false);
     layout->addWidget(d->m_panel_widget);
 

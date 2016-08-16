@@ -134,7 +134,7 @@ void MVClusterVisibilityControl::updateControls()
         d->m_all_widgets << CB;
     }
     foreach (QString tag, tags) {
-        if (tag!="rejected") {
+        if (tag != "rejected") {
             QCheckBox* CB = this->createCheckBoxControl("tag-" + tag, tag);
             CB->setChecked(rule.view_tags.contains(tag));
             d->m_cluster_tag_flow_layout->addWidget(CB);

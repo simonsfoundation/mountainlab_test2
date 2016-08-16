@@ -872,7 +872,7 @@ void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
     this->view_tags = other.view_tags;
     this->view_all_tagged = other.view_all_tagged;
     this->view_all_untagged = other.view_all_untagged;
-    this->hide_rejected=other.hide_rejected;
+    this->hide_rejected = other.hide_rejected;
 
     this->use_subset = other.use_subset;
     this->subset = other.subset;
@@ -888,7 +888,8 @@ bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num)
     QSet<QString> tags = context->clusterTags(cluster_num);
 
     if (hide_rejected) {
-        if (tags.contains("rejected")) return false;
+        if (tags.contains("rejected"))
+            return false;
     }
 
     if ((view_all_tagged) && (!tags.isEmpty()))
@@ -957,7 +958,7 @@ ClusterVisibilityRule ClusterVisibilityRule::fromJsonObject(const QJsonObject& X
     ClusterVisibilityRule ret;
     ret.view_all_tagged = X["view_all_tagged"].toBool();
     ret.view_all_untagged = X["view_all_untagged"].toBool();
-    ret.hide_rejected=X["hide_rejected"].toBool();
+    ret.hide_rejected = X["hide_rejected"].toBool();
     ret.view_tags = QSet<QString>::fromList(json_array_to_strlist(X["view_tags"].toArray()));
     ret.use_subset = X["use_subset"].toBool();
     ret.subset = QSet<int>::fromList(json_array_to_intlist(X["subset"].toArray()));

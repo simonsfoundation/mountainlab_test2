@@ -76,8 +76,8 @@ MVTemplatesView2::MVTemplatesView2(MVContext* mvcontext)
 
     d->m_panel_widget = new MVPanelWidget2;
     PanelWidget2Behavior B;
-    B.h_scrollable=true;
-    B.v_scrollable=false;
+    B.h_scrollable = true;
+    B.v_scrollable = false;
     d->m_panel_widget->setBehavior(B);
     layout->addWidget(d->m_panel_widget);
 

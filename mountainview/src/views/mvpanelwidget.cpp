@@ -56,9 +56,9 @@ MVPanelWidget::~MVPanelWidget()
     delete d;
 }
 
-void MVPanelWidget::setBehavior(const PanelWidgetBehavior &behavior)
+void MVPanelWidget::setBehavior(const PanelWidgetBehavior& behavior)
 {
-    d->m_behavior=behavior;
+    d->m_behavior = behavior;
 }
 
 void MVPanelWidget::clearPanels(bool delete_layers)

@@ -27,14 +27,14 @@ public:
     int m_col_margin = 3;
     int m_col_spacing = 3;
 
-    double m_zoom_factor=1;
+    double m_zoom_factor = 1;
 
-    QPointF m_scroll_offset=QPointF(0,0);
+    QPointF m_scroll_offset = QPointF(0, 0);
     int m_current_panel_index = -1;
     bool m_zoom_on_wheel = true;
 
     QPointF m_press_anchor = QPointF(-1, -1);
-    QPointF m_press_anchor_scroll_offset = QPointF(0,0);
+    QPointF m_press_anchor_scroll_offset = QPointF(0, 0);
     bool m_is_dragging = false;
 
     PanelWidget2Behavior m_behavior;
@@ -57,9 +57,9 @@ MVPanelWidget2::~MVPanelWidget2()
     delete d;
 }
 
-void MVPanelWidget2::setBehavior(const PanelWidget2Behavior &behavior)
+void MVPanelWidget2::setBehavior(const PanelWidget2Behavior& behavior)
 {
-    d->m_behavior=behavior;
+    d->m_behavior = behavior;
 }
 
 void MVPanelWidget2::clearPanels(bool delete_layers)
@@ -152,8 +152,8 @@ void MVPanelWidget2::paintEvent(QPaintEvent* evt)
     for (int i = 0; i < d->m_panels.count(); i++) {
         QRectF geom = d->m_panels[i].geometry;
         d->m_panels[i].layer->setWindowSize(geom.size().toSize());
-        double x1 = geom.left()-d->m_scroll_offset.x();
-        double y1 = geom.top()-d->m_scroll_offset.y();
+        double x1 = geom.left() - d->m_scroll_offset.x();
+        double y1 = geom.top() - d->m_scroll_offset.y();
         QRegion hold_region = painter.clipRegion();
         painter.translate(QPointF(x1, y1));
         painter.setClipRect(0, 0, geom.width(), geom.height());
@@ -165,11 +165,11 @@ void MVPanelWidget2::paintEvent(QPaintEvent* evt)
 
 void MVPanelWidget2::wheelEvent(QWheelEvent* evt)
 {
-    PanelWidget2Behavior B=d->m_behavior;
+    PanelWidget2Behavior B = d->m_behavior;
     int delta = evt->delta();
 
-    if ((!B.h_scrollable)&&(B.v_scrollable)) {
-        d->m_scroll_offset.setY(d->m_scroll_offset.y()-delta);
+    if ((!B.h_scrollable) && (B.v_scrollable)) {
+        d->m_scroll_offset.setY(d->m_scroll_offset.y() - delta);
         update();
         evt->accept();
     }
@@ -229,7 +229,7 @@ void MVPanelWidget2::mouseMoveEvent(QMouseEvent* evt)
             d->m_is_dragging = true;
         }
         if (d->m_is_dragging) {
-            d->m_scroll_offset=d->m_press_anchor_scroll_offset-QPointF(dx,dy);
+            d->m_scroll_offset = d->m_press_anchor_scroll_offset - QPointF(dx, dy);
             this->update();
         }
     }
@@ -237,7 +237,7 @@ void MVPanelWidget2::mouseMoveEvent(QMouseEvent* evt)
 
 void MVPanelWidget2Private::zoom(double by_factor)
 {
-    m_zoom_factor*=by_factor;
+    m_zoom_factor *= by_factor;
     q->update();
     /*
     QRectF current_panel_geom = QRectF(0, 0, 1, 1);
@@ -272,24 +272,24 @@ void MVPanelWidget2Private::zoom(double by_factor)
 
 void MVPanelWidget2Private::update_panel_geometries()
 {
-    PanelWidget2Behavior B=m_behavior;
+    PanelWidget2Behavior B = m_behavior;
 
     if (B.adjust_layout_to_preferred_size) {
-        if ((B.v_scrollable)&&(!B.h_scrollable)) {
-            double WW=q->width()-m_col_margin*2;
-            int num_cols=qMax(1.0,ceil(WW/(B.preferred_panel_width*m_zoom_factor+m_col_spacing)));
-            for (int i=0; i<m_panels.count(); i++) {
-                m_panels[i].row=i/num_cols;
-                m_panels[i].col=i%num_cols;
+        if ((B.v_scrollable) && (!B.h_scrollable)) {
+            double WW = q->width() - m_col_margin * 2;
+            int num_cols = qMax(1.0, ceil(WW / (B.preferred_panel_width * m_zoom_factor + m_col_spacing)));
+            for (int i = 0; i < m_panels.count(); i++) {
+                m_panels[i].row = i / num_cols;
+                m_panels[i].col = i % num_cols;
             }
         }
-        else if ((!B.v_scrollable)&&(B.h_scrollable)) {
-            double HH=q->height()-m_row_margin*2;
-            int num_rows=qMax(1.0,ceil(HH/(B.preferred_panel_height*m_zoom_factor+m_row_spacing)));
-            int num_cols=qMax(1,m_panels.count()/num_rows);
-            for (int i=0; i<m_panels.count(); i++) {
-                m_panels[i].row=i/num_cols;
-                m_panels[i].col=i%num_cols;
+        else if ((!B.v_scrollable) && (B.h_scrollable)) {
+            double HH = q->height() - m_row_margin * 2;
+            int num_rows = qMax(1.0, ceil(HH / (B.preferred_panel_height * m_zoom_factor + m_row_spacing)));
+            int num_cols = qMax(1, m_panels.count() / num_rows);
+            for (int i = 0; i < m_panels.count(); i++) {
+                m_panels[i].row = i / num_cols;
+                m_panels[i].col = i % num_cols;
             }
         }
         else {
@@ -297,32 +297,31 @@ void MVPanelWidget2Private::update_panel_geometries()
         }
     }
 
+    int num_rows = qMax(1, q->rowCount());
+    int num_cols = qMax(1, q->columnCount());
 
-    int num_rows = qMax(1,q->rowCount());
-    int num_cols = qMax(1,q->columnCount());
-
-    double panel_width=0;
+    double panel_width = 0;
     if (B.h_scrollable) {
-        panel_width=B.preferred_panel_width*m_zoom_factor;
+        panel_width = B.preferred_panel_width * m_zoom_factor;
     }
     else {
-        double W0=q->width()-(num_cols-1)*m_col_spacing-2*m_col_margin;
-        panel_width=W0/num_cols;
+        double W0 = q->width() - (num_cols - 1) * m_col_spacing - 2 * m_col_margin;
+        panel_width = W0 / num_cols;
     }
 
-    double panel_height=0;
+    double panel_height = 0;
     if (B.v_scrollable) {
-        panel_height=B.preferred_panel_height*m_zoom_factor;
+        panel_height = B.preferred_panel_height * m_zoom_factor;
     }
     else {
-        double H0=q->height()-(num_rows-1)*m_row_spacing-2*m_row_margin;
-        panel_height=H0/num_rows;
+        double H0 = q->height() - (num_rows - 1) * m_row_spacing - 2 * m_row_margin;
+        panel_height = H0 / num_rows;
     }
 
-    for (int i=0; i<m_panels.count(); i++) {
-        double x0=m_col_margin+(panel_width+m_col_spacing)*m_panels[i].col;
-        double y0=m_row_margin+(panel_height+m_row_spacing)*m_panels[i].row;
-        m_panels[i].geometry=QRectF(x0,y0,panel_width,panel_height);
+    for (int i = 0; i < m_panels.count(); i++) {
+        double x0 = m_col_margin + (panel_width + m_col_spacing) * m_panels[i].col;
+        double y0 = m_row_margin + (panel_height + m_row_spacing) * m_panels[i].row;
+        m_panels[i].geometry = QRectF(x0, y0, panel_width, panel_height);
     }
 
     if (!B.h_scrollable) {
@@ -332,20 +331,23 @@ void MVPanelWidget2Private::update_panel_geometries()
         m_scroll_offset.setY(0);
     }
 
-    double W1=2*m_col_margin+num_cols*(panel_width+m_col_spacing);
-    if (m_scroll_offset.x()+q->width()>W1) m_scroll_offset.setX(W1-q->width());
-    if (m_scroll_offset.x()<0) m_scroll_offset.setX(0);
+    double W1 = 2 * m_col_margin + num_cols * (panel_width + m_col_spacing);
+    if (m_scroll_offset.x() + q->width() > W1)
+        m_scroll_offset.setX(W1 - q->width());
+    if (m_scroll_offset.x() < 0)
+        m_scroll_offset.setX(0);
 
-    double H1=2*m_row_margin+num_rows*(panel_height+m_row_spacing);
-    if (m_scroll_offset.y()+q->height()>H1) m_scroll_offset.setY(H1-q->height());
-    if (m_scroll_offset.y()<0) m_scroll_offset.setY(0);
-
+    double H1 = 2 * m_row_margin + num_rows * (panel_height + m_row_spacing);
+    if (m_scroll_offset.y() + q->height() > H1)
+        m_scroll_offset.setY(H1 - q->height());
+    if (m_scroll_offset.y() < 0)
+        m_scroll_offset.setY(0);
 }
 
 int MVPanelWidget2Private::panel_index_at_pt(const QPointF& pt)
 {
     for (int i = 0; i < m_panels.count(); i++) {
-        if (m_panels[i].geometry.contains(pt+m_scroll_offset))
+        if (m_panels[i].geometry.contains(pt + m_scroll_offset))
             return i;
     }
     return -1;
