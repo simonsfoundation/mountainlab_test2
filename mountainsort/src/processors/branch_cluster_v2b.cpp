@@ -67,7 +67,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
     }
 
     Mda firings0;
-    firings0.allocate(5, L); //L is the max it could be
+    firings0.allocate(3, L); //L is the max it could be
 
     long jjjj = 0;
     long k_offset = 0;
@@ -113,7 +113,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
                     firings0.setValue(m + 1, 0, jjjj); //channel
                     firings0.setValue(times[i] + 1, 1, jjjj); //times //convert back to 1-based indexing
                     firings0.setValue(labels[i] + k_offset, 2, jjjj); //labels
-                    firings0.setValue(peaks[i], 3, jjjj); //peaks
+                    //firings0.setValue(peaks[i], 3, jjjj); //peaks
                     jjjj++;
                 }
             }

@@ -5,7 +5,7 @@
         "detect_threshold":3.5,
         "freq_min":300,
         "freq_max":8000,
-        "adj_radius":0,
+        "adj_radius":5,
         "use_whitening":"true",
         "mask_threshold":6,
         "detect_interval":null,

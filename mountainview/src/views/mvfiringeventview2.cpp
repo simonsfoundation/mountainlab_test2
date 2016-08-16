@@ -15,13 +15,16 @@
 #include <taskprogress.h>
 #include "mvclusterlegend.h"
 #include "paintlayerstack.h"
+#include "mvamphistview3.h" //for compute_amplitudes()
 
 /// TODO: (MEDIUM) control brightness in firing event view
 
 class MVFiringEventViewCalculator {
 public:
     //input
-    DiskReadMda firings;
+    QString timeseries;
+    QString firings;
+    QString mlproxy_url;
     QSet<int> labels_to_use;
 
     //output
@@ -135,7 +138,9 @@ MVFiringEventView2::~MVFiringEventView2()
 void MVFiringEventView2::prepareCalculation()
 {
     d->m_calculator.labels_to_use = d->m_labels_to_use;
-    d->m_calculator.firings = mvContext()->firings();
+    d->m_calculator.mlproxy_url = mvContext()->mlProxyUrl();
+    d->m_calculator.timeseries = mvContext()->currentTimeseries().makePath();
+    d->m_calculator.firings = mvContext()->firings().makePath();
 }
 
 void MVFiringEventView2::runCalculation()
@@ -303,7 +308,9 @@ void MVFiringEventViewCalculator::compute()
 {
     TaskProgress task("Computing firing events");
 
-    long L = firings.N2();
+    DiskReadMda firings2 = compute_amplitudes(timeseries, firings, mlproxy_url);
+
+    long L = firings2.N2();
     times.clear();
     labels.clear();
     amplitudes.clear();
@@ -314,12 +321,12 @@ void MVFiringEventViewCalculator::compute()
                 return;
             }
         }
-        int label0 = (int)firings.value(2, i);
+        int label0 = (int)firings2.value(2, i);
         if (labels_to_use.contains(label0)) {
             task.setProgress(i * 1.0 / L);
-            times << firings.value(1, i);
+            times << firings2.value(1, i);
             labels << label0;
-            amplitudes << firings.value(3, i);
+            amplitudes << firings2.value(3, i);
         }
     }
     task.log(QString("Found %1 events, using %2 clusters").arg(times.count()).arg(labels_to_use.count()));

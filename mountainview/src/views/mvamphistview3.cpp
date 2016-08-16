@@ -8,6 +8,8 @@
 #include <QLabel>
 #include <QSpinBox>
 #include <QVBoxLayout>
+#include <diskreadmda32.h>
+#include <mountainprocessrunner.h>
 #include <taskprogress.h>
 
 struct AmpHistogram3 {
@@ -19,7 +21,9 @@ class MVAmpHistView3Computer {
 public:
     //input
     QString mlproxy_url;
-    DiskReadMda firings;
+    QString firings;
+    QString timeseries;
+    MVAmpHistView3::AmplitudeMode amplitude_mode;
 
     //output
     QList<AmpHistogram3> histograms;
@@ -36,6 +40,7 @@ public:
     MVPanelWidget2* m_panel_widget;
     QList<HistogramLayer*> m_views;
     QSpinBox* m_num_bins_control;
+    MVAmpHistView3::AmplitudeMode m_amplitude_mode = MVAmpHistView3::ComputeAmplitudes;
     double m_zoom_factor = 1;
 
     void set_views();
@@ -105,7 +110,9 @@ MVAmpHistView3::~MVAmpHistView3()
 void MVAmpHistView3::prepareCalculation()
 {
     d->m_computer.mlproxy_url = mvContext()->mlProxyUrl();
-    d->m_computer.firings = mvContext()->firings();
+    d->m_computer.firings = mvContext()->firings().makePath();
+    d->m_computer.timeseries = mvContext()->currentTimeseries().makePath();
+    d->m_computer.amplitude_mode = d->m_amplitude_mode;
 }
 
 void MVAmpHistView3::runCalculation()
@@ -230,19 +237,46 @@ void MVAmpHistView3::slot_current_cluster_changed()
     }
 }
 
+DiskReadMda compute_amplitudes(QString timeseries, QString firings, QString mlproxy_url)
+{
+    MountainProcessRunner X;
+    QString processor_name = "compute_amplitudes";
+    X.setProcessorName(processor_name);
+
+    QMap<QString, QVariant> params;
+    params["timeseries"] = timeseries;
+    params["firings"] = firings;
+    X.setInputParameters(params);
+    X.setMLProxyUrl(mlproxy_url);
+
+    QString firings_out_fname = X.makeOutputFilePath("firings_out");
+
+    X.runProcess();
+    DiskReadMda ret(firings_out_fname);
+    return ret;
+}
+
 void MVAmpHistView3Computer::compute()
 {
     TaskProgress task(TaskProgress::Calculate, QString("AmplitudeHistograms3"));
 
     histograms.clear();
 
+    DiskReadMda firings2;
+    if (amplitude_mode == MVAmpHistView3::ComputeAmplitudes) {
+        firings2 = compute_amplitudes(timeseries, firings, mlproxy_url);
+    }
+    else {
+        firings2 = DiskReadMda(firings);
+    }
+
     QVector<int> labels;
     //QVector<double> amplitudes;
-    long L = firings.N2();
+    long L = firings2.N2();
 
     task.setProgress(0.2);
     for (long n = 0; n < L; n++) {
-        labels << (int)firings.value(2, n);
+        labels << (int)firings2.value(2, n);
     }
 
     int K = MLCompute::max<int>(labels);
@@ -256,8 +290,8 @@ void MVAmpHistView3Computer::compute()
 
     int row = 3; //for amplitudes
     for (long n = 0; n < L; n++) {
-        int label0 = (int)firings.value(2, n);
-        double amp0 = firings.value(row, n);
+        int label0 = (int)firings2.value(2, n);
+        double amp0 = firings2.value(row, n);
         if ((label0 >= 1) && (label0 <= K)) {
             this->histograms[label0 - 1].data << amp0;
         }

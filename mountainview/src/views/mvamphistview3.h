@@ -3,6 +3,7 @@
 
 #include "mvabstractview.h"
 #include "mvabstractviewfactory.h"
+#include "diskreadmda.h"
 
 class MVAmpHistView3Private;
 class MVAmpHistView3 : public MVAbstractView {
@@ -15,6 +16,11 @@ public:
     void prepareCalculation() Q_DECL_OVERRIDE;
     void runCalculation() Q_DECL_OVERRIDE;
     void onCalculationFinished() Q_DECL_OVERRIDE;
+
+    enum AmplitudeMode {
+        ReadAmplitudes,
+        ComputeAmplitudes
+    };
 
 protected:
     void wheelEvent(QWheelEvent* evt);
@@ -45,5 +51,7 @@ public:
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
 };
+
+DiskReadMda compute_amplitudes(QString timeseries, QString firings, QString mlproxy_url);
 
 #endif // MVAMPHISTVIEW3_H

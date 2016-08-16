@@ -129,7 +129,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     registerViewFactory(new MVChannelFeaturesFactory(context, this));
     registerViewFactory(new MVSpikeSprayFactory(context, this));
     registerViewFactory(new MVFiringEventsFactory(context, this));
-    registerViewFactory(new MVAmplitudeHistogramsFactory(context, this));
+    //registerViewFactory(new MVAmplitudeHistogramsFactory(context, this));
     registerViewFactory(new MVAmplitudeHistograms3Factory(context, this));
     registerViewFactory(new MVDiscrimHistFactory(context, this));
     registerViewFactory(new MVDiscrimHistGuideFactory(context, this));
