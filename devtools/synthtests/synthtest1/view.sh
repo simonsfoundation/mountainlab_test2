@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mountainview --firings=firings.mda --raw=pre0.mda --filt=pre1b.mda --pre=pre2.mda --samplerate=30000 --geom=geom.csv
+mountainview --firings=output/firings.mda --raw=output/pre0.mda --filt=output/pre1b.mda --pre=output/pre2.mda --samplerate=30000 --geom=geom.csv

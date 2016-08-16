@@ -21,21 +21,21 @@ public:
     MVPanelWidget* q;
 
     QList<MVPanelWidgetPanel> m_panels;
+
     int m_row_margin = 3;
     int m_row_spacing = 3;
     int m_col_margin = 3;
     int m_col_spacing = 3;
+
     QRectF m_viewport_geom = QRectF(0, 0, 1, 1);
     int m_current_panel_index = -1;
-    bool m_h_scrollable = true;
-    bool m_v_scrollable = true;
-    double m_minimum_panel_width = 0;
-    double m_minimum_panel_height = 0;
     bool m_zoom_on_wheel = true;
 
     QPointF m_press_anchor = QPointF(-1, -1);
     QRectF m_press_anchor_viewport_geom = QRectF(0, 0, 1, 1);
     bool m_is_dragging = false;
+
+    PanelWidgetBehavior m_behavior;
 
     void correct_viewport_geom();
     void zoom(double factor);
@@ -54,6 +54,11 @@ MVPanelWidget::MVPanelWidget()
 MVPanelWidget::~MVPanelWidget()
 {
     delete d;
+}
+
+void MVPanelWidget::setBehavior(const PanelWidgetBehavior &behavior)
+{
+    d->m_behavior=behavior;
 }
 
 void MVPanelWidget::clearPanels(bool delete_layers)
@@ -108,22 +113,6 @@ void MVPanelWidget::setMargins(int row_margin, int col_margin)
     d->m_row_margin = row_margin;
     d->m_col_margin = col_margin;
     update();
-}
-
-void MVPanelWidget::setMinimumPanelWidth(int w)
-{
-    d->m_minimum_panel_width = w;
-}
-
-void MVPanelWidget::setMinimumPanelHeight(int h)
-{
-    d->m_minimum_panel_height = h;
-}
-
-void MVPanelWidget::setScrollable(bool h_scrollable, bool v_scrollable)
-{
-    d->m_h_scrollable = h_scrollable;
-    d->m_v_scrollable = v_scrollable;
 }
 
 void MVPanelWidget::setZoomOnWheel(bool val)
@@ -254,14 +243,14 @@ void MVPanelWidgetPrivate::correct_viewport_geom()
     QRectF G = m_viewport_geom;
 
     //respect the minimum panel width/height
-    if ((m_h_scrollable) && (q->columnCount() > 1) && (!m_panels.isEmpty())) {
-        if (G.width() * q->width() / m_panels.count() < m_minimum_panel_width) {
-            G.setWidth(m_minimum_panel_width / q->width() * m_panels.count());
+    if ((m_behavior.h_scrollable) && (q->columnCount() > 1) && (!m_panels.isEmpty())) {
+        if (G.width() * q->width() / m_panels.count() < m_behavior.minimum_panel_width) {
+            G.setWidth(m_behavior.minimum_panel_width / q->width() * m_panels.count());
         }
     }
-    if ((m_v_scrollable) && (q->rowCount() > 1) && (!m_panels.isEmpty())) {
-        if (G.height() * q->height() / m_panels.count() < m_minimum_panel_height) {
-            G.setHeight(m_minimum_panel_height / q->height() * m_panels.count());
+    if ((m_behavior.v_scrollable) && (q->rowCount() > 1) && (!m_panels.isEmpty())) {
+        if (G.height() * q->height() / m_panels.count() < m_behavior.minimum_panel_height) {
+            G.setHeight(m_behavior.minimum_panel_height / q->height() * m_panels.count());
         }
     }
 
@@ -292,10 +281,10 @@ void MVPanelWidgetPrivate::zoom(double factor)
     if ((m_current_panel_index >= 0) && (m_current_panel_index < m_panels.count())) {
         current_panel_geom = m_panels[m_current_panel_index].geom;
     }
-    if ((q->rowCount() > 1) && (m_v_scrollable)) {
+    if ((q->rowCount() > 1) && (m_behavior.v_scrollable)) {
         m_viewport_geom.setHeight(m_viewport_geom.height() * factor);
     }
-    if ((q->columnCount() > 1) && (m_h_scrollable)) {
+    if ((q->columnCount() > 1) && (m_behavior.h_scrollable)) {
         m_viewport_geom.setWidth(m_viewport_geom.width() * factor);
     }
     correct_viewport_geom();

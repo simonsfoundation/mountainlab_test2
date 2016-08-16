@@ -87,6 +87,7 @@ void MVClusterVisibilityControl::updateContext()
 
     rule.view_all_tagged = this->controlValue("all_tagged").toBool();
     rule.view_all_untagged = this->controlValue("all_untagged").toBool();
+    rule.hide_rejected = this->controlValue("hide_rejected").toBool();
 
     rule.view_tags.clear();
     QStringList tags = mvContext()->allClusterTags().toList();
@@ -126,13 +127,21 @@ void MVClusterVisibilityControl::updateControls()
         d->m_cluster_tag_flow_layout->addWidget(CB);
         d->m_all_widgets << CB;
     }
-    foreach (QString tag, tags) {
-        QCheckBox* CB = this->createCheckBoxControl("tag-" + tag, tag);
-        CB->setChecked(rule.view_tags.contains(tag));
+    {
+        QCheckBox* CB = this->createCheckBoxControl("hide_rejected", "Hide rejected");
+        CB->setChecked(rule.hide_rejected);
         d->m_cluster_tag_flow_layout->addWidget(CB);
         d->m_all_widgets << CB;
-        if (rule.view_all_tagged)
-            CB->setEnabled(false);
+    }
+    foreach (QString tag, tags) {
+        if (tag!="rejected") {
+            QCheckBox* CB = this->createCheckBoxControl("tag-" + tag, tag);
+            CB->setChecked(rule.view_tags.contains(tag));
+            d->m_cluster_tag_flow_layout->addWidget(CB);
+            d->m_all_widgets << CB;
+            if (rule.view_all_tagged)
+                CB->setEnabled(false);
+        }
     }
 
     {

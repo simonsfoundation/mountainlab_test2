@@ -4,13 +4,13 @@
 ** Created: 7/29/2016
 *******************************************************/
 
-#ifndef MVPANELWIDGET_H
-#define MVPANELWIDGET_H
+#ifndef MVPANELWIDGET2_H
+#define MVPANELWIDGET2_H
 
 #include "paintlayer.h"
 #include <QWidget>
 
-struct PanelWidgetBehavior {
+struct PanelWidget2Behavior {
     bool h_scrollable=true;
     bool v_scrollable=true;
 
@@ -23,15 +23,15 @@ struct PanelWidgetBehavior {
     bool adjust_layout_to_preferred_size=false;
 };
 
-class MVPanelWidgetPrivate;
-class MVPanelWidget : public QWidget {
+class MVPanelWidget2Private;
+class MVPanelWidget2 : public QWidget {
     Q_OBJECT
 public:
-    friend class MVPanelWidgetPrivate;
-    MVPanelWidget();
-    virtual ~MVPanelWidget();
+    friend class MVPanelWidget2Private;
+    MVPanelWidget2();
+    virtual ~MVPanelWidget2();
 
-    void setBehavior(const PanelWidgetBehavior &behavior);
+    void setBehavior(const PanelWidget2Behavior &behavior);
 
     void clearPanels(bool delete_layers);
     void addPanel(int row, int col, PaintLayer* layer);
@@ -42,7 +42,6 @@ public:
     void setZoomOnWheel(bool val);
     int currentPanelIndex() const;
     void setCurrentPanelIndex(int index); //for zooming
-    void setViewportGeometry(QRectF geom);
 
 public slots:
     void zoomIn();
@@ -61,7 +60,7 @@ signals:
     void signalPanelActivated(int index);
 
 private:
-    MVPanelWidgetPrivate* d;
+    MVPanelWidget2Private* d;
 };
 
-#endif // MVPANELWIDGET_H
+#endif // MVPANELWIDGET2_H

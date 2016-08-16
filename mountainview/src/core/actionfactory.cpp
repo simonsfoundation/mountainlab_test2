@@ -13,22 +13,22 @@ void ActionFactory::addToToolbar(ActionType action, QWidget* container, QObject*
     switch (action) {
     case ActionType::ZoomIn:
         name = "Zoom In";
-        tooltip = "Zoom in. Alternatively, use the mouse wheel.";
+        tooltip = "Zoom in.";
         icon = QIcon(":/images/zoom-in.png");
         break;
     case ActionType::ZoomOut:
         name = "Zoom Out";
-        tooltip = "Zoom out. Alternatively, use the mouse wheel.";
+        tooltip = "Zoom out.";
         icon = QIcon(":/images/zoom-out.png");
         break;
     case ActionType::ZoomInVertical:
         name = "Vertical Zoom In";
-        tooltip = "Vertical zoom in. Alternatively, use the UP arrow.";
+        tooltip = "Vertical zoom in.";
         icon = QIcon(":/images/vertical-zoom-in.png");
         break;
     case ActionType::ZoomOutVertical:
         name = "Vertical Zoom Out";
-        tooltip = "Vertical zoom out. Alternatively, use the DOWN arrow.";
+        tooltip = "Vertical zoom out.";
         icon = QIcon(":/images/vertical-zoom-out.png");
         break;
     case ActionType::ZoomInHorizontal:

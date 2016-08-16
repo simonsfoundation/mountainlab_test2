@@ -858,6 +858,8 @@ bool ClusterVisibilityRule::operator==(const ClusterVisibilityRule& other) const
         return false;
     if (this->view_all_untagged != other.view_all_untagged)
         return false;
+    if (this->hide_rejected != other.hide_rejected)
+        return false;
     if (this->use_subset != other.use_subset)
         return false;
     if (this->subset != other.subset)
@@ -870,6 +872,7 @@ void ClusterVisibilityRule::copy_from(const ClusterVisibilityRule& other)
     this->view_tags = other.view_tags;
     this->view_all_tagged = other.view_all_tagged;
     this->view_all_untagged = other.view_all_untagged;
+    this->hide_rejected=other.hide_rejected;
 
     this->use_subset = other.use_subset;
     this->subset = other.subset;
@@ -883,6 +886,10 @@ bool ClusterVisibilityRule::isVisible(const MVContext* context, int cluster_num)
     }
 
     QSet<QString> tags = context->clusterTags(cluster_num);
+
+    if (hide_rejected) {
+        if (tags.contains("rejected")) return false;
+    }
 
     if ((view_all_tagged) && (!tags.isEmpty()))
         return true;
@@ -938,6 +945,7 @@ QJsonObject ClusterVisibilityRule::toJsonObject() const
     QJsonObject obj;
     obj["view_all_tagged"] = this->view_all_tagged;
     obj["view_all_untagged"] = this->view_all_untagged;
+    obj["hide_rejected"] = this->hide_rejected;
     obj["view_tags"] = strlist_to_json_array(this->view_tags.toList());
     obj["use_subset"] = this->use_subset;
     obj["subset"] = intlist_to_json_array(this->subset.toList());
@@ -949,6 +957,7 @@ ClusterVisibilityRule ClusterVisibilityRule::fromJsonObject(const QJsonObject& X
     ClusterVisibilityRule ret;
     ret.view_all_tagged = X["view_all_tagged"].toBool();
     ret.view_all_untagged = X["view_all_untagged"].toBool();
+    ret.hide_rejected=X["hide_rejected"].toBool();
     ret.view_tags = QSet<QString>::fromList(json_array_to_strlist(X["view_tags"].toArray()));
     ret.use_subset = X["use_subset"].toBool();
     ret.subset = QSet<int>::fromList(json_array_to_intlist(X["subset"].toArray()));

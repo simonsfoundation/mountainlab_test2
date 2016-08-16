@@ -5,7 +5,7 @@
 *******************************************************/
 
 #include "mvtemplatesview2.h"
-#include "mvpanelwidget.h"
+#include "mvpanelwidget2.h"
 #include "mvtemplatesview2panel.h"
 
 #include <QLabel>
@@ -56,7 +56,7 @@ public:
 
     double m_total_time_sec = 0;
     bool m_zoomed_out_once = false;
-    MVPanelWidget* m_panel_widget;
+    MVPanelWidget2* m_panel_widget;
     double m_vscale_factor = 4;
     double m_hscale_factor = 2;
 
@@ -74,8 +74,11 @@ MVTemplatesView2::MVTemplatesView2(MVContext* mvcontext)
     QVBoxLayout* layout = new QVBoxLayout;
     this->setLayout(layout);
 
-    d->m_panel_widget = new MVPanelWidget;
-    d->m_panel_widget->setScrollable(true, false);
+    d->m_panel_widget = new MVPanelWidget2;
+    PanelWidget2Behavior B;
+    B.h_scrollable=true;
+    B.v_scrollable=false;
+    d->m_panel_widget->setBehavior(B);
     layout->addWidget(d->m_panel_widget);
 
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomIn, this, d->m_panel_widget, SLOT(zoomIn()));
@@ -142,7 +145,7 @@ void MVTemplatesView2::onCalculationFinished()
 
 void MVTemplatesView2::zoomAllTheWayOut()
 {
-    d->m_panel_widget->setViewportGeometry(QRectF(0, 0, 1, 1));
+    //d->m_panel_widget->zoomAllTheWayOut();
 }
 
 void MVTemplatesView2::keyPressEvent(QKeyEvent* evt)

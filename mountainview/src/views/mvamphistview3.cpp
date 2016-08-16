@@ -1,7 +1,7 @@
 #include "mvamphistview3.h"
 #include "actionfactory.h"
 #include "histogramlayer.h"
-#include "mvpanelwidget.h"
+#include "mvpanelwidget2.h"
 #include "get_sort_indices.h"
 /// TODO get_sort_indices should be put into MLCompute
 
@@ -33,7 +33,7 @@ public:
 
     MVAmpHistView3Computer m_computer;
     QList<AmpHistogram3> m_histograms;
-    MVPanelWidget* m_panel_widget;
+    MVPanelWidget2* m_panel_widget;
     QList<HistogramLayer*> m_views;
     QSpinBox* m_num_bins_control;
     double m_zoom_factor = 1;
@@ -50,8 +50,16 @@ MVAmpHistView3::MVAmpHistView3(MVContext* context)
     QVBoxLayout* layout = new QVBoxLayout;
     this->setLayout(layout);
 
-    d->m_panel_widget = new MVPanelWidget;
-    d->m_panel_widget->setScrollable(true, false);
+    d->m_panel_widget = new MVPanelWidget2;
+    PanelWidget2Behavior B;
+    B.h_scrollable=false;
+    B.v_scrollable=true;
+    B.preferred_panel_width=300;
+    B.preferred_panel_height=300;
+    B.adjust_layout_to_preferred_size=true;
+    d->m_panel_widget->setBehavior(B);
+    d->m_panel_widget->setSpacing(14,14);
+    d->m_panel_widget->setMargins(14,14);
     //d->m_panel_widget->setZoomOnWheel(false);
     layout->addWidget(d->m_panel_widget);
 
@@ -309,7 +317,7 @@ void MVAmpHistView3::slot_update_bins()
     int num_bins = d->m_num_bins_control->value();
     for (int i = 0; i < d->m_views.count(); i++) {
         d->m_views[i]->setBinInfo(bin_min, bin_max, num_bins);
-        d->m_views[i]->setXRange(MVRange(-max00 * 0.8, max00 * 0.8));
+        d->m_views[i]->setXRange(MVRange(-max00 * 0.5, max00 * 0.5));
         d->m_views[i]->autoCenterXRange();
     }
 }
@@ -332,7 +340,7 @@ void MVAmpHistView3Private::set_views()
             HV->setDrawVerticalAxisAtZero(true);
             if (amp_thresh) {
                 QList<double> vals;
-                for (int i = 1; i <= 50; i++) {
+                for (int i = 1; i <= 1; i++) {
                     vals << -amp_thresh* i << amp_thresh* i;
                 }
                 HV->setVerticalLines(vals);

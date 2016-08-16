@@ -43,6 +43,7 @@ public:
     QSet<QString> view_tags;
     bool view_all_tagged = true;
     bool view_all_untagged = true;
+    bool hide_rejected = true;
 
     bool use_subset = false;
     QSet<int> subset;
