@@ -67,7 +67,7 @@ MVAmpHistView3::MVAmpHistView3(MVContext* context)
         d->m_num_bins_control = new QSpinBox();
         d->m_num_bins_control->setRange(1, 2000);
         d->m_num_bins_control->setSingleStep(20);
-        d->m_num_bins_control->setValue(100);
+        d->m_num_bins_control->setValue(500);
         this->addToolbarControl(new QLabel(" #bins:"));
         this->addToolbarControl(d->m_num_bins_control);
         QObject::connect(d->m_num_bins_control, SIGNAL(valueChanged(int)), this, SLOT(slot_update_bins()));
