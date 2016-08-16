@@ -8,6 +8,7 @@
 #include "paintlayerstack.h"
 #include <QRectF>
 #include <QDebug>
+#include <math.h>
 
 struct MVPanelWidget2Panel {
     int row = 0;

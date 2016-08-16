@@ -30,6 +30,30 @@ Mda extract_clips(const DiskReadMda& X, const QVector<double>& times, int clip_s
     return clips;
 }
 
+Mda32 extract_clips(const DiskReadMda32& X, const QVector<double>& times, int clip_size)
+{
+    int M = X.N1();
+    int N = X.N2();
+    int T = clip_size;
+    int L = times.count();
+    int Tmid = (int)((T + 1) / 2) - 1;
+    Mda32 clips(M, T, L);
+    for (int i = 0; i < L; i++) {
+        int t1 = (int)times[i] - Tmid;
+        int t2 = t1 + T - 1;
+        if ((t1 >= 0) && (t2 < N)) {
+            Mda32 tmp;
+            X.readChunk(tmp, 0, t1, M, T);
+            for (int t = 0; t < T; t++) {
+                for (int m = 0; m < M; m++) {
+                    clips.set(tmp.get(m, t), m, t, i);
+                }
+            }
+        }
+    }
+    return clips;
+}
+
 Mda extract_clips(const DiskReadMda& X, const QVector<double>& times, const QVector<int>& channels, int clip_size)
 {
     int M = X.N1();
