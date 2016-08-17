@@ -2,7 +2,7 @@ function synthesize_timeseries_example
 
 close all;
 
-rng(1);
+%rng(1);
 
 M=5;
 T=800;

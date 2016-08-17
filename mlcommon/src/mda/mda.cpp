@@ -68,7 +68,8 @@ public:
 
 private:
     double* m_data;
-    std::vector<long> m_dims;
+    //std::vector<long> m_dims;
+    QVector<long> m_dims;
     size_t total_size;
 };
 
@@ -878,7 +879,7 @@ bool MdaData::allocate(double value, long N1, long N2, long N3, long N4, long N5
     return true;
 }
 
-long MdaData::dim(size_t idx) const { return m_dims.at(idx); }
+long MdaData::dim(size_t idx) const { return m_dims.value(idx); }
 
 long MdaData::N1() const { return dim(0); }
 
