@@ -168,14 +168,6 @@ bool was_already_attempted(int M, const AttemptedComparisons& attempted_comparis
             double diff_count2 = fabs(attempted_comparisons.counts2[i] - count2);
             double avg_count2 = (attempted_comparisons.counts2[i] + count2) / 2;
             if (diff_count2 <= tol * avg_count2) {
-#if 0
-                float C1[M];
-                for (int m = 0; m < M; m++)
-                    C1[m] = attempted_comparisons.centers1[i * M + m];
-                float C2[M];
-                for (int m = 0; m < M; m++)
-                    C2[m] = attempted_comparisons.centers2[i * M + m];
-#else
                 // We don't have to copy into C1 and C2
                 // attempted_comparisons.centers{1,2} already contain all the data we need
                 // we just need to point to the proper section of the data
@@ -183,7 +175,6 @@ bool was_already_attempted(int M, const AttemptedComparisons& attempted_comparis
                 // but this shouldn't affect speed that much
                 const double *C1 = attempted_comparisons.centers1.constData()+(i*M);
                 const double *C2 = attempted_comparisons.centers2.constData()+(i*M);
-#endif
                 const double dist0 = distance_between_vectors(M, C1, C2);
                 if (dist0 > 0) {
                     double dist1 = distance_between_vectors(M, C1, center1);
@@ -255,18 +246,6 @@ void find_next_comparison(int M, int K, int& k1, int& k2, const bool* active_lab
     k2 = -1;
 }
 
-#if 0
-Mda32 matrix_transpose_isosplit(const Mda32& A)
-{
-    Mda32 ret(A.N2(), A.N1());
-    for (int i = 0; i < A.N1(); i++) {
-        for (int j = 0; j < A.N2(); j++) {
-            ret.set(A.get(i, j), j, i);
-        }
-    }
-    return ret;
-}
-#endif
 
 Mda32 matrix_multiply_isosplit(const Mda32& A, const Mda32& B)
 {
@@ -291,25 +270,6 @@ Mda32 matrix_multiply_isosplit(const Mda32& A, const Mda32& B)
     return ret;
 }
 
-#if 0
-Mda32 matrix_multiply_transposed_isosplit(const Mda32 &A)
-{
-    int N1 = A.N1();
-    int N2 = A.N2();
-
-    Mda32 ret(N1, N1);
-    for (int i = 0; i < N1; i++) {
-        for (int j = 0; j < N1; j++) {
-            double val = 0;
-            for (int k = 0; k < N2; k++) {
-                val += A.get(i, k) * A.get(j, k);
-            }
-            ret.set(val, i, j);
-        }
-    }
-    return ret;
-}
-#else
 Mda32 matrix_multiply_transposed_isosplit(const Mda32 &A)
 {
     int N1 = A.N1();
@@ -328,7 +288,6 @@ Mda32 matrix_multiply_transposed_isosplit(const Mda32 &A)
     }
     return ret;
 }
-#endif
 /*
 Mda32 get_whitening_matrix_isosplit(Mda32& COV)
 {
@@ -369,17 +328,9 @@ void whiten_two_clusters(double* V, Mda32& X1, Mda32& X2)
                 XX.set(X2.get(j, i) - center2[j], j, i + N1);
             }
         }
-        /// TODO: This can definitely be optimized as it should be perfectly possible
-        ///       to multiply a matrix with a transposed matrix without precalculating
-        ///       the transposed matrix.
-        ///
         ///       (AA^T)^T = AA^T (the matrix is symmetric) therefore we can calculate
         ///                       just half of the resulting matrix
-#if 0
-        Mda32 XXt = matrix_multiply_isosplit(XX, matrix_transpose_isosplit(XX));
-#else
         Mda32 XXt = matrix_multiply_transposed_isosplit(XX);
-#endif
         //Mda32 W = get_whitening_matrix_isosplit(COV);
         Mda32 W;
         whitening_matrix_from_XXt(W, XXt);
@@ -439,19 +390,8 @@ QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isoc
             val += X2.value(m, i) * V[m];
         XX << val;
     }
-#if 0
-    QVector<double> XXs = XX;
-    qSort(XXs);
-
-    const double* XXX = XXs.constData();
-
-
-    double cutpoint;
-    bool do_cut = isocut(N1 + N2, &cutpoint, XXX, isocut_threshold, 5);
-#else
     double cutpoint;
     bool do_cut = isocut(N1 + N2, &cutpoint, XX.constData(), isocut_threshold, 5);
-#endif
 
     if (do_cut) {
         do_merge = false;
@@ -613,6 +553,8 @@ QVector<int> choose_random_indices(int N, int K)
             ret << N - 1;
         return ret;
 #else
+        // WW: This "optimized" version is likely slower than the original due to a large
+        //     number of copy operations that have to be made while moving items
         QVector<int> ret;
         std::copy(ML::counting_iterator<int>(0),
                   ML::counting_iterator<int>(N),
@@ -621,18 +563,6 @@ QVector<int> choose_random_indices(int N, int K)
         return ret;
 #endif
     }
-#if 0
-    /// TODO: This can actually starve the function
-    ///       better make it deterministic
-    QSet<int> theset;
-    while (theset.count() < K) {
-        int ind = (qrand() % N);
-        theset.insert(ind);
-    }
-    ret = theset.toList().toVector();
-    qSort(ret);
-    return ret;
-#else
     // fill vector with numbers [0, N-1]
     // shuffle vector getting a random permutation
     // return first K elements
@@ -644,7 +574,6 @@ QVector<int> choose_random_indices(int N, int K)
     ret.resize(K); // truncate to K
     qSort(ret);
     return ret;
-#endif
 }
 
 //do k-means with K clusters -- X is MxN representing N points in M-dimensional space. Returns a labels vector of size N.
