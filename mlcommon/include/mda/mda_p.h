@@ -71,7 +71,7 @@ public:
 
     inline long dims(size_t idx) const
     {
-        return m_dims.at(idx);
+        return m_dims.constData()+idx;
     }
     void setDims(long n1, long n2, long n3, long n4, long n5, long n6)
     {
