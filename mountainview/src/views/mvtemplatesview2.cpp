@@ -158,6 +158,26 @@ void MVTemplatesView2::keyPressEvent(QKeyEvent* evt)
     }
 }
 
+void MVTemplatesView2::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
+{
+    /*
+    int view_index = d->find_view_index_at(pos);
+    if (view_index >= 0) {
+        int k = d->m_views[view_index]->k();
+        if (!mvContext()->selectedClusters().contains(k)) {
+            mvContext()->clickCluster(k, Qt::NoModifier);
+        }
+    }
+    */
+
+    QByteArray ba;
+    QDataStream ds(&ba, QIODevice::WriteOnly);
+    ds << mvContext()->selectedClusters();
+    mimeData.setData("application/x-mv-clusters", ba); // selected cluster data
+
+    MVAbstractView::prepareMimeData(mimeData, pos); // call base class implementation
+}
+
 void MVTemplatesView2::slot_update_panels()
 {
     d->update_panels();
@@ -351,25 +371,30 @@ void MVTemplatesView2Private::update_panels()
     for (int i = 0; i < m_cluster_data.count(); i++) {
         m_max_absval = qMax(qMax(m_max_absval, qAbs(m_cluster_data[i].template0.minimum())), qAbs(m_cluster_data[i].template0.maximum()));
     }
-    int num_rows = m_num_rows;
-    int num_cols = ceil(m_cluster_data.count() * 1.0 / num_rows);
+
     for (int i = 0; i < m_cluster_data.count(); i++) {
         ClusterData2 CD = m_cluster_data[i];
-        MVTemplatesView2Panel* panel = new MVTemplatesView2Panel;
-        panel->setElectrodeGeometry(q->mvContext()->electrodeGeometry());
-        panel->setTemplate(CD.template0);
-        panel->setChannelColors(channel_colors);
-        panel->setColors(q->mvContext()->colors());
-        panel->setTitle(QString::number(CD.k));
-        if (q->mvContext()->sampleRate()) {
-            double total_time_sec = q->mvContext()->currentTimeseries().N2() / q->mvContext()->sampleRate();
-            if (total_time_sec) {
-                double firing_rate = CD.num_events / total_time_sec;
-                panel->setFiringRateDiskDiameter(get_disksize_for_firing_rate(firing_rate));
+        if (q->mvContext()->clusterIsVisible(CD.k)) {
+            MVTemplatesView2Panel* panel = new MVTemplatesView2Panel;
+            panel->setElectrodeGeometry(q->mvContext()->electrodeGeometry());
+            panel->setTemplate(CD.template0);
+            panel->setChannelColors(channel_colors);
+            panel->setColors(q->mvContext()->colors());
+            panel->setTitle(QString::number(CD.k));
+            if (q->mvContext()->sampleRate()) {
+                double total_time_sec = q->mvContext()->currentTimeseries().N2() / q->mvContext()->sampleRate();
+                if (total_time_sec) {
+                    double firing_rate = CD.num_events / total_time_sec;
+                    panel->setFiringRateDiskDiameter(get_disksize_for_firing_rate(firing_rate));
+                }
             }
+            m_panels << panel;
         }
-        m_panel_widget->addPanel(i / num_cols, i % num_cols, panel);
-        m_panels << panel;
+    }
+    int num_rows = m_num_rows;
+    int num_cols = ceil(m_panels.count() * 1.0 / num_rows);
+    for (int i = 0; i < m_panels.count(); i++) {
+        m_panel_widget->addPanel(i / num_cols, i % num_cols, m_panels[i]);
     }
     update_scale_factors();
     q->slot_update_highlighting();

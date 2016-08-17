@@ -27,7 +27,8 @@ public:
     void zoomAllTheWayOut();
 
 protected:
-    void keyPressEvent(QKeyEvent* evt);
+    void keyPressEvent(QKeyEvent* evt) Q_DECL_OVERRIDE;
+    void prepareMimeData(QMimeData& mimeData, const QPoint& pos) Q_DECL_OVERRIDE;
 
 private slots:
     void slot_update_panels();

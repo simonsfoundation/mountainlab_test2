@@ -193,9 +193,11 @@ void MVPanelWidget2::wheelEvent(QWheelEvent* evt)
 
 void MVPanelWidget2::mousePressEvent(QMouseEvent* evt)
 {
-    d->m_press_anchor = evt->pos();
-    d->m_press_anchor_scroll_offset = d->m_scroll_offset;
-    d->m_is_dragging = false;
+    if (evt->button() == Qt::LeftButton) {
+        d->m_press_anchor = evt->pos();
+        d->m_press_anchor_scroll_offset = d->m_scroll_offset;
+        d->m_is_dragging = false;
+    }
 
     QWidget::mousePressEvent(evt);
 }

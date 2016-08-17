@@ -91,9 +91,10 @@ MVAmpHistView3::MVAmpHistView3(MVContext* context)
     QObject::connect(context, SIGNAL(currentClusterChanged()), this, SLOT(slot_current_cluster_changed()));
 
     this->recalculateOn(context, SIGNAL(firingsChanged()), false);
-    this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
+    //this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
-    this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
+    //this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
+    this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()), true);
     this->recalculateOnOptionChanged("amp_thresh_display", false);
 
     connect(d->m_panel_widget, SIGNAL(signalPanelClicked(int, Qt::KeyboardModifiers)), this, SLOT(slot_panel_clicked(int, Qt::KeyboardModifiers)));
