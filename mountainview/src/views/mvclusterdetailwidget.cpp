@@ -39,8 +39,8 @@ struct ClusterData {
 
     int k;
     int channel;
-    Mda template0;
-    Mda stdev0;
+    Mda32 template0;
+    Mda32 stdev0;
     int num_events = 0;
 
     QJsonObject toJsonObject();
@@ -183,6 +183,12 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewF
 
     this->setMouseTracking(true);
 
+    {
+        QAction* A = new QAction("Export waveforms (.mda)", this);
+        A->setProperty("action_type", "");
+        QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_export_waveforms()));
+        this->addAction(A);
+    }
     {
         QAction* a = new QAction("Export image", this);
         this->addAction(a);
@@ -506,6 +512,40 @@ void MVClusterDetailWidget::prepareMimeData(QMimeData& mimeData, const QPoint& p
     MVAbstractView::prepareMimeData(mimeData, pos); // call base class implementation
 }
 
+void MVClusterDetailWidget::slot_export_waveforms()
+{
+    int K = d->m_views.count();
+    if (!K) {
+        QMessageBox::warning(0, "Unable to export waveforms", "Unable to export waveforms. No waveforms are visible");
+        return;
+    }
+    int M, T;
+    {
+        Mda32 template0 = d->m_views[0]->clusterData()->template0;
+        M = template0.N1();
+        T = template0.N2();
+    }
+    Mda32 templates(M, T, K);
+    for (int k = 0; k < K; k++) {
+        Mda32 template0 = d->m_views[k]->clusterData()->template0;
+        templates.setChunk(template0, 0, 0, k);
+    }
+    QString default_dir = QDir::currentPath();
+    QString fname = QFileDialog::getSaveFileName(this, "Export waveforms", default_dir, "*.mda");
+    if (fname.isEmpty())
+        return;
+    if (QFileInfo(fname).suffix() != "mda")
+        fname = fname + ".mda";
+    TaskProgress task("Export waveforms");
+    if (templates.write32(fname)) {
+        task.log(QString("Exported waveforms %1x%2x%3 to %4").arg(M).arg(T).arg(K).arg(fname));
+    }
+    else {
+        task.error(QString("Unable to export waveforms. Unable to write file: ") + fname);
+        QMessageBox::warning(0, "Unable to export waveforms", "Unable to write file: " + fname);
+    }
+}
+
 /*
 void MVClusterDetailWidget::slot_context_menu(const QPoint& pos)
 {
@@ -710,8 +750,8 @@ void ClusterView::paint(QPainter* painter, QRectF rect)
     painter->setPen(pen_frame);
     painter->drawRect(rect2);
 
-    Mda template0 = m_CD.template0;
-    Mda stdev0 = m_CD.stdev0;
+    Mda32 template0 = m_CD.template0;
+    Mda32 stdev0 = m_CD.stdev0;
     int M = template0.N1();
     int T = template0.N2();
     int Tmid = (int)((T + 1) / 2) - 1;
@@ -1104,7 +1144,7 @@ DiskReadMda mp_compute_templates(const QString& mlproxy_url, const QString& time
     return ret;
 }
 
-void mp_compute_templates_stdevs(DiskReadMda& templates_out, DiskReadMda& stdevs_out, const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
+void mp_compute_templates_stdevs(DiskReadMda32& templates_out, DiskReadMda32& stdevs_out, const QString& mlproxy_url, const QString& timeseries, const QString& firings, int clip_size)
 {
     TaskProgress task(TaskProgress::Calculate, "mp_compute_templates_stdevs");
     task.log("mlproxy_url: " + mlproxy_url);
@@ -1186,7 +1226,7 @@ void MVClusterDetailWidgetCalculator::compute()
     task.log("mp_compute_templates_stdevs: " + mlproxy_url + " timeseries_path=" + timeseries_path + " firings_path=" + firings_path);
     task.setProgress(0.6);
     //DiskReadMda templates0 = mp_compute_templates(mlproxy_url, timeseries_path, firings_path, T);
-    DiskReadMda templates0, stdevs0;
+    DiskReadMda32 templates0, stdevs0;
     mp_compute_templates_stdevs(templates0, stdevs0, mlproxy_url, timeseries_path, firings_path, T);
     if (MLUtil::threadInterruptRequested()) {
         task.error("Halted **");

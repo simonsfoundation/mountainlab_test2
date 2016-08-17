@@ -56,6 +56,7 @@ signals:
     //void signalTemplateActivated();
 private slots:
     //void slot_context_menu(const QPoint& pos);
+    void slot_export_waveforms();
     void slot_export_image();
     void slot_toggle_stdev_shading();
     void slot_zoom_in();
