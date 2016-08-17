@@ -12,6 +12,7 @@ function mountainview(view_params)
 %    view_params.raw - MxN raw data (array or path to .mda)
 %    view_params.filt - MxN filtered data (array or path to .mda)
 %    view_params.pre - MxN preprocessed data (array or path to .mda)
+%    view_params.timeseries - MxN filtered data (array or path to .mda)
 %    view_params.firings - RxL array of times/labels etc. according to
 %                           the docs. R is at least 3. The second row is 
 %                           the times, the third row is the labels. (array
@@ -50,6 +51,10 @@ end;
 if isfield(view_params,'pre')
     view_params.pre=create_temporary_path_if_array32(view_params.pre);
     cmd=[cmd,sprintf('--pre=%s ',view_params.pre)];
+end;
+if isfield(view_params,'timeseries')
+    view_params.timeseries=create_temporary_path_if_array32(view_params.timeseries);
+    cmd=[cmd,sprintf('--timeseries=%s ',view_params.timeseries)];
 end;
 if isfield(view_params,'firings')
     view_params.firings=create_temporary_path_if_array64(view_params.firings);

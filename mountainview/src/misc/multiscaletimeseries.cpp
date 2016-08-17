@@ -88,6 +88,7 @@ void MultiScaleTimeSeries::initialize()
         path = d->m_data.makePath();
         if (path.isEmpty()) {
             qWarning() << "Unable to initialize multiscaletimeseries.... path is empty.";
+            task.error() << "Unable to initialize multiscaletimeseries.... path is empty.";
             d->m_initialized = true;
             return;
         }

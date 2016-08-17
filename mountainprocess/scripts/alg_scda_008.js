@@ -17,6 +17,7 @@ function run_algorithm(params) {
 	params.num_features=params.num_features||10;
 	params.num_features2=params.num_features2||10;
 	params.adj_radius=params.adj_radius||0;
+	params.consolidation_factor=params.consolidation_factor||0.9;
 	params.channels=params.channels||'';
 	params.timerange=params.timerange||[-1,-1];
 	params.use_whitening=params.use_whitening||'true';
@@ -61,7 +62,7 @@ function run_algorithm(params) {
 		num_features:params.num_features,
 		num_features2:params.num_features2,
 		detect_interval:params.detect_interval,
-		consolidation_factor:0.9,
+		consolidation_factor:params.consolidation_factor,
 		num_threads:params.cluster_num_threads
 	};
 	var o_merge_across_channels_v2={
