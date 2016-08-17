@@ -26,10 +26,20 @@
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtConcurrentRun>
+#include <firetrackview.h>
+#include <mvamphistview3.h>
+#include <mvclipswidget.h>
+#include <mvclustercontextmenuhandler.h>
 #include <mvclusterdetailwidget.h>
+#include <mvclusterpaircontextmenuhandler.h>
 #include <mvcrosscorrelogramswidget3.h>
+#include <mvdiscrimhistview.h>
+#include <mvdiscrimhistview_guide.h>
+#include <mvfiringeventview2.h>
 #include <mvmergecontrol.h>
 #include <mvspikesprayview.h>
+#include <mvtemplatesview2.h>
+#include <mvtimeseriesview2.h>
 #include <tabber.h>
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
@@ -37,6 +47,8 @@
 /// TODO: (HIGH) Resort by populations, ampl, etc
 /// TODO: (MEDIUM) electrode view... (firetrack)
 /// TODO: (0.9.1) Go to timepoint ****
+
+void setup_main_window(MVMainWindow *W, MVContext *context);
 
 class TaskProgressViewThread : public QRunnable {
 public:
@@ -242,6 +254,7 @@ int main(int argc, char* argv[])
         context->setChannelColors(channel_colors);
         context->setClusterColors(label_colors);
         MVMainWindow* W = new MVMainWindow(context);
+        setup_main_window(W,context);
 
         if (!mv_fname.isEmpty()) {
             QString json = TextFile::read(mv_fname);
@@ -714,4 +727,28 @@ void set_nice_size(QWidget* W)
     if (geom.height() - 100 < H0)
         H0 = geom.height() - 100;
     W->resize(W0, H0);
+}
+
+void setup_main_window(MVMainWindow *W, MVContext *context) {
+    W->registerViewFactory(new MVClusterDetailsFactory(context, W));
+    W->registerViewFactory(new MVTemplatesView2Factory(context, W));
+    W->registerViewFactory(new MVAutoCorrelogramsFactory(context, W));
+    W->registerViewFactory(new MVSelectedAutoCorrelogramsFactory(context, W));
+    W->registerViewFactory(new MVCrossCorrelogramsFactory(context, W));
+    W->registerViewFactory(new MVMatrixOfCrossCorrelogramsFactory(context, W));
+    W->registerViewFactory(new MVSelectedCrossCorrelogramsFactory(context, W));
+    W->registerViewFactory(new MVTimeSeriesDataFactory(context, W));
+    W->registerViewFactory(new MVClipsFactory(context, W));
+    W->registerViewFactory(new MVPCAFeaturesFactory(context, W));
+    W->registerViewFactory(new MVChannelFeaturesFactory(context, W));
+    W->registerViewFactory(new MVSpikeSprayFactory(context, W));
+    W->registerViewFactory(new MVFiringEventsFactory(context, W));
+    //W->registerViewFactory(new MVAmplitudeHistogramsFactory(context, W));
+    W->registerViewFactory(new MVAmplitudeHistograms3Factory(context, W));
+    W->registerViewFactory(new MVDiscrimHistFactory(context, W));
+    W->registerViewFactory(new MVDiscrimHistGuideFactory(context, W));
+    W->registerViewFactory(new MVFireTrackFactory(context, W));
+
+    W->registerContextMenuHandler(new MVClusterContextMenuHandler(context, W));
+    W->registerContextMenuHandler(new MVClusterPairContextMenuHandler(context, W));
 }

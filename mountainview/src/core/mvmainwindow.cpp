@@ -1,33 +1,19 @@
 #include "mvmainwindow.h"
 #include "diskreadmda.h"
-#include "mvcrosscorrelogramswidget3.h"
-#include "mvclusterdetailwidget.h"
-#include "mvclipswidget.h"
-#include "mvclusterwidget.h"
-#include "mvspikesprayview.h"
-#include "mvfiringeventview2.h"
 #include "tabber.h"
 #include "taskprogressview.h"
 #include "mvcontrolpanel2.h"
 #include "taskprogress.h"
 #include "mvcontext.h"
 #include "mvstatusbar.h"
-#include "mvtimeseriesview2.h"
 #include "mlcommon.h"
 #include "mvabstractviewfactory.h"
-#include "mvamphistview2.h"
-#include "mvamphistview3.h"
-#include "mvdiscrimhistview.h"
-#include "guidev1.h"
 
 #include <QApplication>
 #include <QProcess>
-#include <mvtemplatesview2.h>
 
 #include "mvabstractviewfactory.h"
 #include "mvabstractcontextmenuhandler.h"
-#include "mvclustercontextmenuhandler.h"
-#include "mvclusterpaircontextmenuhandler.h"
 
 /// TODO, get rid of computationthread
 /// TODO: (HIGH) create test dataset to be distributed
@@ -61,12 +47,7 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QMenu>
-#include <mvdiscrimhistview_guide.h>
-#include <guidev2.h>
-#include <firetrackview.h>
 #include <cachemanager.h>
-
-#include "clusterannotationguide.h"
 
 /// TODO (LOW) put styles in central place?
 #define MV_STATUS_BAR_HEIGHT 30
@@ -91,9 +72,9 @@ public:
     MVAbstractViewFactory* viewFactoryById(const QString& id) const;
     MVAbstractView* openView(MVAbstractViewFactory* factory);
 
-    ClusterAnnotationGuide* m_cluster_annotation_guide;
-    GuideV1* m_guide_v1;
-    GuideV2* m_guide_v2;
+    //ClusterAnnotationGuide* m_cluster_annotation_guide;
+    //GuideV1* m_guide_v1;
+    //GuideV2* m_guide_v2;
 
     void update_sizes(); //update sizes of all the widgets when the main window is resized
     void add_tab(MVAbstractView* W, QString label);
@@ -116,32 +97,14 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
 
     d->m_context = context;
 
-    registerViewFactory(new MVClusterDetailsFactory(context, this));
-    registerViewFactory(new MVTemplatesView2Factory(context, this));
-    registerViewFactory(new MVAutoCorrelogramsFactory(context, this));
-    registerViewFactory(new MVSelectedAutoCorrelogramsFactory(context, this));
-    registerViewFactory(new MVCrossCorrelogramsFactory(context, this));
-    registerViewFactory(new MVMatrixOfCrossCorrelogramsFactory(context, this));
-    registerViewFactory(new MVSelectedCrossCorrelogramsFactory(context, this));
-    registerViewFactory(new MVTimeSeriesDataFactory(context, this));
-    registerViewFactory(new MVClipsFactory(context, this));
-    registerViewFactory(new MVPCAFeaturesFactory(context, this));
-    registerViewFactory(new MVChannelFeaturesFactory(context, this));
-    registerViewFactory(new MVSpikeSprayFactory(context, this));
-    registerViewFactory(new MVFiringEventsFactory(context, this));
-    //registerViewFactory(new MVAmplitudeHistogramsFactory(context, this));
-    registerViewFactory(new MVAmplitudeHistograms3Factory(context, this));
-    registerViewFactory(new MVDiscrimHistFactory(context, this));
-    registerViewFactory(new MVDiscrimHistGuideFactory(context, this));
-    registerViewFactory(new MVFireTrackFactory(context, this));
-
-    registerContextMenuHandler(new MVClusterContextMenuHandler(context, this));
-    registerContextMenuHandler(new MVClusterPairContextMenuHandler(context, this));
-
     QToolBar* main_toolbar = new QToolBar;
+
+    /*
     d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_context, this);
     d->m_guide_v1 = new GuideV1(d->m_context, this);
     d->m_guide_v2 = new GuideV2(d->m_context, this);
+    */
+
     {
 
         {
@@ -177,6 +140,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
                 QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalShareViewsOnWeb()));
             }
         }
+        /*
         {
             QToolButton* B = new QToolButton();
             //B->setIcon(QIcon(":/images/gear.png"));
@@ -191,6 +155,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
                 QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_guide_v2()));
             }
         }
+        */
 
         {
             QToolButton* B = new QToolButton();
@@ -274,7 +239,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
 
 MVMainWindow::~MVMainWindow()
 {
-    delete d->m_cluster_annotation_guide;
+    //delete d->m_cluster_annotation_guide;
     delete d;
 }
 
@@ -459,24 +424,22 @@ void MVMainWindow::slot_pop_out_widget()
 
 void MVMainWindow::slot_cluster_annotation_guide()
 {
-    d->m_cluster_annotation_guide->show();
-    d->m_cluster_annotation_guide->raise();
+    //d->m_cluster_annotation_guide->show();
+    //d->m_cluster_annotation_guide->raise();
 }
 
 void MVMainWindow::slot_guide_v1()
 {
-    this->closeAllViews();
-    d->m_guide_v1->show();
-    d->m_guide_v1->raise();
+    //this->closeAllViews();
+    //d->m_guide_v1->show();
+    //d->m_guide_v1->raise();
 }
 
 void MVMainWindow::slot_guide_v2()
 {
-    this->closeAllViews();
-    d->m_guide_v2->show();
-    d->m_guide_v2->raise();
-    //the following causes widget to break
-    //d->m_guide_v2->setWindowFlags(d->m_guide_v2->windowFlags()|Qt::WindowStaysOnTopHint);
+    //this->closeAllViews();
+    //d->m_guide_v2->show();
+    //d->m_guide_v2->raise();
 }
 
 void MVMainWindow::slot_open_view(QObject* o)
