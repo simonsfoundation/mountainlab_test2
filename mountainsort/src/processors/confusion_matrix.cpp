@@ -2,6 +2,7 @@
 #include "diskreadmda.h"
 #include <QSet>
 #include <QMap>
+#include "get_sort_indices.h"
 
 QVector<int> indexlist(const QVector<int>& T2, int t1, int offset, int& ptr2);
 Mda confusion_matrix_2(const char* firings1_path, const char* firings2_path, int max_matching_offset, QMap<int, int>& map12);
@@ -38,6 +39,18 @@ bool confusion_matrix(const char* firings1_path, const char* firings2_path, cons
     return true;
 }
 
+void sort_times_labels(QVector<double> &times, QVector<int> &labels) {
+    QVector<double> times2;
+    QVector<int> labels2;
+    QList<long> inds=get_sort_indices(times);
+    for (long i=0; i<inds.count(); i++) {
+        times2 << times[inds[i]];
+        labels2 << labels[inds[i]];
+    }
+    times=times2;
+    labels=labels2;
+}
+
 Mda confusion_matrix_2(const char* firings1_path, const char* firings2_path, int max_matching_offset, QMap<int, int>& map12)
 {
     DiskReadMda C1;
@@ -45,16 +58,27 @@ Mda confusion_matrix_2(const char* firings1_path, const char* firings2_path, int
     DiskReadMda C2;
     C2.setPath(firings2_path);
 
-    QVector<int> T1, L1;
-    QVector<int> T2, L2;
+    QVector<double> T1d,T2d;
+    QVector<int> L1,L2;
 
     for (int ii = 0; ii < C1.N2(); ii++) {
-        T1 << C1.value(1, ii);
+        T1d << C1.value(1, ii);
         L1 << C1.value(2, ii);
     }
     for (int ii = 0; ii < C2.N2(); ii++) {
-        T2 << C2.value(1, ii);
+        T2d << C2.value(1, ii);
         L2 << C2.value(2, ii);
+    }
+
+    sort_times_labels(T1d,L1);
+    sort_times_labels(T2d,L2);
+
+    QVector<int> T1,T2;
+    for (long i=0; i<T1d.count(); i++) {
+        T1 << (int)T1d[i];
+    }
+    for (long i=0; i<T2d.count(); i++) {
+        T2 << (int)T2d[i];
     }
 
     int K1 = 1;

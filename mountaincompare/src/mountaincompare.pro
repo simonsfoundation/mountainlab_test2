@@ -15,11 +15,14 @@ QT+=concurrent
 DESTDIR = ../bin
 OBJECTS_DIR = ../build
 MOC_DIR=../build
-TARGET = mountainview
+TARGET = mountaincompare
 TEMPLATE = app
 
 SOURCES += mountaincomparemain.cpp \
-    mvmainwindow.cpp
+    mvmainwindow.cpp \
+    mccontext.cpp \
+    views/confusionmatrixview.cpp \
+    views/matrixview.cpp
 
 INCLUDEPATH += ../../mountainview/src/core
 VPATH += ../../mountainview/src/core
@@ -29,7 +32,10 @@ mountainprocessrunner.h mvabstractcontextmenuhandler.h \
 mvabstractcontrol.h mvabstractview.h mvabstractviewfactory.h \
 mvcontrolpanel2.h mvstatusbar.h \
 mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
-    mvmainwindow.h
+    mvmainwindow.h \
+    mccontext.h \
+    views/confusionmatrixview.h \
+    views/matrixview.h
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
@@ -47,8 +53,17 @@ SOURCES += \
 clustermerge.cpp multiscaletimeseries.cpp \
 mvmisc.cpp mvutils.cpp paintlayer.cpp paintlayerstack.cpp
 
+INCLUDEPATH += ../../mountainview/src/controlwidgets
+VPATH += ../../mountainview/src/controlwidgets
+HEADERS += mvopenviewscontrol.h
+SOURCES += mvopenviewscontrol.cpp
+
+#TODO, make a .pri for the accordion because this appears in the mountainview as well
 INCLUDEPATH += ../../mountainview/src/3rdparty/qaccordion/include
 VPATH += ../../mountainview/src/3rdparty/qaccordion/include
 VPATH += ../../mountainview/src/3rdparty/qaccordion/src
 HEADERS += qAccordion/qaccordion.h qAccordion/contentpane.h qAccordion/clickableframe.h
 SOURCES += qaccordion.cpp contentpane.cpp clickableframe.cpp
+
+RESOURCES += ../../mountainview/src/mountainview.qrc \
+            ../../mountainview/src/3rdparty/qaccordion/icons/qaccordionicons.qrc

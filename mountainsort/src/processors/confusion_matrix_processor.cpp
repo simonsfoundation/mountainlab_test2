@@ -18,7 +18,7 @@ confusion_matrix_Processor::confusion_matrix_Processor()
     d->q = this;
 
     this->setName("confusion_matrix");
-    this->setVersion("0.1");
+    this->setVersion("0.12");
     this->setInputFileParameters("firings1", "firings2");
     this->setOutputFileParameters("output");
     this->setRequiredParameters("max_matching_offset");
