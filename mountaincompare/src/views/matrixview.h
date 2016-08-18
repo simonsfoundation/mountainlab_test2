@@ -21,6 +21,9 @@ public:
     void setValueRange(double minval,double maxval);
     void setIndexPermutations(const QVector<int> &perm_rows,const QVector<int> &perm_cols);
     void setLabels(const QStringList &row_labels, const QStringList &col_labels);
+    void setTitle(QString title);
+    void setRowAxisLabel(QString label);
+    void setColumnAxisLabel(QString label);
     void setDrawDividerForFinalRow(bool val);
     void setDrawDividerForFinalColumn(bool val);
     void setCurrentElement(QPoint pt);

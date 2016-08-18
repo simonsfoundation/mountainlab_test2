@@ -17,9 +17,12 @@ public:
     bool m_draw_divider_for_final_column=true;
     QPoint m_hovered_element=QPoint(-1,-1);
     QPoint m_current_element=QPoint(-1,-1);
+    QString m_title;
+    QString m_row_axis_label;
+    QString m_column_axis_label;
 
     //left,right,top,bottom
-    double m_margins[4]={20,0,0,20};
+    double m_margins[4]={50,0,40,50};
 
     QRectF get_entry_rect(int m,int n);
     QPointF coord2pix(double m,double n);
@@ -78,6 +81,24 @@ void MatrixView::setLabels(const QStringList &row_labels, const QStringList &col
     update();
 }
 
+void MatrixView::setTitle(QString title)
+{
+    d->m_title=title;
+    update();
+}
+
+void MatrixView::setRowAxisLabel(QString label)
+{
+    d->m_row_axis_label=label;
+    update();
+}
+
+void MatrixView::setColumnAxisLabel(QString label)
+{
+    d->m_column_axis_label=label;
+    update();
+}
+
 void MatrixView::setDrawDividerForFinalRow(bool val)
 {
     d->m_draw_divider_for_final_row=val;
@@ -111,10 +132,11 @@ void MatrixView::paintEvent(QPaintEvent *evt)
     Q_UNUSED(evt)
 
     double left=d->m_margins[0];
-    //double right=d->m_margins[1];
-    //double top=d->m_margins[2];
+    double right=d->m_margins[1];
+    double top=d->m_margins[2];
     double bottom=d->m_margins[3];
 
+    //The matrix
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     int M=d->m_matrix.N1();
@@ -138,23 +160,28 @@ void MatrixView::paintEvent(QPaintEvent *evt)
         }
     }
 
+    //The row labels
     for (int m=0; m<M; m++) {
+        int label_wid=20;
         int m2=d->row_map(m);
         QPointF pt1=d->coord2pix(m2,0);
         QPointF pt2=d->coord2pix(m2+1,0);
-        QRectF r=QRectF(pt1.x()-left,pt1.y(),left,pt2.y()-pt1.y());
+        QRectF r=QRectF(pt1.x()-label_wid,pt1.y(),label_wid,pt2.y()-pt1.y());
         int fontsize=qMin(16.0,pt2.y()-pt1.y());
         d->draw_string_in_rect(painter,r,d->m_row_labels.value(m),Qt::black,fontsize);
     }
+    //The column labels
     for (int n=0; n<N; n++) {
+        int label_height=20;
         int n2=d->col_map(n);
         QPointF pt1=d->coord2pix(M,n2);
         QPointF pt2=d->coord2pix(M,n2+1);
-        QRectF r=QRectF(pt1.x(),pt1.y(),pt2.x()-pt1.x(),bottom);
+        QRectF r=QRectF(pt1.x(),pt1.y(),pt2.x()-pt1.x(),label_height);
         int fontsize=qMin(16.0,(pt2.x()-pt1.x())/2);
         d->draw_string_in_rect(painter,r,d->m_col_labels.value(n),Qt::black,fontsize);
     }
 
+    //Dividers for final row/column
     if (d->m_draw_divider_for_final_row) {
         QPointF pt1=d->coord2pix(M-1,0);
         QPointF pt2=d->coord2pix(M-1,N-1);
@@ -170,6 +197,7 @@ void MatrixView::paintEvent(QPaintEvent *evt)
         painter.drawLine(pt1,pt2);
     }
 
+    //hovered row/column
     QColor col(255,255,220,60);
     if (d->m_hovered_element.x()>=0) {
         int m2=d->row_map(d->m_hovered_element.x());
@@ -192,11 +220,18 @@ void MatrixView::paintEvent(QPaintEvent *evt)
         painter.fillRect(r2,col);
     }
 
+    //current element
     if ((d->m_current_element.x()>=0)&&(d->m_current_element.y()>=0)) {
         QRectF r=d->get_entry_rect(d->m_current_element.x(),d->m_current_element.y());
         QPen pen(QBrush(QColor(255,200,180)),3);
         painter.setPen(pen);
         painter.drawRect(r);
+    }
+
+    //title
+    {
+        QRectF r(left,0,this->width()-left-right,top);
+        d->draw_string_in_rect(painter,r,d->m_title,Qt::black,16);
     }
 }
 

@@ -25,6 +25,7 @@ public:
     //output
     DiskReadMda confusion_matrix;
     QList<int> optimal_assignments;
+    DiskReadMda event_correspondence;
 
     virtual void compute();
 
@@ -125,10 +126,13 @@ ConfusionMatrixView::ConfusionMatrixView(MVContext* mvcontext)
 
     d->m_matrix_view=new MatrixView;
     d->m_matrix_view->setMode(MatrixView::CountsMode);
+    d->m_matrix_view->setTitle("Confusion matrix");
     d->m_matrix_view_rn=new MatrixView;
     d->m_matrix_view_rn->setMode(MatrixView::PercentMode);
+    d->m_matrix_view_rn->setTitle("Row-normalized");
     d->m_matrix_view_cn=new MatrixView;
     d->m_matrix_view_cn->setMode(MatrixView::PercentMode);
+    d->m_matrix_view_cn->setTitle("Column-normalized");
 
     d->m_all_matrix_views << d->m_matrix_view << d->m_matrix_view_cn << d->m_matrix_view_rn;
 
@@ -293,6 +297,7 @@ void ConfusionMatrixViewCalculator::compute()
 
     QString output_path = MPR.makeOutputFilePath("output");
     QString optimal_assignments_path = MPR.makeOutputFilePath("optimal_assignments");
+    QString event_correspondence_path = MPR.makeOutputFilePath("event_correspondence");
 
     MPR.runProcess();
 
@@ -302,6 +307,7 @@ void ConfusionMatrixViewCalculator::compute()
     }
 
     confusion_matrix.setPath(output_path);
+    event_correspondence.setPath(event_correspondence_path);
 
     optimal_assignments.clear();
     {
@@ -315,6 +321,7 @@ void ConfusionMatrixViewCalculator::compute()
     task.log() << "Optimal assignments path:" << optimal_assignments_path;
     task.log() << "Optimal assignments:" << optimal_assignments;
     task.log() << "Confusion matrix dimensions:" << confusion_matrix.N1() << confusion_matrix.N2();
+    task.log() << "Event correspondence dimensions:" << event_correspondence.N1() << event_correspondence.N2();
 }
 
 ConfusionMatrixViewFactory::ConfusionMatrixViewFactory(MVContext* context, QObject* parent)
