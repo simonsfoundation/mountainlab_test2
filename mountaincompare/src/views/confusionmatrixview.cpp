@@ -255,7 +255,7 @@ void ConfusionMatrixView::slot_matrix_view_current_element_changed()
     if (!MV) return;
     QPoint a=MV->currentElement();
     if ((a.x()>=0)&&(a.y()>=0)) {
-        mcContext()->setCurrentCluster(a.x()+1);
+        mcContext()->clickCluster(a.x()+1,Qt::NoModifier);
         mcContext()->setCurrentCluster2(a.y()+1);
     }
     else {
@@ -266,8 +266,20 @@ void ConfusionMatrixView::slot_matrix_view_current_element_changed()
 
 void ConfusionMatrixView::slot_update_current_elements_based_on_context()
 {
-    foreach (MatrixView *MV,d->m_all_matrix_views) {
-        MV->setCurrentElement(QPoint(mcContext()->currentCluster()-1,mcContext()->currentCluster2()-1));
+    int k1=mcContext()->currentCluster();
+    int k2=mcContext()->currentCluster2();
+    if (k1<=0) {
+        foreach (MatrixView *MV,d->m_all_matrix_views) {
+            MV->setCurrentElement(QPoint(-1,-1));
+        }
+    }
+    else {
+        if (k2<=0) {
+            k2=1;
+        }
+        foreach (MatrixView *MV,d->m_all_matrix_views) {
+            MV->setCurrentElement(QPoint(k1-1,k2-1));
+        }
     }
 }
 

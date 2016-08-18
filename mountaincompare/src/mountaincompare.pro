@@ -22,7 +22,8 @@ SOURCES += mountaincomparemain.cpp \
     mvmainwindow.cpp \
     mccontext.cpp \
     views/confusionmatrixview.cpp \
-    views/matrixview.cpp
+    views/matrixview.cpp \
+    mcviewfactories.cpp
 
 INCLUDEPATH += ../../mountainview/src/core
 VPATH += ../../mountainview/src/core
@@ -35,7 +36,8 @@ mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
     mvmainwindow.h \
     mccontext.h \
     views/confusionmatrixview.h \
-    views/matrixview.h
+    views/matrixview.h \
+    mcviewfactories.h
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
@@ -58,6 +60,23 @@ VPATH += ../../mountainview/src/controlwidgets
 HEADERS += mvopenviewscontrol.h
 SOURCES += mvopenviewscontrol.cpp
 
+INCLUDEPATH += ../../mountainview/src/views
+VPATH += ../../mountainview/src/views
+HEADERS += \
+mvclipsview.h mvclipswidget.h mvtimeseriesview2.h mvtimeseriesviewbase.h mvtimeseriesrendermanager.h \
+mvclusterview.h mvclusterwidget.h mvclusterlegend.h \
+mvclusterdetailwidget.h
+SOURCES += \
+mvclipsview.cpp mvclipswidget.cpp mvtimeseriesview2.cpp mvtimeseriesviewbase.cpp mvtimeseriesrendermanager.cpp \
+mvclusterview.cpp mvclusterwidget.cpp mvclusterlegend.cpp \
+mvclusterdetailwidget.cpp
+
+INCLUDEPATH += ../../mountainsort/src/processors
+DEPENDPATH += ../../mountainsort/src/processors
+VPATH += ../../mountainsort/src/processors
+HEADERS += extract_clips.h
+SOURCES += extract_clips.cpp
+
 #TODO, make a .pri for the accordion because this appears in the mountainview as well
 INCLUDEPATH += ../../mountainview/src/3rdparty/qaccordion/include
 VPATH += ../../mountainview/src/3rdparty/qaccordion/include
@@ -70,6 +89,8 @@ DEPENDPATH += ../../mountainsort/src/utils
 VPATH += ../../mountainsort/src/utils
 HEADERS += get_sort_indices.h msmisc.h
 SOURCES += get_sort_indices.cpp msmisc.cpp
+HEADERS += affinetransformation.h
+SOURCES += affinetransformation.cpp
 
 RESOURCES += ../../mountainview/src/mountainview.qrc \
             ../../mountainview/src/3rdparty/qaccordion/icons/qaccordionicons.qrc
