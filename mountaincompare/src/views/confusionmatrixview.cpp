@@ -15,25 +15,6 @@
 #include "matrixview.h"
 #include "get_sort_indices.h"
 
-class ConfusionMatrixViewCalculator {
-public:
-    //input
-    QString mlproxy_url;
-    DiskReadMda firings1;
-    DiskReadMda firings2;
-
-    //output
-    DiskReadMda confusion_matrix;
-    QList<int> optimal_assignments;
-    DiskReadMda event_correspondence;
-
-    virtual void compute();
-
-    bool loaded_from_static_output = false;
-    QJsonObject exportStaticOutput();
-    void loadStaticOutput(const QJsonObject& X);
-};
-
 struct CMVControlBar {
     QWidget *widget;
     QMap<QString,QRadioButton*> permutation_buttons;
@@ -101,9 +82,8 @@ class ConfusionMatrixViewPrivate {
 public:
     ConfusionMatrixView* q;
 
-    ConfusionMatrixViewCalculator m_calculator;
     Mda m_confusion_matrix;
-    QList<int> m_optimal_assignments;
+    QList<long> m_optimal_assignments;
     MatrixView *m_matrix_view; //raw numbers
     MatrixView *m_matrix_view_rn; //row normalized
     MatrixView *m_matrix_view_cn; //column normalized
@@ -176,23 +156,23 @@ ConfusionMatrixView::~ConfusionMatrixView()
 void ConfusionMatrixView::prepareCalculation()
 {
     if (!mcContext()) return;
-
-    d->m_calculator.mlproxy_url = mcContext()->mlProxyUrl();
-    d->m_calculator.firings1 = mcContext()->firings();
-    d->m_calculator.firings2 = mcContext()->firings2();
 }
 
 void ConfusionMatrixView::runCalculation()
 {
-    d->m_calculator.compute();
+    mcContext()->computeConfusionMatrix();
 }
 
 void ConfusionMatrixView::onCalculationFinished()
 {
-    int A1=d->m_calculator.confusion_matrix.N1();
-    int A2=d->m_calculator.confusion_matrix.N2();
-    d->m_calculator.confusion_matrix.readChunk(d->m_confusion_matrix,0,0,A1,A2);
-    d->m_optimal_assignments=d->m_calculator.optimal_assignments;
+    DiskReadMda confusion_matrix=mcContext()->confusionMatrix();
+    int A1=confusion_matrix.N1();
+    int A2=confusion_matrix.N2();
+    confusion_matrix.readChunk(d->m_confusion_matrix,0,0,A1,A2);
+    d->m_optimal_assignments.clear();
+    for (long i=0; i<mcContext()->optimalAssignments().totalSize(); i++) {
+        d->m_optimal_assignments << mcContext()->optimalAssignments().value(i);
+    }
 
     d->m_matrix_view->setMatrix(d->m_confusion_matrix);
     d->m_matrix_view->setValueRange(0,d->m_confusion_matrix.maximum());
@@ -283,58 +263,7 @@ void ConfusionMatrixView::slot_update_current_elements_based_on_context()
     }
 }
 
-void ConfusionMatrixViewCalculator::compute()
-{
-    TaskProgress task(TaskProgress::Calculate, "Compute confusion matrix");
-    if (this->loaded_from_static_output) {
-        task.log("Loaded from static output");
-        return;
-    }
 
-    QTime timer;
-    timer.start();
-    task.setProgress(0.1);
-
-    MountainProcessRunner MPR;
-    MPR.setProcessorName("confusion_matrix");
-
-    QMap<QString, QVariant> params;
-    params["firings1"] = firings1.makePath();
-    params["firings2"] = firings2.makePath();
-    params["max_matching_offset"] = 6;
-    MPR.setInputParameters(params);
-    MPR.setMLProxyUrl(mlproxy_url);
-
-    task.log() << "Firings 1/2 dimensions" << firings1.N1() << firings1.N2() << firings2.N1() << firings2.N2();
-
-    QString output_path = MPR.makeOutputFilePath("output");
-    QString optimal_assignments_path = MPR.makeOutputFilePath("optimal_assignments");
-    QString event_correspondence_path = MPR.makeOutputFilePath("event_correspondence");
-
-    MPR.runProcess();
-
-    if (MLUtil::threadInterruptRequested()) {
-        task.error(QString("Halted while running process."));
-        return;
-    }
-
-    confusion_matrix.setPath(output_path);
-    event_correspondence.setPath(event_correspondence_path);
-
-    optimal_assignments.clear();
-    {
-        DiskReadMda tmp(optimal_assignments_path);
-        for (int i=0; i<tmp.totalSize(); i++) {
-            optimal_assignments << tmp.value(i);
-        }
-    }
-
-    task.log() << "Output path:" << output_path;
-    task.log() << "Optimal assignments path:" << optimal_assignments_path;
-    task.log() << "Optimal assignments:" << optimal_assignments;
-    task.log() << "Confusion matrix dimensions:" << confusion_matrix.N1() << confusion_matrix.N2();
-    task.log() << "Event correspondence dimensions:" << event_correspondence.N1() << event_correspondence.N2();
-}
 
 ConfusionMatrixViewFactory::ConfusionMatrixViewFactory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)

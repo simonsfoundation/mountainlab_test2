@@ -12,6 +12,13 @@ public:
     MCContext();
     virtual ~MCContext();
 
+    void computeConfusionMatrix(); //must be done in worker thread
+
+    DiskReadMda confusionMatrix() const;
+    DiskReadMda optimalAssignments() const;
+    DiskReadMda eventCorrespondence() const;
+
+
     DiskReadMda firings2();
     int currentCluster2() const;
     QList<int> selectedClusters2() const;
