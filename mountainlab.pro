@@ -7,7 +7,7 @@ TEMPLATE = subdirs
 #COMPONENTS = mdachunk mdaconvert mountainoverlook mountainprocess mountainview mountainbrowser
 
 isEmpty(COMPONENTS) {
-    COMPONENTS = mdachunk mdaconvert mountainoverlook mountainprocess mountainsort mountainview
+    COMPONENTS = mdachunk mdaconvert mountainoverlook mountainprocess mountainsort mountainview mountaincompare
     #we intentionally exclude mountainbrowser -- use: qmake "COMPONENTS = mountainbrowser"
 }
 
@@ -30,6 +30,7 @@ SUBDIRS += $$ifcomponent(mountainoverlook,mountainoverlook/src/mountainoverlook.
 SUBDIRS += $$ifcomponent(mountainprocess,mountainprocess/src/mountainprocess.pro)
 SUBDIRS += $$ifcomponent(mountainsort,mountainsort/src/mountainsort.pro)
 SUBDIRS += $$ifcomponent(mountainview,mountainview/src/mountainview.pro)
+SUBDIRS += $$ifcomponent(mountaincompare,mountaincompare/src/mountaincompare.pro)
 
 
 
