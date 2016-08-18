@@ -1,6 +1,8 @@
 #ifndef MCVIEWFACTORIES_H
 #define MCVIEWFACTORIES_H
 
+#include "mccontext.h"
+
 #include <mvabstractviewfactory.h>
 
 class MVClusterDetails2Factory : public MVAbstractViewFactory {
@@ -13,6 +15,18 @@ public:
     MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
 private slots:
     //void openClipsForTemplate();
+};
+
+class Synchronizer1 : public QObject {
+    Q_OBJECT
+public:
+    Synchronizer1(MCContext *C,MVContext *C_new);
+private slots:
+    void sync_new_to_old();
+    void sync_old_to_new();
+private:
+    MCContext *m_C;
+    MVContext *m_C_new;
 };
 
 #endif // MCVIEWFACTORIES_H

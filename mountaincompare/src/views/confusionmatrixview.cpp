@@ -256,7 +256,7 @@ void ConfusionMatrixView::slot_matrix_view_current_element_changed()
     QPoint a=MV->currentElement();
     if ((a.x()>=0)&&(a.y()>=0)) {
         mcContext()->clickCluster(a.x()+1,Qt::NoModifier);
-        mcContext()->setCurrentCluster2(a.y()+1);
+        mcContext()->clickCluster2(a.y()+1,Qt::NoModifier);
     }
     else {
         mcContext()->setCurrentCluster(-1);
