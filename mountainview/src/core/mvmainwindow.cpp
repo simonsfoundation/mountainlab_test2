@@ -245,6 +245,7 @@ MVMainWindow::~MVMainWindow()
 
 void MVMainWindow::setDefaultInitialization()
 {
+    qWarning() << "Dev note: Get rid of setDefaultInitialization and move functionality to mountainviewmain.cpp";
     openView("open-cluster-details");
     d->m_tabber->switchCurrentContainer();
     openView("open-auto-correlograms");

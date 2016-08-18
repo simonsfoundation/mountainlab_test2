@@ -16,6 +16,11 @@ class ConfusionMatrixViewPrivate;
 class ConfusionMatrixView : public MVAbstractView {
     Q_OBJECT
 public:
+
+    enum PermutationMode {
+        NoPermutation,RowPermutation,ColumnPermutation,BothRowBasedPermutation,BothColumnBasedPermutation
+    };
+
     friend class ConfusionMatrixViewPrivate;
     ConfusionMatrixView(MVContext* mvcontext);
     virtual ~ConfusionMatrixView();
@@ -31,6 +36,9 @@ protected:
     void prepareMimeData(QMimeData& mimeData, const QPoint& pos) Q_DECL_OVERRIDE;
 
 private slots:
+    void slot_permutation_mode_button_clicked();
+    void slot_matrix_view_current_element_changed();
+    void slot_update_current_elements_based_on_context();
 
 private:
     ConfusionMatrixViewPrivate* d;

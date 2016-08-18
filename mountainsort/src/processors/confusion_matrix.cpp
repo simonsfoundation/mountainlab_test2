@@ -3,12 +3,13 @@
 #include <QSet>
 #include <QMap>
 #include "get_sort_indices.h"
+#include "hungarian.h"
 
 QVector<int> indexlist(const QVector<int>& T2, int t1, int offset, int& ptr2);
-Mda confusion_matrix_2(const char* firings1_path, const char* firings2_path, int max_matching_offset, QMap<int, int>& map12);
+Mda confusion_matrix_2(QString firings1_path, QString firings2_path, int max_matching_offset, QMap<int, int>& map12);
+Mda compute_optimal_assignments(const Mda &confusion_matrix);
 
-bool confusion_matrix(const char* firings1_path, const char* firings2_path, const char* output_path, int max_matching_offset)
-{
+bool confusion_matrix(QString firings1_path, QString firings2_path, QString output_path, QString optimal_assignments_path, int max_matching_offset) {
     //first we get the confusion matrix with an empty map12
     QMap<int, int> empty_map;
     Mda CM = confusion_matrix_2(firings1_path, firings2_path, max_matching_offset, empty_map);
@@ -33,8 +34,12 @@ bool confusion_matrix(const char* firings1_path, const char* firings2_path, cons
     //finally we get the confusion matrix again using this map12
     Mda output = confusion_matrix_2(firings1_path, firings2_path, max_matching_offset, map12);
 
-    //finally we write it
+    //finally we compute_the_optimal_assignments
+    Mda optimal_assignments=compute_optimal_assignments(output);
+
+    //finally we write the output
     output.write32(output_path);
+    optimal_assignments.write64(optimal_assignments_path);
 
     return true;
 }
@@ -51,7 +56,7 @@ void sort_times_labels(QVector<double> &times, QVector<int> &labels) {
     labels=labels2;
 }
 
-Mda confusion_matrix_2(const char* firings1_path, const char* firings2_path, int max_matching_offset, QMap<int, int>& map12)
+Mda confusion_matrix_2(QString firings1_path, QString firings2_path, int max_matching_offset, QMap<int, int>& map12)
 {
     DiskReadMda C1;
     C1.setPath(firings1_path);
@@ -198,6 +203,29 @@ QVector<int> indexlist(const QVector<int>& T2, int t1, int offset, int& ptr2)
     }
     if (ret.count() > 0) {
         ptr2 = ret[0]; //update the pointer
+    }
+    return ret;
+}
+
+Mda compute_optimal_assignments(const Mda &confusion_matrix) {
+    //multiply by -1
+    Mda matrix(confusion_matrix.N1()-1,confusion_matrix.N2()-1);
+    for (int i=0; i<confusion_matrix.N1()-1; i++) {
+        for (int j=0; j<confusion_matrix.N2()-1; j++) {
+            matrix.setValue(confusion_matrix.value(i,j)*(-1),i,j);
+        }
+    }
+
+    if (!matrix.N1()) return Mda();
+
+    //call the hungarian algorithm
+    int assignment[matrix.N1()];
+    double cost;
+    hungarian(assignment,&cost,matrix.dataPtr(),matrix.N1(),matrix.N2());
+
+    Mda ret(matrix.N1(),1);
+    for (int i=0; i<matrix.N1(); i++) {
+        ret.setValue(assignment[i],i);
     }
     return ret;
 }

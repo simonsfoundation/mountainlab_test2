@@ -19,7 +19,7 @@ compute_templates_Processor::compute_templates_Processor()
     d->q = this;
 
     this->setName("compute_templates");
-    this->setVersion("0.1");
+    this->setVersion("0.11");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("templates");
     this->setRequiredParameters("clip_size");

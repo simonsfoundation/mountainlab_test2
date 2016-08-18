@@ -11,9 +11,14 @@ public:
     friend class MCContextPrivate;
     MCContext();
     virtual ~MCContext();
+
     DiskReadMda firings2();
+    int currentCluster2() const;
 
     void setFirings2(const DiskReadMda &F);
+    void setCurrentCluster2(int k);
+signals:
+    void currentCluster2Changed();
 private:
     MCContextPrivate *d;
 };

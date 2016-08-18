@@ -89,7 +89,8 @@ HEADERS += \
     processors/synthesize1_processor.h \
     processors/synthesize1.h \
     processors/compute_amplitudes_processor.h \
-    processors/compute_amplitudes.h
+    processors/compute_amplitudes.h \
+    processors/hungarian.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -160,7 +161,8 @@ SOURCES += \
     processors/synthesize1.cpp \
     processors/branch_cluster_v2c.cpp \
     processors/compute_amplitudes_processor.cpp \
-    processors/compute_amplitudes.cpp
+    processors/compute_amplitudes.cpp \
+    processors/hungarian.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \

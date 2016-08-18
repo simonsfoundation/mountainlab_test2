@@ -1,6 +1,8 @@
 #ifndef CONFUSION_MATRIX_H
 #define CONFUSION_MATRIX_H
 
-bool confusion_matrix(const char* firings1_path, const char* firings2_path, const char* output_path, int max_matching_offset);
+#include <QString>
+
+bool confusion_matrix(QString firings1_path, QString firings2_path, QString output_path, QString optimal_assignments_path, int max_matching_offset);
 
 #endif // CONFUSION_MATRIX_H

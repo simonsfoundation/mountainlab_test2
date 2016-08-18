@@ -18,9 +18,9 @@ confusion_matrix_Processor::confusion_matrix_Processor()
     d->q = this;
 
     this->setName("confusion_matrix");
-    this->setVersion("0.12");
+    this->setVersion("0.13");
     this->setInputFileParameters("firings1", "firings2");
-    this->setOutputFileParameters("output");
+    this->setOutputFileParameters("output","optimal_assignments");
     this->setRequiredParameters("max_matching_offset");
 }
 
@@ -41,6 +41,7 @@ bool confusion_matrix_Processor::run(const QMap<QString, QVariant>& params)
     QString firings1_path = params["firings1"].toString();
     QString firings2_path = params["firings2"].toString();
     QString output_path = params["output"].toString();
+    QString optimal_assignments_path = params["optimal_assignments"].toString();
     int max_matching_offset = params["max_matching_offset"].toInt();
-    return confusion_matrix(firings1_path.toLatin1().data(), firings2_path.toLatin1().data(), output_path.toLatin1().data(), max_matching_offset);
+    return confusion_matrix(firings1_path, firings2_path, output_path, optimal_assignments_path, max_matching_offset);
 }

@@ -65,5 +65,11 @@ VPATH += ../../mountainview/src/3rdparty/qaccordion/src
 HEADERS += qAccordion/qaccordion.h qAccordion/contentpane.h qAccordion/clickableframe.h
 SOURCES += qaccordion.cpp contentpane.cpp clickableframe.cpp
 
+INCLUDEPATH += ../../mountainsort/src/utils
+DEPENDPATH += ../../mountainsort/src/utils
+VPATH += ../../mountainsort/src/utils
+HEADERS += get_sort_indices.h msmisc.h
+SOURCES += get_sort_indices.cpp msmisc.cpp
+
 RESOURCES += ../../mountainview/src/mountainview.qrc \
             ../../mountainview/src/3rdparty/qaccordion/icons/qaccordionicons.qrc
