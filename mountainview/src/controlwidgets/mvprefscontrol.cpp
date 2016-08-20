@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QMap>
 #include <QTimer>
+#include "mlcommon.h"
 
 class MVPrefsControlPrivate {
 public:
@@ -19,6 +20,14 @@ MVPrefsControl::MVPrefsControl(MVContext* context, MVMainWindow* mw)
 
     QGridLayout* glayout = new QGridLayout;
     int row = 0;
+    {
+        QWidget* X = this->createStringControl("visible_channels");
+        X->setToolTip("Comma-separated list of channels to view");
+        connect(context, SIGNAL(visibleChannelsChanged()), this, SLOT(updateControls()));
+        glayout->addWidget(new QLabel("Visible channels:"), row, 0);
+        glayout->addWidget(X, row, 1);
+        row++;
+    }
     {
         QWidget* X = this->createChoicesControl("timeseries_for_spikespray");
         connect(context, SIGNAL(timeseriesNamesChanged()), this, SLOT(updateControls()));
@@ -91,6 +100,7 @@ void MVPrefsControl::updateContext()
     QString ts4ss = this->controlValue("timeseries_for_spikespray").toString();
     if (ts4ss == "Default timeseries")
         ts4ss = "";
+    mvContext()->setVisibleChannels(MLUtil::stringListToIntList(this->controlValue("visible_channels").toString().split(",", QString::SkipEmptyParts)));
     mvContext()->setOption("timeseries_for_spikespray", ts4ss);
     mvContext()->setOption("clip_size", this->controlValue("clip_size").toInt());
     mvContext()->setOption("cc_max_dt_msec", this->controlValue("cc_max_dt_msec").toDouble());
@@ -104,6 +114,7 @@ void MVPrefsControl::updateControls()
 {
     QStringList choices = mvContext()->timeseriesNames();
     choices.insert(0, "Default timeseries");
+    this->setControlValue("visible_channels", MLUtil::intListToStringList(mvContext()->visibleChannels()).join(","));
     this->setChoices("timeseries_for_spikespray", choices);
     this->setControlValue("clip_size", mvContext()->option("clip_size").toInt());
     this->setControlValue("cc_max_dt_msec", mvContext()->option("cc_max_dt_msec").toDouble());

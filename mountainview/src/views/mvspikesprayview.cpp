@@ -85,6 +85,7 @@ public:
     int m_panel_width = 0;
 
     Mda m_clips_to_render;
+    Mda m_clips_to_render_subchannels;
     QVector<int> m_labels_to_render;
     MVSpikeSprayComputer m_computer;
 
@@ -109,6 +110,7 @@ MVSpikeSprayView::MVSpikeSprayView(MVContext* context)
     recalculateOnOptionChanged("timeseries_for_spikespray");
     recalculateOn(mvContext(), SIGNAL(clusterMergeChanged()));
     recalculateOn(mvContext(), SIGNAL(timeseriesNamesChanged()));
+    recalculateOn(mvContext(), SIGNAL(visibleChannelsChanged()));
     this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     onOptionChanged("cluster_color_index_shift", this, SLOT(onCalculationFinished()));
 
@@ -237,6 +239,19 @@ void MVSpikeSprayView::runCalculation()
     d->m_computer.compute();
 }
 
+Mda extract_channels_from_clips(const Mda& clips, QList<int> channels)
+{
+    Mda ret(channels.count(), clips.N2(), clips.N3());
+    for (long i = 0; i < clips.N3(); i++) {
+        for (int t = 0; t < clips.N2(); t++) {
+            for (int j = 0; j < channels.count(); j++) {
+                ret.setValue(clips.value(channels[j] - 1, t, i), j, t, i);
+            }
+        }
+    }
+    return ret;
+}
+
 void MVSpikeSprayView::onCalculationFinished()
 {
     d->m_clips_to_render = d->m_computer.clips_to_render;
@@ -252,8 +267,12 @@ void MVSpikeSprayView::onCalculationFinished()
         }
     }
 
+    if (!mvContext()->visibleChannels().isEmpty())
+        d->m_clips_to_render_subchannels = extract_channels_from_clips(d->m_clips_to_render, mvContext()->visibleChannels());
+    else
+        d->m_clips_to_render_subchannels = d->m_clips_to_render;
     for (long i = 0; i < d->m_panels.count(); i++) {
-        d->m_panels[i]->setClipsToRender(&d->m_clips_to_render);
+        d->m_panels[i]->setClipsToRender(&d->m_clips_to_render_subchannels);
         d->m_panels[i]->setLabelsToRender(d->m_labels_to_render);
     }
 }

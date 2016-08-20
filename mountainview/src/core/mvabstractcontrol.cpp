@@ -17,6 +17,7 @@ public:
     MVContext* m_context;
     MVMainWindow* m_main_window;
 
+    QMap<QString, QLineEdit*> m_string_controls;
     QMap<QString, QLineEdit*> m_int_controls;
     QMap<QString, QLineEdit*> m_double_controls;
     QMap<QString, QComboBox*> m_choices_controls;
@@ -51,6 +52,9 @@ MVMainWindow* MVAbstractControl::mainWindow()
 
 QVariant MVAbstractControl::controlValue(QString name) const
 {
+    if (d->m_string_controls.contains(name)) {
+        return d->m_string_controls[name]->text();
+    }
     if (d->m_int_controls.contains(name)) {
         return d->m_int_controls[name]->text().toInt();
     }
@@ -70,6 +74,10 @@ void MVAbstractControl::setControlValue(QString name, QVariant val)
 {
     if (controlValue(name) == val)
         return;
+    if (d->m_string_controls.contains(name)) {
+        QString txt = QString("%1").arg(val.toString());
+        d->m_string_controls[name]->setText(txt);
+    }
     if (d->m_int_controls.contains(name)) {
         QString txt = QString("%1").arg(val.toInt());
         d->m_int_controls[name]->setText(txt);
@@ -92,6 +100,15 @@ QWidget* MVAbstractControl::createIntControl(QString name)
     QLineEdit* X = new QLineEdit;
     X->setText("0");
     d->m_int_controls[name] = X;
+    QObject::connect(X, SIGNAL(textEdited(QString)), this, SLOT(updateContext()));
+    return X;
+}
+
+QWidget* MVAbstractControl::createStringControl(QString name)
+{
+    QLineEdit* X = new QLineEdit;
+    X->setText("");
+    d->m_string_controls[name] = X;
     QObject::connect(X, SIGNAL(textEdited(QString)), this, SLOT(updateContext()));
     return X;
 }
@@ -202,6 +219,7 @@ void add_to(QMap<QString, QWidget*>& A, QMap<QString, QToolButton*>& B)
 QMap<QString, QWidget*> MVAbstractControlPrivate::all_control_widgets()
 {
     QMap<QString, QWidget*> ret;
+    add_to(ret, m_string_controls);
     add_to(ret, m_int_controls);
     add_to(ret, m_double_controls);
     add_to(ret, m_choices_controls);

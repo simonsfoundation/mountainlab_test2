@@ -49,6 +49,7 @@ public:
     ElectrodeGeometry m_electrode_geometry;
     QSet<int> m_clusters_subset;
     bool m_view_merged;
+    QSet<int> m_visible_channels;
 
     void update_current_and_selected_clusters_according_to_merged();
 };
@@ -186,6 +187,7 @@ QJsonObject MVContext::toMVFileObject() const
     X["electrode_geometry"] = d->m_electrode_geometry.toJsonObject();
     X["clusters_subset"] = intlist_to_json_array(d->m_clusters_subset.toList());
     X["view_merged"] = d->m_view_merged;
+    X["visible_channels"] = intlist_to_json_array(d->m_visible_channels.toList());
     return X;
 }
 
@@ -210,6 +212,9 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     if (X.contains("clusters_subset")) {
         this->setClustersSubset(json_array_to_intlist(X["clusters_subset"].toArray()).toSet());
     }
+    if (X.contains("visible_channels")) {
+        this->setVisibleChannels(json_array_to_intlist(X["visible_clusters"].toArray()));
+    }
     d->m_view_merged = X["view_merged"].toBool();
     emit this->currentTimeseriesChanged();
     emit this->timeseriesNamesChanged();
@@ -226,6 +231,7 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     emit this->selectedClusterPairsChanged();
     emit this->clusterPairAttributesChanged(ClusterPair(0, 0));
     emit this->viewMergedChanged();
+    emit this->visibleChannelsChanged();
 }
 
 MVEvent MVContext::currentEvent() const
@@ -551,6 +557,22 @@ void MVContext::setClusterVisibilityRule(const ClusterVisibilityRule& rule)
         return;
     d->m_visibility_rule = rule;
     emit this->clusterVisibilityChanged();
+}
+
+QList<int> MVContext::visibleChannels() const
+{
+    QList<int> ch = d->m_visible_channels.toList();
+    qSort(ch);
+    return ch;
+}
+
+void MVContext::setVisibleChannels(const QList<int>& channels)
+{
+    QSet<int> ch = channels.toSet();
+    if (ch == d->m_visible_channels)
+        return;
+    d->m_visible_channels = ch;
+    emit visibleChannelsChanged();
 }
 
 ElectrodeGeometry MVContext::electrodeGeometry() const

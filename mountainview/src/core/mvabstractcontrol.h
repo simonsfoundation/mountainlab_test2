@@ -35,6 +35,7 @@ protected:
     void setChoices(QString name, const QStringList& choices);
     void setControlEnabled(QString name, bool val);
 
+    QWidget* createStringControl(QString name);
     QWidget* createIntControl(QString name);
     QWidget* createDoubleControl(QString name);
     QComboBox* createChoicesControl(QString name);

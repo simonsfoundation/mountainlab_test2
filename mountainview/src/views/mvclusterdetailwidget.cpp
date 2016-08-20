@@ -179,6 +179,7 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewF
 
     this->recalculateOn(context, SIGNAL(firingsChanged()), false);
     recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
+    recalculateOn(context, SIGNAL(visibleChannelsChanged()));
     recalculateOnOptionChanged("clip_size");
 
     this->setMouseTracking(true);
@@ -244,9 +245,32 @@ void MVClusterDetailWidget::runCalculation()
     d->m_calculator.compute();
 }
 
+Mda32 extract_channels_from_template(const Mda32& X, QList<int> channels)
+{
+    Mda32 ret(channels.count(), X.N2(), X.N3());
+    for (long i = 0; i < X.N3(); i++) { //handle case of more than 1 template, just because
+        for (int t = 0; t < X.N2(); t++) {
+            for (int j = 0; j < channels.count(); j++) {
+                ret.setValue(X.value(channels[j] - 1, t, i), j, t, i);
+            }
+        }
+    }
+    return ret;
+}
+
+void extract_channels_from_templates(QList<ClusterData>& CD, QList<int> channels)
+{
+    for (int i = 0; i < CD.count(); i++) {
+        CD[i].template0 = extract_channels_from_template(CD[i].template0, channels);
+    }
+}
+
 void MVClusterDetailWidget::onCalculationFinished()
 {
     d->m_cluster_data = d->m_calculator.cluster_data;
+    if (!mvContext()->visibleChannels().isEmpty()) {
+        extract_channels_from_templates(d->m_cluster_data, mvContext()->visibleChannels());
+    }
     if (!d->m_zoomed_out_once) {
         this->zoomAllTheWayOut();
         d->m_zoomed_out_once = true;

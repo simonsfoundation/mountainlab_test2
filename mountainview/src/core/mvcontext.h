@@ -122,6 +122,10 @@ public:
     void setClusterVisibilityRule(const ClusterVisibilityRule& rule);
 
     /////////////////////////////////////////////////
+    QList<int> visibleChannels() const; //1-based indexing
+    void setVisibleChannels(const QList<int>& channels);
+
+    /////////////////////////////////////////////////
     ElectrodeGeometry electrodeGeometry() const;
     void setElectrodeGeometry(const ElectrodeGeometry& geom);
 
@@ -203,6 +207,7 @@ signals:
     void clusterPairAttributesChanged(ClusterPair pair);
     void electrodeGeometryChanged();
     void viewMergedChanged();
+    void visibleChannelsChanged();
 
 private slots:
     void slot_option_changed(QString name);
