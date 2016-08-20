@@ -16,9 +16,12 @@ class ConfusionMatrixViewPrivate;
 class ConfusionMatrixView : public MVAbstractView {
     Q_OBJECT
 public:
-
     enum PermutationMode {
-        NoPermutation,RowPermutation,ColumnPermutation,BothRowBasedPermutation,BothColumnBasedPermutation
+        NoPermutation,
+        RowPermutation,
+        ColumnPermutation,
+        BothRowBasedPermutation,
+        BothColumnBasedPermutation
     };
 
     friend class ConfusionMatrixViewPrivate;
@@ -29,7 +32,7 @@ public:
     void runCalculation() Q_DECL_OVERRIDE;
     void onCalculationFinished() Q_DECL_OVERRIDE;
 
-    MCContext *mcContext();
+    MCContext* mcContext();
 
 protected:
     void keyPressEvent(QKeyEvent* evt) Q_DECL_OVERRIDE;

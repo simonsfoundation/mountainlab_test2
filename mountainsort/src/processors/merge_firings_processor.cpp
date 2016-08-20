@@ -20,7 +20,7 @@ merge_firings_Processor::merge_firings_Processor()
     this->setName("merge_firings");
     this->setVersion("0.1");
     this->setInputFileParameters("firings1", "firings2");
-    this->setOutputFileParameters("firings_merged","confusion_matrix","optimal_label_map");
+    this->setOutputFileParameters("firings_merged", "confusion_matrix", "optimal_label_map");
     this->setRequiredParameters("max_matching_offset");
 }
 
@@ -44,6 +44,5 @@ bool merge_firings_Processor::run(const QMap<QString, QVariant>& params)
     QString confusion_matrix_path = params["confusion_matrix"].toString();
     QString optimal_label_map_path = params["optimal_label_map"].toString();
     int max_matching_offset = params["max_matching_offset"].toInt();
-    return merge_firings(firings1_path,firings2_path,firings_merged_path,confusion_matrix_path,optimal_label_map_path,max_matching_offset);
+    return merge_firings(firings1_path, firings2_path, firings_merged_path, confusion_matrix_path, optimal_label_map_path, max_matching_offset);
 }
-

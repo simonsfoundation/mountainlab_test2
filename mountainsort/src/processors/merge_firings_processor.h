@@ -18,4 +18,3 @@ private:
 };
 
 #endif // MERGE_FIRINGS_PROCESSOR_H
-

@@ -733,16 +733,16 @@ void MVClusterViewPrivate::update_grid()
                     }
                 }
                 else if (m_mode == MVCV_MODE_LABEL_COLORS) {
-                    if (val > 0) {
+                    if (val >= 0) {
                         QColor CC = m_context->clusterColor((int)val);
                         if (val == hovered_cluster_number)
                             CC = Qt::white;
                         m_grid_image.setPixel(i1, i2, CC.rgb());
                     }
-                    else if (val == 0) {
+                    /*else if (val == 0) {
                         QColor CC = Qt::white;
                         m_grid_image.setPixel(i1, i2, CC.rgb());
-                    }
+                    }*/
                     else if (val == -2) {
                         m_grid_image.setPixel(i1, i2, axes_color.rgb());
                     }

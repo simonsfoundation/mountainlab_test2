@@ -42,7 +42,6 @@ POSSIBILITY OF SUCH DAMAGE.
  *
 */
 
-void hungarian(int *assignment,double *cost,double *matrix,int M,int N);
+void hungarian(int* assignment, double* cost, double* matrix, int M, int N);
 
 #endif // HUNGARIAN_H
-

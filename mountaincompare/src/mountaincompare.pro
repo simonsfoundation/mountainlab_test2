@@ -23,7 +23,8 @@ SOURCES += mountaincomparemain.cpp \
     mccontext.cpp \
     views/confusionmatrixview.cpp \
     views/matrixview.cpp \
-    mcviewfactories.cpp
+    mcviewfactories.cpp \
+    views/compareclusterview.cpp
 
 INCLUDEPATH += ../../mountainview/src/core
 VPATH += ../../mountainview/src/core
@@ -37,7 +38,8 @@ mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
     mccontext.h \
     views/confusionmatrixview.h \
     views/matrixview.h \
-    mcviewfactories.h
+    mcviewfactories.h \
+    views/compareclusterview.h
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \

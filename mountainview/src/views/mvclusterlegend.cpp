@@ -139,8 +139,10 @@ void MVClusterLegend::setActiveClusterNumbers(const QSet<int>& active_numbers)
 
 QColor MVClusterLegendPrivate::cluster_color(int k) const
 {
-    if (k <= 0)
+    if (k < 0)
         return Qt::black;
+    if (k == 0)
+        return Qt::gray;
     if (m_cluster_colors.isEmpty())
         return Qt::black;
     return m_cluster_colors[(k - 1) % m_cluster_colors.count()];

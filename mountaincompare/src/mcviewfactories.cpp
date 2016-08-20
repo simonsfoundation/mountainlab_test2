@@ -3,6 +3,8 @@
 
 #include <mvclusterdetailwidget.h>
 
+#include <views/compareclusterview.h>
+
 MVClusterDetails2Factory::MVClusterDetails2Factory(MVContext* context, QObject* parent)
     : MVAbstractViewFactory(context, parent)
 {
@@ -27,29 +29,30 @@ MVAbstractView* MVClusterDetails2Factory::createView(QWidget* parent)
 {
     Q_UNUSED(parent)
 
-    MCContext *mc_context=qobject_cast<MCContext*>(mvContext());
-    if (!mc_context) return 0;
+    MCContext* mc_context = qobject_cast<MCContext*>(mvContext());
+    if (!mc_context)
+        return 0;
 
-    MVContext *c2=new MVContext;
+    MVContext* c2 = new MVContext;
     c2->setFromMVFileObject(mc_context->toMVFileObject());
     c2->setFirings(mc_context->firings2());
     c2->setCurrentCluster(mc_context->currentCluster2());
 
-    new Synchronizer1(mc_context,c2);
+    new Synchronizer1(mc_context, c2);
 
     MVClusterDetailWidget* X = new MVClusterDetailWidget(c2);
     return X;
 }
 
-Synchronizer1::Synchronizer1(MCContext *C, MVContext *C_new)
+Synchronizer1::Synchronizer1(MCContext* C, MVContext* C_new)
 {
-    m_C=C;
-    m_C_new=C_new;
-    QObject::connect(C,SIGNAL(selectedClusters2Changed()),this,SLOT(sync_old_to_new()),Qt::QueuedConnection);
-    QObject::connect(C,SIGNAL(currentCluster2Changed()),this,SLOT(sync_old_to_new()),Qt::QueuedConnection);
+    m_C = C;
+    m_C_new = C_new;
+    QObject::connect(C, SIGNAL(selectedClusters2Changed()), this, SLOT(sync_old_to_new()), Qt::QueuedConnection);
+    QObject::connect(C, SIGNAL(currentCluster2Changed()), this, SLOT(sync_old_to_new()), Qt::QueuedConnection);
 
-    QObject::connect(C_new,SIGNAL(selectedClustersChanged()),this,SLOT(sync_new_to_old()),Qt::QueuedConnection);
-    QObject::connect(C_new,SIGNAL(currentClusterChanged()),this,SLOT(sync_new_to_old()),Qt::QueuedConnection);
+    QObject::connect(C_new, SIGNAL(selectedClustersChanged()), this, SLOT(sync_new_to_old()), Qt::QueuedConnection);
+    QObject::connect(C_new, SIGNAL(currentClusterChanged()), this, SLOT(sync_new_to_old()), Qt::QueuedConnection);
 }
 
 void Synchronizer1::sync_new_to_old()
@@ -64,3 +67,36 @@ void Synchronizer1::sync_old_to_new()
     m_C_new->setCurrentCluster(m_C->currentCluster2());
 }
 
+////////////////////////////////////////////////////////////////////////
+CompareClustersFactory::CompareClustersFactory(MVContext* context, QObject* parent)
+    : MVAbstractViewFactory(context, parent)
+{
+}
+
+QString CompareClustersFactory::id() const
+{
+    return QStringLiteral("open-compare-clusters");
+}
+
+QString CompareClustersFactory::name() const
+{
+    return tr("Compare Clusters");
+}
+
+QString CompareClustersFactory::title() const
+{
+    return tr("Compare Clusters");
+}
+
+MVAbstractView* CompareClustersFactory::createView(QWidget* parent)
+{
+    Q_UNUSED(parent)
+
+    MCContext* mc_context = qobject_cast<MCContext*>(mvContext());
+    if (!mc_context)
+        return 0;
+
+    CompareClusterView* X = new CompareClusterView(mc_context);
+
+    return X;
+}

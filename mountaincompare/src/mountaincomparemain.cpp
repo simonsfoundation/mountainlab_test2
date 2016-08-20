@@ -127,6 +127,7 @@ int main(int argc, char* argv[])
     W->show();
 
     W->registerViewFactory(new ConfusionMatrixViewFactory(context, W));
+    W->registerViewFactory(new CompareClustersFactory(context, W));
 
     W->registerViewFactory(new MVClusterDetailsFactory(context, W));
     W->registerViewFactory(new MVClusterDetails2Factory(context, W));

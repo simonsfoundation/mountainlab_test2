@@ -5,7 +5,7 @@
 #include <taskprogress.h>
 #include "mlcommon.h"
 
-class ConfusionMatrixCalculator {
+class MergeFiringsCalculator {
 public:
     //input
     QString mlproxy_url;
@@ -13,38 +13,33 @@ public:
     DiskReadMda firings2;
 
     //output
+    DiskReadMda firings_merged;
     DiskReadMda confusion_matrix;
-    DiskReadMda optimal_assignments;
-    DiskReadMda event_correspondence;
+    DiskReadMda optimal_label_map;
 
     virtual void compute();
-
-    bool loaded_from_static_output = false;
-    QJsonObject exportStaticOutput();
-    void loadStaticOutput(const QJsonObject& X);
 };
-
 
 class MCContextPrivate {
 public:
-    MCContext *q;
+    MCContext* q;
     DiskReadMda m_firings2;
-    int m_current_cluster2=-1;
+    int m_current_cluster2 = -1;
     QSet<int> m_selected_clusters2;
 
     QMutex m_mutex;
-    bool m_confusion_matrix_computed=false;
+    bool m_merged_firings_computed = false;
     DiskReadMda m_confusion_matrix;
-    DiskReadMda m_optimal_assignments;
-    DiskReadMda m_event_correspondence;
+    DiskReadMda m_optimal_label_map;
+    DiskReadMda m_firings_merged;
 
-    ConfusionMatrixCalculator m_calculator;
+    MergeFiringsCalculator m_calculator;
 };
 
 MCContext::MCContext()
 {
-    d=new MCContextPrivate;
-    d->q=this;
+    d = new MCContextPrivate;
+    d->q = this;
 }
 
 MCContext::~MCContext()
@@ -52,41 +47,47 @@ MCContext::~MCContext()
     delete d;
 }
 
-
-void MCContext::computeConfusionMatrix()
+void MCContext::computeMergedFirings()
 {
     {
         QMutexLocker locker(&d->m_mutex);
-        if (d->m_confusion_matrix_computed) return;
+        if (d->m_merged_firings_computed)
+            return;
     }
 
     d->m_calculator.mlproxy_url = this->mlProxyUrl();
     d->m_calculator.firings1 = this->firings();
     d->m_calculator.firings2 = this->firings2();
     d->m_calculator.compute();
-    d->m_confusion_matrix=d->m_calculator.confusion_matrix;
-    d->m_optimal_assignments=d->m_calculator.optimal_assignments;
-    d->m_event_correspondence=d->m_calculator.event_correspondence;
+    d->m_confusion_matrix = d->m_calculator.confusion_matrix;
+    d->m_optimal_label_map = d->m_calculator.optimal_label_map;
+    d->m_firings_merged = d->m_calculator.firings_merged;
 
     {
         QMutexLocker locker(&d->m_mutex);
-        d->m_confusion_matrix_computed=true;
+        d->m_merged_firings_computed = true;
     }
 }
 
-DiskReadMda MCContext::confusionMatrix() const
+Mda MCContext::confusionMatrix() const
 {
-    return d->m_confusion_matrix;
+    Mda ret;
+    d->m_confusion_matrix.readChunk(ret, 0, 0, d->m_confusion_matrix.N1(), d->m_confusion_matrix.N2());
+    return ret;
 }
 
-DiskReadMda MCContext::optimalAssignments() const
+QList<int> MCContext::optimalLabelMap() const
 {
-    return d->m_optimal_assignments;
+    QList<int> ret;
+    for (int i = 0; i < d->m_optimal_label_map.totalSize(); i++) {
+        ret << d->m_optimal_label_map.value(i);
+    }
+    return ret;
 }
 
-DiskReadMda MCContext::eventCorrespondence() const
+DiskReadMda MCContext::firingsMerged() const
 {
-    return d->m_event_correspondence;
+    return d->m_firings_merged;
 }
 
 DiskReadMda MCContext::firings2()
@@ -101,28 +102,30 @@ int MCContext::currentCluster2() const
 
 QList<int> MCContext::selectedClusters2() const
 {
-    QList<int> ret=d->m_selected_clusters2.toList();
+    QList<int> ret = d->m_selected_clusters2.toList();
     qSort(ret);
     return ret;
 }
 
-void MCContext::setFirings2(const DiskReadMda &F)
+void MCContext::setFirings2(const DiskReadMda& F)
 {
-    d->m_firings2=F;
+    d->m_firings2 = F;
     emit firings2Changed();
 }
 
 void MCContext::setCurrentCluster2(int k)
 {
-    if (d->m_current_cluster2==k) return;
-    d->m_current_cluster2=k;
+    if (d->m_current_cluster2 == k)
+        return;
+    d->m_current_cluster2 = k;
     emit currentCluster2Changed();
 }
 
-void MCContext::setSelectedClusters2(const QList<int> &list)
+void MCContext::setSelectedClusters2(const QList<int>& list)
 {
-    if (list.toSet()==d->m_selected_clusters2) return;
-    d->m_selected_clusters2=list.toSet();
+    if (list.toSet() == d->m_selected_clusters2)
+        return;
+    d->m_selected_clusters2 = list.toSet();
     emit selectedClusters2Changed();
 }
 
@@ -151,20 +154,13 @@ void MCContext::clickCluster2(int k, Qt::KeyboardModifiers modifiers)
     }
 }
 
-void ConfusionMatrixCalculator::compute()
+void MergeFiringsCalculator::compute()
 {
     TaskProgress task(TaskProgress::Calculate, "Compute confusion matrix");
-    if (this->loaded_from_static_output) {
-        task.log("Loaded from static output");
-        return;
-    }
-
-    QTime timer;
-    timer.start();
     task.setProgress(0.1);
 
     MountainProcessRunner MPR;
-    MPR.setProcessorName("confusion_matrix");
+    MPR.setProcessorName("merge_firings");
 
     QMap<QString, QVariant> params;
     params["firings1"] = firings1.makePath();
@@ -175,9 +171,9 @@ void ConfusionMatrixCalculator::compute()
 
     task.log() << "Firings 1/2 dimensions" << firings1.N1() << firings1.N2() << firings2.N1() << firings2.N2();
 
-    QString output_path = MPR.makeOutputFilePath("output");
-    QString optimal_assignments_path = MPR.makeOutputFilePath("optimal_assignments");
-    QString event_correspondence_path = MPR.makeOutputFilePath("event_correspondence");
+    QString firings_merged_path = MPR.makeOutputFilePath("firings_merged");
+    QString optimal_label_map_path = MPR.makeOutputFilePath("optimal_label_map");
+    QString confusion_matrix_path = MPR.makeOutputFilePath("confusion_matrix");
 
     MPR.runProcess();
 
@@ -186,21 +182,7 @@ void ConfusionMatrixCalculator::compute()
         return;
     }
 
-    confusion_matrix.setPath(output_path);
-    event_correspondence.setPath(event_correspondence_path);
-
-    optimal_assignments.setPath(optimal_assignments_path);
-    /*
-    {
-        DiskReadMda tmp(optimal_assignments_path);
-        for (int i=0; i<tmp.totalSize(); i++) {
-            optimal_assignments << tmp.value(i);
-        }
-    }
-    */
-
-    task.log() << "Output path:" << output_path;
-    task.log() << "Optimal assignments path:" << optimal_assignments_path;
-    task.log() << "Confusion matrix dimensions:" << confusion_matrix.N1() << confusion_matrix.N2();
-    task.log() << "Event correspondence dimensions:" << event_correspondence.N1() << event_correspondence.N2();
+    firings_merged.setPath(firings_merged_path);
+    confusion_matrix.setPath(confusion_matrix_path);
+    optimal_label_map.setPath(optimal_label_map_path);
 }

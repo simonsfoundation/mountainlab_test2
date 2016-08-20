@@ -48,7 +48,7 @@
 /// TODO: (MEDIUM) electrode view... (firetrack)
 /// TODO: (0.9.1) Go to timepoint ****
 
-void setup_main_window(MVMainWindow *W, MVContext *context);
+void setup_main_window(MVMainWindow* W, MVContext* context);
 
 class TaskProgressViewThread : public QRunnable {
 public:
@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
         context->setChannelColors(channel_colors);
         context->setClusterColors(label_colors);
         MVMainWindow* W = new MVMainWindow(context);
-        setup_main_window(W,context);
+        setup_main_window(W, context);
 
         if (!mv_fname.isEmpty()) {
             QString json = TextFile::read(mv_fname);
@@ -729,7 +729,8 @@ void set_nice_size(QWidget* W)
     W->resize(W0, H0);
 }
 
-void setup_main_window(MVMainWindow *W, MVContext *context) {
+void setup_main_window(MVMainWindow* W, MVContext* context)
+{
     W->registerViewFactory(new MVClusterDetailsFactory(context, W));
     W->registerViewFactory(new MVTemplatesView2Factory(context, W));
     W->registerViewFactory(new MVAutoCorrelogramsFactory(context, W));

@@ -287,8 +287,10 @@ QString MVContext::currentTimeseriesName() const
 
 QColor MVContext::clusterColor(int k) const
 {
-    if (k <= 0)
+    if (k < 0)
         return Qt::black;
+    if (k == 0)
+        return Qt::gray;
     if (d->m_cluster_colors.isEmpty())
         return Qt::black;
     int cluster_color_index_shift = this->option("cluster_color_index_shift", 0).toInt();

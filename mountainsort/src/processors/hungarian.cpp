@@ -75,7 +75,8 @@ void hungarian(int* assignment, double* cost, double* matrix, int M, int N)
                         coveredColumns[col] = true;
                         break;
                     }
-    } else /* if(nOfRows > nOfColumns) */
+    }
+    else /* if(nOfRows > nOfColumns) */
     {
         minDim = nOfColumns;
 
@@ -191,7 +192,8 @@ void step2b(int* assignment, double* distMatrix, bool* starMatrix, bool* newStar
     if (nOfCoveredColumns == minDim) {
         /* algorithm finished */
         buildassignmentvector(assignment, starMatrix, nOfRows, nOfColumns);
-    } else {
+    }
+    else {
         /* move to step 3 */
         step3(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim);
     }
@@ -223,7 +225,8 @@ void step3(int* assignment, double* distMatrix, bool* starMatrix, bool* newStarM
                             /* move to step 4 */
                             step4(assignment, distMatrix, starMatrix, newStarMatrix, primeMatrix, coveredColumns, coveredRows, nOfRows, nOfColumns, minDim, row, col);
                             return;
-                        } else {
+                        }
+                        else {
                             coveredRows[row] = true;
                             coveredColumns[starCol] = false;
                             zerosFound = true;

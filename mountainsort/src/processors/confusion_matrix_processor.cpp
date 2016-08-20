@@ -20,7 +20,7 @@ confusion_matrix_Processor::confusion_matrix_Processor()
     this->setName("confusion_matrix");
     this->setVersion("0.14");
     this->setInputFileParameters("firings1", "firings2");
-    this->setOutputFileParameters("output","optimal_assignments","event_correspondence");
+    this->setOutputFileParameters("output", "optimal_assignments", "event_correspondence");
     this->setRequiredParameters("max_matching_offset");
 }
 
