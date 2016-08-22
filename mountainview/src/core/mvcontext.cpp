@@ -510,6 +510,7 @@ QSet<QString> MVContext::allClusterPairTags() const
     QSet<QString> ret;
     ret.insert("merge_candidate");
     ret.insert("merged");
+    ret.insert("uncertain");
     QList<ClusterPair> keys = clusterPairAttributesKeys();
     foreach (ClusterPair key, keys) {
         QSet<QString> tags0 = clusterPairTags(key);
