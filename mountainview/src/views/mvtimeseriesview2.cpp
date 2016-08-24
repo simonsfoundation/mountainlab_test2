@@ -278,8 +278,8 @@ void MVTimeSeriesView2Calculator::compute()
     num_channels = timeseries.N1();
 }
 
-MVTimeSeriesDataFactory::MVTimeSeriesDataFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVTimeSeriesDataFactory::MVTimeSeriesDataFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
 }
 
@@ -298,11 +298,10 @@ QString MVTimeSeriesDataFactory::title() const
     return tr("Timeseries");
 }
 
-MVAbstractView* MVTimeSeriesDataFactory::createView(QWidget* parent)
+MVAbstractView* MVTimeSeriesDataFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVTimeSeriesView2* X = new MVTimeSeriesView2(mvContext());
-    QList<int> ks = mvContext()->selectedClusters();
+    MVTimeSeriesView2* X = new MVTimeSeriesView2(context);
+    QList<int> ks = context->selectedClusters();
     X->setLabelsToView(ks.toSet());
     return X;
 }

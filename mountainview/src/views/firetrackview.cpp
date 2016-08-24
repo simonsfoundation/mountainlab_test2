@@ -65,8 +65,8 @@ void FireTrackView::onCalculationFinished()
     d->m_electrode_array_view->setElectrodeLocations(locations);
 }
 
-MVFireTrackFactory::MVFireTrackFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVFireTrackFactory::MVFireTrackFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
 }
 
@@ -85,9 +85,8 @@ QString MVFireTrackFactory::title() const
     return tr("FireTrack");
 }
 
-MVAbstractView* MVFireTrackFactory::createView(QWidget* parent)
+MVAbstractView* MVFireTrackFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    FireTrackView* X = new FireTrackView(mvContext());
+    FireTrackView* X = new FireTrackView(context);
     return X;
 }

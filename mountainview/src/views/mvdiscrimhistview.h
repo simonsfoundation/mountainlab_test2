@@ -35,13 +35,13 @@ private:
 class MVDiscrimHistFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVDiscrimHistFactory(MVContext* context, QObject* parent = 0);
+    MVDiscrimHistFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 private slots:
-    void updateEnabled();
+    void updateEnabled(MVContext* context);
 };
 
 #endif // MVDISCRIMHISTVIEW_H

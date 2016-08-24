@@ -282,12 +282,9 @@ void MVDiscrimHistViewPrivate::set_views()
     q->slot_zoom_in_horizontal(2.5); //give it a nice zoom in to start
 }
 
-MVDiscrimHistFactory::MVDiscrimHistFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVDiscrimHistFactory::MVDiscrimHistFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
-    connect(mvContext(), SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
-    updateEnabled();
 }
 
 QString MVDiscrimHistFactory::id() const
@@ -305,19 +302,18 @@ QString MVDiscrimHistFactory::title() const
     return tr("Discrim");
 }
 
-MVAbstractView* MVDiscrimHistFactory::createView(QWidget* parent)
+MVAbstractView* MVDiscrimHistFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVDiscrimHistView* X = new MVDiscrimHistView(mvContext());
-    QList<int> ks = mvContext()->selectedClusters();
+    MVDiscrimHistView* X = new MVDiscrimHistView(context);
+    QList<int> ks = context->selectedClusters();
     if (ks.isEmpty())
-        ks = mvContext()->clusterVisibilityRule().subset.toList();
+        ks = context->clusterVisibilityRule().subset.toList();
     qSort(ks);
     X->setClusterNumbers(ks);
     return X;
 }
 
-void MVDiscrimHistFactory::updateEnabled()
+void MVDiscrimHistFactory::updateEnabled(MVContext* context)
 {
-    setEnabled(mvContext()->selectedClusters().count() >= 2);
+    //setEnabled(mvContext()->selectedClusters().count() >= 2);
 }

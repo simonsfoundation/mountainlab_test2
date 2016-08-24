@@ -10,25 +10,22 @@
 #include "mda.h"
 #include <QWidget>
 #include "mvabstractview.h"
-#include "mvabstractviewfactory.h"
 
-/** \class MVClusterDetailWidget
+/** \class ClusterDetailView
  *  \brief Display a view of each cluster -- mainly the template shapes and some stats
  *
  *  The user may click to change the current cluster, or use the Ctrl/Shift keys to select multiple clusters.
  */
 
 class ClusterView;
-class MVClusterDetailWidgetPrivate;
-class MVClusterDetailWidget : public MVAbstractView {
+class ClusterDetailViewPrivate;
+class ClusterDetailView : public MVAbstractView {
     Q_OBJECT
 public:
-    friend class MVClusterDetailWidgetPrivate;
+    friend class ClusterDetailViewPrivate;
     friend class ClusterView;
-    MVClusterDetailWidget(MVContext* context, MVAbstractViewFactory* factory = 0);
-    virtual ~MVClusterDetailWidget();
-
-    MVAbstractViewFactory* viewFactory() const Q_DECL_OVERRIDE;
+    ClusterDetailView(MVContext* context);
+    virtual ~ClusterDetailView();
 
     void prepareCalculation() Q_DECL_OVERRIDE;
     void runCalculation() Q_DECL_OVERRIDE;
@@ -66,19 +63,7 @@ private slots:
     void slot_export_static_view();
 
 private:
-    MVClusterDetailWidgetPrivate* d;
-};
-
-class MVClusterDetailsFactory : public MVAbstractViewFactory {
-    Q_OBJECT
-public:
-    MVClusterDetailsFactory(MVContext* context, QObject* parent = 0);
-    QString id() const Q_DECL_OVERRIDE;
-    QString name() const Q_DECL_OVERRIDE;
-    QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
-private slots:
-    //void openClipsForTemplate();
+    ClusterDetailViewPrivate* d;
 };
 
 #endif // MVCLUSTERDETAILWIDGET_H

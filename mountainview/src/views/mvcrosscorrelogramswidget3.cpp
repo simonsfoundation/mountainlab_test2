@@ -501,8 +501,8 @@ void MVCrossCorrelogramsWidget3Computer::loadStaticOutput(const QJsonObject& X)
     loaded_from_static_output = true;
 }
 
-MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
 }
 
@@ -521,22 +521,24 @@ QString MVAutoCorrelogramsFactory::title() const
     return tr("All auto-Correlograms");
 }
 
-MVAbstractView* MVAutoCorrelogramsFactory::createView(QWidget* parent)
+MVAbstractView* MVAutoCorrelogramsFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(context);
     CrossCorrelogramOptions3 opts;
     opts.mode = All_Auto_Correlograms3;
     X->setOptions(opts);
     return X;
 }
 
-MVSelectedAutoCorrelogramsFactory::MVSelectedAutoCorrelogramsFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+bool MVAutoCorrelogramsFactory::isEnabled(MVContext* context) const
 {
-    connect(mvContext(), SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
-    updateEnabled();
+    Q_UNUSED(context)
+    return true;
+}
+
+MVSelectedAutoCorrelogramsFactory::MVSelectedAutoCorrelogramsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
+{
 }
 
 QString MVSelectedAutoCorrelogramsFactory::id() const
@@ -554,13 +556,12 @@ QString MVSelectedAutoCorrelogramsFactory::title() const
     return tr("Selected auto-correlograms");
 }
 
-MVAbstractView* MVSelectedAutoCorrelogramsFactory::createView(QWidget* parent)
+MVAbstractView* MVSelectedAutoCorrelogramsFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<int> ks = mvContext()->selectedClusters();
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(context);
+    QList<int> ks = context->selectedClusters();
     if (ks.isEmpty())
-        ks = mvContext()->clusterVisibilityRule().subset.toList();
+        ks = context->clusterVisibilityRule().subset.toList();
     qSort(ks);
     if (ks.isEmpty())
         return X;
@@ -571,17 +572,14 @@ MVAbstractView* MVSelectedAutoCorrelogramsFactory::createView(QWidget* parent)
     return X;
 }
 
-void MVSelectedAutoCorrelogramsFactory::updateEnabled()
+bool MVSelectedAutoCorrelogramsFactory::isEnabled(MVContext* context) const
 {
-    setEnabled(mvContext()->selectedClusters().count() >= 1);
+    return (context->selectedClusters().count() >= 1);
 }
 
-MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
-    connect(mvContext(), SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
-    updateEnabled();
 }
 
 QString MVCrossCorrelogramsFactory::id() const
@@ -599,11 +597,10 @@ QString MVCrossCorrelogramsFactory::title() const
     return tr("Cross-Correlograms");
 }
 
-MVAbstractView* MVCrossCorrelogramsFactory::createView(QWidget* parent)
+MVAbstractView* MVCrossCorrelogramsFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<int> ks = mvContext()->selectedClusters();
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(context);
+    QList<int> ks = context->selectedClusters();
     if (ks.count() != 1)
         return X;
 
@@ -615,17 +612,14 @@ MVAbstractView* MVCrossCorrelogramsFactory::createView(QWidget* parent)
     return X;
 }
 
-void MVCrossCorrelogramsFactory::updateEnabled()
+bool MVCrossCorrelogramsFactory::isEnabled(MVContext* context) const
 {
-    setEnabled(mvContext()->selectedClusters().count() == 1);
+    return (context->selectedClusters().count() == 1);
 }
 
-MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
-    connect(mvContext(), SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
-    updateEnabled();
 }
 
 QString MVMatrixOfCrossCorrelogramsFactory::id() const
@@ -643,13 +637,12 @@ QString MVMatrixOfCrossCorrelogramsFactory::title() const
     return tr("CC Matrix");
 }
 
-MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(QWidget* parent)
+MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<int> ks = mvContext()->selectedClusters();
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(context);
+    QList<int> ks = context->selectedClusters();
     if (ks.isEmpty())
-        ks = mvContext()->clusterVisibilityRule().subset.toList();
+        ks = context->clusterVisibilityRule().subset.toList();
     qSort(ks);
     if (ks.isEmpty())
         return X;
@@ -660,17 +653,14 @@ MVAbstractView* MVMatrixOfCrossCorrelogramsFactory::createView(QWidget* parent)
     return X;
 }
 
-void MVMatrixOfCrossCorrelogramsFactory::updateEnabled()
+bool MVMatrixOfCrossCorrelogramsFactory::isEnabled(MVContext* context) const
 {
-    setEnabled(!mvContext()->selectedClusters().isEmpty());
+    return (!context->selectedClusters().isEmpty());
 }
 
-MVSelectedCrossCorrelogramsFactory::MVSelectedCrossCorrelogramsFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVSelectedCrossCorrelogramsFactory::MVSelectedCrossCorrelogramsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
-    connect(mvContext(), SIGNAL(selectedClusterPairsChanged()),
-        this, SLOT(updateEnabled()));
-    updateEnabled();
 }
 
 QString MVSelectedCrossCorrelogramsFactory::id() const
@@ -688,11 +678,10 @@ QString MVSelectedCrossCorrelogramsFactory::title() const
     return tr("CC");
 }
 
-MVAbstractView* MVSelectedCrossCorrelogramsFactory::createView(QWidget* parent)
+MVAbstractView* MVSelectedCrossCorrelogramsFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(mvContext());
-    QList<ClusterPair> pairs = mvContext()->selectedClusterPairs().toList();
+    MVCrossCorrelogramsWidget3* X = new MVCrossCorrelogramsWidget3(context);
+    QList<ClusterPair> pairs = context->selectedClusterPairs().toList();
     qSort(pairs);
     if (pairs.isEmpty())
         return X;
@@ -703,9 +692,9 @@ MVAbstractView* MVSelectedCrossCorrelogramsFactory::createView(QWidget* parent)
     return X;
 }
 
-void MVSelectedCrossCorrelogramsFactory::updateEnabled()
+bool MVSelectedCrossCorrelogramsFactory::isEnabled(MVContext* context) const
 {
-    setEnabled(!mvContext()->selectedClusterPairs().isEmpty());
+    return (!context->selectedClusterPairs().isEmpty());
 }
 
 void MVCrossCorrelogramsWidget3Private::update_scale_stuff()

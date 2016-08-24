@@ -7,6 +7,8 @@
 #include <QProcess>
 #include <QStringList>
 
+#include "clusterdetailplugin.h"
+
 #include "usagetracking.h"
 #include "mda.h"
 #include <QDesktopServices>
@@ -30,7 +32,6 @@
 #include <mvamphistview3.h>
 #include <mvclipswidget.h>
 #include <mvclustercontextmenuhandler.h>
-#include <mvclusterdetailwidget.h>
 #include <mvclusterpaircontextmenuhandler.h>
 #include <mvcrosscorrelogramswidget3.h>
 #include <mvdiscrimhistview.h>
@@ -192,9 +193,9 @@ int main(int argc, char* argv[])
                     else if (view_type == "MVCrossCorrelogramsWidget") {
                         V = new MVCrossCorrelogramsWidget3(mvcontext);
                     }
-                    else if (view_type == "MVClusterDetailWidget") {
-                        V = new MVClusterDetailWidget(mvcontext);
-                    }
+                    //else if (view_type == "MVClusterDetailWidget") {
+                    //    V = new MVClusterDetailWidget(mvcontext);
+                    //}
                     else {
                         qWarning() << "Unknown view type: " + view_type;
                         return -1;
@@ -731,24 +732,24 @@ void set_nice_size(QWidget* W)
 
 void setup_main_window(MVMainWindow* W, MVContext* context)
 {
-    W->registerViewFactory(new MVClusterDetailsFactory(context, W));
-    W->registerViewFactory(new MVTemplatesView2Factory(context, W));
-    W->registerViewFactory(new MVAutoCorrelogramsFactory(context, W));
-    W->registerViewFactory(new MVSelectedAutoCorrelogramsFactory(context, W));
-    W->registerViewFactory(new MVCrossCorrelogramsFactory(context, W));
-    W->registerViewFactory(new MVMatrixOfCrossCorrelogramsFactory(context, W));
-    W->registerViewFactory(new MVSelectedCrossCorrelogramsFactory(context, W));
-    W->registerViewFactory(new MVTimeSeriesDataFactory(context, W));
-    W->registerViewFactory(new MVClipsFactory(context, W));
-    W->registerViewFactory(new MVPCAFeaturesFactory(context, W));
-    W->registerViewFactory(new MVChannelFeaturesFactory(context, W));
-    W->registerViewFactory(new MVSpikeSprayFactory(context, W));
-    W->registerViewFactory(new MVFiringEventsFactory(context, W));
-    //W->registerViewFactory(new MVAmplitudeHistogramsFactory(context, W));
-    W->registerViewFactory(new MVAmplitudeHistograms3Factory(context, W));
-    W->registerViewFactory(new MVDiscrimHistFactory(context, W));
-    W->registerViewFactory(new MVDiscrimHistGuideFactory(context, W));
-    W->registerViewFactory(new MVFireTrackFactory(context, W));
+    W->loadPlugin(new ClusterDetailPlugin);
+    W->registerViewFactory(new MVTemplatesView2Factory(W));
+    W->registerViewFactory(new MVAutoCorrelogramsFactory(W));
+    W->registerViewFactory(new MVSelectedAutoCorrelogramsFactory(W));
+    W->registerViewFactory(new MVCrossCorrelogramsFactory(W));
+    W->registerViewFactory(new MVMatrixOfCrossCorrelogramsFactory(W));
+    W->registerViewFactory(new MVSelectedCrossCorrelogramsFactory(W));
+    W->registerViewFactory(new MVTimeSeriesDataFactory(W));
+    W->registerViewFactory(new MVClipsFactory(W));
+    W->registerViewFactory(new MVPCAFeaturesFactory(W));
+    W->registerViewFactory(new MVChannelFeaturesFactory(W));
+    W->registerViewFactory(new MVSpikeSprayFactory(W));
+    W->registerViewFactory(new MVFiringEventsFactory(W));
+    //W->registerViewFactory(new MVAmplitudeHistogramsFactory(W));
+    W->registerViewFactory(new MVAmplitudeHistograms3Factory(W));
+    W->registerViewFactory(new MVDiscrimHistFactory(W));
+    W->registerViewFactory(new MVDiscrimHistGuideFactory(W));
+    W->registerViewFactory(new MVFireTrackFactory(W));
 
     W->registerContextMenuHandler(new MVClusterContextMenuHandler(context, W));
     W->registerContextMenuHandler(new MVClusterPairContextMenuHandler(context, W));

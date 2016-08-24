@@ -8,11 +8,11 @@
 class MVClusterDetails2Factory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVClusterDetails2Factory(MVContext* context, QObject* parent = 0);
+    MVClusterDetails2Factory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 private slots:
     //void openClipsForTemplate();
 };
@@ -33,11 +33,11 @@ private:
 class CompareClustersFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    CompareClustersFactory(MVContext* context, QObject* parent = 0);
+    CompareClustersFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 private slots:
     //void openClipsForTemplate();
 };

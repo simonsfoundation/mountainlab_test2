@@ -332,12 +332,9 @@ void MVFiringEventViewCalculator::compute()
     task.log(QString("Found %1 events, using %2 clusters").arg(times.count()).arg(labels_to_use.count()));
 }
 
-MVFiringEventsFactory::MVFiringEventsFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVFiringEventsFactory::MVFiringEventsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
-    connect(context, SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
-    updateEnabled();
 }
 
 QString MVFiringEventsFactory::id() const
@@ -355,28 +352,27 @@ QString MVFiringEventsFactory::title() const
     return tr("Firing Events");
 }
 
-MVAbstractView* MVFiringEventsFactory::createView(QWidget* parent)
+MVAbstractView* MVFiringEventsFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = context->selectedClusters();
     if (ks.isEmpty())
-        ks = mvContext()->clusterVisibilityRule().subset.toList();
+        ks = context->clusterVisibilityRule().subset.toList();
     if (ks.isEmpty()) {
         QMessageBox::warning(0, "Unable to open firing events", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
-    MVFiringEventView2* X = new MVFiringEventView2(mvContext());
+    MVFiringEventView2* X = new MVFiringEventView2(context);
     X->setLabelsToUse(ks.toSet());
-    X->setNumTimepoints(mvContext()->currentTimeseries().N2());
+    X->setNumTimepoints(context->currentTimeseries().N2());
     return X;
 }
 
-void MVFiringEventsFactory::updateEnabled()
+void MVFiringEventsFactory::updateEnabled(MVContext* context)
 {
     //bool has_peaks = (d->m_firings.value(0, 3) != 0); //for now we just test the very first one (might be problematic)
     /// TODO: (0.9.1) restore this has_peaks without accessing m_firings in gui thread
     bool has_peaks = true;
-    setEnabled(!mvContext()->selectedClusters().isEmpty() && has_peaks);
+    //setEnabled(!mvContext()->selectedClusters().isEmpty() && has_peaks);
 }
 
 void FiringEventAxisLayer::paint(QPainter* painter)

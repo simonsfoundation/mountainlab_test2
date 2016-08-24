@@ -1,5 +1,5 @@
 //#include "mvclustercontextmenu.h"
-#include "mvclusterdetailwidget.h"
+#include "clusterdetailview.h"
 #include "mvmainwindow.h"
 #include "tabber.h"
 #include "taskprogress.h"
@@ -53,7 +53,7 @@ struct ChannelSpacingInfo {
     double vert_scaling_factor;
 };
 
-class MVClusterDetailWidgetCalculator {
+class ClusterDetailViewCalculator {
 public:
     //input
     //QString mscmdserver_url;
@@ -72,11 +72,13 @@ public:
     void loadStaticOutput(const QJsonObject& X);
 };
 
+class ClusterDetailView;
+class ClusterDetailViewPrivate;
 class ClusterView {
 public:
-    friend class MVClusterDetailWidgetPrivate;
-    friend class MVClusterDetailWidget;
-    ClusterView(MVClusterDetailWidget* q0, MVClusterDetailWidgetPrivate* d0);
+    friend class ClusterDetailViewPrivate;
+    friend class ClusterDetailView;
+    ClusterView(ClusterDetailView* q0, ClusterDetailViewPrivate* d0);
     void setClusterData(const ClusterData& CD);
     void setAttributes(QJsonObject aa);
 
@@ -94,8 +96,8 @@ public:
     QRectF rect();
     QPointF template_coord2pix(int m, double t, double val);
 
-    MVClusterDetailWidget* q;
-    MVClusterDetailWidgetPrivate* d;
+    ClusterDetailView* q;
+    ClusterDetailViewPrivate* d;
     double x_position_before_scaling;
 
 private:
@@ -115,10 +117,9 @@ private:
     QColor get_firing_rate_text_color(double rate);
 };
 
-class MVClusterDetailWidgetPrivate {
+class ClusterDetailViewPrivate {
 public:
-    MVClusterDetailWidget* q;
-    MVAbstractViewFactory* f;
+    ClusterDetailView* q;
 
     QList<ClusterData> m_cluster_data;
 
@@ -131,7 +132,7 @@ public:
     double m_anchor_x;
     double m_anchor_scroll_x;
     int m_anchor_view_index;
-    MVClusterDetailWidgetCalculator m_calculator;
+    ClusterDetailViewCalculator m_calculator;
     bool m_stdev_shading;
     bool m_zoomed_out_once;
 
@@ -154,12 +155,11 @@ public:
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
 
-MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewFactory* factory)
+ClusterDetailView::ClusterDetailView(MVContext* context)
     : MVAbstractView(context)
 {
-    d = new MVClusterDetailWidgetPrivate;
+    d = new ClusterDetailViewPrivate;
     d->q = this;
-    d->f = factory;
     d->m_vscale_factor = 2;
     d->m_total_time_sec = 1;
     d->m_hovered_k = -1;
@@ -215,19 +215,14 @@ MVClusterDetailWidget::MVClusterDetailWidget(MVContext* context, MVAbstractViewF
     recalculate();
 }
 
-MVClusterDetailWidget::~MVClusterDetailWidget()
+ClusterDetailView::~ClusterDetailView()
 {
     this->stopCalculation();
     qDeleteAll(d->m_views);
     delete d;
 }
 
-MVAbstractViewFactory* MVClusterDetailWidget::viewFactory() const
-{
-    return d->f;
-}
-
-void MVClusterDetailWidget::prepareCalculation()
+void ClusterDetailView::prepareCalculation()
 {
 
     if (!d->m_calculator.loaded_from_static_output) {
@@ -240,7 +235,7 @@ void MVClusterDetailWidget::prepareCalculation()
     update();
 }
 
-void MVClusterDetailWidget::runCalculation()
+void ClusterDetailView::runCalculation()
 {
     d->m_calculator.compute();
 }
@@ -265,7 +260,7 @@ void extract_channels_from_templates(QList<ClusterData>& CD, QList<int> channels
     }
 }
 
-void MVClusterDetailWidget::onCalculationFinished()
+void ClusterDetailView::onCalculationFinished()
 {
     d->m_cluster_data = d->m_calculator.cluster_data;
     if (!mvContext()->visibleChannels().isEmpty()) {
@@ -278,13 +273,13 @@ void MVClusterDetailWidget::onCalculationFinished()
     this->update();
 }
 
-void MVClusterDetailWidget::zoomAllTheWayOut()
+void ClusterDetailView::zoomAllTheWayOut()
 {
     d->m_space_ratio = 0;
     update();
 }
 
-QImage MVClusterDetailWidget::renderImage(int W, int H)
+QImage ClusterDetailView::renderImage(int W, int H)
 {
     if (!W)
         W = 1600;
@@ -305,10 +300,10 @@ QImage MVClusterDetailWidget::renderImage(int W, int H)
     return ret;
 }
 
-QJsonObject MVClusterDetailWidget::exportStaticView()
+QJsonObject ClusterDetailView::exportStaticView()
 {
     QJsonObject ret = MVAbstractView::exportStaticView();
-    ret["view-type"] = "MVClusterDetailWidget";
+    ret["view-type"] = "ClusterDetailView";
     ret["version"] = "0.1";
     ret["calculator-output"] = d->m_calculator.exportStaticOutput();
 
@@ -322,7 +317,7 @@ QJsonObject MVClusterDetailWidget::exportStaticView()
     return ret;
 }
 
-void MVClusterDetailWidget::loadStaticView(const QJsonObject& X)
+void ClusterDetailView::loadStaticView(const QJsonObject& X)
 {
     MVAbstractView::loadStaticView(X);
     d->m_calculator.loadStaticOutput(X["calculator-output"].toObject());
@@ -366,7 +361,7 @@ ChannelSpacingInfo compute_channel_spacing_info(QList<ClusterData>& cdata, doubl
     return info;
 }
 
-void MVClusterDetailWidget::paintEvent(QPaintEvent* evt)
+void ClusterDetailView::paintEvent(QPaintEvent* evt)
 {
     Q_UNUSED(evt)
 
@@ -375,7 +370,7 @@ void MVClusterDetailWidget::paintEvent(QPaintEvent* evt)
     d->do_paint(painter, width(), height());
 }
 
-void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
+void ClusterDetailView::keyPressEvent(QKeyEvent* evt)
 {
     double factor = 1.15;
     if (evt->key() == Qt::Key_Up) {
@@ -436,7 +431,7 @@ void MVClusterDetailWidget::keyPressEvent(QKeyEvent* evt)
         evt->ignore();
 }
 
-void MVClusterDetailWidget::mousePressEvent(QMouseEvent* evt)
+void ClusterDetailView::mousePressEvent(QMouseEvent* evt)
 {
     if (evt->button() == Qt::LeftButton) {
         QPoint pt = evt->pos();
@@ -445,7 +440,7 @@ void MVClusterDetailWidget::mousePressEvent(QMouseEvent* evt)
     }
 }
 
-void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
+void ClusterDetailView::mouseReleaseEvent(QMouseEvent* evt)
 {
     QPoint pt = evt->pos();
 
@@ -474,7 +469,7 @@ void MVClusterDetailWidget::mouseReleaseEvent(QMouseEvent* evt)
     }
 }
 
-void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
+void ClusterDetailView::mouseMoveEvent(QMouseEvent* evt)
 {
     QPoint pt = evt->pos();
     if ((d->m_anchor_x >= 0) && (qAbs(pt.x() - d->m_anchor_x) > 5)) {
@@ -492,7 +487,7 @@ void MVClusterDetailWidget::mouseMoveEvent(QMouseEvent* evt)
     }
 }
 
-void MVClusterDetailWidget::mouseDoubleClickEvent(QMouseEvent* evt)
+void ClusterDetailView::mouseDoubleClickEvent(QMouseEvent* evt)
 {
     Q_UNUSED(evt);
 #if 0
@@ -507,7 +502,7 @@ void MVClusterDetailWidget::mouseDoubleClickEvent(QMouseEvent* evt)
 #endif
 }
 
-void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
+void ClusterDetailView::wheelEvent(QWheelEvent* evt)
 {
     int delta = evt->delta();
     double factor = 1;
@@ -518,7 +513,7 @@ void MVClusterDetailWidget::wheelEvent(QWheelEvent* evt)
     d->zoom(factor);
 }
 
-void MVClusterDetailWidget::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
+void ClusterDetailView::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
 {
     int view_index = d->find_view_index_at(pos);
     if (view_index >= 0) {
@@ -536,7 +531,7 @@ void MVClusterDetailWidget::prepareMimeData(QMimeData& mimeData, const QPoint& p
     MVAbstractView::prepareMimeData(mimeData, pos); // call base class implementation
 }
 
-void MVClusterDetailWidget::slot_export_waveforms()
+void ClusterDetailView::slot_export_waveforms()
 {
     int K = d->m_views.count();
     if (!K) {
@@ -571,7 +566,7 @@ void MVClusterDetailWidget::slot_export_waveforms()
 }
 
 /*
-void MVClusterDetailWidget::slot_context_menu(const QPoint& pos)
+void ClusterDetailView::slot_context_menu(const QPoint& pos)
 {
     QMenu M;
     QAction* export_image = M.addAction("Export Image");
@@ -585,39 +580,39 @@ void MVClusterDetailWidget::slot_context_menu(const QPoint& pos)
 }
 */
 
-void MVClusterDetailWidget::slot_export_image()
+void ClusterDetailView::slot_export_image()
 {
     d->export_image();
 }
 
-void MVClusterDetailWidget::slot_toggle_stdev_shading()
+void ClusterDetailView::slot_toggle_stdev_shading()
 {
     d->toggle_stdev_shading();
 }
 
-void MVClusterDetailWidget::slot_zoom_in()
+void ClusterDetailView::slot_zoom_in()
 {
     d->zoom(1.2);
 }
 
-void MVClusterDetailWidget::slot_zoom_out()
+void ClusterDetailView::slot_zoom_out()
 {
     d->zoom(1 / 1.2);
 }
 
-void MVClusterDetailWidget::slot_vertical_zoom_in()
+void ClusterDetailView::slot_vertical_zoom_in()
 {
     d->m_vscale_factor *= 1.15;
     update();
 }
 
-void MVClusterDetailWidget::slot_vertical_zoom_out()
+void ClusterDetailView::slot_vertical_zoom_out()
 {
     d->m_vscale_factor /= 1.15;
     update();
 }
 
-void MVClusterDetailWidget::slot_export_static_view()
+void ClusterDetailView::slot_export_static_view()
 {
     //QSettings settings("SCDA", "MountainView");
     //QString default_dir = settings.value("default_export_dir", "").toString();
@@ -634,12 +629,12 @@ void MVClusterDetailWidget::slot_export_static_view()
     }
 }
 
-void MVClusterDetailWidgetPrivate::compute_total_time()
+void ClusterDetailViewPrivate::compute_total_time()
 {
     m_total_time_sec = q->mvContext()->currentTimeseries().N2() / q->mvContext()->sampleRate();
 }
 
-void MVClusterDetailWidgetPrivate::set_hovered_k(int k)
+void ClusterDetailViewPrivate::set_hovered_k(int k)
 {
     if (k == m_hovered_k)
         return;
@@ -647,7 +642,7 @@ void MVClusterDetailWidgetPrivate::set_hovered_k(int k)
     q->update();
 }
 
-int MVClusterDetailWidgetPrivate::find_view_index_at(QPoint pos)
+int ClusterDetailViewPrivate::find_view_index_at(QPoint pos)
 {
     for (int i = 0; i < m_views.count(); i++) {
         if (m_views[i]->rect().contains(pos))
@@ -656,7 +651,7 @@ int MVClusterDetailWidgetPrivate::find_view_index_at(QPoint pos)
     return -1;
 }
 
-ClusterView* MVClusterDetailWidgetPrivate::find_view_for_k(int k)
+ClusterView* ClusterDetailViewPrivate::find_view_for_k(int k)
 {
     for (int i = 0; i < m_views.count(); i++) {
         if (m_views[i]->k() == k)
@@ -665,7 +660,7 @@ ClusterView* MVClusterDetailWidgetPrivate::find_view_for_k(int k)
     return 0;
 }
 
-int MVClusterDetailWidgetPrivate::find_view_index_for_k(int k)
+int ClusterDetailViewPrivate::find_view_index_for_k(int k)
 {
     for (int i = 0; i < m_views.count(); i++) {
         if (m_views[i]->k() == k)
@@ -674,7 +669,7 @@ int MVClusterDetailWidgetPrivate::find_view_index_for_k(int k)
     return -1;
 }
 
-void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
+void ClusterDetailViewPrivate::ensure_view_visible(ClusterView* V)
 {
     double x0 = V->x_position_before_scaling * m_space_ratio;
     if (x0 < m_scroll_x) {
@@ -687,7 +682,7 @@ void MVClusterDetailWidgetPrivate::ensure_view_visible(ClusterView* V)
     }
 }
 
-void MVClusterDetailWidgetPrivate::zoom(double factor)
+void ClusterDetailViewPrivate::zoom(double factor)
 {
     int current_k = q->mvContext()->currentCluster();
     if ((current_k >= 0) && (find_view_for_k(current_k))) {
@@ -704,7 +699,7 @@ void MVClusterDetailWidgetPrivate::zoom(double factor)
     q->update();
 }
 
-QString MVClusterDetailWidgetPrivate::group_label_for_k(int k)
+QString ClusterDetailViewPrivate::group_label_for_k(int k)
 {
     if (q->mvContext()->viewMerged()) {
         return QString("%1").arg(q->mvContext()->clusterMerge().clusterLabelText(k));
@@ -714,7 +709,7 @@ QString MVClusterDetailWidgetPrivate::group_label_for_k(int k)
     }
 }
 
-int MVClusterDetailWidgetPrivate::get_current_view_index()
+int ClusterDetailViewPrivate::get_current_view_index()
 {
     int k = q->mvContext()->currentCluster();
     if (k < 0)
@@ -910,7 +905,7 @@ double ClusterView::spaceNeeded()
     return 1;
 }
 
-void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_in)
+void ClusterDetailViewPrivate::do_paint(QPainter& painter, int W_in, int H_in)
 {
     painter.fillRect(0, 0, W_in, H_in, q->mvContext()->color("background"));
 
@@ -1023,19 +1018,19 @@ void MVClusterDetailWidgetPrivate::do_paint(QPainter& painter, int W_in, int H_i
     }
 }
 
-void MVClusterDetailWidgetPrivate::export_image()
+void ClusterDetailViewPrivate::export_image()
 {
     QImage img = q->renderImage();
     user_save_image(img);
 }
 
-void MVClusterDetailWidgetPrivate::toggle_stdev_shading()
+void ClusterDetailViewPrivate::toggle_stdev_shading()
 {
     m_stdev_shading = !m_stdev_shading;
     q->update();
 }
 
-void MVClusterDetailWidgetPrivate::shift_select_clusters_between(int k1, int k2)
+void ClusterDetailViewPrivate::shift_select_clusters_between(int k1, int k2)
 {
     QSet<int> selected_clusters = q->mvContext()->selectedClusters().toSet();
     int ind1 = find_view_index_for_k(k1);
@@ -1095,7 +1090,7 @@ ClusterData combine_cluster_data_group(const QList<ClusterData>& group, ClusterD
     return ret;
 }
 
-QList<ClusterData> MVClusterDetailWidgetPrivate::merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD)
+QList<ClusterData> ClusterDetailViewPrivate::merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD)
 {
     QList<ClusterData> ret;
     for (int i = 0; i < CD.count(); i++) {
@@ -1196,9 +1191,9 @@ void mp_compute_templates_stdevs(DiskReadMda32& templates_out, DiskReadMda32& st
     stdevs_out.setRemoteDataType("float32_q8");
 }
 
-void MVClusterDetailWidgetCalculator::compute()
+void ClusterDetailViewCalculator::compute()
 {
-    TaskProgress task(TaskProgress::Calculate, "Cluster Details");
+    TaskProgress task(TaskProgress::Calculate, "Cluster Detail");
     if (this->loaded_from_static_output) {
         task.log("Loaded from static output");
         return;
@@ -1286,10 +1281,10 @@ void MVClusterDetailWidgetCalculator::compute()
     }
 }
 
-QJsonObject MVClusterDetailWidgetCalculator::exportStaticOutput()
+QJsonObject ClusterDetailViewCalculator::exportStaticOutput()
 {
     QJsonObject ret;
-    ret["version"] = "MVClusterDetailWidgetCalculator-0.1";
+    ret["version"] = "ClusterDetailViewCalculator-0.1";
 
     QJsonArray cd_list;
     for (int i = 0; i < cluster_data.count(); i++) {
@@ -1300,7 +1295,7 @@ QJsonObject MVClusterDetailWidgetCalculator::exportStaticOutput()
     return ret;
 }
 
-void MVClusterDetailWidgetCalculator::loadStaticOutput(const QJsonObject& X)
+void ClusterDetailViewCalculator::loadStaticOutput(const QJsonObject& X)
 {
     cluster_data.clear();
     QJsonArray cd_list = X["cluster_data"].toArray();
@@ -1312,7 +1307,7 @@ void MVClusterDetailWidgetCalculator::loadStaticOutput(const QJsonObject& X)
     loaded_from_static_output = true;
 }
 
-ClusterView::ClusterView(MVClusterDetailWidget* q0, MVClusterDetailWidgetPrivate* d0)
+ClusterView::ClusterView(ClusterDetailView* q0, ClusterDetailViewPrivate* d0)
 {
     q = q0;
     d = d0;
@@ -1369,53 +1364,6 @@ QRectF ClusterView::rect()
 {
     return m_rect;
 }
-
-MVClusterDetailsFactory::MVClusterDetailsFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
-{
-}
-
-QString MVClusterDetailsFactory::id() const
-{
-    return QStringLiteral("open-cluster-details");
-}
-
-QString MVClusterDetailsFactory::name() const
-{
-    return tr("Cluster Details");
-}
-
-QString MVClusterDetailsFactory::title() const
-{
-    return tr("Details");
-}
-
-MVAbstractView* MVClusterDetailsFactory::createView(QWidget* parent)
-{
-    Q_UNUSED(parent)
-    MVClusterDetailWidget* X = new MVClusterDetailWidget(mvContext());
-    //connect(X, SIGNAL(signalTemplateActivated()), this, SLOT(openClipsForTemplate()));
-    //connect(X, SIGNAL(signalTemplateActivated()), X, SIGNAL(signalClusterContextMenu()));
-    //X->setProperty("widget_type", "cluster_details");
-    return X;
-}
-
-/*
-void MVClusterDetailsFactory::openClipsForTemplate()
-{
-    MVAbstractView* view = qobject_cast<MVAbstractView*>(sender());
-    if (!view)
-        return;
-    MVMainWindow* mw = MVMainWindow::instance();
-    int k = mw->mvContext()->currentCluster();
-    if (k < 0)
-        return;
-    TabberTabWidget* TW = mw->tabWidget(view);
-    mw->tabber()->setCurrentContainer(TW);
-    mw->tabber()->switchCurrentContainer();
-    mw->openView("open-clips");
-}
-*/
 
 QJsonObject ClusterData::toJsonObject()
 {

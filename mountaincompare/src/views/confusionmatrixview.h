@@ -50,11 +50,11 @@ private:
 class ConfusionMatrixViewFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    ConfusionMatrixViewFactory(MVContext* context, QObject* parent = 0);
+    ConfusionMatrixViewFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 private slots:
     //void openClipsForTemplate();
 };

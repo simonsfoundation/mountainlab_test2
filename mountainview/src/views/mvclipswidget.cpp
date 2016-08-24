@@ -208,12 +208,9 @@ void MVClipsWidgetComputer::compute()
     */
 }
 
-MVClipsFactory::MVClipsFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVClipsFactory::MVClipsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
-    connect(context, SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
-    updateEnabled();
 }
 
 QString MVClipsFactory::id() const
@@ -231,16 +228,15 @@ QString MVClipsFactory::title() const
     return tr("Clips");
 }
 
-MVAbstractView* MVClipsFactory::createView(QWidget* parent)
+MVAbstractView* MVClipsFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = context->selectedClusters();
     qSort(ks);
     if (ks.count() == 0) {
         QMessageBox::information(0, "Unable to open clips", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
-    MVClipsWidget* X = new MVClipsWidget(mvContext());
+    MVClipsWidget* X = new MVClipsWidget(context);
     X->setProperty("widget_type", "clips");
     X->setLabelsToUse(ks);
     /// TODO, pass this in a method
@@ -260,7 +256,7 @@ int MVClipsFactory::order() const
     return 0;
 }
 
-void MVClipsFactory::updateEnabled()
+void MVClipsFactory::updateEnabled(MVContext* context)
 {
-    setEnabled(!mvContext()->selectedClusters().isEmpty());
+    //setEnabled(!mvContext()->selectedClusters().isEmpty());
 }

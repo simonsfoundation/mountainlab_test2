@@ -4,3 +4,12 @@
 ** Created: 8/20/2016
 *******************************************************/
 
+#include "mvabstractplugin.h"
+
+MVAbstractPlugin::MVAbstractPlugin()
+{
+}
+
+MVAbstractPlugin::~MVAbstractPlugin()
+{
+}

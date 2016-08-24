@@ -527,12 +527,9 @@ void MVSpikeSprayComputer::compute()
     }
 }
 
-MVSpikeSprayFactory::MVSpikeSprayFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVSpikeSprayFactory::MVSpikeSprayFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
-    connect(context, SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
-    updateEnabled();
 }
 
 QString MVSpikeSprayFactory::id() const
@@ -550,23 +547,22 @@ QString MVSpikeSprayFactory::title() const
     return tr("Spike Spray");
 }
 
-MVAbstractView* MVSpikeSprayFactory::createView(QWidget* parent)
+MVAbstractView* MVSpikeSprayFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    QList<int> ks = mvContext()->selectedClusters();
+    QList<int> ks = context->selectedClusters();
     if (ks.isEmpty())
-        ks = mvContext()->clusterVisibilityRule().subset.toList();
+        ks = context->clusterVisibilityRule().subset.toList();
     qSort(ks);
     if (ks.isEmpty()) {
         QMessageBox::warning(0, "Unable to open spike spray", "You must select at least one cluster.");
         return Q_NULLPTR;
     }
-    MVSpikeSprayView* X = new MVSpikeSprayView(mvContext());
+    MVSpikeSprayView* X = new MVSpikeSprayView(context);
     X->setLabelsToUse(ks.toSet());
     return X;
 }
 
-void MVSpikeSprayFactory::updateEnabled()
+void MVSpikeSprayFactory::updateEnabled(MVContext* context)
 {
-    setEnabled(!mvContext()->selectedClusters().isEmpty());
+    //setEnabled(!mvContext()->selectedClusters().isEmpty());
 }

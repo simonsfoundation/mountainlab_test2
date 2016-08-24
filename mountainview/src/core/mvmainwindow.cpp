@@ -57,6 +57,8 @@ public:
     MVMainWindow* q;
     MVContext* m_context; //gets passed to all the views and the control panel
 
+    QMap<QString, MVAbstractPlugin*> m_loaded_plugins;
+
     //these widgets go on the left
     QSplitter* m_left_splitter;
     MVControlPanel2* m_control_panel;
@@ -241,6 +243,31 @@ MVMainWindow::~MVMainWindow()
 {
     //delete d->m_cluster_annotation_guide;
     delete d;
+}
+
+void MVMainWindow::loadPlugin(MVAbstractPlugin* P)
+{
+    if (d->m_loaded_plugins.contains(P->name())) {
+        qWarning() << "Plugin with this name has already been loaded" << P->name();
+        return;
+    }
+    P->initialize(this);
+    d->m_loaded_plugins[P->name()] = P;
+}
+
+QStringList MVMainWindow::loadedPluginNames()
+{
+    QStringList ret;
+    foreach (MVAbstractPlugin* P, d->m_loaded_plugins) {
+        ret << P->name();
+    }
+    qSort(ret);
+    return ret;
+}
+
+MVAbstractPlugin* MVMainWindow::loadedPlugin(QString name)
+{
+    return d->m_loaded_plugins.value(name);
 }
 
 void MVMainWindow::setDefaultInitialization()
@@ -482,7 +509,7 @@ MVAbstractViewFactory* MVMainWindowPrivate::viewFactoryById(const QString& id) c
 
 MVAbstractView* MVMainWindowPrivate::openView(MVAbstractViewFactory* factory)
 {
-    MVAbstractView* view = factory->createView();
+    MVAbstractView* view = factory->createView(m_context);
     if (!view)
         return Q_NULLPTR;
     //    set_tool_button_menu(view);

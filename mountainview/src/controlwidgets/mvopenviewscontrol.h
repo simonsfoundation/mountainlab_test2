@@ -24,6 +24,7 @@ public slots:
 
 private slots:
     void slot_open_view(QObject* obj);
+    void slot_update_enabled();
 
 private:
     MVOpenViewsControlPrivate* d;

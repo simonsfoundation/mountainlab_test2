@@ -23,6 +23,7 @@ public:
     MVOpenViewsControl* q;
     FlowLayout* m_flow_layout;
     QSignalMapper* m_viewMapper;
+    QMap<QString, QAbstractButton*> m_buttons;
 
     QAbstractButton* m_close_all_button;
 };
@@ -47,11 +48,11 @@ MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
         button->setFont(font);
         button->setText(f->name());
         button->setProperty("action_name", f->id());
-        button->setEnabled(f->isEnabled());
         d->m_flow_layout->addWidget(button);
         d->m_viewMapper->setMapping(button, f);
         QObject::connect(button, SIGNAL(clicked()), d->m_viewMapper, SLOT(map()));
         QObject::connect(f, SIGNAL(enabledChanged(bool)), button, SLOT(setEnabled(bool)));
+        d->m_buttons[f->name()] = button;
     }
 
     {
@@ -66,8 +67,14 @@ MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
     }
     this->setLayout(d->m_flow_layout);
 
+    QObject::connect(context, SIGNAL(selectedClustersChanged()), this, SLOT(slot_update_enabled()));
+    QObject::connect(context, SIGNAL(currentClusterChanged()), this, SLOT(slot_update_enabled()));
+    QObject::connect(context, SIGNAL(selectedClusterPairsChanged()), this, SLOT(slot_update_enabled()));
+
     QObject::connect(mw, SIGNAL(viewsChanged()), this, SLOT(updateControls()));
+    QObject::connect(mw, SIGNAL(viewsChanged()), this, SLOT(slot_update_enabled()));
     updateControls();
+    slot_update_enabled();
 }
 
 MVOpenViewsControl::~MVOpenViewsControl()
@@ -95,4 +102,13 @@ void MVOpenViewsControl::slot_open_view(QObject* obj)
     if (!factory)
         return;
     this->mainWindow()->openView(factory->id());
+}
+
+void MVOpenViewsControl::slot_update_enabled()
+{
+    foreach (const MVAbstractViewFactory* factory, this->mainWindow()->viewFactories()) {
+        if (d->m_buttons[factory->name()]) {
+            d->m_buttons[factory->name()]->setEnabled(factory->isEnabled(mvContext()));
+        }
+    }
 }

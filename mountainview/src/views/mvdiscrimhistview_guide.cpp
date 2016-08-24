@@ -268,12 +268,9 @@ QSet<int> MVDiscrimHistViewGuidePrivate::get_clusters_to_exclude()
     return ret;
 }
 
-MVDiscrimHistGuideFactory::MVDiscrimHistGuideFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVDiscrimHistGuideFactory::MVDiscrimHistGuideFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
-    connect(mvContext(), SIGNAL(selectedClustersChanged()),
-        this, SLOT(updateEnabled()));
-    updateEnabled();
 }
 
 QString MVDiscrimHistGuideFactory::id() const
@@ -291,17 +288,15 @@ QString MVDiscrimHistGuideFactory::title() const
     return tr("Discrim");
 }
 
-MVAbstractView* MVDiscrimHistGuideFactory::createView(QWidget* parent)
+MVAbstractView* MVDiscrimHistGuideFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVDiscrimHistViewGuide* X = new MVDiscrimHistViewGuide(mvContext());
+    MVDiscrimHistViewGuide* X = new MVDiscrimHistViewGuide(context);
     X->setPreferredHistogramWidth(200);
     X->setNumHistograms(80);
     return X;
 }
 
-void MVDiscrimHistGuideFactory::updateEnabled()
+bool MVDiscrimHistGuideFactory::isEnabled(MVContext* context) const
 {
-    setEnabled(true);
-    //setEnabled(mvContext()->selectedClusters().count() >= 2);
+    return (context->selectedClusters().count() >= 2);
 }

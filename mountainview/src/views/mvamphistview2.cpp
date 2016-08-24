@@ -246,8 +246,8 @@ void MVAmpHistView2Private::set_views()
     q->setHistogramViews(views); //inherited
 }
 
-MVAmplitudeHistogramsFactory::MVAmplitudeHistogramsFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVAmplitudeHistogramsFactory::MVAmplitudeHistogramsFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
 }
 
@@ -266,10 +266,9 @@ QString MVAmplitudeHistogramsFactory::title() const
     return tr("Amplitudes");
 }
 
-MVAbstractView* MVAmplitudeHistogramsFactory::createView(QWidget* parent)
+MVAbstractView* MVAmplitudeHistogramsFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVAmpHistView2* X = new MVAmpHistView2(mvContext());
+    MVAmpHistView2* X = new MVAmpHistView2(context);
     return X;
 }
 

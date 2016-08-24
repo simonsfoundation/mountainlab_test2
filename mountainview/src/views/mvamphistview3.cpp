@@ -416,8 +416,8 @@ void MVAmpHistView3::keyPressEvent(QKeyEvent* evt)
     }
 }
 
-MVAmplitudeHistograms3Factory::MVAmplitudeHistograms3Factory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVAmplitudeHistograms3Factory::MVAmplitudeHistograms3Factory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
 }
 
@@ -436,9 +436,8 @@ QString MVAmplitudeHistograms3Factory::title() const
     return tr("Amplitudes");
 }
 
-MVAbstractView* MVAmplitudeHistograms3Factory::createView(QWidget* parent)
+MVAbstractView* MVAmplitudeHistograms3Factory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVAmpHistView3* X = new MVAmpHistView3(mvContext());
+    MVAmpHistView3* X = new MVAmpHistView3(context);
     return X;
 }

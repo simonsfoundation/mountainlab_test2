@@ -54,13 +54,13 @@ private:
 class MVSpikeSprayFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVSpikeSprayFactory(MVContext* context, QObject* parent = 0);
+    MVSpikeSprayFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 private slots:
-    void updateEnabled();
+    void updateEnabled(MVContext* context);
 };
 
 #endif // MVSPIKESPRAYVIEW_H

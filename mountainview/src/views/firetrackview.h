@@ -29,11 +29,11 @@ private:
 class MVFireTrackFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVFireTrackFactory(MVContext* context, QObject* parent = 0);
+    MVFireTrackFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 };
 
 #endif // FIRETRACKVIEW_H

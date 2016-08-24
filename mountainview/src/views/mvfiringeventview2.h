@@ -47,13 +47,13 @@ private:
 class MVFiringEventsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVFiringEventsFactory(MVContext* context, QObject* parent = 0);
+    MVFiringEventsFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 private slots:
-    void updateEnabled();
+    void updateEnabled(MVContext* context);
 };
 
 class FiringEventImageCalculator;

@@ -33,11 +33,11 @@ private:
 class MVAmplitudeHistogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVAmplitudeHistogramsFactory(MVContext* context, QObject* parent = 0);
+    MVAmplitudeHistogramsFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 private slots:
     void slot_amplitude_histogram_activated();
 };

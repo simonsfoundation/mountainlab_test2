@@ -269,8 +269,8 @@ void ConfusionMatrixView::slot_update_current_elements_based_on_context()
     }
 }
 
-ConfusionMatrixViewFactory::ConfusionMatrixViewFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+ConfusionMatrixViewFactory::ConfusionMatrixViewFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
 }
 
@@ -289,7 +289,7 @@ QString ConfusionMatrixViewFactory::title() const
     return tr("Confusion Matrix");
 }
 
-MVAbstractView* ConfusionMatrixViewFactory::createView(QWidget* parent)
+MVAbstractView* ConfusionMatrixViewFactory::createView(MVContext* context)
 {
     Q_UNUSED(parent)
     ConfusionMatrixView* X = new ConfusionMatrixView(mvContext());

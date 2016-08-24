@@ -15,6 +15,7 @@
 #include "mvcontext.h"
 #include "mvabstractcontrol.h"
 #include "mvabstractview.h"
+#include "mvabstractplugin.h"
 
 class MVAbstractViewFactory;
 class TabberTabWidget;
@@ -36,6 +37,11 @@ public:
     friend class MVMainWindowPrivate;
     MVMainWindow(MVContext* context, QWidget* parent = 0);
     virtual ~MVMainWindow();
+
+    void loadPlugin(MVAbstractPlugin* P);
+    QStringList loadedPluginNames();
+    MVAbstractPlugin* loadedPlugin(QString name);
+
     void setDefaultInitialization();
 
     void registerViewFactory(MVAbstractViewFactory* f);

@@ -62,25 +62,25 @@ private:
 class MVPCAFeaturesFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVPCAFeaturesFactory(MVContext* context, QObject* parent = 0);
+    MVPCAFeaturesFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 public slots:
-    void updateEnabled();
+    void updateEnabled(MVContext* context);
 };
 
 class MVChannelFeaturesFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVChannelFeaturesFactory(MVContext* context, QObject* parent = 0);
+    MVChannelFeaturesFactory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(QWidget* parent) Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 public slots:
-    void updateEnabled();
+    void updateEnabled(MVContext* context);
 };
 
 #endif // MVCLUSTERWIDGET_H

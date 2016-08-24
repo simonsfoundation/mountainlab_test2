@@ -5,8 +5,8 @@
 
 #include <views/compareclusterview.h>
 
-MVClusterDetails2Factory::MVClusterDetails2Factory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVClusterDetails2Factory::MVClusterDetails2Factory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
 }
 
@@ -25,7 +25,7 @@ QString MVClusterDetails2Factory::title() const
     return tr("Details 2");
 }
 
-MVAbstractView* MVClusterDetails2Factory::createView(QWidget* parent)
+MVAbstractView* MVClusterDetails2Factory::createView(MVContext* context)
 {
     Q_UNUSED(parent)
 
@@ -68,8 +68,8 @@ void Synchronizer1::sync_old_to_new()
 }
 
 ////////////////////////////////////////////////////////////////////////
-CompareClustersFactory::CompareClustersFactory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+CompareClustersFactory::CompareClustersFactory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
 }
 
@@ -88,7 +88,7 @@ QString CompareClustersFactory::title() const
     return tr("Compare Clusters");
 }
 
-MVAbstractView* CompareClustersFactory::createView(QWidget* parent)
+MVAbstractView* CompareClustersFactory::createView(MVContext* context)
 {
     Q_UNUSED(parent)
 

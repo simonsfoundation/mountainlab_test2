@@ -411,8 +411,8 @@ void MVTemplatesView2Private::update_scale_factors()
     q->update();
 }
 
-MVTemplatesView2Factory::MVTemplatesView2Factory(MVContext* context, QObject* parent)
-    : MVAbstractViewFactory(context, parent)
+MVTemplatesView2Factory::MVTemplatesView2Factory(QObject* parent)
+    : MVAbstractViewFactory(parent)
 {
 }
 
@@ -431,9 +431,8 @@ QString MVTemplatesView2Factory::title() const
     return tr("Templates");
 }
 
-MVAbstractView* MVTemplatesView2Factory::createView(QWidget* parent)
+MVAbstractView* MVTemplatesView2Factory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    MVTemplatesView2* X = new MVTemplatesView2(mvContext());
+    MVTemplatesView2* X = new MVTemplatesView2(context);
     return X;
 }
