@@ -23,7 +23,6 @@
 #include <QThreadPool>
 #include <QtConcurrentRun>
 #include <mvclipswidget.h>
-#include <mvclusterdetailwidget.h>
 #include <mvclusterwidget.h>
 #include <mvopenviewscontrol.h>
 #include <tabber.h>
@@ -36,6 +35,7 @@
 #include "mccontext.h"
 #include "mcviewfactories.h"
 #include "mvmainwindow.h"
+#include "clusterdetailplugin.h"
 
 #include <views/confusionmatrixview.h>
 
@@ -126,13 +126,14 @@ int main(int argc, char* argv[])
     set_nice_size(W);
     W->show();
 
-    W->registerViewFactory(new ConfusionMatrixViewFactory(context, W));
-    W->registerViewFactory(new CompareClustersFactory(context, W));
+    W->loadPlugin(new ClusterDetailPlugin());
 
-    W->registerViewFactory(new MVClusterDetailsFactory(context, W));
-    W->registerViewFactory(new MVClusterDetails2Factory(context, W));
-    W->registerViewFactory(new MVClipsFactory(context, W));
-    W->registerViewFactory(new MVPCAFeaturesFactory(context, W));
+    W->registerViewFactory(new ConfusionMatrixViewFactory(W));
+    W->registerViewFactory(new CompareClustersFactory(W));
+
+    W->registerViewFactory(new ClusterDetail2Factory(W));
+    W->registerViewFactory(new MVClipsFactory(W));
+    W->registerViewFactory(new MVPCAFeaturesFactory(W));
 
     W->addControl(new MVOpenViewsControl(context, W), true);
 

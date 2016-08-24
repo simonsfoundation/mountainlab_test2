@@ -18,6 +18,16 @@ MOC_DIR=../build
 TARGET = mountaincompare
 TEMPLATE = app
 
+INCLUDEPATH += ../../mountainview/src/msv/plugins
+VPATH += ../../mountainview/src/msv/plugins
+HEADERS += clusterdetailplugin.h
+SOURCES += clusterdetailplugin.cpp
+
+INCLUDEPATH += ../../mountainview/src/msv/views
+VPATH += ../../mountainview/src/msv/views
+HEADERS += clusterdetailview.h
+SOURCES += clusterdetailview.cpp
+
 SOURCES += mountaincomparemain.cpp \
     mvmainwindow.cpp \
     mccontext.cpp \
@@ -40,6 +50,9 @@ mvcontext.h tabber.h tabberframe.h taskprogressview.h actionfactory.h \
     views/matrixview.h \
     mcviewfactories.h \
     views/compareclusterview.h
+
+HEADERS += mvabstractplugin.h
+SOURCES += mvabstractplugin.cpp
 
 SOURCES += \
 closemehandler.cpp flowlayout.cpp imagesavedialog.cpp \
@@ -66,12 +79,10 @@ INCLUDEPATH += ../../mountainview/src/views
 VPATH += ../../mountainview/src/views
 HEADERS += \
 mvclipsview.h mvclipswidget.h mvtimeseriesview2.h mvtimeseriesviewbase.h mvtimeseriesrendermanager.h \
-mvclusterview.h mvclusterwidget.h mvclusterlegend.h \
-mvclusterdetailwidget.h
+mvclusterview.h mvclusterwidget.h mvclusterlegend.h
 SOURCES += \
 mvclipsview.cpp mvclipswidget.cpp mvtimeseriesview2.cpp mvtimeseriesviewbase.cpp mvtimeseriesrendermanager.cpp \
-mvclusterview.cpp mvclusterwidget.cpp mvclusterlegend.cpp \
-mvclusterdetailwidget.cpp
+mvclusterview.cpp mvclusterwidget.cpp mvclusterlegend.cpp
 
 INCLUDEPATH += ../../mountainsort/src/processors
 DEPENDPATH += ../../mountainsort/src/processors

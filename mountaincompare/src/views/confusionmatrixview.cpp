@@ -291,8 +291,7 @@ QString ConfusionMatrixViewFactory::title() const
 
 MVAbstractView* ConfusionMatrixViewFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-    ConfusionMatrixView* X = new ConfusionMatrixView(mvContext());
+    ConfusionMatrixView* X = new ConfusionMatrixView(context);
 
     if (!X->mcContext()) {
         qCritical() << "mcContext is null" << __FILE__ << __LINE__;

@@ -256,7 +256,7 @@ int MVClipsFactory::order() const
     return 0;
 }
 
-void MVClipsFactory::updateEnabled(MVContext* context)
+bool MVClipsFactory::isEnabled(MVContext* context) const
 {
-    //setEnabled(!mvContext()->selectedClusters().isEmpty());
+    return (!context->selectedClusters().isEmpty());
 }

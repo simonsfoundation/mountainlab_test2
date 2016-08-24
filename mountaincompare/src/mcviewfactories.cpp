@@ -1,35 +1,32 @@
 #include "mccontext.h"
 #include "mcviewfactories.h"
 
-#include <mvclusterdetailwidget.h>
-
+#include "clusterdetailview.h"
 #include <views/compareclusterview.h>
 
-MVClusterDetails2Factory::MVClusterDetails2Factory(QObject* parent)
+ClusterDetail2Factory::ClusterDetail2Factory(QObject* parent)
     : MVAbstractViewFactory(parent)
 {
 }
 
-QString MVClusterDetails2Factory::id() const
+QString ClusterDetail2Factory::id() const
 {
     return QStringLiteral("open-cluster-details-2");
 }
 
-QString MVClusterDetails2Factory::name() const
+QString ClusterDetail2Factory::name() const
 {
     return tr("Cluster Details 2");
 }
 
-QString MVClusterDetails2Factory::title() const
+QString ClusterDetail2Factory::title() const
 {
     return tr("Details 2");
 }
 
-MVAbstractView* MVClusterDetails2Factory::createView(MVContext* context)
+MVAbstractView* ClusterDetail2Factory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-
-    MCContext* mc_context = qobject_cast<MCContext*>(mvContext());
+    MCContext* mc_context = qobject_cast<MCContext*>(context);
     if (!mc_context)
         return 0;
 
@@ -40,7 +37,7 @@ MVAbstractView* MVClusterDetails2Factory::createView(MVContext* context)
 
     new Synchronizer1(mc_context, c2);
 
-    MVClusterDetailWidget* X = new MVClusterDetailWidget(c2);
+    ClusterDetailView* X = new ClusterDetailView(c2);
     return X;
 }
 
@@ -90,9 +87,7 @@ QString CompareClustersFactory::title() const
 
 MVAbstractView* CompareClustersFactory::createView(MVContext* context)
 {
-    Q_UNUSED(parent)
-
-    MCContext* mc_context = qobject_cast<MCContext*>(mvContext());
+    MCContext* mc_context = qobject_cast<MCContext*>(context);
     if (!mc_context)
         return 0;
 

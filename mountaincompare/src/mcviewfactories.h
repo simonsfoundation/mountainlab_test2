@@ -5,10 +5,10 @@
 
 #include <mvabstractviewfactory.h>
 
-class MVClusterDetails2Factory : public MVAbstractViewFactory {
+class ClusterDetail2Factory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVClusterDetails2Factory(QObject* parent = 0);
+    ClusterDetail2Factory(QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

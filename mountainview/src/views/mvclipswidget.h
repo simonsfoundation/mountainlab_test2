@@ -44,8 +44,7 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     int order() const Q_DECL_OVERRIDE;
-private slots:
-    void updateEnabled(MVContext* context);
+    bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
 };
 
 #endif // MVCLIPSWIDGET_H
