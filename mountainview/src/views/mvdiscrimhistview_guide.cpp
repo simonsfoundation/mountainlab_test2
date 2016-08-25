@@ -52,9 +52,9 @@ MVDiscrimHistViewGuide::MVDiscrimHistViewGuide(MVContext* context)
 
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
     this->recalculateOn(context, SIGNAL(firingsChanged()), false);
-    this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
-    this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
-    this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
+    this->recalculateOn(context, SIGNAL(clusterMergeChanged()), true);
+    this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), true);
+    this->recalculateOn(context, SIGNAL(viewMergedChanged()), true);
 
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInHorizontal, this, SLOT(slot_zoom_in_horizontal()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutHorizontal, this, SLOT(slot_zoom_out_horizontal()));
@@ -298,5 +298,5 @@ MVAbstractView* MVDiscrimHistGuideFactory::createView(MVContext* context)
 
 bool MVDiscrimHistGuideFactory::isEnabled(MVContext* context) const
 {
-    return (context->selectedClusters().count() >= 2);
+    return true;
 }

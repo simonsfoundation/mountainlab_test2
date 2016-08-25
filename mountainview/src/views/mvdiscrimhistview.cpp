@@ -57,9 +57,9 @@ MVDiscrimHistView::MVDiscrimHistView(MVContext* context)
 
     this->recalculateOn(context, SIGNAL(currentTimeseriesChanged()));
     this->recalculateOn(context, SIGNAL(firingsChanged()), false);
-    this->recalculateOn(context, SIGNAL(clusterMergeChanged()), false);
-    this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), false);
-    this->recalculateOn(context, SIGNAL(viewMergedChanged()), false);
+    this->recalculateOn(context, SIGNAL(clusterMergeChanged()), true);
+    this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), true);
+    this->recalculateOn(context, SIGNAL(viewMergedChanged()), true);
 
     this->recalculate();
 }
@@ -313,7 +313,7 @@ MVAbstractView* MVDiscrimHistFactory::createView(MVContext* context)
     return X;
 }
 
-void MVDiscrimHistFactory::updateEnabled(MVContext* context)
+bool MVDiscrimHistFactory::isEnabled(MVContext *context) const
 {
-    //setEnabled(mvContext()->selectedClusters().count() >= 2);
+    return (context->selectedClusters().count() >= 2);
 }
