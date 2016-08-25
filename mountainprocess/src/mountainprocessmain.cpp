@@ -17,6 +17,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFileInfo>
+#include <QDir>
 #include "processmanager.h"
 
 #include "cachemanager.h"
@@ -62,12 +63,10 @@ double compute_peak_cpu_pct(const QList<MonitorStats>& stats);
 
 int main(int argc, char* argv[])
 {
-    qInstallMessageHandler(mountainprocessMessageOutput);
-
     QCoreApplication app(argc, argv);
     CLParams CLP(argc, argv);
-
-    /// TODO don't need to always load the process manager?
+    QString arg1 = CLP.unnamed_parameters.value(0);
+    QString arg2 = CLP.unnamed_parameters.value(1);
 
     /// TODO get rid of mlConfigPath()
     QString config_fname = MLUtil::mountainlabBasePath() + "/labcomputer/labcomputer.json";
@@ -88,17 +87,23 @@ int main(int argc, char* argv[])
     if (config.contains("temporary_path")) {
         tmp_path = config["temporary_path"].toString();
     }
-    qDebug() << "Setting temporary path: " << tmp_path;
     CacheManager::globalInstance()->setLocalBasePath(tmp_path);
+
+    if (arg1.endsWith(".prv")) {
+        QString path0=resolve_prv_file(arg1);
+        printf("FILE: %s\n",path0.toLatin1().data());
+        return 0;
+    }
+
+    qInstallMessageHandler(mountainprocessMessageOutput);
+
+    /// TODO don't need to always load the process manager?
 
     ProcessManager* PM = ProcessManager::globalInstance();
     QStringList server_urls = json_array_to_stringlist(config["server_urls"].toArray());
     PM->setServerUrls(server_urls);
     QString server_base_path = MLUtil::resolvePath(config_path, config["mdaserver_base_path"].toString());
     PM->setServerBasePath(server_base_path);
-
-    QString arg1 = CLP.unnamed_parameters.value(0);
-    QString arg2 = CLP.unnamed_parameters.value(1);
 
     setbuf(stdout, NULL);
 
@@ -479,8 +484,8 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
 void print_usage()
 {
     printf("Usage:\n");
-    printf("mountainprocess runProcess [processor_name] --[param1]=[val1] --[param2]=[val2] ...\n");
-    printf("mountainprocess runScript [script1].js [script2.js] ... [file1].par [file2].par ... \n");
+    printf("mountainprocess run-process [processor_name] --[param1]=[val1] --[param2]=[val2] ...\n");
+    printf("mountainprocess run-script [script1].js [script2.js] ... [file1].par [file2].par ... \n");
     printf("mountainprocess daemon-start\n");
     printf("mountainprocess daemon-stop\n");
     printf("mountainprocess daemon-restart\n");
@@ -650,3 +655,4 @@ double compute_peak_cpu_pct(const QList<MonitorStats>& stats)
     }
     return ret;
 }
+

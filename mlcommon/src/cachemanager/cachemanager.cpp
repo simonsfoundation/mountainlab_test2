@@ -77,10 +77,7 @@ QString CacheManager::makeLocalFile(const QString& file_name_in, CacheManager::D
     QString file_name = file_name_in;
     if (file_name.isEmpty())
         file_name = d->create_random_file_name();
-    if (d->m_local_base_path.isEmpty()) {
-        qWarning() << "Local base path has not been set. Using default: " + QString(DEFAULT_LOCAL_BASE_PATH);
-        this->setLocalBasePath(DEFAULT_LOCAL_BASE_PATH);
-    }
+
     QString str;
     if (duration == ShortTerm)
         str = "tmp_short_term";
@@ -90,13 +87,17 @@ QString CacheManager::makeLocalFile(const QString& file_name_in, CacheManager::D
         qWarning() << "Unexpected problem" << __FUNCTION__ << __FILE__ << __LINE__;
         return "";
     }
-    QString ret = QString("%1/%2/%3").arg(d->m_local_base_path).arg(str).arg(file_name);
+    QString ret = QString("%1/%2/%3").arg(localTempPath()).arg(str).arg(file_name);
 
     return ret;
 }
 
 QString CacheManager::localTempPath()
 {
+    if (d->m_local_base_path.isEmpty()) {
+        //qWarning() << "Local base path has not been set. Using default: " + QString(DEFAULT_LOCAL_BASE_PATH);
+        this->setLocalBasePath(DEFAULT_LOCAL_BASE_PATH);
+    }
     return d->m_local_base_path;
 }
 

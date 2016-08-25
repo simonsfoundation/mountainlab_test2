@@ -360,7 +360,7 @@ QVector<int> do_cluster_without_normalized_features(Mda& clips, const Branch_Clu
 
     Mda32 CC, FF; // CC will be MTxK, FF will be KxL
     Mda32 sigma;
-    pca(CC, FF, sigma, clips_reshaped, opts.num_features);
+    pca(CC, FF, sigma, clips_reshaped, opts.num_features, false); //should we subtract the mean?
 
     //Mda FF;
     //FF.allocate(nF, L);

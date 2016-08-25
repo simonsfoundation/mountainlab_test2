@@ -69,6 +69,7 @@ public:
     QJsonObject exportStaticViews() const;
 
 public slots:
+    void slotCloseAllViews();
 
 signals:
     void viewsChanged();

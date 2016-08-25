@@ -353,6 +353,11 @@ QJsonObject MVMainWindow::exportStaticViews() const
     return ret;
 }
 
+void MVMainWindow::slotCloseAllViews()
+{
+    closeAllViews();
+}
+
 void MVMainWindow::openView(const QString& id)
 {
     MVAbstractViewFactory* f = d->viewFactoryById(id);

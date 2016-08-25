@@ -18,6 +18,10 @@
 #include <QCryptographicHash>
 #include <math.h>
 #include <QDataStream>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QProcess>
+#include <QJsonArray>
 
 #ifdef QT_GUI_LIB
 #include <QtNetwork/QNetworkAccessManager>
@@ -521,4 +525,158 @@ double MLCompute::median(const QVector<double>& X)
     else {
         return Y[Y.count() / 2];
     }
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+QString find_file_with_checksum(QString dirpath,QString checksum) {
+    QStringList list=QDir(dirpath).entryList(QStringList("*"),QDir::Files,QDir::Name);
+    foreach (QString fname,list) {
+        QString checksum1=MLUtil::computeSha1SumOfFile(dirpath+"/"+fname);
+        if (checksum1==checksum) return dirpath+"/"+fname;
+    }
+    return "";
+}
+
+QString find_file_with_checksum(const QString &checksum) {
+    QString path;
+    path=find_file_with_checksum(CacheManager::globalInstance()->localTempPath()+"/tmp_short_term",checksum);
+    if (!path.isEmpty()) return path;
+    path=find_file_with_checksum(CacheManager::globalInstance()->localTempPath()+"/tmp_long_term",checksum);
+    if (!path.isEmpty()) return path;
+    return path;
+}
+
+QString make_temporary_output_file_name(QString processor_name,QMap<QString,QVariant> args_inputs,QMap<QString,QVariant> args_parameters,QString output_pname) {
+    QJsonObject tmp;
+    tmp["processor_name"]=processor_name;
+    tmp["inputs"]=QJsonObject::fromVariantMap(args_inputs);
+    tmp["parameters"]=QJsonObject::fromVariantMap(args_parameters);
+    tmp["output_pname"]=output_pname;
+    QString tmp_json=QJsonDocument(tmp).toJson();
+    QString code=MLUtil::computeSha1SumOfString(tmp_json);
+    return CacheManager::globalInstance()->makeLocalFile(code+"-prv-"+output_pname);
+}
+
+void run_process(QString processor_name,QMap<QString,QVariant> inputs,QMap<QString,QVariant> outputs,QMap<QString,QVariant> parameters) {
+    QStringList args;
+    args << "run-process" << processor_name;
+    {
+        QStringList keys=inputs.keys();
+        foreach (QString key,keys) {
+            args << QString("--%1=%2").arg(key).arg(inputs[key].toString());
+        }
+    }
+    {
+        QStringList keys=outputs.keys();
+        foreach (QString key,keys) {
+            args << QString("--%1=%2").arg(key).arg(outputs[key].toString());
+        }
+    }
+    {
+        QStringList keys=parameters.keys();
+        foreach (QString key,keys) {
+            args << QString("--%1=%2").arg(key).arg(parameters[key].toString());
+        }
+    }
+    QString exe=MLUtil::mountainlabBasePath()+"/mountainprocess/bin/mountainprocess";
+    qDebug() << "Running process:" << args.join(" ");
+    QProcess::execute(exe,args);
+}
+
+QString create_prv_file(const QString &output_name, const QJsonArray &processes) {
+    for (int i=0; i<processes.count(); i++) {
+        QJsonObject process0=processes[i].toObject();
+
+        QString processor_name=process0["processor_name"].toString();
+        QJsonObject outputs=process0["outputs"].toObject();
+        QJsonObject inputs=process0["inputs"].toObject();
+        QJsonObject parameters=process0["parameters"].toObject();
+        QStringList input_pnames=inputs.keys();
+        QStringList output_pnames=outputs.keys();
+        QStringList parameter_pnames=parameters.keys();
+
+        foreach (QString opname,output_pnames) {
+            if (outputs[opname].toString()==output_name) {
+                QMap<QString,QVariant> args_inputs;
+                QMap<QString,QVariant> args_outputs;
+                QMap<QString,QVariant> args_parameters;
+
+                foreach (QString ipname,input_pnames) {
+                    QJsonObject input0=inputs[ipname].toObject();
+                    QString name0=input0["path"].toString();
+                    QString checksum0=input0["checksum"].toString();
+                    QString path0=find_file_with_checksum(checksum0);
+                    if (path0.isEmpty()) {
+                        path0=create_prv_file(name0,processes);
+                        if (path0.isEmpty()) return "";
+                    }
+                    args_inputs[ipname]=path0;
+                }
+
+                foreach (QString ppname,parameter_pnames) {
+                    args_parameters[ppname]=parameters[ppname].toVariant(); //important to do it this way instead of toString
+                }
+
+                foreach (QString opname2,output_pnames) {
+                    args_outputs[opname2]=make_temporary_output_file_name(processor_name,args_inputs,args_parameters,opname2);
+                }
+
+                run_process(processor_name,args_inputs,args_outputs,args_parameters);
+                QString output_path=args_outputs[opname].toString();
+                if (!QFile::exists(output_path)) {
+                    qWarning() << "Output file does not exist: "+output_path;
+                    return "";
+                }
+                return output_path;
+            }
+        }
+    }
+    qWarning() << "Could not find process with output: "+output_name;
+    return "";
+}
+
+QString resolve_prv_file(const QString &prv_fname)
+{
+    QString json=TextFile::read(prv_fname);
+    QJsonParseError err;
+    QJsonObject obj=QJsonDocument::fromJson(json.toLatin1(),&err).object();
+    if (err.error!=QJsonParseError::NoError) {
+        qWarning() << "Error parsing json." << err.errorString();
+        return "";
+    }
+    QString path0=obj["path"].toString();
+    QString checksum0=obj["checksum"].toString();
+    QString path1=find_file_with_checksum(checksum0);
+    if (!path1.isEmpty()) {
+        return path1;
+    }
+    QString path2=create_prv_file(path0,obj["processes"].toArray());
+    if (!path2.isEmpty()) {
+        return path2;
+    }
+    return "";
+}
+
+QMap<QString, QVariant> resolve_prv_files(const QMap<QString, QVariant> &command_line_params)
+{
+    QMap<QString,QVariant> ret;
+    QStringList keys=command_line_params.keys();
+    foreach (QString key,keys) {
+        QVariant val=command_line_params[key];
+        if (val.toString().endsWith(".prv")) {
+            QString fname=val.toString();
+            val=resolve_prv_file(fname);
+            if (val.toString().isEmpty()) {
+                qWarning() << "Error resolving .prv file: "+fname;
+            }
+            else {
+                printf("Resolved: %s -> %s\n",fname.toLatin1().data(),val.toString().toLatin1().data());
+            }
+        }
+        ret[key]=val;
+    }
+    return ret;
 }

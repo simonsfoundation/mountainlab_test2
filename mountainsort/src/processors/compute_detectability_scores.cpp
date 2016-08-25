@@ -324,7 +324,7 @@ Mda compute_features(Mda& clips, int num_features)
     }
 
     Mda FF, CC, sigma;
-    pca(CC, FF, sigma, clips_reshaped, num_features);
+    pca(CC, FF, sigma, clips_reshaped, num_features, false);
 
     return FF;
 

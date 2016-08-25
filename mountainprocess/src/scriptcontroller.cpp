@@ -71,9 +71,7 @@ QString ScriptController::fileChecksum(const QString& fname_in)
     QString fname = d->resolve_file_name_p(fname_in);
     QTime timer;
     timer.start();
-    printf("Computing checksum for file %s\n", fname.toLatin1().data());
     QString ret = MLUtil::computeSha1SumOfFile(fname);
-    printf("%s -- Elapsed: %g sec\n", ret.toLatin1().data(), timer.elapsed() * 1.0 / 1000);
     return ret;
 
     /*
@@ -328,6 +326,26 @@ bool ScriptController::runPipeline(const QString& json)
 void ScriptController::log(const QString& message)
 {
     printf("SCRIPT: %s\n", message.toLatin1().data());
+}
+
+void ScriptController::writePrvFile(const QString &fname, const QString &txt)
+{
+    if (!fname.endsWith(".prv")) {
+        printf("SCRIPT: Error -- for security, the .prv file must have a .prv extension\n");
+        return;
+    }
+
+    QJsonParseError err;
+    QJsonDocument doc=QJsonDocument::fromJson(txt.toLatin1(),&err);
+    if (err.error!=QJsonParseError::NoError) {
+        printf("SCRIPT: Error parsing json text in writePrvFile\n");
+        return;
+    }
+    QString json=doc.toJson(QJsonDocument::Indented);
+
+    if (!TextFile::write(fname,json)) {
+        printf("SCRIPT: Error writing .prv file.\n");
+    }
 }
 
 QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const QVariantMap& parameters, bool use_run)

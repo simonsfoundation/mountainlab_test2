@@ -162,6 +162,7 @@ MVClusterWidget::MVClusterWidget(MVContext* context)
     clips_widget->setLayout(vlayout);
     clips_widget->setSizePolicy(clips_size_policy);
     hlayout->addWidget(clips_widget);
+    clips_widget->hide();
 
     QSizePolicy view_size_policy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     view_size_policy.setHorizontalStretch(1);
@@ -468,6 +469,7 @@ void MVClusterWidgetComputer::compute()
         params["firings"] = firings_out_path;
         params["clip_size"] = clip_size;
         params["num_features"] = 3;
+        params["subtract_mean"] = 1;
         MT.setInputParameters(params);
         //MT.setMscmdServerUrl(mscmdserver_url);
         MT.setMLProxyUrl(mlproxy_url);

@@ -136,6 +136,8 @@ int main(int argc, char* argv[])
 
     CLParams CLP(argc, argv);
 
+    CLP.named_parameters=resolve_prv_files(CLP.named_parameters);
+
     QList<QColor> channel_colors;
     QStringList color_strings;
     color_strings

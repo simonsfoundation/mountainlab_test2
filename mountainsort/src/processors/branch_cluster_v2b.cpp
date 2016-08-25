@@ -219,7 +219,7 @@ Mda32 compute_clips_features(const Mda32& X, int num_features)
             }
         }
         Mda32 CC, FF0, sigma;
-        pca(CC, FF0, sigma, tmp0, num_features);
+        pca(CC, FF0, sigma, tmp0, num_features, false); //should we subtract the mean?
         for (int i = 0; i < L; i++) {
             for (int f = 0; f < num_features; f++) {
                 FF.setValue(FF0.value(f, i), m * M + f, i);
@@ -405,7 +405,7 @@ QVector<int> do_cluster_without_normalized_features_b(ClipsGroup clips, const Br
         }
 
         //QTime timerA; timerA.start();
-        pca(CC, FF, sigma, clips_reshaped, opts.num_features);
+        pca(CC, FF, sigma, clips_reshaped, opts.num_features, false); //should we subtract the mean?
         //s_timers["pca2"]+=timerA.elapsed();
     }
     else {
@@ -416,7 +416,7 @@ QVector<int> do_cluster_without_normalized_features_b(ClipsGroup clips, const Br
             }
         }
         //QTime timerA; timerA.start();
-        pca(CC, FF, sigma, features2_subset, opts.num_features);
+        pca(CC, FF, sigma, features2_subset, opts.num_features, false); //should we subtract the mean?
         //s_timers["pca3"]+=timerA.elapsed();
     }
 

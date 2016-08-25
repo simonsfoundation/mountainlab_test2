@@ -11,8 +11,8 @@
 #include "mda32.h"
 
 // see info below
-void pca(Mda& components, Mda& features, Mda& sigma, Mda& X, int num_features);
-void pca(Mda32& components, Mda32& features, Mda32& sigma, Mda32& X, int num_features);
+void pca(Mda& components, Mda& features, Mda& sigma, Mda& X, int num_features, bool subtract_mean);
+void pca(Mda32& components, Mda32& features, Mda32& sigma, Mda32& X, int num_features, bool subtract_mean);
 
 // same as pca, except input it X*X', and features are not computed (because how could they be?)
 void pca_from_XXt(Mda& components, Mda& sigma, Mda& XXt, int num_features);

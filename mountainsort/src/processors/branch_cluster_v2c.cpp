@@ -453,7 +453,7 @@ QVector<int> do_cluster_without_normalized_features_c(ClipsGroup clips, const Br
             }
         }
 
-        pca(CC, FF, sigma, clips_reshaped, opts.num_features);
+        pca(CC, FF, sigma, clips_reshaped, opts.num_features, false); //should we subtract the mean?
     }
 
     //Mda FF;

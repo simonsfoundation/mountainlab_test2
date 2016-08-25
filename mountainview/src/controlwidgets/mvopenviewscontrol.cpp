@@ -69,7 +69,7 @@ MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
         d->m_flow_layout->addWidget(button);
         d->m_viewMapper->setMapping(button, f);
         QObject::connect(button, SIGNAL(clicked()), d->m_viewMapper, SLOT(map()));
-        QObject::connect(f, SIGNAL(enabledChanged(bool)), button, SLOT(setEnabled(bool)));
+        //QObject::connect(f, SIGNAL(enabledChanged(bool)), button, SLOT(setEnabled(bool)));
         d->m_buttons[f->name()] = button;
     }
 
@@ -80,7 +80,7 @@ MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
         button->setFont(font);
         button->setText("Close All");
         d->m_flow_layout->addWidget(button);
-        QObject::connect(button, SIGNAL(clicked()), mw, SLOT(slot_close_all_views()));
+        QObject::connect(button, SIGNAL(clicked()), mw, SLOT(slotCloseAllViews()));
         d->m_close_all_button = button;
     }
     this->setLayout(d->m_flow_layout);
