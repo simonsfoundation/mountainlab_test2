@@ -108,7 +108,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     */
 
     {
-
+        /*
         {
             QToolButton* B = new QToolButton();
             B->setText("File");
@@ -142,6 +142,8 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
                 QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalShareViewsOnWeb()));
             }
         }
+        */
+
         /*
         {
             QToolButton* B = new QToolButton();
@@ -159,6 +161,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
         }
         */
 
+        /*
         {
             QToolButton* B = new QToolButton();
             B->setText("Tools");
@@ -172,6 +175,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
                 QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(extractSelectedClusters()));
             }
         }
+        */
 
         /*
         {
@@ -268,14 +272,6 @@ QStringList MVMainWindow::loadedPluginNames()
 MVAbstractPlugin* MVMainWindow::loadedPlugin(QString name)
 {
     return d->m_loaded_plugins.value(name);
-}
-
-void MVMainWindow::setDefaultInitialization()
-{
-    qWarning() << "Dev note: Get rid of setDefaultInitialization and move functionality to mountainviewmain.cpp";
-    openView("open-cluster-details");
-    d->m_tabber->switchCurrentContainer();
-    openView("open-auto-correlograms");
 }
 
 void MVMainWindow::registerViewFactory(MVAbstractViewFactory* f)
@@ -393,25 +389,6 @@ void MVMainWindow::recalculateViews(RecalculateViewsMode mode)
             VV->recalculate();
         }
     }
-}
-
-void MVMainWindow::extractSelectedClusters()
-{
-    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".mv";
-    QJsonObject obj = this->mvContext()->toMVFileObject();
-    QString json = QJsonDocument(obj).toJson();
-    TextFile::write(tmp_fname, json);
-    QString exe = qApp->applicationFilePath();
-    QStringList args;
-    QList<int> clusters = mvContext()->selectedClusters();
-    QStringList clusters_str;
-    foreach (int cluster, clusters) {
-        clusters_str << QString("%1").arg(cluster);
-    }
-
-    args << tmp_fname << "--clusters=" + clusters_str.join(",");
-    qDebug() << "EXECUTING: " + exe + " " + args.join(" ");
-    QProcess::startDetached(exe, args);
 }
 
 MVContext* MVMainWindow::mvContext() const

@@ -1,19 +1,19 @@
-#include "mvclusterpaircontextmenuhandler.h"
+#include "clusterpaircontextmenuhandler.h"
 #include "mvmainwindow.h"
 #include <QAction>
 #include <QMenu>
 #include <QSet>
 #include <QSignalMapper>
 
-MVClusterPairContextMenuHandler::MVClusterPairContextMenuHandler(MVContext* context, MVMainWindow* mw, QObject* parent)
+MVClusterPairContextMenuHandler::MVClusterPairContextMenuHandler(MVMainWindow* mw, QObject* parent)
     : QObject(parent)
-    , MVAbstractContextMenuHandler(context, mw)
+    , MVAbstractContextMenuHandler(mw)
 {
 }
 
 bool MVClusterPairContextMenuHandler::canHandle(const QMimeData& md) const
 {
-    return md.hasFormat("application/x-mv-cluster-pairs");
+    return md.hasFormat("application/x-msv-cluster-pairs");
 }
 
 QSet<ClusterPair> string_list_to_cluster_pair_set(QStringList list)
@@ -28,13 +28,13 @@ QSet<ClusterPair> string_list_to_cluster_pair_set(QStringList list)
 QList<QAction*> MVClusterPairContextMenuHandler::actions(const QMimeData& md)
 {
     QStringList clusters_strlist;
-    QDataStream ds(md.data("application/x-mv-cluster-pairs"));
+    QDataStream ds(md.data("application/x-msv-cluster-pairs"));
     ds >> clusters_strlist;
     QSet<ClusterPair> cluster_pairs = string_list_to_cluster_pair_set(clusters_strlist);
     QList<QAction*> actions;
 
-    MVContext* context = this->mvContext();
     MVMainWindow* mw = this->mainWindow();
+    MVContext* context = mw->mvContext();
     Q_UNUSED(mw)
 
     //TAGS
@@ -117,7 +117,7 @@ QList<QAction*> MVClusterPairContextMenuHandler::actions(const QMimeData& md)
 
 QAction* MVClusterPairContextMenuHandler::addTagMenu(const QSet<ClusterPair>& cluster_pairs) const
 {
-    MVContext* context = mvContext();
+    MVContext* context = this->mainWindow()->mvContext();
 
     QMenu* M = new QMenu;
     M->setTitle("Add tag");
@@ -144,11 +144,11 @@ QAction* MVClusterPairContextMenuHandler::addTagMenu(const QSet<ClusterPair>& cl
 
 QAction* MVClusterPairContextMenuHandler::removeTagMenu(const QSet<ClusterPair>& cluster_pairs) const
 {
-    MVContext* context = mvContext();
+    MVContext* context = this->mainWindow()->mvContext();
 
     QSet<QString> tags_set;
     foreach (ClusterPair cluster_pair, cluster_pairs) {
-        QJsonObject attributes = mvContext()->clusterPairAttributes(cluster_pair);
+        QJsonObject attributes = context->clusterPairAttributes(cluster_pair);
         QJsonArray tags = attributes["tags"].toArray();
         for (int i = 0; i < tags.count(); i++) {
             tags_set.insert(tags[i].toString());
@@ -180,7 +180,7 @@ QAction* MVClusterPairContextMenuHandler::removeTagMenu(const QSet<ClusterPair>&
 
 QStringList MVClusterPairContextMenuHandler::validTags() const
 {
-    QSet<QString> set = this->mvContext()->allClusterPairTags();
+    QSet<QString> set = this->mainWindow()->mvContext()->allClusterPairTags();
     /// TODO (LOW) these go in a configuration file
     set << "merge_candidate"
         << "merged";

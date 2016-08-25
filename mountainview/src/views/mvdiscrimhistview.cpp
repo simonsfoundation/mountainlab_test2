@@ -282,8 +282,8 @@ void MVDiscrimHistViewPrivate::set_views()
     q->slot_zoom_in_horizontal(2.5); //give it a nice zoom in to start
 }
 
-MVDiscrimHistFactory::MVDiscrimHistFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVDiscrimHistFactory::MVDiscrimHistFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 

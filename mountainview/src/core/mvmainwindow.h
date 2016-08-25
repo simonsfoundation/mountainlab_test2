@@ -26,7 +26,6 @@ class MVMainWindowPrivate;
 class MVMainWindow : public QWidget {
     Q_OBJECT
 public:
-    //Witold, is this the right place to put it?
     enum RecalculateViewsMode {
         All,
         AllVisible,
@@ -38,42 +37,41 @@ public:
     MVMainWindow(MVContext* context, QWidget* parent = 0);
     virtual ~MVMainWindow();
 
+    //The context
+    MVContext* mvContext() const;
+
+    //Plugins
     void loadPlugin(MVAbstractPlugin* P);
     QStringList loadedPluginNames();
     MVAbstractPlugin* loadedPlugin(QString name);
 
-    void setDefaultInitialization();
-
+    //View factories
     void registerViewFactory(MVAbstractViewFactory* f);
     void unregisterViewFactory(MVAbstractViewFactory* f);
     const QList<MVAbstractViewFactory*>& viewFactories() const;
 
+    //Context menu handlers
     void registerContextMenuHandler(MVAbstractContextMenuHandler* h);
     void unregisterContextMenuHandler(MVAbstractContextMenuHandler* h);
     const QList<MVAbstractContextMenuHandler*>& contextMenuHandlers() const;
 
+    //Controls
     void addControl(MVAbstractControl* control, bool start_expanded);
 
+    //Manage views
+    void openView(const QString& id);
     void setCurrentContainerName(const QString& name);
-
+    void closeAllViews();
     QList<MVAbstractView*> allViews();
+    void recalculateViews(RecalculateViewsMode mode);
+
+    //Export
     QJsonObject exportStaticViews() const;
 
-    MVContext* mvContext() const;
+public slots:
 
 signals:
     void viewsChanged();
-    void signalExportMVFile();
-    void signalExportFiringsFile();
-    void signalExportClusterAnnotationFile();
-    void signalExportStaticViews();
-    void signalShareViewsOnWeb();
-
-public slots:
-    void closeAllViews();
-    void openView(const QString& id);
-    void recalculateViews(RecalculateViewsMode mode);
-    void extractSelectedClusters();
 
 protected:
     void resizeEvent(QResizeEvent* evt);

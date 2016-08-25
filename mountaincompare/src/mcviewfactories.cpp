@@ -4,8 +4,8 @@
 #include "clusterdetailview.h"
 #include <views/compareclusterview.h>
 
-ClusterDetail2Factory::ClusterDetail2Factory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+ClusterDetail2Factory::ClusterDetail2Factory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 
@@ -65,8 +65,8 @@ void Synchronizer1::sync_old_to_new()
 }
 
 ////////////////////////////////////////////////////////////////////////
-CompareClustersFactory::CompareClustersFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+CompareClustersFactory::CompareClustersFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 

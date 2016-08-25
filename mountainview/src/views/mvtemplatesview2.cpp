@@ -173,7 +173,7 @@ void MVTemplatesView2::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
     QByteArray ba;
     QDataStream ds(&ba, QIODevice::WriteOnly);
     ds << mvContext()->selectedClusters();
-    mimeData.setData("application/x-mv-clusters", ba); // selected cluster data
+    mimeData.setData("application/x-msv-clusters", ba); // selected cluster data
 
     MVAbstractView::prepareMimeData(mimeData, pos); // call base class implementation
 }
@@ -411,8 +411,8 @@ void MVTemplatesView2Private::update_scale_factors()
     q->update();
 }
 
-MVTemplatesView2Factory::MVTemplatesView2Factory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVTemplatesView2Factory::MVTemplatesView2Factory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 

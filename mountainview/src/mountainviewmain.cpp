@@ -28,11 +28,12 @@
 #include <QRunnable>
 #include <QThreadPool>
 #include <QtConcurrentRun>
+#include <clustercontextmenuplugin.h>
 #include <firetrackview.h>
 #include <mvamphistview3.h>
 #include <mvclipswidget.h>
-#include <mvclustercontextmenuhandler.h>
-#include <mvclusterpaircontextmenuhandler.h>
+#include <clustercontextmenuhandler.h>
+#include <clusterpaircontextmenuhandler.h>
 #include <mvcrosscorrelogramswidget3.h>
 #include <mvdiscrimhistview.h>
 #include <mvdiscrimhistview_guide.h>
@@ -49,7 +50,7 @@
 /// TODO: (MEDIUM) electrode view... (firetrack)
 /// TODO: (0.9.1) Go to timepoint ****
 
-void setup_main_window(MVMainWindow* W, MVContext* context);
+void setup_main_window(MVMainWindow* W);
 
 class TaskProgressViewThread : public QRunnable {
 public:
@@ -255,7 +256,7 @@ int main(int argc, char* argv[])
         context->setChannelColors(channel_colors);
         context->setClusterColors(label_colors);
         MVMainWindow* W = new MVMainWindow(context);
-        setup_main_window(W, context);
+        setup_main_window(W);
 
         if (!mv_fname.isEmpty()) {
             QString json = TextFile::read(mv_fname);
@@ -322,7 +323,10 @@ int main(int argc, char* argv[])
 
         a.processEvents();
 
-        W->setDefaultInitialization();
+        W->setCurrentContainerName("north");
+        W->openView("open-cluster-details");
+        W->setCurrentContainerName("south");
+        W->openView("open-auto-correlograms");
 
         return a.exec();
     }
@@ -730,9 +734,10 @@ void set_nice_size(QWidget* W)
     W->resize(W0, H0);
 }
 
-void setup_main_window(MVMainWindow* W, MVContext* context)
+void setup_main_window(MVMainWindow* W)
 {
     W->loadPlugin(new ClusterDetailPlugin);
+    W->loadPlugin(new ClusterContextMenuPlugin);
     W->registerViewFactory(new MVTemplatesView2Factory(W));
     W->registerViewFactory(new MVAutoCorrelogramsFactory(W));
     W->registerViewFactory(new MVSelectedAutoCorrelogramsFactory(W));
@@ -750,7 +755,4 @@ void setup_main_window(MVMainWindow* W, MVContext* context)
     W->registerViewFactory(new MVDiscrimHistFactory(W));
     W->registerViewFactory(new MVDiscrimHistGuideFactory(W));
     W->registerViewFactory(new MVFireTrackFactory(W));
-
-    W->registerContextMenuHandler(new MVClusterContextMenuHandler(context, W));
-    W->registerContextMenuHandler(new MVClusterPairContextMenuHandler(context, W));
 }

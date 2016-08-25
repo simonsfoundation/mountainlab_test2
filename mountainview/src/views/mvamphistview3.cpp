@@ -401,7 +401,7 @@ void MVAmpHistView3::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
     QByteArray ba;
     QDataStream ds(&ba, QIODevice::WriteOnly);
     ds << mvContext()->selectedClusters();
-    mimeData.setData("application/x-mv-clusters", ba); // selected cluster data
+    mimeData.setData("application/x-msv-clusters", ba); // selected cluster data
     MVAbstractView::prepareMimeData(mimeData, pos);
 }
 
@@ -416,8 +416,8 @@ void MVAmpHistView3::keyPressEvent(QKeyEvent* evt)
     }
 }
 
-MVAmplitudeHistograms3Factory::MVAmplitudeHistograms3Factory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVAmplitudeHistograms3Factory::MVAmplitudeHistograms3Factory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 

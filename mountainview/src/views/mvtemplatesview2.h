@@ -45,7 +45,7 @@ private:
 class MVTemplatesView2Factory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVTemplatesView2Factory(QObject* parent = 0);
+    MVTemplatesView2Factory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

@@ -65,8 +65,8 @@ void FireTrackView::onCalculationFinished()
     d->m_electrode_array_view->setElectrodeLocations(locations);
 }
 
-MVFireTrackFactory::MVFireTrackFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVFireTrackFactory::MVFireTrackFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 

@@ -62,25 +62,23 @@ private:
 class MVPCAFeaturesFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVPCAFeaturesFactory(QObject* parent = 0);
+    MVPCAFeaturesFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
-public slots:
-    void updateEnabled(MVContext* context);
+    bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
 };
 
 class MVChannelFeaturesFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVChannelFeaturesFactory(QObject* parent = 0);
+    MVChannelFeaturesFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
-public slots:
-    void updateEnabled(MVContext* context);
+    bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
 };
 
 #endif // MVCLUSTERWIDGET_H

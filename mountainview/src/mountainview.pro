@@ -20,8 +20,10 @@ TEMPLATE = app
 
 INCLUDEPATH += msv/plugins
 VPATH += msv/plugins
-HEADERS += clusterdetailplugin.h
-SOURCES += clusterdetailplugin.cpp
+HEADERS += clusterdetailplugin.h \
+    msv/plugins/clustercontextmenuplugin.h
+SOURCES += clusterdetailplugin.cpp \
+    msv/plugins/clustercontextmenuplugin.cpp
 
 INCLUDEPATH += msv/views
 VPATH += msv/views
@@ -115,10 +117,10 @@ VPATH += guides
 HEADERS += clusterannotationguide.h
 SOURCES += clusterannotationguide.cpp
 
-INCLUDEPATH += contextmenuhandlers
-VPATH += contextmenuhandlers
-HEADERS += mvclustercontextmenuhandler.h mvclusterpaircontextmenuhandler.h
-SOURCES += mvclustercontextmenuhandler.cpp mvclusterpaircontextmenuhandler.cpp
+INCLUDEPATH += msv/contextmenuhandlers
+VPATH += msv/contextmenuhandlers
+HEADERS += clustercontextmenuhandler.h clusterpaircontextmenuhandler.h
+SOURCES += clustercontextmenuhandler.cpp clusterpaircontextmenuhandler.cpp
 
 INCLUDEPATH += ../../mountainsort/src/utils
 DEPENDPATH += ../../mountainsort/src/utils

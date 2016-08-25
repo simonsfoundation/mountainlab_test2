@@ -530,8 +530,8 @@ void MVClusterWidgetComputer::compute()
     features.readChunk(data, 0, 0, features.N1(), features.N2());
 }
 
-MVPCAFeaturesFactory::MVPCAFeaturesFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVPCAFeaturesFactory::MVPCAFeaturesFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 
@@ -566,13 +566,13 @@ MVAbstractView* MVPCAFeaturesFactory::createView(MVContext* context)
     return X;
 }
 
-void MVPCAFeaturesFactory::updateEnabled(MVContext* context)
+bool MVPCAFeaturesFactory::isEnabled(MVContext* context) const
 {
-    //setEnabled(!mvContext()->selectedClusters().isEmpty());
+    return (!context->selectedClusters().isEmpty());
 }
 
-MVChannelFeaturesFactory::MVChannelFeaturesFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVChannelFeaturesFactory::MVChannelFeaturesFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 
@@ -624,9 +624,9 @@ MVAbstractView* MVChannelFeaturesFactory::createView(MVContext* context)
     return X;
 }
 
-void MVChannelFeaturesFactory::updateEnabled(MVContext* context)
+bool MVChannelFeaturesFactory::isEnabled(MVContext* context) const
 {
-    //setEnabled(!mvContext()->selectedClusters().isEmpty());
+    return (!context->selectedClusters().isEmpty());
 }
 
 #include "extract_clips.h"

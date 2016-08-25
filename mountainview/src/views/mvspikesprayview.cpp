@@ -527,8 +527,8 @@ void MVSpikeSprayComputer::compute()
     }
 }
 
-MVSpikeSprayFactory::MVSpikeSprayFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVSpikeSprayFactory::MVSpikeSprayFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 
@@ -560,6 +560,24 @@ MVAbstractView* MVSpikeSprayFactory::createView(MVContext* context)
     MVSpikeSprayView* X = new MVSpikeSprayView(context);
     X->setLabelsToUse(ks.toSet());
     return X;
+}
+
+QList<QAction*> MVSpikeSprayFactory::actions(const QMimeData& md)
+{
+    QSet<int> clusters;
+    QDataStream ds(md.data("application/x-msv-clusters"));
+    ds >> clusters;
+    QList<QAction*> actions;
+    if (!clusters.isEmpty()) {
+        QAction* action = new QAction("Spike spray");
+        MVMainWindow* mw = this->mainWindow();
+        /// Witold, do I need to worry about mw object being deleted before this action is triggered?
+        connect(action, &QAction::triggered, [mw]() {
+            mw->openView("open-spike-spray");
+        });
+        actions << action;
+    }
+    return actions;
 }
 
 void MVSpikeSprayFactory::updateEnabled(MVContext* context)

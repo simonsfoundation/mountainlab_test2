@@ -6,11 +6,15 @@
 #include "mvcontext.h"
 
 class MVClusterContextMenuHandler : public QObject, public MVAbstractContextMenuHandler {
+    Q_OBJECT
 public:
-    MVClusterContextMenuHandler(MVContext* context, MVMainWindow* mw, QObject* parent = 0);
+    MVClusterContextMenuHandler(MVMainWindow* mw, QObject* parent = 0);
 
     bool canHandle(const QMimeData& md) const Q_DECL_OVERRIDE;
     QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
+
+private slots:
+    void slot_extract_selected_clusters();
 
 private:
     QAction* addTagMenu(const QSet<int>& clusters) const;

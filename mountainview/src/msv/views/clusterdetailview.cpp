@@ -489,17 +489,9 @@ void ClusterDetailView::mouseMoveEvent(QMouseEvent* evt)
 
 void ClusterDetailView::mouseDoubleClickEvent(QMouseEvent* evt)
 {
-    Q_UNUSED(evt);
-#if 0
-    QMimeData md;
-    prepareMimeData(md, evt->pos());
-    if (!md.formats().isEmpty())
-        requestContextMenu(md, evt->pos());
-#else
     // send yourself a context menu request
     QContextMenuEvent e(QContextMenuEvent::Mouse, evt->pos());
     QCoreApplication::sendEvent(this, &e);
-#endif
 }
 
 void ClusterDetailView::wheelEvent(QWheelEvent* evt)
@@ -526,7 +518,7 @@ void ClusterDetailView::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
     QByteArray ba;
     QDataStream ds(&ba, QIODevice::WriteOnly);
     ds << mvContext()->selectedClusters();
-    mimeData.setData("application/x-mv-clusters", ba); // selected cluster data
+    mimeData.setData("application/x-msv-clusters", ba); // selected cluster data
 
     MVAbstractView::prepareMimeData(mimeData, pos); // call base class implementation
 }

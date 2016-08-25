@@ -501,8 +501,8 @@ void MVCrossCorrelogramsWidget3Computer::loadStaticOutput(const QJsonObject& X)
     loaded_from_static_output = true;
 }
 
-MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVAutoCorrelogramsFactory::MVAutoCorrelogramsFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 
@@ -536,8 +536,15 @@ bool MVAutoCorrelogramsFactory::isEnabled(MVContext* context) const
     return true;
 }
 
-MVSelectedAutoCorrelogramsFactory::MVSelectedAutoCorrelogramsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+QList<QAction*> MVAutoCorrelogramsFactory::actions(const QMimeData& md)
+{
+    Q_UNUSED(md)
+    QList<QAction*> actions;
+    return actions;
+}
+
+MVSelectedAutoCorrelogramsFactory::MVSelectedAutoCorrelogramsFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 
@@ -577,8 +584,25 @@ bool MVSelectedAutoCorrelogramsFactory::isEnabled(MVContext* context) const
     return (context->selectedClusters().count() >= 1);
 }
 
-MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+QList<QAction*> MVSelectedAutoCorrelogramsFactory::actions(const QMimeData& md)
+{
+    QList<QAction*> actions;
+    QSet<int> clusters;
+    QDataStream ds(md.data("application/x-msv-clusters"));
+    ds >> clusters;
+    if (!clusters.isEmpty()) {
+        QAction* action = new QAction("Selected auto-correlograms");
+        MVMainWindow* mw = this->mainWindow();
+        connect(action, &QAction::triggered, [mw]() {
+            mw->openView("open-selected-auto-correlograms");
+        });
+        actions << action;
+    }
+    return actions;
+}
+
+MVCrossCorrelogramsFactory::MVCrossCorrelogramsFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 
@@ -617,8 +641,27 @@ bool MVCrossCorrelogramsFactory::isEnabled(MVContext* context) const
     return (context->selectedClusters().count() == 1);
 }
 
-MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+QList<QAction*> MVCrossCorrelogramsFactory::actions(const QMimeData& md)
+{
+    QList<QAction*> actions;
+    QSet<int> clusters;
+    QDataStream ds(md.data("application/x-msv-clusters"));
+    ds >> clusters;
+    if (!clusters.isEmpty()) {
+        QAction* action = new QAction("Cross-correlograms");
+        MVMainWindow* mw = this->mainWindow();
+        connect(action, &QAction::triggered, [mw]() {
+            mw->openView("open-cross-correlograms");
+        });
+        if (clusters.count() != 1)
+            action->setEnabled(false);
+        actions << action;
+    }
+    return actions;
+}
+
+MVMatrixOfCrossCorrelogramsFactory::MVMatrixOfCrossCorrelogramsFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 
@@ -658,8 +701,25 @@ bool MVMatrixOfCrossCorrelogramsFactory::isEnabled(MVContext* context) const
     return (!context->selectedClusters().isEmpty());
 }
 
-MVSelectedCrossCorrelogramsFactory::MVSelectedCrossCorrelogramsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+QList<QAction*> MVMatrixOfCrossCorrelogramsFactory::actions(const QMimeData& md)
+{
+    QList<QAction*> actions;
+    QSet<int> clusters;
+    QDataStream ds(md.data("application/x-msv-clusters"));
+    ds >> clusters;
+    if (!clusters.isEmpty()) {
+        QAction* action = new QAction("Matrix of cross-correlograms");
+        MVMainWindow* mw = this->mainWindow();
+        connect(action, &QAction::triggered, [mw]() {
+            mw->openView("open-matrix-of-cross-correlograms");
+        });
+        actions << action;
+    }
+    return actions;
+}
+
+MVSelectedCrossCorrelogramsFactory::MVSelectedCrossCorrelogramsFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 
@@ -695,6 +755,13 @@ MVAbstractView* MVSelectedCrossCorrelogramsFactory::createView(MVContext* contex
 bool MVSelectedCrossCorrelogramsFactory::isEnabled(MVContext* context) const
 {
     return (!context->selectedClusterPairs().isEmpty());
+}
+
+QList<QAction*> MVSelectedCrossCorrelogramsFactory::actions(const QMimeData& md)
+{
+    Q_UNUSED(md)
+    QList<QAction*> actions;
+    return actions;
 }
 
 void MVCrossCorrelogramsWidget3Private::update_scale_stuff()

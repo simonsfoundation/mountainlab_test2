@@ -36,11 +36,11 @@ QString ClusterDetailPlugin::description()
 
 void ClusterDetailPlugin::initialize(MVMainWindow* mw)
 {
-    mw->registerViewFactory(new ClusterDetailFactory());
+    mw->registerViewFactory(new ClusterDetailFactory(mw));
 }
 
-ClusterDetailFactory::ClusterDetailFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+ClusterDetailFactory::ClusterDetailFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 

@@ -46,7 +46,7 @@ private:
 class MVTimeSeriesDataFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVTimeSeriesDataFactory(QObject* parent = 0);
+    MVTimeSeriesDataFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

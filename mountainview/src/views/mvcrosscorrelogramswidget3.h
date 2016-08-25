@@ -62,57 +62,62 @@ private:
 class MVAutoCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVAutoCorrelogramsFactory(QObject* parent = 0);
+    MVAutoCorrelogramsFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
+    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 private slots:
 };
 
 class MVSelectedAutoCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVSelectedAutoCorrelogramsFactory(QObject* parent = 0);
+    MVSelectedAutoCorrelogramsFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
+    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 };
 
 class MVCrossCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVCrossCorrelogramsFactory(QObject* parent = 0);
+    MVCrossCorrelogramsFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
+    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 };
 
 class MVMatrixOfCrossCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVMatrixOfCrossCorrelogramsFactory(QObject* parent = 0);
+    MVMatrixOfCrossCorrelogramsFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
+    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 };
 
 class MVSelectedCrossCorrelogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVSelectedCrossCorrelogramsFactory(QObject* parent = 0);
+    MVSelectedCrossCorrelogramsFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
+    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 };
 
 #endif // MVCROSSCORRELOGRAMSWIDGET3_H

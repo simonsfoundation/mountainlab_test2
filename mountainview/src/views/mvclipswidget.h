@@ -38,7 +38,7 @@ private:
 class MVClipsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVClipsFactory(QObject* parent = 0);
+    MVClipsFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

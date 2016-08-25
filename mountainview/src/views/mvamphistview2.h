@@ -33,7 +33,7 @@ private:
 class MVAmplitudeHistogramsFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVAmplitudeHistogramsFactory(QObject* parent = 0);
+    MVAmplitudeHistogramsFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

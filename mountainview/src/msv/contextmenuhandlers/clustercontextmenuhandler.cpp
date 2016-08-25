@@ -1,30 +1,34 @@
-#include "mvclustercontextmenuhandler.h"
+#include "clustercontextmenuhandler.h"
 #include "mvmainwindow.h"
 #include <QAction>
+#include <QJsonDocument>
 #include <QMenu>
 #include <QSet>
 #include <QSignalMapper>
+#include "cachemanager.h"
+#include <QApplication>
+#include <QProcess>
 
-MVClusterContextMenuHandler::MVClusterContextMenuHandler(MVContext* context, MVMainWindow* mw, QObject* parent)
+MVClusterContextMenuHandler::MVClusterContextMenuHandler(MVMainWindow* mw, QObject* parent)
     : QObject(parent)
-    , MVAbstractContextMenuHandler(context, mw)
+    , MVAbstractContextMenuHandler(mw)
 {
 }
 
 bool MVClusterContextMenuHandler::canHandle(const QMimeData& md) const
 {
-    return md.hasFormat("application/x-mv-clusters");
+    return md.hasFormat("application/x-msv-clusters");
 }
 
 QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
 {
     QSet<int> clusters;
-    QDataStream ds(md.data("application/x-mv-clusters"));
+    QDataStream ds(md.data("application/x-msv-clusters"));
     ds >> clusters;
     QList<QAction*> actions;
 
-    MVContext* context = this->mvContext();
     MVMainWindow* mw = this->mainWindow();
+    MVContext* context = mw->mvContext();
 
     /// Witold, is there a reason that the clusterList is being added as data to some of the actions below? If not, let's remove this.
     QVariantList clusterList;
@@ -95,6 +99,18 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
             });
             actions << A;
         }
+    }
+
+    //Separator
+    {
+        QAction* action = new QAction(0);
+        action->setSeparator(true);
+        actions << action;
+    }
+
+    //Views
+    foreach (MVAbstractViewFactory* factory, this->mainWindow()->viewFactories()) {
+        actions.append(factory->actions(md));
     }
 
     //Separator
@@ -192,13 +208,35 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
         QAction* action = new QAction("Extract selected clusters in new window", 0);
         action->setToolTip("Extract selected clusters in new window");
         action->setEnabled(clusters.count() >= 1);
-        connect(action, &QAction::triggered, [mw]() {
-            mw->extractSelectedClusters();
-        });
+        connect(action, SIGNAL(triggered(bool)), this, SLOT(slot_extract_selected_clusters()));
+        //connect(action, &QAction::triggered, [mw]() {
+        //    mw->extractSelectedClusters();
+        //});
         actions << action;
     }
 
     return actions;
+}
+
+void MVClusterContextMenuHandler::slot_extract_selected_clusters()
+{
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".mv";
+    QJsonObject obj = this->mainWindow()->mvContext()->toMVFileObject();
+    QString json = QJsonDocument(obj).toJson();
+    TextFile::write(tmp_fname, json);
+    QString exe = qApp->applicationFilePath();
+    QStringList args;
+    QList<int> clusters = this->mainWindow()->mvContext()->selectedClusters();
+    QStringList clusters_str;
+    foreach (int cluster, clusters) {
+        clusters_str << QString("%1").arg(cluster);
+    }
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+
+    args << tmp_fname << "--clusters=" + clusters_str.join(",");
+    qDebug() << "EXECUTING: " + exe + " " + args.join(" ");
+    QProcess::startDetached(exe, args);
 }
 
 bool MVClusterContextMenuHandler::can_unmerge_selected_clusters(MVContext* context, const QSet<int>& clusters)
@@ -215,7 +253,7 @@ bool MVClusterContextMenuHandler::can_unmerge_selected_clusters(MVContext* conte
 
 QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) const
 {
-    MVContext* context = mvContext();
+    MVContext* context = this->mainWindow()->mvContext();
 
     QMenu* M = new QMenu;
     M->setTitle("Add tag");
@@ -242,11 +280,11 @@ QAction* MVClusterContextMenuHandler::addTagMenu(const QSet<int>& clusters) cons
 
 QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) const
 {
-    MVContext* context = mvContext();
+    MVContext* context = this->mainWindow()->mvContext();
 
     QSet<QString> tags_set;
     foreach (int cluster_number, clusters) {
-        QJsonObject attributes = mvContext()->clusterAttributes(cluster_number);
+        QJsonObject attributes = context->clusterAttributes(cluster_number);
         QJsonArray tags = attributes["tags"].toArray();
         for (int i = 0; i < tags.count(); i++) {
             tags_set.insert(tags[i].toString());
@@ -279,7 +317,7 @@ QAction* MVClusterContextMenuHandler::removeTagMenu(const QSet<int>& clusters) c
 QStringList MVClusterContextMenuHandler::validTags() const
 {
     /// TODO (LOW) these go in a configuration file
-    QSet<QString> set = this->mvContext()->allClusterTags();
+    QSet<QString> set = this->mainWindow()->mvContext()->allClusterTags();
     set << "accepted"
         << "rejected"
         << "noise"

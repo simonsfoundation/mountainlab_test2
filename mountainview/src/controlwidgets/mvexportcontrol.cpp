@@ -61,12 +61,6 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         flayout->addWidget(B);
     }
 
-    connect(mw, SIGNAL(signalExportMVFile()), this, SLOT(slot_export_mv_document()));
-    connect(mw, SIGNAL(signalExportStaticViews()), this, SLOT(slot_export_static_views()));
-    connect(mw, SIGNAL(signalShareViewsOnWeb()), this, SLOT(slot_share_views_on_web()));
-    connect(mw, SIGNAL(signalExportFiringsFile()), this, SLOT(slot_export_firings_file()));
-    connect(mw, SIGNAL(signalExportClusterAnnotationFile()), this, SLOT(slot_export_cluster_annotation_file()));
-
     updateControls();
 }
 

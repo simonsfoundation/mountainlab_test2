@@ -208,8 +208,8 @@ void MVClipsWidgetComputer::compute()
     */
 }
 
-MVClipsFactory::MVClipsFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVClipsFactory::MVClipsFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 

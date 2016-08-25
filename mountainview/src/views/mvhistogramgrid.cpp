@@ -240,11 +240,11 @@ void MVHistogramGrid::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
     QDataStream ds(&ba, QIODevice::WriteOnly);
     if (this->pairMode()) {
         ds << cluster_pair_set_to_string_list(mvContext()->selectedClusterPairs());
-        mimeData.setData("application/x-mv-cluster-pairs", ba); // selected cluster pairs data
+        mimeData.setData("application/x-msv-cluster-pairs", ba); // selected cluster pairs data
     }
     else {
         ds << mvContext()->selectedClusters();
-        mimeData.setData("application/x-mv-clusters", ba); // selected cluster data
+        mimeData.setData("application/x-msv-clusters", ba); // selected cluster data
     }
     MVAbstractView::prepareMimeData(mimeData, pos);
 }

@@ -268,8 +268,8 @@ QSet<int> MVDiscrimHistViewGuidePrivate::get_clusters_to_exclude()
     return ret;
 }
 
-MVDiscrimHistGuideFactory::MVDiscrimHistGuideFactory(QObject* parent)
-    : MVAbstractViewFactory(parent)
+MVDiscrimHistGuideFactory::MVDiscrimHistGuideFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
 {
 }
 

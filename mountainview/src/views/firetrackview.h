@@ -29,7 +29,7 @@ private:
 class MVFireTrackFactory : public MVAbstractViewFactory {
     Q_OBJECT
 public:
-    MVFireTrackFactory(QObject* parent = 0);
+    MVFireTrackFactory(MVMainWindow* mw, QObject* parent = 0);
     QString id() const Q_DECL_OVERRIDE;
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;

@@ -7,7 +7,7 @@
 
 class MVClusterPairContextMenuHandler : public QObject, public MVAbstractContextMenuHandler {
 public:
-    MVClusterPairContextMenuHandler(MVContext* context, MVMainWindow* mw, QObject* parent = 0);
+    MVClusterPairContextMenuHandler(MVMainWindow* mw, QObject* parent = 0);
 
     bool canHandle(const QMimeData& md) const Q_DECL_OVERRIDE;
     QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
