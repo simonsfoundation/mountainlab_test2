@@ -538,8 +538,15 @@ bool MVAutoCorrelogramsFactory::isEnabled(MVContext* context) const
 
 QList<QAction*> MVAutoCorrelogramsFactory::actions(const QMimeData& md)
 {
-    Q_UNUSED(md)
     QList<QAction*> actions;
+    if (!md.data("x-mv-main").isEmpty()) {
+        QAction* action = new QAction("All auto-correlograms",0);
+        MVMainWindow* mw = this->mainWindow();
+        connect(action, &QAction::triggered, [mw]() {
+            mw->openView("open-auto-correlograms");
+        });
+        actions << action;
+    }
     return actions;
 }
 
@@ -591,7 +598,7 @@ QList<QAction*> MVSelectedAutoCorrelogramsFactory::actions(const QMimeData& md)
     QDataStream ds(md.data("application/x-msv-clusters"));
     ds >> clusters;
     if (!clusters.isEmpty()) {
-        QAction* action = new QAction("Selected auto-correlograms");
+        QAction* action = new QAction("Selected auto-correlograms",0);
         MVMainWindow* mw = this->mainWindow();
         connect(action, &QAction::triggered, [mw]() {
             mw->openView("open-selected-auto-correlograms");
@@ -648,7 +655,7 @@ QList<QAction*> MVCrossCorrelogramsFactory::actions(const QMimeData& md)
     QDataStream ds(md.data("application/x-msv-clusters"));
     ds >> clusters;
     if (!clusters.isEmpty()) {
-        QAction* action = new QAction("Cross-correlograms");
+        QAction* action = new QAction("Cross-correlograms",0);
         MVMainWindow* mw = this->mainWindow();
         connect(action, &QAction::triggered, [mw]() {
             mw->openView("open-cross-correlograms");
@@ -708,7 +715,7 @@ QList<QAction*> MVMatrixOfCrossCorrelogramsFactory::actions(const QMimeData& md)
     QDataStream ds(md.data("application/x-msv-clusters"));
     ds >> clusters;
     if (!clusters.isEmpty()) {
-        QAction* action = new QAction("Matrix of cross-correlograms");
+        QAction* action = new QAction("Matrix of cross-correlograms",0);
         MVMainWindow* mw = this->mainWindow();
         connect(action, &QAction::triggered, [mw]() {
             mw->openView("open-matrix-of-cross-correlograms");
