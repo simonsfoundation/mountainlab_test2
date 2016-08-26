@@ -60,7 +60,6 @@ struct run_script_opts {
 QJsonArray monitor_stats_to_json_array(const QList<MonitorStats>& stats);
 long compute_peak_mem_bytes(const QList<MonitorStats>& stats);
 double compute_peak_cpu_pct(const QList<MonitorStats>& stats);
-QString get_existing_directory_console(QString prompt,QString default_path);
 
 int main(int argc, char* argv[])
 {
@@ -69,15 +68,9 @@ int main(int argc, char* argv[])
 
     if (!resolve_prv_files(CLP.named_parameters)) {
         QSettings settings("magland", "mountainlab");
-        QString raw_data_search_path = settings.value("raw_data_search_path").toString();
-        raw_data_search_path = get_existing_directory_console("Specify a directory to search for local raw data", raw_data_search_path);
-        if (!raw_data_search_path.isEmpty()) {
-            settings.setValue("raw_data_search_path", raw_data_search_path);
-        }
-        if (!resolve_prv_files(CLP.named_parameters)) {
-            qWarning() << "Error resolving .prv files.";
-            return -1;
-        }
+        QString big_file_search_path = settings.value("big_file_search_path").toString();
+        qWarning() << "Could not resolve .prv file. Try setting the big_file_search_path by using \"mountainprocess set-big-file-search-path\"";
+        return -1;
     }
 
 
@@ -391,6 +384,18 @@ int main(int argc, char* argv[])
             return -1;
         }
     }
+    else if (arg1 == "set-big-file-search-path") {
+        QSettings settings("magland", "mountainlab");
+        QString big_file_search_path = settings.value("big_file_search_path").toString();
+        if (arg2.isEmpty()) {
+            printf("%s\n",big_file_search_path.toLatin1().data());
+        }
+        else {
+            settings.setValue("big_file_search_path",arg2);
+            printf("big-file-search-path = %s\n",settings.value("big_file_search_path").toString().toLatin1().data());
+        }
+        return 0;
+    }
     else {
         print_usage(); //print usage information
         return -1;
@@ -533,6 +538,8 @@ void print_usage()
     printf("mountainprocess queue-process [processor_name] --~process_output=[optional_output_fname] --[param1]=[val1] --[param2]=[val2] ...\n");
     printf("mountainprocess create-prv [filename]\n");
     printf("mountainprocess create-prv [filename] [output_filename].prv\n");
+    printf("mountainprocess set-big-file-search-path\n");
+    printf("mountainprocess set-big-file-search-path [path]\n");
 }
 
 void remove_system_parameters(QVariantMap& params)
@@ -697,12 +704,3 @@ double compute_peak_cpu_pct(const QList<MonitorStats>& stats)
     return ret;
 }
 
-QString get_existing_directory_console(QString prompt,QString default_path) {
-    printf("%s: [%s]\n",prompt.toLatin1().data(),default_path.toLatin1().data());
-    fflush(stdout);
-    char str[1000];
-    gets(str);
-    QString str0=str;
-    if (str0.isEmpty()) return default_path;
-    return str0;
-}

@@ -547,8 +547,9 @@ QString find_file_with_checksum(QString dirpath, QString checksum, long size_byt
         QString path0 = dirpath + "/" + fname;
         if (QFileInfo(path0).size() == size_bytes) {
             QString checksum1 = MLUtil::computeSha1SumOfFile(path0);
-            if (checksum1 == checksum)
+            if (checksum1 == checksum) {
                 return path0;
+            }
         }
     }
     if (recursive) {
@@ -567,9 +568,9 @@ QString find_file_with_checksum(const QString& checksum, long size_bytes)
     QString path;
 
     QSettings settings("magland", "mountainlab");
-    QString raw_data_search_path = settings.value("raw_data_search_path", "").toString();
-    if (!raw_data_search_path.isEmpty()) {
-        path = find_file_with_checksum(raw_data_search_path, checksum, size_bytes, true);
+    QString big_file_search_path = settings.value("big_file_search_path", "").toString();
+    if (!big_file_search_path.isEmpty()) {
+        path = find_file_with_checksum(big_file_search_path, checksum, size_bytes, true);
         if (!path.isEmpty())
             return path;
     }

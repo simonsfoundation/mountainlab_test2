@@ -63,7 +63,7 @@ struct CMVControlBar {
 
         hlayout->addStretch();
 
-        permutation_buttons["none"]->setChecked(true);
+        permutation_buttons["column"]->setChecked(true);
     }
     ConfusionMatrixView::PermutationMode permutationMode()
     {

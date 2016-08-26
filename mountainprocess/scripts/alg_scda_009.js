@@ -3,10 +3,8 @@ function main(params) {
 }
 
 function run_algorithm(params) {
-	display_parameters(params);
-
 	params.clip_size=params.clip_size||50;
-	params.detect_threshold=params.detect_threshold||4.0;
+	params.detect_threshold=params.detect_threshold||3.5;
 	params.detect_interval=params.detect_interval||10;
 	params.shell_increment=params.shell_increment||3;
 	params.min_shell_size=params.min_shell_size||150;
@@ -21,8 +19,10 @@ function run_algorithm(params) {
 	params.channels=params.channels||'';
 	params.timerange=params.timerange||[-1,-1];
 	params.use_whitening=params.use_whitening||'true';
-	params.mask_threshold=params.mask_threshold||6; //to mask out artifacts. Use 0 to not mask out artifacts
+	if (params.mask_threshold===null) params.mask_threshold=6; //to mask out artifacts. Use 0 to not mask out artifacts
 	params.cluster_num_threads=params.cluster_num_threads||0;
+
+	display_parameters(params);
 
 	var raw=params.raw;
 	var geom=params.geom;
@@ -106,8 +106,8 @@ function run_algorithm(params) {
 	save_prv('@pre2',outpath+'/pre2.mda.prv');
 	save_prv(raw,outpath+'/raw.mda.prv');
 
-	copy('@firings1',outpath+'/firings_before_merge_across_channels.mda');
-	copy('@firings2',outpath+'/firings_before_fit.mda');
+	//copy('@firings1',outpath+'/firings_before_merge_across_channels.mda');
+	//copy('@firings2',outpath+'/firings_before_fit.mda');
 	copy('@firings3',outpath+'/firings.mda');
 
 	run_pipeline();

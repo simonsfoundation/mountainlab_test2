@@ -10,7 +10,7 @@
 #define MDA_MAX_DIMS 6
 
 #ifdef USE_SSE2
-static void* malloc_aligned(const size_t alignValue, const size_t nbytes)
+static void* malloc_aligned(const long alignValue, const long nbytes)
 {
     void* result = 0;
 #ifdef __linux__
@@ -23,7 +23,7 @@ static void* malloc_aligned(const size_t alignValue, const size_t nbytes)
 }
 #endif
 
-void* allocate(const size_t nbytes)
+void* allocate(unsigned long nbytes)
 {
 #ifdef USE_SSE2
     return malloc_aligned(16, nbytes);
@@ -39,28 +39,28 @@ public:
     ~MdaData();
     bool allocate(double value, long N1, long N2, long N3 = 1, long N4 = 1, long N5 = 1, long N6 = 1);
 
-    inline long dim(size_t idx) const;
+    inline long dim(long idx) const;
     inline long N1() const;
     inline long N2() const;
 
-    void allocate(size_t size);
+    void allocate(long size);
     void deallocate();
-    inline size_t totalSize() const;
-    inline void setTotalSize(size_t ts);
+    inline long totalSize() const;
+    inline void setTotalSize(long ts);
     inline double* data();
     inline const double* constData() const;
-    inline double at(size_t idx) const;
-    inline double at(size_t i1, size_t i2) const;
-    inline void set(double val, size_t idx);
-    inline void set(double val, size_t i1, size_t i2);
+    inline double at(long idx) const;
+    inline double at(long i1, long i2) const;
+    inline void set(double val, long idx);
+    inline void set(double val, long i1, long i2);
 
-    inline long dims(size_t idx) const;
+    inline long dims(long idx) const;
     void setDims(long n1, long n2, long n3, long n4, long n5, long n6);
 
     int determine_num_dims(long N1, long N2, long N3, long N4, long N5, long N6) const;
-    bool safe_index(size_t i) const;
-    bool safe_index(size_t i1, size_t i2) const;
-    bool safe_index(size_t i1, size_t i2, size_t i3) const;
+    bool safe_index(long i) const;
+    bool safe_index(long i1, long i2) const;
+    bool safe_index(long i1, long i2, long i3) const;
     bool safe_index(long i1, long i2, long i3, long i4, long i5, long i6) const;
 
     bool read_from_text_file(const QString& path);
@@ -70,7 +70,7 @@ private:
     double* m_data;
     //std::vector<long> m_dims;
     QVector<long> m_dims;
-    size_t total_size;
+    long total_size;
 };
 
 Mda::Mda(long N1, long N2, long N3, long N4, long N5, long N6)
@@ -879,13 +879,13 @@ bool MdaData::allocate(double value, long N1, long N2, long N3, long N4, long N5
     return true;
 }
 
-long MdaData::dim(size_t idx) const { return m_dims.value(idx); }
+long MdaData::dim(long idx) const { return m_dims.value(idx); }
 
 long MdaData::N1() const { return dim(0); }
 
 long MdaData::N2() const { return dim(1); }
 
-void MdaData::allocate(size_t size)
+void MdaData::allocate(long size)
 {
     m_data = (double*)::allocate(size * sizeof(double));
     if (!m_data)
@@ -902,23 +902,23 @@ void MdaData::deallocate()
     m_data = 0;
 }
 
-size_t MdaData::totalSize() const { return total_size; }
+long MdaData::totalSize() const { return total_size; }
 
-void MdaData::setTotalSize(size_t ts) { total_size = ts; }
+void MdaData::setTotalSize(long ts) { total_size = ts; }
 
 double* MdaData::data() { return m_data; }
 
 const double* MdaData::constData() const { return m_data; }
 
-double MdaData::at(size_t idx) const { return *(constData() + idx); }
+double MdaData::at(long idx) const { return *(constData() + idx); }
 
-double MdaData::at(size_t i1, size_t i2) const { return at(i1 + dim(0) * i2); }
+double MdaData::at(long i1, long i2) const { return at(i1 + dim(0) * i2); }
 
-void MdaData::set(double val, size_t idx) { m_data[idx] = val; }
+void MdaData::set(double val, long idx) { m_data[idx] = val; }
 
-void MdaData::set(double val, size_t i1, size_t i2) { set(val, i1 + dim(0) * i2); }
+void MdaData::set(double val, long i1, long i2) { set(val, i1 + dim(0) * i2); }
 
-long MdaData::dims(size_t idx) const
+long MdaData::dims(long idx) const
 {
     return m_dims.at(idx);
 }
@@ -949,19 +949,19 @@ int MdaData::determine_num_dims(long N1, long N2, long N3, long N4, long N5, lon
     return 2;
 }
 
-bool MdaData::safe_index(size_t i) const
+bool MdaData::safe_index(long i) const
 {
-    return (i < totalSize());
+    return ((i>=0)&&(i < totalSize()));
 }
 
-bool MdaData::safe_index(size_t i1, size_t i2) const
+bool MdaData::safe_index(long i1, long i2) const
 {
-    return (((long)i1 < dims(0)) && ((long)i2 < dims(1)));
+    return ((i1>=0) && (i2>=0) && (i1 < dims(0)) && (i2 < dims(1)));
 }
 
-bool MdaData::safe_index(size_t i1, size_t i2, size_t i3) const
+bool MdaData::safe_index(long i1, long i2, long i3) const
 {
-    return (((long)i1 < dims(0)) && ((long)i2 < dims(1)) && ((long)i3 < dims(2)));
+    return ((i1>=0) && (i2>=0) && (i3>=0) && (i1 < dims(0)) && (i2 < dims(1)) && (i3 < dims(2)));
 }
 
 bool MdaData::safe_index(long i1, long i2, long i3, long i4, long i5, long i6) const

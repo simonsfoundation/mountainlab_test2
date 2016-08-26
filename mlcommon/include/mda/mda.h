@@ -10,7 +10,7 @@
 #include <QDebug>
 #include <QSharedDataPointer>
 
-extern void* allocate(const size_t nbytes);
+extern void* allocate(unsigned long nbytes);
 
 class MdaData;
 /** \class Mda - a multi-dimensional array corresponding to the .mda file format
