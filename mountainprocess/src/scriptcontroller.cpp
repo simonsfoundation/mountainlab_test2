@@ -457,26 +457,6 @@ void ScriptController::log(const QString& message)
     printf("SCRIPT: %s\n", message.toLatin1().data());
 }
 
-void ScriptController::writePrvFile(const QString& fname, const QString& txt)
-{
-    if (!fname.endsWith(".prv")) {
-        printf("SCRIPT: Error -- for security, the .prv file must have a .prv extension\n");
-        return;
-    }
-
-    QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(txt.toLatin1(), &err);
-    if (err.error != QJsonParseError::NoError) {
-        printf("SCRIPT: Error parsing json text in writePrvFile\n");
-        return;
-    }
-    QString json = doc.toJson(QJsonDocument::Indented);
-
-    if (!TextFile::write(fname, json)) {
-        printf("SCRIPT: Error writing .prv file.\n");
-    }
-}
-
 QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const QVariantMap& parameters, bool use_run)
 {
     QString exe = qApp->applicationFilePath();
