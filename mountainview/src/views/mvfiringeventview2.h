@@ -53,7 +53,6 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
 private slots:
-    void updateEnabled(MVContext* context);
 };
 
 class FiringEventImageCalculator;

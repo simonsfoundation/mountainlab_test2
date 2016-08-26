@@ -162,7 +162,7 @@ QString ProcessManager::startProcess(const QString& processor_name, const QVaria
     }
 
     if (!d->m_processors.contains(processor_name)) {
-        qWarning() << "Unable to find processor: " + processor_name;
+        qWarning() << "Unable to find processor (165): " + processor_name;
         return "";
     }
     MLProcessor P = d->m_processors[processor_name];
@@ -229,10 +229,14 @@ bool ProcessManager::waitForFinished(const QString& process_id)
 
 bool ProcessManager::checkParameters(const QString& processor_name, const QVariantMap& parameters)
 {
+    if (processor_name.isEmpty())
+        return true; //empty processor name is for handling .prv files
     if (!d->m_processors.contains(processor_name)) {
-        qWarning() << "checkProcess: Unable to find processor: " + processor_name;
+        qWarning() << "checkProcess: Unable to find processor (233): " + processor_name;
         return false;
     }
+    if (processor_name.isEmpty())
+        return true; //empty processor name is for handling .prv files
     MLProcessor P = d->m_processors[processor_name];
     {
         QStringList keys = P.inputs.keys();

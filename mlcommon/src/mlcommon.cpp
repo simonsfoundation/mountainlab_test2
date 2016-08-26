@@ -191,12 +191,22 @@ QString MLUtil::computeSha1SumOfFile(const QString& path)
     */
 }
 
+static QString s_temp_path = "";
 QString MLUtil::tempPath()
 {
-    //QString ret = mountainlabBasePath() + "/tmp";
-    QString ret = QDir::tempPath() + "/mountainlab";
-    mkdir_if_doesnt_exist(ret);
-    return ret;
+    if (!s_temp_path.isEmpty())
+        return s_temp_path;
+
+    QString json = TextFile::read(mountainlabBasePath() + "/mountainlab.json");
+    if (!json.isEmpty()) {
+        QJsonObject cfg = QJsonDocument::fromJson(json.toLatin1()).object();
+        s_temp_path = cfg.value("temporary_path").toString() + "/mountainlab";
+    }
+    if (s_temp_path.isEmpty()) {
+        s_temp_path = QDir::tempPath() + "/mountainlab";
+    }
+    mkdir_if_doesnt_exist(s_temp_path);
+    return s_temp_path;
 }
 
 QVariant clp_string_to_variant(const QString& str);
@@ -530,18 +540,21 @@ double MLCompute::median(const QVector<double>& X)
 
 /////////////////////////////////////////////////////////////////////////////
 
-QString find_file_with_checksum(QString dirpath, QString checksum, bool recursive)
+QString find_file_with_checksum(QString dirpath, QString checksum, long size_bytes, bool recursive)
 {
     QStringList list = QDir(dirpath).entryList(QStringList("*"), QDir::Files, QDir::Name);
     foreach (QString fname, list) {
-        QString checksum1 = MLUtil::computeSha1SumOfFile(dirpath + "/" + fname);
-        if (checksum1 == checksum)
-            return dirpath + "/" + fname;
+        QString path0 = dirpath + "/" + fname;
+        if (QFileInfo(path0).size() == size_bytes) {
+            QString checksum1 = MLUtil::computeSha1SumOfFile(path0);
+            if (checksum1 == checksum)
+                return path0;
+        }
     }
     if (recursive) {
         QStringList list2 = QDir(dirpath).entryList(QStringList("*"), QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
         foreach (QString foldername, list2) {
-            QString tmp = find_file_with_checksum(dirpath + "/" + foldername, checksum, recursive);
+            QString tmp = find_file_with_checksum(dirpath + "/" + foldername, checksum, size_bytes, recursive);
             if (!tmp.isEmpty())
                 return tmp;
         }
@@ -549,25 +562,25 @@ QString find_file_with_checksum(QString dirpath, QString checksum, bool recursiv
     return "";
 }
 
-QString find_file_with_checksum(const QString& checksum)
+QString find_file_with_checksum(const QString& checksum, long size_bytes)
 {
     QString path;
 
-    path = find_file_with_checksum(".", checksum, false);
+    path = find_file_with_checksum(".", checksum, size_bytes, false);
     if (!path.isEmpty())
         return path;
 
-    path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_short_term", checksum, false);
+    path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_short_term", checksum, size_bytes, false);
     if (!path.isEmpty())
         return path;
-    path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_long_term", checksum, false);
+    path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_long_term", checksum, size_bytes, false);
     if (!path.isEmpty())
         return path;
 
     QSettings settings("magland", "mountainlab");
     QString raw_data_search_path = settings.value("raw_data_search_path", "").toString();
     if (!raw_data_search_path.isEmpty()) {
-        path = find_file_with_checksum(raw_data_search_path, checksum, true);
+        path = find_file_with_checksum(raw_data_search_path, checksum, size_bytes, true);
         if (!path.isEmpty())
             return path;
     }
@@ -614,12 +627,12 @@ void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QS
     QProcess::execute(exe, args);
 }
 
-QString create_prv_file(const QString& output_name, QString checksum, const QJsonArray& processes)
+QString create_file_from_prv(QString output_name, QString checksum0, long size0, const QJsonArray& processes)
 {
-    printf("Creating %s\n", output_name.toLatin1().data());
-    QString path1 = find_file_with_checksum(checksum);
+    printf("Creating output corresponding to %s\n", output_name.toLatin1().data());
+    QString path1 = find_file_with_checksum(checksum0, size0);
     if (!path1.isEmpty()) {
-        printf("Found file with checksum %s\n", checksum.toLatin1().data());
+        printf("Found file with checksum %s\n", checksum0.toLatin1().data());
         return path1;
     }
     for (int i = 0; i < processes.count(); i++) {
@@ -634,16 +647,17 @@ QString create_prv_file(const QString& output_name, QString checksum, const QJso
         QStringList parameter_pnames = parameters.keys();
 
         foreach (QString opname, output_pnames) {
-            if (outputs[opname].toString() == output_name) {
+            if (outputs[opname].toObject()["original_path"].toString() == output_name) {
                 QMap<QString, QVariant> args_inputs;
                 QMap<QString, QVariant> args_outputs;
                 QMap<QString, QVariant> args_parameters;
 
                 foreach (QString ipname, input_pnames) {
                     QJsonObject input0 = inputs[ipname].toObject();
-                    QString name0 = input0["path"].toString();
-                    QString checksum0 = input0["checksum"].toString();
-                    QString path0 = create_prv_file(name0, checksum0, processes);
+                    QString name0 = input0["original_path"].toString();
+                    QString checksum0 = input0["original_checksum"].toString();
+                    long size0 = input0["original_size"].toVariant().toLongLong();
+                    QString path0 = create_file_from_prv(name0, checksum0, size0, processes);
                     if (path0.isEmpty())
                         return "";
                     args_inputs[ipname] = path0;
@@ -679,9 +693,10 @@ QString resolve_prv_file(const QString& prv_fname)
         qWarning() << "Error parsing json." << err.errorString();
         return "";
     }
-    QString path0 = obj["path"].toString();
-    QString checksum0 = obj["checksum"].toString();
-    QString path2 = create_prv_file(path0, checksum0, obj["processes"].toArray());
+    QString path0 = obj["original_path"].toString();
+    QString checksum0 = obj["original_checksum"].toString();
+    long size0 = obj["original_size"].toVariant().toLongLong();
+    QString path2 = create_file_from_prv(path0, checksum0, size0, obj["processes"].toArray());
     if (!path2.isEmpty()) {
         return path2;
     }

@@ -84,9 +84,12 @@ int main(int argc, char* argv[])
     }
     QString log_path = MLUtil::mlLogPath() + "/mountainprocess";
     QString tmp_path = MLUtil::tempPath();
+    /// TODO: remove temporary_path from labcomputer.json
+    /*
     if (config.contains("temporary_path")) {
         tmp_path = config["temporary_path"].toString();
     }
+    */
     CacheManager::globalInstance()->setLocalBasePath(tmp_path);
 
     if (arg1.endsWith(".prv")) {

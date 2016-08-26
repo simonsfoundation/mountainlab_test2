@@ -249,7 +249,9 @@ function copy(input,output) {
 }
 
 function save_prv(input,output) {
-	PIPELINE.savePrv(input,output);
+	if (!PIPELINE.savePrv(input,output)) {
+		throw "Error in save_prv: "+input+' '+output;
+	}
 }
 
 function clone(obj) {
@@ -258,13 +260,13 @@ function clone(obj) {
 
 var console={
 	log:function(msg) {MP.log(msg);}
-}
+};
 
 function MSPipeline() {
-	this.addProcess=function(P) {m_processes.push(clone(P));}
-	this.addProcesses=function(Ps) {for (var i in Ps) {this.addProcess(Ps[i]);}}
-	this.clearProcesses=function() {m_processes=[];}
-	this.savePrv=function(input_path,output_path) {m_prvs.push({input:input_path,output:output_path});};
+	this.addProcess=function(P) {m_processes.push(clone(P));};
+	this.addProcesses=function(Ps) {for (var i in Ps) {this.addProcess(Ps[i]);}};
+	this.clearProcesses=function() {m_processes=[];};
+	this.savePrv=function(input_path,output_path) {return _savePrv(input_path,output_path);};
 	this.run=_run;
 
 	var m_processes=[];
@@ -407,7 +409,7 @@ function MSPipeline() {
 				for (var pname in PP.outputs) {
 					parameters[pname]=PP.outputs[pname];
 				}
-				pipe.processes.push({processor_name:processor_name,parameters:parameters})
+				pipe.processes.push({processor_name:processor_name,parameters:parameters,prvs:PP.prvs||{}});
 			}
 			if (!MP.runPipeline(JSON.stringify(pipe))) {
 				console.log ('Error running pipeline');
@@ -433,12 +435,6 @@ function MSPipeline() {
 			}
 		}
 
-		for (var i=0; i<m_prvs.length; i++) {
-			var input0=m_prvs[i].input;
-			var output0=m_prvs[i].output;
-			_save_prv(input0,output0);
-		}
-
 		return true;
 	}	
 
@@ -447,51 +443,26 @@ function MSPipeline() {
 			var PP=processes[j];
 			for (var pname in PP.outputs) {
 				if (PP.outputs[pname]==fname) {
-					return {process:clone(processes[j]),pname:pname};
+					return {process:processes[j],pname:pname};
 				}
 			}
 		}
 		return {process:null,pname:''};
 	}
 
-	function prv_find_all_processes_needed_to_generate_file(path) {
-		var A=find_process_and_pname_for_output(m_processes,path);
+	function _savePrv(input_path,output_path) {
+		var A=find_process_and_pname_for_output(m_processes,input_path);
 		if (!A.process) {
-			return [];
-		}
-		var ret=[];
-		var proc0=clone(A.process);
-		ret.push(proc0);
-		for (var pname in proc0.inputs) {
-			var B=prv_find_all_processes_needed_to_generate_file(proc0.inputs[pname]);
-			if (B===null) return null;
-			for (var j=0; j<B.length; j++) {
-				ret.push(clone(B[j]));
+			if (input_path.indexOf('@')===0) {
+				console.log ('Error in _savePrv. Unable to find process for output: '+input_path);
+				return false;
 			}
-			var path0=proc0.inputs[pname];
-			var checksum0=prv_file_checksum(path0);
-			proc0.inputs[pname]={path:path0,checksum:checksum0};
+			m_processes.push({processor_name:'',parameters:{output:input_path},prvs:{output:output_path}}); //dummy processor that will have a .prv
+			return true;
 		}
-		return ret;
-	}
-
-	function prv_file_checksum(path) {
-		if (path.indexOf('@')===0) {
-			path=fname_map[path];
-		}
-		return MP.fileChecksum(path);
-	}
-
-	function _save_prv(input_path,output_path) {
-		console.log ('Saving provenance file: '+input_path+' -> '+output_path);
-		var processes=prv_find_all_processes_needed_to_generate_file(input_path);
-		if (processes===null) {
-			console.log ('Error in _savePrv.');
-			return false;
-		}
-		var X={path:input_path,processes:processes};
-		X.checksum=prv_file_checksum(X.path);
-		MP.writePrvFile(output_path,JSON.stringify(X));
+		if (!A.process.prvs) A.process.prvs={};
+		A.process.prvs[A.pname]=output_path;
+		return true;
 	}
 }
 

@@ -70,8 +70,8 @@ bool merge_across_channels(const QString& timeseries_path, const QString& firing
             }
         }
     }
-    S.write32("/tmp/debugS.mda");
-    best_dt.write32("/tmp/debugbest_dt.mda");
+    //S.write32("/tmp/debugS.mda");
+    //best_dt.write32("/tmp/debugbest_dt.mda");
 
     //make the matrix reflexive and transitive
     make_reflexive_and_transitive(S, best_dt);
