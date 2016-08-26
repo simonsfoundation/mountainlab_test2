@@ -60,11 +60,27 @@ struct run_script_opts {
 QJsonArray monitor_stats_to_json_array(const QList<MonitorStats>& stats);
 long compute_peak_mem_bytes(const QList<MonitorStats>& stats);
 double compute_peak_cpu_pct(const QList<MonitorStats>& stats);
+QString get_existing_directory_console(QString prompt,QString default_path);
 
 int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
     CLParams CLP(argc, argv);
+
+    if (!resolve_prv_files(CLP.named_parameters)) {
+        QSettings settings("magland", "mountainlab");
+        QString raw_data_search_path = settings.value("raw_data_search_path").toString();
+        raw_data_search_path = get_existing_directory_console("Specify a directory to search for local raw data", raw_data_search_path);
+        if (!raw_data_search_path.isEmpty()) {
+            settings.setValue("raw_data_search_path", raw_data_search_path);
+        }
+        if (!resolve_prv_files(CLP.named_parameters)) {
+            qWarning() << "Error resolving .prv files.";
+            return -1;
+        }
+    }
+
+
     QString arg1 = CLP.unnamed_parameters.value(0);
     QString arg2 = CLP.unnamed_parameters.value(1);
 
@@ -355,6 +371,26 @@ int main(int argc, char* argv[])
             printf("%s", str.toLatin1().data());
         }
     }
+    else if (arg1 == "create-prv") {
+
+        if (arg2.isEmpty()) {
+            print_usage();
+            return -1;
+        }
+        QString arg3=CLP.unnamed_parameters.value(2);
+        if (arg3.isEmpty()) arg3=arg2+".prv";
+
+        if (!QFile::exists(arg2)) {
+            qWarning() << "File does not exist: "+arg2;
+            return -1;
+        }
+        QJsonObject obj=make_prv_object(arg2);
+        QString json=QJsonDocument(obj).toJson(QJsonDocument::Indented);
+        if (!TextFile::write(arg3,json)) {
+            qWarning() << "Error writing file: "+arg3;
+            return -1;
+        }
+    }
     else {
         print_usage(); //print usage information
         return -1;
@@ -495,6 +531,8 @@ void print_usage()
     printf("mountainprocess daemon-state\n");
     printf("mountainprocess queue-script --~script_output=[optional_output_fname] [script1].js [script2.js] ... [file1].par [file2].par ... \n");
     printf("mountainprocess queue-process [processor_name] --~process_output=[optional_output_fname] --[param1]=[val1] --[param2]=[val2] ...\n");
+    printf("mountainprocess create-prv [filename]\n");
+    printf("mountainprocess create-prv [filename] [output_filename].prv\n");
 }
 
 void remove_system_parameters(QVariantMap& params)
@@ -657,4 +695,14 @@ double compute_peak_cpu_pct(const QList<MonitorStats>& stats)
         ret = qMax(ret, stats[i].cpu_pct);
     }
     return ret;
+}
+
+QString get_existing_directory_console(QString prompt,QString default_path) {
+    printf("%s: [%s]\n",prompt.toLatin1().data(),default_path.toLatin1().data());
+    fflush(stdout);
+    char str[1000];
+    gets(str);
+    QString str0=str;
+    if (str0.isEmpty()) return default_path;
+    return str0;
 }

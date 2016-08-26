@@ -220,7 +220,6 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
 
 void MVClusterContextMenuHandler::slot_extract_selected_clusters()
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".mv";
     QJsonObject obj = this->mainWindow()->mvContext()->toMVFileObject();
     QString json = QJsonDocument(obj).toJson();
@@ -232,7 +231,6 @@ void MVClusterContextMenuHandler::slot_extract_selected_clusters()
     foreach (int cluster, clusters) {
         clusters_str << QString("%1").arg(cluster);
     }
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 
     args << tmp_fname << "--clusters=" + clusters_str.join(",");
     qDebug() << "EXECUTING: " + exe + " " + args.join(" ");

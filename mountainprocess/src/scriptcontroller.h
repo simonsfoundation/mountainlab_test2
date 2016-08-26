@@ -32,5 +32,6 @@ private:
 };
 
 QString resolve_file_name(QStringList server_urls, QString server_base_path, QString fname_in);
+QJsonObject make_prv_object(QString path);
 
 #endif // SCRIPTCONTROLLER_H

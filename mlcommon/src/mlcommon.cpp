@@ -566,6 +566,14 @@ QString find_file_with_checksum(const QString& checksum, long size_bytes)
 {
     QString path;
 
+    QSettings settings("magland", "mountainlab");
+    QString raw_data_search_path = settings.value("raw_data_search_path", "").toString();
+    if (!raw_data_search_path.isEmpty()) {
+        path = find_file_with_checksum(raw_data_search_path, checksum, size_bytes, true);
+        if (!path.isEmpty())
+            return path;
+    }
+
     path = find_file_with_checksum(".", checksum, size_bytes, false);
     if (!path.isEmpty())
         return path;
@@ -576,14 +584,6 @@ QString find_file_with_checksum(const QString& checksum, long size_bytes)
     path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_long_term", checksum, size_bytes, false);
     if (!path.isEmpty())
         return path;
-
-    QSettings settings("magland", "mountainlab");
-    QString raw_data_search_path = settings.value("raw_data_search_path", "").toString();
-    if (!raw_data_search_path.isEmpty()) {
-        path = find_file_with_checksum(raw_data_search_path, checksum, size_bytes, true);
-        if (!path.isEmpty())
-            return path;
-    }
 
     return path;
 }
@@ -690,6 +690,7 @@ QString resolve_prv_file(const QString& prv_fname)
     QJsonParseError err;
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &err).object();
     if (err.error != QJsonParseError::NoError) {
+        qDebug() << json;
         qWarning() << "Error parsing json." << err.errorString();
         return "";
     }
