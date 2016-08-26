@@ -43,6 +43,8 @@
 #include <mvtemplatesview2.h>
 #include <mvtimeseriesview2.h>
 #include <tabber.h>
+#include <QFileDialog>
+#include <QSettings>
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
 /// TODO: (HIGH) blobs for populations
@@ -136,7 +138,18 @@ int main(int argc, char* argv[])
 
     CLParams CLP(argc, argv);
 
-    CLP.named_parameters=resolve_prv_files(CLP.named_parameters);
+    if (!resolve_prv_files(CLP.named_parameters)) {
+        QSettings settings("magland", "mountainlab");
+        QString raw_data_search_path = settings.value("raw_data_search_path").toString();
+        raw_data_search_path = QFileDialog::getExistingDirectory(0, "Specify a directory to search for local raw data", raw_data_search_path);
+        if (!raw_data_search_path.isEmpty()) {
+            settings.setValue("raw_data_search_path", raw_data_search_path);
+        }
+        if (!resolve_prv_files(CLP.named_parameters)) {
+            qWarning() << "Error resolving .prv files.";
+            return -1;
+        }
+    }
 
     QList<QColor> channel_colors;
     QStringList color_strings;

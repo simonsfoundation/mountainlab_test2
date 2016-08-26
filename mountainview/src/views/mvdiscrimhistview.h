@@ -40,7 +40,7 @@ public:
     QString name() const Q_DECL_OVERRIDE;
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
-    bool isEnabled(MVContext *context) const;
+    bool isEnabled(MVContext* context) const;
 };
 
 #endif // MVDISCRIMHISTVIEW_H

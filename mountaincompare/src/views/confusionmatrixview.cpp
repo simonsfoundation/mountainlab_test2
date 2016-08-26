@@ -424,17 +424,12 @@ void ConfusionMatrixViewPrivate::update_permutations()
         }
         for (int i = 0; i < N - 1; i++) {
             if (perm_cols[i] == -1) {
-                qDebug() << "@@@@" << i;
                 for (int j = 0; j < N - 1; j++) {
-                    printf("%d- [%d]", j, (int)perm_cols.contains(7));
                     if (!perm_cols.contains(j)) {
-                        printf("! ");
                         perm_cols[i] = j;
                         break;
                     }
                 }
-                printf(" using %d\n", perm_cols[i]);
-                qDebug() << perm_cols;
             }
         }
         perm_rows[M - 1] = M - 1; //unclassified row
@@ -478,10 +473,6 @@ void ConfusionMatrixViewPrivate::update_permutations()
         perm_rows[M - 1] = M - 1; //unclassified row
         perm_cols[N - 1] = N - 1; //unclassified column
     }
-
-    qDebug() << "label_map" << m_optimal_label_map;
-    qDebug() << "perm_rows" << perm_rows;
-    qDebug() << "perm_cols" << perm_cols;
 
     foreach (MatrixView* MV, m_all_matrix_views) {
         MV->setIndexPermutations(perm_rows, perm_cols);

@@ -90,8 +90,8 @@ int main(int argc, char* argv[])
     CacheManager::globalInstance()->setLocalBasePath(tmp_path);
 
     if (arg1.endsWith(".prv")) {
-        QString path0=resolve_prv_file(arg1);
-        printf("FILE: %s\n",path0.toLatin1().data());
+        QString path0 = resolve_prv_file(arg1);
+        printf("FILE: %s\n", path0.toLatin1().data());
         return 0;
     }
 
@@ -655,4 +655,3 @@ double compute_peak_cpu_pct(const QList<MonitorStats>& stats)
     }
     return ret;
 }
-

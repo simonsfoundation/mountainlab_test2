@@ -22,8 +22,8 @@ void subtract_out_rank_1(Mda32& X, Mda32& C);
 void subtract_out_rank_1_from_XXt(Mda& X, Mda& C);
 void subtract_out_rank_1_from_XXt(Mda32& X, Mda32& C);
 void normalize_vector(Mda& V);
-void pca_subtract_mean(Mda &X);
-void pca_subtract_mean(Mda32 &X);
+void pca_subtract_mean(Mda& X);
+void pca_subtract_mean(Mda32& X);
 
 void pca(Mda& C, Mda& F, Mda& sigma, Mda& X, int num_features, bool subtract_mean)
 {
@@ -85,43 +85,45 @@ void pca(Mda32& C, Mda32& F, Mda32& sigma, Mda32& X, int num_features, bool subt
     F = mult_AtransB(C, X);
 }
 
-void pca_subtract_mean(Mda &X) {
-    int M=X.N1();
-    long N=X.N2();
+void pca_subtract_mean(Mda& X)
+{
+    int M = X.N1();
+    long N = X.N2();
     QVector<double> mean0(M);
-    for (int m=0; m<M; m++)
-        mean0[m]=0;
-    for (long i=0; i<N; i++) {
-        for (int m=0; m<M; m++)
-            mean0[m]+=X.value(m,i);
+    for (int m = 0; m < M; m++)
+        mean0[m] = 0;
+    for (long i = 0; i < N; i++) {
+        for (int m = 0; m < M; m++)
+            mean0[m] += X.value(m, i);
     }
     if (N) {
-        for (int m=0; m<M; m++)
-            mean0[m]/=N;
+        for (int m = 0; m < M; m++)
+            mean0[m] /= N;
     }
-    for (long i=0; i<N; i++) {
-        for (int m=0; m<M; m++)
-            X.setValue(X.value(m,i)-mean0[m],m,i);
+    for (long i = 0; i < N; i++) {
+        for (int m = 0; m < M; m++)
+            X.setValue(X.value(m, i) - mean0[m], m, i);
     }
 }
 
-void pca_subtract_mean(Mda32 &X) {
-    int M=X.N1();
-    long N=X.N2();
+void pca_subtract_mean(Mda32& X)
+{
+    int M = X.N1();
+    long N = X.N2();
     QVector<double> mean0(M);
-    for (int m=0; m<M; m++)
-        mean0[m]=0;
-    for (long i=0; i<N; i++) {
-        for (int m=0; m<M; m++)
-            mean0[m]+=X.value(m,i);
+    for (int m = 0; m < M; m++)
+        mean0[m] = 0;
+    for (long i = 0; i < N; i++) {
+        for (int m = 0; m < M; m++)
+            mean0[m] += X.value(m, i);
     }
     if (N) {
-        for (int m=0; m<M; m++)
-            mean0[m]/=N;
+        for (int m = 0; m < M; m++)
+            mean0[m] /= N;
     }
-    for (long i=0; i<N; i++) {
-        for (int m=0; m<M; m++)
-            X.setValue(X.value(m,i)-mean0[m],m,i);
+    for (long i = 0; i < N; i++) {
+        for (int m = 0; m < M; m++)
+            X.setValue(X.value(m, i) - mean0[m], m, i);
     }
 }
 

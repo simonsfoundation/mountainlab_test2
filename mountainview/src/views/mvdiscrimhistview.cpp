@@ -313,7 +313,7 @@ MVAbstractView* MVDiscrimHistFactory::createView(MVContext* context)
     return X;
 }
 
-bool MVDiscrimHistFactory::isEnabled(MVContext *context) const
+bool MVDiscrimHistFactory::isEnabled(MVContext* context) const
 {
     return (context->selectedClusters().count() >= 2);
 }

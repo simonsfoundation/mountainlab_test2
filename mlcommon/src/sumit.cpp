@@ -22,13 +22,14 @@ QString compute_the_file_hash(const QString& path)
     QFile FF(path);
     if (!FF.open(QFile::ReadOnly))
         return "";
-    QTime timer; timer.start();
+    QTime timer;
+    timer.start();
     printf("Computing checksum for file %s\n", path.toLatin1().data());
     while (!FF.atEnd()) {
         hash.addData(FF.read(10000));
     }
 
-    QString ret=QString(hash.result().toHex());
+    QString ret = QString(hash.result().toHex());
     printf("%s -- Elapsed: %g sec\n", ret.toLatin1().data(), timer.elapsed() * 1.0 / 1000);
     return ret;
 }

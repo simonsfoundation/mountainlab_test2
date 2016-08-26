@@ -328,7 +328,7 @@ void ScriptController::log(const QString& message)
     printf("SCRIPT: %s\n", message.toLatin1().data());
 }
 
-void ScriptController::writePrvFile(const QString &fname, const QString &txt)
+void ScriptController::writePrvFile(const QString& fname, const QString& txt)
 {
     if (!fname.endsWith(".prv")) {
         printf("SCRIPT: Error -- for security, the .prv file must have a .prv extension\n");
@@ -336,14 +336,14 @@ void ScriptController::writePrvFile(const QString &fname, const QString &txt)
     }
 
     QJsonParseError err;
-    QJsonDocument doc=QJsonDocument::fromJson(txt.toLatin1(),&err);
-    if (err.error!=QJsonParseError::NoError) {
+    QJsonDocument doc = QJsonDocument::fromJson(txt.toLatin1(), &err);
+    if (err.error != QJsonParseError::NoError) {
         printf("SCRIPT: Error parsing json text in writePrvFile\n");
         return;
     }
-    QString json=doc.toJson(QJsonDocument::Indented);
+    QString json = doc.toJson(QJsonDocument::Indented);
 
-    if (!TextFile::write(fname,json)) {
+    if (!TextFile::write(fname, json)) {
         printf("SCRIPT: Error writing .prv file.\n");
     }
 }

@@ -569,7 +569,7 @@ QList<QAction*> MVSpikeSprayFactory::actions(const QMimeData& md)
     ds >> clusters;
     QList<QAction*> actions;
     if (!clusters.isEmpty()) {
-        QAction* action = new QAction("Spike spray",0);
+        QAction* action = new QAction("Spike spray", 0);
         MVMainWindow* mw = this->mainWindow();
         /// Witold, do I need to worry about mw object being deleted before this action is triggered?
         connect(action, &QAction::triggered, [mw]() {

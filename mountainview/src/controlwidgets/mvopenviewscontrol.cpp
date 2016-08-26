@@ -44,18 +44,18 @@ MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
     QList<QAction*> actions;
     QMimeData md;
     /// Witold, is there a better way to do this than to set a "non-empty" dummy string?
-    md.setData("x-mv-main","non-empty");
+    md.setData("x-mv-main", "non-empty");
     foreach (MVAbstractViewFactory* factory, this->mainWindow()->viewFactories()) {
         actions.append(factory->actions(md));
     }
-    foreach (QAction *action,actions) {
+    foreach (QAction* action, actions) {
         QToolButton* button = new QToolButton;
         QFont font = button->font();
         font.setPixelSize(14);
         button->setFont(font);
         button->setText(action->text());
         d->m_flow_layout->addWidget(button);
-        QObject::connect(button, SIGNAL(clicked()), action,SLOT(trigger()));
+        QObject::connect(button, SIGNAL(clicked()), action, SLOT(trigger()));
     }
 
     QList<MVAbstractViewFactory*> factories = mw->viewFactories();

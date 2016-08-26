@@ -26,7 +26,7 @@ public:
     //Q_INVOKABLE bool runProcess(const QString& processor_name, const QString& parameters_json);
     Q_INVOKABLE bool runPipeline(const QString& json);
     Q_INVOKABLE void log(const QString& message);
-    Q_INVOKABLE void writePrvFile(const QString &fname, const QString &txt);
+    Q_INVOKABLE void writePrvFile(const QString& fname, const QString& txt);
 
 private:
     ScriptControllerPrivate* d;

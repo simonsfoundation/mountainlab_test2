@@ -78,8 +78,9 @@ function run_algorithm(params) {
 
 	var adjacency_matrix='';
 	if (geom) {
-		adjacency_matrix=outpath+'/AM.csv';
+		adjacency_matrix='@AM';
 		geom2adj(geom,adjacency_matrix,o_geom2adj);
+		geom2adj(geom,outpath+'/AM.csv',o_geom2adj); //for convenience
 	}
 
 	extract_raw(raw,'@pre0',o_extract_raw);

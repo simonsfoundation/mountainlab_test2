@@ -45,7 +45,7 @@ bool extract_clips_features_Processor::run(const QMap<QString, QVariant>& params
     QString features_path = params["features"].toString();
     int clip_size = params["clip_size"].toInt();
     int num_features = params["num_features"].toInt();
-    int subtract_mean = params.value("subtract_mean",0).toInt();
+    int subtract_mean = params.value("subtract_mean", 0).toInt();
 
     DiskReadMda X(timeseries_path);
     DiskReadMda F(firings_path);
