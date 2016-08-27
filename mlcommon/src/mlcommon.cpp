@@ -59,7 +59,7 @@ bool TextFile::write(const QString& fname, const QString& txt, QTextCodec* codec
     //(should we really do this before testing whether writing is successful? I think yes)
     if (QFile::exists(fname)) {
         if (!QFile::remove(fname)) {
-            qWarning() << "Problem in TextFile::write" << __FUNCTION__ << __FILE__ << __LINE__;
+            qWarning() << "Problem in TextFile::write. Could not remove file even though it exists" << fname;
             return false;
         }
     }
@@ -67,7 +67,7 @@ bool TextFile::write(const QString& fname, const QString& txt, QTextCodec* codec
     //write text to temporary file
     QFile file(tmp_fname);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning() << "Problem in TextFile::write could not open for writing... " << __FUNCTION__ << __FILE__ << __LINE__ << tmp_fname;
+        qWarning() << "Problem in TextFile::write. Could not open for writing... " << tmp_fname;
         return false;
     }
     QTextStream ts(&file);
@@ -83,25 +83,29 @@ bool TextFile::write(const QString& fname, const QString& txt, QTextCodec* codec
     QString txt_test = TextFile::read(tmp_fname, codec);
     if (txt_test != txt) {
         QFile::remove(tmp_fname);
-        qWarning() << "Problem in TextFile::write" << __FUNCTION__ << __FILE__ << __LINE__;
+        qWarning() << "Problem in TextFile::write. The contents of the file do not match what was expected." << fname;
         return false;
     }
 
     //finally, rename the file
     if (!QFile::rename(tmp_fname, fname)) {
-        qWarning() << "Problem in TextFile::write" << __FUNCTION__ << __FILE__ << __LINE__;
+        qWarning() << "Problem in TextFile::write. Unable to rename file at the end of the write command" << fname;
         return false;
     }
 
     return true;
 }
 
-QChar make_random_alphanumeric_mv()
+QChar make_random_alphanumeric()
 {
     static int val = 0;
     val++;
     QTime time = QTime::currentTime();
-    int num = qHash(time.toString("hh:mm:ss:zzz") + QString::number(qrand() + val));
+    QString code = time.toString("hh:mm:ss:zzz");
+    code += QString::number(qrand() + val);
+    code += QString::number(QCoreApplication::applicationPid());
+    code += QString::number((long)QThread::currentThreadId());
+    int num = qHash(code);
     if (num < 0)
         num = -num;
     num = num % 36;
@@ -110,14 +114,18 @@ QChar make_random_alphanumeric_mv()
     else
         return QChar('0' + num - 26);
 }
-
-QString MLUtil::makeRandomId(int numchars)
+QString make_random_id_22(int numchars)
 {
     QString ret;
     for (int i = 0; i < numchars; i++) {
-        ret.append(make_random_alphanumeric_mv());
+        ret.append(make_random_alphanumeric());
     }
     return ret;
+}
+
+QString MLUtil::makeRandomId(int numchars)
+{
+    return make_random_id_22(numchars);
 }
 
 bool MLUtil::threadInterruptRequested()
@@ -719,7 +727,7 @@ bool resolve_prv_files(QMap<QString, QVariant>& command_line_params)
                 return false;
             }
             else {
-                printf("Resolved: %s -> %s\n", fname.toLatin1().data(), val.toString().toLatin1().data());
+                printf("Resolved: %s --> %s\n", fname.toLatin1().data(), val.toString().toLatin1().data());
             }
             command_line_params[key] = val;
         }

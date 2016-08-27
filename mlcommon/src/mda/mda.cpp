@@ -951,17 +951,17 @@ int MdaData::determine_num_dims(long N1, long N2, long N3, long N4, long N5, lon
 
 bool MdaData::safe_index(long i) const
 {
-    return ((i>=0)&&(i < totalSize()));
+    return ((i >= 0) && (i < totalSize()));
 }
 
 bool MdaData::safe_index(long i1, long i2) const
 {
-    return ((i1>=0) && (i2>=0) && (i1 < dims(0)) && (i2 < dims(1)));
+    return ((i1 >= 0) && (i2 >= 0) && (i1 < dims(0)) && (i2 < dims(1)));
 }
 
 bool MdaData::safe_index(long i1, long i2, long i3) const
 {
-    return ((i1>=0) && (i2>=0) && (i3>=0) && (i1 < dims(0)) && (i2 < dims(1)) && (i3 < dims(2)));
+    return ((i1 >= 0) && (i2 >= 0) && (i3 >= 0) && (i1 < dims(0)) && (i2 < dims(1)) && (i3 < dims(2)));
 }
 
 bool MdaData::safe_index(long i1, long i2, long i3, long i4, long i5, long i6) const

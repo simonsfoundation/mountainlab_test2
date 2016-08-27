@@ -146,7 +146,7 @@ bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_
 
     static long num = 100000;
     QString timestamp = MPDaemon::makeTimestamp();
-    QString fname = QString("%1/daemon_commands/%2.%3.command").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
+    QString fname = QString("%1/daemon_commands/%2.%3.%4.command").arg(MPDaemon::daemonPath()).arg(timestamp).arg(MLUtil::makeRandomId(5)).arg(num);
     num++;
 
     QString json = QJsonDocument(obj).toJson();

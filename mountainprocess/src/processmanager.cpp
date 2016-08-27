@@ -18,6 +18,7 @@
 #include "mlcommon.h"
 
 #include <QCoreApplication>
+#include <QThread>
 #include <QTimer>
 #include "mpdaemon.h"
 #include "scriptcontroller.h" //for resolve_file_name()
@@ -195,7 +196,7 @@ QString ProcessManager::startProcess(const QString& processor_name, const QVaria
         exe_command.replace(QRegExp("\\$\\(arguments\\)"), ppp);
     }
 
-    QString id = make_random_id();
+    QString id = MLUtil::makeRandomId();
     PMProcess PP;
     PP.info.exe_command = exe_command;
     PP.info.parameters = parameters;
@@ -589,27 +590,4 @@ QJsonObject ProcessManagerPrivate::create_file_object(const QString& fname_in)
     obj["size"] = QFileInfo(fname).size();
     obj["last_modified"] = QFileInfo(fname).lastModified().toString("yyyy-MM-dd-hh-mm-ss-zzz");
     return obj;
-}
-
-QChar make_random_alphanumeric()
-{
-    static int val = 0;
-    val++;
-    QTime time = QTime::currentTime();
-    int num = qHash(time.toString("hh:mm:ss:zzz") + QString::number(qrand() + val));
-    if (num < 0)
-        num = -num;
-    num = num % 36;
-    if (num < 26)
-        return QChar('A' + num);
-    else
-        return QChar('0' + num - 26);
-}
-QString make_random_id(int numchars)
-{
-    QString ret;
-    for (int i = 0; i < numchars; i++) {
-        ret.append(make_random_alphanumeric());
-    }
-    return ret;
 }

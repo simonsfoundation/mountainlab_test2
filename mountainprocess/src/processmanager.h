@@ -91,6 +91,4 @@ private:
     ProcessManagerPrivate* d;
 };
 
-QString make_random_id(int numchars = 20);
-
 #endif // PROCESSMANAGER_H

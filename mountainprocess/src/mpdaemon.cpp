@@ -680,11 +680,18 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
 
     qprocess->start(exe, args);
     if (qprocess->waitForStarted()) {
+        if (S->prtype == ScriptType) {
+            writeLogRecord("started-script", "pript_id", pript_id, "pid", (long long)qprocess->processId());
+        }
+        else {
+            writeLogRecord("started-process", "pript_id", pript_id, "pid", (long long)qprocess->processId());
+        }
         S->qprocess = qprocess;
         if (!S->stdout_fname.isEmpty()) {
             S->stdout_file = new QFile(S->stdout_fname);
             if (!S->stdout_file->open(QFile::WriteOnly)) {
                 qCritical() << "Unable to open stdout file for writing: " + S->stdout_fname;
+                writeLogRecord("error", "message", "Unable to open stdout file for writing: " + S->stdout_fname);
                 delete S->stdout_file;
                 S->stdout_file = 0;
             }
@@ -997,11 +1004,11 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
                 debug_log(__FUNCTION__, __FILE__, __LINE__);
                 if (m_pripts[key].qprocess) {
                     if (m_pripts[key].prtype == ScriptType) {
-                        writeLogRecord("stop-script", "pript_id", key, "reason", "orphan");
+                        writeLogRecord("stop-script", "pript_id", key, "reason", "orphan", "parent_pid", m_pripts[key].parent_pid);
                         qWarning() << "Terminating orphan script qprocess: " + key;
                     }
                     else {
-                        writeLogRecord("stop-process", "pript_id", key, "reason", "orphan");
+                        writeLogRecord("stop-process", "pript_id", key, "reason", "orphan", "parent_pid", m_pripts[key].parent_pid);
                         qWarning() << "Terminating orphan process qprocess: " + key;
                     }
 
@@ -1013,11 +1020,11 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
                 }
                 else {
                     if (m_pripts[key].prtype == ScriptType) {
-                        writeLogRecord("unqueue-script", "pript_id", key, "reason", "orphan");
+                        writeLogRecord("unqueue-script", "pript_id", key, "reason", "orphan", "parent_pid", m_pripts[key].parent_pid);
                         qWarning() << "Removing orphan script: " + key + " " + m_pripts[key].script_paths.value(0);
                     }
                     else {
-                        writeLogRecord("unqueue-process", "pript_id", key, "reason", "orphan");
+                        writeLogRecord("unqueue-process", "pript_id", key, "reason", "orphan", "parent_pid", m_pripts[key].parent_pid);
                         qWarning() << "Removing orphan process: " + key + " " + m_pripts[key].processor_name;
                     }
                     finish_and_finalize(m_pripts[key]);

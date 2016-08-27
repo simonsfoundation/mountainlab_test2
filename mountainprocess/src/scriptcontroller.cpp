@@ -151,15 +151,17 @@ struct PipelineNode {
     bool running;
     QProcess* qprocess;
 
-    QStringList input_paths() {
+    QStringList input_paths()
+    {
         QStringList ret;
-        foreach (QString pname,input_pnames)
+        foreach (QString pname, input_pnames)
             ret << parameters[pname].toString();
         return ret;
     }
-    QStringList output_paths() {
+    QStringList output_paths()
+    {
         QStringList ret;
-        foreach (QString pname,output_pnames)
+        foreach (QString pname, output_pnames)
             ret << parameters[pname].toString();
         return ret;
     }
@@ -178,11 +180,11 @@ QJsonObject make_prv_object(QString path)
     return obj;
 }
 
-QJsonArray get_prv_processes(const QList<PipelineNode>& nodes, const QMap<QString, int>& node_indices_for_outputs, QString path, QSet<int> &node_indices_already_used, bool* ok)
+QJsonArray get_prv_processes(const QList<PipelineNode>& nodes, const QMap<QString, int>& node_indices_for_outputs, QString path, QSet<int>& node_indices_already_used, bool* ok)
 {
     QJsonArray processes;
     int ind0 = node_indices_for_outputs.value(path, -1);
-    if ((ind0 >= 0)&&(!node_indices_already_used.contains(ind0))) { //avoid infinite cycles, which can happen, for example, if an output file is the same as an input file
+    if ((ind0 >= 0) && (!node_indices_already_used.contains(ind0))) { //avoid infinite cycles, which can happen, for example, if an output file is the same as an input file
         const PipelineNode* node = &nodes[ind0];
         if (!node->processor_name.isEmpty()) {
             QJsonObject process;
@@ -304,19 +306,19 @@ bool ScriptController::runPipeline(const QString& json)
             qWarning() << "Unable to find processor *: " + node.processor_name;
             return false;
         }
-        node.input_pnames=PP.inputs.keys();
-        node.output_pnames=PP.outputs.keys();
+        node.input_pnames = PP.inputs.keys();
+        node.output_pnames = PP.outputs.keys();
         nodes << node;
     }
 
     //check for situation where input file matches output file
-    for (int i=0; i<nodes.count(); i++) {
-        PipelineNode *node=&nodes[i];
-        foreach (QString pname_input,node->input_pnames) {
-            QString path_input=node->parameters[pname_input].toString();
-            foreach (QString pname_output,node->output_pnames) {
-                QString path_output=node->parameters[pname_output].toString();
-                if ((!path_input.isEmpty())&&(path_input==path_output)) {
+    for (int i = 0; i < nodes.count(); i++) {
+        PipelineNode* node = &nodes[i];
+        foreach (QString pname_input, node->input_pnames) {
+            QString path_input = node->parameters[pname_input].toString();
+            foreach (QString pname_output, node->output_pnames) {
+                QString path_output = node->parameters[pname_output].toString();
+                if ((!path_input.isEmpty()) && (path_input == path_output)) {
                     qDebug() << path_input;
                     qDebug() << node->processor_name;
                     qWarning() << "An input path is the same as an output path. This can happen sometimes when using .prv files (checksum lookups) in the case where a process creates an output file that matches an input file.";
@@ -329,7 +331,7 @@ bool ScriptController::runPipeline(const QString& json)
     //record which outputs get created by which nodes (by index)
     QMap<QString, int> node_indices_for_outputs;
     for (int i = 0; i < nodes.count(); i++) {
-        QStringList output_paths=nodes[i].output_paths();
+        QStringList output_paths = nodes[i].output_paths();
         foreach (QString path, output_paths) {
             if (!path.isEmpty()) {
                 if (node_indices_for_outputs.contains(path)) {
@@ -357,7 +359,7 @@ bool ScriptController::runPipeline(const QString& json)
             }
             else {
                 bool ready_to_go = true;
-                QStringList input_paths=nodes[i].input_paths();
+                QStringList input_paths = nodes[i].input_paths();
                 foreach (QString path, input_paths) {
                     if (node_indices_for_outputs.contains(path)) {
                         int ii = node_indices_for_outputs[path];
