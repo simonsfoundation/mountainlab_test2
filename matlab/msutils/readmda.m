@@ -19,6 +19,11 @@ function A=readmda(fname)
 % Author: Jeremy Magland
 % Jan 2015; Last revision: 15-Feb-2106
 
+if (strcmp(fname(end-4:end),'.csv')==0)
+    A=textread(fname,'','delimiter',',');
+    return;
+end
+
 F=fopen(fname,'rb');
 
 try

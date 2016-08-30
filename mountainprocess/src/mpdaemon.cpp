@@ -561,13 +561,16 @@ bool MPDaemonPrivate::handle_scripts()
 {
     int max_simultaneous_scripts = 100;
     if (num_running_scripts() < max_simultaneous_scripts) {
+        int old_num_pending_scripts=num_pending_scripts();
         if (num_pending_scripts() > 0) {
             if (launch_next_script()) {
                 printf("%d scripts running.\n", num_running_scripts());
             }
             else {
-                qCritical() << "Unexpected problem. Failed to launch_next_script";
-                return false;
+                if (num_pending_scripts()==old_num_pending_scripts) {
+                    qCritical() << "Failed to launch_next_script and the number of pending scripts has not decreased (unexpected). This has potential for infinite loop. So we are aborting.";
+                    abort();
+                }
             }
         }
     }
@@ -596,13 +599,22 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     debug_log(__FUNCTION__, __FILE__, __LINE__);
 
     MPDaemonPript* S;
-    if (!m_pripts.contains(pript_id))
+    if (!m_pripts.contains(pript_id)) {
+        qCritical() << "Unexpected problem. No pript exists with id: "+pript_id;
+        abort();
         return false;
+    }
     S = &m_pripts[pript_id];
-    if (S->is_running)
+    if (S->is_running) {
+        qCritical() << "Unexpected problem. Pript is already running: "+pript_id;
+        abort();
         return false;
-    if (S->is_finished)
+    }
+    if (S->is_finished) {
+        qCritical() << "Unexpected problem. Pript is already finished: "+pript_id;
+        abort();
         return false;
+    }
 
     QString exe = qApp->applicationFilePath();
     QStringList args;
