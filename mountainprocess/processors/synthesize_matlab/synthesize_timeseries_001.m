@@ -51,7 +51,7 @@ for k=1:K
     
     times0=rand(1,populations(k))*(N-1)+1;
     times0=[times0,times0+rand_distr2(refr_timepoints,refr_timepoints*20,size(times0))];
-    times0=times0(randsample(length(times0),ceil(length(times0)/2)));
+    times0=times0(randsample0(length(times0),ceil(length(times0)/2)));
     times0=enforce_refractory_period(times0,refr_timepoints);
     times0=times0((times0>=1)&(times0<=N));
     
@@ -112,4 +112,9 @@ while ~done
         done=1;
     end;
 end
+end
+
+function ret=randsample0(n,k)
+a=randperm(n);
+ret=a(1:k);
 end
