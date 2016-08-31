@@ -27,10 +27,6 @@ confusion_matrix_Processor::confusion_matrix_Processor()
 confusion_matrix_Processor::~confusion_matrix_Processor()
 {
     delete d;
-
-
-    asdjklasfl;
-
 }
 
 bool confusion_matrix_Processor::check(const QMap<QString, QVariant>& params)
