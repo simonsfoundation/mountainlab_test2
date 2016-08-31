@@ -8,8 +8,9 @@
 QVector<int> indexlist(const QVector<int>& T2, int t1, int offset, int& ptr2);
 Mda confusion_matrix_2(QString firings1_path, QString firings2_path, int max_matching_offset, QMap<int, int>& map12, QVector<long>& event_correspondence);
 Mda compute_optimal_assignments(const Mda& confusion_matrix);
+void write_stats(QString stats_path, const Mda &confusion_matrix, const Mda &optimal_assignments);
 
-bool confusion_matrix(QString firings1_path, QString firings2_path, QString output_path, QString optimal_assignments_path, QString event_correspondence_path, int max_matching_offset)
+bool confusion_matrix(QString firings1_path, QString firings2_path, QString output_path, QString optimal_assignments_path, QString event_correspondence_path, QString stats_path, int max_matching_offset)
 {
     //first we get the confusion matrix with an empty map12
     QMap<int, int> empty_map;
@@ -49,6 +50,8 @@ bool confusion_matrix(QString firings1_path, QString firings2_path, QString outp
     output.write32(output_path);
     optimal_assignments.write64(optimal_assignments_path);
     EC.write64(event_correspondence_path);
+
+    write_stats(stats_path,output,optimal_assignments);
 
     return true;
 }
@@ -266,4 +269,9 @@ Mda compute_optimal_assignments(const Mda& confusion_matrix)
         ret.setValue(assignment[i], i);
     }
     return ret;
+}
+
+void write_stats(QString stats_path, const Mda &confusion_matrix, const Mda &optimal_assignments) {
+
+
 }
