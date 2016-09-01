@@ -27,6 +27,7 @@ private slots:
     void slot_export_static_views();
     void slot_share_views_on_web();
     void slot_export_firings_file();
+    void slot_export_firings_annotated_file();
     void slot_export_cluster_annotation_file();
 
 private:

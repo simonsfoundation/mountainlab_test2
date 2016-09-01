@@ -23,4 +23,6 @@ bool synthesize1(
     const QString& firings_true_path,
     const synthesize1_opts& opts);
 
+void generate_randn(size_t N, float* X);
+
 #endif // SYNTHESIZE1_H

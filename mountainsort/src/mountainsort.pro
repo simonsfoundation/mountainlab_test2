@@ -92,7 +92,8 @@ HEADERS += \
     processors/compute_amplitudes.h \
     processors/hungarian.h \
     processors/merge_firings_processor.h \
-    processors/merge_firings.h
+    processors/merge_firings.h \
+    processors/add_noise_processor.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -166,7 +167,8 @@ SOURCES += \
     processors/compute_amplitudes.cpp \
     processors/hungarian.cpp \
     processors/merge_firings_processor.cpp \
-    processors/merge_firings.cpp
+    processors/merge_firings.cpp \
+    processors/add_noise_processor.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \

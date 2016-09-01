@@ -351,7 +351,7 @@ void MPDaemon::slot_pript_qprocess_finished()
         QString runtime_results_json = TextFile::read(S->output_fname);
         if (runtime_results_json.isEmpty()) {
             S->success = false;
-            S->error = "Could not read results file: " + S->output_fname;
+            S->error = "Could not read results file ****: " + S->output_fname;
         }
         else {
             QJsonParseError error;
@@ -623,7 +623,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         debug_log(__FUNCTION__, __FILE__, __LINE__);
         args << "run-script";
         if (!S->output_fname.isEmpty()) {
-            args << "--~script_output=" + S->output_fname;
+            args << "--_script_output=" + S->output_fname;
         }
         for (int ii = 0; ii < S->script_paths.count(); ii++) {
             QString fname = S->script_paths[ii];
@@ -657,13 +657,16 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
         args << "run-process";
         args << S->processor_name;
         if (!S->output_fname.isEmpty())
-            args << "--~process_output=" + S->output_fname;
+            args << "--_process_output=" + S->output_fname;
         QStringList pkeys = S->parameters.keys();
         foreach (QString pkey, pkeys) {
             args << QString("--%1=%2").arg(pkey).arg(S->parameters[pkey].toString());
         }
         S->runtime_opts.num_threads_allotted = S->num_threads_requested;
         S->runtime_opts.memory_gb_allotted = S->memory_gb_requested;
+    }
+    if (S->force_run) {
+        args << "--_force_run";
     }
     debug_log(__FUNCTION__, __FILE__, __LINE__);
     QProcess* qprocess = new QProcess;
@@ -1162,6 +1165,7 @@ QJsonObject pript_struct_to_obj(MPDaemonPript S, RecordType rt)
         ret["stdout_fname"] = S.stdout_fname;
         ret["parent_pid"] = QString("%1").arg(S.parent_pid);
     }
+    ret["force_run"]=S.force_run;
     ret["id"] = S.id;
     ret["success"] = S.success;
     ret["error"] = S.error;
@@ -1201,6 +1205,7 @@ MPDaemonPript pript_obj_to_struct(QJsonObject obj)
     ret.success = obj.value("success").toBool();
     ret.error = obj.value("error").toString();
     ret.parent_pid = obj.value("parent_pid").toString().toLongLong();
+    ret.force_run=obj.value("force_run").toBool();
     ret.timestamp_queued = QDateTime::fromString(obj.value("timestamp_queued").toString(), "yyyy-MM-dd|hh:mm:ss.zzz");
     ret.timestamp_started = QDateTime::fromString(obj.value("timestamp_started").toString(), "yyyy-MM-dd|hh:mm:ss.zzz");
     ret.timestamp_finished = QDateTime::fromString(obj.value("timestamp_finished").toString(), "yyyy-MM-dd|hh:mm:ss.zzz");

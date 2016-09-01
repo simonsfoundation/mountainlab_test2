@@ -19,6 +19,8 @@ public:
     void setNoDaemon(bool val);
     void setServerUrls(const QStringList& urls);
     void setServerBasePath(const QString& path);
+    void setForceRun(bool force_run);
+    QJsonObject getResults();
 
     Q_INVOKABLE QString fileChecksum(const QString& fname);
     Q_INVOKABLE QString stringChecksum(const QString& str);

@@ -474,6 +474,40 @@ void ConfusionMatrixViewPrivate::update_permutations()
         perm_cols[N - 1] = N - 1; //unclassified column
     }
 
+    if (perm_rows.isEmpty()) {
+        for (int i=0; i<M; i++) perm_rows << i;
+    }
+    if (perm_cols.isEmpty()) {
+        for (int i=0; i<N; i++) perm_cols << i;
+    }
+
+    //put the zero rows/columns at the end
+    QList<int> row_sums,col_sums;
+    for (int i=0; i<M; i++) row_sums << 0;
+    for (int i=0; i<N; i++) col_sums << 0;
+    for (int i=0; i<M; i++) {
+        for (int j=0; j<N; j++) {
+            row_sums[i]+=m_confusion_matrix.value(i,j);
+            col_sums[j]+=m_confusion_matrix.value(i,j);
+        }
+    }
+    for (int i=0; i<M; i++) {
+        if (row_sums[i]==0) {
+            for (int k=0; k<M; k++) {
+                if (perm_rows[k]>perm_rows[i]) perm_rows[k]--;
+            }
+            perm_rows[i]=-1;
+        }
+    }
+    for (int i=0; i<N; i++) {
+        if (col_sums[i]==0) {
+            for (int k=0; k<N; k++) {
+                if (perm_cols[k]>perm_cols[i]) perm_cols[k]--;
+            }
+            perm_cols[i]=-1;
+        }
+    }
+
     foreach (MatrixView* MV, m_all_matrix_views) {
         MV->setIndexPermutations(perm_rows, perm_cols);
     }

@@ -14,7 +14,6 @@
 
 double rand_uniform(double a, double b);
 long rand_int(long a, long b);
-void generate_randn(size_t N, float* X);
 double eval_waveform(Mda& W, int m, double t, int k, int waveforms_oversamp);
 
 bool synthesize1(const QString& waveforms_in_path, const QString& info_in_path, const QString& timeseries_out_path, const QString& firings_true_path, const synthesize1_opts& opts)

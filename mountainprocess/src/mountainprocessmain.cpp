@@ -38,7 +38,7 @@
 struct run_script_opts;
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);
-bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message);
+bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message,QJsonObject &results);
 bool initialize_process_manager(QString config_fname, QJsonObject config);
 void remove_system_parameters(QVariantMap& params);
 bool queue_pript(PriptType prtype, const CLParams& CLP);
@@ -51,11 +51,13 @@ struct run_script_opts {
     run_script_opts()
     {
         nodaemon = false;
+        force_run = false;
     }
 
     bool nodaemon;
     QStringList server_urls;
     QString server_base_path;
+    bool force_run;
 };
 
 QJsonArray monitor_stats_to_json_array(const QList<MonitorStats>& stats);
@@ -127,9 +129,9 @@ int main(int argc, char* argv[])
     setbuf(stdout, NULL);
 
     if (arg1 == "list-processors") { //Provide a human-readable list of the available processors
-        if (!initialize_process_manager(config_fname, config)) {
+        if (!initialize_process_manager(config_fname, config)) { //load the processor plugins etc
             //log_end();
-            return -1; //load the processor plugins etc
+            return -1;
         }
         QStringList pnames = PM->processorNames();
         qSort(pnames);
@@ -139,20 +141,31 @@ int main(int argc, char* argv[])
         //log_end();
         return 0;
     }
+    else if (arg1 == "spec") {
+        if (!initialize_process_manager(config_fname, config)) { //load the processor plugins etc
+            //log_end();
+            return -1;
+        }
+        MLProcessor MLP=PM->processor(arg2);
+        QString json=QJsonDocument(MLP.spec).toJson(QJsonDocument::Indented);
+        printf("%s\n",json.toLatin1().data());
+
+    }
     else if (arg1 == "run-process") { //Run a process synchronously
         if (!initialize_process_manager(config_fname, config)) {
             //log_end();
             return -1; //load the processor plugins etc
         }
-        QString output_fname = CLP.named_parameters.value("~process_output").toString(); //maybe the user specified where output is to be reported
+        QString output_fname = CLP.named_parameters.value("_process_output").toString(); //maybe the user specified where output is to be reported
         QString processor_name = arg2; //name of the processor is the second user-supplied arg
         QVariantMap process_parameters = CLP.named_parameters;
-        remove_system_parameters(process_parameters); //remove parameters starting with "~"
+        remove_system_parameters(process_parameters); //remove parameters starting with "_"
         int ret = 0;
         QString error_message;
         MLProcessInfo info;
 
-        if (PM->processAlreadyCompleted(processor_name, process_parameters)) { //do we have a record of this procesor already completing? If so, we save a lot of time by not re-running
+        bool force_run=CLP.named_parameters.contains("_force_run");
+        if ((!force_run)&&(PM->processAlreadyCompleted(processor_name, process_parameters))) { //do we have a record of this procesor already completing? If so, we save a lot of time by not re-running
             printf("Process already completed: %s\n", processor_name.toLatin1().data());
         }
         else {
@@ -232,7 +245,7 @@ int main(int argc, char* argv[])
             return -1;
         }
 
-        QString output_fname = CLP.named_parameters.value("~script_output").toString(); //maybe the user specified where output is to be reported
+        QString output_fname = CLP.named_parameters.value("_script_output").toString(); //maybe the user specified where output is to be reported
 
         int ret = 0;
         QString error_message;
@@ -276,7 +289,9 @@ int main(int argc, char* argv[])
         opts.nodaemon = CLP.named_parameters.contains("_nodaemon");
         opts.server_urls = server_urls;
         opts.server_base_path = server_base_path;
-        if (!run_script(script_fnames, params, opts, error_message)) { //actually run the script
+        opts.force_run=CLP.named_parameters.contains("_force_run");
+        QJsonObject results;
+        if (!run_script(script_fnames, params, opts, error_message, results)) { //actually run the script
             ret = -1;
         }
 
@@ -284,6 +299,7 @@ int main(int argc, char* argv[])
         obj["script_fnames"] = stringlist_to_json_array(script_fnames);
         obj["parameters"] = variantmap_to_json_obj(params);
         obj["success"] = (ret == 0);
+        obj["results"]=results;
         obj["error"] = error_message;
         if (!output_fname.isEmpty()) { //The user wants the results to go in this file
             QString obj_json = QJsonDocument(obj).toJson();
@@ -536,7 +552,7 @@ void display_error(QJSValue result)
     qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
 }
 
-bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message)
+bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message, QJsonObject &results)
 {
     QJsonObject parameters = variantmap_to_json_obj(params);
 
@@ -545,6 +561,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
     Controller.setNoDaemon(opts.nodaemon);
     Controller.setServerUrls(opts.server_urls);
     Controller.setServerBasePath(opts.server_base_path);
+    Controller.setForceRun(opts.force_run);
     QJSValue MP = engine.newQObject(&Controller);
     engine.globalObject().setProperty("MP", MP);
     foreach (QString fname, script_fnames) {
@@ -569,32 +586,36 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
         }
     }
 
+    results=Controller.getResults();
+
     return true;
 }
 
 void print_usage()
 {
     printf("Usage:\n");
-    printf("mountainprocess run-process [processor_name] --[param1]=[val1] --[param2]=[val2] ...\n");
-    printf("mountainprocess run-script [script1].js [script2.js] ... [file1].par [file2].par ... \n");
+    printf("mountainprocess run-process [processor_name] --[param1]=[val1] --[param2]=[val2] ... [--_force_run]\n");
+    printf("mountainprocess run-script [script1].js [script2.js] ... [file1].par [file2].par ... [--_force_run] \n");
     printf("mountainprocess daemon-start\n");
     printf("mountainprocess daemon-stop\n");
     printf("mountainprocess daemon-restart\n");
     printf("mountainprocess daemon-state\n");
     printf("mountainprocess daemon-state-summary\n");
-    printf("mountainprocess queue-script --~script_output=[optional_output_fname] [script1].js [script2.js] ... [file1].par [file2].par ... \n");
-    printf("mountainprocess queue-process [processor_name] --~process_output=[optional_output_fname] --[param1]=[val1] --[param2]=[val2] ...\n");
+    printf("mountainprocess queue-script --_script_output=[optional_output_fname] [script1].js [script2.js] ... [file1].par [file2].par ...  [--_force_run]\n");
+    printf("mountainprocess queue-process [processor_name] --_process_output=[optional_output_fname] --[param1]=[val1] --[param2]=[val2] ... [--_force_run]\n");
     printf("mountainprocess create-prv [filename]\n");
     printf("mountainprocess create-prv [filename] [output_filename].prv\n");
     printf("mountainprocess set-big-file-search-path\n");
     printf("mountainprocess set-big-file-search-path [path]\n");
+    printf("mountainprocess list-processors\n");
+    printf("mountainprocess spec [processor_name]\n");
 }
 
 void remove_system_parameters(QVariantMap& params)
 {
     QStringList keys = params.keys();
     foreach (QString key, keys) {
-        if (key.startsWith("~")) {
+        if (key.startsWith("_")) {
             params.remove(key);
         }
     }
@@ -604,7 +625,7 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
 {
     MPDaemonPript PP;
 
-    bool detach = CLP.named_parameters.value("~detach", false).toBool();
+    bool detach = CLP.named_parameters.value("_detach", false).toBool();
 
     if (prtype == ScriptType) {
         QVariantMap params;
@@ -639,10 +660,10 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
     PP.id = MLUtil::makeRandomId(20);
 
     if (prtype == ScriptType) {
-        PP.output_fname = CLP.named_parameters["~script_output"].toString();
+        PP.output_fname = CLP.named_parameters["_script_output"].toString();
     }
     else {
-        PP.output_fname = CLP.named_parameters["~process_output"].toString();
+        PP.output_fname = CLP.named_parameters["_process_output"].toString();
     }
     if (PP.output_fname.isEmpty()) {
         if (prtype == ScriptType)
@@ -659,6 +680,8 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
         PP.parent_pid = QCoreApplication::applicationPid();
     }
 
+    PP.force_run=CLP.named_parameters.contains("_force_run");
+
     MPDaemonInterface X;
     if (prtype == ScriptType) {
         if (!X.queueScript(PP)) { //queue the script
@@ -673,7 +696,7 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
         }
     }
     if (!detach) {
-        qint64 parent_pid = CLP.named_parameters.value("~parent_pid", 0).toLongLong();
+        qint64 parent_pid = CLP.named_parameters.value("_parent_pid", 0).toLongLong();
         MPDaemon::waitForFileToAppear(PP.output_fname, -1, false, parent_pid, PP.stdout_fname);
         QJsonParseError error;
         QJsonObject results_obj = QJsonDocument::fromJson(TextFile::read(PP.output_fname).toLatin1(), &error).object();

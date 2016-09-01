@@ -1,5 +1,7 @@
 function synthesize_timeseries_001(timeseries_path,firings_true_path,waveforms_path,opts)
 
+disp('synthesize_timeseries_001');
+
 if nargin<1
     synthesize_timeseries_001_test;
     return;
@@ -16,6 +18,9 @@ if (~isfield(opts,'noise_level')) opts.noise_level=1; end; %
 if (~isfield(opts,'firing_rate_range')) opts.firing_rate_range=[0.5,3]; end;
 if (~isfield(opts,'amp_variation_range')) opts.amp_variation_range=[1,1]; end;
 if (~isfield(opts,'show_figures')) opts.show_figures=0; end;
+
+disp('opts:');
+disp(opts);
 
 run_mountainlab_setup;
 

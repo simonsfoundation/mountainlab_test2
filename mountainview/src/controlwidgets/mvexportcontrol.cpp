@@ -56,6 +56,11 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         flayout->addWidget(B);
     }
     {
+        QPushButton* B = new QPushButton("Export firings.annotated.mda");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_annotated_file()));
+        flayout->addWidget(B);
+    }
+    {
         QPushButton* B = new QPushButton("Export cluster_annotation.mda");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_cluster_annotation_file()));
         flayout->addWidget(B);
@@ -169,6 +174,72 @@ void MVExportControl::slot_export_firings_file()
 
     DiskReadMda firings = mvContext()->firings();
     export_file(firings.makePath(), fname, true);
+}
+
+QString get_local_path_of_firings_file_or_current_path(const DiskReadMda &X) {
+    QString path=X.makePath();
+    if (!path.isEmpty()) {
+        if (!path.startsWith("http:")) {
+            if (QFile::exists(path)) {
+                return path;
+            }
+        }
+    }
+    return QDir::currentPath();
+}
+
+void MVExportControl::slot_export_firings_annotated_file()
+{
+
+    QString default_dir = get_local_path_of_firings_file_or_current_path(mvContext()->firings());
+    QString fname = QFileDialog::getSaveFileName(this, "Export cluster annotation array", default_dir+"/firings.annotated.mda", "*.mda");
+    if (fname.isEmpty())
+        return;
+    if (QFileInfo(fname).suffix() != "mda")
+        fname = fname + ".mda";
+
+    DiskReadMda F=mvContext()->firings();
+
+    QVector<int> labels;
+    for (long i=0; i<F.N2(); i++) {
+        int label=F.value(2,i);
+        labels << label;
+    }
+
+    int K=MLCompute::max(labels);
+
+    QSet<int> accepted_clusters;
+    QMap<int,int> merge_map;
+    for (int k=1; k<=K; k++) {
+        if (!mvContext()->clusterTags(k).contains("rejected")) {
+            accepted_clusters.insert(k);
+            merge_map[k]=mvContext()->clusterMerge().representativeLabel(k);
+        }
+    }
+
+    QVector<long> inds_to_use;
+    for (long i=0; i<F.N2(); i++) {
+        int label=F.value(2,i);
+        if (accepted_clusters.contains(label)) {
+            inds_to_use << i;
+        }
+    }
+
+    Mda F2(F.N1(),inds_to_use.count());
+    for (long j=0; j<inds_to_use.count(); j++) {
+        long i=inds_to_use[j];
+        for (int a=0; a<F.N1(); a++) {
+            F2.set(F.value(a,i),a,j);
+        }
+        int label=F.value(2,i);
+        label=merge_map[label];
+        F2.setValue(label,2,j);
+    }
+
+    if (!F2.write64(fname)) {
+        QMessageBox::warning(0, "Problem exporting firings annotated file", "Unable to write file: " + fname);
+    }
+
 }
 
 void MVExportControl::slot_export_cluster_annotation_file()

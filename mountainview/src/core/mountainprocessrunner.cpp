@@ -165,7 +165,7 @@ void MountainProcessRunner::runProcess()
         }
         //right now we can't detach while running locally
         //if (d->m_detach) {
-        //    args << QString("--~detach=1");
+        //    args << QString("--_detach=1");
         //}
         task.log(QString("Executing locally: %1").arg(mountainprocess_exe));
         foreach (QString key, keys) {

@@ -21,6 +21,46 @@
 #include "mpdaemon.h"
 #include "mlcommon.h"
 
+
+struct PipelineNode {
+    PipelineNode()
+    {
+        completed = false;
+        running = false;
+        qprocess = 0;
+    }
+    ~PipelineNode()
+    {
+        if (qprocess) {
+            delete qprocess;
+        }
+    }
+    QMap<QString,QDateTime> timestamps;
+    QString processor_name;
+    QVariantMap parameters;
+    QVariantMap prvs;
+    QStringList input_pnames;
+    QStringList output_pnames;
+    bool completed;
+    bool running;
+    QProcess* qprocess;
+
+    QStringList input_paths()
+    {
+        QStringList ret;
+        foreach (QString pname, input_pnames)
+            ret << parameters[pname].toString();
+        return ret;
+    }
+    QStringList output_paths()
+    {
+        QStringList ret;
+        foreach (QString pname, output_pnames)
+            ret << parameters[pname].toString();
+        return ret;
+    }
+};
+
 class ScriptControllerPrivate {
 public:
     ScriptControllerPrivate()
@@ -29,12 +69,15 @@ public:
     }
 
     ScriptController* q;
-    bool m_nodaemon;
+    bool m_nodaemon=false;
     QStringList m_server_urls;
     QString m_server_base_path;
+    bool m_force_run=false;
 
-    QProcess* queue_process(QString processor_name, const QVariantMap& parameters, bool use_run = false);
-    QProcess* run_process(QString processor_name, const QVariantMap& parameters);
+    QList<PipelineNode> m_pipeline_nodes;
+
+    QProcess* queue_process(QString processor_name, const QVariantMap& parameters, bool use_run, bool force_run);
+    QProcess* run_process(QString processor_name, const QVariantMap& parameters, bool force_run);
     //static bool queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters);
     static void wait(qint64 msec);
 
@@ -65,6 +108,16 @@ void ScriptController::setServerUrls(const QStringList& urls)
 void ScriptController::setServerBasePath(const QString& path)
 {
     d->m_server_base_path = path;
+}
+
+void ScriptController::setForceRun(bool force_run)
+{
+    d->m_force_run=force_run;
+}
+
+QJsonObject ScriptController::getResults()
+{
+    return QJsonObject();
 }
 
 QString ScriptController::fileChecksum(const QString& fname_in)
@@ -129,43 +182,7 @@ bool ScriptController::runProcess(const QString& processor_name, const QString& 
 }
 */
 
-struct PipelineNode {
-    PipelineNode()
-    {
-        completed = false;
-        running = false;
-        qprocess = 0;
-    }
-    ~PipelineNode()
-    {
-        if (qprocess) {
-            delete qprocess;
-        }
-    }
-    QString processor_name;
-    QVariantMap parameters;
-    QVariantMap prvs;
-    QStringList input_pnames;
-    QStringList output_pnames;
-    bool completed;
-    bool running;
-    QProcess* qprocess;
 
-    QStringList input_paths()
-    {
-        QStringList ret;
-        foreach (QString pname, input_pnames)
-            ret << parameters[pname].toString();
-        return ret;
-    }
-    QStringList output_paths()
-    {
-        QStringList ret;
-        foreach (QString pname, output_pnames)
-            ret << parameters[pname].toString();
-        return ret;
-    }
-};
 
 QJsonObject make_prv_object(QString path)
 {
@@ -410,7 +427,7 @@ bool ScriptController::runPipeline(const QString& json)
                 QProcess* P1;
                 if (d->m_nodaemon) {
                     printf("Launching process %s\n", node->processor_name.toLatin1().data());
-                    P1 = d->run_process(node->processor_name, node->parameters);
+                    P1 = d->run_process(node->processor_name, node->parameters, d->m_force_run);
                     if (!P1) {
                         qWarning() << "Unable to launch process: " + node->processor_name;
                         return false;
@@ -418,7 +435,7 @@ bool ScriptController::runPipeline(const QString& json)
                 }
                 else {
                     printf("Queuing process %s\n", node->processor_name.toLatin1().data());
-                    P1 = d->queue_process(node->processor_name, node->parameters);
+                    P1 = d->queue_process(node->processor_name, node->parameters, false, d->m_force_run);
                     if (!P1) {
                         qWarning() << "Unable to queue process: " + node->processor_name;
                         return false;
@@ -473,6 +490,8 @@ bool ScriptController::runPipeline(const QString& json)
         }
     }
 
+    d->m_pipeline_nodes=nodes;
+
     return true;
 }
 
@@ -481,7 +500,7 @@ void ScriptController::log(const QString& message)
     printf("SCRIPT: %s\n", message.toLatin1().data());
 }
 
-QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const QVariantMap& parameters, bool use_run)
+QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const QVariantMap& parameters, bool use_run, bool force_run)
 {
     QString exe = qApp->applicationFilePath();
     QStringList args;
@@ -496,8 +515,10 @@ QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const Q
     foreach (QString pkey, pkeys) {
         args << QString("--%1=%2").arg(pkey).arg(parameters[pkey].toString());
     }
-    /// TODO switch all --~* parameters to --_* (more readable)
-    args << QString("--~parent_pid=%1").arg(QCoreApplication::applicationPid());
+    args << QString("--_parent_pid=%1").arg(QCoreApplication::applicationPid());
+    if (force_run) {
+        args << "--_force_run";
+    }
     QProcess* P1 = new QProcess;
     P1->setReadChannelMode(QProcess::MergedChannels);
     P1->start(exe, args);
@@ -509,9 +530,9 @@ QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const Q
     return P1;
 }
 
-QProcess* ScriptControllerPrivate::run_process(QString processor_name, const QVariantMap& parameters)
+QProcess* ScriptControllerPrivate::run_process(QString processor_name, const QVariantMap& parameters, bool force_run)
 {
-    return ScriptControllerPrivate::queue_process(processor_name, parameters, true);
+    return ScriptControllerPrivate::queue_process(processor_name, parameters, true, force_run);
 }
 
 /*
@@ -525,7 +546,7 @@ bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString proces
     foreach (QString pkey, pkeys) {
         args << QString("--%1=%2").arg(pkey).arg(parameters[pkey].toString());
     }
-    args << QString("--~parent_pid=%1").arg(QCoreApplication::applicationPid());
+    args << QString("--_parent_pid=%1").arg(QCoreApplication::applicationPid());
     QProcess P1;
     P1.setReadChannelMode(QProcess::MergedChannels);
     P1.start(exe, args);
