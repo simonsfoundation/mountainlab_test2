@@ -267,4 +267,3 @@ Mda compute_optimal_assignments(const Mda& confusion_matrix)
     }
     return ret;
 }
-

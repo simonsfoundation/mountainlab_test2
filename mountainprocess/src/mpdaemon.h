@@ -84,7 +84,7 @@ struct MPDaemonPript {
         prtype = ScriptType;
         num_threads_requested = 1;
         memory_gb_requested = 1;
-        force_run=false;
+        force_run = false;
     }
     PriptType prtype;
     QString id;

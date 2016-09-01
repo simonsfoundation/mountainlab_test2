@@ -467,7 +467,7 @@ QVariantMap ProcessManagerPrivate::resolve_file_names_in_parameters(QString proc
 MLProcessor ProcessManagerPrivate::create_processor_from_json_object(QJsonObject obj)
 {
     MLProcessor P;
-    P.spec=obj;
+    P.spec = obj;
     P.name = obj["name"].toString();
     P.version = obj["version"].toString();
     P.description = obj["description"].toString();

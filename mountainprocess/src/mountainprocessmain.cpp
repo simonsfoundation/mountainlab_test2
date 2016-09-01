@@ -38,7 +38,7 @@
 struct run_script_opts;
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);
-bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message,QJsonObject &results);
+bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message, QJsonObject& results);
 bool initialize_process_manager(QString config_fname, QJsonObject config);
 void remove_system_parameters(QVariantMap& params);
 bool queue_pript(PriptType prtype, const CLParams& CLP);
@@ -146,10 +146,9 @@ int main(int argc, char* argv[])
             //log_end();
             return -1;
         }
-        MLProcessor MLP=PM->processor(arg2);
-        QString json=QJsonDocument(MLP.spec).toJson(QJsonDocument::Indented);
-        printf("%s\n",json.toLatin1().data());
-
+        MLProcessor MLP = PM->processor(arg2);
+        QString json = QJsonDocument(MLP.spec).toJson(QJsonDocument::Indented);
+        printf("%s\n", json.toLatin1().data());
     }
     else if (arg1 == "run-process") { //Run a process synchronously
         if (!initialize_process_manager(config_fname, config)) {
@@ -164,8 +163,8 @@ int main(int argc, char* argv[])
         QString error_message;
         MLProcessInfo info;
 
-        bool force_run=CLP.named_parameters.contains("_force_run");
-        if ((!force_run)&&(PM->processAlreadyCompleted(processor_name, process_parameters))) { //do we have a record of this procesor already completing? If so, we save a lot of time by not re-running
+        bool force_run = CLP.named_parameters.contains("_force_run");
+        if ((!force_run) && (PM->processAlreadyCompleted(processor_name, process_parameters))) { //do we have a record of this procesor already completing? If so, we save a lot of time by not re-running
             printf("Process already completed: %s\n", processor_name.toLatin1().data());
         }
         else {
@@ -289,7 +288,7 @@ int main(int argc, char* argv[])
         opts.nodaemon = CLP.named_parameters.contains("_nodaemon");
         opts.server_urls = server_urls;
         opts.server_base_path = server_base_path;
-        opts.force_run=CLP.named_parameters.contains("_force_run");
+        opts.force_run = CLP.named_parameters.contains("_force_run");
         QJsonObject results;
         if (!run_script(script_fnames, params, opts, error_message, results)) { //actually run the script
             ret = -1;
@@ -299,7 +298,7 @@ int main(int argc, char* argv[])
         obj["script_fnames"] = stringlist_to_json_array(script_fnames);
         obj["parameters"] = variantmap_to_json_obj(params);
         obj["success"] = (ret == 0);
-        obj["results"]=results;
+        obj["results"] = results;
         obj["error"] = error_message;
         if (!output_fname.isEmpty()) { //The user wants the results to go in this file
             QString obj_json = QJsonDocument(obj).toJson();
@@ -552,7 +551,7 @@ void display_error(QJSValue result)
     qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
 }
 
-bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message, QJsonObject &results)
+bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message, QJsonObject& results)
 {
     QJsonObject parameters = variantmap_to_json_obj(params);
 
@@ -586,7 +585,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
         }
     }
 
-    results=Controller.getResults();
+    results = Controller.getResults();
 
     return true;
 }
@@ -680,7 +679,7 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
         PP.parent_pid = QCoreApplication::applicationPid();
     }
 
-    PP.force_run=CLP.named_parameters.contains("_force_run");
+    PP.force_run = CLP.named_parameters.contains("_force_run");
 
     MPDaemonInterface X;
     if (prtype == ScriptType) {

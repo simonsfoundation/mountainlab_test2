@@ -604,7 +604,7 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
         return labels;
     }
     else {
-        if (opts.shell_increment==0) {
+        if (opts.shell_increment == 0) {
             //in this case we are not going to increment at all
             QVector<int> labels;
             for (long i = 0; i < L; i++)

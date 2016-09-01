@@ -21,7 +21,6 @@
 #include "mpdaemon.h"
 #include "mlcommon.h"
 
-
 struct PipelineNode {
     PipelineNode()
     {
@@ -35,7 +34,7 @@ struct PipelineNode {
             delete qprocess;
         }
     }
-    QMap<QString,QDateTime> timestamps;
+    QMap<QString, QDateTime> timestamps;
     QString processor_name;
     QVariantMap parameters;
     QVariantMap prvs;
@@ -69,10 +68,10 @@ public:
     }
 
     ScriptController* q;
-    bool m_nodaemon=false;
+    bool m_nodaemon = false;
     QStringList m_server_urls;
     QString m_server_base_path;
-    bool m_force_run=false;
+    bool m_force_run = false;
 
     QList<PipelineNode> m_pipeline_nodes;
 
@@ -112,7 +111,7 @@ void ScriptController::setServerBasePath(const QString& path)
 
 void ScriptController::setForceRun(bool force_run)
 {
-    d->m_force_run=force_run;
+    d->m_force_run = force_run;
 }
 
 QJsonObject ScriptController::getResults()
@@ -181,8 +180,6 @@ bool ScriptController::runProcess(const QString& processor_name, const QString& 
     }
 }
 */
-
-
 
 QJsonObject make_prv_object(QString path)
 {
@@ -490,7 +487,7 @@ bool ScriptController::runPipeline(const QString& json)
         }
     }
 
-    d->m_pipeline_nodes=nodes;
+    d->m_pipeline_nodes = nodes;
 
     return true;
 }

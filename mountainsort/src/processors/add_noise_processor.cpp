@@ -36,12 +36,12 @@ bool add_noise_Processor::run(const QMap<QString, QVariant>& params)
 {
     QString input = params["timeseries"].toString();
     QString output = params["timeseries_out"].toString();
-    double noise_level=params["noise_level"].toDouble();
+    double noise_level = params["noise_level"].toDouble();
     Mda32 X(input);
-    Mda32 noise(X.N1(),X.N2());
-    generate_randn(X.totalSize(),noise.dataPtr());
-    for (long i=0; i<X.totalSize(); i++) {
-        X.set(X.get(i)+noise.get(i)*noise_level,i);
+    Mda32 noise(X.N1(), X.N2());
+    generate_randn(X.totalSize(), noise.dataPtr());
+    for (long i = 0; i < X.totalSize(); i++) {
+        X.set(X.get(i) + noise.get(i) * noise_level, i);
     }
     return X.write32(output);
 }

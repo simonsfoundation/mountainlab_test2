@@ -21,8 +21,8 @@ public:
     QString m_title;
     QString m_row_axis_label;
     QString m_column_axis_label;
-    int m_max_row_map=0;
-    int m_max_col_map=0;
+    int m_max_row_map = 0;
+    int m_max_col_map = 0;
 
     //left,right,top,bottom
     double m_margins[4] = { 50, 0, 40, 50 };
@@ -77,14 +77,14 @@ void MatrixView::setIndexPermutations(const QVector<int>& perm_rows, const QVect
     d->m_perm_rows = perm_rows;
     d->m_perm_cols = perm_cols;
 
-    d->m_max_row_map=0;
-    for (int i=0; i<perm_rows.count(); i++) {
-        d->m_max_row_map=qMax(d->m_max_row_map,perm_rows[i]);
+    d->m_max_row_map = 0;
+    for (int i = 0; i < perm_rows.count(); i++) {
+        d->m_max_row_map = qMax(d->m_max_row_map, perm_rows[i]);
     }
 
-    d->m_max_col_map=0;
-    for (int i=0; i<perm_cols.count(); i++) {
-        d->m_max_col_map=qMax(d->m_max_col_map,perm_cols[i]);
+    d->m_max_col_map = 0;
+    for (int i = 0; i < perm_cols.count(); i++) {
+        d->m_max_col_map = qMax(d->m_max_col_map, perm_cols[i]);
     }
 
     update();
@@ -199,7 +199,7 @@ void MatrixView::paintEvent(QPaintEvent* evt)
     for (int m = 0; m < M; m++) {
         int label_wid = 20;
         int m2 = d->row_map(m);
-        if (m2>=0) {
+        if (m2 >= 0) {
             QPointF pt1 = d->coord2pix(m2, 0);
             QPointF pt2 = d->coord2pix(m2 + 1, 0);
             QRectF r = QRectF(pt1.x() - label_wid, pt1.y(), label_wid, pt2.y() - pt1.y());
@@ -211,7 +211,7 @@ void MatrixView::paintEvent(QPaintEvent* evt)
     for (int n = 0; n < N; n++) {
         int label_height = 20;
         int n2 = d->col_map(n);
-        if (n2>=0) {
+        if (n2 >= 0) {
             QPointF pt1 = d->coord2pix(M, n2);
             QPointF pt2 = d->coord2pix(M, n2 + 1);
             QRectF r = QRectF(pt1.x(), pt1.y(), pt2.x() - pt1.x(), label_height);
@@ -224,7 +224,7 @@ void MatrixView::paintEvent(QPaintEvent* evt)
     QColor col(255, 255, 220, 60);
     if (d->m_hovered_element.x() >= 0) {
         int m2 = d->row_map(d->m_hovered_element.x());
-        if (m2>=0) {
+        if (m2 >= 0) {
             QPointF pt1 = d->coord2pix(m2, 0);
             QPointF pt2 = d->coord2pix(m2 + 1, N);
             QRectF r = QRectF(pt1 - QPointF(left, 0), pt2);
@@ -234,7 +234,7 @@ void MatrixView::paintEvent(QPaintEvent* evt)
     if (d->m_hovered_element.y() >= 0) {
         int n2 = d->col_map(d->m_hovered_element.y());
         int m2 = d->row_map(d->m_hovered_element.x());
-        if ((m2>=0)&&(n2>=0)) {
+        if ((m2 >= 0) && (n2 >= 0)) {
             QPointF pt1 = d->coord2pix(0, n2);
             QPointF pt2 = d->coord2pix(m2, n2 + 1);
             QPointF pt3 = d->coord2pix(m2 + 1, n2);
@@ -274,7 +274,7 @@ void MatrixView::mouseMoveEvent(QMouseEvent* evt)
     if ((0 <= m) && (m < M) && (0 <= n) && (n < N)) {
         int m2 = d->row_map_inv(m);
         int n2 = d->col_map_inv(n);
-        if ((m2>=0)&&(n2>=0)) {
+        if ((m2 >= 0) && (n2 >= 0)) {
             d->set_hovered_element(QPoint(m2, n2));
         }
     }
@@ -301,7 +301,7 @@ void MatrixView::mousePressEvent(QMouseEvent* evt)
     if ((0 <= m) && (m < M) && (0 <= n) && (n < N)) {
         int m2 = d->row_map_inv(m);
         int n2 = d->col_map_inv(n);
-        if ((m2>=0)&&(n2>=0)) {
+        if ((m2 >= 0) && (n2 >= 0)) {
             this->setCurrentElement(QPoint(m2, n2));
         }
     }
@@ -332,8 +332,8 @@ QPointF MatrixViewPrivate::coord2pix(double m, double n)
         return QPointF(-1, -1);
     //int M = m_matrix.N1();
     //int N = m_matrix.N2();
-    int M=max_row_map()+1;
-    int N=max_col_map()+1;
+    int M = max_row_map() + 1;
+    int N = max_col_map() + 1;
     if (!(M * N))
         return QPointF(0, 0);
 
@@ -353,8 +353,8 @@ QPointF MatrixViewPrivate::pix2coord(QPointF pix)
         return QPointF(-1, -1);
     //int M = m_matrix.N1();
     //int N = m_matrix.N2();
-    int M=max_row_map()+1;
-    int N=max_col_map()+1;
+    int M = max_row_map() + 1;
+    int N = max_col_map() + 1;
     if (!(M * N))
         return QPointF(0, 0);
 
@@ -452,14 +452,16 @@ int MatrixViewPrivate::col_map(int n)
 
 int MatrixViewPrivate::row_map_inv(int m)
 {
-    if (m_perm_rows.isEmpty()) return m;
+    if (m_perm_rows.isEmpty())
+        return m;
     int m2 = m_perm_rows.indexOf(m);
     return m2;
 }
 
 int MatrixViewPrivate::col_map_inv(int n)
 {
-    if (m_perm_cols.isEmpty()) return n;
+    if (m_perm_cols.isEmpty())
+        return n;
     int n2 = m_perm_cols.indexOf(n);
     return n2;
 }
@@ -474,12 +476,14 @@ void MatrixViewPrivate::set_hovered_element(QPoint a)
 
 int MatrixViewPrivate::max_row_map()
 {
-    if (m_max_row_map==0) return m_matrix.N1()-1;
+    if (m_max_row_map == 0)
+        return m_matrix.N1() - 1;
     return m_max_row_map;
 }
 
 int MatrixViewPrivate::max_col_map()
 {
-    if (m_max_col_map==0) return m_matrix.N2()-1;
+    if (m_max_col_map == 0)
+        return m_matrix.N2() - 1;
     return m_max_col_map;
 }
