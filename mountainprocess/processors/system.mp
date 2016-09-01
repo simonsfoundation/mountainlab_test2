@@ -7,7 +7,7 @@
 			"inputs":[{"name":"input"}],
 			"outputs":[{"name":"output"}],
 			"parameters":[],
-			"exe_command":"cp $input $output"
+			"exe_command":"cp $input$ $output$"
 		},
 		{
 			"name":"copy_with_delay",
@@ -16,7 +16,7 @@
 			"inputs":[{"name":"input"}],
 			"outputs":[{"name":"output"}],
 			"parameters":[],
-			"exe_command":"$(basepath)/copy_with_delay.sh $input $output"
+			"exe_command":"$(basepath)/copy_with_delay.sh $input$ $output$"
 		}
 	]
 }

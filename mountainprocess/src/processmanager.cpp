@@ -174,21 +174,21 @@ QString ProcessManager::startProcess(const QString& processor_name, const QVaria
         {
             QStringList keys = P.inputs.keys();
             foreach (QString key, keys) {
-                exe_command.replace(QRegExp(QString("\\$%1").arg(key)), parameters[key].toString());
+                exe_command.replace(QRegExp(QString("\\$%1\\$").arg(key)), parameters[key].toString());
                 ppp += QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
             }
         }
         {
             QStringList keys = P.outputs.keys();
             foreach (QString key, keys) {
-                exe_command.replace(QRegExp(QString("\\$%1").arg(key)), parameters[key].toString());
+                exe_command.replace(QRegExp(QString("\\$%1\\$").arg(key)), parameters[key].toString());
                 ppp += QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
             }
         }
         {
             QStringList keys = P.parameters.keys();
             foreach (QString key, keys) {
-                exe_command.replace(QRegExp(QString("$%1").arg(key)), parameters[key].toString());
+                exe_command.replace(QRegExp(QString("\\$%1\\$").arg(key)), parameters[key].toString());
                 ppp += QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
             }
         }
