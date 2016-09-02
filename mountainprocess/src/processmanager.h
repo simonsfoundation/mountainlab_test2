@@ -11,6 +11,7 @@
 #include <QVariant>
 #include <QProcess>
 #include <QDateTime>
+#include <QJsonObject>
 
 struct MLParameter {
     QString name;
@@ -28,6 +29,7 @@ struct MLProcessor {
     QMap<QString, MLParameter> outputs;
     QMap<QString, MLParameter> parameters;
     QString exe_command;
+    QJsonObject spec;
 
     QString basepath;
 };

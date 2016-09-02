@@ -27,7 +27,8 @@ private slots:
     void slot_export_static_views();
     void slot_share_views_on_web();
     void slot_export_firings_file();
-    void slot_export_cluster_annotation_file();
+    void slot_export_firings_curated_file();
+    void slot_export_cluster_curation_file();
 
 private:
     MVExportControlPrivate* d;

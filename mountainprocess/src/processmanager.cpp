@@ -174,21 +174,21 @@ QString ProcessManager::startProcess(const QString& processor_name, const QVaria
         {
             QStringList keys = P.inputs.keys();
             foreach (QString key, keys) {
-                exe_command.replace(QRegExp(QString("\\$%1").arg(key)), parameters[key].toString());
+                exe_command.replace(QRegExp(QString("\\$%1\\$").arg(key)), parameters[key].toString());
                 ppp += QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
             }
         }
         {
             QStringList keys = P.outputs.keys();
             foreach (QString key, keys) {
-                exe_command.replace(QRegExp(QString("\\$%1").arg(key)), parameters[key].toString());
+                exe_command.replace(QRegExp(QString("\\$%1\\$").arg(key)), parameters[key].toString());
                 ppp += QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
             }
         }
         {
             QStringList keys = P.parameters.keys();
             foreach (QString key, keys) {
-                exe_command.replace(QRegExp(QString("$%1").arg(key)), parameters[key].toString());
+                exe_command.replace(QRegExp(QString("\\$%1\\$").arg(key)), parameters[key].toString());
                 ppp += QString("--%1=%2 ").arg(key).arg(parameters[key].toString());
             }
         }
@@ -467,6 +467,7 @@ QVariantMap ProcessManagerPrivate::resolve_file_names_in_parameters(QString proc
 MLProcessor ProcessManagerPrivate::create_processor_from_json_object(QJsonObject obj)
 {
     MLProcessor P;
+    P.spec = obj;
     P.name = obj["name"].toString();
     P.version = obj["version"].toString();
     P.description = obj["description"].toString();

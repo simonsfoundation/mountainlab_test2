@@ -84,10 +84,12 @@ QJsonObject MPDaemonInterface::getDaemonState()
     return d->get_last_daemon_state();
 }
 
+static QString daemon_message = "Open a terminal and run [mountainprocess daemon-start], and keep that terminal open. Alternatively use tmux to run the daemon in the background.";
+
 bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
 {
     if (!d->daemon_is_running()) {
-        printf("Problem in queueScript: Daemon is not running.\n");
+        qWarning() << "Problem in queueScript: Daemon is not running. " + daemon_message;
         return false;
         /*
         if (!this->start()) {
@@ -104,7 +106,7 @@ bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
 bool MPDaemonInterface::queueProcess(const MPDaemonPript& process)
 {
     if (!d->daemon_is_running()) {
-        printf("Problem in queueProcess: Daemon is not running.\n");
+        qWarning() << "Problem in queueProcess: Daemon is not running. " + daemon_message;
         return false;
         /*
         if (!this->start()) {

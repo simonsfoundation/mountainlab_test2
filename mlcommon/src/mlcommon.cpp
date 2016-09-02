@@ -609,7 +609,7 @@ QString make_temporary_output_file_name(QString processor_name, QMap<QString, QV
     return CacheManager::globalInstance()->makeLocalFile(code + "-prv-" + output_pname);
 }
 
-void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QString, QVariant> outputs, QMap<QString, QVariant> parameters)
+void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QString, QVariant> outputs, QMap<QString, QVariant> parameters, bool force_run)
 {
     QStringList args;
     args << "run-process" << processor_name;
@@ -630,6 +630,9 @@ void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QS
         foreach (QString key, keys) {
             args << QString("--%1=%2").arg(key).arg(parameters[key].toString());
         }
+    }
+    if (force_run) {
+        args << "--_force_run";
     }
     QString exe = MLUtil::mountainlabBasePath() + "/mountainprocess/bin/mountainprocess";
     qDebug() << "Running process:" << args.join(" ");
@@ -680,7 +683,8 @@ QString create_file_from_prv(QString output_name, QString checksum0, long size0,
                     args_outputs[opname2] = make_temporary_output_file_name(processor_name, args_inputs, args_parameters, opname2);
                 }
 
-                run_process(processor_name, args_inputs, args_outputs, args_parameters);
+                //should we always force_run here? (I guess so)
+                run_process(processor_name, args_inputs, args_outputs, args_parameters, true);
                 QString output_path = args_outputs[opname].toString();
                 if (!QFile::exists(output_path)) {
                     qWarning() << "Output file does not exist after running process: " + output_path;

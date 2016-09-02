@@ -604,6 +604,14 @@ QVector<int> do_branch_cluster_v2b(ClipsGroup clips, const Branch_Cluster_V2_Opt
         return labels;
     }
     else {
+        if (opts.shell_increment == 0) {
+            //in this case we are not going to increment at all
+            QVector<int> labels;
+            for (long i = 0; i < L; i++)
+                labels << 1;
+            return labels;
+        }
+
         //otherwise, we have only one cluster
         //so we need to increase the threshold to see if we can get things to split at higher amplitude
         double abs_peak_threshold = 0;

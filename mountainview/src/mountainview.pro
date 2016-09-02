@@ -114,8 +114,8 @@ mvexportcontrol.cpp mvgeneralcontrol.cpp mvopenviewscontrol.cpp
 
 INCLUDEPATH += guides
 VPATH += guides
-HEADERS += clusterannotationguide.h
-SOURCES += clusterannotationguide.cpp
+HEADERS += clustercurationguide.h
+SOURCES += clustercurationguide.cpp
 
 INCLUDEPATH += msv/contextmenuhandlers
 VPATH += msv/contextmenuhandlers

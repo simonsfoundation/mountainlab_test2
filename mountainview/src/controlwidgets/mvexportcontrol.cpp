@@ -56,8 +56,13 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         flayout->addWidget(B);
     }
     {
-        QPushButton* B = new QPushButton("Export cluster_annotation.mda");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_cluster_annotation_file()));
+        QPushButton* B = new QPushButton("Export firings.curated.mda");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_curated_file()));
+        flayout->addWidget(B);
+    }
+    {
+        QPushButton* B = new QPushButton("Export cluster_curation.mda");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_cluster_curation_file()));
         flayout->addWidget(B);
     }
 
@@ -171,7 +176,74 @@ void MVExportControl::slot_export_firings_file()
     export_file(firings.makePath(), fname, true);
 }
 
-void MVExportControl::slot_export_cluster_annotation_file()
+QString get_local_path_of_firings_file_or_current_path(const DiskReadMda& X)
+{
+    QString path = X.makePath();
+    qDebug() << ":::::::::::::::::::::::" << path << X.N1() << X.N2();
+    if (!path.isEmpty()) {
+        if (!path.startsWith("http:")) {
+            if (QFile::exists(path)) {
+                return QFileInfo(path).path();
+            }
+        }
+    }
+    return QDir::currentPath();
+}
+
+void MVExportControl::slot_export_firings_curated_file()
+{
+
+    QString default_dir = get_local_path_of_firings_file_or_current_path(mvContext()->firings());
+    QString fname = QFileDialog::getSaveFileName(this, "Export cluster curation array", default_dir + "/firings.curated.mda", "*.mda");
+    if (fname.isEmpty())
+        return;
+    if (QFileInfo(fname).suffix() != "mda")
+        fname = fname + ".mda";
+
+    DiskReadMda F = mvContext()->firings();
+
+    QVector<int> labels;
+    for (long i = 0; i < F.N2(); i++) {
+        int label = F.value(2, i);
+        labels << label;
+    }
+
+    int K = MLCompute::max(labels);
+
+    QSet<int> accepted_clusters;
+    QMap<int, int> merge_map;
+    for (int k = 1; k <= K; k++) {
+        if (!mvContext()->clusterTags(k).contains("rejected")) {
+            accepted_clusters.insert(k);
+            merge_map[k] = mvContext()->clusterMerge().representativeLabel(k);
+        }
+    }
+
+    QVector<long> inds_to_use;
+    for (long i = 0; i < F.N2(); i++) {
+        int label = F.value(2, i);
+        if (accepted_clusters.contains(label)) {
+            inds_to_use << i;
+        }
+    }
+
+    Mda F2(F.N1(), inds_to_use.count());
+    for (long j = 0; j < inds_to_use.count(); j++) {
+        long i = inds_to_use[j];
+        for (int a = 0; a < F.N1(); a++) {
+            F2.set(F.value(a, i), a, j);
+        }
+        int label = F.value(2, i);
+        label = merge_map[label];
+        F2.setValue(label, 2, j);
+    }
+
+    if (!F2.write64(fname)) {
+        QMessageBox::warning(0, "Problem exporting firings curated file", "Unable to write file: " + fname);
+    }
+}
+
+void MVExportControl::slot_export_cluster_curation_file()
 {
     //first row is the cluster number
     //second row is 0 if not accepted, 1 if accepted
@@ -191,29 +263,29 @@ void MVExportControl::slot_export_cluster_annotation_file()
     QList<int> clusters = clusters_set.toList();
     qSort(clusters);
     int num = clusters.count();
-    Mda cluster_annotation(3, num);
+    Mda cluster_curation(3, num);
     for (int i = 0; i < num; i++) {
         int accepted = 0;
         if (mvContext()->clusterTags(clusters[i]).contains("accepted"))
             accepted = 1;
         int merge_label = mvContext()->clusterMerge().representativeLabel(clusters[i]);
-        cluster_annotation.setValue(clusters[i], 0, i);
-        cluster_annotation.setValue(accepted, 1, i);
-        cluster_annotation.setValue(merge_label, 2, i);
+        cluster_curation.setValue(clusters[i], 0, i);
+        cluster_curation.setValue(accepted, 1, i);
+        cluster_curation.setValue(merge_label, 2, i);
     }
 
     //QSettings settings("SCDA", "MountainView");
     //QString default_dir = settings.value("default_export_dir", "").toString();
     QString default_dir = QDir::currentPath();
-    QString fname = QFileDialog::getSaveFileName(this, "Export cluster annotation array", default_dir, "*.mda");
+    QString fname = QFileDialog::getSaveFileName(this, "Export cluster curation array", default_dir, "*.mda");
     if (fname.isEmpty())
         return;
     //settings.setValue("default_export_dir", QFileInfo(fname).path());
     if (QFileInfo(fname).suffix() != "mda")
         fname = fname + ".mda";
 
-    if (!cluster_annotation.write32(fname)) {
-        QMessageBox::warning(0, "Problem exporting cluster annotation array", "Unable to write file: " + fname);
+    if (!cluster_curation.write32(fname)) {
+        QMessageBox::warning(0, "Problem exporting cluster curation array", "Unable to write file: " + fname);
     }
 }
 

@@ -176,6 +176,8 @@ QVector<int> find_events_to_use(const QVector<double>& times, const QVector<doub
 
 Mda split_into_shells(const Mda& firings, Define_Shells_Opts opts)
 {
+    if (!opts.shell_increment)
+        return firings;
     //The input is firings the output is the same except with new labels corresponding to subclusters
     QVector<int> labels, labels_new;
     for (long j = 0; j < firings.N2(); j++) {

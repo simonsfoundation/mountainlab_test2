@@ -84,6 +84,7 @@ struct MPDaemonPript {
         prtype = ScriptType;
         num_threads_requested = 1;
         memory_gb_requested = 1;
+        force_run = false;
     }
     PriptType prtype;
     QString id;
@@ -96,6 +97,7 @@ struct MPDaemonPript {
     QString error;
     QJsonObject runtime_results;
     qint64 parent_pid;
+    bool force_run;
     QDateTime timestamp_queued;
     QDateTime timestamp_started;
     QDateTime timestamp_finished;
