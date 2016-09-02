@@ -29,6 +29,7 @@
 #include <math.h>
 #include "mlcommon.h"
 #include "mvmisc.h"
+#include "get_sort_indices.h"
 
 struct ClusterData {
     ClusterData()
@@ -136,6 +137,8 @@ public:
     bool m_stdev_shading;
     bool m_zoomed_out_once;
 
+    QComboBox* m_sort_order_chooser;
+
     QList<ClusterView*> m_views;
 
     void compute_total_time();
@@ -151,6 +154,8 @@ public:
     void export_image();
     void toggle_stdev_shading();
     void shift_select_clusters_between(int k1, int k2);
+    void sort_cluster_data(QList<ClusterData>& cluster_data);
+    double compute_sort_score(const ClusterData& CD);
 
     static QList<ClusterData> merge_cluster_data(const ClusterMerge& CM, const QList<ClusterData>& CD);
 };
@@ -210,6 +215,15 @@ ClusterDetailView::ClusterDetailView(MVContext* context)
         A->setProperty("action_type", "");
         QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_export_static_view()));
         this->addAction(A);
+    }
+
+    {
+        QComboBox* CB = new QComboBox;
+        CB->addItem("Default order", "default");
+        CB->addItem("Quality order", "quality");
+        d->m_sort_order_chooser = CB;
+        this->addToolbarControl(CB);
+        QObject::connect(CB, SIGNAL(currentIndexChanged(int)), this, SLOT(slot_update_sort_order()));
     }
 
     recalculate();
@@ -621,6 +635,11 @@ void ClusterDetailView::slot_export_static_view()
     }
 }
 
+void ClusterDetailView::slot_update_sort_order()
+{
+    this->update();
+}
+
 void ClusterDetailViewPrivate::compute_total_time()
 {
     m_total_time_sec = q->mvContext()->currentTimeseries().N2() / q->mvContext()->sampleRate();
@@ -916,6 +935,8 @@ void ClusterDetailViewPrivate::do_paint(QPainter& painter, int W_in, int H_in)
         cluster_data_merged = m_cluster_data;
     }
 
+    sort_cluster_data(cluster_data_merged);
+
     int old_view_count = m_views.count();
 
     qDeleteAll(m_views);
@@ -1116,6 +1137,68 @@ QPointF ClusterView::template_coord2pix(int m, double t, double val)
     float x0 = m_template_rect.x() + margx + pctx * (m_template_rect.width() - margx * 2);
     float y0 = m_template_rect.y() + margy + pcty * (m_template_rect.height() - margy * 2);
     return QPointF(x0, y0);
+}
+
+void ClusterDetailViewPrivate::sort_cluster_data(QList<ClusterData>& CD)
+{
+    QList<ClusterData> ret;
+    QVector<double> sort_scores;
+    for (int i = 0; i < CD.count(); i++) {
+        sort_scores << compute_sort_score(CD[i]);
+    }
+    QList<long> inds = get_sort_indices(sort_scores);
+    for (int i = 0; i < inds.count(); i++) {
+        ret << CD[inds[i]];
+    }
+    CD = ret;
+}
+
+double compute_centeredness_score(const Mda32& template0)
+{
+    int M = template0.N1();
+    int T = template0.N2();
+    QVector<double> tvals;
+    QVector<double> yvals;
+    for (int t = 0; t < T; t++) {
+        for (int m = 0; m < M; m++) {
+            yvals << qAbs(template0.value(m, t));
+            tvals << t;
+        }
+    }
+    double sum_yt = 0, sum_y = 0;
+    for (long i = 0; i < tvals.count(); i++) {
+        sum_yt += yvals[i] * tvals[i];
+        sum_y += yvals[i];
+    }
+    if (sum_y) {
+        double center_of_mass = sum_yt / sum_y;
+        double score = 1 - qAbs((center_of_mass - T / 2) / (T / 2));
+        return score;
+    }
+    else
+        return 0;
+}
+
+double ClusterDetailViewPrivate::compute_sort_score(const ClusterData& CD)
+{
+    double score = 0;
+
+    QString score_mode = m_sort_order_chooser->currentData().toString();
+
+    if (score_mode == "quality") {
+        //norm of signal divided by norm of noise
+        double norm1 = MLCompute::norm(CD.template0.totalSize(), CD.template0.constDataPtr());
+        double norm2 = MLCompute::norm(CD.stdev0.totalSize(), CD.stdev0.constDataPtr());
+        if (norm2)
+            score += norm1 / norm2;
+
+        score += compute_centeredness_score(CD.template0);
+
+        return -score;
+    }
+    else {
+        return 0;
+    }
 }
 
 QColor ClusterView::get_firing_rate_text_color(double rate)
