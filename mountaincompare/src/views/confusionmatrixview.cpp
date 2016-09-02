@@ -423,7 +423,7 @@ void ConfusionMatrixViewPrivate::update_permutations()
             }
         }
         for (int i = 0; i < N - 1; i++) {
-            if (perm_cols[i] == -1) {
+            if ((perm_cols[i] == -1) || (perm_cols[i] >= N)) {
                 for (int j = 0; j < N - 1; j++) {
                     if (!perm_cols.contains(j)) {
                         perm_cols[i] = j;
@@ -441,7 +441,7 @@ void ConfusionMatrixViewPrivate::update_permutations()
 
         QVector<double> diag_entries(N - 1);
         for (int n = 0; n < N - 1; n++) {
-            if (m_optimal_label_map.indexOf(n + 1) >= 0) {
+            if (m_optimal_label_map.indexOf(n + 1) >= 0) { //something maps to it
                 diag_entries[n] = A.value(m_optimal_label_map.indexOf(n + 1), n);
             }
             else {
@@ -461,7 +461,7 @@ void ConfusionMatrixViewPrivate::update_permutations()
             }
         }
         for (int i = 0; i < M - 1; i++) {
-            if (perm_rows[i] == -1) {
+            if ((perm_rows[i] == -1) || (perm_rows[i] >= M)) {
                 for (int j = 0; j < M - 1; j++) {
                     if (!perm_rows.contains(j)) {
                         perm_rows[i] = j;

@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+
+function print_usage() {
+	console.log ('boxer_compare [alg1,[alg2]] [ds1,[ds2]] --firings1_name=[] --firings2_name=[] --outpath=[output(default)]');
+}
+
+var fs=require('fs');
+var common=require(__dirname+'/common.node.js');
+
+var CLP=new common.CLParams(process.argv);
+
+var algnames=CLP.unnamedParameters[0];
+var dsnames=CLP.unnamedParameters[1];
+var outpath=CLP.namedParameters.outpath||'output';
+var alglist_path='alglist.txt';
+var dslist_path='dslist.txt';
+var firings1_name,firings2_name;
+if (CLP.namedParameters.firings_name) {
+	firings1_name=CLP.namedParameters.firings_name;
+	firings2_name=CLP.namedParameters.firings_name;
+}
+firings1_name=CLP.namedParameters.firings1_name||firings1_name||'firings.mda';
+firings2_name=CLP.namedParameters.firings2_name||firings2_name||'firings.mda';
+
+algnames=algnames.split(',');
+dsnames=dsnames.split(',');
+
+if (algnames.length==1) algnames.push(algnames[0]);
+if (dsnames.length==1) dsnames.push(dsnames[0]);
+
+if ((algnames.length!=2)||(dsnames.length!=2)) {
+	print_usage();
+	process.exit(-1);
+}
+
+var algname1=algnames[0],algname2=algnames[1];
+var dsname1=dsnames[0],dsname2=dsnames[1];
+
+if ((!algname1)||(!algname2)||(!dsname1)||(!dsname2)||(!outpath)||(!alglist_path)||(!dslist_path)||(!firings1_name)||(!firings2_name)) {
+	console.log(algnames);
+	console.log(dsnames);
+	print_usage();
+	process.exit(-1);
+}
+
+common.mkdir_safe(outpath);
+var basepath=__dirname+'/../../../../mountainsort_experiments';
+
+var algs=common.read_algs_from_text_file(alglist_path);
+var datasets=common.read_datasets_from_text_file(dslist_path);
+
+console.log(algs);
+console.log(datasets);
+
+var A1=common.find_alg(algs,algname1);
+var A2=common.find_alg(algs,algname2);
+var D1=common.find_ds(datasets,dsname1);
+var D2=common.find_ds(datasets,dsname2);
+
+open_compare(A1,D1,A2,D2);
+
+common.wait_for_system_calls_to_finish(function() {
+
+});
+
+function open_compare(Alg1,Ds1,Alg2,Ds2,callback) {
+	var outpath1=outpath+'/'+Alg1.name+'-'+Ds1.name;
+	var outpath2=outpath+'/'+Alg2.name+'-'+Ds2.name;
+
+	var samplerate=30000; //fix this
+
+	var cmd='mountaincompare';
+	var args='';
+	args+=' --firings1='+outpath1+'/'+firings1_name;
+	args+=' --firings2='+outpath2+'/'+firings2_name;
+	args+=' --raw='+outpath1+'/pre0.mda.prv';
+	args+=' --filt='+outpath1+'/pre1b.mda.prv';
+	args+=' --pre='+outpath1+'/pre2.mda.prv';
+	args+=' --samplerate='+samplerate;
+	
+	args=args.split(' ');
+	common.make_system_call(cmd,args,callback);
+}
+
+

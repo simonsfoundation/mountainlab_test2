@@ -22,13 +22,11 @@ QList<long> fit_stage_kernel_old(Mda& X, Mda& templates, QVector<double>& times,
 
 bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, const QString& firings_out_path, const fit_stage_opts& opts)
 {
-    qDebug() << __FILE__ << __LINE__;
     //Just for timing things
     QTime timer_total;
     timer_total.start();
     QMap<QString, long> elapsed_times;
 
-    qDebug() << __FILE__ << __LINE__;
     //The timeseries data and the dimensions
     DiskReadMda X(timeseries_path);
     long M = X.N1();
@@ -40,7 +38,6 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     firingsA.read(firings_path);
     Mda firings = sort_firings_by_time(firingsA);
 
-    qDebug() << __FILE__ << __LINE__;
     //These are the options for splitting into shells
     Define_Shells_Opts define_shells_opts;
     define_shells_opts.min_shell_size = opts.min_shell_size;
@@ -49,11 +46,9 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
     //Here we split into shells to handle amplitude variation
     Mda firings_split = split_into_shells(firings, define_shells_opts);
 
-    qDebug() << __FILE__ << __LINE__;
     //These are the templates corresponding to the sub-clusters (after shell splitting)
     Mda templates = compute_templates_0(X, firings_split, T); //MxTxK (wrong: MxNxK)
 
-    qDebug() << __FILE__ << __LINE__;
     //L is the number of events. Accumulate vectors of times and labels for convenience
     long L = firings.N2();
     QVector<double> times;
@@ -71,7 +66,6 @@ bool fit_stage_new(const QString& timeseries_path, const QString& firings_path, 
         overlap_size = 0;
     }
 
-    qDebug() << __FILE__ << __LINE__;
     QList<long> inds_to_use;
 
     printf("Starting fit stage\n");

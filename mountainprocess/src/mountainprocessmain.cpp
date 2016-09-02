@@ -128,6 +128,13 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, NULL);
 
+    QString working_path = CLP.named_parameters.value("_working_path").toString();
+    if (!working_path.isEmpty()) {
+        if (!QDir::setCurrent(working_path)) {
+            qWarning() << "Unable to set working path to: " << working_path;
+        }
+    }
+
     if (arg1 == "list-processors") { //Provide a human-readable list of the available processors
         if (!initialize_process_manager(config_fname, config)) { //load the processor plugins etc
             //log_end();
@@ -680,6 +687,7 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
     }
 
     PP.force_run = CLP.named_parameters.contains("_force_run");
+    PP.working_path = QDir::currentPath();
 
     MPDaemonInterface X;
     if (prtype == ScriptType) {

@@ -249,7 +249,9 @@ void MatrixView::paintEvent(QPaintEvent* evt)
 
     //current element
     if ((d->m_current_element.x() >= 0) && (d->m_current_element.y() >= 0)) {
-        QRectF r = d->get_entry_rect(d->m_current_element.x(), d->m_current_element.y());
+        int m = d->m_current_element.x();
+        int n = d->m_current_element.y();
+        QRectF r = d->get_entry_rect(m, n);
         QPen pen(QBrush(QColor(255, 200, 180)), 3);
         painter.setPen(pen);
         painter.drawRect(r);
@@ -291,18 +293,15 @@ void MatrixView::leaveEvent(QEvent*)
 
 void MatrixView::mousePressEvent(QMouseEvent* evt)
 {
-    int M = d->m_matrix.N1();
-    int N = d->m_matrix.N2();
-
     QPointF pos = evt->pos();
     QPointF coord = d->pix2coord(pos);
-    int m = (int)coord.x();
-    int n = (int)coord.y();
-    if ((0 <= m) && (m < M) && (0 <= n) && (n < N)) {
-        int m2 = d->row_map_inv(m);
-        int n2 = d->col_map_inv(n);
-        if ((m2 >= 0) && (n2 >= 0)) {
-            this->setCurrentElement(QPoint(m2, n2));
+    int m2 = (int)coord.x();
+    int n2 = (int)coord.y();
+    if ((0 <= m2) && (m2 <= d->max_row_map()) && (0 <= n2) && (n2 <= d->max_col_map())) {
+        int m = d->row_map_inv(m2);
+        int n = d->col_map_inv(n2);
+        if ((m >= 0) && (n >= 0)) {
+            this->setCurrentElement(QPoint(m, n));
         }
     }
     else {
@@ -312,11 +311,15 @@ void MatrixView::mousePressEvent(QMouseEvent* evt)
 
 QRectF MatrixViewPrivate::get_entry_rect(int m, int n)
 {
-    m = row_map(m);
-    n = col_map(n);
-    QPointF pt1 = coord2pix(m, n);
-    QPointF pt2 = coord2pix(m + 1, n + 1) + QPointF(1, 1);
-    return QRectF(pt1, pt2);
+    int m2 = row_map(m);
+    int n2 = col_map(n);
+    if ((m2 >= 0) && (n2 >= 0)) {
+        QPointF pt1 = coord2pix(m2, n2);
+        QPointF pt2 = coord2pix(m2 + 1, n2 + 1) + QPointF(1, 1);
+        return QRectF(pt1, pt2);
+    }
+    else
+        return QRectF();
 }
 
 QPointF MatrixViewPrivate::coord2pix(double m, double n)
