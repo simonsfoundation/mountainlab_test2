@@ -74,7 +74,7 @@ public:
     MVAbstractViewFactory* viewFactoryById(const QString& id) const;
     MVAbstractView* openView(MVAbstractViewFactory* factory);
 
-    //ClusterAnnotationGuide* m_cluster_annotation_guide;
+    //ClustercurationGuide* m_cluster_curation_guide;
     //GuideV1* m_guide_v1;
     //GuideV2* m_guide_v2;
 
@@ -102,7 +102,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
     QToolBar* main_toolbar = new QToolBar;
 
     /*
-    d->m_cluster_annotation_guide = new ClusterAnnotationGuide(d->m_context, this);
+    d->m_cluster_curation_guide = new ClustercurationGuide(d->m_context, this);
     d->m_guide_v1 = new GuideV1(d->m_context, this);
     d->m_guide_v2 = new GuideV2(d->m_context, this);
     */
@@ -127,9 +127,9 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
                 QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportFiringsFile()));
             }
             {
-                QAction* A = new QAction("Export cluster annotation file", this);
+                QAction* A = new QAction("Export cluster curation file", this);
                 menu->addAction(A);
-                QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportClusterAnnotationFile()));
+                QObject::connect(A, SIGNAL(triggered(bool)), this, SIGNAL(signalExportClustercurationFile()));
             }
             {
                 QAction* A = new QAction("Export static views (.smv)", this);
@@ -184,9 +184,9 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
             QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_guide_v1()));
         }
         {
-            QAction* A = new QAction("Cluster annotation guide", this);
+            QAction* A = new QAction("Cluster curation guide", this);
             menu->addAction(A);
-            QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_cluster_annotation_guide()));
+            QObject::connect(A, SIGNAL(triggered(bool)), this, SLOT(slot_cluster_curation_guide()));
         }
         */
     }
@@ -245,7 +245,7 @@ MVMainWindow::MVMainWindow(MVContext* context, QWidget* parent)
 
 MVMainWindow::~MVMainWindow()
 {
-    //delete d->m_cluster_annotation_guide;
+    //delete d->m_cluster_curation_guide;
     delete d;
 }
 
@@ -432,10 +432,10 @@ void MVMainWindow::slot_pop_out_widget()
     d->m_tabber->popOutWidget(W);
 }
 
-void MVMainWindow::slot_cluster_annotation_guide()
+void MVMainWindow::slot_cluster_curation_guide()
 {
-    //d->m_cluster_annotation_guide->show();
-    //d->m_cluster_annotation_guide->raise();
+    //d->m_cluster_curation_guide->show();
+    //d->m_cluster_curation_guide->raise();
 }
 
 void MVMainWindow::slot_guide_v1()

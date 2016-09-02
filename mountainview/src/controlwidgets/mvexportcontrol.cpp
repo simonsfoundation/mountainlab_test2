@@ -56,13 +56,13 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         flayout->addWidget(B);
     }
     {
-        QPushButton* B = new QPushButton("Export firings.annotated.mda");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_annotated_file()));
+        QPushButton* B = new QPushButton("Export firings.curated.mda");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_curated_file()));
         flayout->addWidget(B);
     }
     {
-        QPushButton* B = new QPushButton("Export cluster_annotation.mda");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_cluster_annotation_file()));
+        QPushButton* B = new QPushButton("Export cluster_curation.mda");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_cluster_curation_file()));
         flayout->addWidget(B);
     }
 
@@ -189,11 +189,11 @@ QString get_local_path_of_firings_file_or_current_path(const DiskReadMda& X)
     return QDir::currentPath();
 }
 
-void MVExportControl::slot_export_firings_annotated_file()
+void MVExportControl::slot_export_firings_curated_file()
 {
 
     QString default_dir = get_local_path_of_firings_file_or_current_path(mvContext()->firings());
-    QString fname = QFileDialog::getSaveFileName(this, "Export cluster annotation array", default_dir + "/firings.annotated.mda", "*.mda");
+    QString fname = QFileDialog::getSaveFileName(this, "Export cluster curation array", default_dir + "/firings.curated.mda", "*.mda");
     if (fname.isEmpty())
         return;
     if (QFileInfo(fname).suffix() != "mda")
@@ -238,11 +238,11 @@ void MVExportControl::slot_export_firings_annotated_file()
     }
 
     if (!F2.write64(fname)) {
-        QMessageBox::warning(0, "Problem exporting firings annotated file", "Unable to write file: " + fname);
+        QMessageBox::warning(0, "Problem exporting firings curated file", "Unable to write file: " + fname);
     }
 }
 
-void MVExportControl::slot_export_cluster_annotation_file()
+void MVExportControl::slot_export_cluster_curation_file()
 {
     //first row is the cluster number
     //second row is 0 if not accepted, 1 if accepted
@@ -262,29 +262,29 @@ void MVExportControl::slot_export_cluster_annotation_file()
     QList<int> clusters = clusters_set.toList();
     qSort(clusters);
     int num = clusters.count();
-    Mda cluster_annotation(3, num);
+    Mda cluster_curation(3, num);
     for (int i = 0; i < num; i++) {
         int accepted = 0;
         if (mvContext()->clusterTags(clusters[i]).contains("accepted"))
             accepted = 1;
         int merge_label = mvContext()->clusterMerge().representativeLabel(clusters[i]);
-        cluster_annotation.setValue(clusters[i], 0, i);
-        cluster_annotation.setValue(accepted, 1, i);
-        cluster_annotation.setValue(merge_label, 2, i);
+        cluster_curation.setValue(clusters[i], 0, i);
+        cluster_curation.setValue(accepted, 1, i);
+        cluster_curation.setValue(merge_label, 2, i);
     }
 
     //QSettings settings("SCDA", "MountainView");
     //QString default_dir = settings.value("default_export_dir", "").toString();
     QString default_dir = QDir::currentPath();
-    QString fname = QFileDialog::getSaveFileName(this, "Export cluster annotation array", default_dir, "*.mda");
+    QString fname = QFileDialog::getSaveFileName(this, "Export cluster curation array", default_dir, "*.mda");
     if (fname.isEmpty())
         return;
     //settings.setValue("default_export_dir", QFileInfo(fname).path());
     if (QFileInfo(fname).suffix() != "mda")
         fname = fname + ".mda";
 
-    if (!cluster_annotation.write32(fname)) {
-        QMessageBox::warning(0, "Problem exporting cluster annotation array", "Unable to write file: " + fname);
+    if (!cluster_curation.write32(fname)) {
+        QMessageBox::warning(0, "Problem exporting cluster curation array", "Unable to write file: " + fname);
     }
 }
 

@@ -1,4 +1,4 @@
-#include "clusterannotationguide.h"
+#include "clustercurationguide.h"
 
 #include <QLabel>
 #include <QVBoxLayout>
@@ -6,9 +6,9 @@
 #include <QMessageBox>
 #include "flowlayout.h"
 
-class ClusterAnnotationGuidePrivate {
+class ClusterCurationGuidePrivate {
 public:
-    ClusterAnnotationGuide* q;
+    ClusterCurationGuide* q;
     MVContext* m_context;
     MVMainWindow* m_main_window;
 
@@ -21,9 +21,9 @@ public:
     void show_instructions(QString title, QString instructions);
 };
 
-ClusterAnnotationGuide::ClusterAnnotationGuide(MVContext* mvcontext, MVMainWindow* mw)
+ClusterCurationGuide::ClusterCurationGuide(MVContext* mvcontext, MVMainWindow* mw)
 {
-    d = new ClusterAnnotationGuidePrivate;
+    d = new ClusterCurationGuidePrivate;
     d->q = this;
     d->m_context = mvcontext;
     d->m_main_window = mw;
@@ -40,12 +40,12 @@ ClusterAnnotationGuide::ClusterAnnotationGuide(MVContext* mvcontext, MVMainWindo
     this->resize(500, 600);
 }
 
-ClusterAnnotationGuide::~ClusterAnnotationGuide()
+ClusterCurationGuide::~ClusterCurationGuide()
 {
     delete d;
 }
 
-void ClusterAnnotationGuide::slot_button_clicked()
+void ClusterCurationGuide::slot_button_clicked()
 {
     QString action = sender()->property("action").toString();
     if (action == "open_view") {
@@ -56,12 +56,12 @@ void ClusterAnnotationGuide::slot_button_clicked()
     }
 }
 
-QWizardPage* ClusterAnnotationGuidePrivate::make_intro_page()
+QWizardPage* ClusterCurationGuidePrivate::make_intro_page()
 {
     QWizardPage* page = new QWizardPage;
-    page->setTitle("Cluster Annotation Guide");
+    page->setTitle("Cluster Curation Guide");
 
-    QLabel* label = new QLabel("This is the cluster annotation guide. It is under development.");
+    QLabel* label = new QLabel("This is the cluster curation guide. It is under development.");
     label->setWordWrap(true);
 
     QVBoxLayout* layout = new QVBoxLayout;
@@ -71,7 +71,7 @@ QWizardPage* ClusterAnnotationGuidePrivate::make_intro_page()
     return page;
 }
 
-QWizardPage* ClusterAnnotationGuidePrivate::make_noise_page()
+QWizardPage* ClusterCurationGuidePrivate::make_noise_page()
 {
     QWizardPage* page = new QWizardPage;
     page->setTitle("Reject clusters too close to noise");
@@ -98,7 +98,7 @@ QWizardPage* ClusterAnnotationGuidePrivate::make_noise_page()
     return page;
 }
 
-QAbstractButton* ClusterAnnotationGuidePrivate::make_instructions_button(QString text, QString instructions)
+QAbstractButton* ClusterCurationGuidePrivate::make_instructions_button(QString text, QString instructions)
 {
     QPushButton* B = new QPushButton(text);
     B->setProperty("action", "show_instructions");
@@ -107,7 +107,7 @@ QAbstractButton* ClusterAnnotationGuidePrivate::make_instructions_button(QString
     return B;
 }
 
-QAbstractButton* ClusterAnnotationGuidePrivate::make_open_view_button(QString text, QString view_id)
+QAbstractButton* ClusterCurationGuidePrivate::make_open_view_button(QString text, QString view_id)
 {
     QPushButton* B = new QPushButton(text);
     B->setProperty("action", "open_view");
@@ -116,7 +116,7 @@ QAbstractButton* ClusterAnnotationGuidePrivate::make_open_view_button(QString te
     return B;
 }
 
-void ClusterAnnotationGuidePrivate::show_instructions(QString title, QString instructions)
+void ClusterCurationGuidePrivate::show_instructions(QString title, QString instructions)
 {
     QMessageBox::information(q, title, instructions);
 }

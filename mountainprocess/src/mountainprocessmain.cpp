@@ -788,7 +788,7 @@ QString get_daemon_state_summary(const QJsonObject& state)
         ret += "Daemon is running.\n";
     }
     else {
-        ret += "Daemon is NOT running\n";
+        ret += "Daemon is NOT running.\n";
         return ret;
     }
     long num_running = 0;
