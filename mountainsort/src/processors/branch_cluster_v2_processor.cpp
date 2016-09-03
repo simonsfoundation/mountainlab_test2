@@ -20,6 +20,7 @@ branch_cluster_v2_Processor::branch_cluster_v2_Processor()
     this->setRequiredParameters("detect_interval");
     this->setOptionalParameters("num_pca_representatives", "consolidation_factor");
     this->setOptionalParameters("num_threads", "num_features2");
+    this->setOptionalParameters("isocut_threshold");
 }
 
 branch_cluster_v2_Processor::~branch_cluster_v2_Processor()
@@ -50,6 +51,7 @@ bool branch_cluster_v2_Processor::run(const QMap<QString, QVariant>& params)
     opts.detect_interval = params["detect_interval"].toInt();
     opts.num_pca_representatives = (long)params.value("num_pca_representatives", 5000).toDouble();
     opts.consolidation_factor = params.value("consolidation_factor", 0.9).toDouble();
+    opts.isocut_threshold = params.value("isocut_threshold", 1.5).toDouble();
 
     int num_threads = params.value("num_threads", 0).toInt();
     if (num_threads > 0) {

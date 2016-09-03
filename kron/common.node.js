@@ -4,6 +4,11 @@ var common=exports;
 var fs=require('fs');
 var child_process=require('child_process');
 
+//use > npm install ini
+var ini=require('ini');
+
+var mountainlab_config=ini.parse(fs.readFileSync(__dirname+'/../mountainlab.ini','utf8'));
+
 exports.read_algs_from_text_file=function(file_path) {
 	var algs=[];
 	{
@@ -28,7 +33,7 @@ exports.read_algs_from_text_file=function(file_path) {
 		}
 	}
 	return algs;
-}
+};
 
 exports.read_datasets_from_text_file=function(file_path) {
 	var datasets=[];
@@ -69,6 +74,35 @@ exports.find_ds=function(datasets,dsname) {
 	return null;
 };
 
+exports.find_dataset_folder=function(folder) {
+	var dataset_paths=mountainlab_config.kron.dataset_paths.split(';');
+	console.log('@@@@@@@@@@@@@@@@@@@@2');
+	console.log(dataset_paths);
+	for (var i in dataset_paths) {
+		var p=resolve_from_mountainlab(dataset_paths[i]+'/'+folder);
+		if (fs.existsSync(p)) {
+			return p;
+		}
+	}
+	return null;
+};
+
+exports.find_algorithm_script=function(script_path) {
+	var algorithm_paths=mountainlab_config.kron.algorithm_paths.split(';');
+	for (var i in algorithm_paths) {
+		var p=resolve_from_mountainlab(algorithm_paths[i]+'/'+script_path);
+		if (fs.existsSync(p)) {
+			return p;
+		}
+	}
+	return null;
+};
+
+function resolve_from_mountainlab(path) {
+	if (path.indexOf('/')===0) return path; //absolute
+	else return __dirname+'/../'+path; //relative
+}
+
 exports.CLParams=function(argv) {
 	this.unnamedParameters=[];
 	this.namedParameters={};
@@ -76,7 +110,7 @@ exports.CLParams=function(argv) {
 	var args=argv.slice(2);
 	for (var i=0; i<args.length; i++) {
 		var arg0=args[i];
-		if (arg0.indexOf('--')==0) {
+		if (arg0.indexOf('--')===0) {
 			arg0=arg0.slice(2);
 			var ind=arg0.indexOf('=');
 			if (ind>=0) {
@@ -91,7 +125,7 @@ exports.CLParams=function(argv) {
 			this.unnamedParameters.push(arg0);
 		}
 	}
-}
+};
 
 exports.contains_alg=function(algnames,alg) {
 	if (algnames=='all') return true;
@@ -101,7 +135,7 @@ exports.contains_alg=function(algnames,alg) {
 			return true;
 	}
 	return false;
-}
+};
 
 exports.contains_ds=function(dsnames,ds) {
 	if (dsnames=='all') return true;
@@ -111,7 +145,7 @@ exports.contains_ds=function(dsnames,ds) {
 			return true;
 	}
 	return false;
-}
+};
 
 
 exports.mkdir_safe=function(path) {
@@ -121,17 +155,17 @@ exports.mkdir_safe=function(path) {
 	catch (err) {
 
 	}
-}
+};
 
 exports.read_text_file=function(path) {
 	return fs.readFileSync(path,'utf8');
-}
+};
 
 exports.copy_file_sync=function(src,dst) {
 	if (!fs.existsSync(src)) return;
 	var data=fs.readFileSync(src);
 	fs.writeFileSync(dst,data);
-}
+};
 
 var s_num_system_calls_running=0;
 exports.make_system_call=function(cmd,args,callback) {
@@ -165,7 +199,7 @@ exports.make_system_call=function(cmd,args,callback) {
 exports.wait_for_system_calls_to_finish=function(callback) {
 	setTimeout(check_it,100);
 	function check_it() {
-		if (s_num_system_calls_running==0) {
+		if (s_num_system_calls_running===0) {
 			callback();
 		}
 		else {
@@ -175,7 +209,7 @@ exports.wait_for_system_calls_to_finish=function(callback) {
 };
 
 exports.transpose_matrix=function(X) {
-	if (X.length==0) return X;
+	if (X.length===0) return X;
 	var Y=[];
 	for (var i in X[0]) {
 		Y.push([]);
@@ -186,7 +220,7 @@ exports.transpose_matrix=function(X) {
 		}
 	}
 	return Y;
-}
+};
 
 exports.read_csv_matrix=function(path) {
 	var ret=[];
@@ -203,7 +237,7 @@ exports.read_csv_matrix=function(path) {
 		}
 	}
 	return common.transpose_matrix(ret); //this is because of a bad decision I made
-}
+};
 
 exports.read_csv_vector=function(path) {
 	var X=common.read_csv_matrix(path);
@@ -214,14 +248,14 @@ exports.read_csv_vector=function(path) {
 		}
 	}
 	return Y;
-}
+};
 
 exports.print_csv_matrix=function(X) {
 	var txt='';
 	for (var r=0; r<X.length; r++) {
 		console.log (X[r].join(','));
 	}
-}
+};
 
 exports.row_sum=function(X,row) {
 	var ret=0;
@@ -229,22 +263,22 @@ exports.row_sum=function(X,row) {
 		ret=ret+X[row][i];
 	}
 	return ret;
-}
+};
 exports.col_sum=function(X,col) {
 	var ret=0;
 	for (var i in X) {
 		ret=ret+X[i][col];
 	}
 	return ret;
-}
+};
 
 exports.topct=function(num) {
 	if (isNaN(num)) return '';
 	if (num>1) return '>100%';
 	if (num<0.1) return Math.round(num*1000)/10+'%';
 	else return Math.round(num*1000)/10+'%';
-}
+};
 
 exports.clone=function(X) {
 	return JSON.parse(JSON.stringify(X));
-}
+};

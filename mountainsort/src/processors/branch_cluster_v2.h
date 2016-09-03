@@ -18,6 +18,7 @@ struct Branch_Cluster_V2_Opts {
     long num_pca_representatives;
     double consolidation_factor;
     bool split_clusters_at_end = true;
+    double isocut_threshold = 1.5;
 };
 
 bool branch_cluster_v2(const QString& timeseries_path, const QString& detect_path, const QString& adjacency_matrix_path, const QString& output_firings_path, const Branch_Cluster_V2_Opts& opts);

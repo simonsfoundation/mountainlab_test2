@@ -139,9 +139,7 @@ int main(int argc, char* argv[])
     CLParams CLP(argc, argv);
 
     if (!resolve_prv_files(CLP.named_parameters)) {
-        QSettings settings("magland", "mountainlab");
-        QString big_file_search_path = settings.value("big_file_search_path").toString();
-        qWarning() << "Could not resolve .prv file. Try setting the big_file_search_path by using \"mountainprocess set-big-file-search-path\"";
+        qWarning() << "Could not resolve .prv file. Try adjusting the bigfile_paths in mountainlab.ini";
         return -1;
     }
 

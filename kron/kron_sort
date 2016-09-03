@@ -21,7 +21,6 @@ if ((!algnames)||(!dsnames)||(!outpath)||(!alglist_path)||(!dslist_path)) {
 }
 
 common.mkdir_safe(outpath);
-var basepath=__dirname+'/../../../../mountainsort_experiments';
 
 var algs=common.read_algs_from_text_file(alglist_path);
 var datasets=common.read_datasets_from_text_file(dslist_path);
@@ -47,13 +46,23 @@ function apply_sorting(alg,ds,callback) {
 	var outpath0=outpath+'/'+alg.name+'-'+ds.name;
 	common.mkdir_safe(outpath0);
 
-	common.copy_file_sync(basepath+'/datasets/'+ds.folder+'/firings_true.mda',outpath0+'/firings_true.mda');
-	common.copy_file_sync(basepath+'/datasets/'+ds.folder+'/firings_true.mda.prv',outpath0+'/firings_true.mda.prv');
+	var ds_folder=common.find_dataset_folder(ds.folder);
+	var alg_script_path=common.find_algorithm_script(alg.script);
 
-	var ds_folder=basepath+'/datasets/'+ds.folder;
+	if (!ds_folder) {
+		console.log('Unable to find dataset: '+ds.folder);
+		process.exit(-1);
+	}
+	if (!alg_script_path) {
+		console.log('Unable to find algorithm script: '+alg.script);
+		process.exit(-1);
+	}
+
+	common.copy_file_sync(ds_folder+'/firings_true.mda',outpath0+'/firings_true.mda');
+	common.copy_file_sync(ds_folder+'/firings_true.mda.prv',outpath0+'/firings_true.mda.prv');
 
 	var cmd='mountainprocess';
-	args='queue-script '+basepath+'/algorithms/'+alg.script;
+	args='queue-script '+alg_script_path;
 	args+=' --raw='+ds_folder+'/raw.mda.prv';
 	args+=' '+ds_folder+'/params.json';
 	var geom_fname=ds_folder+'/geom.csv';

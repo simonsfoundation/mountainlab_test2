@@ -22,7 +22,6 @@ if ((!algnames)||(!dsnames)||(!outpath)||(!alglist_path)||(!dslist_path)) {
 }
 
 common.mkdir_safe(outpath);
-var basepath=__dirname+'/../../../../mountainsort_experiments';
 
 var algs=common.read_algs_from_text_file(alglist_path);
 var datasets=common.read_datasets_from_text_file(dslist_path);

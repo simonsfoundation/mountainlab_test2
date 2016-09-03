@@ -205,15 +205,13 @@ QString MLUtil::tempPath()
     if (!s_temp_path.isEmpty())
         return s_temp_path;
 
-    QString json = TextFile::read(mountainlabBasePath() + "/mountainlab.json");
-    if (!json.isEmpty()) {
-        QJsonObject cfg = QJsonDocument::fromJson(json.toLatin1()).object();
-        s_temp_path = cfg.value("temporary_path").toString() + "/mountainlab";
+    QString tmp = MLUtil::configResolvedPath("", "temporary_path");
+    if (!QDir(tmp).mkpath("mountainlab")) {
+        qCritical() << "Unable to create temporary directory: " + tmp + "/mountainlab";
+        abort();
     }
-    if (s_temp_path.isEmpty()) {
-        s_temp_path = QDir::tempPath() + "/mountainlab";
-    }
-    mkdir_if_doesnt_exist(s_temp_path);
+
+    s_temp_path = tmp + "/mountainlab";
     return s_temp_path;
 }
 
@@ -573,28 +571,36 @@ QString find_file_with_checksum(QString dirpath, QString checksum, long size_byt
 
 QString find_file_with_checksum(const QString& checksum, long size_bytes)
 {
-    QString path;
+    QStringList bigfile_paths = MLUtil::configResolvedPathList("mountainprocess", "bigfile_paths");
 
-    QSettings settings("magland", "mountainlab");
-    QString big_file_search_path = settings.value("big_file_search_path", "").toString();
-    if (!big_file_search_path.isEmpty()) {
-        path = find_file_with_checksum(big_file_search_path, checksum, size_bytes, true);
+    //first search in the big files
+    foreach (QString bp, bigfile_paths) {
+        QString path = find_file_with_checksum(bp, checksum, size_bytes, true);
         if (!path.isEmpty())
             return path;
     }
 
-    path = find_file_with_checksum(".", checksum, size_bytes, false);
-    if (!path.isEmpty())
-        return path;
+    //next search in the current directory
+    {
+        QString path = find_file_with_checksum(".", checksum, size_bytes, false);
+        if (!path.isEmpty())
+            return path;
+    }
 
-    path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_short_term", checksum, size_bytes, false);
-    if (!path.isEmpty())
-        return path;
-    path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_long_term", checksum, size_bytes, false);
-    if (!path.isEmpty())
-        return path;
+    //finally try in the temporary directories
+    {
+        QString path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_long_term", checksum, size_bytes, false);
+        if (!path.isEmpty())
+            return path;
+    }
 
-    return path;
+    {
+        QString path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_short_term", checksum, size_bytes, false);
+        if (!path.isEmpty())
+            return path;
+    }
+
+    return "";
 }
 
 QString make_temporary_output_file_name(QString processor_name, QMap<QString, QVariant> args_inputs, QMap<QString, QVariant> args_parameters, QString output_pname)
@@ -699,7 +705,9 @@ QString create_file_from_prv(QString output_name, QString checksum0, long size0,
 
 QString resolve_prv_file(const QString& prv_fname)
 {
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << prv_fname;
     QString json = TextFile::read(prv_fname);
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << json;
     QJsonParseError err;
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &err).object();
     if (err.error != QJsonParseError::NoError) {
@@ -710,7 +718,9 @@ QString resolve_prv_file(const QString& prv_fname)
     QString path0 = obj["original_path"].toString();
     QString checksum0 = obj["original_checksum"].toString();
     long size0 = obj["original_size"].toVariant().toLongLong();
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     QString path2 = create_file_from_prv(path0, checksum0, size0, obj["processes"].toArray());
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (!path2.isEmpty()) {
         return path2;
     }
@@ -737,4 +747,34 @@ bool resolve_prv_files(QMap<QString, QVariant>& command_line_params)
         }
     }
     return true;
+}
+
+QVariant MLUtil::configValue(const QString& group, const QString& key)
+{
+    QSettings settings(MLUtil::mountainlabBasePath() + "/mountainlab.ini", QSettings::IniFormat);
+    QSettings settings_default(MLUtil::mountainlabBasePath() + "/mountainlab.ini.default", QSettings::IniFormat);
+    if (!group.isEmpty()) {
+        settings.beginGroup(group);
+        settings_default.beginGroup(group);
+    }
+    if (settings.contains(key))
+        return settings.value(key);
+    else
+        return settings_default.value(key);
+}
+
+QString MLUtil::configResolvedPath(const QString& group, const QString& key)
+{
+    QString ret = MLUtil::configValue(group, key).toString();
+    return QDir(MLUtil::mountainlabBasePath()).filePath(ret);
+}
+
+QStringList MLUtil::configResolvedPathList(const QString& group, const QString& key)
+{
+    QStringList vals = MLUtil::configValue(group, key).toString().split(";", QString::SkipEmptyParts);
+    QStringList ret;
+    foreach (QString val, vals) {
+        ret << QDir(MLUtil::mountainlabBasePath()).filePath(val);
+    }
+    return ret;
 }
