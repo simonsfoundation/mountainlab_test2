@@ -40,6 +40,9 @@ void fromJsonValue(QVector<int>& X, const QJsonValue& val);
 void fromJsonValue(QVector<double>& X, const QJsonValue& val);
 QByteArray readByteArray(const QString& path);
 bool writeByteArray(const QString& path, const QByteArray& X);
+QVariant configValue(const QString& group, const QString& key);
+QString configResolvedPath(const QString& group, const QString& key);
+QStringList configResolvedPathList(const QString& group, const QString& key);
 };
 
 namespace MLCompute {

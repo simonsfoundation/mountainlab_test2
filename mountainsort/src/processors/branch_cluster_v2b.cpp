@@ -422,7 +422,7 @@ QVector<int> do_cluster_without_normalized_features_b(ClipsGroup clips, const Br
 
     //normalize_features(FF);
     //QTime timerA; timerA.start();
-    QVector<int> ret = isosplit2(FF);
+    QVector<int> ret = isosplit2(FF, opts.isocut_threshold);
     //s_timers["isosplit2"]+=timerA.elapsed();
     return ret;
 }

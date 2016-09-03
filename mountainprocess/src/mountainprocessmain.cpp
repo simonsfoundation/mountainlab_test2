@@ -39,7 +39,7 @@ struct run_script_opts;
 void print_usage();
 bool load_parameter_file(QVariantMap& params, const QString& fname);
 bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message, QJsonObject& results);
-bool initialize_process_manager(QString config_fname, QJsonObject config);
+bool initialize_process_manager();
 void remove_system_parameters(QVariantMap& params);
 bool queue_pript(PriptType prtype, const CLParams& CLP);
 QString get_daemon_state_summary(const QJsonObject& state);
@@ -74,9 +74,7 @@ int main(int argc, char* argv[])
     //log_begin(argc,argv);
 
     if (!resolve_prv_files(CLP.named_parameters)) {
-        QSettings settings("magland", "mountainlab");
-        QString big_file_search_path = settings.value("big_file_search_path").toString();
-        qWarning() << "Could not resolve .prv file. Try setting the big_file_search_path by using \"mountainprocess set-big-file-search-path\"";
+        qWarning() << "Could not resolve .prv file. Try adjusting the bigfile_paths in mountainlab.ini.";
         //log_end();
         return -1;
     }
@@ -84,29 +82,8 @@ int main(int argc, char* argv[])
     QString arg1 = CLP.unnamed_parameters.value(0);
     QString arg2 = CLP.unnamed_parameters.value(1);
 
-    /// TODO get rid of mlConfigPath()
-    QString config_fname = MLUtil::mountainlabBasePath() + "/labcomputer/labcomputer.json";
-    QString config_path = QFileInfo(config_fname).path();
-    QJsonParseError parse_error;
-    QJsonObject config = QJsonDocument::fromJson(TextFile::read(config_fname).toLatin1(), &parse_error).object();
-    if (parse_error.error != QJsonParseError::NoError) {
-        //qWarning() << "Unable to parse confuration file (but maybe not a problem on local machine -- trying example file): " + config_fname;
-        qWarning() << "trying labcomputer.json.example";
-        config = QJsonDocument::fromJson(TextFile::read(config_fname + ".example").toLatin1(), &parse_error).object();
-        if (parse_error.error != QJsonParseError::NoError) {
-            qWarning() << "Unable to parse confuration file: " + config_fname + ".example";
-            //log_end();
-            return -1;
-        }
-    }
     QString log_path = MLUtil::mlLogPath() + "/mountainprocess";
     QString tmp_path = MLUtil::tempPath();
-    /// TODO: remove temporary_path from labcomputer.json
-    /*
-    if (config.contains("temporary_path")) {
-        tmp_path = config["temporary_path"].toString();
-    }
-    */
     CacheManager::globalInstance()->setLocalBasePath(tmp_path);
 
     if (arg1.endsWith(".prv")) {
@@ -121,9 +98,9 @@ int main(int argc, char* argv[])
     /// TODO don't need to always load the process manager?
 
     ProcessManager* PM = ProcessManager::globalInstance();
-    QStringList server_urls = json_array_to_stringlist(config["server_urls"].toArray());
+    QStringList server_urls = MLUtil::configResolvedPathList("mountainprocess", "server_urls");
     PM->setServerUrls(server_urls);
-    QString server_base_path = MLUtil::resolvePath(config_path, config["mdaserver_base_path"].toString());
+    QString server_base_path = MLUtil::configResolvedPath("server", "mdaserver_base_path");
     PM->setServerBasePath(server_base_path);
 
     setbuf(stdout, NULL);
@@ -136,7 +113,7 @@ int main(int argc, char* argv[])
     }
 
     if (arg1 == "list-processors") { //Provide a human-readable list of the available processors
-        if (!initialize_process_manager(config_fname, config)) { //load the processor plugins etc
+        if (!initialize_process_manager()) { //load the processor plugins etc
             //log_end();
             return -1;
         }
@@ -149,7 +126,7 @@ int main(int argc, char* argv[])
         return 0;
     }
     else if (arg1 == "spec") {
-        if (!initialize_process_manager(config_fname, config)) { //load the processor plugins etc
+        if (!initialize_process_manager()) { //load the processor plugins etc
             //log_end();
             return -1;
         }
@@ -158,7 +135,7 @@ int main(int argc, char* argv[])
         printf("%s\n", json.toLatin1().data());
     }
     else if (arg1 == "run-process") { //Run a process synchronously
-        if (!initialize_process_manager(config_fname, config)) {
+        if (!initialize_process_manager()) {
             //log_end();
             return -1; //load the processor plugins etc
         }
@@ -246,7 +223,7 @@ int main(int argc, char* argv[])
         return ret; //returns exit code 0 if okay
     }
     else if (arg1 == "run-script") { //run a script synchronously (although note that individual processes will be queued (unless --_nodaemon is specified), but the script will wait for them to complete)
-        if (!initialize_process_manager(config_fname, config)) {
+        if (!initialize_process_manager()) {
             //log_end();
             return -1;
         }
@@ -318,22 +295,25 @@ int main(int argc, char* argv[])
         return ret;
     }
     else if (arg1 == "daemon-start") {
-        if (!initialize_process_manager(config_fname, config)) {
+        if (!initialize_process_manager()) {
             //log_end();
             return -1;
         }
+        QString mdaserver_base_path = MLUtil::configResolvedPath("mountainprocess", "mdaserver_base_path");
+        QString mdachunk_data_path = MLUtil::configResolvedPath("server", "mdachunk_data_path");
+        //figure out what to do about this cleaner business
         TempFileCleaner cleaner;
         cleaner.addPath(MLUtil::tempPath() + "/tmp_short_term", MAX_SHORT_TERM_GB);
         cleaner.addPath(MLUtil::tempPath() + "/tmp_long_term", MAX_LONG_TERM_GB);
-        cleaner.addPath(MLUtil::resolvePath(config_path, config["mdaserver_base_path"].toString()) + "/tmp_short_term", MAX_SHORT_TERM_GB);
-        cleaner.addPath(MLUtil::resolvePath(config_path, config["mdaserver_base_path"].toString()) + "/tmp_long_term", MAX_LONG_TERM_GB);
-        cleaner.addPath(MLUtil::resolvePath(config_path, config["mdachunk_data_path"].toString() + "/tmp_short_term"), MAX_MDACHUNK_GB);
-        cleaner.addPath(MLUtil::resolvePath(config_path, config["mdachunk_data_path"].toString() + "/tmp_long_term"), MAX_MDACHUNK_GB);
+        cleaner.addPath(mdaserver_base_path + "/tmp_short_term", MAX_SHORT_TERM_GB);
+        cleaner.addPath(mdaserver_base_path + "/tmp_long_term", MAX_LONG_TERM_GB);
+        cleaner.addPath(mdachunk_data_path + "/tmp_short_term", MAX_MDACHUNK_GB);
+        cleaner.addPath(mdachunk_data_path + "/tmp_long_term", MAX_MDACHUNK_GB);
         MPDaemon X;
         X.setLogPath(log_path);
         ProcessResources RR;
-        RR.num_threads = qMax(1.0, config["num_threads"].toDouble());
-        RR.memory_gb = qMax(1.0, config["memory_gb"].toDouble());
+        RR.num_threads = qMax(1.0, MLUtil::configValue("mountainprocess", "num_threads").toDouble());
+        RR.memory_gb = qMax(1.0, MLUtil::configValue("mountainprocess", "memory_gb").toDouble());
         X.setTotalResourcesAvailable(RR);
         if (!X.run()) {
             //log_end();
@@ -450,19 +430,6 @@ int main(int argc, char* argv[])
             return -1;
         }
     }
-    else if (arg1 == "set-big-file-search-path") {
-        QSettings settings("magland", "mountainlab");
-        QString big_file_search_path = settings.value("big_file_search_path").toString();
-        if (arg2.isEmpty()) {
-            printf("%s\n", big_file_search_path.toLatin1().data());
-        }
-        else {
-            settings.setValue("big_file_search_path", arg2);
-            printf("big-file-search-path = %s\n", settings.value("big_file_search_path").toString().toLatin1().data());
-        }
-        //log_end();
-        return 0;
-    }
     else {
         print_usage(); //print usage information
         //log_end();
@@ -473,20 +440,15 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-bool initialize_process_manager(QString config_fname, QJsonObject config)
+bool initialize_process_manager()
 {
     /*
      * Load the processor paths
      */
-    QStringList processor_paths = json_array_to_stringlist(config["processor_paths"].toArray());
+    QStringList processor_paths = MLUtil::configResolvedPathList("mountainprocess", "processor_paths");
     if (processor_paths.isEmpty()) {
-        qCritical() << "No processor paths found in " + config_fname;
+        qCritical() << "No processor paths found.";
         return false;
-    }
-    for (int i = 0; i < processor_paths.count(); i++) {
-        QString path0 = processor_paths[i];
-        path0 = MLUtil::resolvePath(QFileInfo(config_fname).path(), path0);
-        processor_paths[i] = path0;
     }
 
     /*
@@ -494,14 +456,10 @@ bool initialize_process_manager(QString config_fname, QJsonObject config)
      */
     ProcessManager* PM = ProcessManager::globalInstance();
     foreach (QString processor_path, processor_paths) {
-        QString p0 = processor_path;
-        if (QFileInfo(p0).isRelative()) {
-            p0 = QFileInfo(config_fname).path() + "/" + p0;
-        }
         //printf("Searching for processors in %s\n", p0.toLatin1().data());
-        PM->loadProcessors(p0);
+        PM->loadProcessors(processor_path);
         int num_processors = PM->processorNames().count();
-        printf("Loaded %d processors in %s\n", num_processors, p0.toLatin1().data());
+        printf("Loaded %d processors in %s\n", num_processors, processor_path.toLatin1().data());
     }
 
     return true;

@@ -576,6 +576,7 @@ QString ScriptControllerPrivate::resolve_file_name_p(QString fname_in)
 
 QString resolve_file_name(QStringList server_urls, QString server_base_path, QString fname_in)
 {
+    //This is terrible, we need to fix it!
     QString fname = fname_in;
     foreach (QString str, server_urls) {
         if (fname.startsWith(str + "/mdaserver")) {
