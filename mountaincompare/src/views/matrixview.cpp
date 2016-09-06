@@ -212,9 +212,9 @@ void MatrixView::paintEvent(QPaintEvent* evt)
         int label_height = 20;
         int n2 = d->col_map(n);
         if (n2 >= 0) {
-            QPointF pt1 = d->coord2pix(M, n2);
-            QPointF pt2 = d->coord2pix(M, n2 + 1);
-            QRectF r = QRectF(pt1.x(), pt1.y(), pt2.x() - pt1.x(), label_height);
+            QPointF pt1 = d->coord2pix(0, n2);
+            QPointF pt2 = d->coord2pix(0, n2 + 1);
+            QRectF r = QRectF(pt1.x(), height()-d->m_margins[3], pt2.x() - pt1.x(), label_height);
             int fontsize = qMin(16.0, (pt2.x() - pt1.x()) / 2);
             d->draw_string_in_rect(painter, r, d->m_col_labels.value(n), Qt::black, fontsize);
         }

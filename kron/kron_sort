@@ -69,6 +69,9 @@ function apply_sorting(alg,ds,callback) {
 	if (fs.existsSync(geom_fname)) {
 		args+=' --geom='+geom_fname;
 	}
+	if ('_force_run' in CLP.namedParameters) {
+		args+=' --_force_run='+CLP.namedParameters['_force_run'];
+	}
 	args+=' --outpath='+outpath0;
 	var arguments0=alg.arguments.split(' ');
 	for (var i in arguments0) {

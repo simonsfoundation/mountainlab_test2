@@ -69,6 +69,8 @@ for m=1:M
     y_offset=y_offset-vspread;
 end;
 
+vspread=double(vspread); %fix error in text below
+
 Tmargin=T+Tpad;
 vmargin=vspread*1.5;
 additional_left_margin=T*0.5;
