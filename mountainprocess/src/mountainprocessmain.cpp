@@ -647,7 +647,8 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
     PP.force_run = CLP.named_parameters.contains("_force_run");
     PP.working_path = QDir::currentPath();
 
-    qDebug() << ":::::::::::::::::::::::::::::::::::::::::" << "queue_pript" << PP.force_run;
+    qDebug() << ":::::::::::::::::::::::::::::::::::::::::"
+             << "queue_pript" << PP.force_run;
 
     MPDaemonInterface X;
     if (prtype == ScriptType) {

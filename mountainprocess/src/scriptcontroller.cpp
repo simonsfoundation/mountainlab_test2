@@ -412,7 +412,7 @@ bool ScriptController::runPipeline(const QString& json)
                 }
                 node->completed = true;
             }
-            else if ((!d->m_force_run)&&(PM->processAlreadyCompleted(node->processor_name, node->parameters))) {
+            else if ((!d->m_force_run) && (PM->processAlreadyCompleted(node->processor_name, node->parameters))) {
                 this->log(QString("Process already completed: %1").arg(node->processor_name));
                 if (!write_prv_files_for_process(nodes, node_indices_for_outputs, node)) {
                     qWarning() << "Error in write_prv_files_for_process" << node->processor_name;
