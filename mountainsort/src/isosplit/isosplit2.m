@@ -84,7 +84,8 @@ while 1
     [do_merge,labels0,info0]=test_redistribute(X(:,inds1),X(:,inds2),opts);
     if (opts.return_iterations)
         iteration_info.projection=info0.projection;
-        iteration_info.projection_labels=info0.projection_labels;
+        iteration_info.projection_cutpoint=info0.cutpoint;
+        iteration_info.projection_labels=info0.labels;
     end
     if (do_merge)||(max(labels0)==1)
         if (opts.verbose)
@@ -242,7 +243,6 @@ if (N<=5) %avoid a crash - 2/22/2016 jfm
     return;
 end;
 XXs=sort(XX);
-info.projection=XX;
 cutpoint=isocut(XXs,opts.isocut_threshold); %This is the core procedure -- split based on isotonic regression
 if (cutpoint~=0)
 	%It was a statistically significant split -- so let's redistribute!
@@ -257,7 +257,9 @@ end;
 labels=zeros(1,N);
 labels(ii1)=1;
 labels(ii2)=2;
-info.projection_labels=labels;
+info.projection=XX;
+info.cutpoint=cutpoint;
+info.labels=labels;
 
 if (opts.verbose3)
     figure;

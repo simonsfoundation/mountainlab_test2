@@ -252,7 +252,7 @@ void MVDiscrimHistViewPrivate::set_views()
     double bin_max = max2(m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
 
-    int num_bins = 200; //how to choose this?
+    int num_bins = 500; //how to choose this?
 
     QList<HistogramView*> views;
     for (int ii = 0; ii < m_histograms.count(); ii++) {

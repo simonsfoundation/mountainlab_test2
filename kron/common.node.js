@@ -7,7 +7,24 @@ var child_process=require('child_process');
 //use > npm install ini
 var ini=require('ini');
 
-var mountainlab_config=ini.parse(fs.readFileSync(__dirname+'/../mountainlab.ini','utf8'));
+var mountainlab_config=ini.parse(fs.readFileSync(__dirname+'/../mountainlab.ini.default','utf8'));
+try {
+	tmp=ini.parse(fs.readFileSync(__dirname+'/../mountainlab.ini','utf8'));
+	for (var key in tmp) {
+		if (!(key in mountainlab_config))
+			mountainlab_config[key]={};
+		tmp2=tmp[key];
+		for (var key2 in tmp2) {
+			mountainlab_config[key][key2]=tmp2[key2];
+		}
+	}
+}
+catch(err) {
+
+}
+
+console.log(mountainlab_config);
+
 
 exports.read_algs_from_text_file=function(file_path) {
 	var algs=[];
