@@ -39,6 +39,7 @@ for j=1:size(CC,1)
 end;
 
 if M==2
+    legend_titles={};
     for k=0:K
         inds=find(labels==k);
         if (length(inds)>0)
@@ -47,10 +48,12 @@ if M==2
             else
                 plot(features(1,inds),features(2,inds),'.','Color',[0.5,0.5,0.5]); hold on;
             end;
+            legend_titles{end+1}=sprintf('%d',k);
         end;
     end;
+    legend(legend_titles);
     hold off;
-    legnum(1:K);
+    %legnum(1:K);
     axis equal; xlabel('z_1'); ylabel('z_2');
   
 elseif M==3
@@ -78,6 +81,7 @@ else
     error('Invalid number of dimensions: %d',M);
 end
 hline(0); vline(0);   % ahb plot improvements
+
 
 end
 
