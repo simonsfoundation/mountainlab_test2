@@ -16,7 +16,7 @@ branch_cluster_v3_Processor::branch_cluster_v3_Processor()
     this->setVersion("0.34");
     this->setInputFileParameters("timeseries", "detect", "adjacency_matrix");
     this->setOutputFileParameters("firings_out");
-    this->setRequiredParameters("clip_size", "min_shell_size", "shell_increment", "num_features");
+    this->setRequiredParameters("clip_size", "num_features");
     this->setRequiredParameters("detect_interval");
     this->setOptionalParameters("num_pca_representatives", "consolidation_factor");
     this->setOptionalParameters("num_threads", "num_features2");
@@ -44,8 +44,6 @@ bool branch_cluster_v3_Processor::run(const QMap<QString, QVariant>& params)
     QString adjacency_matrix_path = params["adjacency_matrix"].toString();
     QString firings_path = params["firings_out"].toString();
     opts.clip_size = params["clip_size"].toInt();
-    opts.min_shell_size = params["min_shell_size"].toInt();
-    opts.shell_increment = params["shell_increment"].toDouble();
     opts.num_features = params["num_features"].toInt();
     opts.num_features2 = params.value("num_features2", 0).toInt();
     opts.detect_interval = params["detect_interval"].toInt();

@@ -520,8 +520,8 @@ QVector<int> split_clusters_v3(ClipsGroupV3 clips, const QVector<int>& original_
 QVector<int> do_branch_cluster_v3(ClipsGroupV3 clips, const Branch_Cluster_V3_Opts& opts, long channel_for_display)
 {
     printf("do_branch_cluster_v3 %ldx%ldx%d (channel %ld)\n", clips.clips->N1(), clips.clips->N2(), clips.inds.count(), channel_for_display + 1);
-    long M = clips.clips->N1();
-    long T = clips.clips->N2();
+    //long M = clips.clips->N1();
+    //long T = clips.clips->N2();
     long L = clips.inds.count();
     QVector<double> peaks = compute_peaks_v3(clips, 0);
     QVector<double> abs_peaks = compute_abs_peaks_v3(clips, 0);
@@ -604,123 +604,9 @@ QVector<int> do_branch_cluster_v3(ClipsGroupV3 clips, const Branch_Cluster_V3_Op
         return labels;
     }
     else {
-        if (opts.shell_increment == 0) {
-            //in this case we are not going to increment at all
-            QVector<int> labels;
-            for (long i = 0; i < L; i++)
-                labels << 1;
-            return labels;
-        }
-
-        //otherwise, we have only one cluster
-        //so we need to increase the threshold to see if we can get things to split at higher amplitude
-        double abs_peak_threshold = 0;
-        double max_abs_peak = MLCompute::max(abs_peaks);
-
-        //increase abs_peak_threshold by opts.shell_increment until we have at least opts.min_shell_size below and above the threshold
-        while (true) {
-            QVector<long> inds_below = find_peaks_below_threshold_v3(abs_peaks, abs_peak_threshold);
-            if ((inds_below.count() >= opts.min_shell_size) && (L - inds_below.count() >= opts.min_shell_size)) {
-                break;
-            }
-            if (abs_peak_threshold > max_abs_peak) {
-                break;
-            }
-            abs_peak_threshold += opts.shell_increment;
-        }
-        if (abs_peak_threshold > max_abs_peak) {
-            //we couldn't split it. So fine, we'll just say there is only one cluster
-            QVector<int> labels;
-            for (long i = 0; i < L; i++)
-                labels << 1;
-            return labels;
-        }
-        else {
-            //we now split things into two categories based on abs_peak_threshold
-            QVector<long> inds_below = find_peaks_below_threshold_v3(abs_peaks, abs_peak_threshold);
-            QVector<long> inds_above = find_peaks_above_threshold_v3(abs_peaks, abs_peak_threshold);
-            ClipsGroupV3 clips_above = grab_clips_subset_v3(clips, inds_above);
-            ClipsGroupV3 clips_below = grab_clips_subset_v3(clips, inds_below);
-
-            //Apply the procedure to the events above the threshold
-            QVector<int> labels_above;
-            if (!inds_above.isEmpty())
-                labels_above = do_branch_cluster_v3(clips_above, opts, channel_for_display);
-            long K_above = MLCompute::max<int>(labels_above);
-
-            if (K_above <= 1) {
-                //there is really only one cluster
-                QVector<int> labels;
-                for (long i = 0; i < L; i++)
-                    labels << 1;
-                return labels;
-            }
-            else {
-                //there is more than one cluster. Let's divide up the based on the nearest
-                //let's consider only the next shell above
-                QVector<double> abs_peaks_above;
-                for (long i = 0; i < inds_above.count(); i++)
-                    abs_peaks_above << abs_peaks[inds_above[i]];
-                QVector<long> inds_next_shell = find_peaks_below_threshold_v3(abs_peaks_above, abs_peak_threshold + opts.shell_increment);
-                ClipsGroupV3 clips_next_shell = grab_clips_subset_v3(clips_above, inds_next_shell);
-                QVector<int> labels_next_shell;
-                for (long i = 0; i < inds_next_shell.count(); i++)
-                    labels_next_shell << labels_above[inds_next_shell[i]];
-
-                //compute the centroids for the next shell above
-                Mda32 centroids;
-                centroids.allocate(M, T, K_above);
-                for (long kk = 1; kk <= K_above; kk++) {
-                    QVector<long> inds_kk;
-                    for (long i = 0; i < labels_next_shell.count(); i++) {
-                        if (labels_next_shell[i] == kk)
-                            inds_kk << i;
-                    }
-                    ClipsGroupV3 clips_kk = grab_clips_subset_v3(clips_next_shell, inds_kk);
-                    Mda32 centroid0 = compute_mean_clip_v3(clips_kk);
-                    for (long t = 0; t < T; t++) {
-                        for (long m = 0; m < M; m++) {
-                            centroids.setValue(centroid0.value(m, t), m, t, kk - 1);
-                        }
-                    }
-                }
-
-                //set the labels for all of the inds above
-                QVector<int> labels;
-                for (long i = 0; i < L; i++)
-                    labels << 0;
-                for (long i = 0; i < inds_above.count(); i++) {
-                    labels[inds_above[i]] = labels_above[i];
-                }
-
-                //for the events below, compute the distances to all the centroids of the next shell above
-                Mda distances;
-                distances.allocate(inds_below.count(), K_above);
-                for (long k = 1; k <= K_above; k++) {
-                    QVector<int> tmp;
-                    tmp << k - 1;
-                    Mda32 centroid0 = grab_clips_subset(centroids, tmp);
-                    QVector<double> dists = compute_dists_from_template_v3(clips_below, centroid0);
-                    for (long i = 0; i < inds_below.count(); i++) {
-                        distances.setValue(dists[i], i, k - 1);
-                    }
-                }
-
-                //label the events below based on distance to threshold
-                for (long i = 0; i < inds_below.count(); i++) {
-                    long best_k = 0;
-                    double best_dist = distances.value(i, 0L);
-                    for (long k = 0; k < K_above; k++) {
-                        double dist0 = distances.value(i, k);
-                        if (dist0 < best_dist) {
-                            best_dist = dist0;
-                            best_k = k;
-                        }
-                    }
-                    labels[inds_below[i]] = best_k + 1; //convert back to 1-based indexing
-                }
-                return labels;
-            }
-        }
+        QVector<int> labels;
+        for (long i = 0; i < L; i++)
+            labels << 1;
+        return labels;
     }
 }
