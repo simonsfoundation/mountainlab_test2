@@ -61,9 +61,23 @@ exports.read_datasets_from_text_file=function(file_path) {
 			if (lines[i].trim().slice(0,1)!='#') {
 				var vals=lines[i].trim().split(' ');
 				if (vals.length==2) {
+					var dataset_folder=common.find_dataset_folder(vals[1]);
+					var dataset_params={};
+					var params_fname=dataset_folder+'/params.json';
+					try {
+						dataset_params=JSON.parse(common.read_text_file(params_fname));
+					}
+					catch(err) {
+						console.log('Error parsing json from file: '+params_fname);
+						console.log(common.read_text_file(params_fname));
+					}
+					console.log('dataset_folder='+dataset_folder);
+					console.log('dataset_params='+JSON.stringify(dataset_params));
 					datasets.push({
 						name:vals[0],
-						folder:vals[1]
+						folder:vals[1],
+						dataset_folder:dataset_folder,
+						dataset_params:dataset_params
 					});
 				}
 				else {

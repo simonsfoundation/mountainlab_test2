@@ -58,7 +58,7 @@ common.wait_for_system_calls_to_finish(function() {
 function open_view(alg,ds,callback) {
 	var outpath0=outpath+'/'+alg.name+'-'+ds.name;
 
-	var samplerate=30000; //fix this
+	var samplerate=ds.dataset_params.samplerate||0;
 
 	var cmd='mountainview';
 	var args='';
@@ -74,7 +74,7 @@ function open_view(alg,ds,callback) {
 
 function open_ground_truth_view(ds,callback) {
 	var ds_folder=common.find_dataset_folder(ds.folder);
-	var samplerate=30000; //fix this
+	var samplerate=ds.dataset_params.samplerate||0;
 	var firings_name='firings_true.mda.prv';
 
 	var cmd='mountainview';

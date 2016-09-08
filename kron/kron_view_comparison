@@ -67,7 +67,7 @@ function open_compare(Alg1,Ds1,Alg2,Ds2,callback) {
 	var outpath1=outpath+'/'+Alg1.name+'-'+Ds1.name;
 	var outpath2=outpath+'/'+Alg2.name+'-'+Ds2.name;
 
-	var samplerate=30000; //fix this
+	var samplerate=Ds1.dataset_params.samplerate||0;
 
 	var cmd='mountaincompare';
 	var args='';
