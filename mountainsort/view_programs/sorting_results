@@ -1,0 +1,91 @@
+#!/usr/bin/env node
+
+var fs=require('fs');
+var child_process=require('child_process');
+
+var CLP=new CLParams(process.argv);
+console.log(CLP.namedParameters);
+
+var dsfolder=CLP.namedParameters.dataset_folder;
+var outfolder=CLP.namedParameters.output_folder;
+
+var dsparams=JSON.parse(read_text_file(dsfolder+'/params.json')||'{}');
+
+var firings_path=outfolder+'/firings.mda';
+if ('ground_truth' in CLP.namedParameters) {
+	firings_path=dsfolder+'/firings_true.mda.prv';
+}
+
+var args='';
+args+=' --raw='+dsfolder+'/raw.mda.prv';
+if (file_exists(outfolder+'/filt.mda.prv')) {
+	args+=' --filt='+outfolder+'/filt.mda.prv';
+}
+if (file_exists(outfolder+'/pre.mda.prv')) {
+	args+=' --pre='+outfolder+'/pre.mda.prv';
+}
+args+=' --firings='+firings_path;
+args+=' --samplerate='+(dsparams.samplerate||0);
+args=args.split(' ');
+make_system_call('mountainview',args);
+
+function CLParams(argv) {
+	this.unnamedParameters=[];
+	this.namedParameters={};
+
+	var args=argv.slice(2);
+	for (var i=0; i<args.length; i++) {
+		var arg0=args[i];
+		if (arg0.indexOf('--')===0) {
+			arg0=arg0.slice(2);
+			var ind=arg0.indexOf('=');
+			if (ind>=0) {
+				this.namedParameters[arg0.slice(0,ind)]=arg0.slice(ind+1);
+			}
+			else {
+				this.namedParameters[arg0]=args[i+1]||'';
+				i++;
+			}
+		}
+		else {
+			this.unnamedParameters.push(arg0);
+		}
+	}
+};
+
+var s_num_system_calls_running=0;
+function make_system_call(cmd,args,callback) {
+	console.log ('Running '+cmd+' '+args.join(' '));
+	s_num_system_calls_running++;
+	var pp=child_process.spawn(cmd,args);
+	pp.stdout.setEncoding('utf8');
+	pp.stderr.setEncoding('utf8');
+	var done=false;
+	pp.on('close', function(code) {
+  		done=true;
+		if (callback) callback();
+		s_num_system_calls_running--;
+	});
+	pp.on('error',function(err) {
+		console.log ('Process error: '+cmd+' '+args.join(' '));
+		console.log (err);
+	});
+	var all_stdout='';
+	var all_stderr='';
+	pp.stdout.on('data',function(data) {
+		console.log ('----'+data);
+		all_stdout+=data;
+	});
+	pp.stderr.on('data',function(data) {
+		console.log ('===='+data);
+		all_stderr+=data;
+	});
+}
+
+function read_text_file(path) {
+	return fs.readFileSync(path,'utf8');
+}
+
+function file_exists(path) {
+	return fs.existsSync(path);
+}
