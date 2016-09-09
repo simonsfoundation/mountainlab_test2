@@ -23,33 +23,36 @@ catch(err) {
 
 }
 
-console.log(mountainlab_config);
-
-
-exports.read_algs_from_text_file=function(file_path) {
-	var algs=[];
+exports.read_pipelines_from_text_file=function(file_path) {
+	var pipelines=[];
 	{
 		var txt=common.read_text_file(file_path);
 		var lines=txt.split('\n');
 		for (var i in lines) {
 			if (lines[i].trim().slice(0,1)!='#') {
 				var vals=lines[i].trim().split(' ');
+				var absolute_script_path=find_absolute_pipeline_script_path(vals[1]);
+				if (!absolute_script_path) {
+					console.log ('Unable to find pipeline script path: '+vals[1]);
+					process.exit(-1);
+				}
 				if (vals.length>=2) {
-					algs.push({
+					pipelines.push({
 						name:vals[0],
 						script:vals[1],
+						absolute_script_path:absolute_script_path,
 						arguments:vals.slice(2).join(' ')
 					});
 				}
 				else {
 					if (lines[i].trim()) {
-						throw 'problem in alglist file: '+lines[i].trim();
+						throw 'problem in pipelines file: '+lines[i].trim();
 					}
 				}
 			}
 		}
 	}
-	return algs;
+	return pipelines;
 };
 
 exports.read_datasets_from_text_file=function(file_path) {
@@ -61,22 +64,24 @@ exports.read_datasets_from_text_file=function(file_path) {
 			if (lines[i].trim().slice(0,1)!='#') {
 				var vals=lines[i].trim().split(' ');
 				if (vals.length==2) {
-					var dataset_folder=common.find_dataset_folder(vals[1]);
+					var absolute_folder_path=find_absolute_dataset_folder_path(vals[1]);
+					if (!absolute_folder_path) {
+						console.log ('Unable to find dataset folder: '+vals[1]);
+						process.exit(-1);
+					}
 					var dataset_params={};
-					var params_fname=dataset_folder+'/params.json';
+					var params_fname=absolute_folder_path+'/params.json';
 					try {
 						dataset_params=JSON.parse(common.read_text_file(params_fname));
 					}
 					catch(err) {
-						console.log('Error parsing json from file: '+params_fname);
-						console.log(common.read_text_file(params_fname));
+						console.log ('Error parsing json from file: '+params_fname);
+						console.log (common.read_text_file(params_fname));
 					}
-					console.log('dataset_folder='+dataset_folder);
-					console.log('dataset_params='+JSON.stringify(dataset_params));
 					datasets.push({
 						name:vals[0],
 						folder:vals[1],
-						dataset_folder:dataset_folder,
+						absolute_folder_path:absolute_folder_path,
 						dataset_params:dataset_params
 					});
 				}
@@ -91,24 +96,32 @@ exports.read_datasets_from_text_file=function(file_path) {
 	return datasets;
 };
 
-exports.find_alg=function(algs,algname) {
-	for (var i in algs) {
-		if (algs[i].name==algname) return algs[i];
+exports.get_interface=function() {
+	//for now this is hard-coded for spike sorting
+	return {
+		parameters:{
+			raw:'$dataset_folder$/raw.mda.prv',
+			geom:'$dataset_folder$/geom.csv'
+		}
+	};
+};
+
+exports.find_pipeline=function(pipelines,pipeline_name) {
+	for (var i in pipelines) {
+		if (pipelines[i].name==pipeline_name) return pipelines[i];
 	}
 	return null;
 };
 
-exports.find_ds=function(datasets,dsname) {
+exports.find_dataset=function(datasets,dsname) {
 	for (var i in datasets) {
 		if (datasets[i].name==dsname) return datasets[i];
 	}
 	return null;
 };
 
-exports.find_dataset_folder=function(folder) {
+function find_absolute_dataset_folder_path(folder) {
 	var dataset_paths=mountainlab_config.kron.dataset_paths.split(';');
-	console.log('@@@@@@@@@@@@@@@@@@@@2');
-	console.log(dataset_paths);
 	for (var i in dataset_paths) {
 		var p=resolve_from_mountainlab(dataset_paths[i]+'/'+folder);
 		if (fs.existsSync(p)) {
@@ -116,12 +129,23 @@ exports.find_dataset_folder=function(folder) {
 		}
 	}
 	return null;
-};
+}
 
-exports.find_algorithm_script=function(script_path) {
-	var algorithm_paths=mountainlab_config.kron.algorithm_paths.split(';');
-	for (var i in algorithm_paths) {
-		var p=resolve_from_mountainlab(algorithm_paths[i]+'/'+script_path);
+function find_absolute_pipeline_script_path(script_path) {
+	var pipeline_paths=mountainlab_config.kron.pipeline_paths.split(';');
+	for (var i in pipeline_paths) {
+		var p=resolve_from_mountainlab(pipeline_paths[i]+'/'+script_path);
+		if (fs.existsSync(p)) {
+			return p;
+		}
+	}
+	return null;
+}
+
+exports.find_view_program_file=function(program_name) {
+	var view_program_paths=mountainlab_config.kron.view_program_paths.split(';');
+	for (var i in view_program_paths) {
+		var p=resolve_from_mountainlab(view_program_paths[i]+'/'+program_name);
 		if (fs.existsSync(p)) {
 			return p;
 		}
@@ -158,11 +182,11 @@ exports.CLParams=function(argv) {
 	}
 };
 
-exports.contains_alg=function(algnames,alg) {
-	if (algnames=='all') return true;
-	algnames=algnames.split(',');
-	for (var i in algnames) {
-		if (algnames[i]==alg.name)
+exports.contains_pipeline=function(pipeline_names,pipeline) {
+	if (pipeline_names=='all') return true;
+	pipeline_names=pipeline_names.split(',');
+	for (var i in pipeline_names) {
+		if (pipeline_names[i]==pipeline.name)
 			return true;
 	}
 	return false;

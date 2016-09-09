@@ -23,6 +23,7 @@
 #include "cachemanager.h"
 #include "tempfilecleaner.h"
 #include "mlcommon.h"
+#include "scriptcontroller2.h"
 
 /// TODO security in scripts that are able to be submitted
 /// TODO title on mountainview from mountainbrowser
@@ -58,6 +59,7 @@ struct run_script_opts {
     QStringList server_urls;
     QString server_base_path;
     bool force_run;
+    QString working_path;
 };
 
 QJsonArray monitor_stats_to_json_array(const QList<MonitorStats>& stats);
@@ -237,7 +239,7 @@ int main(int argc, char* argv[])
         QVariantMap params; //parameters to be passed into the main() function of the javascript
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString str = CLP.unnamed_parameters[i];
-            if (str.endsWith(".js")) { //must be a javascript source file
+            if ((str.endsWith(".js"))||(str.endsWith(".pipeline"))) { //must be a javascript source file
                 if (!QFile::exists(str)) {
                     QString str2 = MLUtil::mountainlabBasePath() + "/mountainprocess/scripts/" + str;
                     if (QFile::exists(str2)) {
@@ -273,6 +275,7 @@ int main(int argc, char* argv[])
         opts.server_urls = server_urls;
         opts.server_base_path = server_base_path;
         opts.force_run = CLP.named_parameters.contains("_force_run");
+        opts.working_path=QDir::currentPath();
         QJsonObject results;
         if (!run_script(script_fnames, params, opts, error_message, results)) { //actually run the script
             ret = -1;
@@ -521,6 +524,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
     QJsonObject parameters = variantmap_to_json_obj(params);
 
     QJSEngine engine;
+
     ScriptController Controller;
     Controller.setNoDaemon(opts.nodaemon);
     Controller.setServerUrls(opts.server_urls);
@@ -528,6 +532,16 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
     Controller.setForceRun(opts.force_run);
     QJSValue MP = engine.newQObject(&Controller);
     engine.globalObject().setProperty("MP", MP);
+
+    ScriptController2 Controller2;
+    Controller2.setNoDaemon(opts.nodaemon);
+    Controller2.setServerUrls(opts.server_urls);
+    Controller2.setServerBasePath(opts.server_base_path);
+    Controller2.setForceRun(opts.force_run);
+    Controller2.setWorkingPath(opts.working_path);
+    QJSValue MP2 = engine.newQObject(&Controller2);
+    engine.globalObject().setProperty("_MP2", MP2);
+
     foreach (QString fname, script_fnames) {
         QJSValue result = engine.evaluate(TextFile::read(fname), fname);
         if (result.isError()) {
@@ -595,7 +609,7 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
         QVariantMap params;
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString str = CLP.unnamed_parameters[i];
-            if (str.endsWith(".js")) {
+            if ((str.endsWith(".js"))||(str.endsWith(".pipeline"))) {
                 PP.script_paths << str;
                 PP.script_path_checksums << MLUtil::computeSha1SumOfFile(str);
             }

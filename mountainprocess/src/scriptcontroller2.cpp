@@ -4,9 +4,10 @@
 ** Created: 4/19/2016
 *******************************************************/
 
-#include "scriptcontroller.h"
+#include "scriptcontroller2.h"
 
 #include <QCryptographicHash>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
@@ -21,14 +22,14 @@
 #include "mpdaemon.h"
 #include "mlcommon.h"
 
-struct PipelineNode {
-    PipelineNode()
+struct PipelineNode2 {
+    PipelineNode2()
     {
         completed = false;
         running = false;
         qprocess = 0;
     }
-    ~PipelineNode()
+    ~PipelineNode2()
     {
         if (qprocess) {
             delete qprocess;
@@ -36,152 +37,216 @@ struct PipelineNode {
     }
     QMap<QString, QDateTime> timestamps;
     QString processor_name;
+    QVariantMap inputs;
     QVariantMap parameters;
-    QVariantMap prvs;
-    QStringList input_pnames;
-    QStringList output_pnames;
+    QVariantMap outputs;
+    bool create_prv=false;
     bool completed;
     bool running;
     QProcess* qprocess;
 
     QStringList input_paths()
     {
+        QStringList input_pnames=inputs.keys();
         QStringList ret;
         foreach (QString pname, input_pnames)
-            ret << parameters[pname].toString();
+            ret << inputs[pname].toString();
         return ret;
     }
     QStringList output_paths()
     {
+        QStringList output_pnames=outputs.keys();
         QStringList ret;
         foreach (QString pname, output_pnames)
-            ret << parameters[pname].toString();
+            ret << outputs[pname].toString();
         return ret;
     }
 };
 
-class ScriptControllerPrivate {
+class ScriptController2Private {
 public:
-    ScriptControllerPrivate()
+    ScriptController2Private()
     {
         m_nodaemon = false;
     }
 
-    ScriptController* q;
+    ScriptController2* q;
     bool m_nodaemon = false;
     QStringList m_server_urls;
     QString m_server_base_path;
     bool m_force_run = false;
+    QString m_working_path;
 
-    QList<PipelineNode> m_pipeline_nodes;
+    QList<PipelineNode2> m_pipeline_nodes;
 
     QProcess* queue_process(QString processor_name, const QVariantMap& parameters, bool use_run, bool force_run);
     QProcess* run_process(QString processor_name, const QVariantMap& parameters, bool force_run);
-    //static bool queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters);
-    static void wait(qint64 msec);
 
+    void resolve_file_names(QVariantMap &fnames);
     QString resolve_file_name_p(QString fname);
+
+    bool run_or_queue_node(PipelineNode2 *node);
+    PipelineNode2 *find_node_ready_to_run();
+    QString create_temporary_path_for_output(QString processor_name,QVariantMap inputs,QVariantMap parameters, QString output_pname);
+    bool handle_running_processes();
 };
 
-ScriptController::ScriptController()
+ScriptController2::ScriptController2()
 {
-    d = new ScriptControllerPrivate;
+    d = new ScriptController2Private;
     d->q = this;
 }
 
-ScriptController::~ScriptController()
+ScriptController2::~ScriptController2()
 {
     delete d;
 }
 
-void ScriptController::setNoDaemon(bool val)
+void ScriptController2::setNoDaemon(bool val)
 {
     d->m_nodaemon = val;
 }
 
-void ScriptController::setServerUrls(const QStringList& urls)
+void ScriptController2::setServerUrls(const QStringList& urls)
 {
     d->m_server_urls = urls;
 }
 
-void ScriptController::setServerBasePath(const QString& path)
+void ScriptController2::setServerBasePath(const QString& path)
 {
     d->m_server_base_path = path;
 }
 
-void ScriptController::setForceRun(bool force_run)
+void ScriptController2::setForceRun(bool force_run)
 {
     d->m_force_run = force_run;
 }
 
-QJsonObject ScriptController::getResults()
+void ScriptController2::setWorkingPath(QString working_path)
+{
+    d->m_working_path=working_path;
+}
+
+QJsonObject ScriptController2::getResults()
 {
     return QJsonObject();
 }
 
-QString ScriptController::fileChecksum(const QString& fname_in)
+QString ScriptController2::addProcess(QString processor_name, QString inputs_json, QString parameters_json,QString outputs_json)
 {
-    QString fname = d->resolve_file_name_p(fname_in);
-    QTime timer;
-    timer.start();
-    QString ret = MLUtil::computeSha1SumOfFile(fname);
-    return ret;
-
-    /*
-    QFile file(fname);
-    if (!file.open(QIODevice::ReadOnly))
-        return "";
-
-    QCryptographicHash hash(QCryptographicHash::Sha1);
-    hash.addData(&file);
-    file.close();
-    QString ret = QString(hash.result().toHex());
-    printf("%s -- Elapsed: %g sec\n", ret.toLatin1().data(), timer.elapsed() * 1.0 / 1000);
-    return ret;
-    */
-}
-
-QString ScriptController::stringChecksum(const QString& str)
-{
-    QByteArray X = str.toLatin1();
-    QCryptographicHash hash(QCryptographicHash::Sha1);
-    hash.addData(X);
-    return QString(hash.result().toHex());
-}
-
-QString ScriptController::createTemporaryFileName(const QString& code)
-{
-    return CacheManager::globalInstance()->makeLocalFile(code, CacheManager::LongTerm);
-}
-
-/*
-bool ScriptController::runProcess(const QString& processor_name, const QString& parameters_json)
-{
-    QJsonObject params = QJsonDocument::fromJson(parameters_json.toLatin1()).object();
-    QStringList keys = params.keys();
-    QMap<QString, QVariant> parameters;
-    foreach (QString key, keys) {
-        parameters[key] = params[key].toVariant();
-    }
-    ProcessManager* PM = ProcessManager::globalInstance();
-    if (!PM->checkParameters(processor_name, parameters)) {
+    MLProcessor PP=ProcessManager::globalInstance()->processor(processor_name);
+    if (PP.name != processor_name) { //rather use PP.isNull()
+        qWarning() << "Unable to find processor **: " + processor_name;
         return false;
     }
-    if (PM->processAlreadyCompleted(processor_name, parameters)) {
-        this->log(QString("Process already completed: %1").arg(processor_name));
-        return true;
-    }
+    QMap<QString,MLParameter> PP_outputs=PP.outputs;
 
-    if (d->queue_process_and_wait_for_finished(processor_name, parameters)) {
-        return true;
+    PipelineNode2 node;
+    /// TODO: check for json parse errors here
+    node.processor_name=processor_name;
+    node.inputs=QJsonDocument::fromJson(inputs_json.toLatin1()).object().toVariantMap();
+    node.parameters=QJsonDocument::fromJson(parameters_json.toLatin1()).object().toVariantMap();
+    if (!outputs_json.isEmpty()) {
+        node.outputs=QJsonDocument::fromJson(outputs_json.toLatin1()).object().toVariantMap();
+        /// TODO: check to see if outputs are consistent with PP_outputs
     }
     else {
-        return false;
+        QStringList output_pnames=PP_outputs.keys();
+        foreach (QString pname,output_pnames) {
+            node.outputs[pname]=d->create_temporary_path_for_output(node.processor_name,node.inputs,node.parameters,pname);
+        }
     }
-}
-*/
+    d->resolve_file_names(node.inputs);
+    d->resolve_file_names(node.outputs);
+    d->m_pipeline_nodes << node;
 
-QJsonObject make_prv_object(QString path)
+    return QJsonDocument(QJsonObject::fromVariantMap(node.outputs)).toJson();
+}
+
+void ScriptController2::addPrv(QString input_path, QString output_path)
+{
+    PipelineNode2 node;
+    node.inputs["input"]=d->resolve_file_name_p(input_path);
+    node.outputs["output"]=d->resolve_file_name_p(output_path);
+    node.create_prv=true;
+    d->m_pipeline_nodes << node;
+}
+
+bool ScriptController2::runPipeline()
+{
+    //check for empty output paths
+    for (int i = 0; i < d->m_pipeline_nodes.count(); i++) {
+        PipelineNode2* node = &d->m_pipeline_nodes[i];
+        QStringList output_paths=node->output_paths();
+        foreach (QString path,output_paths) {
+            if (path.isEmpty()) {
+                qWarning() << "Output path is empty" << node->processor_name << node->input_paths() << node->output_paths();
+                return false;
+            }
+        }
+    }
+
+    //check for situation where input file matches output file
+    for (int i = 0; i < d->m_pipeline_nodes.count(); i++) {
+        PipelineNode2* node = &d->m_pipeline_nodes[i];
+        QSet<QString> input_paths_set=node->input_paths().toSet();
+        QStringList output_paths=node->output_paths();
+        foreach (QString output_path,output_paths) {
+            if (input_paths_set.contains(output_path)) {
+                qWarning() << node->processor_name << output_path;
+                qWarning() << "An input path is the same as an output path. This can happen sometimes when using .prv files (checksum lookups) in the case where a process creates an output file that matches an input file.";
+                return false;
+            }
+        }
+    }
+
+    bool done=false;
+    while (!done) {
+        bool found=true;
+        while (found) {
+            found=false;
+            PipelineNode2 *node=d->find_node_ready_to_run();
+            if (node) {
+                if (!d->run_or_queue_node(node)) {
+                    return false;
+                }
+                found=true;
+            }
+        }
+
+        if (!d->handle_running_processes()) {
+            return false;
+        }
+
+        //check to see if we are done
+        if (!d->find_node_ready_to_run()) {
+            int num_running=0;
+            for (int i=0; i<d->m_pipeline_nodes.count(); i++) {
+                PipelineNode2 *node=&d->m_pipeline_nodes[i];
+                if (node->running) num_running++;
+            }
+            if (num_running==0) done=true; //if nothing is ready to run, and nothing is running, then we are done
+        }
+
+        if (!done) {
+            MPDaemon::wait(100);
+            qApp->processEvents(); //important I think for detecting when processes end.
+        }
+    }
+
+    //check whether everything got run
+    for (int i=0; i<d->m_pipeline_nodes.count(); i++) {
+        PipelineNode2 *node=&d->m_pipeline_nodes[i];
+        if (!node->completed) {
+            qWarning() << "Not every process in the pipeline was run. For example: "+node->processor_name+". This could be due to a cyclic dependency.";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+QJsonObject make_prv_object_2(QString path)
 {
     if (!QFile::exists(path)) {
         qWarning() << "Unable to find file (for prv):" << path;
@@ -194,310 +259,12 @@ QJsonObject make_prv_object(QString path)
     return obj;
 }
 
-QJsonArray get_prv_processes(const QList<PipelineNode>& nodes, const QMap<QString, int>& node_indices_for_outputs, QString path, QSet<int>& node_indices_already_used, bool* ok)
-{
-    QJsonArray processes;
-    int ind0 = node_indices_for_outputs.value(path, -1);
-    if ((ind0 >= 0) && (!node_indices_already_used.contains(ind0))) { //avoid infinite cycles, which can happen, for example, if an output file is the same as an input file
-        const PipelineNode* node = &nodes[ind0];
-        if (!node->processor_name.isEmpty()) {
-            QJsonObject process;
-            process["processor_name"] = node->processor_name;
-            {
-                QJsonObject inputs;
-                foreach (QString pname, node->input_pnames) {
-                    QJsonObject tmp;
-                    tmp = make_prv_object(node->parameters[pname].toString());
-                    if (tmp.isEmpty()) {
-                        *ok = false;
-                        return processes;
-                    }
-                    inputs[pname] = tmp;
-                }
-                process["inputs"] = inputs;
-            }
-            {
-                QJsonObject outputs;
-                foreach (QString pname, node->output_pnames) {
-                    QJsonObject tmp;
-                    tmp = make_prv_object(node->parameters[pname].toString());
-                    if (tmp.isEmpty()) {
-                        *ok = false;
-                        return processes;
-                    }
-                    outputs[pname] = tmp;
-                }
-                process["outputs"] = outputs;
-            }
-            {
-                QJsonObject parameters;
-                QStringList pnames = node->parameters.keys();
-                foreach (QString pname, pnames) {
-                    if ((!node->input_pnames.contains(pname)) && (!node->output_pnames.contains(pname))) {
-                        parameters[pname] = node->parameters[pname].toString();
-                    }
-                }
-                process["parameters"] = parameters;
-            }
-            node_indices_already_used.insert(ind0);
-            processes.append(process);
-            foreach (QString pname, node->input_pnames) {
-                QJsonArray X = get_prv_processes(nodes, node_indices_for_outputs, node->parameters[pname].toString(), node_indices_already_used, ok);
-                if (!ok)
-                    return processes;
-                for (int a = 0; a < X.count(); a++) {
-                    processes.append(X[a]);
-                }
-            }
-        }
-    }
-    *ok = true;
-    return processes;
-}
-
-bool write_prv_file(const QList<PipelineNode>& nodes, const QMap<QString, int>& node_indices_for_outputs, QString input_path, QString output_path)
-{
-    if (!output_path.endsWith(".prv")) {
-        qWarning() << ".prv file must end with .prv extension";
-        return false;
-    }
-    QJsonObject obj = make_prv_object(input_path);
-    if (obj.isEmpty())
-        return false;
-    bool ok;
-    QSet<int> node_indices_already_used; //to avoid infinite cycles, which can happen, for example, when an input file is the same as an output file
-    obj["processes"] = get_prv_processes(nodes, node_indices_for_outputs, input_path, node_indices_already_used, &ok);
-    if (!ok) {
-        qWarning() << "Error in get_prv_processes";
-        return false;
-    }
-    QString json = QJsonDocument(obj).toJson(QJsonDocument::Indented);
-    return TextFile::write(output_path, json);
-}
-
-bool write_prv_files_for_process(const QList<PipelineNode>& nodes, const QMap<QString, int>& node_indices_for_outputs, PipelineNode* node)
-{
-    QStringList prv_keys = node->prvs.keys();
-    foreach (QString key0, prv_keys) {
-        if (!node->parameters.contains(key0)) {
-            qWarning() << "No such parameter for prv key:" << key0 << node->processor_name;
-            return false;
-        }
-        QString input_path = node->parameters.value(key0).toString();
-        QString output_path = node->prvs.value(key0).toString();
-        printf("Writing prv file: %s -> %s\n", input_path.toLatin1().data(), output_path.toLatin1().data());
-        if (!write_prv_file(nodes, node_indices_for_outputs, input_path, output_path)) {
-            qWarning() << "Error in write_prv_file";
-            return false;
-        }
-    }
-    return true;
-}
-
-bool ScriptController::runPipeline(const QString& json)
-{
-    ProcessManager* PM = ProcessManager::globalInstance();
-
-    //parse the json
-    QJsonParseError parse_err;
-    QJsonObject pipe_obj = QJsonDocument::fromJson(json.toLatin1(), &parse_err).object();
-    if (parse_err.error != QJsonParseError::NoError) {
-        qWarning() << "runPipeline: error parsing json: " + parse_err.errorString();
-        return false;
-    }
-    QJsonArray processes = pipe_obj["processes"].toArray();
-
-    //set up the node tree
-    QList<PipelineNode> nodes;
-    for (int i = 0; i < processes.count(); i++) {
-        QJsonObject process = processes[i].toObject();
-        PipelineNode node;
-        node.parameters = json_obj_to_variantmap(process["parameters"].toObject());
-        node.prvs = json_obj_to_variantmap(process["prvs"].toObject());
-        node.processor_name = process["processor_name"].toString();
-        MLProcessor PP = PM->processor(node.processor_name);
-        if (PP.name != node.processor_name) {
-            qWarning() << "Unable to find processor *: " + node.processor_name;
-            return false;
-        }
-        node.input_pnames = PP.inputs.keys();
-        node.output_pnames = PP.outputs.keys();
-        nodes << node;
-    }
-
-    //check for situation where input file matches output file
-    for (int i = 0; i < nodes.count(); i++) {
-        PipelineNode* node = &nodes[i];
-        foreach (QString pname_input, node->input_pnames) {
-            QString path_input = node->parameters[pname_input].toString();
-            foreach (QString pname_output, node->output_pnames) {
-                QString path_output = node->parameters[pname_output].toString();
-                if ((!path_input.isEmpty()) && (path_input == path_output)) {
-                    qDebug() << path_input;
-                    qDebug() << node->processor_name;
-                    qWarning() << "An input path is the same as an output path. This can happen sometimes when using .prv files (checksum lookups) in the case where a process creates an output file that matches an input file.";
-                    return false;
-                }
-            }
-        }
-    }
-
-    //record which outputs get created by which nodes (by index)
-    QMap<QString, int> node_indices_for_outputs;
-    for (int i = 0; i < nodes.count(); i++) {
-        QStringList output_paths = nodes[i].output_paths();
-        foreach (QString path, output_paths) {
-            if (!path.isEmpty()) {
-                if (node_indices_for_outputs.contains(path)) {
-                    qWarning() << "Same output is created twice in pipeline.";
-                    return false;
-                }
-            }
-            node_indices_for_outputs[path] = i;
-        }
-    }
-
-    //run the processing in parallel
-    bool done = false;
-    while (!done) {
-        QVector<int> node_indices_ready_to_be_run;
-        QVector<int> node_indices_not_ready_to_be_run;
-        QVector<int> node_indices_running;
-        QVector<int> node_indices_completed;
-        for (int i = 0; i < nodes.count(); i++) {
-            if (nodes[i].completed) {
-                node_indices_completed << i;
-            }
-            else if (nodes[i].running) {
-                node_indices_running << i;
-            }
-            else {
-                bool ready_to_go = true;
-                QStringList input_paths = nodes[i].input_paths();
-                foreach (QString path, input_paths) {
-                    if (node_indices_for_outputs.contains(path)) {
-                        int ii = node_indices_for_outputs[path];
-                        if (!nodes[ii].completed) {
-                            ready_to_go = false;
-                        }
-                    }
-                }
-                if (ready_to_go)
-                    node_indices_ready_to_be_run << i;
-                else
-                    node_indices_not_ready_to_be_run << i;
-            }
-        }
-        if ((node_indices_running.isEmpty()) && (node_indices_ready_to_be_run.isEmpty()) && (node_indices_not_ready_to_be_run.isEmpty())) {
-            //we are done!
-            done = true;
-        }
-        if ((node_indices_running.isEmpty()) && (node_indices_ready_to_be_run.isEmpty()) && (!node_indices_not_ready_to_be_run.isEmpty())) {
-            //Somehow we are not done, but nothing is ready and nothing is running.
-            qWarning() << "Unable to run all processes in pipeline. Perhaps there are cyclic dependencies. For example a process may have an input file that matches an output file.";
-            return false;
-        }
-        if (!node_indices_ready_to_be_run.isEmpty()) {
-            //something is ready to run
-            int ii = node_indices_ready_to_be_run[0];
-            PipelineNode* node = &nodes[ii];
-            if (!PM->checkParameters(node->processor_name, node->parameters)) {
-                qWarning() << "Error checking parameters for processor: " + node->processor_name;
-                return false;
-            }
-            if (node->processor_name.isEmpty()) { //empty processor name used for writing .prv files when the file is raw (ie does not come from an output)
-                if (!write_prv_files_for_process(nodes, node_indices_for_outputs, node)) {
-                    qWarning() << "Error in write_prv_files_for_process ***" << node->processor_name;
-                    return false;
-                }
-                node->completed = true;
-            }
-            else if ((!d->m_force_run) && (PM->processAlreadyCompleted(node->processor_name, node->parameters))) {
-                this->log(QString("Process already completed: %1").arg(node->processor_name));
-                if (!write_prv_files_for_process(nodes, node_indices_for_outputs, node)) {
-                    qWarning() << "Error in write_prv_files_for_process" << node->processor_name;
-                    return false;
-                }
-                node->completed = true;
-            }
-            else {
-                QProcess* P1;
-                if (d->m_nodaemon) {
-                    printf("Launching process %s\n", node->processor_name.toLatin1().data());
-                    P1 = d->run_process(node->processor_name, node->parameters, d->m_force_run);
-                    if (!P1) {
-                        qWarning() << "Unable to launch process: " + node->processor_name;
-                        return false;
-                    }
-                }
-                else {
-                    printf("Queuing process %s\n", node->processor_name.toLatin1().data());
-                    P1 = d->queue_process(node->processor_name, node->parameters, false, d->m_force_run);
-                    if (!P1) {
-                        qWarning() << "Unable to queue process: " + node->processor_name;
-                        return false;
-                    }
-                }
-
-                node->running = true;
-                node->qprocess = P1;
-            }
-        }
-        //check for completed processes
-        for (int i = 0; i < node_indices_running.count(); i++) {
-            PipelineNode* node = &nodes[node_indices_running[i]];
-            if (!node->qprocess) {
-                qCritical() << "Unexpected problem" << __FILE__ << __LINE__;
-                return false;
-            }
-            {
-                QByteArray str = node->qprocess->readAll();
-                if (!str.isEmpty()) {
-                    printf("%s:: %s", node->processor_name.toLatin1().data(), str.data());
-                }
-            }
-            if (node->qprocess->state() == QProcess::NotRunning) {
-                printf("Process finished: %s\n", node->processor_name.toLatin1().data());
-                node->qprocess->waitForReadyRead();
-                QByteArray str = node->qprocess->readAll();
-                if (!str.isEmpty()) {
-                    printf("%s", str.data());
-                }
-                if (node->qprocess->exitStatus() == QProcess::CrashExit) {
-                    qWarning() << "Process crashed: " + node->processor_name;
-                    return false;
-                }
-                if (node->qprocess->exitCode() != 0) {
-                    qWarning() << "Process returned with non-zero exit code: " + node->processor_name;
-                    return false;
-                }
-                if (!write_prv_files_for_process(nodes, node_indices_for_outputs, node)) {
-                    return false;
-                }
-
-                node->completed = true;
-                node->running = false;
-                delete node->qprocess;
-                node->qprocess = 0;
-            }
-        }
-        if (!done) {
-            MPDaemon::wait(100);
-            qApp->processEvents(); //important I think for detecting when processes end.
-        }
-    }
-
-    d->m_pipeline_nodes = nodes;
-
-    return true;
-}
-
-void ScriptController::log(const QString& message)
+void ScriptController2::log(const QString& message)
 {
     printf("SCRIPT: %s\n", message.toLatin1().data());
 }
 
-QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const QVariantMap& parameters, bool use_run, bool force_run)
+QProcess* ScriptController2Private::queue_process(QString processor_name, const QVariantMap& parameters, bool use_run, bool force_run)
 {
     QString exe = qApp->applicationFilePath();
     QStringList args;
@@ -527,54 +294,198 @@ QProcess* ScriptControllerPrivate::queue_process(QString processor_name, const Q
     return P1;
 }
 
-QProcess* ScriptControllerPrivate::run_process(QString processor_name, const QVariantMap& parameters, bool force_run)
+QProcess* ScriptController2Private::run_process(QString processor_name, const QVariantMap& parameters, bool force_run)
 {
-    return ScriptControllerPrivate::queue_process(processor_name, parameters, true, force_run);
+    return ScriptController2Private::queue_process(processor_name, parameters, true, force_run);
 }
 
-/*
-bool ScriptControllerPrivate::queue_process_and_wait_for_finished(QString processor_name, const QVariantMap& parameters)
+void ScriptController2Private::resolve_file_names(QVariantMap &fnames)
 {
-    QString exe = qApp->applicationFilePath();
-    QStringList args;
-    args << "queue-process";
-    args << processor_name;
-    QStringList pkeys = parameters.keys();
-    foreach (QString pkey, pkeys) {
-        args << QString("--%1=%2").arg(pkey).arg(parameters[pkey].toString());
+    QStringList pnames=fnames.keys();
+    foreach (QString pname,pnames) {
+        fnames[pname]=resolve_file_name_p(fnames[pname].toString());
     }
-    args << QString("--_parent_pid=%1").arg(QCoreApplication::applicationPid());
-    QProcess P1;
-    P1.setReadChannelMode(QProcess::MergedChannels);
-    P1.start(exe, args);
-    if (!MPDaemon::waitForFinishedAndWriteOutput(&P1)) {
-        //if (!P1.waitForFinished(-1)) {
-        printf("Error waiting for queue-process to finish: %s\n", processor_name.toLatin1().data());
+}
+
+QString ScriptController2Private::resolve_file_name_p(QString fname_in)
+{
+    if (fname_in.isEmpty()) return "";
+    QString ret=resolve_file_name_2(m_server_urls, m_server_base_path, fname_in);
+    if (!ret.startsWith("http:")) {
+        if ((QDir::isRelativePath(ret))&&(!m_working_path.isEmpty())) {
+            ret=m_working_path+"/"+ret;
+        }
+    }
+    return ret;
+}
+
+bool ScriptController2Private::run_or_queue_node(PipelineNode2 *node)
+{
+    QVariantMap parameters0;
+    {
+        QStringList pnames=node->inputs.keys();
+        foreach (QString pname,pnames) {
+            parameters0[pname]=node->inputs[pname];
+        }
+    }
+    {
+        QStringList pnames=node->parameters.keys();
+        foreach (QString pname,pnames) {
+            parameters0[pname]=node->parameters[pname];
+        }
+    }
+    {
+        QStringList pnames=node->outputs.keys();
+        foreach (QString pname,pnames) {
+            parameters0[pname]=node->outputs[pname];
+        }
+    }
+
+    ProcessManager *PM=ProcessManager::globalInstance();
+    if (node->create_prv) {
+        QString input_path=node->inputs["input"].toString();
+        QString output_path=node->outputs["output"].toString();
+        if (input_path.isEmpty()) {
+            qWarning() << "Input path for create_prv is empty.";
+            return false;
+        }
+        if (!QFile::exists(input_path)) {
+            qWarning() << "Input file for create_prv does not exist: "+input_path;
+            return false;
+        }
+        if (!output_path.endsWith(".prv")) {
+            qWarning() << "Problem creating .prv file. The file path must end with .prv.";
+            return false;
+        }
+        QJsonObject obj=make_prv_object_2(input_path);
+        QString obj_json=QJsonDocument(obj).toJson();
+        if (TextFile::write(output_path,obj_json)) {
+            node->completed=true;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    if (!PM->checkParameters(node->processor_name, parameters0)) {
+        qWarning() << "Error checking parameters for processor: " + node->processor_name;
         return false;
     }
-    if (P1.exitStatus() == QProcess::CrashExit) {
-        printf("Error -- queue-process crashed: %s\n", processor_name.toLatin1().data());
-        return false;
+    if ((!m_force_run) && (PM->processAlreadyCompleted(node->processor_name, parameters0))) {
+        q->log(QString("Process already completed: %1").arg(node->processor_name));
+        node->completed = true;
+        return true;
     }
-    if (P1.exitCode() != 0) {
-        printf("Error -- queue-process returned non-zero exit code: %s\n", processor_name.toLatin1().data());
-        return false;
+    else {
+        QProcess* P1;
+        if (m_nodaemon) {
+            printf("Launching process %s\n", node->processor_name.toLatin1().data());
+            P1 = run_process(node->processor_name, parameters0, m_force_run);
+            if (!P1) {
+                qWarning() << "Unable to launch process: " + node->processor_name;
+                return false;
+            }
+        }
+        else {
+            printf("Queuing process %s\n", node->processor_name.toLatin1().data());
+            P1 = queue_process(node->processor_name, parameters0, false, m_force_run);
+            if (!P1) {
+                qWarning() << "Unable to queue process: " + node->processor_name;
+                return false;
+            }
+        }
+
+        node->running = true;
+        node->qprocess = P1;
+        return true;
+    }
+}
+
+PipelineNode2 *ScriptController2Private::find_node_ready_to_run()
+{
+    QSet<QString> file_paths_waiting_to_be_created;
+    for (int i=0; i<m_pipeline_nodes.count(); i++) {
+        PipelineNode2 *node=&m_pipeline_nodes[i];
+        if (!node->completed) {
+            QStringList pnames=node->outputs.keys();
+            foreach (QString pname,pnames) {
+                QString output_path=node->outputs[pname].toString();
+                file_paths_waiting_to_be_created.insert(output_path);
+            }
+        }
+    }
+    for (int i=0; i<m_pipeline_nodes.count(); i++) {
+        PipelineNode2 *node=&m_pipeline_nodes[i];
+        if ((!node->completed)&&(!node->running)) {
+            bool ready_to_run=true;
+            QStringList pnames=node->inputs.keys();
+            foreach (QString pname,pnames) {
+                QString input_path=node->inputs[pname].toString();
+                if (file_paths_waiting_to_be_created.contains(input_path)) {
+                    ready_to_run=false;
+                }
+            }
+            if (ready_to_run) {
+                return node;
+            }
+        }
+    }
+    return 0;
+}
+
+QString ScriptController2Private::create_temporary_path_for_output(QString processor_name, QVariantMap inputs, QVariantMap parameters, QString output_pname)
+{
+    QJsonObject obj;
+    obj["processor_name"]=processor_name;
+    obj["inputs"]=QJsonObject::fromVariantMap(inputs);
+    obj["parameters"]=QJsonObject::fromVariantMap(parameters);
+    obj["output_pname"]=output_pname;
+    QString json=QJsonDocument(obj).toJson();
+    QString code=MLUtil::computeSha1SumOfString(json);
+    return CacheManager::globalInstance()->makeLocalFile(code+"-"+processor_name+"-"+output_pname+".tmp",CacheManager::LongTerm);
+}
+
+bool ScriptController2Private::handle_running_processes()
+{
+    for (int i = 0; i < m_pipeline_nodes.count(); i++) {
+        PipelineNode2* node = &m_pipeline_nodes[i];
+        if (node->running) {
+            if (!node->qprocess) {
+                qCritical() << "Unexpected problem" << __FILE__ << __LINE__;
+                return false;
+            }
+            {
+                QByteArray str = node->qprocess->readAll();
+                if (!str.isEmpty()) {
+                    printf("%s:: %s", node->processor_name.toLatin1().data(), str.data());
+                }
+            }
+            if (node->qprocess->state() == QProcess::NotRunning) {
+                printf("Process finished: %s\n", node->processor_name.toLatin1().data());
+                node->qprocess->waitForReadyRead();
+                QByteArray str = node->qprocess->readAll();
+                if (!str.isEmpty()) {
+                    printf("%s", str.data());
+                }
+                if (node->qprocess->exitStatus() == QProcess::CrashExit) {
+                    qWarning() << "Process crashed: " + node->processor_name;
+                    return false;
+                }
+                if (node->qprocess->exitCode() != 0) {
+                    qWarning() << "Process returned with non-zero exit code: " + node->processor_name;
+                    return false;
+                }
+                node->completed = true;
+                node->running = false;
+                delete node->qprocess;
+                node->qprocess = 0;
+            }
+        }
     }
     return true;
 }
-*/
 
-void ScriptControllerPrivate::wait(qint64 msec)
-{
-    usleep(msec * 1000);
-}
-
-QString ScriptControllerPrivate::resolve_file_name_p(QString fname_in)
-{
-    return resolve_file_name(m_server_urls, m_server_base_path, fname_in);
-}
-
-QString resolve_file_name(QStringList server_urls, QString server_base_path, QString fname_in)
+QString resolve_file_name_2(QStringList server_urls, QString server_base_path, QString fname_in)
 {
     //This is terrible, we need to fix it!
     QString fname = fname_in;

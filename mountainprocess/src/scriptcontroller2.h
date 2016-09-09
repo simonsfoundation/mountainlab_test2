@@ -4,36 +4,35 @@
 ** Created: 4/27/2016
 *******************************************************/
 
-#ifndef SCRIPTCONTROLLER_H
-#define SCRIPTCONTROLLER_H
+#ifndef SCRIPTCONTROLLER2_H
+#define SCRIPTCONTROLLER2_H
 
 #include <QObject>
 
-class ScriptControllerPrivate;
-class ScriptController : public QObject {
+class ScriptController2Private;
+class ScriptController2 : public QObject {
     Q_OBJECT
 public:
-    friend class ScriptControllerPrivate;
-    ScriptController();
-    virtual ~ScriptController();
+    friend class ScriptController2Private;
+    ScriptController2();
+    virtual ~ScriptController2();
     void setNoDaemon(bool val);
     void setServerUrls(const QStringList& urls);
     void setServerBasePath(const QString& path);
     void setForceRun(bool force_run);
+    void setWorkingPath(QString working_path);
     QJsonObject getResults();
 
-    Q_INVOKABLE QString fileChecksum(const QString& fname);
-    Q_INVOKABLE QString stringChecksum(const QString& str);
-    Q_INVOKABLE QString createTemporaryFileName(const QString& code);
-    //Q_INVOKABLE bool runProcess(const QString& processor_name, const QString& parameters_json);
-    Q_INVOKABLE bool runPipeline(const QString& json);
+    Q_INVOKABLE QString addProcess(QString processor_name,QString inputs_json,QString parameters_json,QString outputs_json); //returns json
+    Q_INVOKABLE void addPrv(QString input_path,QString output_path);
+    Q_INVOKABLE bool runPipeline();
     Q_INVOKABLE void log(const QString& message);
 
 private:
-    ScriptControllerPrivate* d;
+    ScriptController2Private* d;
 };
 
-QString resolve_file_name(QStringList server_urls, QString server_base_path, QString fname_in);
-QJsonObject make_prv_object(QString path);
+QString resolve_file_name_2(QStringList server_urls, QString server_base_path, QString fname_in);
+QJsonObject make_prv_object_2(QString path);
 
-#endif // SCRIPTCONTROLLER_H
+#endif // SCRIPTCONTROLLER2_H

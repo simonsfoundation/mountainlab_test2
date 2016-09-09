@@ -13,7 +13,10 @@ mbserver_base_path=/home/magland/sorting_results
 
 [kron]
 dataset_paths=mountainsort/example_datasets;user/datasets
+; algorithm_paths to be removed
 algorithm_paths=mountainsort/algorithms;user/algorithms
+pipeline_paths=mountainsort/pipelines;user/pipelines
+view_program_paths=mountainsort/view_programs;user/view_programs
 
 [server]
 mountainprocess_exe=mountainprocess/bin/mountainprocess

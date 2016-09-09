@@ -26,12 +26,12 @@ SOURCES += \
 
 HEADERS += \
     processmanager.h \
-    scriptcontroller.h \
+    scriptcontroller.h scriptcontroller2.h \
     unit_tests/unit_tests.h
 
 SOURCES += \
     processmanager.cpp \
-    scriptcontroller.cpp \
+    scriptcontroller.cpp scriptcontroller2.cpp \
     unit_tests/unit_tests.cpp
 
 #tests
