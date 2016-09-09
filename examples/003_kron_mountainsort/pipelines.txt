@@ -1,1 +1,3 @@
 ms mountainsort_001.pipeline
+ms_nf3 mountainsort_001.pipeline --num_features=3 --num_features2=3
+ms_nf30 mountainsort_001.pipeline --num_features=30 --num_features2=30

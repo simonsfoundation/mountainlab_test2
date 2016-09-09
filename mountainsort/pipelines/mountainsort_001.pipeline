@@ -10,7 +10,9 @@ function run_mountainsort(params) {
 		detect_threshold:3.5, // std. dev's
 		detect_interval:10, //timepoints
 		clip_size:50, //timepoints
-		sign:0 // use 1 to detect only positive spikes, -1 to detect only negative spikes, and 0 for both
+		sign:0, // use 1 to detect only positive spikes, -1 to detect only negative spikes, and 0 for both
+		num_features:10,
+		num_features2:10
 	});
 
 	// Bandpass filter
@@ -33,7 +35,7 @@ function run_mountainsort(params) {
 	var firings1=Process('branch_cluster_v2',{timeseries:pre2,detect:detect,adjacency_matrix:''},{
 			clip_size:params.clip_size,
 			min_shell_size:150,shell_increment:0,
-			num_features:10,num_features2:10,
+			num_features:params.num_features,num_features2:params.num_features2,
 			detect_interval:params.detect_interval,consolidation_factor:0.9,
 			isocut_threshold:1.5
 		}).firings_out;

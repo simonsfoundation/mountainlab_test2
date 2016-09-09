@@ -242,11 +242,11 @@ exports.make_system_call=function(cmd,args,callback) {
 	var all_stdout='';
 	var all_stderr='';
 	pp.stdout.on('data',function(data) {
-		console.log ('----'+data);
+		console.log (data);
 		all_stdout+=data;
 	});
 	pp.stderr.on('data',function(data) {
-		console.log ('===='+data);
+		console.log (data);
 		all_stderr+=data;
 	});
 };

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 function print_usage() {
-	console.log ('kron_view [view_program_name] [pipeline_name] [dataset_name] --outpath=[output(default)]');
-	console.log ('kron_view [view_program_name] [dataset_name] --outpath=[output(default)]');
+	console.log ('kron_view [view_program_name] [pipeline_names] [dataset_names] --outpath=[output(default)]');
+	console.log ('kron_view [view_program_name] [dataset_names] --outpath=[output(default)]');
 }
 
 var fs=require('fs');
@@ -11,27 +11,53 @@ var common=require(__dirname+'/common.node.js');
 var CLP=new common.CLParams(process.argv);
 
 var view_program_name=CLP.unnamedParameters[0];
-var pipname=CLP.unnamedParameters[1];
-var dsname=CLP.unnamedParameters[2];
+var pipnames=(CLP.unnamedParameters[1]||'').split(',');
+var dsnames=(CLP.unnamedParameters[2]||'').split(',');
+if ('all_pairs' in CLP.namedParameters) {
+	var pipnames2=[];
+	var dsnames2=[];
+	for (var i2 in dsnames) {
+		for (var i1 in pipnames) {
+			pipnames2.push(pipnames[i1]);
+			dsnames2.push(dsnames[i2]);
+		}		
+	}
+	pipnames=pipnames2;
+	dsnames=dsnames2;
+}
+else {
+	if (pipnames.length>dsnames.length) {
+		if (dsnames.length==1) {
+			while (pipnames.length>dsnames.length) {
+				dsnames.push(dsnames[0]||'');
+			}
+		}
+	}
+	if (dsnames.length>pipnames.length) {
+		if (pipnames.length==1) {
+			while (dsnames.length>pipnames.length) {
+				pipnames.push(pipnames[0]||'');
+			}
+		}
+	}
+}
 if (CLP.unnamedParameters.length==2) {
-	pipname='';
-	dsname=CLP.unnamedParameters[1];
+	pipnames=[''];
+	dsnames=CLP.unnamedParameters[1].split(',');
 }
 var outpath=CLP.namedParameters.outpath||'output';
 var pipelines_path='pipelines.txt';
 var datasets_path='datasets.txt';
 
-if ((!dsname)||(!outpath)||(!pipelines_path)||(!datasets_path)) {
+if ((!outpath)||(!pipelines_path)||(!datasets_path)) {
 	print_usage();
 	process.exit(-1);
 }
 
-var datasets=common.read_datasets_from_text_file(datasets_path);
-var dataset=common.find_dataset(datasets,dsname);
-
-if (!dataset) {
-	console.log ('Unable to find dataset: '+dsname);
-	process.exit(-1);
+var all_datasets=common.read_datasets_from_text_file(datasets_path);
+var datasets=[];
+for (var i in dsnames) {
+	datasets.push(common.find_dataset(all_datasets,dsnames[i]));
 }
 
 var view_program_file=common.find_view_program_file(view_program_name);
@@ -40,17 +66,27 @@ if (!view_program_file) {
 	process.exit(-1);	
 }
 
-var output_folder='';
-if (pipname) output_folder=outpath+'/'+pipname+'--'+dsname;
+var output_folders=[];
+for (var i in pipnames) {
+	output_folders.push(outpath+'/'+pipnames[i]+'--'+dsnames[i]);
+}
+var dataset_folders=[];
+for (var i in datasets) {
+	dataset_folders.push(datasets[i].absolute_folder_path);
+}
 
 var args='';
 for (var key in CLP.namedParameters) {
 	args+=' --'+key+'='+CLP.namedParameters[key];
 }
-args+=' --dataset_folder='+dataset.absolute_folder_path;
-if (output_folder) {
-	args+=' --output_folder='+output_folder;
+if (dataset_folders.length>0) {
+	args+=' --dataset_folders='+dataset_folders.join(';');
 }
+if (output_folders.length>0) {
+	args+=' --output_folders='+output_folders.join(';');
+}
+args+=' --dataset_names='+dsnames.join(',');
+args+=' --pipeline_names='+pipnames.join(',');
 args=args.split(' ');
 common.make_system_call(view_program_file,args,function() {
 });

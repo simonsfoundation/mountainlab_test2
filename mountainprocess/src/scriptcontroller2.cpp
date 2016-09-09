@@ -137,7 +137,7 @@ QString ScriptController2::addProcess(QString processor_name, QString inputs_jso
     MLProcessor PP=ProcessManager::globalInstance()->processor(processor_name);
     if (PP.name != processor_name) { //rather use PP.isNull()
         qWarning() << "Unable to find processor **: " + processor_name;
-        return false;
+        return "{}";
     }
     QMap<QString,MLParameter> PP_outputs=PP.outputs;
 
