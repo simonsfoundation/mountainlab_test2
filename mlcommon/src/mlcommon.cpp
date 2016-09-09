@@ -705,9 +705,7 @@ QString create_file_from_prv(QString output_name, QString checksum0, long size0,
 
 QString resolve_prv_file(const QString& prv_fname)
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << prv_fname;
     QString json = TextFile::read(prv_fname);
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << json;
     QJsonParseError err;
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &err).object();
     if (err.error != QJsonParseError::NoError) {
@@ -718,9 +716,7 @@ QString resolve_prv_file(const QString& prv_fname)
     QString path0 = obj["original_path"].toString();
     QString checksum0 = obj["original_checksum"].toString();
     long size0 = obj["original_size"].toVariant().toLongLong();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     QString path2 = create_file_from_prv(path0, checksum0, size0, obj["processes"].toArray());
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (!path2.isEmpty()) {
         return path2;
     }

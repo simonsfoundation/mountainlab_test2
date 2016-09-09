@@ -176,6 +176,10 @@ exports.CLParams=function(argv) {
 				i++;
 			}
 		}
+		else if (arg0.indexOf('-')===0) {
+			arg0=arg0.slice(1);
+			this.namedParameters[arg0]='';
+		}
 		else {
 			this.unnamedParameters.push(arg0);
 		}

@@ -10,5 +10,12 @@ kron_view table_truth ms example1
 *** Repeat this with example1 replaced by example2...example5
 
 *** Run processing with different sorting parameters
+kron_pipeline ms_nf3 example1
 kron_pipeline ms_nf30 example1
 (see pipelines.txt)
+
+*** Run batch processing
+kron_pipeline ms,ms_nf3,ms_nf30 example1,example2,example5 --all_pairs
+
+*** View more result tables
+kron_view table_truth ms,ms_nf3,ms_nf30 example1,example2,example5 --all_pairs

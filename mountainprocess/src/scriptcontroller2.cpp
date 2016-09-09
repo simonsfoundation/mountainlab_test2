@@ -76,6 +76,7 @@ public:
     QString m_server_base_path;
     bool m_force_run = false;
     QString m_working_path;
+    QJsonObject m_results;
 
     QList<PipelineNode2> m_pipeline_nodes;
 
@@ -129,7 +130,7 @@ void ScriptController2::setWorkingPath(QString working_path)
 
 QJsonObject ScriptController2::getResults()
 {
-    return QJsonObject();
+    return d->m_results;
 }
 
 QString ScriptController2::addProcess(QString processor_name, QString inputs_json, QString parameters_json,QString outputs_json)
@@ -174,6 +175,7 @@ void ScriptController2::addPrv(QString input_path, QString output_path)
 
 bool ScriptController2::runPipeline()
 {
+    QDateTime timestamp_start=QDateTime::currentDateTime();
     //check for empty output paths
     for (int i = 0; i < d->m_pipeline_nodes.count(); i++) {
         PipelineNode2* node = &d->m_pipeline_nodes[i];
@@ -243,6 +245,8 @@ bool ScriptController2::runPipeline()
         }
     }
 
+    QDateTime timestamp_finish=QDateTime::currentDateTime();
+    d->m_results["total_time_sec"]=timestamp_start.msecsTo(timestamp_finish)*1.0/1000;
     return true;
 }
 

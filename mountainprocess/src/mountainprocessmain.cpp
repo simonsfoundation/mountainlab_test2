@@ -142,6 +142,9 @@ int main(int argc, char* argv[])
             return -1; //load the processor plugins etc
         }
         QString output_fname = CLP.named_parameters.value("_process_output").toString(); //maybe the user specified where output is to be reported
+        if (!output_fname.isEmpty()) {
+            output_fname=QDir::current().absoluteFilePath(output_fname); //make it absolute
+        }
         QString processor_name = arg2; //name of the processor is the second user-supplied arg
         QVariantMap process_parameters = CLP.named_parameters;
         remove_system_parameters(process_parameters); //remove parameters starting with "_"
@@ -211,6 +214,7 @@ int main(int argc, char* argv[])
         obj["peak_cpu_pct"] = compute_peak_cpu_pct(info.monitor_stats);
         //obj["monitor_stats"]=monitor_stats_to_json_array(info.monitor_stats); -- at some point we can include this in the file. For now we only worry about the computed peak values
         if (!output_fname.isEmpty()) { //The user wants the results to go in this file
+            QFile::remove(output_fname); //important -- added 9/9/16
             QString obj_json = QJsonDocument(obj).toJson();
             if (!TextFile::write(output_fname, obj_json)) {
                 qCritical() << "Unable to write results to: " + output_fname;
@@ -231,6 +235,9 @@ int main(int argc, char* argv[])
         }
 
         QString output_fname = CLP.named_parameters.value("_script_output").toString(); //maybe the user specified where output is to be reported
+        if (!output_fname.isEmpty()) {
+            output_fname=QDir::current().absoluteFilePath(output_fname); //make it absolute
+        }
 
         int ret = 0;
         QString error_message;
@@ -288,6 +295,7 @@ int main(int argc, char* argv[])
         obj["results"] = results;
         obj["error"] = error_message;
         if (!output_fname.isEmpty()) { //The user wants the results to go in this file
+            QFile::remove(output_fname); //important -- added 9/9/16
             QString obj_json = QJsonDocument(obj).toJson();
             if (!TextFile::write(output_fname, obj_json)) {
                 qCritical() << "Unable to write results to: " + output_fname;
@@ -564,7 +572,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
         }
     }
 
-    results = Controller.getResults();
+    results = Controller2.getResults();
 
     return true;
 }
@@ -639,9 +647,17 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
 
     if (prtype == ScriptType) {
         PP.output_fname = CLP.named_parameters["_script_output"].toString();
+        if (!PP.output_fname.isEmpty()) {
+            PP.output_fname=QDir::current().absoluteFilePath(PP.output_fname); //make it absolute
+            QFile::remove(PP.output_fname); //important, added 9/9/16
+        }
     }
     else {
         PP.output_fname = CLP.named_parameters["_process_output"].toString();
+        if (!PP.output_fname.isEmpty()) {
+            PP.output_fname=QDir::current().absoluteFilePath(PP.output_fname); //make it absolute
+            QFile::remove(PP.output_fname); //important, added 9/9/16
+        }
     }
     if (PP.output_fname.isEmpty()) {
         if (prtype == ScriptType)
@@ -771,39 +787,74 @@ QString get_daemon_state_summary(const QJsonObject& state)
         ret += "Daemon is NOT running.\n";
         return ret;
     }
-    long num_running = 0;
-    long num_finished = 0;
-    long num_queued = 0;
-    long num_errors = 0;
-    QMap<QString, ProcessorCount> processor_counts;
-    QJsonObject processes = state["processes"].toObject();
-    QStringList ids = processes.keys();
-    foreach (QString id, ids) {
-        QJsonObject process = processes[id].toObject();
-        if (process["is_running"].toBool()) {
-            num_running++;
-            processor_counts[process["processor_name"].toString()].running++;
-        }
-        else if (process["is_finished"].toBool()) {
-            if (!process["error"].toString().isEmpty()) {
-                num_errors++;
-                processor_counts[process["processor_name"].toString()].errors++;
+
+    //scripts
+    {
+        long num_running = 0;
+        long num_finished = 0;
+        long num_queued = 0;
+        long num_errors = 0;
+        QJsonObject scripts = state["scripts"].toObject();
+        QStringList ids = scripts.keys();
+        foreach (QString id, ids) {
+            QJsonObject script = scripts[id].toObject();
+            if (script["is_running"].toBool()) {
+                num_running++;
+            }
+            else if (script["is_finished"].toBool()) {
+                if (!script["error"].toString().isEmpty()) {
+                    num_errors++;
+                }
+                else {
+                    num_finished++;
+                }
             }
             else {
-                num_finished++;
-                processor_counts[process["processor_name"].toString()].finished++;
+                num_queued++;
             }
         }
-        else {
-            num_queued++;
-            processor_counts[process["processor_name"].toString()].queued++;
+        ret += QString("%1 scripts: %2 queued, %3 running, %4 finished, %5 errors\n").arg(ids.count()).arg(num_queued).arg(num_running).arg(num_finished).arg(num_errors);
+    }
+
+    //processes
+    {
+        long num_running = 0;
+        long num_finished = 0;
+        long num_queued = 0;
+        long num_errors = 0;
+        QMap<QString, ProcessorCount> processor_counts;
+        QJsonObject processes = state["processes"].toObject();
+        QStringList ids = processes.keys();
+        foreach (QString id, ids) {
+            QJsonObject process = processes[id].toObject();
+            if (process["is_running"].toBool()) {
+                num_running++;
+                processor_counts[process["processor_name"].toString()].running++;
+            }
+            else if (process["is_finished"].toBool()) {
+                if (!process["error"].toString().isEmpty()) {
+                    num_errors++;
+                    processor_counts[process["processor_name"].toString()].errors++;
+                }
+                else {
+                    num_finished++;
+                    processor_counts[process["processor_name"].toString()].finished++;
+                }
+            }
+            else {
+                num_queued++;
+                processor_counts[process["processor_name"].toString()].queued++;
+            }
+        }
+        ret += QString("%1 processes: %2 queued, %3 running, %4 finished, %5 errors\n").arg(ids.count()).arg(num_queued).arg(num_running).arg(num_finished).arg(num_errors);
+        QStringList keys = processor_counts.keys();
+        foreach (QString processor_name, keys) {
+            ret += QString("  %1: %2 queued, %3 running, %4 finished, %5 errors\n").arg(processor_name).arg(processor_counts[processor_name].queued).arg(processor_counts[processor_name].running).arg(processor_counts[processor_name].finished).arg(processor_counts[processor_name].errors);
         }
     }
-    ret += QString("%1 processes: %2 queued, %3 running, %4 finished, %5 errors\n").arg(ids.count()).arg(num_queued).arg(num_running).arg(num_finished).arg(num_errors);
-    QStringList keys = processor_counts.keys();
-    foreach (QString processor_name, keys) {
-        ret += QString("  %1: %2 queued, %3 running, %4 finished, %5 errors\n").arg(processor_name).arg(processor_counts[processor_name].queued).arg(processor_counts[processor_name].running).arg(processor_counts[processor_name].finished).arg(processor_counts[processor_name].errors);
-    }
+
+
+
     return ret;
 }
 

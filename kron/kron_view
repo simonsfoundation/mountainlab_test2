@@ -87,6 +87,8 @@ if (output_folders.length>0) {
 }
 args+=' --dataset_names='+dsnames.join(',');
 args+=' --pipeline_names='+pipnames.join(',');
+console.log('==============================================================');
+console.log(args);
 args=args.split(' ');
 common.make_system_call(view_program_file,args,function() {
 });

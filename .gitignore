@@ -17,6 +17,8 @@ mountainsort.mp
 *.mda
 mountainlab.ini
 log
+*.log
+*.mexa64
 
 # Qt-es
 

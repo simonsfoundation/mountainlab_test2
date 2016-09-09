@@ -1,0 +1,485 @@
+#!/usr/bin/env node
+
+var fs=require('fs');
+var child_process=require('child_process');
+require('console.table');
+
+table_truth();
+
+function table_truth() {
+
+	var CLP=new CLParams(process.argv);
+
+	var dsfolders=CLP.namedParameters.dataset_folders.split(';');
+	var outfolders=CLP.namedParameters.output_folders.split(';');
+	var dataset_names=(CLP.namedParameters.dataset_names||'').split(',');
+	var pipeline_names=(CLP.namedParameters.pipeline_names||'').split(',');
+
+	var separate_by_dataset=true;
+	if ('single_table' in CLP.namedParameters) separate_by_dataset=false;
+	console.log('sbd: '+separate_by_dataset);
+
+	//var dsparams=JSON.parse(read_text_file(dsfolders[0]+'/params.json')||'{}');
+
+	var tables=[];
+	var num_tables_computed=0;
+	for (var i=0; i<dsfolders.length; i++) {
+		(function(i) {
+			var firings1_path=dsfolders[i]+'/firings_true.mda.prv';
+			var firings2_path=outfolders[i]+'/firings.mda';
+			var pipeline_results=JSON.parse(read_text_file(outfolders[i]+'/pipeline_output.json')||'{}').results||{};
+			get_table(firings1_path,firings2_path,{
+				pipeline_results:pipeline_results,
+				dsname:dataset_names[i],
+				pipname:pipeline_names[i],
+				individual_units:(('individual_units' in CLP.namedParameters)||('i' in CLP.namedParameters)),
+			},function(table0) {
+				tables[i]=table0;
+				num_tables_computed++;
+			});
+		})(i);
+	}
+
+	wait_for_condition(function() {return (num_tables_computed==dsfolders.length);},function() {
+		var entire_table=[];
+		for (var i=0; i<dsfolders.length; i++) {
+			entire_table=entire_table.concat(tables[i]);
+			if ((i+1>=dsfolders.length)||
+				((separate_by_dataset)&&(dsfolders[i]!=dsfolders[i+1]))
+				) {
+				console.table(entire_table);
+				entire_table=[];
+			}
+		}
+	});
+}
+
+
+function get_table(firings1_path,firings2_path,info,callback) {
+	var outpath=make_temporary_output_path('/tmp');
+	if (!outpath) {
+		console.log ('Unable to make temporary path in /tmp');
+		process.exit(-1);
+	}
+	compute_confusion_matrix(firings1_path,firings2_path,outpath,function() {
+		var CM=read_csv_matrix(outpath+'/confusion_matrix.csv');
+		var LM=read_csv_vector(outpath+'/optimal_label_map.csv');
+
+		var table=[];
+
+		var K1=CM.length-1;
+		console.log('K1 = '+K1);
+		if (info.individual_units) {
+			for (var k1=1; k1<=K1; k1++) {
+				var table0=tabulate_results(CM,LM,info.dsname,info.pipname,info.pipeline_results,k1);
+				table=table.concat(table0);
+			}
+		}
+		else {
+			var table0=tabulate_results(CM,LM,info.dsname,info.pipname,info.pipeline_results,0);
+			table=table.concat(table0);
+		}
+
+		clean_up_temporary_output_path(outpath);
+		callback(table);
+	});
+}
+
+/*
+var args='';
+args+=' --raw='+dsfolder+'/raw.mda.prv';
+if (file_exists(outfolder+'/filt.mda.prv')) {
+	args+=' --filt='+outfolder+'/filt.mda.prv';
+}
+if (file_exists(outfolder+'/pre.mda.prv')) {
+	args+=' --pre='+outfolder+'/pre.mda.prv';
+}
+args+=' --firings1='+firings_true_path;
+args+=' --firings2='+firings_path;
+args+=' --samplerate='+(dsparams.samplerate||0);
+args=args.split(' ');
+make_system_call('mountaincompare',args);
+*/
+
+function compute_confusion_matrix(firings1_path,firings2_path,outpath,callback) {
+	var cmd='mountainprocess';
+	var args=['run-process','merge_firings'];
+	args.push('--firings1='+firings1_path);
+	args.push('--firings2='+firings2_path);
+	args.push('--max_matching_offset=10');
+	args.push('--confusion_matrix='+outpath+'/confusion_matrix.csv');
+	args.push('--optimal_label_map='+outpath+'/optimal_label_map.csv');
+	args.push('--firings_merged='+outpath+'/firings_merged.mda');
+
+	make_system_call(cmd,args,function() {
+		if (callback) callback();
+	});
+}
+
+function tabulate_results(CM,LM,dsname0,algname0,pipeline_results,k) { //use k=0 for all
+	var table0=[];
+	{
+		var K1=CM.length-1;
+		var K2=CM[0].length-1;
+
+		if (k>K1) return false;
+
+		var Ntrue=0,Ndetect=0,Ncorrect=0,Nincorrect_detect=0,Nincorrect_true=0,Nextra=0,Nmissed=0;
+		if (k==0) {
+			for (var k1=1; k1<=K1; k1++) {
+				for (var k2=1; k2<=K2; k2++) {
+					var val=CM[k1-1][k2-1];
+					Ntrue+=val;
+					Ndetect+=val;
+					if (LM[k1-1]==k2) {
+						Ncorrect+=val;
+					}
+					else {
+						//classified with a label that corresponds to a different true label
+						Nincorrect_detect+=val;
+						Nincorrect_true+=val;
+					}
+				}
+			}
+			for (var k1=1; k1<=K1; k1++) {
+				var val=CM[k1-1][K2];
+				//true events that are not detected
+				Ntrue+=val;
+				Nmissed+=val;
+			}
+			for (var k2=1; k2<=K2; k2++) {
+				var val=CM[K1][k2-1];
+				//detected events that don't correspond to any true label
+				Ndetect+=val;
+				Nextra+=val;
+			}
+		}
+		else { // k>0
+			var k_prime=LM[k-1]||0;
+			if (k_prime>0) {
+				for (var k1=1; k1<=K1; k1++) {
+					var val=CM[k1-1][k_prime-1];	
+					Ndetect+=val;
+					if (k1==k) Ncorrect+=val;
+					else Nincorrect_detect+=val;
+				}	
+			}
+			{
+				for (var k2=1; k2<=K2; k2++) {
+					var val=CM[k-1][k2-1];	
+					Ntrue+=val;
+					if (k2!=k_prime) Nincorrect_true+=val;
+				}		
+			}
+			{
+				Ntrue+=CM[k-1][K2];
+				Nmissed+=CM[k-1][K2];
+				if (k_prime>0) {
+					Ndetect+=CM[K1][k_prime-1];
+					Nextra+=CM[K1][k_prime-1];
+				}
+			}
+		}
+
+		var k_display=k||'all';
+		var table_row={};
+		table_row.DATASET=dsname0;
+		table_row.ALG=algname0;
+		if (k==0) {
+			table_row['Time (s)']=pipeline_results.total_time_sec||'';
+		}
+		table_row.UNIT=k_display;
+		table_row.Ntrue=Ntrue;
+		table_row.Ndetect=Ndetect;
+		if (k==0) {
+			table_row.Ktrue=K1;
+			table_row.Kdetect=K2;
+		}
+		table_row['N.correct/N.detect']=topct(Ncorrect/Ndetect);
+		table_row['N.incorrect/N.detect']=topct(Nincorrect_detect/Ndetect);
+		table_row['N.extra/N.detect']=topct(Nextra/Ndetect);
+		table_row['N.correct/N.true']=topct(Ncorrect/Ntrue);
+		table_row['N.incorrect/N.true']=topct(Nincorrect_true/Ntrue);
+		table_row['N.missed/N.true']=topct(Nmissed/Ntrue);
+		table0.push(table_row);
+	}
+	return table0;
+}
+
+function reduce_confusion_matrix(CM_orig,LM,k) {
+	if (k===0) return CM_orig;
+
+	var K1=CM_orig.length-1;
+	var K2=CM_orig[0].length-1;
+
+	var CM=[];
+	for (var i1=1; i1<=K1+1; i1++) {
+		var row=[];
+		for (var i2=1; i2<=K2+1; i2++) {
+			row.push(0);
+		}
+		CM.push(row);
+	}
+
+	var k2=LM[k-1];
+	for (var i1=1; i1<=K1+1; i1++) {
+		for (var i2=1; i2<=K2+1; i2++) {
+			if ((i1==k)||(i2==k2)) {
+				CM[i1-1][i2-1]=CM_orig[i1-1][i2-1];
+			}
+		}
+	}
+	return CM;
+}
+
+function sub_confusion_matrix(CM,LM,ks) {
+	var ks2=[];
+	var LMb=[];
+	for (var i in ks) {
+		var match=LM[ks[i]-1];
+		if (match) {
+			ks2.push(match);
+			LMb.push(ks2.length);
+		}
+		else {
+			LMb.push(0);
+		}
+	}
+	var K1b=ks.length;
+	var K2b=ks2.length;
+	var CMb=[];
+
+	for (var i1=0; i1<K1b; i1++) {
+		var tmp=[];
+		for (var i2=0; i2<K2b; i2++) {
+			tmp.push(CM[ks[i1]-1][ks2[i2]-1]);
+		}
+		tmp.push(0); //place-holder
+		CMb.push(tmp);
+	}
+	//last row
+	{
+		var tmp=[];
+		for (var i2=0; i2<K2b; i2++) {
+			tmp.push(0); //place-holder
+		}
+		tmp.push(0); //place-holder
+		CMb.push(tmp);
+	}
+	for (var i1=0; i1<K1b; i1++) {
+		CMb[i1][K2b]=row_sum(CM,ks[i1]-1)-row_sum(CMb,i1);
+	}
+	for (var i2=0; i2<K2b; i2++) {
+		CMb[K1b][i2]=col_sum(CM,ks2[i2]-1)-col_sum(CMb,i2);
+	}
+	return {
+		CMb:CMb,
+		LMb:LMb
+	}
+}
+
+
+function CLParams(argv) {
+	this.unnamedParameters=[];
+	this.namedParameters={};
+
+	var args=argv.slice(2);
+	for (var i=0; i<args.length; i++) {
+		var arg0=args[i];
+		if (arg0.indexOf('--')===0) {
+			arg0=arg0.slice(2);
+			var ind=arg0.indexOf('=');
+			if (ind>=0) {
+				this.namedParameters[arg0.slice(0,ind)]=arg0.slice(ind+1);
+			}
+			else {
+				this.namedParameters[arg0]=args[i+1]||'';
+				i++;
+			}
+		}
+		else if (arg0.indexOf('-')===0) {
+			arg0=arg0.slice(1);
+			this.namedParameters[arg0]='';
+		}
+		else {
+			this.unnamedParameters.push(arg0);
+		}
+	}
+};
+
+var s_num_system_calls_running=0;
+function make_system_call(cmd,args,callback) {
+	console.log ('Running '+cmd+' '+args.join(' '));
+	s_num_system_calls_running++;
+	var pp=child_process.spawn(cmd,args);
+	pp.stdout.setEncoding('utf8');
+	pp.stderr.setEncoding('utf8');
+	var done=false;
+	pp.on('close', function(code) {
+  		done=true;
+		if (callback) callback();
+		s_num_system_calls_running--;
+	});
+	pp.on('error',function(err) {
+		console.log ('Process error: '+cmd+' '+args.join(' '));
+		console.log (err);
+	});
+	var all_stdout='';
+	var all_stderr='';
+	pp.stdout.on('data',function(data) {
+		console.log (data);
+		all_stdout+=data;
+	});
+	pp.stderr.on('data',function(data) {
+		console.log (data);
+		all_stderr+=data;
+	});
+}
+function wait_for_condition(func,callback) {
+	setTimeout(check_it,100);
+	function check_it() {
+		if (func()) {
+			callback();
+		}
+		else {
+			setTimeout(check_it,100);
+		}
+	}
+}
+function wait_for_system_calls_to_finish(callback) {
+	setTimeout(check_it,100);
+	function check_it() {
+		if (s_num_system_calls_running===0) {
+			callback();
+		}
+		else {
+			setTimeout(check_it,100);
+		}
+	}
+}
+
+function read_text_file(path) {
+	try {
+		return fs.readFileSync(path,'utf8');
+	}
+	catch(err) {
+		console.log ('WARNING: problem reading file: '+path);
+		return '';
+	}
+}
+
+function file_exists(path) {
+	return fs.existsSync(path);
+}
+function read_csv_matrix(path) {
+	var ret=[];
+	var txt=read_text_file(path);
+	var lines=txt.split('\n');
+	for (var i in lines) {
+		var vals=lines[i].split(',');
+		if (vals.length>0) {
+			var row=[];
+			for (var k=0; k<vals.length; k++) {
+				row.push(Number(vals[k]));
+			}
+			ret.push(row);
+		}
+	}
+	return transpose_matrix(ret); //this is because of a bad decision I made
+}
+
+function read_csv_vector(path) {
+	var X=read_csv_matrix(path);
+	var Y=[];
+	for (var i in X) {
+		for (var j in X[i]) {
+			Y.push(X[i][j]);
+		}
+	}
+	return Y;
+}
+
+function print_csv_matrix(X) {
+	var txt='';
+	for (var r=0; r<X.length; r++) {
+		console.log (X[r].join(','));
+	}
+}
+
+function row_sum(X,row) {
+	var ret=0;
+	for (var i in X[row]) {
+		ret=ret+X[row][i];
+	}
+	return ret;
+}
+function col_sum(X,col) {
+	var ret=0;
+	for (var i in X) {
+		ret=ret+X[i][col];
+	}
+	return ret;
+}
+
+function transpose_matrix(X) {
+	if (X.length===0) return X;
+	var Y=[];
+	for (var i in X[0]) {
+		Y.push([]);
+	}
+	for (var j in X) {
+		for (var i in X[j]) {
+			Y[i].push(X[j][i]);
+		}
+	}
+	return Y;
+}
+
+function topct(num) {
+	if (isNaN(num)) return '';
+	if (num>1) return '>100%';
+	if (num<0.1) return Math.round(num*1000)/10+'%';
+	else return Math.round(num*1000)/10+'%';
+}
+
+function make_temporary_output_path(base_directory) {
+	try {
+		var code=make_random_id(10);
+		try {fs.mkdirSync(base_directory+'/table_truth');}
+		catch(err) {}
+		var path=base_directory+'/table_truth/mountainlab_tmp_'+code;
+		fs.mkdirSync(path);
+		return path;
+	}
+	catch(err) {
+		return '';
+	}
+}
+
+function clean_up_temporary_output_path(outpath) {
+	if (outpath.indexOf('mountainlab_tmp_')<0) {  //to be safe
+		console.log ('WARNING: unable to clean up temporary output path: '+outpath);
+		return;
+	}
+	fs.readdirSync(outpath).forEach(function(file,index){
+      var file_path = outpath + "/" + file;
+      if(fs.lstatSync(file_path).isDirectory()) { // recurse
+        //deleteFolderRecursive(curPath);
+      } else { // delete file
+        fs.unlinkSync(file_path);
+      }
+    });
+    fs.rmdirSync(outpath);
+}
+
+function make_random_id(len)
+{
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+    for( var i=0; i < len; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
