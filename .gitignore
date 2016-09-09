@@ -11,6 +11,12 @@ html
 *.so
 *.dll
 *.dylib
+output
+bin
+mountainsort.mp
+*.mda
+mountainlab.ini
+log
 
 # Qt-es
 
