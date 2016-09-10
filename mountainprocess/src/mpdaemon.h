@@ -129,4 +129,10 @@ QJsonObject variantmap_to_json_obj(QVariantMap map);
 QVariantMap json_obj_to_variantmap(QJsonObject obj);
 QJsonObject runtime_opts_struct_to_obj(ProcessRuntimeOpts opts);
 
+// this has to be a POD -> no pointers, no dynamic memory allocation
+struct MountainProcessDescriptor {
+    uint32_t version = 1;
+    pid_t pid;
+};
+
 #endif // MPDAEMON_H

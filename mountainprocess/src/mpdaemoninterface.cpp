@@ -1,6 +1,6 @@
 /******************************************************
 ** See the accompanying README and LICENSE files
-** Author(s): Jeremy Magland
+** Author(s): Jeremy Magland, Witold Wysota
 ** Created: 5/2/2016
 *******************************************************/
 
@@ -14,7 +14,9 @@
 #include "mpdaemon.h"
 
 #include <QDebug>
+#include <QSharedMemory>
 #include "mlcommon.h"
+#include <signal.h>
 
 class MPDaemonInterfacePrivate {
 public:
@@ -127,17 +129,15 @@ bool MPDaemonInterface::clearProcessing()
     return d->send_daemon_command(obj, 0);
 }
 
-#include "signal.h"
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
-    QString fname = MLUtil::tempPath() + "/mpdaemon_running.pid";
-    if (!QFile::exists(fname))
+    QSharedMemory shm("mountainprocess");
+    if (!shm.attach(QSharedMemory::ReadOnly))
         return false;
-    if (QFileInfo(fname).lastModified().secsTo(QDateTime::currentDateTime()) > 120) { // time since last write
-        return false;
-    }
-    long pid = TextFile::read(fname).toLongLong();
-    bool ret = (kill(pid, 0) == 0);
+    shm.lock();
+    const MountainProcessDescriptor *desc = reinterpret_cast<const MountainProcessDescriptor*>(shm.constData());
+    bool ret = (kill(desc->pid, 0) == 0);
+    shm.unlock();
     return ret;
 }
 

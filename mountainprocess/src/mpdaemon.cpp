@@ -1,6 +1,6 @@
 /******************************************************
 ** See the accompanying README and LICENSE files
-** Author(s): Jeremy Magland
+** Author(s): Jeremy Magland, Witold Wysota
 ** Created: 5/2/2016
 *******************************************************/
 
@@ -39,6 +39,7 @@ public:
     QMap<QString, MPDaemonPript> m_pripts;
     ProcessResources m_total_resources_available;
     QString m_log_path;
+    QSharedMemory *shm = nullptr;
 
     void process_command(QJsonObject obj);
     void writeLogRecord(QString record_type, QString key1 = "", QVariant val1 = QVariant(), QString key2 = "", QVariant val2 = QVariant(), QString key3 = "", QVariant val3 = QVariant());
@@ -81,6 +82,9 @@ public:
     bool launch_pript(QString id);
     ProcessResources compute_process_resources_available();
     ProcessResources compute_process_resources_needed(MPDaemonPript P);
+
+    bool acquireServer();
+    bool releaseServer();
 };
 
 void append_line_to_file(QString fname, QString line)
@@ -135,7 +139,7 @@ MPDaemon::~MPDaemon()
                 P.qprocess->terminate(); // I think it's okay to terminate a process. It won't cause this program to crash.
         }
     }
-
+    d->releaseServer();
     delete d;
 }
 
@@ -768,6 +772,83 @@ ProcessResources MPDaemonPrivate::compute_process_resources_needed(MPDaemonPript
     return ret;
 }
 
+bool MPDaemonPrivate::acquireServer()
+{
+    if (!shm)
+        shm = new QSharedMemory("mountainprocess", q);
+    else if (shm->isAttached())
+        shm->detach();
+
+    // algrithm:
+    // create a shared memory segment
+    // if successful, there is no active server, so we become one
+    //   - write your own PID into the segment
+    // otherwise try to attach to the segment
+    //   - check the pid stored in the segment
+    //   - see if process with that pid exists
+    //   - if yes, bail out
+    //   - if not, overwrite the pid with your own
+    // repeat the process until either create or attach is successfull
+
+    while (true) {
+        if (shm->create(sizeof(MountainProcessDescriptor))) {
+            shm->lock(); // there is potentially a race condition here -> someone might have locked the segment
+                         // before we did and written its own pid there
+                         // we assume that by default memory is zeroed (it seems to be on Linux)
+                         // so we can check the version
+            MountainProcessDescriptor *desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
+
+            // on Linux the memory seems to be zeroed by default
+            if (desc->version != 0) {
+                // someone has hijacked our segment
+                shm->unlock();
+                shm->detach();
+                continue; // try again
+            }
+            desc->version = 1;
+            desc->pid = (pid_t)QCoreApplication::applicationPid();
+            shm->unlock();
+            return true;
+        }
+        if (shm->attach()) {
+            shm->lock();
+            MountainProcessDescriptor *desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
+            // on Linux the memory seems to be zeroed by default
+            if (desc->version != 0) {
+                if (kill(desc->pid, 0) == 0) {
+                    // pid exists, server is likely active
+                    shm->unlock();
+                    shm->detach();
+                    return false;
+                }
+            }
+            // server has crashed or we have hijacked the segment
+            desc->version = 1;
+            desc->pid = (pid_t)QCoreApplication::applicationPid();
+            shm->unlock();
+            return true;
+        }
+    }
+}
+
+bool MPDaemonPrivate::releaseServer()
+{
+    if (shm && shm->isAttached()) {
+        shm->lock();
+        MountainProcessDescriptor *desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
+        // just to be sure we're the reigning server:
+        if (desc->pid == (pid_t)QCoreApplication::applicationPid()) {
+            // to avoid a race condition (released the server but not ended the process just yet), empty the block
+            desc->version = 0;
+            desc->pid = 0;
+        }
+        shm->unlock();
+        shm->detach();
+        return true;
+    }
+    return false;
+}
+
 bool MPDaemonPrivate::handle_processes()
 {
     ProcessResources pr_available = compute_process_resources_available();
@@ -887,24 +968,12 @@ QStringList MPDaemonPrivate::get_output_paths(MPDaemonPript P)
     return ret;
 }
 
-#include "signal.h"
 bool MPDaemonPrivate::write_running_file()
 {
-    QString fname = MLUtil::tempPath() + "/mpdaemon_running.pid";
-    QString txt = QString("%1").arg(qApp->applicationPid());
-
-    //check for another daemon running!
-    if (QFileInfo(fname).lastModified().secsTo(QDateTime::currentDateTime()) <= 60) {
-        QString txt0 = TextFile::read(fname);
-        if ((!txt0.isEmpty()) && (txt0 != txt)) {
-            if (kill(txt0.toLong(), 0) == 0) {
-                printf("Another daemon seems to be running. Closing.\n");
-                return false;
-            }
-        }
+    if (!acquireServer()) {
+        printf("Another daemon seems to be running. Closing.\n");
+        return false;
     }
-    TextFile::write(fname, txt);
-    //we will be forgiving if we cannot write the text file, since it is more important that the daemon stays up
     return true;
 }
 
