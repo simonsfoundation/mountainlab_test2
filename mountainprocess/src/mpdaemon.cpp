@@ -900,10 +900,9 @@ bool MPDaemonPrivate::write_running_file()
 
 void MPDaemonPrivate::write_daemon_state()
 {
-    /// Witold rather than starting at 100000, I'd like to format the num in the fname to be like 0000023. Could you please help?
-    static long num = 100000;
+    static long num = 1;
     QString timestamp = MPDaemon::makeTimestamp();
-    QString fname = QString("%1/daemon_state/%2.%3.json").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
+    QString fname = QString("%1/daemon_state/%2.%3.json").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num, 7, 10, QChar('0'));
     num++;
 
     QJsonObject state;
