@@ -21,6 +21,15 @@
 #include <sys/stat.h> //for mkfifo
 #include "processmanager.h"
 #include "mlcommon.h"
+#include <QSharedMemory>
+#include <signal.h>
+
+static bool stopDaemon = false;
+
+void sighandler(int num) {
+    if (num == SIGINT)
+        stopDaemon = true;
+}
 
 class MPDaemonPrivate {
 public:
@@ -155,6 +164,7 @@ bool MPDaemon::run()
     if (!d->write_running_file()) { //this also checks whether another daemon is running,
         return false;
     }
+    signal(SIGINT, sighandler);
     d->write_daemon_state();
 
     d->m_is_running = true;
@@ -173,7 +183,7 @@ bool MPDaemon::run()
     QTime timer2;
     timer2.start();
     long num_cycles = 0;
-    while (d->m_is_running) {
+    while (!stopDaemon && d->m_is_running) {
         if (timer0.elapsed() > 2000) {
             if (!d->write_running_file())
                 return false;
