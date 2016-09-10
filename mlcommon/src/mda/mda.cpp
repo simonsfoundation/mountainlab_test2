@@ -178,17 +178,23 @@ bool Mda::write32i(const QString& path) const
 bool Mda::read(const char* path)
 {
     if ((QString(path).endsWith(".txt")) || (QString(path).endsWith(".csv"))) {
-        return d->read_from_text_file(path);
+        if (!d->read_from_text_file(path)) {
+            *this = Mda(1);
+            return false;
+        }
+        return true;
     }
     FILE* input_file = fopen(path, "rb");
     if (!input_file) {
         printf("Warning: Unable to open mda file for reading: %s\n", path);
+        *this = Mda(1);
         return false;
     }
     MDAIO_HEADER H;
     if (!mda_read_header(&H, input_file)) {
         qWarning() << "Problem reading mda file: " + QString(path);
         fclose(input_file);
+        *this = Mda(1);
         return false;
     }
     this->allocate(H.dims[0], H.dims[1], H.dims[2], H.dims[3], H.dims[4], H.dims[5]);
