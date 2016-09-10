@@ -936,6 +936,7 @@ void MPDaemonPrivate::write_daemon_state()
     QString json = QJsonDocument(state).toJson();
     TextFile::write(fname + ".tmp", json);
     /// Witold I don't think rename is an atomic operation. Is there a way to guarantee that I don't read the file halfway through the rename?
+    /// Jeremy: rename is atomic, at least when done within the same file system
     QFile::rename(fname + ".tmp", fname);
 
     //remove the pripts that have been finished for a while
