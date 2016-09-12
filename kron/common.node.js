@@ -30,23 +30,25 @@ exports.read_pipelines_from_text_file=function(file_path) {
 		var lines=txt.split('\n');
 		for (var i in lines) {
 			if (lines[i].trim().slice(0,1)!='#') {
-				var vals=lines[i].trim().split(' ');
-				var absolute_script_path=find_absolute_pipeline_script_path(vals[1]);
-				if (!absolute_script_path) {
-					console.log ('Unable to find pipeline script path: '+vals[1]);
-					process.exit(-1);
-				}
-				if (vals.length>=2) {
-					pipelines.push({
-						name:vals[0],
-						script:vals[1],
-						absolute_script_path:absolute_script_path,
-						arguments:vals.slice(2).join(' ')
-					});
-				}
-				else {
-					if (lines[i].trim()) {
-						throw 'problem in pipelines file: '+lines[i].trim();
+				if (lines[i].trim()) {
+					var vals=lines[i].trim().split(' ');
+					var absolute_script_path=find_absolute_pipeline_script_path(vals[1]);
+					if (!absolute_script_path) {
+						console.log ('Unable to find pipeline script path: '+vals[1]);
+						process.exit(-1);
+					}
+					if (vals.length>=2) {
+						pipelines.push({
+							name:vals[0],
+							script:vals[1],
+							absolute_script_path:absolute_script_path,
+							arguments:vals.slice(2).join(' ')
+						});
+					}
+					else {
+						if (lines[i].trim()) {
+							throw 'problem in pipelines file: '+lines[i].trim();
+						}
 					}
 				}
 			}

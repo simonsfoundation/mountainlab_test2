@@ -9,12 +9,12 @@
 #include <QString>
 
 struct Branch_Cluster_V3_Opts {
-    int clip_size=50;
-    int num_features=10;
+    int clip_size = 50;
+    int num_features = 10;
     int num_features2 = 0;
-    int detect_interval=10; //timepoints
+    int detect_interval = 10; //timepoints
     long num_pca_representatives; //??
-    double consolidation_factor=0.9;
+    double consolidation_factor = 0.9;
     bool split_clusters_at_end = true; //??
     double isocut_threshold = 1.5; //For Hartigan test
 };

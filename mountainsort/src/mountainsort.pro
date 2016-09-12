@@ -50,6 +50,7 @@ HEADERS += \
     processors/mask_out_artifacts_processor.h \
     processors/mask_out_artifacts.h \
     processors/fit_stage_processor.h \
+    processors/remove_noise_clusters_processor.h \
     processors/fit_stage.h \
     processors/compute_templates.h \
     processors/compute_templates_processor.h \
@@ -123,6 +124,7 @@ SOURCES += \
     processors/mask_out_artifacts_processor.cpp \
     processors/mask_out_artifacts.cpp \
     processors/fit_stage_processor.cpp \
+    processors/remove_noise_clusters_processor.cpp \
     processors/fit_stage.cpp \
     processors/compute_templates.cpp \
     processors/compute_templates_processor.cpp \

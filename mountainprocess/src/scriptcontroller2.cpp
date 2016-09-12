@@ -40,14 +40,14 @@ struct PipelineNode2 {
     QVariantMap inputs;
     QVariantMap parameters;
     QVariantMap outputs;
-    bool create_prv=false;
+    bool create_prv = false;
     bool completed;
     bool running;
     QProcess* qprocess;
 
     QStringList input_paths()
     {
-        QStringList input_pnames=inputs.keys();
+        QStringList input_pnames = inputs.keys();
         QStringList ret;
         foreach (QString pname, input_pnames)
             ret << inputs[pname].toString();
@@ -55,7 +55,7 @@ struct PipelineNode2 {
     }
     QStringList output_paths()
     {
-        QStringList output_pnames=outputs.keys();
+        QStringList output_pnames = outputs.keys();
         QStringList ret;
         foreach (QString pname, output_pnames)
             ret << outputs[pname].toString();
@@ -83,12 +83,12 @@ public:
     QProcess* queue_process(QString processor_name, const QVariantMap& parameters, bool use_run, bool force_run);
     QProcess* run_process(QString processor_name, const QVariantMap& parameters, bool force_run);
 
-    void resolve_file_names(QVariantMap &fnames);
+    void resolve_file_names(QVariantMap& fnames);
     QString resolve_file_name_p(QString fname);
 
-    bool run_or_queue_node(PipelineNode2 *node);
-    PipelineNode2 *find_node_ready_to_run();
-    QString create_temporary_path_for_output(QString processor_name,QVariantMap inputs,QVariantMap parameters, QString output_pname);
+    bool run_or_queue_node(PipelineNode2* node);
+    PipelineNode2* find_node_ready_to_run();
+    QString create_temporary_path_for_output(QString processor_name, QVariantMap inputs, QVariantMap parameters, QString output_pname);
     bool handle_running_processes();
 };
 
@@ -125,7 +125,7 @@ void ScriptController2::setForceRun(bool force_run)
 
 void ScriptController2::setWorkingPath(QString working_path)
 {
-    d->m_working_path=working_path;
+    d->m_working_path = working_path;
 }
 
 QJsonObject ScriptController2::getResults()
@@ -133,28 +133,28 @@ QJsonObject ScriptController2::getResults()
     return d->m_results;
 }
 
-QString ScriptController2::addProcess(QString processor_name, QString inputs_json, QString parameters_json,QString outputs_json)
+QString ScriptController2::addProcess(QString processor_name, QString inputs_json, QString parameters_json, QString outputs_json)
 {
-    MLProcessor PP=ProcessManager::globalInstance()->processor(processor_name);
+    MLProcessor PP = ProcessManager::globalInstance()->processor(processor_name);
     if (PP.name != processor_name) { //rather use PP.isNull()
         qWarning() << "Unable to find processor **: " + processor_name;
         return "{}";
     }
-    QMap<QString,MLParameter> PP_outputs=PP.outputs;
+    QMap<QString, MLParameter> PP_outputs = PP.outputs;
 
     PipelineNode2 node;
     /// TODO: check for json parse errors here
-    node.processor_name=processor_name;
-    node.inputs=QJsonDocument::fromJson(inputs_json.toLatin1()).object().toVariantMap();
-    node.parameters=QJsonDocument::fromJson(parameters_json.toLatin1()).object().toVariantMap();
+    node.processor_name = processor_name;
+    node.inputs = QJsonDocument::fromJson(inputs_json.toLatin1()).object().toVariantMap();
+    node.parameters = QJsonDocument::fromJson(parameters_json.toLatin1()).object().toVariantMap();
     if (!outputs_json.isEmpty()) {
-        node.outputs=QJsonDocument::fromJson(outputs_json.toLatin1()).object().toVariantMap();
+        node.outputs = QJsonDocument::fromJson(outputs_json.toLatin1()).object().toVariantMap();
         /// TODO: check to see if outputs are consistent with PP_outputs
     }
     else {
-        QStringList output_pnames=PP_outputs.keys();
-        foreach (QString pname,output_pnames) {
-            node.outputs[pname]=d->create_temporary_path_for_output(node.processor_name,node.inputs,node.parameters,pname);
+        QStringList output_pnames = PP_outputs.keys();
+        foreach (QString pname, output_pnames) {
+            node.outputs[pname] = d->create_temporary_path_for_output(node.processor_name, node.inputs, node.parameters, pname);
         }
     }
     d->resolve_file_names(node.inputs);
@@ -167,20 +167,20 @@ QString ScriptController2::addProcess(QString processor_name, QString inputs_jso
 void ScriptController2::addPrv(QString input_path, QString output_path)
 {
     PipelineNode2 node;
-    node.inputs["input"]=d->resolve_file_name_p(input_path);
-    node.outputs["output"]=d->resolve_file_name_p(output_path);
-    node.create_prv=true;
+    node.inputs["input"] = d->resolve_file_name_p(input_path);
+    node.outputs["output"] = d->resolve_file_name_p(output_path);
+    node.create_prv = true;
     d->m_pipeline_nodes << node;
 }
 
 bool ScriptController2::runPipeline()
 {
-    QDateTime timestamp_start=QDateTime::currentDateTime();
+    QDateTime timestamp_start = QDateTime::currentDateTime();
     //check for empty output paths
     for (int i = 0; i < d->m_pipeline_nodes.count(); i++) {
         PipelineNode2* node = &d->m_pipeline_nodes[i];
-        QStringList output_paths=node->output_paths();
-        foreach (QString path,output_paths) {
+        QStringList output_paths = node->output_paths();
+        foreach (QString path, output_paths) {
             if (path.isEmpty()) {
                 qWarning() << "Output path is empty" << node->processor_name << node->input_paths() << node->output_paths();
                 return false;
@@ -191,9 +191,9 @@ bool ScriptController2::runPipeline()
     //check for situation where input file matches output file
     for (int i = 0; i < d->m_pipeline_nodes.count(); i++) {
         PipelineNode2* node = &d->m_pipeline_nodes[i];
-        QSet<QString> input_paths_set=node->input_paths().toSet();
-        QStringList output_paths=node->output_paths();
-        foreach (QString output_path,output_paths) {
+        QSet<QString> input_paths_set = node->input_paths().toSet();
+        QStringList output_paths = node->output_paths();
+        foreach (QString output_path, output_paths) {
             if (input_paths_set.contains(output_path)) {
                 qWarning() << node->processor_name << output_path;
                 qWarning() << "An input path is the same as an output path. This can happen sometimes when using .prv files (checksum lookups) in the case where a process creates an output file that matches an input file.";
@@ -202,17 +202,17 @@ bool ScriptController2::runPipeline()
         }
     }
 
-    bool done=false;
+    bool done = false;
     while (!done) {
-        bool found=true;
+        bool found = true;
         while (found) {
-            found=false;
-            PipelineNode2 *node=d->find_node_ready_to_run();
+            found = false;
+            PipelineNode2* node = d->find_node_ready_to_run();
             if (node) {
                 if (!d->run_or_queue_node(node)) {
                     return false;
                 }
-                found=true;
+                found = true;
             }
         }
 
@@ -222,12 +222,14 @@ bool ScriptController2::runPipeline()
 
         //check to see if we are done
         if (!d->find_node_ready_to_run()) {
-            int num_running=0;
-            for (int i=0; i<d->m_pipeline_nodes.count(); i++) {
-                PipelineNode2 *node=&d->m_pipeline_nodes[i];
-                if (node->running) num_running++;
+            int num_running = 0;
+            for (int i = 0; i < d->m_pipeline_nodes.count(); i++) {
+                PipelineNode2* node = &d->m_pipeline_nodes[i];
+                if (node->running)
+                    num_running++;
             }
-            if (num_running==0) done=true; //if nothing is ready to run, and nothing is running, then we are done
+            if (num_running == 0)
+                done = true; //if nothing is ready to run, and nothing is running, then we are done
         }
 
         if (!done) {
@@ -237,16 +239,16 @@ bool ScriptController2::runPipeline()
     }
 
     //check whether everything got run
-    for (int i=0; i<d->m_pipeline_nodes.count(); i++) {
-        PipelineNode2 *node=&d->m_pipeline_nodes[i];
+    for (int i = 0; i < d->m_pipeline_nodes.count(); i++) {
+        PipelineNode2* node = &d->m_pipeline_nodes[i];
         if (!node->completed) {
-            qWarning() << "Not every process in the pipeline was run. For example: "+node->processor_name+". This could be due to a cyclic dependency.";
+            qWarning() << "Not every process in the pipeline was run. For example: " + node->processor_name + ". This could be due to a cyclic dependency.";
             return false;
         }
     }
 
-    QDateTime timestamp_finish=QDateTime::currentDateTime();
-    d->m_results["total_time_sec"]=timestamp_start.msecsTo(timestamp_finish)*1.0/1000;
+    QDateTime timestamp_finish = QDateTime::currentDateTime();
+    d->m_results["total_time_sec"] = timestamp_start.msecsTo(timestamp_finish) * 1.0 / 1000;
     return true;
 }
 
@@ -303,68 +305,69 @@ QProcess* ScriptController2Private::run_process(QString processor_name, const QV
     return ScriptController2Private::queue_process(processor_name, parameters, true, force_run);
 }
 
-void ScriptController2Private::resolve_file_names(QVariantMap &fnames)
+void ScriptController2Private::resolve_file_names(QVariantMap& fnames)
 {
-    QStringList pnames=fnames.keys();
-    foreach (QString pname,pnames) {
-        fnames[pname]=resolve_file_name_p(fnames[pname].toString());
+    QStringList pnames = fnames.keys();
+    foreach (QString pname, pnames) {
+        fnames[pname] = resolve_file_name_p(fnames[pname].toString());
     }
 }
 
 QString ScriptController2Private::resolve_file_name_p(QString fname_in)
 {
-    if (fname_in.isEmpty()) return "";
-    QString ret=resolve_file_name_2(m_server_urls, m_server_base_path, fname_in);
+    if (fname_in.isEmpty())
+        return "";
+    QString ret = resolve_file_name_2(m_server_urls, m_server_base_path, fname_in);
     if (!ret.startsWith("http:")) {
-        if ((QDir::isRelativePath(ret))&&(!m_working_path.isEmpty())) {
-            ret=m_working_path+"/"+ret;
+        if ((QDir::isRelativePath(ret)) && (!m_working_path.isEmpty())) {
+            ret = m_working_path + "/" + ret;
         }
     }
     return ret;
 }
 
-bool ScriptController2Private::run_or_queue_node(PipelineNode2 *node)
+bool ScriptController2Private::run_or_queue_node(PipelineNode2* node)
 {
     QVariantMap parameters0;
     {
-        QStringList pnames=node->inputs.keys();
-        foreach (QString pname,pnames) {
-            parameters0[pname]=node->inputs[pname];
+        QStringList pnames = node->inputs.keys();
+        foreach (QString pname, pnames) {
+            parameters0[pname] = node->inputs[pname];
         }
     }
     {
-        QStringList pnames=node->parameters.keys();
-        foreach (QString pname,pnames) {
-            parameters0[pname]=node->parameters[pname];
+        QStringList pnames = node->parameters.keys();
+        foreach (QString pname, pnames) {
+            parameters0[pname] = node->parameters[pname];
         }
     }
     {
-        QStringList pnames=node->outputs.keys();
-        foreach (QString pname,pnames) {
-            parameters0[pname]=node->outputs[pname];
+        QStringList pnames = node->outputs.keys();
+        foreach (QString pname, pnames) {
+            parameters0[pname] = node->outputs[pname];
         }
     }
 
-    ProcessManager *PM=ProcessManager::globalInstance();
+    ProcessManager* PM = ProcessManager::globalInstance();
     if (node->create_prv) {
-        QString input_path=node->inputs["input"].toString();
-        QString output_path=node->outputs["output"].toString();
+        QString input_path = node->inputs["input"].toString();
+        QString output_path = node->outputs["output"].toString();
         if (input_path.isEmpty()) {
             qWarning() << "Input path for create_prv is empty.";
             return false;
         }
         if (!QFile::exists(input_path)) {
-            qWarning() << "Input file for create_prv does not exist: "+input_path;
+            qWarning() << "Input file for create_prv does not exist: " + input_path;
             return false;
         }
         if (!output_path.endsWith(".prv")) {
             qWarning() << "Problem creating .prv file. The file path must end with .prv.";
             return false;
         }
-        QJsonObject obj=make_prv_object_2(input_path);
-        QString obj_json=QJsonDocument(obj).toJson();
-        if (TextFile::write(output_path,obj_json)) {
-            node->completed=true;
+        QJsonObject obj = make_prv_object_2(input_path);
+        QString obj_json = QJsonDocument(obj).toJson();
+        if (TextFile::write(output_path, obj_json)) {
+            node->completed = true;
             return true;
         }
         else {
@@ -405,28 +408,28 @@ bool ScriptController2Private::run_or_queue_node(PipelineNode2 *node)
     }
 }
 
-PipelineNode2 *ScriptController2Private::find_node_ready_to_run()
+PipelineNode2* ScriptController2Private::find_node_ready_to_run()
 {
     QSet<QString> file_paths_waiting_to_be_created;
-    for (int i=0; i<m_pipeline_nodes.count(); i++) {
-        PipelineNode2 *node=&m_pipeline_nodes[i];
+    for (int i = 0; i < m_pipeline_nodes.count(); i++) {
+        PipelineNode2* node = &m_pipeline_nodes[i];
         if (!node->completed) {
-            QStringList pnames=node->outputs.keys();
-            foreach (QString pname,pnames) {
-                QString output_path=node->outputs[pname].toString();
+            QStringList pnames = node->outputs.keys();
+            foreach (QString pname, pnames) {
+                QString output_path = node->outputs[pname].toString();
                 file_paths_waiting_to_be_created.insert(output_path);
             }
         }
     }
-    for (int i=0; i<m_pipeline_nodes.count(); i++) {
-        PipelineNode2 *node=&m_pipeline_nodes[i];
-        if ((!node->completed)&&(!node->running)) {
-            bool ready_to_run=true;
-            QStringList pnames=node->inputs.keys();
-            foreach (QString pname,pnames) {
-                QString input_path=node->inputs[pname].toString();
+    for (int i = 0; i < m_pipeline_nodes.count(); i++) {
+        PipelineNode2* node = &m_pipeline_nodes[i];
+        if ((!node->completed) && (!node->running)) {
+            bool ready_to_run = true;
+            QStringList pnames = node->inputs.keys();
+            foreach (QString pname, pnames) {
+                QString input_path = node->inputs[pname].toString();
                 if (file_paths_waiting_to_be_created.contains(input_path)) {
-                    ready_to_run=false;
+                    ready_to_run = false;
                 }
             }
             if (ready_to_run) {
@@ -440,13 +443,13 @@ PipelineNode2 *ScriptController2Private::find_node_ready_to_run()
 QString ScriptController2Private::create_temporary_path_for_output(QString processor_name, QVariantMap inputs, QVariantMap parameters, QString output_pname)
 {
     QJsonObject obj;
-    obj["processor_name"]=processor_name;
-    obj["inputs"]=QJsonObject::fromVariantMap(inputs);
-    obj["parameters"]=QJsonObject::fromVariantMap(parameters);
-    obj["output_pname"]=output_pname;
-    QString json=QJsonDocument(obj).toJson();
-    QString code=MLUtil::computeSha1SumOfString(json);
-    return CacheManager::globalInstance()->makeLocalFile(code+"-"+processor_name+"-"+output_pname+".tmp",CacheManager::LongTerm);
+    obj["processor_name"] = processor_name;
+    obj["inputs"] = QJsonObject::fromVariantMap(inputs);
+    obj["parameters"] = QJsonObject::fromVariantMap(parameters);
+    obj["output_pname"] = output_pname;
+    QString json = QJsonDocument(obj).toJson();
+    QString code = MLUtil::computeSha1SumOfString(json);
+    return CacheManager::globalInstance()->makeLocalFile(code + "-" + processor_name + "-" + output_pname + ".tmp", CacheManager::LongTerm);
 }
 
 bool ScriptController2Private::handle_running_processes()
