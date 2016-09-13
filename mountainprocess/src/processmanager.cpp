@@ -571,6 +571,8 @@ bool ProcessManagerPrivate::all_input_and_output_files_exist(MLProcessor P, cons
 QString ProcessManagerPrivate::compute_unique_object_code(QJsonObject obj)
 {
     /// Witold I need a string that depends on the json object. However I am worried about the order of the fields. Is there a way to make this canonical?
+    /// Jeremy: You can sort all keys in the dictionary, convert that to string and
+    ///         calculate hash of that. However this is going to be CPU consuming
     QByteArray json = QJsonDocument(obj).toJson();
     QCryptographicHash hash(QCryptographicHash::Sha1);
     hash.addData(json);
