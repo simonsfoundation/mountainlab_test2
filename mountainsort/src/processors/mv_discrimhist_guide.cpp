@@ -5,6 +5,7 @@
 #include "mlcommon.h"
 #include "compute_templates_0.h"
 #include "msmisc.h"
+#include "mv_discrimhist.h"
 
 struct discrimhist_guide_data {
     int k1 = 0, k2 = 0;
@@ -22,14 +23,14 @@ struct discrimhist_guide_data_comparer {
 
 /// TODO parallelize mv_distrimhist
 
-void get_discrimhist_guide_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
+//void get_discrimhist_guide_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size);
 Mda compute_distance_matrix(DiskReadMda timeseries, DiskReadMda firings, mv_discrimhist_guide_opts opts);
 void get_pairs_to_compare(QVector<int>& ret_k1, QVector<int>& ret_k2, const Mda& distance_matrix, int num_histograms, QSet<int> clusters_to_exclude);
 double compute_separation_score(const QVector<double>& data1, const QVector<double>& data2);
 
 bool mv_discrimhist_guide(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_guide_opts opts)
 {
-    DiskReadMda timeseries(timeseries_path);
+    DiskReadMda32 timeseries(timeseries_path);
     DiskReadMda firings(firings_path);
 
     Mda distance_matrix = compute_distance_matrix(DiskReadMda(timeseries_path), DiskReadMda(firings_path), opts);
@@ -43,7 +44,7 @@ bool mv_discrimhist_guide(QString timeseries_path, QString firings_path, QString
         discrimhist_guide_data DD;
         DD.k1 = k1;
         DD.k2 = k2;
-        get_discrimhist_guide_data(DD.data1, DD.data2, timeseries, firings, k1, k2, opts.clip_size);
+        get_discrimhist_data(DD.data1, DD.data2, timeseries, firings, k1, k2, opts.clip_size,opts.method);
         DD.separation_score = compute_separation_score(DD.data1, DD.data2);
         datas << DD;
     }
@@ -85,6 +86,7 @@ bool mv_discrimhist_guide(QString timeseries_path, QString firings_path, QString
     return true;
 }
 
+/*
 void get_discrimhist_guide_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size)
 {
     QVector<double> times1, times2;
@@ -128,6 +130,7 @@ void get_discrimhist_guide_data(QVector<double>& ret1, QVector<double>& ret2, co
         ret2 << MLCompute::dotProduct(N, ptr_diff, &ptr_clips2[N * i]) / (norm0 * norm0);
     }
 }
+*/
 
 double compute_distance(long N, double* ptr1, double* ptr2)
 {

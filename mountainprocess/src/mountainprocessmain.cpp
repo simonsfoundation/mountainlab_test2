@@ -584,7 +584,7 @@ void print_usage()
     printf("mountainprocess run-process [processor_name] --[param1]=[val1] --[param2]=[val2] ... [--_force_run]\n");
     printf("mountainprocess run-script [script1].js [script2.js] ... [file1].par [file2].par ... [--_force_run] \n");
     printf("mountainprocess daemon-start\n");
-    printf("mountainprocess daemon-stop\n");
+    //printf("mountainprocess daemon-stop\n");
     printf("mountainprocess daemon-restart\n");
     printf("mountainprocess daemon-state\n");
     printf("mountainprocess daemon-state-summary\n");
