@@ -48,7 +48,7 @@ bool MPDaemonInterface::start()
     }
     QString exe = qApp->applicationFilePath();
     QStringList args;
-    args << "-internal-daemon-start";
+    args << "daemon-start";
     if (!QProcess::startDetached(exe, args)) {
         printf("Unable to startDetached: %s\n", exe.toLatin1().data());
         return false;
@@ -91,14 +91,12 @@ static QString daemon_message = "Open a terminal and run [mountainprocess daemon
 bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
 {
     if (!d->daemon_is_running()) {
-        qWarning() << "Problem in queueScript: Daemon is not running. " + daemon_message;
-        return false;
-        /*
+
         if (!this->start()) {
             printf("Problem in queueScript: Unable to start daemon.\n");
             return false;
         }
-        */
+
     }
     QJsonObject obj = pript_struct_to_obj(script, FullRecord);
     obj["command"] = "queue-script";
@@ -108,14 +106,10 @@ bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
 bool MPDaemonInterface::queueProcess(const MPDaemonPript& process)
 {
     if (!d->daemon_is_running()) {
-        qWarning() << "Problem in queueProcess: Daemon is not running. " + daemon_message;
-        return false;
-        /*
         if (!this->start()) {
             printf("Problem in queueProcess: Unable to start daemon.\n");
             return false;
         }
-        */
     }
     QJsonObject obj = pript_struct_to_obj(process, FullRecord);
     obj["command"] = "queue-process";
