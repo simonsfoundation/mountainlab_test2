@@ -530,6 +530,7 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
     json = remove_comments(json);
     QJsonParseError error;
     /// Witold I use toLatin1() everywhere. Is this the appropriate way to convert to byte array?
+    /// Jeremy: toUtf8() or toLocal8Bit() might be better
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
     if (error.error != QJsonParseError::NoError) {
         qCritical() << "Error parsing json file: " + fname + " : " + error.errorString();
