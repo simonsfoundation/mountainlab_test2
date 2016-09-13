@@ -27,7 +27,7 @@
 static bool stopDaemon = false;
 
 void sighandler(int num) {
-    if (num == SIGINT)
+    if (num == SIGINT || num == SIGTERM)
         stopDaemon = true;
 }
 
@@ -169,6 +169,7 @@ bool MPDaemon::run()
         return false;
     }
     signal(SIGINT, sighandler);
+    signal(SIGTERM, sighandler);
     d->write_daemon_state();
 
     d->m_is_running = true;
