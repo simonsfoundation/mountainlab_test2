@@ -237,6 +237,13 @@ exports.make_system_call=function(cmd,args,callback) {
 	pp.stderr.setEncoding('utf8');
 	var done=false;
 	pp.on('close', function(code) {
+		if (done) return;
+  		done=true;
+		if (callback) callback();
+		s_num_system_calls_running--;
+	});
+	pp.on('exit', function(code) {
+		if (done) return;
   		done=true;
 		if (callback) callback();
 		s_num_system_calls_running--;
