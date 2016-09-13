@@ -63,6 +63,12 @@ ampls=zeros(1,0);
 for k=1:K
     refr_timepoints=refr/1000*samplerate;
     
+%     a=refr_timepoints;
+%     b=2*N/populations(k)-a; %(a+b)/2=N/pop so b=2*N/pop-a
+%     isi=rand_uniform(a,b,[1,populations(k)*2]); %x2 to be safe
+%     times0=cumsum(isi);
+%     times0=times0((times0>=1)&(times0<=N));
+    
     times0=rand(1,populations(k))*(N-1)+1;
     times0=[times0,times0+rand_distr2(refr_timepoints,refr_timepoints*20,size(times0))];
     times0=times0(randsample0(length(times0),ceil(length(times0)/2)));

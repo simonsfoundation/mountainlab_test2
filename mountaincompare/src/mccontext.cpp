@@ -165,7 +165,7 @@ void MergeFiringsCalculator::compute()
     QMap<QString, QVariant> params;
     params["firings1"] = firings1.makePath();
     params["firings2"] = firings2.makePath();
-    params["max_matching_offset"] = 6;
+    params["max_matching_offset"] = 4;
     MPR.setInputParameters(params);
     MPR.setMLProxyUrl(mlproxy_url);
 

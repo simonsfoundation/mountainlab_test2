@@ -138,6 +138,9 @@ QString compute_process_code(const QString& processor_name, const QVariantMap& p
     X["parameters"] = QJsonObject::fromVariantMap(parameters);
     QString json = QJsonDocument(X).toJson();
     /// Witold I need a canonical json here so that the hash is always the same. (relatively important)
+    /// Jeremy: JSON doesn't care about order of fields so there is no canonical form. I suggest
+    ///         you sort keys alphabetically. But this is CPU consuming since the JSON can be
+    ///         quite deep.
     return MLUtil::computeSha1SumOfString(json);
 }
 

@@ -506,6 +506,7 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
     json = remove_comments(json);
     QJsonParseError error;
     /// Witold I use toLatin1() everywhere. Is this the appropriate way to convert to byte array?
+    /// Jeremy: toUtf8() or toLocal8Bit() might be better
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
     if (error.error != QJsonParseError::NoError) {
         qCritical() << "Error parsing json file: " + fname + " : " + error.errorString();
@@ -521,10 +522,10 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
 void display_error(QJSValue result)
 {
     /// Witold there must be a better way to print the QJSValue error message out to the console.
-    /// Witold In general is it possible to not display quotes around strings for qDebug?
-    qDebug() << result.property("name").toString(); //okay
-    qDebug() << result.property("message").toString(); //okay
-    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
+    /// Jeremy: No, this is the proper way. You can use "stack" property to get a full trace, if you want
+    qDebug().noquote() << result.property("name").toString(); //okay
+    qDebug().noquote() << result.property("message").toString(); //okay
+    qDebug().noquote() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
 }
 
 bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message, QJsonObject& results)
