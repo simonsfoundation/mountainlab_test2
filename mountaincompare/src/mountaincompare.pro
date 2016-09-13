@@ -20,8 +20,8 @@ TEMPLATE = app
 
 INCLUDEPATH += ../../mountainview/src/msv/plugins
 VPATH += ../../mountainview/src/msv/plugins
-HEADERS += clusterdetailplugin.h
-SOURCES += clusterdetailplugin.cpp
+HEADERS += clusterdetailplugin.h clipsviewplugin.h
+SOURCES += clusterdetailplugin.cpp clipsviewplugin.cpp
 
 INCLUDEPATH += ../../mountainview/src/msv/views
 VPATH += ../../mountainview/src/msv/views

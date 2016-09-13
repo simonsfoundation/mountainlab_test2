@@ -35,16 +35,4 @@ private:
     MVClipsWidgetPrivate* d;
 };
 
-class MVClipsFactory : public MVAbstractViewFactory {
-    Q_OBJECT
-public:
-    MVClipsFactory(MVMainWindow* mw, QObject* parent = 0);
-    QString id() const Q_DECL_OVERRIDE;
-    QString name() const Q_DECL_OVERRIDE;
-    QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
-    int order() const Q_DECL_OVERRIDE;
-    bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
-};
-
 #endif // MVCLIPSWIDGET_H

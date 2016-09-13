@@ -31,7 +31,7 @@ function run_mountainsort(params) {
 		pre2=Process('normalize_channels',{timeseries:pre1}).timeseries_out;
 	}
 
-	var pre2_noise=Process('add_noise',{timeseries:pre2},{noise_level:1}).timeseries_out;
+	var pre2_noise=Process('add_noise',{timeseries:pre2},{noise_level:0.3}).timeseries_out;
 	pre2_noise=Process('normalize_channels',{timeseries:pre2_noise}).timeseries_out;
 
 	// Detect super-threshold events
