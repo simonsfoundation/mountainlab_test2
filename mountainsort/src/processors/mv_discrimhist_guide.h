@@ -12,6 +12,7 @@ struct mv_discrimhist_guide_opts {
     int num_histograms = 100;
     QSet<int> clusters_to_exclude;
     QString method = "centroid"; //centroid or svm
+    int num_features=20;
 };
 
 bool mv_discrimhist_guide(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_guide_opts opts);

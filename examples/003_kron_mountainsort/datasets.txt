@@ -1,5 +1,5 @@
-example1 synth_examples/example1
-example2 synth_examples/example2
-example3 synth_examples/example3
-example4 synth_examples/example4
-example5 synth_examples/example5
+example1 examples/example1
+example2 examples/example2
+example3 examples/example3
+example4 examples/example4
+example5 examples/example5

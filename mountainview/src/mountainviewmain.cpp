@@ -46,6 +46,7 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <clipsviewplugin.h>
+#include <mvclusterordercontrol.h>
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
 /// TODO: (HIGH) blobs for populations
@@ -328,6 +329,7 @@ int main(int argc, char* argv[])
         W->addControl(new MVMergeControl(context, W), false);
         W->addControl(new MVPrefsControl(context, W), false);
         W->addControl(new MVExportControl(context, W), false);
+        W->addControl(new MVClusterOrderControl(context,W),false);
 
         a.processEvents();
 

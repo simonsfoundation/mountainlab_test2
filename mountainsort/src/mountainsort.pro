@@ -84,6 +84,8 @@ HEADERS += \
     processors/mv_discrimhist.h \
     processors/mv_discrimhist_guide_processor.h \
     processors/mv_discrimhist_guide.h \
+    processors/mv_discrimhist_guide2_processor.h \
+    processors/mv_discrimhist_guide2.h \
     processors/normalize_channels_processor.h \
     processors/normalize_channels.h \
     utils/pca.h \
@@ -163,6 +165,8 @@ SOURCES += \
     processors/mv_discrimhist.cpp \
     processors/mv_discrimhist_guide_processor.cpp \
     processors/mv_discrimhist_guide.cpp \
+    processors/mv_discrimhist_guide2_processor.cpp \
+    processors/mv_discrimhist_guide2.cpp \
     processors/normalize_channels_processor.cpp \
     processors/normalize_channels.cpp \
     utils/pca.cpp \
