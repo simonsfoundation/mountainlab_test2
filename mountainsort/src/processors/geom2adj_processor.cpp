@@ -119,11 +119,11 @@ bool linear_adjacency_matrix_Processor::run(const QMap<QString, QVariant>& param
     Mda X(timeseries);
     int M = X.N1();
 
-    Mda Y(M,M);
+    Mda Y(M, M);
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < M; j++) {
-            if (qAbs(i-j)<=radius) {
-                Y.setValue(1,i,j);
+            if (qAbs(i - j) <= radius) {
+                Y.setValue(1, i, j);
             }
         }
     }

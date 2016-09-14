@@ -96,7 +96,6 @@ bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
             printf("Problem in queueScript: Unable to start daemon.\n");
             return false;
         }
-
     }
     QJsonObject obj = pript_struct_to_obj(script, FullRecord);
     obj["command"] = "queue-script";
@@ -129,7 +128,7 @@ bool MPDaemonInterfacePrivate::daemon_is_running()
     if (!shm.attach(QSharedMemory::ReadOnly))
         return false;
     shm.lock();
-    const MountainProcessDescriptor *desc = reinterpret_cast<const MountainProcessDescriptor*>(shm.constData());
+    const MountainProcessDescriptor* desc = reinterpret_cast<const MountainProcessDescriptor*>(shm.constData());
     bool ret = (kill(desc->pid, 0) == 0);
     shm.unlock();
     return ret;

@@ -20,10 +20,10 @@ cluster_scores_Processor::cluster_scores_Processor()
     this->setName("cluster_scores");
     this->setVersion("0.11");
     this->setInputFileParameters("timeseries", "firings");
-    this->setOutputFileParameters("cluster_scores","cluster_pair_scores");
-    this->setRequiredParameters("clip_size","detect_threshold");
+    this->setOutputFileParameters("cluster_scores", "cluster_pair_scores");
+    this->setRequiredParameters("clip_size", "detect_threshold");
     this->setRequiredParameters("add_noise_level");
-    this->setOptionalParameters("cluster_numbers","max_comparisons_per_cluster");
+    this->setOptionalParameters("cluster_numbers", "max_comparisons_per_cluster");
 }
 
 cluster_scores_Processor::~cluster_scores_Processor()
@@ -43,15 +43,15 @@ bool cluster_scores_Processor::run(const QMap<QString, QVariant>& params)
     cluster_scores_opts opts;
     opts.clip_size = params["clip_size"].toInt();
     opts.detect_threshold = params["detect_threshold"].toDouble();
-    QStringList cluster_numbers_str=params["cluster_numbers"].toString().split(",",QString::SkipEmptyParts);
-    foreach (QString num,cluster_numbers_str) {
+    QStringList cluster_numbers_str = params["cluster_numbers"].toString().split(",", QString::SkipEmptyParts);
+    foreach (QString num, cluster_numbers_str) {
         opts.cluster_numbers << num.toInt();
     }
     opts.max_comparisons_per_cluster = params["max_comparisons_per_cluster"].toInt();
-    opts.add_noise_level=params["add_noise_level"].toDouble();
+    opts.add_noise_level = params["add_noise_level"].toDouble();
     QString timeseries_path = params["timeseries"].toString();
     QString firings_path = params["firings"].toString();
     QString cluster_scores_path = params["cluster_scores"].toString();
     QString cluster_pair_scores_path = params["cluster_pair_scores"].toString();
-    return ClusterScores::cluster_scores(timeseries_path, firings_path, cluster_scores_path,cluster_pair_scores_path, opts);
+    return ClusterScores::cluster_scores(timeseries_path, firings_path, cluster_scores_path, cluster_pair_scores_path, opts);
 }

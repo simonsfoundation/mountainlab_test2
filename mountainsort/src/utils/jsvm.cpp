@@ -2,10 +2,10 @@
 
 #include <mda32.h>
 
-bool get_svm_discrim_direction(double &cutoff,QVector<double> &direction, const Mda32 &X, const QVector<int> &labels)
+bool get_svm_discrim_direction(double& cutoff, QVector<double>& direction, const Mda32& X, const QVector<int>& labels)
 {
-    long num_points=X.N2();
-    int num_dims=X.N1();
+    long num_points = X.N2();
+    int num_dims = X.N1();
 
     svm_parameter param;
     param.svm_type = C_SVC;
@@ -28,32 +28,32 @@ bool get_svm_discrim_direction(double &cutoff,QVector<double> &direction, const 
     prob.l = num_points;
     prob.y = new double[num_points];
 
-    svm_node *x_space = new svm_node[(num_dims+1) * num_points];
-    prob.x = new svm_node *[num_points];
+    svm_node* x_space = new svm_node[(num_dims + 1) * num_points];
+    prob.x = new svm_node* [num_points];
 
-    for (long i=0; i<num_points; i++) {
-        for (int d=0; d<num_dims; d++) {
-            x_space[(num_dims+1)*i+d].index=d;
-            x_space[(num_dims+1)*i+d].value=X.value(d,i);
+    for (long i = 0; i < num_points; i++) {
+        for (int d = 0; d < num_dims; d++) {
+            x_space[(num_dims + 1) * i + d].index = d;
+            x_space[(num_dims + 1) * i + d].value = X.value(d, i);
         }
 
-        x_space[(num_dims+1)*i+num_dims].index=-1;
-        prob.x[i]=&x_space[(num_dims+1)*i];
+        x_space[(num_dims + 1) * i + num_dims].index = -1;
+        prob.x[i] = &x_space[(num_dims + 1) * i];
 
-        prob.y[i]=labels[i];
+        prob.y[i] = labels[i];
     }
 
-    svm_model *model = svm_train(&prob, &param);
+    svm_model* model = svm_train(&prob, &param);
 
     direction.clear();
-    for (long d=0; d<num_dims; d++)
+    for (long d = 0; d < num_dims; d++)
         direction << 0;
-    for (long i=0; i<model->l; i++) {
-        for (long d=0; d<num_dims; d++) {
-            direction[d]+=model->sv_coef[0][i]*model->SV[i][d].value;
+    for (long i = 0; i < model->l; i++) {
+        for (long d = 0; d < num_dims; d++) {
+            direction[d] += model->sv_coef[0][i] * model->SV[i][d].value;
         }
     }
-    cutoff=model->rho[0];
+    cutoff = model->rho[0];
 
     svm_free_and_destroy_model(&model);
     delete prob.y;

@@ -26,7 +26,7 @@ bool mv_discrimhist(QString timeseries_path, QString firings_path, QString outpu
             discrimhist_data DD;
             DD.k1 = k1;
             DD.k2 = k2;
-            if (!get_discrimhist_data(DD.data1, DD.data2, timeseries, firings, k1, k2, opts.clip_size,opts.method)) {
+            if (!get_discrimhist_data(DD.data1, DD.data2, timeseries, firings, k1, k2, opts.clip_size, opts.method)) {
                 return false;
             }
             datas << DD;
@@ -74,7 +74,7 @@ double compute_dot_product(long N, float* v1, float* v2)
     return ip;
 }
 
-bool get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda32& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size,QString method)
+bool get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const DiskReadMda32& timeseries, const DiskReadMda& firings, int k1, int k2, int clip_size, QString method)
 {
     //Assemble the times where neuron k1 fires (times1) and where neuron k2 fires (times2)
     QVector<double> times1, times2;
@@ -96,22 +96,22 @@ bool get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const Di
 
     //the direction to project onto and the cutoff to separate the two clusters
     Mda32 discrim_direction;
-    double cutoff=0;
+    double cutoff = 0;
 
     //compute the centroids
     Mda32 centroid1 = compute_mean_clip(clips1);
     Mda32 centroid2 = compute_mean_clip(clips2);
-    long M=centroid1.N1();
-    long T=centroid1.N2();
+    long M = centroid1.N1();
+    long T = centroid1.N2();
     long MT = M * T;
-    long L1=clips1.N3();
-    long L2=clips2.N3();
+    long L1 = clips1.N3();
+    long L2 = clips2.N3();
 
     //allocate the discrim direction
     discrim_direction.allocate(centroid1.N1(), centroid1.N2());
     float* ptr_dd = discrim_direction.dataPtr();
 
-    if (method=="centroid") {
+    if (method == "centroid") {
         //the direction will be the vector connecting the two centroids
         for (long t = 0; t < T; t++) {
             for (long m = 0; m < M; m++) {
@@ -119,34 +119,34 @@ bool get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const Di
             }
         }
     }
-    else if (method=="svm") {
+    else if (method == "svm") {
         //the direction and cutoff are determined using support vector machine
         QVector<double> direction0;
-        Mda32 X0(MT,L1+L2); //concatenation (and reshaped) of clips1 and clips2
+        Mda32 X0(MT, L1 + L2); //concatenation (and reshaped) of clips1 and clips2
         QVector<int> labels0;
-        for (long j=0; j<L1; j++) {
+        for (long j = 0; j < L1; j++) {
             Mda32 tmp;
-            clips1.getChunk(tmp,0,0,j,M,T,1);
-            for (long k=0; k<MT; k++) {
-                X0.setValue(tmp.value(k),k,j);
+            clips1.getChunk(tmp, 0, 0, j, M, T, 1);
+            for (long k = 0; k < MT; k++) {
+                X0.setValue(tmp.value(k), k, j);
             }
             labels0 << 1;
         }
-        for (long j=0; j<L2; j++) {
+        for (long j = 0; j < L2; j++) {
             Mda32 tmp;
-            clips2.getChunk(tmp,0,0,j,M,T,1);
-            for (long k=0; k<MT; k++) {
-                X0.setValue(tmp.value(k),k,clips1.N2()+j);
+            clips2.getChunk(tmp, 0, 0, j, M, T, 1);
+            for (long k = 0; k < MT; k++) {
+                X0.setValue(tmp.value(k), k, clips1.N2() + j);
             }
             labels0 << 2;
         }
-        get_svm_discrim_direction(cutoff,direction0,X0,labels0);
-        for (long i=0; i<MT; i++) {
-            discrim_direction.setValue(direction0[i],i);
+        get_svm_discrim_direction(cutoff, direction0, X0, labels0);
+        for (long i = 0; i < MT; i++) {
+            discrim_direction.setValue(direction0[i], i);
         }
     }
     else {
-        qWarning() << "Unsupported discrimhist method: "+method;
+        qWarning() << "Unsupported discrimhist method: " + method;
         return false;
     }
 
@@ -157,11 +157,11 @@ bool get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const Di
 
     ret1.clear();
     for (long i = 0; i < clips1.N3(); i++) {
-        ret1 << (compute_dot_product(MT, ptr_dd, &ptr_clips1[MT * i])-cutoff) / (norm0 * norm0);
+        ret1 << (compute_dot_product(MT, ptr_dd, &ptr_clips1[MT * i]) - cutoff) / (norm0 * norm0);
     }
     ret2.clear();
     for (long i = 0; i < clips2.N3(); i++) {
-        ret2 << (compute_dot_product(MT, ptr_dd, &ptr_clips2[MT * i])-cutoff) / (norm0 * norm0);
+        ret2 << (compute_dot_product(MT, ptr_dd, &ptr_clips2[MT * i]) - cutoff) / (norm0 * norm0);
     }
 
     return true;
