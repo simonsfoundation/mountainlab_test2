@@ -478,14 +478,14 @@ QList<int> MVContext::clusterOrder(int max_K) const
 {
     QList<int> ret;
     if (d->m_cluster_order_scores.isEmpty()) {
-        for (int k=1; k<=max_K; k++) {
+        for (int k = 1; k <= max_K; k++) {
             ret << k;
         }
     }
-    QList<long> inds=get_sort_indices(d->m_cluster_order_scores.toVector());
+    QList<long> inds = get_sort_indices(d->m_cluster_order_scores.toVector());
 
-    for (long i=0; i<inds.count(); i++) {
-        ret << inds[i]+1;
+    for (long i = 0; i < inds.count(); i++) {
+        ret << inds[i] + 1;
     }
     return ret;
 }
@@ -500,12 +500,12 @@ QList<double> MVContext::clusterOrderScores() const
     return d->m_cluster_order_scores;
 }
 
-void MVContext::setClusterOrderScores(QString scores_name, const QList<double> &scores)
+void MVContext::setClusterOrderScores(QString scores_name, const QList<double>& scores)
 {
-    if ((scores_name==d->m_cluster_order_scores_name)&&(scores==d->m_cluster_order_scores))
+    if ((scores_name == d->m_cluster_order_scores_name) && (scores == d->m_cluster_order_scores))
         return;
-    d->m_cluster_order_scores_name=scores_name;
-    d->m_cluster_order_scores=scores;
+    d->m_cluster_order_scores_name = scores_name;
+    d->m_cluster_order_scores = scores;
     emit this->clusterOrderChanged();
 }
 

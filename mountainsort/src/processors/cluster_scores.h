@@ -9,15 +9,15 @@
 #include <QList>
 
 struct cluster_scores_opts {
-    int clip_size=50;
-    double detect_threshold=0;
-    int max_comparisons_per_cluster=5;
+    int clip_size = 50;
+    double detect_threshold = 0;
+    int max_comparisons_per_cluster = 5;
     QList<int> cluster_numbers;
-    double add_noise_level=1;
+    double add_noise_level = 1;
 };
 
 namespace ClusterScores {
-    bool cluster_scores(QString timeseries,QString firings,QString cluster_scores,QString cluster_pair_scores,cluster_scores_opts opts);
+bool cluster_scores(QString timeseries, QString firings, QString cluster_scores, QString cluster_pair_scores, cluster_scores_opts opts);
 }
 
 #endif // CLUSTER_SCORES_H

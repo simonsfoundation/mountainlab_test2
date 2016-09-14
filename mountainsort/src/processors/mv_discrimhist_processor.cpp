@@ -12,7 +12,7 @@ mv_discrimhist_Processor::mv_discrimhist_Processor()
     d->q = this;
 
     this->setName("mv_discrimhist");
-    this->setVersion("0.13");
+    this->setVersion("0.14");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("output");
     this->setRequiredParameters("clusters");
@@ -44,7 +44,8 @@ bool mv_discrimhist_Processor::run(const QMap<QString, QVariant>& params)
 
     mv_discrimhist_opts opts;
     opts.clusters = clusters;
-    opts.method=params.value("method").toString();
-    if (opts.method.isEmpty()) opts.method="svm";
+    opts.method = params.value("method").toString();
+    if (opts.method.isEmpty())
+        opts.method = "centroid";
     return mv_discrimhist(timeseries_path, firings_path, output_path, opts);
 }

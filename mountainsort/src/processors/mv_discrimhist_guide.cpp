@@ -44,7 +44,7 @@ bool mv_discrimhist_guide(QString timeseries_path, QString firings_path, QString
         discrimhist_guide_data DD;
         DD.k1 = k1;
         DD.k2 = k2;
-        get_discrimhist_data(DD.data1, DD.data2, timeseries, firings, k1, k2, opts.clip_size,opts.method);
+        get_discrimhist_data(DD.data1, DD.data2, timeseries, firings, k1, k2, opts.clip_size, opts.method);
         DD.separation_score = compute_separation_score(DD.data1, DD.data2);
         datas << DD;
     }

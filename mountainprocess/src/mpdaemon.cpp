@@ -26,7 +26,8 @@
 
 static bool stopDaemon = false;
 
-void sighandler(int num) {
+void sighandler(int num)
+{
     if (num == SIGINT || num == SIGTERM)
         stopDaemon = true;
 }
@@ -39,7 +40,7 @@ public:
     QMap<QString, MPDaemonPript> m_pripts;
     ProcessResources m_total_resources_available;
     QString m_log_path;
-    QSharedMemory *shm = nullptr;
+    QSharedMemory* shm = nullptr;
 
     void process_command(QJsonObject obj);
     void writeLogRecord(QString record_type, QString key1 = "", QVariant val1 = QVariant(), QString key2 = "", QVariant val2 = QVariant(), QString key3 = "", QVariant val3 = QVariant());
@@ -812,10 +813,10 @@ bool MPDaemonPrivate::acquireServer()
     while (true) {
         if (shm->create(sizeof(MountainProcessDescriptor))) {
             shm->lock(); // there is potentially a race condition here -> someone might have locked the segment
-                         // before we did and written its own pid there
-                         // we assume that by default memory is zeroed (it seems to be on Linux)
-                         // so we can check the version
-            MountainProcessDescriptor *desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
+            // before we did and written its own pid there
+            // we assume that by default memory is zeroed (it seems to be on Linux)
+            // so we can check the version
+            MountainProcessDescriptor* desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
 
             // on Linux the memory seems to be zeroed by default
             if (desc->version != 0) {
@@ -831,7 +832,7 @@ bool MPDaemonPrivate::acquireServer()
         }
         if (shm->attach()) {
             shm->lock();
-            MountainProcessDescriptor *desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
+            MountainProcessDescriptor* desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
             // on Linux the memory seems to be zeroed by default
             if (desc->version != 0) {
                 if (kill(desc->pid, 0) == 0) {
@@ -854,7 +855,7 @@ bool MPDaemonPrivate::releaseServer()
 {
     if (shm && shm->isAttached()) {
         shm->lock();
-        MountainProcessDescriptor *desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
+        MountainProcessDescriptor* desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
         // just to be sure we're the reigning server:
         if (desc->pid == (pid_t)QCoreApplication::applicationPid()) {
             // to avoid a race condition (released the server but not ended the process just yet), empty the block

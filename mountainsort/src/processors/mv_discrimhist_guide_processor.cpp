@@ -44,7 +44,9 @@ bool mv_discrimhist_guide_Processor::run(const QMap<QString, QVariant>& params)
     mv_discrimhist_guide_opts opts;
     opts.num_histograms = num_histograms;
     opts.clusters_to_exclude = clusters_to_exclude;
-    opts.method=params.value("method").toString();
-    if (opts.method.isEmpty()) opts.method="centroid";
+    opts.method = params.value("method").toString();
+    if (opts.method.isEmpty())
+        opts.method = "centroid";
+    printf("Using discrim method: %s\n", opts.method.toUtf8().data());
     return mv_discrimhist_guide(timeseries_path, firings_path, output_path, opts);
 }
