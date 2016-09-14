@@ -97,7 +97,9 @@ HEADERS += \
     processors/merge_firings_processor.h \
     processors/merge_firings.h \
     processors/add_noise_processor.h \
-    utils/jsvm.h
+    processors/cluster_scores_processor.h \
+    utils/jsvm.h \
+    processors/cluster_scores.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -176,7 +178,9 @@ SOURCES += \
     processors/merge_firings_processor.cpp \
     processors/merge_firings.cpp \
     processors/add_noise_processor.cpp \
-    utils/jsvm.cpp
+    processors/cluster_scores_processor.cpp \
+    utils/jsvm.cpp \
+    processors/cluster_scores.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \

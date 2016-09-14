@@ -305,7 +305,7 @@ double MLCompute::dotProduct(const QVector<double>& X1, const QVector<double>& X
 {
     if (X1.count() != X2.count())
         return 0;
-    return std::inner_product(X1.constBegin(), X1.constEnd(), X1.constBegin(), 0.0);
+    return std::inner_product(X1.constBegin(), X1.constEnd(), X2.constBegin(), 0.0);
 }
 
 double MLCompute::norm(const QVector<double>& X)
@@ -345,7 +345,6 @@ double MLCompute::dotProduct(long N, const double* X1, const double* X2)
 
 double MLCompute::dotProduct(long N, const float* X1, const float* X2)
 {
-
     return std::inner_product(X1, X1 + N, X2, 0.0);
 }
 

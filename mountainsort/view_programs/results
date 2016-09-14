@@ -91,5 +91,5 @@ function read_text_file(path) {
 }
 
 function file_exists(path) {
-	return fs.existsSync(path);
+	return (fs.existsSync(path))||(fs.existsSync(path+'.prv'));
 }

@@ -46,6 +46,7 @@
 #include "merge_firings_processor.h"
 #include "add_noise_processor.h"
 #include "remove_noise_clusters_processor.h"
+#include "cluster_scores_processor.h"
 #include <sys/stat.h>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -120,6 +121,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new merge_firings_Processor);
     loadProcessor(new add_noise_Processor);
     loadProcessor(new remove_noise_clusters_Processor);
+    loadProcessor(new cluster_scores_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString& processor_name) const
