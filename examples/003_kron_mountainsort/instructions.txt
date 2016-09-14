@@ -1,4 +1,4 @@
-*** Generate the data by running 001_*.sh
+*** Generate the synthetic data (more info needed)
 
 *** Run sorting and view results
 kron_pipeline ms example1

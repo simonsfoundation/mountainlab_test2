@@ -63,6 +63,8 @@ struct PipelineNode2 {
     }
 };
 
+QJsonArray get_prv_processes_2(const QList<PipelineNode2>& nodes, const QMap<QString, int>& node_indices_for_outputs, QString path, QSet<int>& node_indices_already_used, bool* ok);
+
 class ScriptController2Private {
 public:
     ScriptController2Private()
@@ -86,7 +88,7 @@ public:
     void resolve_file_names(QVariantMap &fnames);
     QString resolve_file_name_p(QString fname);
 
-    bool run_or_queue_node(PipelineNode2 *node);
+    bool run_or_queue_node(PipelineNode2 *node, const QMap<QString, int> &node_indices_for_outputs);
     PipelineNode2 *find_node_ready_to_run();
     QString create_temporary_path_for_output(QString processor_name,QVariantMap inputs,QVariantMap parameters, QString output_pname);
     bool handle_running_processes();
@@ -202,6 +204,21 @@ bool ScriptController2::runPipeline()
         }
     }
 
+    //record which outputs get created by which nodes (by index)
+    QMap<QString, int> node_indices_for_outputs;
+    for (int i = 0; i < d->m_pipeline_nodes.count(); i++) {
+        QStringList output_paths = d->m_pipeline_nodes[i].output_paths();
+        foreach (QString path, output_paths) {
+            if (!path.isEmpty()) {
+                if (node_indices_for_outputs.contains(path)) {
+                    qWarning() << "Same output is created twice in pipeline.";
+                    return false;
+                }
+            }
+            node_indices_for_outputs[path] = i;
+        }
+    }
+
     bool done=false;
     while (!done) {
         bool found=true;
@@ -209,7 +226,7 @@ bool ScriptController2::runPipeline()
             found=false;
             PipelineNode2 *node=d->find_node_ready_to_run();
             if (node) {
-                if (!d->run_or_queue_node(node)) {
+                if (!d->run_or_queue_node(node,node_indices_for_outputs)) {
                     return false;
                 }
                 found=true;
@@ -323,8 +340,8 @@ QString ScriptController2Private::resolve_file_name_p(QString fname_in)
     return ret;
 }
 
-bool ScriptController2Private::run_or_queue_node(PipelineNode2 *node)
-{
+bool ScriptController2Private::run_or_queue_node(PipelineNode2 *node,const QMap<QString, int> &node_indices_for_outputs)
+{      
     QVariantMap parameters0;
     {
         QStringList pnames=node->inputs.keys();
@@ -361,13 +378,28 @@ bool ScriptController2Private::run_or_queue_node(PipelineNode2 *node)
             qWarning() << "Problem creating .prv file. The file path must end with .prv.";
             return false;
         }
-        QJsonObject obj=make_prv_object_2(input_path);
-        QString obj_json=QJsonDocument(obj).toJson();
-        if (TextFile::write(output_path,obj_json)) {
+
+        if (!output_path.endsWith(".prv")) {
+            qWarning() << ".prv file must end with .prv extension";
+            return false;
+        }
+        QJsonObject obj = make_prv_object_2(input_path);
+        if (obj.isEmpty())
+            return false;
+        bool ok;
+        QSet<int> node_indices_already_used; //to avoid infinite cycles, which can happen, for example, when an input file is the same as an output file
+        obj["processes"] = get_prv_processes_2(m_pipeline_nodes, node_indices_for_outputs, input_path, node_indices_already_used, &ok);
+        if (!ok) {
+            qWarning() << "Error in get_prv_processes";
+            return false;
+        }
+        QString obj_json = QJsonDocument(obj).toJson(QJsonDocument::Indented);
+        if (TextFile::write(output_path, obj_json)) {
             node->completed=true;
             return true;
         }
         else {
+            qWarning() << "Unable to write prv file: " << output_path;
             return false;
         }
     }
@@ -512,4 +544,69 @@ QString resolve_file_name_2(QStringList server_urls, QString server_base_path, Q
     */
 
     return fname;
+}
+
+QJsonArray get_prv_processes_2(const QList<PipelineNode2>& nodes, const QMap<QString, int>& node_indices_for_outputs, QString path, QSet<int>& node_indices_already_used, bool* ok)
+{
+    QJsonArray processes;
+    int ind0 = node_indices_for_outputs.value(path, -1);
+    if ((ind0 >= 0) && (!node_indices_already_used.contains(ind0))) { //avoid infinite cycles, which can happen, for example, if an output file is the same as an input file
+        const PipelineNode2* node = &nodes[ind0];
+        if (!node->processor_name.isEmpty()) {
+            QJsonObject process;
+            process["processor_name"] = node->processor_name;
+            {
+                QStringList input_pnames=node->inputs.keys();
+                QJsonObject inputs;
+                foreach (QString pname, input_pnames) {
+                    QJsonObject tmp;
+                    tmp = make_prv_object_2(node->inputs[pname].toString());
+                    if (tmp.isEmpty()) {
+                        *ok = false;
+                        return processes;
+                    }
+                    inputs[pname] = tmp;
+                }
+                process["inputs"] = inputs;
+            }
+            {
+
+                QJsonObject outputs;
+                QStringList output_pnames=node->outputs.keys();
+                foreach (QString pname, output_pnames) {
+                    QJsonObject tmp;
+                    tmp = make_prv_object_2(node->outputs[pname].toString());
+                    if (tmp.isEmpty()) {
+                        *ok = false;
+                        return processes;
+                    }
+                    outputs[pname] = tmp;
+                }
+                process["outputs"] = outputs;
+            }
+            {
+                QJsonObject parameters;
+                QStringList pnames = node->parameters.keys();
+                foreach (QString pname, pnames) {
+                    parameters[pname] = node->parameters[pname].toString();
+                }
+                process["parameters"] = parameters;
+            }
+            node_indices_already_used.insert(ind0);
+            processes.append(process);
+            {
+                QStringList input_pnames=node->inputs.keys();
+                foreach (QString pname, input_pnames) {
+                    QJsonArray X = get_prv_processes_2(nodes, node_indices_for_outputs, node->inputs[pname].toString(), node_indices_already_used, ok);
+                    if (!ok)
+                        return processes;
+                    for (int a = 0; a < X.count(); a++) {
+                        processes.append(X[a]);
+                    }
+                }
+            }
+        }
+    }
+    *ok = true;
+    return processes;
 }

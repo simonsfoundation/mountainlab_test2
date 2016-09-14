@@ -302,17 +302,27 @@ void MPDaemon::wait(qint64 msec)
 
 void MPDaemon::slot_commands_directory_changed()
 {
+    // This slot is called whenever the contents of the temporary directory "daemon_commands" is called
+    // Other runs of mountainprocess will write command files to this directory in order to queue scripts and processes, etc
     QString path = MPDaemon::daemonPath() + "/daemon_commands";
     QStringList fnames = QDir(path).entryList(QStringList("*.command"), QDir::Files, QDir::Name);
     foreach (QString fname, fnames) {
+        // We iterate through all .command files in the directory. They are sorted alphabetically by name, so the first created will be the first processed
         QString path0 = path + "/" + fname;
         qint64 elapsed_sec = QFileInfo(path0).lastModified().secsTo(QDateTime::currentDateTime());
         if (elapsed_sec > 20) {
+            // If it has been more than 20 seconds since the file was created/modified, then we delete it
+            // This avoids re-executing commands from previous runs, since there is no reason it should take >20 seconds to notice the file
+            // But obviously this is not very elegant. This probably should be improved
+            // The idea is that mpdaemon itself doesn't do any heavy processing, so it should remain responsive
+            // However if all the CPU's are being used by other processes, I suppose this could become an issue.
             if (!QFile::remove(path0)) {
                 qCritical() << "Unable to remove command file: " + path0;
+                // maybe we should abort here?
             }
         }
         else {
+            // read and parse the JSON content of the command file
             QString json = TextFile::read(path0);
             QJsonParseError error;
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
@@ -320,10 +330,17 @@ void MPDaemon::slot_commands_directory_changed()
                 qCritical() << "Error in slot_commands_directory_changed parsing json file";
             }
             else {
+                // if all goes well, we process the command
+                // the daemon is a single-thread process, so the whole loop will stop as we process the command
+                // as mentioned above, this is why rely on NO heavy processing being done by the daemon
+                // basically the daemon is responsible for managing queued processes and scripts, and launching
+                // other instances of mountainprocess, and managing those QProcess's
                 d->process_command(obj);
             }
             if (!QFile::remove(path0)) {
+                // finally, remove the command so we don't execute it again.
                 qCritical() << "Problem removing command file: " + path0;
+                // should we abort here?
             }
         }
     }

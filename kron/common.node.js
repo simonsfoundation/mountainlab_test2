@@ -100,7 +100,7 @@ exports.get_interface=function() {
 	//for now this is hard-coded for spike sorting
 	return {
 		parameters:{
-			raw:'$dataset_folder$/raw.mda.prv',
+			raw:'$dataset_folder$/raw.mda',
 			geom:'$dataset_folder$/geom.csv'
 		}
 	};

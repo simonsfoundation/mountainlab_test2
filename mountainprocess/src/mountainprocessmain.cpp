@@ -4,6 +4,45 @@
 ** Created: 4/27/2016
 *******************************************************/
 
+/*
+An example of what happens when running a processingn script (aka pipeline)
+
+0. Daemon needs to be running in the background:
+    > mountainprocess daemon-start
+
+1. User queues the script
+    > mountainprocess queue-script foo_script.pipeline [parameters...]
+    A command is send to the daemon via: MPDaemonInterface::queueScript
+
+2. The daemon receives the command and adds this job to its queue of scripts.
+    When it becomes time to run the script it, the daemon launches (and tracks) a new QProcess
+    > mountainprocess run-script foo_script.pipeline [parameters...]
+
+3. The script is executed by QJSEngine (see run_script() below)
+    During the course of execution, various processes will be queued. These involve system calls
+    > mountainprocess queue-process [processor_name] [parameters...]
+
+4. When "mountainprocess queue-process" is called, a command is sent to the daemon
+    just as above MPDaemonInterface::queueProcess
+
+5. The daemon receives the command (as above) and adds this job to its queue of processes.
+    When it becomes time to run the process, the daemon launches (and tracks) a new QProcess
+    > mountainprocess run-process [processor_name] [parameters...]
+
+6. The process is actually run. This involves calling the appropriate processor library,
+    for example mountainsort.mp
+
+7. When the process QProcess ends, an output file with JSON info is written. That triggers things to stop:
+    mountainprocess run-process stops ->
+    -> mountainprocess queue-process stops
+    once all of the queued processes for the script have stopped ->
+    -> mountainprocess run-script stops ->
+    -> mountainprocess queue-script stops
+
+If anything crashes along the way, every involved QProcess is killed.
+
+*/
+
 #include "mpdaemon.h"
 #include "mpdaemoninterface.h"
 #include "scriptcontroller.h"

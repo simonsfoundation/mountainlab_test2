@@ -729,6 +729,10 @@ bool resolve_prv_files(QMap<QString, QVariant>& command_line_params)
     QStringList keys = command_line_params.keys();
     foreach (QString key, keys) {
         QVariant val = command_line_params[key];
+        if ((!QFile::exists(val.toString()))&&(QFile::exists(val.toString()+".prv"))) {
+            val=val.toString()+".prv";
+            command_line_params[key]=val;
+        }
         if (val.toString().endsWith(".prv")) {
             QString fname = val.toString();
             val = resolve_prv_file(fname);

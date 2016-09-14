@@ -80,3 +80,53 @@ bool geom2adj_Processor::run(const QMap<QString, QVariant>& params)
 
     return Y2.write32(output);
 }
+
+class linear_adjacency_matrix_ProcessorPrivate {
+public:
+    linear_adjacency_matrix_Processor* q;
+};
+
+linear_adjacency_matrix_Processor::linear_adjacency_matrix_Processor()
+{
+    d = new linear_adjacency_matrix_ProcessorPrivate;
+    d->q = this;
+
+    this->setName("linear_adjacency_matrix");
+    this->setVersion("0.1");
+    this->setInputFileParameters("timeseries");
+    this->setOutputFileParameters("output");
+    this->setRequiredParameters("radius");
+}
+
+linear_adjacency_matrix_Processor::~linear_adjacency_matrix_Processor()
+{
+    delete d;
+}
+
+bool linear_adjacency_matrix_Processor::check(const QMap<QString, QVariant>& params)
+{
+    if (!this->checkParameters(params))
+        return false;
+    return true;
+}
+
+bool linear_adjacency_matrix_Processor::run(const QMap<QString, QVariant>& params)
+{
+    QString timeseries = params["timeseries"].toString();
+    QString output = params["output"].toString();
+    double radius = params["radius"].toDouble();
+
+    Mda X(timeseries);
+    int M = X.N1();
+
+    Mda Y(M,M);
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < M; j++) {
+            if (qAbs(i-j)<=radius) {
+                Y.setValue(1,i,j);
+            }
+        }
+    }
+
+    return Y.write32(output);
+}

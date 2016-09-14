@@ -23,4 +23,18 @@ private:
     geom2adj_ProcessorPrivate* d;
 };
 
+class linear_adjacency_matrix_ProcessorPrivate;
+class linear_adjacency_matrix_Processor : public MSProcessor {
+public:
+    friend class linear_adjacency_matrix_ProcessorPrivate;
+    linear_adjacency_matrix_Processor();
+    virtual ~linear_adjacency_matrix_Processor();
+
+    bool check(const QMap<QString, QVariant>& params);
+    bool run(const QMap<QString, QVariant>& params);
+
+private:
+    linear_adjacency_matrix_ProcessorPrivate* d;
+};
+
 #endif // GEOM2ADJ_H

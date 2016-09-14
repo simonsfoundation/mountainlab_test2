@@ -25,7 +25,7 @@ function table_truth() {
 	var num_tables_computed=0;
 	for (var i=0; i<dsfolders.length; i++) {
 		(function(i) {
-			var firings1_path=dsfolders[i]+'/firings_true.mda.prv';
+			var firings1_path=dsfolders[i]+'/firings_true.mda';
 			var firings2_path=outfolders[i]+'/firings.mda';
 			var pipeline_results=JSON.parse(read_text_file(outfolders[i]+'/pipeline_output.json')||'{}').results||{};
 			get_table(firings1_path,firings2_path,{

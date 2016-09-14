@@ -12,15 +12,15 @@ var outfolder=CLP.namedParameters.output_folders;
 var dsparams=JSON.parse(read_text_file(dsfolder+'/params.json')||'{}');
 
 var firings_path=outfolder+'/firings.mda';
-var firings_true_path=dsfolder+'/firings_true.mda.prv';
+var firings_true_path=dsfolder+'/firings_true.mda';
 
 var args='';
-args+=' --raw='+dsfolder+'/raw.mda.prv';
-if (file_exists(outfolder+'/filt.mda.prv')) {
-	args+=' --filt='+outfolder+'/filt.mda.prv';
+args+=' --raw='+dsfolder+'/raw.mda';
+if (file_exists(outfolder+'/filt.mda')) {
+	args+=' --filt='+outfolder+'/filt.mda';
 }
-if (file_exists(outfolder+'/pre.mda.prv')) {
-	args+=' --pre='+outfolder+'/pre.mda.prv';
+if (file_exists(outfolder+'/pre.mda')) {
+	args+=' --pre='+outfolder+'/pre.mda';
 }
 args+=' --firings1='+firings_true_path;
 args+=' --firings2='+firings_path;

@@ -106,6 +106,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new merge_across_channels_Processor);
     loadProcessor(new merge_across_channels_v2_Processor);
     loadProcessor(new geom2adj_Processor);
+    loadProcessor(new linear_adjacency_matrix_Processor);
     loadProcessor(new create_multiscale_timeseries_Processor);
     loadProcessor(new extract_channel_values_Processor);
     loadProcessor(new mv_discrimhist_Processor);

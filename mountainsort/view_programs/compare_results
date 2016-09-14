@@ -18,12 +18,12 @@ var firings1_path=outfolders[0]+'/firings.mda';
 var firings2_path=outfolders[1]+'/firings.mda';
 
 var args='';
-args+=' --raw='+dsfolders[0]+'/raw.mda.prv';
-if (file_exists(outfolders[0]+'/filt.mda.prv')) {
-	args+=' --filt='+outfolders[0]+'/filt.mda.prv';
+args+=' --raw='+dsfolders[0]+'/raw.mda';
+if (file_exists(outfolders[0]+'/filt.mda')) {
+	args+=' --filt='+outfolders[0]+'/filt.mda';
 }
-if (file_exists(outfolders[0]+'/pre.mda.prv')) {
-	args+=' --pre='+outfolders[0]+'/pre.mda.prv';
+if (file_exists(outfolders[0]+'/pre.mda')) {
+	args+=' --pre='+outfolders[0]+'/pre.mda';
 }
 args+=' --firings1='+firings1_path;
 args+=' --firings2='+firings2_path;
