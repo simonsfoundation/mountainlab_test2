@@ -17,7 +17,15 @@ public:
 
     virtual QString name() = 0;
     virtual QString description() = 0;
-    virtual void initialize(MVMainWindow* mw) = 0;
+    virtual void initialize(MVMainWindow* mw);
+
+    virtual QList<QAction*> actions(const QMimeData& md);
+
+protected:
+    MVMainWindow* mainWindow();
+
+private:
+    MVMainWindow* m_main_window = 0;
 };
 
 #endif // MVABSTRACTPLUGIN_H

@@ -50,6 +50,7 @@ HEADERS += \
     processors/mask_out_artifacts_processor.h \
     processors/mask_out_artifacts.h \
     processors/fit_stage_processor.h \
+    processors/remove_noise_clusters_processor.h \
     processors/fit_stage.h \
     processors/compute_templates.h \
     processors/compute_templates_processor.h \
@@ -95,7 +96,8 @@ HEADERS += \
     processors/hungarian.h \
     processors/merge_firings_processor.h \
     processors/merge_firings.h \
-    processors/add_noise_processor.h
+    processors/add_noise_processor.h \
+    utils/jsvm.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -123,6 +125,7 @@ SOURCES += \
     processors/mask_out_artifacts_processor.cpp \
     processors/mask_out_artifacts.cpp \
     processors/fit_stage_processor.cpp \
+    processors/remove_noise_clusters_processor.cpp \
     processors/fit_stage.cpp \
     processors/compute_templates.cpp \
     processors/compute_templates_processor.cpp \
@@ -172,7 +175,8 @@ SOURCES += \
     processors/hungarian.cpp \
     processors/merge_firings_processor.cpp \
     processors/merge_firings.cpp \
-    processors/add_noise_processor.cpp
+    processors/add_noise_processor.cpp \
+    utils/jsvm.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \
@@ -200,6 +204,9 @@ SOURCES += utils/get_sort_indices.cpp \
     utils/get_pca_features.cpp \
     utils/compute_templates_0.cpp \
     utils/msmisc.cpp
+
+HEADERS += utils/svm.h
+SOURCES += utils/svm.cpp
 
 DEFINES += USE_SSE2
 

@@ -40,14 +40,14 @@ struct PipelineNode2 {
     QVariantMap inputs;
     QVariantMap parameters;
     QVariantMap outputs;
-    bool create_prv=false;
+    bool create_prv = false;
     bool completed;
     bool running;
     QProcess* qprocess;
 
     QStringList input_paths()
     {
-        QStringList input_pnames=inputs.keys();
+        QStringList input_pnames = inputs.keys();
         QStringList ret;
         foreach (QString pname, input_pnames)
             ret << inputs[pname].toString();
@@ -55,7 +55,7 @@ struct PipelineNode2 {
     }
     QStringList output_paths()
     {
-        QStringList output_pnames=outputs.keys();
+        QStringList output_pnames = outputs.keys();
         QStringList ret;
         foreach (QString pname, output_pnames)
             ret << outputs[pname].toString();

@@ -45,8 +45,9 @@ MVOpenViewsControl::MVOpenViewsControl(MVContext* context, MVMainWindow* mw)
     QMimeData md;
     /// Witold, is there a better way to do this than to set a "non-empty" dummy string?
     md.setData("x-mv-main", "non-empty");
-    foreach (MVAbstractViewFactory* factory, this->mainWindow()->viewFactories()) {
-        actions.append(factory->actions(md));
+    QStringList plugin_names = this->mainWindow()->loadedPluginNames();
+    foreach (QString plugin_name, plugin_names) {
+        actions.append(this->mainWindow()->loadedPlugin(plugin_name)->actions(md));
     }
     foreach (QAction* action, actions) {
         QToolButton* button = new QToolButton;

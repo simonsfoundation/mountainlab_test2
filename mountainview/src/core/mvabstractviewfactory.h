@@ -17,12 +17,12 @@ public:
     virtual QString toolTip() const;
     virtual QString title() const; /// TODO: move title to the view itself
     virtual int order() const { return 0; }
-    virtual QList<QAction*> actions(const QMimeData& md);
     virtual bool isEnabled(MVContext* context) const;
 
     MVMainWindow* mainWindow();
 
     virtual MVAbstractView* createView(MVContext* context) = 0;
+    virtual QList<QAction*> actions(const QMimeData& md);
 signals:
 
 private:

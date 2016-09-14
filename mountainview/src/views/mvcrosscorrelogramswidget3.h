@@ -68,7 +68,6 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
-    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 private slots:
 };
 
@@ -81,7 +80,6 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
-    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 };
 
 class MVCrossCorrelogramsFactory : public MVAbstractViewFactory {
@@ -93,7 +91,6 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
-    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 };
 
 class MVMatrixOfCrossCorrelogramsFactory : public MVAbstractViewFactory {
@@ -105,7 +102,6 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
-    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 };
 
 class MVSelectedCrossCorrelogramsFactory : public MVAbstractViewFactory {
@@ -117,7 +113,6 @@ public:
     QString title() const Q_DECL_OVERRIDE;
     MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
     bool isEnabled(MVContext* context) const Q_DECL_OVERRIDE;
-    QList<QAction*> actions(const QMimeData& md) Q_DECL_OVERRIDE;
 };
 
 #endif // MVCROSSCORRELOGRAMSWIDGET3_H

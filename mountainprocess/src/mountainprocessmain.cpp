@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
         }
         QString output_fname = CLP.named_parameters.value("_process_output").toString(); //maybe the user specified where output is to be reported
         if (!output_fname.isEmpty()) {
-            output_fname=QDir::current().absoluteFilePath(output_fname); //make it absolute
+            output_fname = QDir::current().absoluteFilePath(output_fname); //make it absolute
         }
         QString processor_name = arg2; //name of the processor is the second user-supplied arg
         QVariantMap process_parameters = CLP.named_parameters;
@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
 
         QString output_fname = CLP.named_parameters.value("_script_output").toString(); //maybe the user specified where output is to be reported
         if (!output_fname.isEmpty()) {
-            output_fname=QDir::current().absoluteFilePath(output_fname); //make it absolute
+            output_fname = QDir::current().absoluteFilePath(output_fname); //make it absolute
         }
 
         int ret = 0;
@@ -285,7 +285,7 @@ int main(int argc, char* argv[])
         QVariantMap params; //parameters to be passed into the main() function of the javascript
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString str = CLP.unnamed_parameters[i];
-            if ((str.endsWith(".js"))||(str.endsWith(".pipeline"))) { //must be a javascript source file
+            if ((str.endsWith(".js")) || (str.endsWith(".pipeline"))) { //must be a javascript source file
                 if (!QFile::exists(str)) {
                     QString str2 = MLUtil::mountainlabBasePath() + "/mountainprocess/scripts/" + str;
                     if (QFile::exists(str2)) {
@@ -321,7 +321,7 @@ int main(int argc, char* argv[])
         opts.server_urls = server_urls;
         opts.server_base_path = server_base_path;
         opts.force_run = CLP.named_parameters.contains("_force_run");
-        opts.working_path=QDir::currentPath();
+        opts.working_path = QDir::currentPath();
         QJsonObject results;
         if (!run_script(script_fnames, params, opts, error_message, results)) { //actually run the script
             ret = -1;
@@ -545,6 +545,7 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
     json = remove_comments(json);
     QJsonParseError error;
     /// Witold I use toLatin1() everywhere. Is this the appropriate way to convert to byte array?
+    /// Jeremy: toUtf8() or toLocal8Bit() might be better
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
     if (error.error != QJsonParseError::NoError) {
         qCritical() << "Error parsing json file: " + fname + " : " + error.errorString();
@@ -560,10 +561,10 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
 void display_error(QJSValue result)
 {
     /// Witold there must be a better way to print the QJSValue error message out to the console.
-    /// Witold In general is it possible to not display quotes around strings for qDebug?
-    qDebug() << result.property("name").toString(); //okay
-    qDebug() << result.property("message").toString(); //okay
-    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
+    /// Jeremy: No, this is the proper way. You can use "stack" property to get a full trace, if you want
+    qDebug().noquote() << result.property("name").toString(); //okay
+    qDebug().noquote() << result.property("message").toString(); //okay
+    qDebug().noquote() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
 }
 
 bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message, QJsonObject& results)
@@ -622,7 +623,7 @@ void print_usage()
     printf("mountainprocess run-process [processor_name] --[param1]=[val1] --[param2]=[val2] ... [--_force_run]\n");
     printf("mountainprocess run-script [script1].js [script2.js] ... [file1].par [file2].par ... [--_force_run] \n");
     printf("mountainprocess daemon-start\n");
-    printf("mountainprocess daemon-stop\n");
+    //printf("mountainprocess daemon-stop\n");
     printf("mountainprocess daemon-restart\n");
     printf("mountainprocess daemon-state\n");
     printf("mountainprocess daemon-state-summary\n");
@@ -656,7 +657,7 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
         QVariantMap params;
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString str = CLP.unnamed_parameters[i];
-            if ((str.endsWith(".js"))||(str.endsWith(".pipeline"))) {
+            if ((str.endsWith(".js")) || (str.endsWith(".pipeline"))) {
                 PP.script_paths << str;
                 PP.script_path_checksums << MLUtil::computeSha1SumOfFile(str);
             }
@@ -687,14 +688,14 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
     if (prtype == ScriptType) {
         PP.output_fname = CLP.named_parameters["_script_output"].toString();
         if (!PP.output_fname.isEmpty()) {
-            PP.output_fname=QDir::current().absoluteFilePath(PP.output_fname); //make it absolute
+            PP.output_fname = QDir::current().absoluteFilePath(PP.output_fname); //make it absolute
             QFile::remove(PP.output_fname); //important, added 9/9/16
         }
     }
     else {
         PP.output_fname = CLP.named_parameters["_process_output"].toString();
         if (!PP.output_fname.isEmpty()) {
-            PP.output_fname=QDir::current().absoluteFilePath(PP.output_fname); //make it absolute
+            PP.output_fname = QDir::current().absoluteFilePath(PP.output_fname); //make it absolute
             QFile::remove(PP.output_fname); //important, added 9/9/16
         }
     }
@@ -891,8 +892,6 @@ QString get_daemon_state_summary(const QJsonObject& state)
             ret += QString("  %1: %2 queued, %3 running, %4 finished, %5 errors\n").arg(processor_name).arg(processor_counts[processor_name].queued).arg(processor_counts[processor_name].running).arg(processor_counts[processor_name].finished).arg(processor_counts[processor_name].errors);
         }
     }
-
-
 
     return ret;
 }

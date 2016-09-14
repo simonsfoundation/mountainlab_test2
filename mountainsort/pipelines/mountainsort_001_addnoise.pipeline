@@ -13,43 +13,36 @@ function run_mountainsort(params) {
 		sign:0, // use 1 to detect only positive spikes, -1 to detect only negative spikes, and 0 for both
 		num_features:10,
 		num_features2:10,
-		adjacency_radius:0
+		whiten:1
 	});
 
-	var adjacency_matrix='';
-	if (params.geom) {
-		if (params.geom==linear) {
-			adjacency_matrix=Process('linear_adjacency_matrix',{timeseries:params.raw},{adjacency_radius:adjacency_radius});
-		}
-		else {
-			adjacency_matrix=Process('params.geom',{input:params.geom},{radius:params.adjacency_radius}).output;
-		}
-	}
-
 	// Bandpass filter
-	var filt=Process('bandpass_filter',{timeseries:params.raw},{
+	var pre1=Process('bandpass_filter',{timeseries:params.raw},{
 			samplerate:params.samplerate,freq_min:params.freq_min,freq_max:params.freq_max
 		}).timeseries_out;
 
 
-	var pre='';
+	var pre2='';
 	if (params.whiten) {
-		pre=Process('whiten',{timeseries:pre1}).timeseries_out;
+		pre2=Process('whiten',{timeseries:pre1}).timeseries_out;
 	}
 	else {
 		// Normalize channels (to have variance 1)
-		pre=Process('normalize_channels',{timeseries:pre1}).timeseries_out;
+		pre2=Process('normalize_channels',{timeseries:pre1}).timeseries_out;
 	}
 
+	var pre2_noise=Process('add_noise',{timeseries:pre2},{noise_level:0.3}).timeseries_out;
+	pre2_noise=Process('normalize_channels',{timeseries:pre2_noise}).timeseries_out;
+
 	// Detect super-threshold events
-	var detect=Process('detect',{timeseries:pre},{
+	var detect=Process('detect',{timeseries:pre2_noise},{
 			detect_threshold:params.detect_threshold,detect_interval:params.detect_interval,
 			clip_size:params.clip_size,sign:params.sign,
 			individual_channels:1
 		}).detect_out;
 
 	// Clustering
-	var firings1=Process('branch_cluster_v2',{timeseries:pre,detect:detect,adjacency_matrix:''},{
+	var firings1=Process('branch_cluster_v2',{timeseries:pre2,detect:detect,adjacency_matrix:''},{
 			clip_size:params.clip_size,
 			min_shell_size:150,shell_increment:0,
 			num_features:params.num_features,num_features2:params.num_features2,
@@ -58,20 +51,20 @@ function run_mountainsort(params) {
 		}).firings_out;
 
 	// Merge across channels
-	var firings2=Process('merge_across_channels_v2',{timeseries:pre,firings:firings1},{
+	var firings2=Process('merge_across_channels_v2',{timeseries:pre2,firings:firings1},{
 			clip_size:params.clip_size
 		}).firings_out;
 
 	// Fit stage
-	var firings3=Process('fit_stage',{timeseries:pre,firings:firings2},{
+	var firings3=Process('fit_stage',{timeseries:pre2,firings:firings2},{
 			clip_size:params.clip_size,
 			min_shell_size:150,shell_increment:0
 		}).firings_out;
 
 	// Write the output
 	write_prv(params.raw,params.outpath+'/raw.mda.prv');
-	write_prv(filt,params.outpath+'/filt.mda.prv');
-	write_prv(pre,params.outpath+'/pre.mda.prv');
+	write_prv(pre1,params.outpath+'/filt.mda.prv');
+	write_prv(pre2,params.outpath+'/pre.mda.prv');
 	write_file(firings3,params.outpath+'/firings.mda');
 
 	run_pipeline();

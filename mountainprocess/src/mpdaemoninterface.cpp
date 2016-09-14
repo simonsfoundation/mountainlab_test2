@@ -1,6 +1,6 @@
 /******************************************************
 ** See the accompanying README and LICENSE files
-** Author(s): Jeremy Magland
+** Author(s): Jeremy Magland, Witold Wysota
 ** Created: 5/2/2016
 *******************************************************/
 
@@ -14,7 +14,9 @@
 #include "mpdaemon.h"
 
 #include <QDebug>
+#include <QSharedMemory>
 #include "mlcommon.h"
+#include <signal.h>
 
 class MPDaemonInterfacePrivate {
 public:
@@ -46,7 +48,7 @@ bool MPDaemonInterface::start()
     }
     QString exe = qApp->applicationFilePath();
     QStringList args;
-    args << "-internal-daemon-start";
+    args << "daemon-start";
     if (!QProcess::startDetached(exe, args)) {
         printf("Unable to startDetached: %s\n", exe.toLatin1().data());
         return false;
@@ -89,14 +91,12 @@ static QString daemon_message = "Open a terminal and run [mountainprocess daemon
 bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
 {
     if (!d->daemon_is_running()) {
-        qWarning() << "Problem in queueScript: Daemon is not running. " + daemon_message;
-        return false;
-        /*
+
         if (!this->start()) {
             printf("Problem in queueScript: Unable to start daemon.\n");
             return false;
         }
-        */
+
     }
     QJsonObject obj = pript_struct_to_obj(script, FullRecord);
     obj["command"] = "queue-script";
@@ -106,14 +106,10 @@ bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
 bool MPDaemonInterface::queueProcess(const MPDaemonPript& process)
 {
     if (!d->daemon_is_running()) {
-        qWarning() << "Problem in queueProcess: Daemon is not running. " + daemon_message;
-        return false;
-        /*
         if (!this->start()) {
             printf("Problem in queueProcess: Unable to start daemon.\n");
             return false;
         }
-        */
     }
     QJsonObject obj = pript_struct_to_obj(process, FullRecord);
     obj["command"] = "queue-process";
@@ -127,17 +123,15 @@ bool MPDaemonInterface::clearProcessing()
     return d->send_daemon_command(obj, 0);
 }
 
-#include "signal.h"
 bool MPDaemonInterfacePrivate::daemon_is_running()
 {
-    QString fname = MLUtil::tempPath() + "/mpdaemon_running.pid";
-    if (!QFile::exists(fname))
+    QSharedMemory shm("mountainprocess");
+    if (!shm.attach(QSharedMemory::ReadOnly))
         return false;
-    if (QFileInfo(fname).lastModified().secsTo(QDateTime::currentDateTime()) > 120) { // time since last write
-        return false;
-    }
-    long pid = TextFile::read(fname).toLongLong();
-    bool ret = (kill(pid, 0) == 0);
+    shm.lock();
+    const MountainProcessDescriptor *desc = reinterpret_cast<const MountainProcessDescriptor*>(shm.constData());
+    bool ret = (kill(desc->pid, 0) == 0);
+    shm.unlock();
     return ret;
 }
 

@@ -45,6 +45,7 @@
 #include <tabber.h>
 #include <QFileDialog>
 #include <QSettings>
+#include <clipsviewplugin.h>
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
 /// TODO: (HIGH) blobs for populations
@@ -744,6 +745,7 @@ void set_nice_size(QWidget* W)
 void setup_main_window(MVMainWindow* W)
 {
     W->loadPlugin(new ClusterDetailPlugin);
+    W->loadPlugin(new ClipsViewPlugin);
     W->loadPlugin(new ClusterContextMenuPlugin);
     W->registerViewFactory(new MVTemplatesView2Factory(W));
     W->registerViewFactory(new MVAutoCorrelogramsFactory(W));
@@ -752,7 +754,6 @@ void setup_main_window(MVMainWindow* W)
     W->registerViewFactory(new MVMatrixOfCrossCorrelogramsFactory(W));
     W->registerViewFactory(new MVSelectedCrossCorrelogramsFactory(W));
     W->registerViewFactory(new MVTimeSeriesDataFactory(W));
-    W->registerViewFactory(new MVClipsFactory(W));
     W->registerViewFactory(new MVPCAFeaturesFactory(W));
     W->registerViewFactory(new MVChannelFeaturesFactory(W));
     W->registerViewFactory(new MVSpikeSprayFactory(W));

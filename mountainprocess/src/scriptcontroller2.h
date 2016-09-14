@@ -23,8 +23,8 @@ public:
     void setWorkingPath(QString working_path);
     QJsonObject getResults();
 
-    Q_INVOKABLE QString addProcess(QString processor_name,QString inputs_json,QString parameters_json,QString outputs_json); //returns json
-    Q_INVOKABLE void addPrv(QString input_path,QString output_path);
+    Q_INVOKABLE QString addProcess(QString processor_name, QString inputs_json, QString parameters_json, QString outputs_json); //returns json
+    Q_INVOKABLE void addPrv(QString input_path, QString output_path);
     Q_INVOKABLE bool runPipeline();
     Q_INVOKABLE void log(const QString& message);
 

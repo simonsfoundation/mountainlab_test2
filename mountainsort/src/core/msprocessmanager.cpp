@@ -45,6 +45,7 @@
 #include "compute_amplitudes_processor.h"
 #include "merge_firings_processor.h"
 #include "add_noise_processor.h"
+#include "remove_noise_clusters_processor.h"
 #include <sys/stat.h>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -118,6 +119,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new compute_amplitudes_Processor);
     loadProcessor(new merge_firings_Processor);
     loadProcessor(new add_noise_Processor);
+    loadProcessor(new remove_noise_clusters_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString& processor_name) const
@@ -137,6 +139,9 @@ QString compute_process_code(const QString& processor_name, const QVariantMap& p
     X["parameters"] = QJsonObject::fromVariantMap(parameters);
     QString json = QJsonDocument(X).toJson();
     /// Witold I need a canonical json here so that the hash is always the same. (relatively important)
+    /// Jeremy: JSON doesn't care about order of fields so there is no canonical form. I suggest
+    ///         you sort keys alphabetically. But this is CPU consuming since the JSON can be
+    ///         quite deep.
     return MLUtil::computeSha1SumOfString(json);
 }
 

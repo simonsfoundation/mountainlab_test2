@@ -12,12 +12,6 @@ QString MVAbstractViewFactory::toolTip() const { return QString(); }
 
 QString MVAbstractViewFactory::title() const { return name(); }
 
-QList<QAction*> MVAbstractViewFactory::actions(const QMimeData& md)
-{
-    Q_UNUSED(md)
-    return QList<QAction*>();
-}
-
 bool MVAbstractViewFactory::isEnabled(MVContext* context) const
 {
     Q_UNUSED(context)
@@ -27,4 +21,10 @@ bool MVAbstractViewFactory::isEnabled(MVContext* context) const
 MVMainWindow* MVAbstractViewFactory::mainWindow()
 {
     return m_main_window;
+}
+
+QList<QAction*> MVAbstractViewFactory::actions(const QMimeData& md)
+{
+    Q_UNUSED(md)
+    return QList<QAction*>();
 }
