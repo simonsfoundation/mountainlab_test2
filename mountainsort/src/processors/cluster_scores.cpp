@@ -17,7 +17,7 @@
 
 namespace ClusterScores {
     QVector<double> compute_cluster_scores(const Mda32 &clips,cluster_scores_opts opts);
-    QVector<double> compute_cluster_pair_scores(const Mda32 &clips1,const Mda32 &clips2,cluster_scores_opts opts);
+    QVector<double> compute_cluster_pair_scores(DiskReadMda32 timeseries, const Mda32 &clips1,const Mda32 &clips2,cluster_scores_opts opts);
     double compute_distance(long N, float* ptr1, float* ptr2);
     bool is_zero(const Mda& X);
     void find_pairs_to_compare(QList<int> &k1s,QList<int> &k2s,DiskReadMda32 timeseries, DiskReadMda firings,cluster_scores_opts opts);
@@ -77,7 +77,7 @@ namespace ClusterScores {
             }
             Mda32 clips_k2=extract_clips(X,times_k2,opts.clip_size);
 
-            QVector<double> scores_k1_k2=compute_cluster_pair_scores(clips_k1,clips_k2,opts);
+            QVector<double> scores_k1_k2=compute_cluster_pair_scores(X,clips_k1,clips_k2,opts);
             cluster_pair_scores.setValue(k1,0,ii);
             cluster_pair_scores.setValue(k2,1,ii);
             for (int a=0; a<scores_k1_k2.count(); a++) {
@@ -94,6 +94,23 @@ namespace ClusterScores {
         return true;
     }
 
+    Mda32 add_self_noise_to_clips(const DiskReadMda32 &timeseries,const Mda32 &clips,double noise_factor) {
+        Mda32 ret=clips;
+        int M=clips.N1();
+        int T=clips.N2();
+        for (long i=0; i<clips.N3(); i++) {
+            long ind0=T+(qrand()%timeseries.N2()-T*2);
+            Mda32 chunk;
+            timeseries.readChunk(chunk,0,ind0,M,T);
+            for (int t=0; t<T; t++) {
+                for (int m=0; m<M; m++) {
+                    ret.set(ret.get(m,t)+chunk.value(m,t)*noise_factor,m,t,i);
+                }
+            }
+        }
+        return ret;
+    }
+
     Mda32 add_noise_to(const Mda32 &X,double noise_level) {
         Mda32 noise(X.N1(),X.N2(),X.N3());
         generate_randn(noise.totalSize(),noise.dataPtr());
@@ -106,27 +123,33 @@ namespace ClusterScores {
     }
 
     QVector<double> compute_cluster_scores(const Mda32 &clips,cluster_scores_opts opts) {
-        if (clips.N2()==0) return QVector<double>();
+        if (clips.N3()==0) return QVector<double>();
         Mda32 template0=compute_mean_clip(clips);
         int ind_m_of_peak=0;
         int ind_t_of_peak=0;
+        int sign=1;
         for (int t=0; t<template0.N2(); t++) {
             for (int m=0; m<template0.N1(); m++) {
                 if (qAbs(template0.value(m,t))>qAbs(template0.value(ind_m_of_peak,ind_t_of_peak))) {
                     ind_m_of_peak=m;
                     ind_t_of_peak=t;
+                    if (template0.value(m,t)>0)
+                        sign=1;
+                    else
+                        sign=-1;
                 }
             }
         }
-        Mda32 clips2=add_noise_to(clips,opts.add_noise_level);
+        Mda32 clips_noise=add_noise_to(clips,opts.add_noise_level);
         long num_err=0;
-        for (long i=0; i<clips2.N2(); i++) {
-            double val=qAbs(clips2.value(ind_m_of_peak,ind_t_of_peak,i));
+        for (long i=0; i<clips_noise.N3(); i++) {
+            double val=sign*clips_noise.value(ind_m_of_peak,ind_t_of_peak,i);
             if (val<opts.detect_threshold)
                 num_err++;
         }
         QVector<double> ret;
-        ret << num_err*1.0/clips.N2();
+        ret << num_err*1.0/clips.N3();
+        printf("%ld/%ld (%g%%)\n",num_err,clips.N3(),num_err*1.0/clips.N3()*100);
         return ret;
     }
 
@@ -196,7 +219,7 @@ namespace ClusterScores {
             }
         }
     }
-    QVector<double> compute_cluster_pair_scores(const Mda32 &clips1,const Mda32 &clips2,cluster_scores_opts opts) {
+    QVector<double> compute_cluster_pair_scores(DiskReadMda32 timeseries,const Mda32 &clips1,const Mda32 &clips2,cluster_scores_opts opts) {
         long L1=clips1.N3();
         long L2=clips2.N3();
         if (!L1) return QVector<double>();
@@ -204,8 +227,8 @@ namespace ClusterScores {
         int M=clips1.N1();
         int T=clips1.N2();
 
-        Mda32 clips1_noise=add_noise_to(clips1,opts.add_noise_level);
-        Mda32 clips2_noise=add_noise_to(clips2,opts.add_noise_level);
+        Mda32 clips1_noise=add_self_noise_to_clips(timeseries,clips1,opts.add_noise_level);
+        Mda32 clips2_noise=add_self_noise_to_clips(timeseries,clips2,opts.add_noise_level);
 
         Mda32 X(M*T,L1+L2);
         QVector<int> labels;
@@ -252,7 +275,7 @@ namespace ClusterScores {
             if (val>cutoff_00) num_err++;
         }
 
-        qDebug() << num_err << L1 << L2;
+        printf("%ld/%ld (%g%%)    cutoff=%g\n",num_err,L1+L2,num_err*1.0/(L1+L2)*100,cutoff_00);
         QVector<double> ret;
         ret << num_err*1.0/(L1+L2);
         return ret;
