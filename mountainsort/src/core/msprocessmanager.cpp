@@ -38,6 +38,7 @@
 #include "extract_channel_values_processor.h"
 #include "mv_discrimhist_processor.h"
 #include "mv_discrimhist_guide_processor.h"
+#include "mv_discrimhist_guide2_processor.h"
 #include "firings_subset_processor.h"
 #include "quantize_processor.h"
 #include "merge_stage_processor.h"
@@ -113,6 +114,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new extract_channel_values_Processor);
     loadProcessor(new mv_discrimhist_Processor);
     loadProcessor(new mv_discrimhist_guide_Processor);
+    loadProcessor(new mv_discrimhist_guide2_Processor);
     loadProcessor(new firings_subset_Processor);
     loadProcessor(new quantize_Processor);
     loadProcessor(new merge_stage_Processor);

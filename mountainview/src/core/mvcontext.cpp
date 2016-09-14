@@ -75,6 +75,7 @@ MVContext::MVContext()
     d->m_options["cc_bin_size_msec"] = 0.5;
     d->m_options["cc_max_est_data_size"] = "1e4";
     d->m_options["amp_thresh_display"] = 3;
+    d->m_options["discrim_hist_method"] = "centroid";
 
     // default colors
     d->m_colors["background"] = QColor(240, 240, 240);

@@ -136,7 +136,7 @@ bool get_discrimhist_data(QVector<double>& ret1, QVector<double>& ret2, const Di
             Mda32 tmp;
             clips2.getChunk(tmp, 0, 0, j, M, T, 1);
             for (long k = 0; k < MT; k++) {
-                X0.setValue(tmp.value(k), k, clips1.N2() + j);
+                X0.setValue(tmp.value(k), k, L2 + j);
             }
             labels0 << 2;
         }

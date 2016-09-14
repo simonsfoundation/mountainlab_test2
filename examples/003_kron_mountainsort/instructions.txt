@@ -1,4 +1,9 @@
-*** Generate the synthetic data (more info needed)
+*** Install and configure mountainlab
+
+*** Generate the synthetic data
+./001_generate_synthetic_data
+
+This will create two folders: examples and BIGFILES
 
 *** Run sorting and view results
 kron_run ms example1
