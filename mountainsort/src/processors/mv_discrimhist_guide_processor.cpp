@@ -13,7 +13,7 @@ mv_discrimhist_guide_Processor::mv_discrimhist_guide_Processor()
     d->q = this;
 
     this->setName("mv_discrimhist_guide");
-    this->setVersion("0.154");
+    this->setVersion("0.156");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("output");
     this->setRequiredParameters("num_histograms", "clusters_to_exclude");
@@ -45,6 +45,6 @@ bool mv_discrimhist_guide_Processor::run(const QMap<QString, QVariant>& params)
     opts.num_histograms = num_histograms;
     opts.clusters_to_exclude = clusters_to_exclude;
     opts.method=params.value("method").toString();
-    if (opts.method.isEmpty()) opts.method="svm";
+    if (opts.method.isEmpty()) opts.method="centroid";
     return mv_discrimhist_guide(timeseries_path, firings_path, output_path, opts);
 }

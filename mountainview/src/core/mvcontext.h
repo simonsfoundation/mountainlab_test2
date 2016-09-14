@@ -107,6 +107,12 @@ public:
     void setClusterTags(int num, const QSet<QString>& tags); //part of attributes
 
     /////////////////////////////////////////////////
+    QList<int> clusterOrder(int max_K=0) const; //max_K is used in case the cluster order is empty, in which case it will return 1,2,...,max_K
+    QString clusterOrderScoresName() const;
+    QList<double> clusterOrderScores() const;
+    void setClusterOrderScores(QString scores_name,const QList<double> &scores);
+
+    /////////////////////////////////////////////////
     QJsonObject clusterPairAttributes(const ClusterPair& pair) const;
     QList<ClusterPair> clusterPairAttributesKeys() const;
     void setClusterPairAttributes(const ClusterPair& pair, const QJsonObject& obj);
@@ -208,6 +214,7 @@ signals:
     void electrodeGeometryChanged();
     void viewMergedChanged();
     void visibleChannelsChanged();
+    void clusterOrderChanged();
 
 private slots:
     void slot_option_changed(QString name);
