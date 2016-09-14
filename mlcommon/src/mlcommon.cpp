@@ -579,14 +579,14 @@ QString find_file_with_checksum(const QString& checksum, long size_bytes)
             return path;
     }
 
-    //next search in the current directory
+    //next search in the current directory (recursively)
     {
-        QString path = find_file_with_checksum(".", checksum, size_bytes, false);
+        QString path = find_file_with_checksum(".", checksum, size_bytes, true);
         if (!path.isEmpty())
             return path;
     }
 
-    //finally try in the temporary directories
+    //next try in the temporary directories
     {
         QString path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_long_term", checksum, size_bytes, false);
         if (!path.isEmpty())

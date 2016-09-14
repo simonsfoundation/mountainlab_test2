@@ -18,12 +18,13 @@ cluster_scores_Processor::cluster_scores_Processor()
     d->q = this;
 
     this->setName("cluster_scores");
-    this->setVersion("0.11");
+    this->setVersion("0.12");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("cluster_scores", "cluster_pair_scores");
     this->setRequiredParameters("clip_size", "detect_threshold");
     this->setRequiredParameters("add_noise_level");
     this->setOptionalParameters("cluster_numbers", "max_comparisons_per_cluster");
+    this->setOptionalParameters("cluster_scores_only");
 }
 
 cluster_scores_Processor::~cluster_scores_Processor()
@@ -49,6 +50,7 @@ bool cluster_scores_Processor::run(const QMap<QString, QVariant>& params)
     }
     opts.max_comparisons_per_cluster = params["max_comparisons_per_cluster"].toInt();
     opts.add_noise_level = params["add_noise_level"].toDouble();
+    opts.cluster_scores_only=params.value("cluster_scores_only",0).toInt();
     QString timeseries_path = params["timeseries"].toString();
     QString firings_path = params["firings"].toString();
     QString cluster_scores_path = params["cluster_scores"].toString();

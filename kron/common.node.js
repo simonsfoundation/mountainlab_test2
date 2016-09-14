@@ -2,6 +2,7 @@ var exports = module.exports = {};
 var common=exports;
 
 var fs=require('fs');
+var path=require('path');
 var child_process=require('child_process');
 
 //use > npm install ini
@@ -32,7 +33,7 @@ exports.read_pipelines_from_text_file=function(file_path) {
 			if (lines[i].trim().slice(0,1)!='#') {
 				if (lines[i].trim()) {
 					var vals=lines[i].trim().split(' ');
-					var absolute_script_path=find_absolute_pipeline_script_path(vals[1]);
+					var absolute_script_path=find_absolute_pipeline_script_path(vals[1],path.dirname(file_path)||'.');
 					if (!absolute_script_path) {
 						console.log ('Unable to find pipeline script path: '+vals[1]);
 						process.exit(-1);
@@ -66,7 +67,7 @@ exports.read_datasets_from_text_file=function(file_path) {
 			if (lines[i].trim().slice(0,1)!='#') {
 				var vals=lines[i].trim().split(' ');
 				if (vals.length==2) {
-					var absolute_folder_path=find_absolute_dataset_folder_path(vals[1]);
+					var absolute_folder_path=find_absolute_dataset_folder_path(vals[1],path.dirname(file_path)||'.');
 					if (!absolute_folder_path) {
 						console.log ('Unable to find dataset folder: '+vals[1]);
 						process.exit(-1);
@@ -122,8 +123,12 @@ exports.find_dataset=function(datasets,dsname) {
 	return null;
 };
 
-function find_absolute_dataset_folder_path(folder) {
+function find_absolute_dataset_folder_path(folder,text_file_path) {
 	var dataset_paths=mountainlab_config.kron.dataset_paths.split(';');
+	if (text_file_path)
+		dataset_paths.push(text_file_path);
+	console.log(dataset_paths);
+	console.log(text_file_path);
 	for (var i in dataset_paths) {
 		var p=resolve_from_mountainlab(dataset_paths[i]+'/'+folder);
 		if (fs.existsSync(p)) {
@@ -133,8 +138,10 @@ function find_absolute_dataset_folder_path(folder) {
 	return null;
 }
 
-function find_absolute_pipeline_script_path(script_path) {
+function find_absolute_pipeline_script_path(script_path,text_file_path) {
 	var pipeline_paths=mountainlab_config.kron.pipeline_paths.split(';');
+	if (text_file_path)
+		pipeline_paths.push(text_file_path);
 	for (var i in pipeline_paths) {
 		var p=resolve_from_mountainlab(pipeline_paths[i]+'/'+script_path);
 		if (fs.existsSync(p)) {
@@ -157,7 +164,8 @@ exports.find_view_program_file=function(program_name) {
 
 function resolve_from_mountainlab(path) {
 	if (path.indexOf('/')===0) return path; //absolute
-	else return __dirname+'/../'+path; //relative
+	if (path.indexOf('.')===0) return path; //prob referring to the working directory. Witold, help!!
+	return __dirname+'/../'+path; //relative
 }
 
 exports.CLParams=function(argv) {

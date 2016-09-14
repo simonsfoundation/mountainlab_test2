@@ -108,10 +108,10 @@ INCLUDEPATH += controlwidgets
 VPATH += controlwidgets
 HEADERS += \
 mvclustervisibilitycontrol.h \
-mvexportcontrol.h mvgeneralcontrol.h mvopenviewscontrol.h
+mvexportcontrol.h mvgeneralcontrol.h mvopenviewscontrol.h mvclusterordercontrol.h
 SOURCES += \
 mvclustervisibilitycontrol.cpp \
-mvexportcontrol.cpp mvgeneralcontrol.cpp mvopenviewscontrol.cpp
+mvexportcontrol.cpp mvgeneralcontrol.cpp mvopenviewscontrol.cpp mvclusterordercontrol.cpp
 
 INCLUDEPATH += guides
 VPATH += guides
