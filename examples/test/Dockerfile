@@ -46,10 +46,12 @@ WORKDIR mountainlab
 RUN ./compile_components.sh default
 
 # Set up environment variables
-RUN echo "export PATH=/home/magland/dev/mountainlab/mountainprocess/bin:\$PATH" >> /home/magland/.bashrc
-RUN echo "export PATH=/home/magland/dev/mountainlab/mountainview/bin:\$PATH" >> /home/magland/.bashrc
-RUN echo "export PATH=/home/magland/dev/mountainlab/mountaincompare/bin:\$PATH" >> /home/magland/.bashrc
-RUN echo "export PATH=/home/magland/dev/mountainlab/kron:\$PATH" >> /home/magland/.bashrc
+#RUN echo "export PATH=/home/magland/dev/mountainlab/mountainprocess/bin:\$PATH" >> /home/magland/.bashrc
+#RUN echo "export PATH=/home/magland/dev/mountainlab/mountainview/bin:\$PATH" >> /home/magland/.bashrc
+#RUN echo "export PATH=/home/magland/dev/mountainlab/mountaincompare/bin:\$PATH" >> /home/magland/.bashrc
+#RUN echo "export PATH=/home/magland/dev/mountainlab/kron:\$PATH" >> /home/magland/.bashrc
+ENV PATH /home/magland/dev/mountainlab/mountainprocess/bin:$PATH
+ENV PATH /home/magland/dev/mountainlab/mountainview/bin:$PATH
 
 # Now I'll put you in the directory of the examples
 WORKDIR examples
