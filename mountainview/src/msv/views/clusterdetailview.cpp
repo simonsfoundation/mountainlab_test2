@@ -217,6 +217,7 @@ ClusterDetailView::ClusterDetailView(MVContext* context)
         this->addAction(A);
     }
 
+    /*
     {
         QComboBox* CB = new QComboBox;
         CB->addItem("Default order", "default");
@@ -225,6 +226,7 @@ ClusterDetailView::ClusterDetailView(MVContext* context)
         this->addToolbarControl(CB);
         QObject::connect(CB, SIGNAL(currentIndexChanged(int)), this, SLOT(slot_update_sort_order()));
     }
+    */
 
     recalculate();
 }
@@ -1141,11 +1143,21 @@ QPointF ClusterView::template_coord2pix(int m, double t, double val)
 
 void ClusterDetailViewPrivate::sort_cluster_data(QList<ClusterData>& CD)
 {
-    QList<ClusterData> ret;
+    QList<double> cluster_order_scores = q->mvContext()->clusterOrderScores();
+    QVector<double> sort_scores;
+    for (int i = 0; i < CD.count(); i++) {
+        sort_scores << cluster_order_scores.value(CD[i].k - 1, 0);
+    }
+
+    /*
     QVector<double> sort_scores;
     for (int i = 0; i < CD.count(); i++) {
         sort_scores << compute_sort_score(CD[i]);
     }
+
+    */
+
+    QList<ClusterData> ret;
     QList<long> inds = get_sort_indices(sort_scores);
     for (int i = 0; i < inds.count(); i++) {
         ret << CD[inds[i]];

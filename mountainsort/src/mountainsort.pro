@@ -35,6 +35,8 @@ HEADERS += \
     processors/whiten.h \
     processors/branch_cluster_v2_processor.h \
     processors/branch_cluster_v2.h \
+    processors/branch_cluster_v3_processor.h \
+    processors/branch_cluster_v3.h \
     isosplit/isosplit2.h \
     isosplit/isocut.h \
     isosplit/jisotonic.h \
@@ -48,6 +50,7 @@ HEADERS += \
     processors/mask_out_artifacts_processor.h \
     processors/mask_out_artifacts.h \
     processors/fit_stage_processor.h \
+    processors/remove_noise_clusters_processor.h \
     processors/fit_stage.h \
     processors/compute_templates.h \
     processors/compute_templates_processor.h \
@@ -81,6 +84,8 @@ HEADERS += \
     processors/mv_discrimhist.h \
     processors/mv_discrimhist_guide_processor.h \
     processors/mv_discrimhist_guide.h \
+    processors/mv_discrimhist_guide2_processor.h \
+    processors/mv_discrimhist_guide2.h \
     processors/normalize_channels_processor.h \
     processors/normalize_channels.h \
     utils/pca.h \
@@ -93,7 +98,10 @@ HEADERS += \
     processors/hungarian.h \
     processors/merge_firings_processor.h \
     processors/merge_firings.h \
-    processors/add_noise_processor.h
+    processors/add_noise_processor.h \
+    processors/cluster_scores_processor.h \
+    utils/jsvm.h \
+    processors/cluster_scores.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -109,6 +117,8 @@ SOURCES += \
     processors/whiten.cpp \
     processors/branch_cluster_v2_processor.cpp \
     processors/branch_cluster_v2.cpp \
+    processors/branch_cluster_v3_processor.cpp \
+    processors/branch_cluster_v3.cpp \
     processors/extract_clips.cpp \
     processors/remove_duplicate_clusters_processor.cpp \
     processors/remove_duplicate_clusters.cpp \
@@ -119,6 +129,7 @@ SOURCES += \
     processors/mask_out_artifacts_processor.cpp \
     processors/mask_out_artifacts.cpp \
     processors/fit_stage_processor.cpp \
+    processors/remove_noise_clusters_processor.cpp \
     processors/fit_stage.cpp \
     processors/compute_templates.cpp \
     processors/compute_templates_processor.cpp \
@@ -154,6 +165,8 @@ SOURCES += \
     processors/mv_discrimhist.cpp \
     processors/mv_discrimhist_guide_processor.cpp \
     processors/mv_discrimhist_guide.cpp \
+    processors/mv_discrimhist_guide2_processor.cpp \
+    processors/mv_discrimhist_guide2.cpp \
     processors/normalize_channels_processor.cpp \
     processors/normalize_channels.cpp \
     utils/pca.cpp \
@@ -168,7 +181,10 @@ SOURCES += \
     processors/hungarian.cpp \
     processors/merge_firings_processor.cpp \
     processors/merge_firings.cpp \
-    processors/add_noise_processor.cpp
+    processors/add_noise_processor.cpp \
+    processors/cluster_scores_processor.cpp \
+    utils/jsvm.cpp \
+    processors/cluster_scores.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \
@@ -196,6 +212,9 @@ SOURCES += utils/get_sort_indices.cpp \
     utils/get_pca_features.cpp \
     utils/compute_templates_0.cpp \
     utils/msmisc.cpp
+
+HEADERS += utils/svm.h
+SOURCES += utils/svm.cpp
 
 DEFINES += USE_SSE2
 

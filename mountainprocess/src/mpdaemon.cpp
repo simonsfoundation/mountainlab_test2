@@ -1,6 +1,6 @@
 /******************************************************
 ** See the accompanying README and LICENSE files
-** Author(s): Jeremy Magland
+** Author(s): Jeremy Magland, Witold Wysota
 ** Created: 5/2/2016
 *******************************************************/
 
@@ -21,6 +21,16 @@
 #include <sys/stat.h> //for mkfifo
 #include "processmanager.h"
 #include "mlcommon.h"
+#include <QSharedMemory>
+#include <signal.h>
+
+static bool stopDaemon = false;
+
+void sighandler(int num)
+{
+    if (num == SIGINT || num == SIGTERM)
+        stopDaemon = true;
+}
 
 class MPDaemonPrivate {
 public:
@@ -30,6 +40,7 @@ public:
     QMap<QString, MPDaemonPript> m_pripts;
     ProcessResources m_total_resources_available;
     QString m_log_path;
+    QSharedMemory* shm = nullptr;
 
     void process_command(QJsonObject obj);
     void writeLogRecord(QString record_type, QString key1 = "", QVariant val1 = QVariant(), QString key2 = "", QVariant val2 = QVariant(), QString key3 = "", QVariant val3 = QVariant());
@@ -72,6 +83,9 @@ public:
     bool launch_pript(QString id);
     ProcessResources compute_process_resources_available();
     ProcessResources compute_process_resources_needed(MPDaemonPript P);
+
+    bool acquireServer();
+    bool releaseServer();
 };
 
 void append_line_to_file(QString fname, QString line)
@@ -126,7 +140,7 @@ MPDaemon::~MPDaemon()
                 P.qprocess->terminate(); // I think it's okay to terminate a process. It won't cause this program to crash.
         }
     }
-
+    d->releaseServer();
     delete d;
 }
 
@@ -155,6 +169,8 @@ bool MPDaemon::run()
     if (!d->write_running_file()) { //this also checks whether another daemon is running,
         return false;
     }
+    signal(SIGINT, sighandler);
+    signal(SIGTERM, sighandler);
     d->write_daemon_state();
 
     d->m_is_running = true;
@@ -173,7 +189,7 @@ bool MPDaemon::run()
     QTime timer2;
     timer2.start();
     long num_cycles = 0;
-    while (d->m_is_running) {
+    while (!stopDaemon && d->m_is_running) {
         if (timer0.elapsed() > 2000) {
             if (!d->write_running_file())
                 return false;
@@ -302,17 +318,27 @@ void MPDaemon::wait(qint64 msec)
 
 void MPDaemon::slot_commands_directory_changed()
 {
+    // This slot is called whenever the contents of the temporary directory "daemon_commands" is called
+    // Other runs of mountainprocess will write command files to this directory in order to queue scripts and processes, etc
     QString path = MPDaemon::daemonPath() + "/daemon_commands";
     QStringList fnames = QDir(path).entryList(QStringList("*.command"), QDir::Files, QDir::Name);
     foreach (QString fname, fnames) {
+        // We iterate through all .command files in the directory. They are sorted alphabetically by name, so the first created will be the first processed
         QString path0 = path + "/" + fname;
         qint64 elapsed_sec = QFileInfo(path0).lastModified().secsTo(QDateTime::currentDateTime());
         if (elapsed_sec > 20) {
+            // If it has been more than 20 seconds since the file was created/modified, then we delete it
+            // This avoids re-executing commands from previous runs, since there is no reason it should take >20 seconds to notice the file
+            // But obviously this is not very elegant. This probably should be improved
+            // The idea is that mpdaemon itself doesn't do any heavy processing, so it should remain responsive
+            // However if all the CPU's are being used by other processes, I suppose this could become an issue.
             if (!QFile::remove(path0)) {
                 qCritical() << "Unable to remove command file: " + path0;
+                // maybe we should abort here?
             }
         }
         else {
+            // read and parse the JSON content of the command file
             QString json = TextFile::read(path0);
             QJsonParseError error;
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
@@ -320,10 +346,17 @@ void MPDaemon::slot_commands_directory_changed()
                 qCritical() << "Error in slot_commands_directory_changed parsing json file";
             }
             else {
+                // if all goes well, we process the command
+                // the daemon is a single-thread process, so the whole loop will stop as we process the command
+                // as mentioned above, this is why rely on NO heavy processing being done by the daemon
+                // basically the daemon is responsible for managing queued processes and scripts, and launching
+                // other instances of mountainprocess, and managing those QProcess's
                 d->process_command(obj);
             }
             if (!QFile::remove(path0)) {
+                // finally, remove the command so we don't execute it again.
                 qCritical() << "Problem removing command file: " + path0;
+                // should we abort here?
             }
         }
     }
@@ -759,6 +792,83 @@ ProcessResources MPDaemonPrivate::compute_process_resources_needed(MPDaemonPript
     return ret;
 }
 
+bool MPDaemonPrivate::acquireServer()
+{
+    if (!shm)
+        shm = new QSharedMemory("mountainprocess", q);
+    else if (shm->isAttached())
+        shm->detach();
+
+    // algrithm:
+    // create a shared memory segment
+    // if successful, there is no active server, so we become one
+    //   - write your own PID into the segment
+    // otherwise try to attach to the segment
+    //   - check the pid stored in the segment
+    //   - see if process with that pid exists
+    //   - if yes, bail out
+    //   - if not, overwrite the pid with your own
+    // repeat the process until either create or attach is successfull
+
+    while (true) {
+        if (shm->create(sizeof(MountainProcessDescriptor))) {
+            shm->lock(); // there is potentially a race condition here -> someone might have locked the segment
+            // before we did and written its own pid there
+            // we assume that by default memory is zeroed (it seems to be on Linux)
+            // so we can check the version
+            MountainProcessDescriptor* desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
+
+            // on Linux the memory seems to be zeroed by default
+            if (desc->version != 0) {
+                // someone has hijacked our segment
+                shm->unlock();
+                shm->detach();
+                continue; // try again
+            }
+            desc->version = 1;
+            desc->pid = (pid_t)QCoreApplication::applicationPid();
+            shm->unlock();
+            return true;
+        }
+        if (shm->attach()) {
+            shm->lock();
+            MountainProcessDescriptor* desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
+            // on Linux the memory seems to be zeroed by default
+            if (desc->version != 0) {
+                if (kill(desc->pid, 0) == 0) {
+                    // pid exists, server is likely active
+                    shm->unlock();
+                    shm->detach();
+                    return false;
+                }
+            }
+            // server has crashed or we have hijacked the segment
+            desc->version = 1;
+            desc->pid = (pid_t)QCoreApplication::applicationPid();
+            shm->unlock();
+            return true;
+        }
+    }
+}
+
+bool MPDaemonPrivate::releaseServer()
+{
+    if (shm && shm->isAttached()) {
+        shm->lock();
+        MountainProcessDescriptor* desc = reinterpret_cast<MountainProcessDescriptor*>(shm->data());
+        // just to be sure we're the reigning server:
+        if (desc->pid == (pid_t)QCoreApplication::applicationPid()) {
+            // to avoid a race condition (released the server but not ended the process just yet), empty the block
+            desc->version = 0;
+            desc->pid = 0;
+        }
+        shm->unlock();
+        shm->detach();
+        return true;
+    }
+    return false;
+}
+
 bool MPDaemonPrivate::handle_processes()
 {
     ProcessResources pr_available = compute_process_resources_available();
@@ -878,33 +988,20 @@ QStringList MPDaemonPrivate::get_output_paths(MPDaemonPript P)
     return ret;
 }
 
-#include "signal.h"
 bool MPDaemonPrivate::write_running_file()
 {
-    QString fname = MLUtil::tempPath() + "/mpdaemon_running.pid";
-    QString txt = QString("%1").arg(qApp->applicationPid());
-
-    //check for another daemon running!
-    if (QFileInfo(fname).lastModified().secsTo(QDateTime::currentDateTime()) <= 60) {
-        QString txt0 = TextFile::read(fname);
-        if ((!txt0.isEmpty()) && (txt0 != txt)) {
-            if (kill(txt0.toLong(), 0) == 0) {
-                printf("Another daemon seems to be running. Closing.\n");
-                return false;
-            }
-        }
+    if (!acquireServer()) {
+        printf("Another daemon seems to be running. Closing.\n");
+        return false;
     }
-    TextFile::write(fname, txt);
-    //we will be forgiving if we cannot write the text file, since it is more important that the daemon stays up
     return true;
 }
 
 void MPDaemonPrivate::write_daemon_state()
 {
-    /// Witold rather than starting at 100000, I'd like to format the num in the fname to be like 0000023. Could you please help?
-    static long num = 100000;
+    static long num = 1;
     QString timestamp = MPDaemon::makeTimestamp();
-    QString fname = QString("%1/daemon_state/%2.%3.json").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num);
+    QString fname = QString("%1/daemon_state/%2.%3.json").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num, 7, 10, QChar('0'));
     num++;
 
     QJsonObject state;
@@ -928,6 +1025,7 @@ void MPDaemonPrivate::write_daemon_state()
     QString json = QJsonDocument(state).toJson();
     TextFile::write(fname + ".tmp", json);
     /// Witold I don't think rename is an atomic operation. Is there a way to guarantee that I don't read the file halfway through the rename?
+    /// Jeremy: rename is atomic, at least when done within the same file system
     QFile::rename(fname + ".tmp", fname);
 
     //remove the pripts that have been finished for a while

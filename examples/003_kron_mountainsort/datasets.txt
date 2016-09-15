@@ -1,0 +1,5 @@
+example1 examples/example1
+example2 examples/example2
+example3 examples/example3
+example4 examples/example4
+example5 examples/example5

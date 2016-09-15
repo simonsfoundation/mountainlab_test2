@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 function print_usage() {
-	console.log ('kron_view [dsname]');
-	console.log ('kron_view [algnames] [dsnames] --outpath=[output(default)]');
+	console.log ('kron_view [view_program_name] [pipeline_names] [dataset_names] --outpath=[output(default)]');
+	console.log ('kron_view [view_program_name] [dataset_names] --outpath=[output(default)]');
 }
 
 var fs=require('fs');
@@ -10,46 +10,88 @@ var common=require(__dirname+'/common.node.js');
 
 var CLP=new common.CLParams(process.argv);
 
-var outpath=CLP.namedParameters.outpath||'output';
-var alglist_path='alglist.txt';
-var dslist_path='dslist.txt';
-var firings_name=CLP.namedParameters.firings_name||'firings.mda';
-
-var algs=common.read_algs_from_text_file(alglist_path);
-var datasets=common.read_datasets_from_text_file(dslist_path);
-
-if (CLP.unnamedParameters.length==1) {
-	dsname=CLP.unnamedParameters[0];
-	console.log(dsname);
-	for (var d in datasets) {
-		if (datasets[d].name==dsname) {
-			open_ground_truth_view(datasets[d]);
+var view_program_name=CLP.unnamedParameters[0];
+var pipnames=(CLP.unnamedParameters[1]||'').split(',');
+var dsnames=(CLP.unnamedParameters[2]||'').split(',');
+if ('all_pairs' in CLP.namedParameters) {
+	var pipnames2=[];
+	var dsnames2=[];
+	for (var i2 in dsnames) {
+		for (var i1 in pipnames) {
+			pipnames2.push(pipnames[i1]);
+			dsnames2.push(dsnames[i2]);
+		}		
+	}
+	pipnames=pipnames2;
+	dsnames=dsnames2;
+}
+else {
+	if (pipnames.length>dsnames.length) {
+		if (dsnames.length==1) {
+			while (pipnames.length>dsnames.length) {
+				dsnames.push(dsnames[0]||'');
+			}
 		}
 	}
-}
-else if (CLP.unnamedParameters.length==2) {
-	var algnames=CLP.unnamedParameters[0];
-	var dsnames=CLP.unnamedParameters[1];
-
-	if ((!algnames)||(!dsnames)||(!outpath)||(!alglist_path)||(!dslist_path)) {
-		print_usage();
-		process.exit(-1);
-	}
-
-	for (var a in algs) {
-		if (common.contains_alg(algnames,algs[a])) {
-			for (var d in datasets) {
-				if (common.contains_ds(dsnames,datasets[d])) {
-					open_view(algs[a],datasets[d]);
-				}
+	if (dsnames.length>pipnames.length) {
+		if (pipnames.length==1) {
+			while (dsnames.length>pipnames.length) {
+				pipnames.push(pipnames[0]||'');
 			}
 		}
 	}
 }
-else {
+if (CLP.unnamedParameters.length==2) {
+	pipnames=[''];
+	dsnames=CLP.unnamedParameters[1].split(',');
+}
+var outpath=CLP.namedParameters.outpath||'output';
+var pipelines_path='pipelines.txt';
+var datasets_path='datasets.txt';
+
+if ((!outpath)||(!pipelines_path)||(!datasets_path)) {
 	print_usage();
 	process.exit(-1);
 }
+
+var all_datasets=common.read_datasets_from_text_file(datasets_path);
+var datasets=[];
+for (var i in dsnames) {
+	datasets.push(common.find_dataset(all_datasets,dsnames[i]));
+}
+
+var view_program_file=common.find_view_program_file(view_program_name);
+if (!view_program_file) {
+	console.log ('Unable to find view program: '+view_program_name);
+	process.exit(-1);	
+}
+
+var output_folders=[];
+for (var i in pipnames) {
+	output_folders.push(outpath+'/'+pipnames[i]+'--'+dsnames[i]);
+}
+var dataset_folders=[];
+for (var i in datasets) {
+	dataset_folders.push(datasets[i].absolute_folder_path);
+}
+
+var args='';
+for (var key in CLP.namedParameters) {
+	args+=' --'+key+'='+CLP.namedParameters[key];
+}
+if (dataset_folders.length>0) {
+	args+=' --dataset_folders='+dataset_folders.join(';');
+}
+if (output_folders.length>0) {
+	args+=' --output_folders='+output_folders.join(';');
+}
+args+=' --dataset_names='+dsnames.join(',');
+args+=' --pipeline_names='+pipnames.join(',');
+console.log('==============================================================');
+console.log(args);
+args=args.split(' ');
+common.make_system_call(view_program_file,args,function() {
+});
 
 common.wait_for_system_calls_to_finish(function() {
 
@@ -66,21 +108,6 @@ function open_view(alg,ds,callback) {
 	args+=' --raw='+outpath0+'/pre0.mda.prv';
 	args+=' --filt='+outpath0+'/pre1b.mda.prv';
 	args+=' --pre='+outpath0+'/pre2.mda.prv';
-	args+=' --samplerate='+samplerate;
-	
-	args=args.split(' ');
-	common.make_system_call(cmd,args,callback);
-}
-
-function open_ground_truth_view(ds,callback) {
-	var ds_folder=common.find_dataset_folder(ds.folder);
-	var samplerate=30000; //fix this
-	var firings_name='firings_true.mda.prv';
-
-	var cmd='mountainview';
-	var args='';
-	args+=' --firings='+ds_folder+'/'+firings_name;
-	args+=' --raw='+ds_folder+'/raw.mda.prv';
 	args+=' --samplerate='+samplerate;
 	
 	args=args.split(' ');

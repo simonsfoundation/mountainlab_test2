@@ -2,37 +2,60 @@ var exports = module.exports = {};
 var common=exports;
 
 var fs=require('fs');
+var path=require('path');
 var child_process=require('child_process');
 
 //use > npm install ini
 var ini=require('ini');
 
-var mountainlab_config=ini.parse(fs.readFileSync(__dirname+'/../mountainlab.ini','utf8'));
+var mountainlab_config=ini.parse(fs.readFileSync(__dirname+'/../mountainlab.ini.default','utf8'));
+try {
+	tmp=ini.parse(fs.readFileSync(__dirname+'/../mountainlab.ini','utf8'));
+	for (var key in tmp) {
+		if (!(key in mountainlab_config))
+			mountainlab_config[key]={};
+		tmp2=tmp[key];
+		for (var key2 in tmp2) {
+			mountainlab_config[key][key2]=tmp2[key2];
+		}
+	}
+}
+catch(err) {
 
-exports.read_algs_from_text_file=function(file_path) {
-	var algs=[];
+}
+
+exports.read_pipelines_from_text_file=function(file_path) {
+	var pipelines=[];
 	{
 		var txt=common.read_text_file(file_path);
 		var lines=txt.split('\n');
 		for (var i in lines) {
 			if (lines[i].trim().slice(0,1)!='#') {
-				var vals=lines[i].trim().split(' ');
-				if (vals.length>=2) {
-					algs.push({
-						name:vals[0],
-						script:vals[1],
-						arguments:vals.slice(2).join(' ')
-					});
-				}
-				else {
-					if (lines[i].trim()) {
-						throw 'problem in alglist file: '+lines[i].trim();
+				if (lines[i].trim()) {
+					var vals=lines[i].trim().split(' ');
+					var absolute_script_path=find_absolute_pipeline_script_path(vals[1],path.dirname(file_path)||'.');
+					if (!absolute_script_path) {
+						console.log ('Unable to find pipeline script path: '+vals[1]);
+						process.exit(-1);
+					}
+					if (vals.length>=2) {
+						pipelines.push({
+							name:vals[0],
+							script:vals[1],
+							absolute_script_path:absolute_script_path,
+							arguments:vals.slice(2).join(' ')
+						});
+					}
+					else {
+						if (lines[i].trim()) {
+							throw 'problem in pipelines file: '+lines[i].trim();
+						}
 					}
 				}
 			}
 		}
 	}
-	return algs;
+	return pipelines;
 };
 
 exports.read_datasets_from_text_file=function(file_path) {
@@ -44,9 +67,25 @@ exports.read_datasets_from_text_file=function(file_path) {
 			if (lines[i].trim().slice(0,1)!='#') {
 				var vals=lines[i].trim().split(' ');
 				if (vals.length==2) {
+					var absolute_folder_path=find_absolute_dataset_folder_path(vals[1],path.dirname(file_path)||'.');
+					if (!absolute_folder_path) {
+						console.log ('Unable to find dataset folder: '+vals[1]);
+						process.exit(-1);
+					}
+					var dataset_params={};
+					var params_fname=absolute_folder_path+'/params.json';
+					try {
+						dataset_params=JSON.parse(common.read_text_file(params_fname));
+					}
+					catch(err) {
+						console.log ('Error parsing json from file: '+params_fname);
+						console.log (common.read_text_file(params_fname));
+					}
 					datasets.push({
 						name:vals[0],
-						folder:vals[1]
+						folder:vals[1],
+						absolute_folder_path:absolute_folder_path,
+						dataset_params:dataset_params
 					});
 				}
 				else {
@@ -60,24 +99,36 @@ exports.read_datasets_from_text_file=function(file_path) {
 	return datasets;
 };
 
-exports.find_alg=function(algs,algname) {
-	for (var i in algs) {
-		if (algs[i].name==algname) return algs[i];
+exports.get_interface=function() {
+	//for now this is hard-coded for spike sorting
+	return {
+		parameters:{
+			raw:'$dataset_folder$/raw.mda',
+			geom:'$dataset_folder$/geom.csv'
+		}
+	};
+};
+
+exports.find_pipeline=function(pipelines,pipeline_name) {
+	for (var i in pipelines) {
+		if (pipelines[i].name==pipeline_name) return pipelines[i];
 	}
 	return null;
 };
 
-exports.find_ds=function(datasets,dsname) {
+exports.find_dataset=function(datasets,dsname) {
 	for (var i in datasets) {
 		if (datasets[i].name==dsname) return datasets[i];
 	}
 	return null;
 };
 
-exports.find_dataset_folder=function(folder) {
+function find_absolute_dataset_folder_path(folder,text_file_path) {
 	var dataset_paths=mountainlab_config.kron.dataset_paths.split(';');
-	console.log('@@@@@@@@@@@@@@@@@@@@2');
+	if (text_file_path)
+		dataset_paths.push(text_file_path);
 	console.log(dataset_paths);
+	console.log(text_file_path);
 	for (var i in dataset_paths) {
 		var p=resolve_from_mountainlab(dataset_paths[i]+'/'+folder);
 		if (fs.existsSync(p)) {
@@ -85,12 +136,25 @@ exports.find_dataset_folder=function(folder) {
 		}
 	}
 	return null;
-};
+}
 
-exports.find_algorithm_script=function(script_path) {
-	var algorithm_paths=mountainlab_config.kron.algorithm_paths.split(';');
-	for (var i in algorithm_paths) {
-		var p=resolve_from_mountainlab(algorithm_paths[i]+'/'+script_path);
+function find_absolute_pipeline_script_path(script_path,text_file_path) {
+	var pipeline_paths=mountainlab_config.kron.pipeline_paths.split(';');
+	if (text_file_path)
+		pipeline_paths.push(text_file_path);
+	for (var i in pipeline_paths) {
+		var p=resolve_from_mountainlab(pipeline_paths[i]+'/'+script_path);
+		if (fs.existsSync(p)) {
+			return p;
+		}
+	}
+	return null;
+}
+
+exports.find_view_program_file=function(program_name) {
+	var view_program_paths=mountainlab_config.kron.view_program_paths.split(';');
+	for (var i in view_program_paths) {
+		var p=resolve_from_mountainlab(view_program_paths[i]+'/'+program_name);
 		if (fs.existsSync(p)) {
 			return p;
 		}
@@ -100,7 +164,8 @@ exports.find_algorithm_script=function(script_path) {
 
 function resolve_from_mountainlab(path) {
 	if (path.indexOf('/')===0) return path; //absolute
-	else return __dirname+'/../'+path; //relative
+	if (path.indexOf('.')===0) return path; //prob referring to the working directory. Witold, help!!
+	return __dirname+'/../'+path; //relative
 }
 
 exports.CLParams=function(argv) {
@@ -121,17 +186,21 @@ exports.CLParams=function(argv) {
 				i++;
 			}
 		}
+		else if (arg0.indexOf('-')===0) {
+			arg0=arg0.slice(1);
+			this.namedParameters[arg0]='';
+		}
 		else {
 			this.unnamedParameters.push(arg0);
 		}
 	}
 };
 
-exports.contains_alg=function(algnames,alg) {
-	if (algnames=='all') return true;
-	algnames=algnames.split(',');
-	for (var i in algnames) {
-		if (algnames[i]==alg.name)
+exports.contains_pipeline=function(pipeline_names,pipeline) {
+	if (pipeline_names=='all') return true;
+	pipeline_names=pipeline_names.split(',');
+	for (var i in pipeline_names) {
+		if (pipeline_names[i]==pipeline.name)
 			return true;
 	}
 	return false;
@@ -176,6 +245,13 @@ exports.make_system_call=function(cmd,args,callback) {
 	pp.stderr.setEncoding('utf8');
 	var done=false;
 	pp.on('close', function(code) {
+		if (done) return;
+  		done=true;
+		if (callback) callback();
+		s_num_system_calls_running--;
+	});
+	pp.on('exit', function(code) {
+		if (done) return;
   		done=true;
 		if (callback) callback();
 		s_num_system_calls_running--;
@@ -187,11 +263,11 @@ exports.make_system_call=function(cmd,args,callback) {
 	var all_stdout='';
 	var all_stderr='';
 	pp.stdout.on('data',function(data) {
-		console.log ('----'+data);
+		console.log (data);
 		all_stdout+=data;
 	});
 	pp.stderr.on('data',function(data) {
-		console.log ('===='+data);
+		console.log (data);
 		all_stderr+=data;
 	});
 };

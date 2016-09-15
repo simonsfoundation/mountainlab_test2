@@ -20,8 +20,10 @@ public:
     QString mlproxy_url;
     DiskReadMda timeseries;
     DiskReadMda firings;
-    int num_histograms;
-    QSet<int> clusters_to_exclude;
+    int num_histograms; //old version
+    QSet<int> clusters_to_exclude; //old version
+    QList<int> cluster_numbers;
+    QString method; //old version
 
     //output
     QList<DiscrimHistogram> histograms;
@@ -55,6 +57,7 @@ MVDiscrimHistViewGuide::MVDiscrimHistViewGuide(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), true);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), true);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), true);
+    this->recalculateOnOptionChanged("discrim_hist_method",true);
 
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInHorizontal, this, SLOT(slot_zoom_in_horizontal()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutHorizontal, this, SLOT(slot_zoom_out_horizontal()));
@@ -82,6 +85,8 @@ void MVDiscrimHistViewGuide::prepareCalculation()
     d->m_computer.firings = mvContext()->firings();
     d->m_computer.num_histograms = d->m_num_histograms;
     d->m_computer.clusters_to_exclude = d->get_clusters_to_exclude();
+    d->m_computer.cluster_numbers=mvContext()->selectedClusters();
+    d->m_computer.method=mvContext()->option("discrim_hist_method").toString();
 }
 
 void MVDiscrimHistViewGuide::runCalculation()
@@ -132,13 +137,26 @@ void MVDiscrimHistViewGuideComputer::compute()
 
     MountainProcessRunner MPR;
     MPR.setMLProxyUrl(mlproxy_url);
-    MPR.setProcessorName("mv_discrimhist_guide");
 
+    /*
+    MPR.setProcessorName("mv_discrimhist_guide");
     QMap<QString, QVariant> params;
     params["timeseries"] = timeseries.makePath();
     params["firings"] = firings.makePath();
     params["num_histograms"] = num_histograms;
     params["clusters_to_exclude"] = MLUtil::intListToStringList(clusters_to_exclude.toList()).join(",");
+    params["method"]=method;
+    */
+
+    MPR.setProcessorName("mv_discrimhist_guide2");
+    QMap<QString, QVariant> params;
+    params["timeseries"] = timeseries.makePath();
+    params["firings"] = firings.makePath();
+    params["clip_size"] = 50;
+    params["add_noise_level"]=1;
+    params["cluster_numbers"]=MLUtil::intListToStringList(cluster_numbers).join(",");
+    params["max_comparisons_per_cluster"] = 5;
+
     MPR.setInputParameters(params);
 
     QString output_path = MPR.makeOutputFilePath("output");
@@ -225,7 +243,7 @@ void MVDiscrimHistViewGuidePrivate::set_views()
     double bin_max = max3(m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
 
-    int num_bins = 200; //how to choose this?
+    int num_bins = 500; //how to choose this?
 
     QList<HistogramView*> views;
     for (int ii = 0; ii < m_histograms.count(); ii++) {

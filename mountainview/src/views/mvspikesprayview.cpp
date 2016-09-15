@@ -562,6 +562,7 @@ MVAbstractView* MVSpikeSprayFactory::createView(MVContext* context)
     return X;
 }
 
+/*
 QList<QAction*> MVSpikeSprayFactory::actions(const QMimeData& md)
 {
     QSet<int> clusters;
@@ -579,6 +580,7 @@ QList<QAction*> MVSpikeSprayFactory::actions(const QMimeData& md)
     }
     return actions;
 }
+*/
 
 void MVSpikeSprayFactory::updateEnabled(MVContext* context)
 {

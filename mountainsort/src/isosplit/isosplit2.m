@@ -14,6 +14,13 @@ if (nargin<2)
     opts=struct;
 end;
 
+if (~isfield(opts,'return_iterations'))
+    opts.return_iterations=0;
+end
+if (opts.return_iterations)
+    info.iterations={};
+end;
+
 if (~isfield(opts,'isocut_threshold')) opts.isocut_threshold=1.5; end;
 if (~isfield(opts,'K_init')) opts.K_init=25; end;
 if (isfield(opts,'K')) opts.K_init=opts.K; end;
@@ -54,6 +61,12 @@ while 1
     info.num_iterations=info.num_iterations+1;
     [k1,k2]=find_next_comparison(active_labels,centers,counts,attempted_comparisons,opts.repeat_tolerance);
     if (k1<0) break; end;
+    if (opts.return_iterations)
+        iteration_info=struct;
+        iteration_info.labels_before=labels;
+        iteration_info.k1=k1;
+        iteration_info.k2=k2;
+    end;
     if (opts.verbose)
         fprintf('Iteration %d: Comparing %d (%d) with %d (%d)...',info.num_iterations,k1,counts(k1),k2,counts(k2));
     end;
@@ -68,7 +81,12 @@ while 1
     attempted_comparisons.centers2=cat(2,attempted_comparisons.centers2,centers(:,k1));
     attempted_comparisons.counts1(end+1)=length(inds2);
     attempted_comparisons.counts2(end+1)=length(inds1);
-    [do_merge,labels0]=test_redistribute(X(:,inds1),X(:,inds2),opts);
+    [do_merge,labels0,info0]=test_redistribute(X(:,inds1),X(:,inds2),opts);
+    if (opts.return_iterations)
+        iteration_info.projection=info0.projection;
+        iteration_info.projection_cutpoint=info0.cutpoint;
+        iteration_info.projection_labels=info0.labels;
+    end
     if (do_merge)||(max(labels0)==1)
         if (opts.verbose)
             fprintf('Merging\n',k1,counts(k1),k2,counts(k2));
@@ -91,6 +109,10 @@ while 1
         counts(k1)=length(indsA);
         counts(k2)=length(indsB);
     end;
+    if (opts.return_iterations)
+        iteration_info.labels=labels;
+        info.iterations{end+1}=iteration_info;
+    end
 end;
 
 labels_map=zeros(1,opts.K_init);
@@ -201,7 +223,7 @@ centroid2b=mean(X2b,2);
 V=centroid2b-centroid1b;
 end
 
-function [do_merge,labels]=test_redistribute(X1,X2,opts)
+function [do_merge,labels,info]=test_redistribute(X1,X2,opts)
 if opts.whiten_at_each_comparison
     [X1,X2,V]=whiten_two_clusters(X1,X2);
 else
@@ -235,6 +257,9 @@ end;
 labels=zeros(1,N);
 labels(ii1)=1;
 labels(ii2)=2;
+info.projection=XX;
+info.cutpoint=cutpoint;
+info.labels=labels;
 
 if (opts.verbose3)
     figure;
@@ -289,7 +314,7 @@ figure;
 ms_view_clusters(samples,true_labels);
 drawnow;
 
-[labels,info]=isosplit(samples,opts);
+[labels,info]=isosplit2(samples,opts);
 fprintf('isosplit: num clusters = %d, num iterations = %d\n',max(labels),info.num_iterations);
 figure;
 ms_view_clusters(samples,labels); title('isosplit');

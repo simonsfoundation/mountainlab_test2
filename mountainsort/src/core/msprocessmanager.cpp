@@ -38,6 +38,7 @@
 #include "extract_channel_values_processor.h"
 #include "mv_discrimhist_processor.h"
 #include "mv_discrimhist_guide_processor.h"
+#include "mv_discrimhist_guide2_processor.h"
 #include "firings_subset_processor.h"
 #include "quantize_processor.h"
 #include "merge_stage_processor.h"
@@ -45,6 +46,8 @@
 #include "compute_amplitudes_processor.h"
 #include "merge_firings_processor.h"
 #include "add_noise_processor.h"
+#include "remove_noise_clusters_processor.h"
+#include "cluster_scores_processor.h"
 #include <sys/stat.h>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -106,10 +109,12 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new merge_across_channels_Processor);
     loadProcessor(new merge_across_channels_v2_Processor);
     loadProcessor(new geom2adj_Processor);
+    loadProcessor(new linear_adjacency_matrix_Processor);
     loadProcessor(new create_multiscale_timeseries_Processor);
     loadProcessor(new extract_channel_values_Processor);
     loadProcessor(new mv_discrimhist_Processor);
     loadProcessor(new mv_discrimhist_guide_Processor);
+    loadProcessor(new mv_discrimhist_guide2_Processor);
     loadProcessor(new firings_subset_Processor);
     loadProcessor(new quantize_Processor);
     loadProcessor(new merge_stage_Processor);
@@ -117,6 +122,8 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new compute_amplitudes_Processor);
     loadProcessor(new merge_firings_Processor);
     loadProcessor(new add_noise_Processor);
+    loadProcessor(new remove_noise_clusters_Processor);
+    loadProcessor(new cluster_scores_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString& processor_name) const
@@ -136,6 +143,9 @@ QString compute_process_code(const QString& processor_name, const QVariantMap& p
     X["parameters"] = QJsonObject::fromVariantMap(parameters);
     QString json = QJsonDocument(X).toJson();
     /// Witold I need a canonical json here so that the hash is always the same. (relatively important)
+    /// Jeremy: JSON doesn't care about order of fields so there is no canonical form. I suggest
+    ///         you sort keys alphabetically. But this is CPU consuming since the JSON can be
+    ///         quite deep.
     return MLUtil::computeSha1SumOfString(json);
 }
 

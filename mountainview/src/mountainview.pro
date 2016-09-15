@@ -18,17 +18,18 @@ MOC_DIR=../build
 TARGET = mountainview
 TEMPLATE = app
 
-INCLUDEPATH += msv/plugins
-VPATH += msv/plugins
-HEADERS += clusterdetailplugin.h \
-    msv/plugins/clustercontextmenuplugin.h
-SOURCES += clusterdetailplugin.cpp \
-    msv/plugins/clustercontextmenuplugin.cpp
+INCLUDEPATH += msv/plugins msv/views
+VPATH += msv/plugins msv/views
 
-INCLUDEPATH += msv/views
-VPATH += msv/views
-HEADERS += clusterdetailview.h
-SOURCES += clusterdetailview.cpp
+HEADERS += clusterdetailplugin.h clusterdetailview.h
+SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp
+
+HEADERS += clipsviewplugin.h mvclipsview.h
+SOURCES += clipsviewplugin.cpp mvclipsview.cpp
+
+HEADERS += clustercontextmenuplugin.h
+SOURCES += clustercontextmenuplugin.cpp
+
 
 SOURCES += mountainviewmain.cpp \
     guides/individualmergedecisionpage.cpp \
@@ -88,7 +89,7 @@ INCLUDEPATH += views
 VPATH += views
 HEADERS += \
 correlationmatrixview.h histogramview.h mvamphistview2.h mvamphistview3.h histogramlayer.h \
-mvclipsview.h mvclipswidget.h \
+mvclipswidget.h \
 mvclusterview.h mvclusterwidget.h mvcrosscorrelogramswidget3.h \
 mvdiscrimhistview.h mvfiringeventview2.h mvhistogramgrid.h \
 mvspikesprayview.h mvtimeseriesrendermanager.h mvtimeseriesview2.h \
@@ -96,7 +97,7 @@ mvtimeseriesviewbase.h spikespywidget.h mvdiscrimhistview_guide.h \
 mvclusterlegend.h
 SOURCES += \
 correlationmatrixview.cpp histogramview.cpp mvamphistview2.cpp mvamphistview3.cpp histogramlayer.cpp \
-mvclipsview.cpp mvclipswidget.cpp \
+mvclipswidget.cpp \
 mvclusterview.cpp mvclusterwidget.cpp mvcrosscorrelogramswidget3.cpp \
 mvdiscrimhistview.cpp mvfiringeventview2.cpp mvhistogramgrid.cpp \
 mvspikesprayview.cpp mvtimeseriesrendermanager.cpp mvtimeseriesview2.cpp \
@@ -107,10 +108,10 @@ INCLUDEPATH += controlwidgets
 VPATH += controlwidgets
 HEADERS += \
 mvclustervisibilitycontrol.h \
-mvexportcontrol.h mvgeneralcontrol.h mvopenviewscontrol.h
+mvexportcontrol.h mvgeneralcontrol.h mvopenviewscontrol.h mvclusterordercontrol.h
 SOURCES += \
 mvclustervisibilitycontrol.cpp \
-mvexportcontrol.cpp mvgeneralcontrol.cpp mvopenviewscontrol.cpp
+mvexportcontrol.cpp mvgeneralcontrol.cpp mvopenviewscontrol.cpp mvclusterordercontrol.cpp
 
 INCLUDEPATH += guides
 VPATH += guides

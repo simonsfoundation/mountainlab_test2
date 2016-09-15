@@ -9,7 +9,7 @@
 #include "mlcommon.h"
 #include <math.h>
 
-Mda compute_templates_0(DiskReadMda& X, Mda& firings, int clip_size)
+Mda compute_templates_0(const DiskReadMda& X, Mda& firings, int clip_size)
 {
     QVector<double> times;
     QVector<int> labels;
@@ -21,7 +21,7 @@ Mda compute_templates_0(DiskReadMda& X, Mda& firings, int clip_size)
     return compute_templates_0(X, times, labels, clip_size);
 }
 
-Mda32 compute_templates_0(DiskReadMda32& X, Mda& firings, int clip_size)
+Mda32 compute_templates_0(const DiskReadMda32& X, Mda& firings, int clip_size)
 {
     QVector<double> times;
     QVector<int> labels;
@@ -33,7 +33,7 @@ Mda32 compute_templates_0(DiskReadMda32& X, Mda& firings, int clip_size)
     return compute_templates_0(X, times, labels, clip_size);
 }
 
-Mda compute_templates_0(DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, int clip_size)
+Mda compute_templates_0(const DiskReadMda& X, const QVector<double>& times, const QVector<int>& labels, int clip_size)
 {
     int M = X.N1();
     int T = clip_size;
@@ -74,7 +74,7 @@ Mda compute_templates_0(DiskReadMda& X, const QVector<double>& times, const QVec
     return templates;
 }
 
-Mda32 compute_templates_0(DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, int clip_size)
+Mda32 compute_templates_0(const DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, int clip_size)
 {
     int M = X.N1();
     int T = clip_size;

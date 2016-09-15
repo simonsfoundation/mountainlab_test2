@@ -21,6 +21,7 @@ public:
     DiskReadMda timeseries;
     DiskReadMda firings;
     QList<int> cluster_numbers;
+    QString method;
 
     //output
     QList<DiscrimHistogram> histograms;
@@ -60,6 +61,7 @@ MVDiscrimHistView::MVDiscrimHistView(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), true);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), true);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), true);
+    this->recalculateOnOptionChanged("discrim_hist_method",true);
 
     this->recalculate();
 }
@@ -81,6 +83,7 @@ void MVDiscrimHistView::prepareCalculation()
     d->m_computer.timeseries = mvContext()->currentTimeseries();
     d->m_computer.firings = mvContext()->firings();
     d->m_computer.cluster_numbers = d->m_cluster_numbers;
+    d->m_computer.method=mvContext()->option("discrim_hist_method").toString();
 }
 
 void MVDiscrimHistView::runCalculation()
@@ -151,6 +154,7 @@ void MVDiscrimHistViewComputer::compute()
     params["timeseries"] = timeseries.makePath();
     params["firings"] = firings.makePath();
     params["clusters"] = clusters_strlist.join(",");
+    params["method"]=method;
     MPR.setInputParameters(params);
 
     QString output_path = MPR.makeOutputFilePath("output");
@@ -252,7 +256,7 @@ void MVDiscrimHistViewPrivate::set_views()
     double bin_max = max2(m_histograms);
     double max00 = qMax(qAbs(bin_min), qAbs(bin_max));
 
-    int num_bins = 200; //how to choose this?
+    int num_bins = 500; //how to choose this?
 
     QList<HistogramView*> views;
     for (int ii = 0; ii < m_histograms.count(); ii++) {

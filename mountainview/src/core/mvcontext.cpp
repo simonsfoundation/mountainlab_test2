@@ -11,6 +11,7 @@
 #include <taskprogress.h>
 #include "mlcommon.h"
 #include "mountainprocessrunner.h"
+#include "get_sort_indices.h"
 
 struct TimeseriesStruct {
     QString name;
@@ -50,6 +51,8 @@ public:
     QSet<int> m_clusters_subset;
     bool m_view_merged;
     QSet<int> m_visible_channels;
+    QList<double> m_cluster_order_scores;
+    QString m_cluster_order_scores_name;
 
     void update_current_and_selected_clusters_according_to_merged();
 };
@@ -72,6 +75,7 @@ MVContext::MVContext()
     d->m_options["cc_bin_size_msec"] = 0.5;
     d->m_options["cc_max_est_data_size"] = "1e4";
     d->m_options["amp_thresh_display"] = 3;
+    d->m_options["discrim_hist_method"] = "centroid";
 
     // default colors
     d->m_colors["background"] = QColor(240, 240, 240);
@@ -469,6 +473,41 @@ void MVContext::setClusterTags(int num, const QSet<QString>& tags)
     QJsonObject obj = clusterAttributes(num);
     obj["tags"] = stringset2jsonarray(tags);
     setClusterAttributes(num, obj);
+}
+
+QList<int> MVContext::clusterOrder(int max_K) const
+{
+    QList<int> ret;
+    if (d->m_cluster_order_scores.isEmpty()) {
+        for (int k = 1; k <= max_K; k++) {
+            ret << k;
+        }
+    }
+    QList<long> inds = get_sort_indices(d->m_cluster_order_scores.toVector());
+
+    for (long i = 0; i < inds.count(); i++) {
+        ret << inds[i] + 1;
+    }
+    return ret;
+}
+
+QString MVContext::clusterOrderScoresName() const
+{
+    return d->m_cluster_order_scores_name;
+}
+
+QList<double> MVContext::clusterOrderScores() const
+{
+    return d->m_cluster_order_scores;
+}
+
+void MVContext::setClusterOrderScores(QString scores_name, const QList<double>& scores)
+{
+    if ((scores_name == d->m_cluster_order_scores_name) && (scores == d->m_cluster_order_scores))
+        return;
+    d->m_cluster_order_scores_name = scores_name;
+    d->m_cluster_order_scores = scores;
+    emit this->clusterOrderChanged();
 }
 
 QJsonObject MVContext::clusterPairAttributes(const ClusterPair& pair) const

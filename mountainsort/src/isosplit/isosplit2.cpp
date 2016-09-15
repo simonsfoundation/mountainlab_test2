@@ -395,6 +395,7 @@ void whiten_two_clusters(double* V, Mda32& X1, Mda32& X2)
     }
 }
 
+#include "jsvm.h"
 QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isocut_threshold)
 {
     Mda32 X1;
@@ -407,7 +408,32 @@ QVector<int> test_redistribute(bool& do_merge, Mda32& Y1, Mda32& Y2, double isoc
     QVector<int> ret(N1 + N2, 1);
     do_merge = true;
     double V[M];
-    whiten_two_clusters(V, X1, X2);
+    bool use_svm = false;
+    if (use_svm) {
+        Mda32 X_00(X1.N1(), X1.N2() + X2.N2());
+        QVector<int> labels_00;
+        for (long ii = 0; ii < X1.N2(); ii++) {
+            for (int jj = 0; jj < X1.N1(); jj++) {
+                X_00.setValue(X1.value(jj, ii), jj, ii);
+            }
+            labels_00 << 1;
+        }
+        for (long ii = 0; ii < X2.N2(); ii++) {
+            for (int jj = 0; jj < X1.N1(); jj++) {
+                X_00.setValue(X2.value(jj, ii), jj, ii + X1.N2());
+            }
+            labels_00 << 2;
+        }
+        double cutoff_00;
+        QVector<double> direction_00;
+        get_svm_discrim_direction(cutoff_00, direction_00, X_00, labels_00);
+        for (int mm = 0; mm < M; mm++) {
+            V[mm] = direction_00[mm];
+        }
+    }
+    else {
+        whiten_two_clusters(V, X1, X2);
+    }
     double normv = 0;
     {
         double sumsqr = 0;

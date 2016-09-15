@@ -16,6 +16,7 @@
 #include "closemehandler.h"
 #include "remotereadmda.h"
 #include "taskprogress.h"
+#include "clipsviewplugin.h"
 
 #include <QHBoxLayout>
 #include <QJsonDocument>
@@ -134,12 +135,12 @@ int main(int argc, char* argv[])
     W->show();
 
     W->loadPlugin(new ClusterDetailPlugin());
+    W->loadPlugin(new ClipsViewPlugin());
 
     W->registerViewFactory(new ConfusionMatrixViewFactory(W));
     W->registerViewFactory(new CompareClustersFactory(W));
 
     W->registerViewFactory(new ClusterDetail2Factory(W));
-    W->registerViewFactory(new MVClipsFactory(W));
     W->registerViewFactory(new MVPCAFeaturesFactory(W));
 
     W->addControl(new MVOpenViewsControl(context, W), true);

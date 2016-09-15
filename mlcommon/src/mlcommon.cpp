@@ -305,7 +305,7 @@ double MLCompute::dotProduct(const QVector<double>& X1, const QVector<double>& X
 {
     if (X1.count() != X2.count())
         return 0;
-    return std::inner_product(X1.constBegin(), X1.constEnd(), X1.constBegin(), 0.0);
+    return std::inner_product(X1.constBegin(), X1.constEnd(), X2.constBegin(), 0.0);
 }
 
 double MLCompute::norm(const QVector<double>& X)
@@ -580,14 +580,14 @@ QString find_file_with_checksum(const QString& checksum, long size_bytes)
             return path;
     }
 
-    //next search in the current directory
+    //next search in the current directory (recursively)
     {
-        QString path = find_file_with_checksum(".", checksum, size_bytes, false);
+        QString path = find_file_with_checksum(".", checksum, size_bytes, true);
         if (!path.isEmpty())
             return path;
     }
 
-    //finally try in the temporary directories
+    //next try in the temporary directories
     {
         QString path = find_file_with_checksum(CacheManager::globalInstance()->localTempPath() + "/tmp_long_term", checksum, size_bytes, false);
         if (!path.isEmpty())
@@ -705,9 +705,7 @@ QString create_file_from_prv(QString output_name, QString checksum0, long size0,
 
 QString resolve_prv_file(const QString& prv_fname)
 {
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << prv_fname;
     QString json = TextFile::read(prv_fname);
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__ << json;
     QJsonParseError err;
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &err).object();
     if (err.error != QJsonParseError::NoError) {
@@ -718,9 +716,7 @@ QString resolve_prv_file(const QString& prv_fname)
     QString path0 = obj["original_path"].toString();
     QString checksum0 = obj["original_checksum"].toString();
     long size0 = obj["original_size"].toVariant().toLongLong();
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     QString path2 = create_file_from_prv(path0, checksum0, size0, obj["processes"].toArray());
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (!path2.isEmpty()) {
         return path2;
     }
@@ -733,6 +729,10 @@ bool resolve_prv_files(QMap<QString, QVariant>& command_line_params)
     QStringList keys = command_line_params.keys();
     foreach (QString key, keys) {
         QVariant val = command_line_params[key];
+        if ((!QFile::exists(val.toString())) && (QFile::exists(val.toString() + ".prv"))) {
+            val = val.toString() + ".prv";
+            command_line_params[key] = val;
+        }
         if (val.toString().endsWith(".prv")) {
             QString fname = val.toString();
             val = resolve_prv_file(fname);

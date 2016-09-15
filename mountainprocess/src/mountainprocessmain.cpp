@@ -4,6 +4,45 @@
 ** Created: 4/27/2016
 *******************************************************/
 
+/*
+An example of what happens when running a processingn script (aka pipeline)
+
+0. Daemon needs to be running in the background:
+    > mountainprocess daemon-start
+
+1. User queues the script
+    > mountainprocess queue-script foo_script.pipeline [parameters...]
+    A command is send to the daemon via: MPDaemonInterface::queueScript
+
+2. The daemon receives the command and adds this job to its queue of scripts.
+    When it becomes time to run the script it, the daemon launches (and tracks) a new QProcess
+    > mountainprocess run-script foo_script.pipeline [parameters...]
+
+3. The script is executed by QJSEngine (see run_script() below)
+    During the course of execution, various processes will be queued. These involve system calls
+    > mountainprocess queue-process [processor_name] [parameters...]
+
+4. When "mountainprocess queue-process" is called, a command is sent to the daemon
+    just as above MPDaemonInterface::queueProcess
+
+5. The daemon receives the command (as above) and adds this job to its queue of processes.
+    When it becomes time to run the process, the daemon launches (and tracks) a new QProcess
+    > mountainprocess run-process [processor_name] [parameters...]
+
+6. The process is actually run. This involves calling the appropriate processor library,
+    for example mountainsort.mp
+
+7. When the process QProcess ends, an output file with JSON info is written. That triggers things to stop:
+    mountainprocess run-process stops ->
+    -> mountainprocess queue-process stops
+    once all of the queued processes for the script have stopped ->
+    -> mountainprocess run-script stops ->
+    -> mountainprocess queue-script stops
+
+If anything crashes along the way, every involved QProcess is killed.
+
+*/
+
 #include "mpdaemon.h"
 #include "mpdaemoninterface.h"
 #include "scriptcontroller.h"
@@ -23,6 +62,7 @@
 #include "cachemanager.h"
 #include "tempfilecleaner.h"
 #include "mlcommon.h"
+#include "scriptcontroller2.h"
 
 /// TODO security in scripts that are able to be submitted
 /// TODO title on mountainview from mountainbrowser
@@ -58,6 +98,7 @@ struct run_script_opts {
     QStringList server_urls;
     QString server_base_path;
     bool force_run;
+    QString working_path;
 };
 
 QJsonArray monitor_stats_to_json_array(const QList<MonitorStats>& stats);
@@ -140,6 +181,9 @@ int main(int argc, char* argv[])
             return -1; //load the processor plugins etc
         }
         QString output_fname = CLP.named_parameters.value("_process_output").toString(); //maybe the user specified where output is to be reported
+        if (!output_fname.isEmpty()) {
+            output_fname = QDir::current().absoluteFilePath(output_fname); //make it absolute
+        }
         QString processor_name = arg2; //name of the processor is the second user-supplied arg
         QVariantMap process_parameters = CLP.named_parameters;
         remove_system_parameters(process_parameters); //remove parameters starting with "_"
@@ -209,6 +253,7 @@ int main(int argc, char* argv[])
         obj["peak_cpu_pct"] = compute_peak_cpu_pct(info.monitor_stats);
         //obj["monitor_stats"]=monitor_stats_to_json_array(info.monitor_stats); -- at some point we can include this in the file. For now we only worry about the computed peak values
         if (!output_fname.isEmpty()) { //The user wants the results to go in this file
+            QFile::remove(output_fname); //important -- added 9/9/16
             QString obj_json = QJsonDocument(obj).toJson();
             if (!TextFile::write(output_fname, obj_json)) {
                 qCritical() << "Unable to write results to: " + output_fname;
@@ -229,6 +274,9 @@ int main(int argc, char* argv[])
         }
 
         QString output_fname = CLP.named_parameters.value("_script_output").toString(); //maybe the user specified where output is to be reported
+        if (!output_fname.isEmpty()) {
+            output_fname = QDir::current().absoluteFilePath(output_fname); //make it absolute
+        }
 
         int ret = 0;
         QString error_message;
@@ -237,7 +285,7 @@ int main(int argc, char* argv[])
         QVariantMap params; //parameters to be passed into the main() function of the javascript
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString str = CLP.unnamed_parameters[i];
-            if (str.endsWith(".js")) { //must be a javascript source file
+            if ((str.endsWith(".js")) || (str.endsWith(".pipeline"))) { //must be a javascript source file
                 if (!QFile::exists(str)) {
                     QString str2 = MLUtil::mountainlabBasePath() + "/mountainprocess/scripts/" + str;
                     if (QFile::exists(str2)) {
@@ -273,6 +321,7 @@ int main(int argc, char* argv[])
         opts.server_urls = server_urls;
         opts.server_base_path = server_base_path;
         opts.force_run = CLP.named_parameters.contains("_force_run");
+        opts.working_path = QDir::currentPath();
         QJsonObject results;
         if (!run_script(script_fnames, params, opts, error_message, results)) { //actually run the script
             ret = -1;
@@ -285,6 +334,7 @@ int main(int argc, char* argv[])
         obj["results"] = results;
         obj["error"] = error_message;
         if (!output_fname.isEmpty()) { //The user wants the results to go in this file
+            QFile::remove(output_fname); //important -- added 9/9/16
             QString obj_json = QJsonDocument(obj).toJson();
             if (!TextFile::write(output_fname, obj_json)) {
                 qCritical() << "Unable to write results to: " + output_fname;
@@ -495,6 +545,7 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
     json = remove_comments(json);
     QJsonParseError error;
     /// Witold I use toLatin1() everywhere. Is this the appropriate way to convert to byte array?
+    /// Jeremy: toUtf8() or toLocal8Bit() might be better
     QJsonObject obj = QJsonDocument::fromJson(json.toLatin1(), &error).object();
     if (error.error != QJsonParseError::NoError) {
         qCritical() << "Error parsing json file: " + fname + " : " + error.errorString();
@@ -510,10 +561,10 @@ bool load_parameter_file(QVariantMap& params, const QString& fname)
 void display_error(QJSValue result)
 {
     /// Witold there must be a better way to print the QJSValue error message out to the console.
-    /// Witold In general is it possible to not display quotes around strings for qDebug?
-    qDebug() << result.property("name").toString(); //okay
-    qDebug() << result.property("message").toString(); //okay
-    qDebug() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
+    /// Jeremy: No, this is the proper way. You can use "stack" property to get a full trace, if you want
+    qDebug().noquote() << result.property("name").toString(); //okay
+    qDebug().noquote() << result.property("message").toString(); //okay
+    qDebug().noquote() << QString("%1 line %2").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
 }
 
 bool run_script(const QStringList& script_fnames, const QVariantMap& params, const run_script_opts& opts, QString& error_message, QJsonObject& results)
@@ -521,6 +572,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
     QJsonObject parameters = variantmap_to_json_obj(params);
 
     QJSEngine engine;
+
     ScriptController Controller;
     Controller.setNoDaemon(opts.nodaemon);
     Controller.setServerUrls(opts.server_urls);
@@ -528,6 +580,16 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
     Controller.setForceRun(opts.force_run);
     QJSValue MP = engine.newQObject(&Controller);
     engine.globalObject().setProperty("MP", MP);
+
+    ScriptController2 Controller2;
+    Controller2.setNoDaemon(opts.nodaemon);
+    Controller2.setServerUrls(opts.server_urls);
+    Controller2.setServerBasePath(opts.server_base_path);
+    Controller2.setForceRun(opts.force_run);
+    Controller2.setWorkingPath(opts.working_path);
+    QJSValue MP2 = engine.newQObject(&Controller2);
+    engine.globalObject().setProperty("_MP2", MP2);
+
     foreach (QString fname, script_fnames) {
         QJSValue result = engine.evaluate(TextFile::read(fname), fname);
         if (result.isError()) {
@@ -550,7 +612,7 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
         }
     }
 
-    results = Controller.getResults();
+    results = Controller2.getResults();
 
     return true;
 }
@@ -561,7 +623,7 @@ void print_usage()
     printf("mountainprocess run-process [processor_name] --[param1]=[val1] --[param2]=[val2] ... [--_force_run]\n");
     printf("mountainprocess run-script [script1].js [script2.js] ... [file1].par [file2].par ... [--_force_run] \n");
     printf("mountainprocess daemon-start\n");
-    printf("mountainprocess daemon-stop\n");
+    //printf("mountainprocess daemon-stop\n");
     printf("mountainprocess daemon-restart\n");
     printf("mountainprocess daemon-state\n");
     printf("mountainprocess daemon-state-summary\n");
@@ -595,7 +657,7 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
         QVariantMap params;
         for (int i = 0; i < CLP.unnamed_parameters.count(); i++) {
             QString str = CLP.unnamed_parameters[i];
-            if (str.endsWith(".js")) {
+            if ((str.endsWith(".js")) || (str.endsWith(".pipeline"))) {
                 PP.script_paths << str;
                 PP.script_path_checksums << MLUtil::computeSha1SumOfFile(str);
             }
@@ -625,9 +687,17 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
 
     if (prtype == ScriptType) {
         PP.output_fname = CLP.named_parameters["_script_output"].toString();
+        if (!PP.output_fname.isEmpty()) {
+            PP.output_fname = QDir::current().absoluteFilePath(PP.output_fname); //make it absolute
+            QFile::remove(PP.output_fname); //important, added 9/9/16
+        }
     }
     else {
         PP.output_fname = CLP.named_parameters["_process_output"].toString();
+        if (!PP.output_fname.isEmpty()) {
+            PP.output_fname = QDir::current().absoluteFilePath(PP.output_fname); //make it absolute
+            QFile::remove(PP.output_fname); //important, added 9/9/16
+        }
     }
     if (PP.output_fname.isEmpty()) {
         if (prtype == ScriptType)
@@ -760,39 +830,72 @@ QString get_daemon_state_summary(const QJsonObject& state)
         ret += "Daemon is NOT running.\n";
         return ret;
     }
-    long num_running = 0;
-    long num_finished = 0;
-    long num_queued = 0;
-    long num_errors = 0;
-    QMap<QString, ProcessorCount> processor_counts;
-    QJsonObject processes = state["processes"].toObject();
-    QStringList ids = processes.keys();
-    foreach (QString id, ids) {
-        QJsonObject process = processes[id].toObject();
-        if (process["is_running"].toBool()) {
-            num_running++;
-            processor_counts[process["processor_name"].toString()].running++;
-        }
-        else if (process["is_finished"].toBool()) {
-            if (!process["error"].toString().isEmpty()) {
-                num_errors++;
-                processor_counts[process["processor_name"].toString()].errors++;
+
+    //scripts
+    {
+        long num_running = 0;
+        long num_finished = 0;
+        long num_queued = 0;
+        long num_errors = 0;
+        QJsonObject scripts = state["scripts"].toObject();
+        QStringList ids = scripts.keys();
+        foreach (QString id, ids) {
+            QJsonObject script = scripts[id].toObject();
+            if (script["is_running"].toBool()) {
+                num_running++;
+            }
+            else if (script["is_finished"].toBool()) {
+                if (!script["error"].toString().isEmpty()) {
+                    num_errors++;
+                }
+                else {
+                    num_finished++;
+                }
             }
             else {
-                num_finished++;
-                processor_counts[process["processor_name"].toString()].finished++;
+                num_queued++;
             }
         }
-        else {
-            num_queued++;
-            processor_counts[process["processor_name"].toString()].queued++;
+        ret += QString("%1 scripts: %2 queued, %3 running, %4 finished, %5 errors\n").arg(ids.count()).arg(num_queued).arg(num_running).arg(num_finished).arg(num_errors);
+    }
+
+    //processes
+    {
+        long num_running = 0;
+        long num_finished = 0;
+        long num_queued = 0;
+        long num_errors = 0;
+        QMap<QString, ProcessorCount> processor_counts;
+        QJsonObject processes = state["processes"].toObject();
+        QStringList ids = processes.keys();
+        foreach (QString id, ids) {
+            QJsonObject process = processes[id].toObject();
+            if (process["is_running"].toBool()) {
+                num_running++;
+                processor_counts[process["processor_name"].toString()].running++;
+            }
+            else if (process["is_finished"].toBool()) {
+                if (!process["error"].toString().isEmpty()) {
+                    num_errors++;
+                    processor_counts[process["processor_name"].toString()].errors++;
+                }
+                else {
+                    num_finished++;
+                    processor_counts[process["processor_name"].toString()].finished++;
+                }
+            }
+            else {
+                num_queued++;
+                processor_counts[process["processor_name"].toString()].queued++;
+            }
+        }
+        ret += QString("%1 processes: %2 queued, %3 running, %4 finished, %5 errors\n").arg(ids.count()).arg(num_queued).arg(num_running).arg(num_finished).arg(num_errors);
+        QStringList keys = processor_counts.keys();
+        foreach (QString processor_name, keys) {
+            ret += QString("  %1: %2 queued, %3 running, %4 finished, %5 errors\n").arg(processor_name).arg(processor_counts[processor_name].queued).arg(processor_counts[processor_name].running).arg(processor_counts[processor_name].finished).arg(processor_counts[processor_name].errors);
         }
     }
-    ret += QString("%1 processes: %2 queued, %3 running, %4 finished, %5 errors\n").arg(ids.count()).arg(num_queued).arg(num_running).arg(num_finished).arg(num_errors);
-    QStringList keys = processor_counts.keys();
-    foreach (QString processor_name, keys) {
-        ret += QString("  %1: %2 queued, %3 running, %4 finished, %5 errors\n").arg(processor_name).arg(processor_counts[processor_name].queued).arg(processor_counts[processor_name].running).arg(processor_counts[processor_name].finished).arg(processor_counts[processor_name].errors);
-    }
+
     return ret;
 }
 

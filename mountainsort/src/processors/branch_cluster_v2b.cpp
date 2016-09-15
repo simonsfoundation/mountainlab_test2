@@ -25,7 +25,6 @@ QVector<double> compute_peaks_v2b(ClipsGroup clips, long ch);
 QVector<int> consolidate_labels_v2b(DiskReadMda32& X, const QVector<double>& times, const QVector<int>& labels, long ch, long clip_size, long detect_interval, double consolidation_factor);
 QList<long> get_sort_indices_b(const QVector<int>& channels, const QVector<double>& template_peaks);
 QVector<int> split_clusters(ClipsGroup clips, const QVector<int>& original_labels, const Branch_Cluster_V2_Opts& opts, int channel_for_display);
-Mda32 compute_clips_features(const Mda32& X, int num_features);
 
 //static QMap<QString,long> s_timers;
 
@@ -62,7 +61,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
     }
 
     if ((AM.N1() != M) || (AM.N2() != M)) {
-        printf("Error: incompatible dimensions between AM and X.\n");
+        printf("Error: incompatible dimensions between AM and X %ldx%ld %ld, %s\n", AM.N1(), AM.N2(), M, adjacency_matrix_path.toLatin1().data());
         return false;
     }
 
@@ -91,7 +90,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
         }
         Mda32 features2;
         if (opts.num_features2)
-            features2 = compute_clips_features(clips, opts.num_features2);
+            features2 = compute_clips_features_per_channel(clips, opts.num_features2);
         ClipsGroup clips_group;
         clips_group.clips = &clips;
         clips_group.features2 = &features2;
@@ -184,7 +183,7 @@ bool branch_cluster_v2b(const QString& timeseries_path, const QString& detect_pa
     return true;
 }
 
-Mda32 compute_clips_features(const Mda32& X, int num_features)
+Mda32 compute_clips_features_per_channel(const Mda32& X, int num_features_per_channel)
 {
     int M = X.N1();
     int T = X.N2();
@@ -209,7 +208,7 @@ Mda32 compute_clips_features(const Mda32& X, int num_features)
     return FF;
     */
 
-    Mda32 FF(M * num_features, L);
+    Mda32 FF(M * num_features_per_channel, L);
     //QTime timerA; timerA.start();
     for (int m = 0; m < M; m++) {
         Mda32 tmp0(T, L);
@@ -219,9 +218,9 @@ Mda32 compute_clips_features(const Mda32& X, int num_features)
             }
         }
         Mda32 CC, FF0, sigma;
-        pca(CC, FF0, sigma, tmp0, num_features, false); //should we subtract the mean?
+        pca(CC, FF0, sigma, tmp0, num_features_per_channel, false); //should we subtract the mean?
         for (int i = 0; i < L; i++) {
-            for (int f = 0; f < num_features; f++) {
+            for (int f = 0; f < num_features_per_channel; f++) {
                 FF.setValue(FF0.value(f, i), m * M + f, i);
             }
         }
