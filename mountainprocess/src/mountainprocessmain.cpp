@@ -63,6 +63,13 @@ If anything crashes along the way, every involved QProcess is killed.
 #include "tempfilecleaner.h"
 #include "mlcommon.h"
 #include "scriptcontroller2.h"
+#include <unistd.h>
+
+#ifndef Q_OS_LINUX
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
 
 /// TODO security in scripts that are able to be submitted
 /// TODO title on mountainview from mountainbrowser
@@ -345,6 +352,30 @@ int main(int argc, char* argv[])
         return ret;
     }
     else if (arg1 == "daemon-start") {
+        /*
+         *  The following magic ensures we detach from the parent process
+         *  and from the controlling terminal. This is to prevent process
+         *  that spawned us to wait for our children to complete.
+         */
+#ifdef Q_OS_LINUX
+        // fork, setsid(?), redirect stdout to /dev/null
+        if (!daemon(1, 0)) {
+            exit(1);
+        }
+#else
+        // fork, setsid, fork, redirect stdout to /dev/null
+        if (fork() > 0) {
+            exit(0);
+        }
+        Q_UNUSED(setsid());
+        if (fork() > 0) {
+            exit(0);
+        }
+        int devnull = open("/dev/null", O_WRONLY);
+        Q_UNUSED(dup2(devnull, STDOUT_FILENO));
+        Q_UNUSED(dup2(devnull, STDERR_FILENO));
+#endif
+
         if (!initialize_process_manager()) {
             //log_end();
             return -1;
