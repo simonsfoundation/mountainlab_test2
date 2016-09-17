@@ -359,7 +359,7 @@ int main(int argc, char* argv[])
          */
 #ifdef Q_OS_LINUX
         // fork, setsid(?), redirect stdout to /dev/null
-        if (!daemon(1, 0)) {
+        if (daemon(1, 0)) {
             exit(1);
         }
 #else
