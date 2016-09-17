@@ -371,22 +371,6 @@ int main(int argc, char* argv[])
         }
         //log_end();
         return 0;
-    }
-    /*
-    else if (arg1 == "-internal-daemon-start") { //This is called internaly to start the daemon (which is the central program running in the background)
-        MPDaemon X;
-        if (!X.run())
-            return -1;
-        return 0;
-    } else if (arg1 == "daemon-start") { //Start the daemon
-        MPDaemonInterface X;
-        if (X.start()) {
-            printf("Started daemon.\n");
-            return 0;
-        } else {
-            printf("Failed to start daemon.\n");
-            return -1;
-        }
     } else if (arg1 == "daemon-stop") { //Stop the daemon
         MPDaemonInterface X;
         if (X.stop())
@@ -400,6 +384,13 @@ int main(int argc, char* argv[])
         if (!X.start())
             return -1;
         printf("Daemon has been restarted.\n");
+        return 0;
+    }
+    /*
+    else if (arg1 == "-internal-daemon-start") { //This is called internaly to start the daemon (which is the central program running in the background)
+        MPDaemon X;
+        if (!X.run())
+            return -1;
         return 0;
     }
     */
@@ -718,6 +709,8 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
     PP.working_path = QDir::currentPath();
 
     MPDaemonInterface X;
+    // ensure daemon is running
+
     if (prtype == ScriptType) {
         if (!X.queueScript(PP)) { //queue the script
             qWarning() << "Error queueing script";
