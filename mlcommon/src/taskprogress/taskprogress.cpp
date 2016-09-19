@@ -841,6 +841,8 @@ QVariant TaskProgressModel::taskData(const QModelIndex& index, int role) const
         return assembleLog(task);
     case IndentedLogRole:
         return assembleLog(task, "\t");
+    case HasErrorRole:
+        return !task.error.isEmpty();
     case StatusRole:
         if (task.end_time.isValid() && task.progress >= 1)
             return Finished;
