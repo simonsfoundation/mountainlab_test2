@@ -46,6 +46,7 @@ public:
 
     int m_id;
     TaskInfo m_info;
+    bool m_finished = false;
 };
 
 class TaskProgressModelPrivate : public TaskProgressModel {
@@ -157,13 +158,24 @@ public:
 
     void completeTask(const QModelIndex& index, const QDateTime& dt = QDateTime::currentDateTime())
     {
+#if 0
+        // for debugging
+        for(int i = 0; i < rowCount(); ++i) {
+            TaskInfo tinfo = info(TaskProgressModel::index(i, 0))->taskInfo();
+            auto qd = qDebug().noquote();
+            qd.nospace() << "[" << i << "]\t" << tinfo.label << " " << tinfo.progress << " " << tinfo.end_time;
+            if (index.row() == i) qd.space() << "*";
+        }
+#endif
         TaskProgressAgentPrivate* task = info(index);
         if (!task)
             return;
+        if (task->m_finished) return; // already finished
         int row = index.row();
-        int newRow = rowCount();
+        int newRow = m_activeCount--;
         task->m_info.progress = 1.0;
         task->m_info.end_time = dt;
+        task->m_finished = true;
         task->emitChanged();
         if (row == newRow - 1) {
             emit dataChanged(this->index(row, 0), this->index(row, columnCount() - 1));
@@ -171,7 +183,6 @@ public:
         }
         beginMoveRows(QModelIndex(), row, row, QModelIndex(), newRow);
         m_data.move(row, newRow - 1);
-        m_activeCount--;
         endMoveRows();
     }
 
