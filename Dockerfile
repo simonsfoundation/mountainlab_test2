@@ -15,6 +15,8 @@ RUN apt-get update
 RUN apt-get install -y qtdeclarative5-dev
 RUN apt-get install -y qt5-default qtbase5-dev qtscript5-dev make g++
 
+RUN apt-get install -y libfftw3-dev
+
 # Install nodejs and npm
 RUN apt-get install -y nodejs npm
 RUN npm install ini extend
@@ -26,5 +28,5 @@ RUN ln -s $PWD /base
 ENV path /mountainlab/bin:$PATH
 
 # Compile
-ADD .
+ADD . .
 RUN ./compile_components.sh default
