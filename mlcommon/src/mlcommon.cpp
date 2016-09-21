@@ -659,12 +659,13 @@ QString system_call_return_output(QString cmd) {
     process.start(cmd);
     process.waitForStarted();
     process.waitForFinished(-1);
-    return process.readAllStandardOutput();
+    return process.readAllStandardOutput().trimmed();
 }
 
 QString locate_file_with_checksum(QString checksum,QString checksum1000,long size) {
     qDebug() << "locate_file_with_checksum" << checksum << checksum1000 << size;
     QString cmd=QString("prv locate --checksum=%1 --checksum1000=%2 --size=%3").arg(checksum).arg(checksum1000).arg(size);
+    qDebug() << cmd;
     return system_call_return_output(cmd);
 }
 

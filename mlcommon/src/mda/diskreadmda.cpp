@@ -560,7 +560,7 @@ bool DiskReadMdaPrivate::open_file_if_needed()
         return false;
     if (m_path.isEmpty())
         return false;
-    m_file = fopen(m_path.toLatin1().data(), "rb");
+    m_file = fopen(m_path.toUtf8().data(), "rb");
     if (m_file) {
         if (!m_header_read) {
             //important not to read it again in case we have reshaped the array
@@ -572,7 +572,13 @@ bool DiskReadMdaPrivate::open_file_if_needed()
         }
     }
     else {
-        printf("Failed to open diskreadmda file: %s\n", m_path.toLatin1().data());
+        printf(":::: Failed to open diskreadmda file: %s\n", m_path.toLatin1().data());
+        if (QFile::exists(m_path)) {
+            printf("Even though this file does exist.\n");
+        }
+        else {
+            qDebug() << "File does not exist: "+m_path;
+        }
         m_file_open_failed = true; //we don't want to try this more than once
         return false;
     }

@@ -24,6 +24,9 @@ if (file_exists(outfolder+'/filt.mda')) {
 if (file_exists(outfolder+'/pre.mda')) {
 	args+=' --pre='+outfolder+'/pre.mda';
 }
+if (file_exists(dsfolder+'/geom.csv')) {
+	args+=' --geom='+dsfolder+'/geom.csv';
+}
 args+=' --firings='+firings_path;
 args+=' --samplerate='+(dsparams.samplerate||0);
 args=args.split(' ');

@@ -215,7 +215,7 @@ void MVTemplatesView2PanelPrivate::setup_electrode_boxes(double W, double H)
     int D = coords[0].count();
     QVector<double> mins(D), maxs(D);
     for (int d = 0; d < D; d++) {
-        mins[d] = maxs[d] = 0;
+        mins[d] = maxs[d] = coords.value(0).value(d);
     }
     for (int m = 0; m < coords.count(); m++) {
         for (int d = 0; d < D; d++) {
