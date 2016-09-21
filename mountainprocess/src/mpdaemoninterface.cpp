@@ -17,22 +17,62 @@
 #include <QSharedMemory>
 #include "mlcommon.h"
 #include <signal.h>
+#include "localserver.h"
+#include <QThread>
+
+class MountainProcessClient : public LocalClient::Client {
+public:
+    MountainProcessClient(QObject *parent = 0) : LocalClient::Client(parent) {
+
+    }
+    QByteArray waitForMessage() {
+        m_waitingForMessage = true;
+        while(true) {
+            if (!waitForReadyRead())
+                return QByteArray(); // failure
+//            qApp->sendPostedEvents(this);
+            if (!m_waitingForMessage) {
+                QByteArray result = m_msg;
+                m_msg.clear();
+                return result;
+            }
+        }
+    }
+
+protected:
+    void handleMessage(const QByteArray &ba) Q_DECL_OVERRIDE
+    {
+        if (m_waitingForMessage) {
+            m_msg = ba;
+            m_waitingForMessage = false;
+            return;
+        }
+    }
+    bool m_waitingForMessage = false;
+    QByteArray m_msg;
+};
 
 class MPDaemonInterfacePrivate {
 public:
+    MPDaemonInterfacePrivate(MPDaemonInterface *qq) : q(qq){
+        client = new MountainProcessClient;
+    }
+    ~MPDaemonInterfacePrivate() {
+        delete client;
+    }
+
     MPDaemonInterface* q;
+    MountainProcessClient* client;
 
     bool daemon_is_running();
     bool send_daemon_command(QJsonObject obj, qint64 timeout_msec);
     QDateTime get_time_from_timestamp_of_fname(QString fname);
-    QString last_daemon_state_fname();
     QJsonObject get_last_daemon_state();
 };
 
 MPDaemonInterface::MPDaemonInterface()
 {
-    d = new MPDaemonInterfacePrivate;
-    d->q = this;
+    d = new MPDaemonInterfacePrivate(this);
 }
 
 MPDaemonInterface::~MPDaemonInterface()
@@ -71,6 +111,7 @@ bool MPDaemonInterface::stop()
     QJsonObject obj;
     obj["command"] = "stop";
     d->send_daemon_command(obj, 5000);
+    QThread::sleep(1);
     if (!d->daemon_is_running()) {
         printf("daemon has been stopped.\n");
         return true;
@@ -91,7 +132,6 @@ static QString daemon_message = "Open a terminal and run [mountainprocess daemon
 bool MPDaemonInterface::queueScript(const MPDaemonPript& script)
 {
     if (!d->daemon_is_running()) {
-
         if (!this->start()) {
             printf("Problem in queueScript: Unable to start daemon.\n");
             return false;
@@ -138,29 +178,16 @@ bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_
 {
     if (!msec_timeout)
         msec_timeout = 1000;
-
-    static long num = 100000;
-    QString timestamp = MPDaemon::makeTimestamp();
-    QString fname = QString("%1/daemon_commands/%2.%3.%4.command").arg(MPDaemon::daemonPath()).arg(timestamp).arg(MLUtil::makeRandomId(5)).arg(num);
-    num++;
-
-    QString json = QJsonDocument(obj).toJson();
-    TextFile::write(fname, json);
-    QTime timer;
-    timer.start();
-    //wait until it has been received by the daemon
-    while ((timer.elapsed() <= msec_timeout) && (QFile::exists(fname)))
-        ;
-    return (!QFile::exists(fname));
-}
-
-QString MPDaemonInterfacePrivate::last_daemon_state_fname()
-{
-    QString path = MPDaemon::daemonPath() + "/daemon_state";
-    QStringList list = QDir(path).entryList(QStringList("*.json"), QDir::Files, QDir::Name);
-    if (list.isEmpty())
-        return "";
-    return path + "/" + list[list.count() - 1];
+    if (!client->isConnected()) {
+        client->connectToServer("mountainprocess.sock");
+    }
+    if (!client->waitForConnected())
+        return false;
+    client->writeMessage(QJsonDocument(obj).toJson());
+    QByteArray msg = client->waitForMessage();
+    if (msg.isEmpty()) return false;
+    // TODO: parse message
+    return true;
 }
 
 QJsonObject MPDaemonInterfacePrivate::get_last_daemon_state()
@@ -170,29 +197,24 @@ QJsonObject MPDaemonInterfacePrivate::get_last_daemon_state()
         ret["is_running"] = false;
         return ret;
     }
-    QString fname = last_daemon_state_fname();
-    if (fname.isEmpty())
+    client->connectToServer("mountainprocess.sock");
+    if (!client->waitForConnected()) {
+        qWarning() << "Can't connect to daemon";
         return ret;
-    QString json = TextFile::read(fname);
-    if (json.isEmpty())
-        return ret;
+    }
+    QJsonObject obj;
+    obj["command"] = "get-daemon-state";
+    client->writeMessage(QJsonDocument(obj).toJson());
+    QByteArray msg = client->waitForMessage();
+    if (msg.isEmpty()) return ret;
+
     QJsonParseError error;
-    ret = QJsonDocument::fromJson(json.toLatin1(), &error).object();
+    ret = QJsonDocument::fromJson(msg, &error).object();
     if (error.error != QJsonParseError::NoError) {
         qWarning() << "Error in get_last_daemon_state parsing json";
     }
     return ret;
 }
-
-/*
-qint64 MPDaemonInterfacePrivate::msec_since_last_daemon_state()
-{
-    QString fname = last_daemon_state_fname();
-    if (fname.isEmpty())
-        return 999000;
-    return get_time_from_timestamp_of_fname(fname).msecsTo(QDateTime::currentDateTime());
-}
-*/
 
 QDateTime MPDaemonInterfacePrivate::get_time_from_timestamp_of_fname(QString fname)
 {

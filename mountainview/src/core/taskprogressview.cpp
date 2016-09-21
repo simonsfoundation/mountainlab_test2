@@ -415,8 +415,8 @@ QVariant TaskProgressViewModeProxy::data(const QModelIndex& index, int role) con
 {
     // not the best place to do this however since TaskProgressModel can't use QColor
     // this is the second best place to put this code
-    if (index.parent().isValid() && role == Qt::ForegroundRole) {
-        if (index.data(TaskManager::TaskProgressModel::LogTypeRole).toInt() == TaskManager::TaskProgressModel::Error)
+    if (!index.parent().isValid() && role == Qt::ForegroundRole) {
+        if (index.data(TaskManager::TaskProgressModel::HasErrorRole).toBool())
             return QColor(Qt::red);
     }
     return QSortFilterProxyModel::data(index, role);

@@ -27,6 +27,7 @@ QString mlLogPath();
 QString resolvePath(const QString& basepath, const QString& path);
 void mkdirIfNeeded(const QString& path);
 QString computeSha1SumOfFile(const QString& path);
+QString computeSha1SumOfFileHead(const QString& path,long num_bytes);
 QString computeSha1SumOfString(const QString& str);
 QList<int> stringListToIntList(const QStringList& list);
 QStringList intListToStringList(const QList<int>& list);
