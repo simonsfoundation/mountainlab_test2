@@ -63,6 +63,13 @@ If anything crashes along the way, every involved QProcess is killed.
 #include "tempfilecleaner.h"
 #include "mlcommon.h"
 #include "scriptcontroller2.h"
+#include <unistd.h>
+
+#ifndef Q_OS_LINUX
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
 
 /// TODO security in scripts that are able to be submitted
 /// TODO title on mountainview from mountainbrowser
@@ -345,6 +352,30 @@ int main(int argc, char* argv[])
         return ret;
     }
     else if (arg1 == "daemon-start") {
+        /*
+         *  The following magic ensures we detach from the parent process
+         *  and from the controlling terminal. This is to prevent process
+         *  that spawned us to wait for our children to complete.
+         */
+#ifdef Q_OS_LINUX
+        // fork, setsid(?), redirect stdout to /dev/null
+        if (daemon(1, 0)) {
+            exit(1);
+        }
+#else
+        // fork, setsid, fork, redirect stdout to /dev/null
+        if (fork() > 0) {
+            exit(0);
+        }
+        Q_UNUSED(setsid());
+        if (fork() > 0) {
+            exit(0);
+        }
+        int devnull = open("/dev/null", O_WRONLY);
+        Q_UNUSED(dup2(devnull, STDOUT_FILENO));
+        Q_UNUSED(dup2(devnull, STDERR_FILENO));
+#endif
+
         if (!initialize_process_manager()) {
             //log_end();
             return -1;
@@ -371,22 +402,6 @@ int main(int argc, char* argv[])
         }
         //log_end();
         return 0;
-    }
-    /*
-    else if (arg1 == "-internal-daemon-start") { //This is called internaly to start the daemon (which is the central program running in the background)
-        MPDaemon X;
-        if (!X.run())
-            return -1;
-        return 0;
-    } else if (arg1 == "daemon-start") { //Start the daemon
-        MPDaemonInterface X;
-        if (X.start()) {
-            printf("Started daemon.\n");
-            return 0;
-        } else {
-            printf("Failed to start daemon.\n");
-            return -1;
-        }
     } else if (arg1 == "daemon-stop") { //Stop the daemon
         MPDaemonInterface X;
         if (X.stop())
@@ -394,12 +409,20 @@ int main(int argc, char* argv[])
         else
             return -1;
     } else if (arg1 == "daemon-restart") { //Restart the daemon
+        qDebug() << __FILE__ << __LINE__ << "@@@@@@@@@@@@@@@@@@@";
         MPDaemonInterface X;
         if (!X.stop())
             return -1;
         if (!X.start())
             return -1;
         printf("Daemon has been restarted.\n");
+        return 0;
+    }
+    /*
+    else if (arg1 == "-internal-daemon-start") { //This is called internaly to start the daemon (which is the central program running in the background)
+        MPDaemon X;
+        if (!X.run())
+            return -1;
         return 0;
     }
     */
@@ -717,7 +740,12 @@ bool queue_pript(PriptType prtype, const CLParams& CLP)
     PP.force_run = CLP.named_parameters.contains("_force_run");
     PP.working_path = QDir::currentPath();
 
+    qDebug() << ":::::::::::::::::::::::::::::::::::::::::"
+             << "queue_pript" << PP.force_run;
+
     MPDaemonInterface X;
+    // ensure daemon is running
+
     if (prtype == ScriptType) {
         if (!X.queueScript(PP)) { //queue the script
             qWarning() << "Error queueing script";

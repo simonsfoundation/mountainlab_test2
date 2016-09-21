@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 function print_usage() {
-	console.log ('kron_pipeline [pipeline_names] [dataset_names] --outpath=[output(default)]');
+	console.log ('kron_run [pipeline_names] [dataset_names] --outpath=[output(default)]');
 }
 
 var fs=require('fs');

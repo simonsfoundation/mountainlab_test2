@@ -165,7 +165,8 @@ public:
         LogRole,
         IndentedLogRole,
         StatusRole,
-        LogTypeRole
+        LogTypeRole,
+        HasErrorRole
     };
 
     enum Status {

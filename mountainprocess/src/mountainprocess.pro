@@ -15,14 +15,18 @@ MOC_DIR=../build
 TARGET = mountainprocess
 TEMPLATE = app
 
+DEFINES += QT_MESSAGELOGCONTEXT
+
 INCLUDEPATH += utils core mda unit_tests 3rdparty
 
 HEADERS += \
     mpdaemon.h \
-    mpdaemoninterface.h
+    mpdaemoninterface.h \
+    localserver.h
 SOURCES += \
     mpdaemon.cpp \
-    mpdaemoninterface.cpp
+    mpdaemoninterface.cpp \
+    localserver.cpp
 
 HEADERS += \
     processmanager.h \

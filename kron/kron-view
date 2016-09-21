@@ -94,4 +94,24 @@ common.make_system_call(view_program_file,args,function() {
 });
 
 common.wait_for_system_calls_to_finish(function() {
+
 });
+
+function open_view(alg,ds,callback) {
+	var outpath0=outpath+'/'+alg.name+'-'+ds.name;
+
+	var samplerate=30000; //fix this
+
+	var cmd='mountainview';
+	var args='';
+	args+=' --firings='+outpath0+'/'+firings_name;
+	args+=' --raw='+outpath0+'/pre0.mda.prv';
+	args+=' --filt='+outpath0+'/pre1b.mda.prv';
+	args+=' --pre='+outpath0+'/pre2.mda.prv';
+	args+=' --samplerate='+samplerate;
+	
+	args=args.split(' ');
+	common.make_system_call(cmd,args,callback);
+}
+
+
