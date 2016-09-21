@@ -5,7 +5,7 @@ if [ -z "$1" ]; then
     echo "usage:"
     echo "./compile_components.sh default"
     echo "./compile_components.sh mountainview mountainbrowser"
-    echo "example components: mdachunk mdaconvert mountainbrowser mountainoverlook mountainprocess mountainsort mountainview mountaincompare"
+    echo "example components: mdachunk mdaconvert mountainbrowser mountainoverlook mountainprocess mountainsort mountainview mountaincompare prv"
     echo ""
     echo "Note that mountainbrowser is intentionally not compiled by default."
     echo ""
