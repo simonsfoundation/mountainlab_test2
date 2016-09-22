@@ -859,8 +859,5 @@ QJsonValue MLUtil::configValue(const QString& group, const QString& key)
     if (obj2.contains(key)) {
         ret = obj2[key];
     }
-    qDebug() << "++++++++++++++++++++++++++";
-    qDebug() << obj1 << obj2;
-    qDebug() << "--------------------------------------" << group << key << ret;
     return ret;
 }

@@ -56,8 +56,8 @@ struct ProcessRuntimeOpts {
         num_threads_allotted = 1;
         memory_gb_allotted = 1;
     }
-    double num_threads_allotted;
-    double memory_gb_allotted;
+    double num_threads_allotted = 1;
+    double memory_gb_allotted = 0;
 };
 
 bool is_at_most(ProcessResources needed, ProcessResources available, ProcessResources total_allocated);
@@ -69,37 +69,24 @@ enum PriptType {
 
 struct MPDaemonPript {
     //Represents a process or a script
-    MPDaemonPript()
-    {
-        is_running = false;
-        is_finished = false;
-        success = false;
-        parent_pid = 0;
-        qprocess = 0;
-        stdout_file = 0;
-        prtype = ScriptType;
-        num_threads_requested = 1;
-        memory_gb_requested = 1;
-        force_run = false;
-    }
-    PriptType prtype;
+    PriptType prtype = ScriptType;
     QString id;
     QString output_fname;
     QString stdout_fname;
     QVariantMap parameters;
-    bool is_running;
-    bool is_finished;
-    bool success;
+    bool is_running = false;
+    bool is_finished = false;
+    bool success = false;
     QString error;
     QJsonObject runtime_results;
-    qint64 parent_pid;
+    qint64 parent_pid = 0;
     bool force_run;
     QString working_path;
     QDateTime timestamp_queued;
     QDateTime timestamp_started;
     QDateTime timestamp_finished;
-    QProcess* qprocess;
-    QFile* stdout_file;
+    QProcess* qprocess = 0;
+    QFile* stdout_file = 0;
 
     //For a script:
     QStringList script_paths;
@@ -107,8 +94,8 @@ struct MPDaemonPript {
 
     //For a process:
     QString processor_name;
-    double num_threads_requested;
-    double memory_gb_requested;
+    double num_threads_requested = 1;
+    double memory_gb_requested = 0;
     ProcessRuntimeOpts runtime_opts; //defined at run time
 };
 
