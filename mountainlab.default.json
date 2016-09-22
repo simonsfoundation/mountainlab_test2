@@ -1,6 +1,6 @@
 {
 	"general":{
-		"temporary_path":"/tmp",
+		"temporary_path":"/tmp/mountainlab",
 		"max_cache_size_gb":40
 	},
 	"mountainprocess":{
