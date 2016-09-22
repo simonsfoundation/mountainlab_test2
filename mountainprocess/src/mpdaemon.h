@@ -16,9 +16,9 @@
 #include <QFile>
 
 struct ProcessResources {
-    double num_threads=0;
-    double memory_gb=0;
-    double num_processes=0;
+    double num_threads = 0;
+    double memory_gb = 0;
+    double num_processes = 0;
 };
 
 class MPDaemonPrivate;

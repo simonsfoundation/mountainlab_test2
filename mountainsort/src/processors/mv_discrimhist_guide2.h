@@ -11,7 +11,7 @@ struct mv_discrimhist_guide2_opts {
     int clip_size = 80;
     double add_noise_level = 1;
     QList<int> cluster_numbers;
-    int max_comparisons_per_cluster=4;
+    int max_comparisons_per_cluster = 4;
 };
 
 bool mv_discrimhist_guide2(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_guide2_opts opts);

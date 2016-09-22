@@ -351,7 +351,7 @@ int main(int argc, char* argv[])
         return ret;
     }
     else if (arg1 == "daemon-start") {
-        /*
+/*
          *  The following magic ensures we detach from the parent process
          *  and from the controlling terminal. This is to prevent process
          *  that spawned us to wait for our children to complete.
@@ -396,8 +396,8 @@ int main(int argc, char* argv[])
         ProcessResources RR;
         //RR.num_threads = qMax(0.0, MLUtil::configValue("mountainprocess", "max_num_simultaneous_threads").toDouble());
         //RR.memory_gb = qMax(0.0, MLUtil::configValue("mountainprocess", "max_total_memory_gb").toDouble());
-        RR.num_threads=0;
-        RR.memory_gb=0;
+        RR.num_threads = 0;
+        RR.memory_gb = 0;
         RR.num_processes = MLUtil::configValue("mountainprocess", "max_num_simultaneous_processes").toDouble();
         X.setTotalResourcesAvailable(RR);
         if (!X.run()) {
@@ -406,13 +406,15 @@ int main(int argc, char* argv[])
         }
         //log_end();
         return 0;
-    } else if (arg1 == "daemon-stop") { //Stop the daemon
+    }
+    else if (arg1 == "daemon-stop") { //Stop the daemon
         MPDaemonInterface X;
         if (X.stop())
             return 0;
         else
             return -1;
-    } else if (arg1 == "daemon-restart") { //Restart the daemon
+    }
+    else if (arg1 == "daemon-restart") { //Restart the daemon
         qDebug() << __FILE__ << __LINE__ << "@@@@@@@@@@@@@@@@@@@";
         MPDaemonInterface X;
         if (!X.stop())

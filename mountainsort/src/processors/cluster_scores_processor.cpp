@@ -50,7 +50,7 @@ bool cluster_scores_Processor::run(const QMap<QString, QVariant>& params)
     }
     opts.max_comparisons_per_cluster = params["max_comparisons_per_cluster"].toInt();
     opts.add_noise_level = params["add_noise_level"].toDouble();
-    opts.cluster_scores_only=params.value("cluster_scores_only",0).toInt();
+    opts.cluster_scores_only = params.value("cluster_scores_only", 0).toInt();
     QString timeseries_path = params["timeseries"].toString();
     QString firings_path = params["firings"].toString();
     QString cluster_scores_path = params["cluster_scores"].toString();

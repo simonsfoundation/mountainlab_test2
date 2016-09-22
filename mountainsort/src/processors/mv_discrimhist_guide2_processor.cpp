@@ -40,11 +40,11 @@ bool mv_discrimhist_guide2_Processor::run(const QMap<QString, QVariant>& params)
     QString output_path = params["output"].toString();
 
     mv_discrimhist_guide2_opts opts;
-    opts.clip_size=params["clip_size"].toInt();
-    opts.add_noise_level=params["add_noise_level"].toDouble();
-    QStringList strlist=params["cluster_numbers"].toString().split(",",QString::SkipEmptyParts);
-    opts.cluster_numbers=MLUtil::stringListToIntList(strlist);
-    opts.max_comparisons_per_cluster=params.value("max_comparisons_per_cluster",4).toInt();
+    opts.clip_size = params["clip_size"].toInt();
+    opts.add_noise_level = params["add_noise_level"].toDouble();
+    QStringList strlist = params["cluster_numbers"].toString().split(",", QString::SkipEmptyParts);
+    opts.cluster_numbers = MLUtil::stringListToIntList(strlist);
+    opts.max_comparisons_per_cluster = params.value("max_comparisons_per_cluster", 4).toInt();
 
     return mv_discrimhist_guide2(timeseries_path, firings_path, output_path, opts);
 }

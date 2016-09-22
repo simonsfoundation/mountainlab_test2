@@ -82,7 +82,9 @@ MVPrefsControl::MVPrefsControl(MVContext* context, MVMainWindow* mw)
     }
     {
         QWidget* X = this->createChoicesControl("discrim_hist_method");
-        QStringList choices; choices << "centroid" << "svm";
+        QStringList choices;
+        choices << "centroid"
+                << "svm";
         this->setChoices("discrim_hist_method", choices);
         context->onOptionChanged("discrim_hist_method", this, SLOT(updateControls()));
         glayout->addWidget(new QLabel("Discrim hist method:"), row, 0);
@@ -132,5 +134,5 @@ void MVPrefsControl::updateControls()
     this->setControlValue("cc_bin_size_msec", mvContext()->option("cc_bin_size_msec").toDouble());
     this->setControlValue("cc_max_est_data_size", mvContext()->option("cc_max_est_data_size").toDouble());
     this->setControlValue("amp_thresh_display", mvContext()->option("amp_thresh_display").toDouble());
-    this->setControlValue("discrim_hist_method",mvContext()->option("discrim_hist_method"));
+    this->setControlValue("discrim_hist_method", mvContext()->option("discrim_hist_method"));
 }

@@ -336,7 +336,7 @@ QString ScriptController2Private::resolve_file_name_p(QString fname_in)
 {
     if (fname_in.isEmpty())
         return "";
-    QString ret=fname_in;
+    QString ret = fname_in;
     //QString ret = resolve_file_name_2(m_server_urls, m_server_base_path, fname_in);
     if (!ret.startsWith("http:")) {
         if ((QDir::isRelativePath(ret)) && (!m_working_path.isEmpty())) {

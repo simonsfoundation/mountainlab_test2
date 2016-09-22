@@ -200,9 +200,9 @@ QString MLUtil::computeSha1SumOfFile(const QString& path)
     return ret;
     */
 }
-QString MLUtil::computeSha1SumOfFileHead(const QString& path,long num_bytes)
+QString MLUtil::computeSha1SumOfFileHead(const QString& path, long num_bytes)
 {
-    return sumit(path,num_bytes);
+    return sumit(path, num_bytes);
 }
 
 static QString s_temp_path = "";
@@ -665,7 +665,8 @@ void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QS
     QProcess::execute(exe, args);
 }
 
-QString system_call_return_output(QString cmd) {
+QString system_call_return_output(QString cmd)
+{
     QProcess process;
     process.start(cmd);
     process.waitForStarted();
@@ -673,19 +674,22 @@ QString system_call_return_output(QString cmd) {
     return process.readAllStandardOutput().trimmed();
 }
 
-QString locate_file_with_checksum(QString checksum,QString checksum1000,long size) {
+QString locate_file_with_checksum(QString checksum, QString checksum1000, long size)
+{
     qDebug() << "locate_file_with_checksum" << checksum << checksum1000 << size;
-    QString cmd=QString("prv locate --checksum=%1 --checksum1000=%2 --size=%3").arg(checksum).arg(checksum1000).arg(size);
+    QString cmd = QString("prv locate --checksum=%1 --checksum1000=%2 --size=%3").arg(checksum).arg(checksum1000).arg(size);
     qDebug() << cmd;
     return system_call_return_output(cmd);
 }
 
-QString download_file_to_temp_dir(QString url) {
-    QString tmp_fname=CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(url)+"."+make_random_id_22(5)+".download");
+QString download_file_to_temp_dir(QString url)
+{
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(url) + "." + make_random_id_22(5) + ".download");
     QFile::remove(tmp_fname);
-    QString cmd=QString("curl %1 -o %2").arg(url).arg(tmp_fname);
+    QString cmd = QString("curl %1 -o %2").arg(url).arg(tmp_fname);
     system_call_return_output(cmd);
-    if (!QFile::exists(tmp_fname)) return "";
+    if (!QFile::exists(tmp_fname))
+        return "";
     return tmp_fname;
 }
 
@@ -695,14 +699,14 @@ QString create_file_from_prv(QString output_name, QString checksum0, QString che
     //QString path1 = find_file_with_checksum(checksum0, checksum1000, size0);
     QString path1 = locate_file_with_checksum(checksum0, checksum1000, size0);
     if (!path1.isEmpty()) {
-        if ((path1.startsWith("http://"))||(path1.startsWith("https://"))) {
-            printf("---------- Downloading %s\n",path1.toUtf8().data());
-            QString path2=download_file_to_temp_dir(path1);
-            if ((!path2.isEmpty())&&(sumit(path2)==checksum0)) {
-                path1=path2;
+        if ((path1.startsWith("http://")) || (path1.startsWith("https://"))) {
+            printf("---------- Downloading %s\n", path1.toUtf8().data());
+            QString path2 = download_file_to_temp_dir(path1);
+            if ((!path2.isEmpty()) && (sumit(path2) == checksum0)) {
+                path1 = path2;
             }
             else {
-                path1="";
+                path1 = "";
             }
         }
         if (!path1.isEmpty()) {
@@ -816,44 +820,47 @@ QString MLUtil::configResolvedPath(const QString& group, const QString& key)
 
 QStringList MLUtil::configResolvedPathList(const QString& group, const QString& key)
 {
-    QJsonArray array=MLUtil::configValue(group,key).toArray();
+    QJsonArray array = MLUtil::configValue(group, key).toArray();
     QStringList ret;
-    for (int i=0; i<array.count(); i++) {
-    ret << QDir(MLUtil::mountainlabBasePath()).filePath(array[i].toString());
+    for (int i = 0; i < array.count(); i++) {
+        ret << QDir(MLUtil::mountainlabBasePath()).filePath(array[i].toString());
     }
     return ret;
 }
 
-QJsonValue MLUtil::configValue(const QString &group, const QString &key)
+QJsonValue MLUtil::configValue(const QString& group, const QString& key)
 {
-    QString json1=TextFile::read(MLUtil::mountainlabBasePath()+"/mountainlab.default.json");
+    QString json1 = TextFile::read(MLUtil::mountainlabBasePath() + "/mountainlab.default.json");
     QJsonParseError err1;
-    QJsonObject obj1=QJsonDocument::fromJson(json1.toUtf8(),&err1).object();
-    if (err1.error!=QJsonParseError::NoError) {
-    qWarning() << err1.errorString();
-    qWarning() << "Error parsing mountainlab.default.json.";
-    abort();
-    return QJsonValue();
-    }
-    QJsonObject obj2;
-    if (QFile::exists(MLUtil::mountainlabBasePath()+"/mountainlab.user.json")) {
-    QString json2=TextFile::read(MLUtil::mountainlabBasePath()+"/mountainlab.user.json");
-    QJsonParseError err2;
-    obj2=QJsonDocument::fromJson(json1.toUtf8(),&err2).object();
-    if (err2.error!=QJsonParseError::NoError) {
-        qWarning() << err2.errorString();
-        qWarning() << "Error parsing mountainlab.user.json.";
+    QJsonObject obj1 = QJsonDocument::fromJson(json1.toUtf8(), &err1).object();
+    if (err1.error != QJsonParseError::NoError) {
+        qWarning() << err1.errorString();
+        qWarning() << "Error parsing mountainlab.default.json.";
         abort();
         return QJsonValue();
     }
+    QJsonObject obj2;
+    if (QFile::exists(MLUtil::mountainlabBasePath() + "/mountainlab.user.json")) {
+        QString json2 = TextFile::read(MLUtil::mountainlabBasePath() + "/mountainlab.user.json");
+        QJsonParseError err2;
+        obj2 = QJsonDocument::fromJson(json2.toUtf8(), &err2).object();
+        if (err2.error != QJsonParseError::NoError) {
+            qWarning() << err2.errorString();
+            qWarning() << "Error parsing mountainlab.user.json.";
+            abort();
+            return QJsonValue();
+        }
     }
     if (!group.isEmpty()) {
-    obj1=obj1[group].toObject();
-    obj2=obj2[group].toObject();
+        obj1 = obj1[group].toObject();
+        obj2 = obj2[group].toObject();
     }
-    QJsonValue ret=obj1[key];
-    if (obj2.contains("key")) {
-    ret=obj2[key];
+    QJsonValue ret = obj1[key];
+    if (obj2.contains(key)) {
+        ret = obj2[key];
     }
+    qDebug() << "++++++++++++++++++++++++++";
+    qDebug() << obj1 << obj2;
+    qDebug() << "--------------------------------------" << group << key << ret;
     return ret;
 }

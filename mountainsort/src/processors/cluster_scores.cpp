@@ -16,7 +16,7 @@
 #include "jsvm.h"
 
 namespace ClusterScores {
-QVector<double> compute_cluster_scores(const DiskReadMda32 &timeseries,const Mda32& clips, cluster_scores_opts opts);
+QVector<double> compute_cluster_scores(const DiskReadMda32& timeseries, const Mda32& clips, cluster_scores_opts opts);
 double compute_distance(long N, float* ptr1, float* ptr2);
 bool is_zero(const Mda& X);
 
@@ -49,7 +49,7 @@ bool cluster_scores(QString timeseries, QString firings, QString cluster_scores_
         }
         Mda32 clips_k = extract_clips(X, times_k, opts.clip_size);
 
-        QVector<double> scores_k = compute_cluster_scores(X,clips_k, opts);
+        QVector<double> scores_k = compute_cluster_scores(X, clips_k, opts);
         cluster_scores.setValue(k, 0, i);
         for (int a = 0; a < scores_k.count(); a++) {
             cluster_scores.setValue(scores_k[a], a + 1, i);
@@ -135,7 +135,7 @@ Mda32 add_noise_to(const Mda32& X, double noise_level)
     return ret;
 }
 
-QVector<double> compute_cluster_scores(const DiskReadMda32 &timeseries,const Mda32& clips, cluster_scores_opts opts)
+QVector<double> compute_cluster_scores(const DiskReadMda32& timeseries, const Mda32& clips, cluster_scores_opts opts)
 {
     if (clips.N3() == 0)
         return QVector<double>();
@@ -156,7 +156,7 @@ QVector<double> compute_cluster_scores(const DiskReadMda32 &timeseries,const Mda
         }
     }
     //Mda32 clips_noise = add_noise_to(clips, opts.add_noise_level);
-    Mda32 clips_noise = add_self_noise_to_clips(timeseries,clips, opts.add_noise_level);
+    Mda32 clips_noise = add_self_noise_to_clips(timeseries, clips, opts.add_noise_level);
     long num_err = 0;
     for (long i = 0; i < clips_noise.N3(); i++) {
         double val = sign * clips_noise.value(ind_m_of_peak, ind_t_of_peak, i);
@@ -184,7 +184,7 @@ bool is_zero(const Mda32& X)
     return ((X.minimum() == 0) && (X.maximum() == 0));
 }
 
-void find_pairs_to_compare(QList<int>& k1s, QList<int>& k2s, const DiskReadMda32 &timeseries, const DiskReadMda &firings, cluster_scores_opts opts)
+void find_pairs_to_compare(QList<int>& k1s, QList<int>& k2s, const DiskReadMda32& timeseries, const DiskReadMda& firings, cluster_scores_opts opts)
 {
     k1s.clear();
     k2s.clear();
@@ -201,7 +201,7 @@ void find_pairs_to_compare(QList<int>& k1s, QList<int>& k2s, const DiskReadMda32
     int K = templates.N3();
 
     for (int k1 = 1; k1 <= K; k1++) {
-        if ((opts.cluster_numbers.isEmpty())||(opts.cluster_numbers.contains(k1))) {
+        if ((opts.cluster_numbers.isEmpty()) || (opts.cluster_numbers.contains(k1))) {
             QVector<double> dists;
 
             Mda32 template1;
@@ -209,7 +209,7 @@ void find_pairs_to_compare(QList<int>& k1s, QList<int>& k2s, const DiskReadMda32
 
             QList<int> k2s_considered;
             for (int k2 = k1 + 1; k2 <= K; k2++) {
-                if ((opts.cluster_numbers.isEmpty())||(opts.cluster_numbers.contains(k2))) {
+                if ((opts.cluster_numbers.isEmpty()) || (opts.cluster_numbers.contains(k2))) {
                     Mda32 template2;
                     templates.getChunk(template1, 0, 0, k2 - 1, M, T, 1);
                     double dist = compute_distance(M * T, template1.dataPtr(), template2.dataPtr());
@@ -238,7 +238,7 @@ void find_pairs_to_compare(QList<int>& k1s, QList<int>& k2s, const DiskReadMda32
         }
     }
 }
-QVector<double> compute_cluster_pair_scores(DiskReadMda32 timeseries, const Mda32& clips1, const Mda32& clips2, cluster_scores_opts opts,QVector<double> *out_proj_data1,QVector<double> *out_proj_data2)
+QVector<double> compute_cluster_pair_scores(DiskReadMda32 timeseries, const Mda32& clips1, const Mda32& clips2, cluster_scores_opts opts, QVector<double>* out_proj_data1, QVector<double>* out_proj_data2)
 {
     long L1 = clips1.N3();
     long L2 = clips2.N3();
@@ -299,7 +299,6 @@ QVector<double> compute_cluster_pair_scores(DiskReadMda32 timeseries, const Mda3
             double val = MLCompute::dotProduct(direction_00, out_tmp);
             *out_proj_data1 << val;
         }
-
     }
     for (long i = 0; i < L2; i++) {
         {
