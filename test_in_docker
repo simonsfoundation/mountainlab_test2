@@ -1,5 +1,10 @@
 #!/bin/bash
-sudo docker build -t test_mountainlab .
+sudo docker build -tu test_mountainlab .
+exit_code=$?
+
+if [ $exit_code -ne 0 ];then
+   exit $exit_code
+fi
 
 args="$@ --net=host --pid=host"
 
