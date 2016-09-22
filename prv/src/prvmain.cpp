@@ -312,7 +312,7 @@ private:
             return uploadFile(path, server_url, params);
         }
         QDir dir = path;
-        QFileInfoList entries = dir.entryInfoList(includes, QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, QDir::Name | QDir::DirsLast);
+        QFileInfoList entries = dir.entryInfoList(includes, QDir::Files, QDir::Name);
         foreach (const QFileInfo& fileInfo, entries) {
             bool exclude = false;
             foreach (const QString& exPattern, excludes) {
@@ -326,17 +326,29 @@ private:
             }
             if (exclude)
                 continue;
-            if (fileInfo.isDir()) {
-                int64_t res = upload(fileInfo.absoluteFilePath(), server_url, params, includes, excludes);
-                if (res > 0) {
-                    totalSize += res;
-                }
+            int64_t res = uploadFile(fileInfo.absoluteFilePath(), server_url, params);
+            if (res > 0) {
+                totalSize += res;
             }
-            else {
-                int64_t res = uploadFile(fileInfo.absoluteFilePath(), server_url, params);
-                if (res > 0) {
-                    totalSize += res;
+        }
+        // recursive into subdirectories unless explicitly excluded
+        entries = dir.entryInfoList(QStringList(), QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+        foreach (const QFileInfo& fileInfo, entries) {
+            bool exclude = false;
+            foreach (const QString& exPattern, excludes) {
+                QRegExp rx(exPattern);
+                rx.setPatternSyntax(QRegExp::WildcardUnix);
+                if (rx.exactMatch(fileInfo.fileName())) {
+                    exclude = true;
                 }
+                if (exclude)
+                    break;
+            }
+            if (exclude)
+                continue;
+            int64_t res = upload(fileInfo.absoluteFilePath(), server_url, params, includes, excludes);
+            if (res > 0) {
+                totalSize += res;
             }
         }
         return totalSize;
