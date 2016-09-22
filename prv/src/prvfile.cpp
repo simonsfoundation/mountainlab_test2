@@ -18,6 +18,9 @@
 #include <QDir>
 #include <QJsonArray>
 #include <QProcess>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 
 class PrvFilePrivate {
 public:
@@ -559,45 +562,53 @@ QString http_get_text_curl_0(const QString& url)
     return P.readAllStandardOutput();
 }
 
-QString http_post_file_curl_0(const QString& url,const QString &filename) {
-    if (!curl_is_installed()) {
-        qWarning() << "Problem in http post. It appears that curl is not installed.";
-        return "";
-    }
+namespace NetUtils {
 
-    QString tmp_out_fname="tmp.curl."+make_random_id(5)+".txt";
-    QString cmd = QString("curl --progress-bar -X POST \"$$URL$$\" -H \"Content-Type: application/octet-stream\" --data-binary @%1 -o %2").arg(filename).arg(tmp_out_fname);
-    //we need to do it this way be url will likely have %1, etc in it
-    cmd=cmd.replace("$$URL$$",url);
-    QProcess::execute(cmd);
-    QString ret=read_text_file(tmp_out_fname);
-    QFile::remove(tmp_out_fname);
+QString httpPostFile(const QString &url, const QString &fileName) {
+    QNetworkAccessManager manager;
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly))
+        return QString::null;
+    QNetworkRequest request = QNetworkRequest(QUrl(url));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
+    QNetworkReply *reply = manager.post(request, &file);
+    QEventLoop loop;
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    // TODO: handle timeout
+    QObject::connect(reply, &QNetworkReply::uploadProgress, [reply](qint64 bytesSent, qint64 bytesTotal) {
+        if (bytesTotal == 0) return;
 
-    //the following is a hack to get the body of the response data
-    int ind=ret.indexOf("{");
-    if (ind>=0) ret=ret.mid(ind);
+        unsigned int prc = qRound(50*((double)bytesSent/(double)bytesTotal));
+        printf("\rUpload: ");
+        for(unsigned int i = 0; i < prc; ++i) {
+            printf("#");
+        }
+        for(unsigned int i = prc; i < 50; ++i) {
+            printf(".");
+        }
+//        printf(" %lld/%lld", bytesSent, bytesTotal);
+        fflush(stdout);
+    });
+#if 0
+    QObject::connect(reply, &QNetworkReply::downloadProgress, [reply](qint64 bytesReceived, qint64 bytesTotal) {
+       if (bytesTotal == 0) return;
+       unsigned int prc = qBound(0, qRound(50*((double)bytesReceived/(double)bytesTotal)), 50);
+       printf("\rDownload: ");
+       for(unsigned int i = 0; i < prc; ++i) {
+           printf("#");
+       }
+       for(unsigned int i = prc; i < 50; ++i) {
+           printf(".");
+       }
+//        printf(" %lld/%lld", bytesReceived, bytesTotal);
+       fflush(stdout);
+    });
+#endif
+    loop.exec();
+    printf("\n");
+    QTextStream stream(reply);
+    return stream.readAll();
+}
 
-    return ret;
-
-    /*
-
-    QProcess P;
-    P.start(cmd);
-    P.waitForStarted();
-    P.waitForFinished(-1);
-    int exit_code = P.exitCode();
-    if (exit_code != 0) {
-        //QFile::remove(tmp_fname);
-        return "";
-    }
-    P.readAllStandardError();
-    QByteArray ret=P.readAllStandardOutput();
-    int ind1=ret.indexOf("\r\n\r\n");
-    if (ind1>=0) {
-        int ind2=ret.indexOf("\r\n\r\n",ind1+4);
-        if (ind2>=0) ret=ret.mid(ind2+4);
-    }
-    return ret;
-    */
 }
 

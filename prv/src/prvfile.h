@@ -12,6 +12,7 @@
 #include <QJsonObject>
 #include <QString>
 #include <QStringList>
+#include <QObject>
 
 struct PrvFileCreateOptions {
     bool create_temporary_files=false;
@@ -54,7 +55,10 @@ QString read_text_file(const QString& fname, QTextCodec* codec=0);
 bool write_text_file(const QString& fname, const QString& txt, QTextCodec* codec=0);
 QString make_random_id(int numchars);
 QString http_get_text_curl_0(const QString& url);
-QString http_post_file_curl_0(const QString& url,const QString &filename);
 bool is_url(QString txt);
+
+namespace NetUtils {
+    QString httpPostFile(const QString &url, const QString &fileName);
+}
 
 #endif // PRVFILE_H

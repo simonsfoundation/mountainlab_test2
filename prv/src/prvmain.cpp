@@ -431,7 +431,7 @@ int main_upload(QString src_path,QString server_url,const QVariantMap &params) {
     QString info_json=QJsonDocument(info).toJson();
     url+="&info="+QUrl::toPercentEncoding(info_json.toUtf8());
 
-    QString ret=http_post_file_curl_0(url,src_path);
+    QString ret=NetUtils::httpPostFile(url,src_path);
     if (ret.isEmpty()) {
         qWarning() << "Problem posting file to: "+url;
         return -1;
