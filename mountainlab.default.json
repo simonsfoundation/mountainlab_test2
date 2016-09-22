@@ -1,6 +1,7 @@
 {
 	"general":{
-		"temporary_path":"/tmp"
+		"temporary_path":"/tmp",
+		"max_cache_size_gb":40
 	},
 	"mountainprocess":{
 		"max_num_simultaneous_processes":2,

@@ -59,7 +59,6 @@ If anything crashes along the way, every involved QProcess is killed.
 #include "processmanager.h"
 
 #include "cachemanager.h"
-#include "tempfilecleaner.h"
 #include "mlcommon.h"
 #include "scriptcontroller2.h"
 #include <unistd.h>
@@ -485,6 +484,9 @@ int main(int argc, char* argv[])
             printf("%s", str.toLatin1().data());
         }
     }
+    else if (arg1 == "cleanup-cache") {
+        CacheManager::globalInstance()->cleanUp();
+    }
     /*
     else if (arg1 == "create-prv") {
 
@@ -654,6 +656,7 @@ void print_usage()
     printf("mountainprocess queue-process [processor_name] --_process_output=[optional_output_fname] --[param1]=[val1] --[param2]=[val2] ... [--_force_run]\n");
     printf("mountainprocess list-processors\n");
     printf("mountainprocess spec [processor_name]\n");
+    printf("mountainprocess cleanup-cache\n");
 }
 
 void remove_system_parameters(QVariantMap& params)

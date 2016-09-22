@@ -26,6 +26,8 @@ public:
     QString makeLocalFile(const QString& file_name = "", Duration duration = ShortTerm);
     QString localTempPath();
 
+    void cleanUp();
+
     static CacheManager* globalInstance();
 
     //private slots:

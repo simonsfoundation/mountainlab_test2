@@ -101,6 +101,81 @@ QString CacheManager::localTempPath()
     return d->m_local_base_path;
 }
 
+struct CMFileRec {
+    QString path;
+    long elapsed_sec;
+    double size_gb;
+};
+
+QList<CMFileRec> get_file_records(const QString& path)
+{
+    QStringList fnames = QDir(path).entryList(QStringList("*"), QDir::Files, QDir::Name);
+    QList<CMFileRec> records;
+    foreach (QString fname, fnames) {
+        CMFileRec rec;
+        rec.path = path + "/" + fname;
+        rec.elapsed_sec = QFileInfo(rec.path).lastModified().secsTo(QDateTime::currentDateTime());
+        rec.size_gb = QFileInfo(rec.path).size() * 1.0 / 1e9;
+        records << rec;
+    }
+
+    QStringList dirnames = QDir(path).entryList(QStringList("*"), QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    foreach (QString dirname, dirnames) {
+        QList<CMFileRec> RR = get_file_records(path + "/" + dirname);
+        records.append(RR);
+    }
+    return records;
+}
+
+struct CMFileRec_comparer {
+    bool operator()(const CMFileRec& a, const CMFileRec& b) const
+    {
+        if (a.elapsed_sec > b.elapsed_sec)
+            return true;
+        else
+            return false;
+    }
+};
+
+void sort_by_elapsed(QList<CMFileRec>& records)
+{
+    qSort(records.begin(), records.end(), CMFileRec_comparer());
+}
+
+void CacheManager::cleanUp()
+{
+    double max_gb = MLUtil::configValue("general", "max_cache_size_gb").toDouble();
+    if (!max_gb) {
+        qWarning() << "max_gb is zero. You probably need to adjust the mountainlab configuration files.";
+        return;
+    }
+    QList<CMFileRec> records = get_file_records(d->m_local_base_path);
+    double total_size_gb = 0;
+    for (int i = 0; i < records.count(); i++) {
+        total_size_gb += records[i].size_gb;
+    }
+    long num_files_removed = 0;
+    double amount_removed = 0;
+    if (total_size_gb > max_gb) {
+        double amount_to_remove = total_size_gb - 0.75 * max_gb; //let's get it down to 75% of the max allowed
+        sort_by_elapsed(records);
+        for (int i = 0; i < records.count(); i++) {
+            if (amount_removed >= amount_to_remove) {
+                break;
+            }
+            if (!QFile::remove(records[i].path)) {
+                qWarning() << "Unable to remove file while cleaning up cache: " + records[i].path;
+                return;
+            }
+            amount_removed += records[i].size_gb;
+            num_files_removed++;
+        }
+    }
+    if (num_files_removed) {
+        qWarning() << QString(":::::::::::::::::::::::::::::::: CacheManager removed %1 GB and %2 files").arg(amount_removed).arg(num_files_removed);
+    }
+}
+
 Q_GLOBAL_STATIC(CacheManager, theInstance)
 CacheManager* CacheManager::globalInstance()
 {

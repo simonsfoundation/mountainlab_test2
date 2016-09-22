@@ -33,8 +33,8 @@ SOURCES += diskreadmda.cpp diskwritemda.cpp mda.cpp mdaio.cpp remotereadmda.cpp 
 INCLUDEPATH += ../include/cachemanager
 VPATH += ../include/cachemanager
 VPATH += cachemanager
-HEADERS += cachemanager.h tempfilecleaner.h
-SOURCES += cachemanager.cpp tempfilecleaner.cpp
+HEADERS += cachemanager.h
+SOURCES += cachemanager.cpp
 
 INCLUDEPATH += ../include/taskprogress
 VPATH += ../include/taskprogress
