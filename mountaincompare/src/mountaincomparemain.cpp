@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     CLParams CLP(argc, argv);
 
     if (!resolve_prv_files(CLP.named_parameters)) {
-        qWarning() << "Could not resolve .prv file. Try adjusting the bigfile_paths in mountainlab.ini.";
+        qWarning() << "Could not resolve .prv file. Try adjusting the settings in mountainlab.user.json.";
         return -1;
     }
 

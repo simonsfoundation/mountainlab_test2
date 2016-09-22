@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
     //log_begin(argc,argv);
 
     if (!resolve_prv_files(CLP.named_parameters)) {
-        qWarning() << "Could not resolve .prv file. Try adjusting the bigfile_paths in mountainlab.ini.";
+        qWarning() << "Could not resolve .prv file. Try adjusting the settings in mountainlab.user.json.";
         //log_end();
         return -1;
     }
@@ -644,16 +644,12 @@ void print_usage()
     printf("mountainprocess run-process [processor_name] --[param1]=[val1] --[param2]=[val2] ... [--_force_run]\n");
     printf("mountainprocess run-script [script1].js [script2.js] ... [file1].par [file2].par ... [--_force_run] \n");
     printf("mountainprocess daemon-start\n");
-    //printf("mountainprocess daemon-stop\n");
+    printf("mountainprocess daemon-stop\n");
     printf("mountainprocess daemon-restart\n");
     printf("mountainprocess daemon-state\n");
     printf("mountainprocess daemon-state-summary\n");
     printf("mountainprocess queue-script --_script_output=[optional_output_fname] [script1].js [script2.js] ... [file1].par [file2].par ...  [--_force_run]\n");
     printf("mountainprocess queue-process [processor_name] --_process_output=[optional_output_fname] --[param1]=[val1] --[param2]=[val2] ... [--_force_run]\n");
-    printf("mountainprocess create-prv [filename]\n");
-    printf("mountainprocess create-prv [filename] [output_filename].prv\n");
-    printf("mountainprocess set-big-file-search-path\n");
-    printf("mountainprocess set-big-file-search-path [path]\n");
     printf("mountainprocess list-processors\n");
     printf("mountainprocess spec [processor_name]\n");
 }
