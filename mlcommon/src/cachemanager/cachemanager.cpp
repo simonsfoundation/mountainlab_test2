@@ -119,7 +119,7 @@ QList<CMFileRec> get_file_records(const QString& path)
         records << rec;
     }
 
-    QStringList dirnames = QDir(path).entryList(QStringList("*"), QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    QStringList dirnames = QDir(path).entryList(QStringList("*"), QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks, QDir::Name);
     foreach (QString dirname, dirnames) {
         QList<CMFileRec> RR = get_file_records(path + "/" + dirname);
         records.append(RR);
@@ -147,6 +147,10 @@ void CacheManager::cleanUp()
     double max_gb = MLUtil::configValue("general", "max_cache_size_gb").toDouble();
     if (!max_gb) {
         qWarning() << "max_gb is zero. You probably need to adjust the mountainlab configuration files.";
+        return;
+    }
+    if (!d->m_local_base_path.endsWith("/mountainlab")) {
+        qWarning() << "For safety, the temporary path must end with /mountainlab";
         return;
     }
     QList<CMFileRec> records = get_file_records(d->m_local_base_path);
