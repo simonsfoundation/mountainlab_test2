@@ -48,9 +48,9 @@ This should launch the central viewer.
 
 Linux/Ubuntu or Debian is easiest. Mac and other Linux flavors should also work. Windows is not necessarily excluded.
 
-The required packages are: Qt5 (v5.5 or later), libfftw3-dev, octave, nodejs, npm
+The required packages are: Qt5 (v5.5 or later), FFTW, Octave, NodeJS
 
-The most up-to-date procedure for installing these packages is outlined in the mountainlab/Dockerfile. But here are the current set of operations for Ubuntu 16.04 (let me know if they are out of date):
+The most up-to-date procedure for installing these packages is reflected in the mountainlab/Dockerfile. But here are the current set of operations for Ubuntu 16.04 (let me know if they are out of date):
 
 #### Qt5
 > apt-get install -y software-properties-common
@@ -71,13 +71,12 @@ The most up-to-date procedure for installing these packages is outlined in the m
 
 #### NodeJS
 > apt-get install -y nodejs npm
+
 > npm install ini extend
 
 ## Older information
 
 [About the software](https://mountainlab.vbulletin.net/articles/22-about-mountainlab)
-
-[Installation instructions](https://mountainlab.vbulletin.net/articles/19-installing-mountainlab)
 
 [Forum](https://mountainlab.vbulletin.net/) -- including documentation and latest developments
 
