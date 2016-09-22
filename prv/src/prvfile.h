@@ -13,6 +13,7 @@
 #include <QString>
 #include <QStringList>
 #include <QObject>
+#include <functional>
 
 struct PrvFileCreateOptions {
     bool create_temporary_files = false;

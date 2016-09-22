@@ -17,6 +17,7 @@
 #include <QUrlQuery>
 #include "cachemanager.h"
 #include "prvfile.h"
+#include "mlcommon.h"
 
 void usage()
 {
@@ -32,7 +33,6 @@ void usage()
     printf("prv upload [file or folder name] [server name or url] --[custom_key]=[custom value] ...\n");
 }
 
-QJsonObject get_config();
 QString get_tmp_path();
 QString get_server_url(QString url_or_server_name);
 QStringList get_local_search_paths();
@@ -165,7 +165,7 @@ private:
     int sha1sum(QString path, const QVariantMap& params) const
     {
         Q_UNUSED(params)
-        QString checksum = sumit(path);
+        QString checksum = MLUtil::computeSha1SumOfFile(path);
         if (checksum.isEmpty())
             return -1;
         println(checksum);
@@ -201,12 +201,12 @@ private:
     int stat(QString path, const QVariantMap& params) const
     {
         Q_UNUSED(params)
-        QString checksum = sumit(path);
+        QString checksum = MLUtil::computeSha1SumOfFile(path);
         if (checksum.isEmpty())
             return -1;
         QJsonObject obj;
         obj["checksum"] = checksum;
-        obj["checksum1000"] = sumit(path, 1000);
+        obj["checksum1000"] = MLUtil::computeSha1SumOfFileHead(path, 1000);
         obj["size"] = QFileInfo(path).size();
         println(QJsonDocument(obj).toJson());
         return 0;
@@ -350,7 +350,7 @@ private:
             println("File is empty... skipping: " + path);
             return 0;
         }
-        QString checksum00 = sumit(path);
+        QString checksum00 = MLUtil::computeSha1SumOfFile(path);
         if (checksum00.isEmpty()) {
             println("checksum is empty for file: " + path);
             return -1;
@@ -575,12 +575,12 @@ public:
                 return -1;
             }
             if (src_path.endsWith(".prv")) {
-                obj = QJsonDocument::fromJson(read_text_file(src_path).toUtf8()).object();
+                obj = QJsonDocument::fromJson(TextFile::read(src_path).toUtf8()).object();
             }
             else {
                 if (m_cmd == "locate") {
-                    obj["original_checksum"] = sumit(src_path);
-                    obj["original_checksum_1000"] = sumit(src_path, 1000);
+                    obj["original_checksum"] = MLUtil::computeSha1SumOfFile(src_path);
+                    obj["original_checksum_1000"] = MLUtil::computeSha1SumOfFileHead(src_path, 1000);
                     obj["original_size"] = QFileInfo(src_path).size();
                 }
                 else {
@@ -666,7 +666,6 @@ int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
 
-    QJsonObject config = get_config();
     CacheManager::globalInstance()->setLocalBasePath(get_tmp_path());
 
     MLUtils::ApplicationCommandParser cmdParser;
@@ -696,50 +695,17 @@ void println(QString str)
 
 QStringList get_local_search_paths()
 {
-    QJsonObject config = get_config();
-    QJsonArray local_search_paths0 = config.value("local_search_paths").toArray();
-    QStringList local_search_paths;
-    for (int i = 0; i < local_search_paths0.count(); i++)
-        local_search_paths << local_search_paths0[0].toString();
-    QString temporary_path = config.value("temporary_path").toString();
+    QStringList local_search_paths = MLUtil::configResolvedPathList("prv", "local_search_paths");
+    QString temporary_path = MLUtil::tempPath();
     if (!temporary_path.isEmpty()) {
         local_search_paths << temporary_path;
     }
     return local_search_paths;
 }
 
-QJsonObject get_config()
-{
-    QString fname1 = qApp->applicationDirPath() + "/../prv.json.default";
-    QString fname2 = qApp->applicationDirPath() + "/../prv.json";
-    QJsonParseError err1;
-    QJsonObject obj1 = QJsonDocument::fromJson(read_text_file(fname1).toUtf8(), &err1).object();
-    if (err1.error != QJsonParseError::NoError) {
-        qWarning() << "Error parsing configuration file: " + fname1 + ": " + err1.errorString();
-        abort();
-    }
-    QJsonObject obj2;
-    if (QFile::exists(fname2)) {
-        QJsonParseError err2;
-        obj2 = QJsonDocument::fromJson(read_text_file(fname2).toUtf8(), &err2).object();
-        if (err2.error != QJsonParseError::NoError) {
-            qWarning() << "Error parsing configuration file: " + fname2 + ": " + err2.errorString();
-            abort();
-        }
-    }
-    obj1 = obj1["prv"].toObject();
-    obj2 = obj2["prv"].toObject();
-    QStringList keys2 = obj2.keys();
-    foreach (QString key, keys2) {
-        obj1[key] = obj2[key];
-    }
-    return obj1;
-}
-
 QString get_tmp_path()
 {
-    QJsonObject config = get_config();
-    QString temporary_path = config["temporary_path"].toString();
+    QString temporary_path = MLUtil::tempPath();
     if (temporary_path.isEmpty())
         return "";
     QDir(temporary_path).mkdir("prv");
@@ -748,7 +714,7 @@ QString get_tmp_path()
 
 QString make_temporary_file()
 {
-    QString file_name = make_random_id(10) + ".tmp";
+    QString file_name = MLUtil::makeRandomId(10) + ".tmp";
     return get_tmp_path() + "/" + file_name;
 }
 
@@ -763,8 +729,7 @@ bool is_folder(QString path)
 
 QString get_server_url(QString url_or_server_name)
 {
-    QJsonObject config = get_config();
-    QJsonArray remote_servers = config.value("servers").toArray();
+    QJsonArray remote_servers = MLUtil::configValue("prv", "servers").toArray();
     for (int i = 0; i < remote_servers.count(); i++) {
         QJsonObject server0 = remote_servers[i].toObject();
         if (server0["name"].toString() == url_or_server_name) {
@@ -780,7 +745,6 @@ QString get_server_url(QString url_or_server_name)
 
 QJsonArray get_remote_servers()
 {
-    QJsonObject config = get_config();
-    QJsonArray remote_servers = config.value("servers").toArray();
+    QJsonArray remote_servers = MLUtil::configValue("prv", "servers").toArray();
     return remote_servers;
 }

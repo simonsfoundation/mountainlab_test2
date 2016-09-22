@@ -50,8 +50,8 @@ make_system_call(cmd,args,function() {
 });
 
 function make_prv_file(fname,fname_out,callback) {
-	var cmd='mountainprocess';
-	var args='create-prv '+fname+' '+fname_out;
+	var cmd='prv';
+	var args='create '+fname+' '+fname_out;
 	args=args.split(' ');
 	make_system_call(cmd,args,callback);
 }
