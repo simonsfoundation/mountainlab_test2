@@ -16,6 +16,8 @@ RUN apt-get install -y qt5-default qtbase5-dev qtscript5-dev make g++
 
 RUN apt-get install -y libfftw3-dev
 
+RUN apt-get install -y octave
+
 RUN apt-get install -y git
 
 # Install nodejs and npm

@@ -12,7 +12,11 @@ useradd_cmd="useradd -d /home/mluser -u $UID mluser; chown -R mluser:mluser /hom
 
 args="$args -v /tmp/.X11-unix:/tmp/.X11-unix"
 
-args="$args -it test_mountainlab /bin/bash -c '$useradd_cmd; su - mluser -c '/bin/bash''"
+cmds_to_run="cd /home/mluser/dev/mountainlab;"
+cmds_to_run="$cmds_to_run echo asjdkajsdlajksd;"
+cmds_to_run="$cmds_to_run export PATH=~/dev/mountainlab/bin:\$PATH"
+
+args="$args -it test_mountainlab /bin/bash -c '$useradd_cmd && echo \"$cmds_to_run\" > /home/mluser/.bashrc && su - mluser -c '/bin/bash''"
 
 echo sudo docker run $args
 /bin/bash -c "sudo docker run $args"
