@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env nodejs
 
 function print_usage() {
 	console.log ('kron_run [pipeline_names] [dataset_names] --outpath=[output(default)]');

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env nodejs
 
 /*
 Use this to set up a day's worth of analysis at L. Frank's lab.
