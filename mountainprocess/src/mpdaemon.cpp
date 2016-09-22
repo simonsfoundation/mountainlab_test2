@@ -1065,22 +1065,15 @@ bool MPDaemon::waitForFinishedAndWriteOutput(QProcess* P)
 {
     debug_log(__FUNCTION__, __FILE__, __LINE__);
 
-    P->waitForStarted();
-    while (P->state() == QProcess::Running) {
-        P->waitForReadyRead(100);
+    auto func = [P](){
         QByteArray str = P->readAll();
-        if (str.count() > 0) {
-            printf("%s", str.data());
-        }
-        qApp->processEvents();
-    }
-    {
-        P->waitForReadyRead();
-        QByteArray str = P->readAll();
-        if (str.count() > 0) {
-            printf("%s", str.data());
-        }
-    }
+        if (!str.isEmpty())
+            printf("%s", str.constData());
+    };
+    QMetaObject::Connection c = connect(P, &QProcess::readyRead, func);
+    P->waitForFinished();
+    func();
+    disconnect(c);
     return (P->state() != QProcess::Running);
 }
 
