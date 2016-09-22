@@ -22,6 +22,10 @@ RUN apt-get install -y git
 RUN apt-get install -y nodejs npm
 RUN npm install ini extend
 
-ADD . /home/dabuser/dev/mountainlab
-WORKDIR /home/dabuser/dev/mountainlab
+ADD . /home/mluser/dev/mountainlab
+WORKDIR /home/mluser/dev/mountainlab
 RUN ./compile_components.sh default
+
+ENV PATH /home/mluser/dev/mountainlab/bin:$PATH
+
+
