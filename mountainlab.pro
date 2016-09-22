@@ -4,10 +4,10 @@ TEMPLATE = subdirs
 # qmake
 # qmake "COMPONENTS = mountainview mountainbrowser"
 
-#COMPONENTS = mdaconvert mountainoverlook mountainprocess mountainview mountainbrowser prv
+#COMPONENTS = mdaconvert  mountainprocess mountainview mountainbrowser prv
 
 isEmpty(COMPONENTS) {
-    COMPONENTS = mdaconvert mountainoverlook mountainprocess mountainsort mountainview mountaincompare prv
+    COMPONENTS = mdaconvert mountainprocess mountainsort mountainview mountaincompare prv
     #we intentionally exclude mountainbrowser -- use: qmake "COMPONENTS = mountainbrowser"
 }
 
@@ -25,7 +25,6 @@ defineReplace(ifcomponent) {
 
 SUBDIRS += $$ifcomponent(mdaconvert,mdaconvert/src/mdaconvert.pro)
 SUBDIRS += $$ifcomponent(mountainbrowser,mountainbrowser/src/mountainbrowser.pro)
-SUBDIRS += $$ifcomponent(mountainoverlook,mountainoverlook/src/mountainoverlook.pro)
 SUBDIRS += $$ifcomponent(mountainprocess,mountainprocess/src/mountainprocess.pro)
 SUBDIRS += $$ifcomponent(mountainsort,mountainsort/src/mountainsort.pro)
 SUBDIRS += $$ifcomponent(mountainview,mountainview/src/mountainview.pro)
