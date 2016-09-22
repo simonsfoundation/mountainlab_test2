@@ -13,6 +13,7 @@
 #include <QString>
 #include <QStringList>
 #include <QObject>
+#include <functional>
 
 struct PrvFileCreateOptions {
     bool create_temporary_files=false;
@@ -58,7 +59,8 @@ QString http_get_text_curl_0(const QString& url);
 bool is_url(QString txt);
 
 namespace NetUtils {
-    QString httpPostFile(const QString &url, const QString &fileName);
+    typedef std::function<void(qint64, qint64)> ProgressFunction;
+    QString httpPostFile(const QUrl &url, const QString &fileName, const ProgressFunction &f = ProgressFunction());
 }
 
 #endif // PRVFILE_H
