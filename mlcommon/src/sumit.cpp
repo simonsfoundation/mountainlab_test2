@@ -16,7 +16,7 @@
 #include <QDataStream>
 #include <sys/stat.h>
 
-QString compute_the_file_hash(const QString& path,long num_bytes)
+QString compute_the_file_hash(const QString& path, long num_bytes)
 {
     QCryptographicHash hash(QCryptographicHash::Sha1);
     QFile FF(path);
@@ -25,16 +25,16 @@ QString compute_the_file_hash(const QString& path,long num_bytes)
     QTime timer;
     timer.start();
     //printf("Computing checksum for file %s\n", path.toLatin1().data());
-    long num_bytes_processed=0;
-    while ((!FF.atEnd())&&((num_bytes==0)||(num_bytes_processed==num_bytes))) {
-        QByteArray tmp=FF.read(10000);
-        if (num_bytes!=0) {
-            if (num_bytes_processed+tmp.count()>num_bytes) {
-                tmp=tmp.mid(0,num_bytes-num_bytes_processed);
+    long num_bytes_processed = 0;
+    while ((!FF.atEnd()) && ((num_bytes == 0) || (num_bytes_processed == num_bytes))) {
+        QByteArray tmp = FF.read(10000);
+        if (num_bytes != 0) {
+            if (num_bytes_processed + tmp.count() > num_bytes) {
+                tmp = tmp.mid(0, num_bytes - num_bytes_processed);
             }
         }
         hash.addData(tmp);
-        num_bytes_processed+=tmp.count();
+        num_bytes_processed += tmp.count();
     }
 
     QString ret = QString(hash.result().toHex());
@@ -81,14 +81,14 @@ void write_text_file(const QString& path, const QString& txt)
 
 void create_hash_file(const QString& path, const QString& hash_path)
 {
-    QString the_hash = compute_the_file_hash(path,0);
+    QString the_hash = compute_the_file_hash(path, 0);
     write_text_file(hash_path, the_hash);
 }
 
 QString sumit(const QString& path, long num_bytes)
 {
-    if (num_bytes!=0) {
-        return compute_the_file_hash(path,num_bytes);
+    if (num_bytes != 0) {
+        return compute_the_file_hash(path, num_bytes);
     }
     //the file id is a hashed function of device,inode,size, and modification time (in seconds)
     //note that it is not dependent on the file name

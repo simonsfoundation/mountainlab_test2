@@ -200,9 +200,9 @@ QString MLUtil::computeSha1SumOfFile(const QString& path)
     return ret;
     */
 }
-QString MLUtil::computeSha1SumOfFileHead(const QString& path,long num_bytes)
+QString MLUtil::computeSha1SumOfFileHead(const QString& path, long num_bytes)
 {
-    return sumit(path,num_bytes);
+    return sumit(path, num_bytes);
 }
 
 static QString s_temp_path = "";
@@ -558,8 +558,8 @@ QString find_file_with_checksum(QString dirpath, QString checksum, QString check
     foreach (QString fname, list) {
         QString path0 = dirpath + "/" + fname;
         if (QFileInfo(path0).size() == size_bytes) {
-            QString checksum0_1000 = MLUtil::computeSha1SumOfFileHead(path0,1000);
-            if (checksum0_1000==checksum1000) {
+            QString checksum0_1000 = MLUtil::computeSha1SumOfFileHead(path0, 1000);
+            if (checksum0_1000 == checksum1000) {
                 QString checksum1 = MLUtil::computeSha1SumOfFile(path0);
                 if (checksum1 == checksum) {
                     return path0;
@@ -578,7 +578,7 @@ QString find_file_with_checksum(QString dirpath, QString checksum, QString check
     return "";
 }
 
-QString find_file_with_checksum(const QString& checksum, const QString &checksum1000, long size_bytes)
+QString find_file_with_checksum(const QString& checksum, const QString& checksum1000, long size_bytes)
 {
     QStringList bigfile_paths = MLUtil::configResolvedPathList("mountainprocess", "bigfile_paths");
 
@@ -654,7 +654,8 @@ void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QS
     QProcess::execute(exe, args);
 }
 
-QString system_call_return_output(QString cmd) {
+QString system_call_return_output(QString cmd)
+{
     QProcess process;
     process.start(cmd);
     process.waitForStarted();
@@ -662,19 +663,22 @@ QString system_call_return_output(QString cmd) {
     return process.readAllStandardOutput().trimmed();
 }
 
-QString locate_file_with_checksum(QString checksum,QString checksum1000,long size) {
+QString locate_file_with_checksum(QString checksum, QString checksum1000, long size)
+{
     qDebug() << "locate_file_with_checksum" << checksum << checksum1000 << size;
-    QString cmd=QString("prv locate --checksum=%1 --checksum1000=%2 --size=%3").arg(checksum).arg(checksum1000).arg(size);
+    QString cmd = QString("prv locate --checksum=%1 --checksum1000=%2 --size=%3").arg(checksum).arg(checksum1000).arg(size);
     qDebug() << cmd;
     return system_call_return_output(cmd);
 }
 
-QString download_file_to_temp_dir(QString url) {
-    QString tmp_fname=CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(url)+"."+make_random_id_22(5)+".download");
+QString download_file_to_temp_dir(QString url)
+{
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(url) + "." + make_random_id_22(5) + ".download");
     QFile::remove(tmp_fname);
-    QString cmd=QString("curl %1 -o %2").arg(url).arg(tmp_fname);
+    QString cmd = QString("curl %1 -o %2").arg(url).arg(tmp_fname);
     system_call_return_output(cmd);
-    if (!QFile::exists(tmp_fname)) return "";
+    if (!QFile::exists(tmp_fname))
+        return "";
     return tmp_fname;
 }
 
@@ -684,14 +688,14 @@ QString create_file_from_prv(QString output_name, QString checksum0, QString che
     //QString path1 = find_file_with_checksum(checksum0, checksum1000, size0);
     QString path1 = locate_file_with_checksum(checksum0, checksum1000, size0);
     if (!path1.isEmpty()) {
-        if ((path1.startsWith("http://"))||(path1.startsWith("https://"))) {
-            printf("---------- Downloading %s\n",path1.toUtf8().data());
-            QString path2=download_file_to_temp_dir(path1);
-            if ((!path2.isEmpty())&&(sumit(path2)==checksum0)) {
-                path1=path2;
+        if ((path1.startsWith("http://")) || (path1.startsWith("https://"))) {
+            printf("---------- Downloading %s\n", path1.toUtf8().data());
+            QString path2 = download_file_to_temp_dir(path1);
+            if ((!path2.isEmpty()) && (sumit(path2) == checksum0)) {
+                path1 = path2;
             }
             else {
-                path1="";
+                path1 = "";
             }
         }
         if (!path1.isEmpty()) {

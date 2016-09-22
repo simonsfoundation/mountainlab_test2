@@ -42,7 +42,7 @@ bool mv_discrimhist_guide2(QString timeseries_path, QString firings_path, QStrin
     }
 
     if (opts.cluster_numbers.isEmpty()) {
-        for (int k=1; k<=K; k++) {
+        for (int k = 1; k <= K; k++) {
             opts.cluster_numbers << k;
         }
     }
@@ -51,12 +51,12 @@ bool mv_discrimhist_guide2(QString timeseries_path, QString firings_path, QStrin
 
     QList<int> k1s, k2s;
     cluster_scores_opts opts00;
-    opts00.add_noise_level=opts.add_noise_level;
-    opts00.clip_size=opts.clip_size;
-    opts00.cluster_numbers=opts.cluster_numbers;
-    opts00.cluster_scores_only=0;
-    opts00.detect_threshold=0;
-    opts00.max_comparisons_per_cluster=opts.max_comparisons_per_cluster;
+    opts00.add_noise_level = opts.add_noise_level;
+    opts00.clip_size = opts.clip_size;
+    opts00.cluster_numbers = opts.cluster_numbers;
+    opts00.cluster_scores_only = 0;
+    opts00.detect_threshold = 0;
+    opts00.max_comparisons_per_cluster = opts.max_comparisons_per_cluster;
     ClusterScores::find_pairs_to_compare(k1s, k2s, X, F, opts00);
     for (int ii = 0; ii < k1s.count(); ii++) {
         int k1 = k1s[ii];
@@ -81,8 +81,8 @@ bool mv_discrimhist_guide2(QString timeseries_path, QString firings_path, QStrin
         }
         Mda32 clips_k2 = extract_clips(X, times_k2, opts.clip_size);
 
-        QVector<double> scores_k1_k2 = ClusterScores::compute_cluster_pair_scores(X, clips_k1, clips_k2, opts00, &DD.data1,&DD.data2);
-        DD.overlap_score=scores_k1_k2.value(0);
+        QVector<double> scores_k1_k2 = ClusterScores::compute_cluster_pair_scores(X, clips_k1, clips_k2, opts00, &DD.data1, &DD.data2);
+        DD.overlap_score = scores_k1_k2.value(0);
         datas << DD;
     }
 
@@ -120,4 +120,3 @@ bool mv_discrimhist_guide2(QString timeseries_path, QString firings_path, QStrin
 
     return true;
 }
-

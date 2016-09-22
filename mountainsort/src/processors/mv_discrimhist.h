@@ -12,7 +12,7 @@ struct mv_discrimhist_opts {
     /// TODO clip_size is hard-coded here
     int clip_size = 80;
     QString method = "centroid"; //centroid or svm
-    int num_features=0;
+    int num_features = 0;
 };
 
 bool mv_discrimhist(QString timeseries_path, QString firings_path, QString output_path, mv_discrimhist_opts opts);

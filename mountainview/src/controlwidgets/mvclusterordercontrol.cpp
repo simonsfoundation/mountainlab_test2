@@ -46,7 +46,7 @@ MVClusterOrderControl::MVClusterOrderControl(MVContext* context, MVMainWindow* m
     d = new MVClusterOrderControlPrivate;
     d->q = this;
 
-    QObject::connect(&d->m_computation_thread,SIGNAL(computationFinished()),this,SLOT(slot_computation_finished()));
+    QObject::connect(&d->m_computation_thread, SIGNAL(computationFinished()), this, SLOT(slot_computation_finished()));
 
     FlowLayout* flayout = new FlowLayout;
     this->setLayout(flayout);
@@ -84,13 +84,13 @@ void MVClusterOrderControl::slot_order_by_detectability()
     }
 
     QVariantMap params;
-    params["timeseries"]=mvContext()->currentTimeseries().makePath();
-    params["firings"]=mvContext()->firings().makePath();
-    params["clip_size"]=80;
-    params["detect_threshold"]=mvContext()->option("amp_thresh_display", 0).toDouble();
-    params["add_noise_level"]=1;
-    params["cluster_scores_only"]=1;
-    d->m_computation_thread.params=params;
+    params["timeseries"] = mvContext()->currentTimeseries().makePath();
+    params["firings"] = mvContext()->firings().makePath();
+    params["clip_size"] = 80;
+    params["detect_threshold"] = mvContext()->option("amp_thresh_display", 0).toDouble();
+    params["add_noise_level"] = 1;
+    params["cluster_scores_only"] = 1;
+    d->m_computation_thread.params = params;
     d->m_computation_thread.startComputation();
 }
 
@@ -99,14 +99,13 @@ void MVClusterOrderControl::slot_computation_finished()
     d->m_computation_thread.stopComputation(); //paranoid
     DiskReadMda cluster_scores(d->m_computation_thread.cluster_scores_path);
     QList<double> scores0;
-    for (int i=0; i<cluster_scores.N2(); i++) {
-        scores0 << cluster_scores.value(1,i); //are we sure it will be in the right order?
+    for (int i = 0; i < cluster_scores.N2(); i++) {
+        scores0 << cluster_scores.value(1, i); //are we sure it will be in the right order?
     }
-    mvContext()->setClusterOrderScores("detectability",scores0);
+    mvContext()->setClusterOrderScores("detectability", scores0);
     qDebug() << mvContext()->clusterOrderScores();
     qDebug() << mvContext()->clusterOrder();
 }
-
 
 void MVClusterOrderComputationThread::compute()
 {
@@ -114,7 +113,7 @@ void MVClusterOrderComputationThread::compute()
     MountainProcessRunner MPR;
     MPR.setProcessorName("cluster_scores");
     MPR.setInputParameters(params);
-    cluster_scores_path=MPR.makeOutputFilePath("cluster_scores");
-    cluster_pair_scores_path=MPR.makeOutputFilePath("cluster_pair_scores");
+    cluster_scores_path = MPR.makeOutputFilePath("cluster_scores");
+    cluster_pair_scores_path = MPR.makeOutputFilePath("cluster_pair_scores");
     MPR.runProcess();
 }

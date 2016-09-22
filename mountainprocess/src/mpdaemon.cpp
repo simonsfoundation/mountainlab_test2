@@ -33,18 +33,20 @@ void sighandler(int num)
         stopDaemon = true;
 }
 
-
 class MPDaemonPrivate;
 class MountainProcessServerClient : public LocalServer::Client {
 public:
-    MountainProcessServerClient(QLocalSocket *sock, LocalServer::Server* parent, MPDaemonPrivate* priv)
-        : LocalServer::Client(sock, parent), m_priv(priv) {
+    MountainProcessServerClient(QLocalSocket* sock, LocalServer::Server* parent, MPDaemonPrivate* priv)
+        : LocalServer::Client(sock, parent)
+        , m_priv(priv)
+    {
     }
-    ~MountainProcessServerClient() {
+    ~MountainProcessServerClient()
+    {
     }
 
 protected:
-    bool handleMessage(const QByteArray &ba) Q_DECL_OVERRIDE;
+    bool handleMessage(const QByteArray& ba) Q_DECL_OVERRIDE;
     bool getState();
 
 private:
@@ -53,15 +55,21 @@ private:
 
 class MountainProcessServer : public LocalServer::Server {
 public:
-   MountainProcessServer(MPDaemonPrivate *priv, QObject *parent = 0) : LocalServer::Server(parent), m_priv(priv) {}
-protected:
-    LocalServer::Client *createClient(QLocalSocket *sock) Q_DECL_OVERRIDE
+    MountainProcessServer(MPDaemonPrivate* priv, QObject* parent = 0)
+        : LocalServer::Server(parent)
+        , m_priv(priv)
     {
-        MountainProcessServerClient *client = new MountainProcessServerClient(sock, this, m_priv);
+    }
+
+protected:
+    LocalServer::Client* createClient(QLocalSocket* sock) Q_DECL_OVERRIDE
+    {
+        MountainProcessServerClient* client = new MountainProcessServerClient(sock, this, m_priv);
         return client;
     }
+
 private:
-    MPDaemonPrivate *m_priv;
+    MPDaemonPrivate* m_priv;
 };
 
 class MPDaemonPrivate {
@@ -72,7 +80,7 @@ public:
     ProcessResources m_total_resources_available;
     QString m_log_path;
     QSharedMemory* shm = nullptr;
-    LocalServer::Server *m_server = nullptr;
+    LocalServer::Server* m_server = nullptr;
 
     void process_command(QJsonObject obj);
     void writeLogRecord(QString record_type, QString key1 = "", QVariant val1 = QVariant(), QString key2 = "", QVariant val2 = QVariant(), QString key3 = "", QVariant val3 = QVariant());
@@ -161,7 +169,6 @@ MPDaemon::MPDaemon()
 
     d->m_total_resources_available.num_threads = 12;
     d->m_total_resources_available.memory_gb = 8;
-
 }
 
 MPDaemon::~MPDaemon()
@@ -239,7 +246,6 @@ bool MPDaemon::run()
 
     return true;
 }
-
 
 void MPDaemon::iterate()
 {
@@ -343,23 +349,23 @@ void MPDaemon::wait(qint64 msec)
     usleep(msec * 1000);
 }
 
-    // This slot is called whenever the contents of the temporary directory "daemon_commands" is called
-    // Other runs of mountainprocess will write command files to this directory in order to queue scripts and processes, etc
-        // We iterate through all .command files in the directory. They are sorted alphabetically by name, so the first created will be the first processed
-            // If it has been more than 20 seconds since the file was created/modified, then we delete it
-            // This avoids re-executing commands from previous runs, since there is no reason it should take >20 seconds to notice the file
-            // But obviously this is not very elegant. This probably should be improved
-            // The idea is that mpdaemon itself doesn't do any heavy processing, so it should remain responsive
-            // However if all the CPU's are being used by other processes, I suppose this could become an issue.
-                // maybe we should abort here?
-            // read and parse the JSON content of the command file
-                // if all goes well, we process the command
-                // the daemon is a single-thread process, so the whole loop will stop as we process the command
-                // as mentioned above, this is why rely on NO heavy processing being done by the daemon
-                // basically the daemon is responsible for managing queued processes and scripts, and launching
-                // other instances of mountainprocess, and managing those QProcess's
-                // finally, remove the command so we don't execute it again.
-                // should we abort here?
+// This slot is called whenever the contents of the temporary directory "daemon_commands" is called
+// Other runs of mountainprocess will write command files to this directory in order to queue scripts and processes, etc
+// We iterate through all .command files in the directory. They are sorted alphabetically by name, so the first created will be the first processed
+// If it has been more than 20 seconds since the file was created/modified, then we delete it
+// This avoids re-executing commands from previous runs, since there is no reason it should take >20 seconds to notice the file
+// But obviously this is not very elegant. This probably should be improved
+// The idea is that mpdaemon itself doesn't do any heavy processing, so it should remain responsive
+// However if all the CPU's are being used by other processes, I suppose this could become an issue.
+// maybe we should abort here?
+// read and parse the JSON content of the command file
+// if all goes well, we process the command
+// the daemon is a single-thread process, so the whole loop will stop as we process the command
+// as mentioned above, this is why rely on NO heavy processing being done by the daemon
+// basically the daemon is responsible for managing queued processes and scripts, and launching
+// other instances of mountainprocess, and managing those QProcess's
+// finally, remove the command so we don't execute it again.
+// should we abort here?
 void MPDaemon::slot_pript_qprocess_finished()
 {
     debug_log(__FUNCTION__, __FILE__, __LINE__);
@@ -1317,12 +1323,13 @@ QJsonObject runtime_opts_struct_to_obj(ProcessRuntimeOpts opts)
     return ret;
 }
 
-bool MountainProcessServerClient::getState() {
+bool MountainProcessServerClient::getState()
+{
     writeMessage(m_priv->getState());
     return true;
 }
 
-bool MountainProcessServerClient::handleMessage(const QByteArray &ba)
+bool MountainProcessServerClient::handleMessage(const QByteArray& ba)
 {
     QJsonParseError error;
     QJsonObject obj = QJsonDocument::fromJson(ba, &error).object();
@@ -1333,7 +1340,7 @@ bool MountainProcessServerClient::handleMessage(const QByteArray &ba)
         return getState();
     }
     m_priv->process_command(obj);
-//        qDebug().noquote() << ba;
+    //        qDebug().noquote() << ba;
     writeMessage("OK");
     return true;
 }

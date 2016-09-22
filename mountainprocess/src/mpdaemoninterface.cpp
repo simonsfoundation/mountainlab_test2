@@ -22,15 +22,17 @@
 
 class MountainProcessClient : public LocalClient::Client {
 public:
-    MountainProcessClient(QObject *parent = 0) : LocalClient::Client(parent) {
-
+    MountainProcessClient(QObject* parent = 0)
+        : LocalClient::Client(parent)
+    {
     }
-    QByteArray waitForMessage() {
+    QByteArray waitForMessage()
+    {
         m_waitingForMessage = true;
-        while(true) {
+        while (true) {
             if (!waitForReadyRead())
                 return QByteArray(); // failure
-//            qApp->sendPostedEvents(this);
+            //            qApp->sendPostedEvents(this);
             if (!m_waitingForMessage) {
                 QByteArray result = m_msg;
                 m_msg.clear();
@@ -40,7 +42,7 @@ public:
     }
 
 protected:
-    void handleMessage(const QByteArray &ba) Q_DECL_OVERRIDE
+    void handleMessage(const QByteArray& ba) Q_DECL_OVERRIDE
     {
         if (m_waitingForMessage) {
             m_msg = ba;
@@ -54,10 +56,13 @@ protected:
 
 class MPDaemonInterfacePrivate {
 public:
-    MPDaemonInterfacePrivate(MPDaemonInterface *qq) : q(qq){
+    MPDaemonInterfacePrivate(MPDaemonInterface* qq)
+        : q(qq)
+    {
         client = new MountainProcessClient;
     }
-    ~MPDaemonInterfacePrivate() {
+    ~MPDaemonInterfacePrivate()
+    {
         delete client;
     }
 
@@ -185,7 +190,8 @@ bool MPDaemonInterfacePrivate::send_daemon_command(QJsonObject obj, qint64 msec_
         return false;
     client->writeMessage(QJsonDocument(obj).toJson());
     QByteArray msg = client->waitForMessage();
-    if (msg.isEmpty()) return false;
+    if (msg.isEmpty())
+        return false;
     // TODO: parse message
     return true;
 }
@@ -206,7 +212,8 @@ QJsonObject MPDaemonInterfacePrivate::get_last_daemon_state()
     obj["command"] = "get-daemon-state";
     client->writeMessage(QJsonDocument(obj).toJson());
     QByteArray msg = client->waitForMessage();
-    if (msg.isEmpty()) return ret;
+    if (msg.isEmpty())
+        return ret;
 
     QJsonParseError error;
     ret = QJsonDocument::fromJson(msg, &error).object();

@@ -170,7 +170,8 @@ public:
         TaskProgressAgentPrivate* task = info(index);
         if (!task)
             return;
-        if (task->m_finished) return; // already finished
+        if (task->m_finished)
+            return; // already finished
         int row = index.row();
         int newRow = m_activeCount--;
         task->m_info.progress = 1.0;

@@ -330,7 +330,7 @@ int main(int argc, char* argv[])
         W->addControl(new MVMergeControl(context, W), false);
         W->addControl(new MVPrefsControl(context, W), false);
         W->addControl(new MVExportControl(context, W), false);
-        W->addControl(new MVClusterOrderControl(context,W),false);
+        W->addControl(new MVClusterOrderControl(context, W), false);
 
         a.processEvents();
 

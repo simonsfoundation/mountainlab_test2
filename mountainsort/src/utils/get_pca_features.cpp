@@ -109,5 +109,3 @@ bool pca_denoise(long M, long N, int num_features, double* X_out, double* X_in, 
     return true;
 }
 */
-
-

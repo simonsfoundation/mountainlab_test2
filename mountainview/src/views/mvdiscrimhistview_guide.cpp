@@ -57,7 +57,7 @@ MVDiscrimHistViewGuide::MVDiscrimHistViewGuide(MVContext* context)
     this->recalculateOn(context, SIGNAL(clusterMergeChanged()), true);
     this->recalculateOn(context, SIGNAL(clusterVisibilityChanged()), true);
     this->recalculateOn(context, SIGNAL(viewMergedChanged()), true);
-    this->recalculateOnOptionChanged("discrim_hist_method",true);
+    this->recalculateOnOptionChanged("discrim_hist_method", true);
 
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomInHorizontal, this, SLOT(slot_zoom_in_horizontal()));
     ActionFactory::addToToolbar(ActionFactory::ActionType::ZoomOutHorizontal, this, SLOT(slot_zoom_out_horizontal()));
@@ -85,8 +85,8 @@ void MVDiscrimHistViewGuide::prepareCalculation()
     d->m_computer.firings = mvContext()->firings();
     d->m_computer.num_histograms = d->m_num_histograms;
     d->m_computer.clusters_to_exclude = d->get_clusters_to_exclude();
-    d->m_computer.cluster_numbers=mvContext()->selectedClusters();
-    d->m_computer.method=mvContext()->option("discrim_hist_method").toString();
+    d->m_computer.cluster_numbers = mvContext()->selectedClusters();
+    d->m_computer.method = mvContext()->option("discrim_hist_method").toString();
 }
 
 void MVDiscrimHistViewGuide::runCalculation()
@@ -153,8 +153,8 @@ void MVDiscrimHistViewGuideComputer::compute()
     params["timeseries"] = timeseries.makePath();
     params["firings"] = firings.makePath();
     params["clip_size"] = 50;
-    params["add_noise_level"]=1;
-    params["cluster_numbers"]=MLUtil::intListToStringList(cluster_numbers).join(",");
+    params["add_noise_level"] = 1;
+    params["cluster_numbers"] = MLUtil::intListToStringList(cluster_numbers).join(",");
     params["max_comparisons_per_cluster"] = 5;
 
     MPR.setInputParameters(params);
