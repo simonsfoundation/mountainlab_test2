@@ -1,0 +1,18 @@
+#!/bin/bash
+sudo docker build -t test_mountainlab .
+
+args="$@ --net=host --pid=host"
+
+args="$args --rm -e DISPLAY=$DISPLAY"
+
+useradd_cmd="mkdir /home/mluser; useradd -d /home/mluser -u $UID mluser; chown -R mluser:mluser /home/mluser"
+
+#Here's an example of making the home directory available
+#args="$args -v $HOME:/home/mluser"
+
+args="$args -v /tmp/.X11-unix:/tmp/.X11-unix"
+
+args="$args -it test_ml /bin/bash -c 'mluseradd_cmd; su - magland -c '/bin/bash''"
+
+echo sudo docker run $args
+/bin/bash -c "sudo docker run $args"
