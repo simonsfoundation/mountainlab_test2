@@ -16,13 +16,9 @@
 #include <QFile>
 
 struct ProcessResources {
-    ProcessResources()
-    {
-        num_threads = 0;
-        memory_gb = 0;
-    }
-    double num_threads;
-    double memory_gb;
+    double num_threads=0;
+    double memory_gb=0;
+    double num_processes=0;
 };
 
 class MPDaemonPrivate;
@@ -64,7 +60,7 @@ struct ProcessRuntimeOpts {
     double memory_gb_allotted;
 };
 
-bool is_at_most(ProcessResources PR1, ProcessResources PR2);
+bool is_at_most(ProcessResources needed, ProcessResources available, ProcessResources total_allocated);
 
 enum PriptType {
     ScriptType,

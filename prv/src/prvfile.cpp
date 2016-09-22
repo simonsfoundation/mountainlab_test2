@@ -6,7 +6,7 @@
 
 #include "cachemanager.h"
 #include "prvfile.h"
-#include "sumit.h"
+#include "mlcommon.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -66,7 +66,7 @@ QJsonObject PrvFile::object() const
 
 bool PrvFile::read(const QString &file_path)
 {
-    QString json=read_text_file(file_path);
+    QString json=TextFile::read(file_path);
     QJsonParseError err;
     d->m_object=QJsonDocument::fromJson(json.toUtf8(),&err).object();
     if (err.error!=QJsonParseError::NoError) {
@@ -79,7 +79,7 @@ bool PrvFile::read(const QString &file_path)
 bool PrvFile::write(const QString &file_path) const
 {
     QString json=QJsonDocument(d->m_object).toJson();
-    return write_text_file(file_path,json);
+    return TextFile::write(file_path,json);
 }
 
 bool PrvFile::representsFile() const
@@ -98,8 +98,8 @@ bool PrvFile::createFromFile(const QString &file_path, const PrvFileCreateOption
     obj["prv_version"]=PRV_VERSION;
     obj["original_path"]=file_path;
 
-    obj["original_checksum"]=sumit(file_path);
-    obj["original_checksum_1000"]=sumit(file_path,1000);
+    obj["original_checksum"]=MLUtil::computeSha1SumOfFile(file_path);
+    obj["original_checksum_1000"]=MLUtil::computeSha1SumOfFileHead(file_path,1000);
     obj["original_size"]=QFileInfo(file_path).size();
 
     if (opts.create_temporary_files) {
@@ -129,7 +129,7 @@ bool PrvFile::createFromFolder(const QString &folder_path, const PrvFileCreateOp
                 QString tmp=obj0["file_name"].toString();
                 obj0["file_name"]=tmp.mid(0,tmp.count()-4); //remove the .prv extension
                 d->println("storing prv::::: "+folder_path+"/"+file);
-                obj0["prv"]=QJsonDocument::fromJson(read_text_file(folder_path+"/"+file).toUtf8()).object();
+                obj0["prv"]=QJsonDocument::fromJson(TextFile::read(folder_path+"/"+file).toUtf8()).object();
                 obj0["originally_a_prv_file"]=true;
             }
             else if (d->should_store_binary_content(folder_path+"/"+file)) {
@@ -139,7 +139,7 @@ bool PrvFile::createFromFolder(const QString &folder_path, const PrvFileCreateOp
             }
             else {
                 d->println("storing text:::: "+folder_path+"/"+file);
-                obj0["content"]=read_text_file(folder_path+"/"+file);
+                obj0["content"]=TextFile::read(folder_path+"/"+file);
             }
         }
         else {
@@ -195,7 +195,7 @@ bool PrvFile::recoverFolder(const QString &dst_path, const PrvFileRecoverOptions
         }
         d->println("Recovering "+abs_dst_path+"/"+fname0);
         if (obj0.contains("content")) {
-            if (!write_text_file(abs_dst_path+"/"+fname0,obj0["content"].toString())) {
+            if (!TextFile::write(abs_dst_path+"/"+fname0,obj0["content"].toString())) {
                 d->println("Unable to write file. Aborting. "+fname0);
                 return false;
             }
@@ -222,7 +222,7 @@ bool PrvFile::recoverFolder(const QString &dst_path, const PrvFileRecoverOptions
             }
             else {
                 QString json=QJsonDocument(obj0["prv"].toObject()).toJson();
-                if (!write_text_file(abs_dst_path+"/"+fname0+".prv",json)) {
+                if (!TextFile::write(abs_dst_path+"/"+fname0+".prv",json)) {
                     d->println("Unable to write file. Aborting. "+fname0);
                     return false;
                 }
@@ -285,13 +285,13 @@ bool PrvFile::recoverFile(const QString &dst_file_path, const PrvFileRecoverOpti
     }
     else {
         d->println(QString("Downloading %1 to %2").arg(fname_or_url).arg(dst_file_path));
-        QString fname_tmp=dst_file_path+".tmp."+make_random_id(5);
+        QString fname_tmp=dst_file_path+".tmp."+MLUtil::makeRandomId(5);
         QString cmd=QString("curl %1 > %2").arg(fname_or_url).arg(fname_tmp);
         int ret=system(cmd.toUtf8().data());
         if (ret<0) return false;
-        if ((QFileInfo(fname_tmp).size()!=original_size)||((!checksum1000.isEmpty())&&(sumit(fname_tmp,1000)!=checksum1000))) {
+        if ((QFileInfo(fname_tmp).size()!=original_size)||((!checksum1000.isEmpty())&&(MLUtil::computeSha1SumOfFileHead(fname_tmp,1000)!=checksum1000))) {
             if (QFileInfo(fname_tmp).size()<10000) {
-                QString txt0=read_text_file(fname_tmp);
+                QString txt0=TextFile::read(fname_tmp);
                 if (txt0.startsWith("{")) {
                     //must be an error message from the server
                     qWarning() << txt0;
@@ -305,99 +305,6 @@ bool PrvFile::recoverFile(const QString &dst_file_path, const PrvFileRecoverOpti
             return QFile::rename(fname_tmp,dst_file_path);
         }
     }
-}
-
-QString read_text_file(const QString& fname, QTextCodec* codec)
-{
-    QFile file(fname);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Unable to open file for reading: "+fname;
-        return QString();
-    }
-    QTextStream ts(&file);
-    if (codec != 0)
-        ts.setCodec(codec);
-    QString ret = ts.readAll();
-    file.close();
-    return ret;
-}
-
-bool write_text_file(const QString& fname, const QString& txt, QTextCodec* codec)
-{
-    /*
-     * Modification on 5/23/16 by jfm
-     * We don't want an program to try to read this while we have only partially completed writing the file.
-     * Therefore we now create a temporary file and then copy it over
-     */
-
-    QString tmp_fname = fname + ".tf." + make_random_id(6) + ".tmp";
-
-    //if a file with this name already exists, we need to remove it
-    //(should we really do this before testing whether writing is successful? I think yes)
-    if (QFile::exists(fname)) {
-        if (!QFile::remove(fname)) {
-            qWarning() << "Problem in TextFile::write. Could not remove file even though it exists" << fname;
-            return false;
-        }
-    }
-
-    //write text to temporary file
-    QFile file(tmp_fname);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning() << "Problem in TextFile::write. Could not open for writing... " << tmp_fname;
-        return false;
-    }
-    QTextStream ts(&file);
-    if (codec != 0) {
-        ts.setAutoDetectUnicode(false);
-        ts.setCodec(codec);
-    }
-    ts << txt;
-    ts.flush();
-    file.close();
-
-    //check the contents of the file (is this overkill?)
-    QString txt_test = read_text_file(tmp_fname, codec);
-    if (txt_test != txt) {
-        QFile::remove(tmp_fname);
-        qWarning() << "Problem in TextFile::write. The contents of the file do not match what was expected." << fname;
-        return false;
-    }
-
-    //finally, rename the file
-    if (!QFile::rename(tmp_fname, fname)) {
-        qWarning() << "Problem in TextFile::write. Unable to rename file at the end of the write command" << fname;
-        return false;
-    }
-
-    return true;
-}
-
-QChar make_random_alphanumeric()
-{
-    static int val = 0;
-    val++;
-    QTime time = QTime::currentTime();
-    QString code = time.toString("hh:mm:ss:zzz");
-    code += QString::number(qrand() + val);
-    code += QString::number(QCoreApplication::applicationPid());
-    code += QString::number((long)QThread::currentThreadId());
-    int num = qHash(code);
-    if (num < 0)
-        num = -num;
-    num = num % 36;
-    if (num < 26)
-        return QChar('A' + num);
-    else
-        return QChar('0' + num - 26);
-}
-QString make_random_id(int numchars)
-{
-    QString ret;
-    for (int i = 0; i < numchars; i++) {
-        ret.append(make_random_alphanumeric());
-    }
-    return ret;
 }
 
 bool PrvFilePrivate::should_store_content(QString file_path) {
@@ -489,16 +396,16 @@ QString find_file_2(QString directory,QString checksum,QString checksum1000_opti
         QString path=directory+"/"+file;
         if (QFileInfo(path).size()==size) {
             if (!checksum1000_optional.isEmpty()) {
-                QString checksum0=sumit(path,1000);
+                QString checksum0=MLUtil::computeSha1SumOfFileHead(path,1000);
                 if (checksum0==checksum1000_optional) {
-                    QString checksum1=sumit(path);
+                    QString checksum1=MLUtil::computeSha1SumOfFile(path);
                     if (checksum1==checksum) {
                         return path;
                     }
                 }
             }
             else {
-                QString checksum1=sumit(path);
+                QString checksum1=MLUtil::computeSha1SumOfFile(path);
                 if (checksum1==checksum) {
                     return path;
                 }

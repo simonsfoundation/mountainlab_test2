@@ -74,8 +74,8 @@ public:
 
     ScriptController2* q;
     bool m_nodaemon = false;
-    QStringList m_server_urls;
-    QString m_server_base_path;
+    //QStringList m_server_urls;
+    //QString m_server_base_path;
     bool m_force_run = false;
     QString m_working_path;
     QJsonObject m_results;
@@ -110,6 +110,7 @@ void ScriptController2::setNoDaemon(bool val)
     d->m_nodaemon = val;
 }
 
+/*
 void ScriptController2::setServerUrls(const QStringList& urls)
 {
     d->m_server_urls = urls;
@@ -119,6 +120,7 @@ void ScriptController2::setServerBasePath(const QString& path)
 {
     d->m_server_base_path = path;
 }
+*/
 
 void ScriptController2::setForceRun(bool force_run)
 {
@@ -334,7 +336,8 @@ QString ScriptController2Private::resolve_file_name_p(QString fname_in)
 {
     if (fname_in.isEmpty())
         return "";
-    QString ret = resolve_file_name_2(m_server_urls, m_server_base_path, fname_in);
+    QString ret=fname_in;
+    //QString ret = resolve_file_name_2(m_server_urls, m_server_base_path, fname_in);
     if (!ret.startsWith("http:")) {
         if ((QDir::isRelativePath(ret)) && (!m_working_path.isEmpty())) {
             ret = m_working_path + "/" + ret;
@@ -524,6 +527,7 @@ bool ScriptController2Private::handle_running_processes()
     return true;
 }
 
+/*
 QString resolve_file_name_2(QStringList server_urls, QString server_base_path, QString fname_in)
 {
     //This is terrible, we need to fix it!
@@ -537,17 +541,10 @@ QString resolve_file_name_2(QStringList server_urls, QString server_base_path, Q
             }
         }
     }
-    /*
-    Taking this out to resolve Jason's problem.
-    /// TODO Not sure why I had this in ... raw data does not have to be in this path... I think it was for security. Think about it.
-    if (!fname.startsWith(server_base_path)) {
-        qWarning() << "Path does not start with " + server_base_path + ": " + fname;
-        fname = "";
-    }
-    */
 
     return fname;
 }
+*/
 
 QJsonArray get_prv_processes_2(const QList<PipelineNode2>& nodes, const QMap<QString, int>& node_indices_for_outputs, QString path, QSet<int>& node_indices_already_used, bool* ok)
 {

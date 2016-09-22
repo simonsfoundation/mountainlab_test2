@@ -1,0 +1,8 @@
+{
+	"listen_port":"8080",
+	"url_path":"/prv",
+	"enable_uploads":false,
+	"subservers":[
+		{"host":"","port":0,"path":""}
+	]
+}

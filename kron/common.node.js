@@ -5,24 +5,14 @@ var fs=require('fs');
 var path=require('path');
 var child_process=require('child_process');
 
-//use > npm install ini
-var ini=require('ini');
-
-var mountainlab_config=ini.parse(fs.readFileSync(__dirname+'/../mountainlab.ini.default','utf8'));
+var config=JSON.parse(fs.readFileSync(__dirname+'/../mountainlab.default.json','utf8'));
 try {
-	tmp=ini.parse(fs.readFileSync(__dirname+'/../mountainlab.ini','utf8'));
-	for (var key in tmp) {
-		if (!(key in mountainlab_config))
-			mountainlab_config[key]={};
-		tmp2=tmp[key];
-		for (var key2 in tmp2) {
-			mountainlab_config[key][key2]=tmp2[key2];
-		}
-	}
+	var config_user=JSON.parse(fs.readFileSync(__dirname+'/../mountainlab.user.json','utf8'));
+	config=extend(true,config,config_user);
 }
 catch(err) {
-
 }
+
 
 exports.read_pipelines_from_text_file=function(file_path) {
 	var pipelines=[];
@@ -124,7 +114,7 @@ exports.find_dataset=function(datasets,dsname) {
 };
 
 function find_absolute_dataset_folder_path(folder,text_file_path) {
-	var dataset_paths=mountainlab_config.kron.dataset_paths.split(';');
+	var dataset_paths=config.kron.dataset_paths;
 	if (text_file_path)
 		dataset_paths.push(text_file_path);
 	console.log(dataset_paths);
@@ -139,7 +129,7 @@ function find_absolute_dataset_folder_path(folder,text_file_path) {
 }
 
 function find_absolute_pipeline_script_path(script_path,text_file_path) {
-	var pipeline_paths=mountainlab_config.kron.pipeline_paths.split(';');
+	var pipeline_paths=config.kron.pipeline_paths;
 	if (text_file_path)
 		pipeline_paths.push(text_file_path);
 	for (var i in pipeline_paths) {
@@ -152,7 +142,7 @@ function find_absolute_pipeline_script_path(script_path,text_file_path) {
 }
 
 exports.find_view_program_file=function(program_name) {
-	var view_program_paths=mountainlab_config.kron.view_program_paths.split(';');
+	var view_program_paths=config.kron.view_program_paths;
 	for (var i in view_program_paths) {
 		var p=resolve_from_mountainlab(view_program_paths[i]+'/'+program_name);
 		if (fs.existsSync(p)) {

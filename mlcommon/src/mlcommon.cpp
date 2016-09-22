@@ -211,7 +211,7 @@ QString MLUtil::tempPath()
     if (!s_temp_path.isEmpty())
         return s_temp_path;
 
-    QString tmp = MLUtil::configResolvedPath("", "temporary_path");
+    QString tmp = MLUtil::configResolvedPath("general", "temporary_path");
     if (!QDir(tmp).mkpath("mountainlab")) {
         qCritical() << "Unable to create temporary directory: " + tmp + "/mountainlab";
         abort();
@@ -249,6 +249,13 @@ CLParams::CLParams(int argc, char* argv[])
     }
 }
 
+bool clp_is_long(const QString& str)
+{
+    bool ok;
+    str.toLongLong(&ok);
+    return ok;
+}
+
 bool clp_is_int(const QString& str)
 {
     bool ok;
@@ -265,6 +272,8 @@ bool clp_is_float(const QString& str)
 
 QVariant clp_string_to_variant(const QString& str)
 {
+    if (clp_is_long(str))
+        return str.toLongLong();
     if (clp_is_int(str))
         return str.toInt();
     if (clp_is_float(str))
@@ -552,6 +561,7 @@ double MLCompute::median(const QVector<double>& X)
 
 /////////////////////////////////////////////////////////////////////////////
 
+/*
 QString find_file_with_checksum(QString dirpath, QString checksum, QString checksum1000, long size_bytes, bool recursive)
 {
     QStringList list = QDir(dirpath).entryList(QStringList("*"), QDir::Files, QDir::Name);
@@ -611,6 +621,7 @@ QString find_file_with_checksum(const QString& checksum, const QString &checksum
 
     return "";
 }
+*/
 
 QString make_temporary_output_file_name(QString processor_name, QMap<QString, QVariant> args_inputs, QMap<QString, QVariant> args_parameters, QString output_pname)
 {
@@ -797,20 +808,6 @@ bool resolve_prv_files(QMap<QString, QVariant>& command_line_params)
     return true;
 }
 
-QVariant MLUtil::configValue(const QString& group, const QString& key)
-{
-    QSettings settings(MLUtil::mountainlabBasePath() + "/mountainlab.ini", QSettings::IniFormat);
-    QSettings settings_default(MLUtil::mountainlabBasePath() + "/mountainlab.ini.default", QSettings::IniFormat);
-    if (!group.isEmpty()) {
-        settings.beginGroup(group);
-        settings_default.beginGroup(group);
-    }
-    if (settings.contains(key))
-        return settings.value(key);
-    else
-        return settings_default.value(key);
-}
-
 QString MLUtil::configResolvedPath(const QString& group, const QString& key)
 {
     QString ret = MLUtil::configValue(group, key).toString();
@@ -819,10 +816,44 @@ QString MLUtil::configResolvedPath(const QString& group, const QString& key)
 
 QStringList MLUtil::configResolvedPathList(const QString& group, const QString& key)
 {
-    QStringList vals = MLUtil::configValue(group, key).toString().split(";", QString::SkipEmptyParts);
+    QJsonArray array=MLUtil::configValue(group,key).toArray();
     QStringList ret;
-    foreach (QString val, vals) {
-        ret << QDir(MLUtil::mountainlabBasePath()).filePath(val);
+    for (int i=0; i<array.count(); i++) {
+    ret << QDir(MLUtil::mountainlabBasePath()).filePath(array[i].toString());
+    }
+    return ret;
+}
+
+QJsonValue MLUtil::configValue(const QString &group, const QString &key)
+{
+    QString json1=TextFile::read(MLUtil::mountainlabBasePath()+"/mountainlab.default.json");
+    QJsonParseError err1;
+    QJsonObject obj1=QJsonDocument::fromJson(json1.toUtf8(),&err1).object();
+    if (err1.error!=QJsonParseError::NoError) {
+    qWarning() << err1.errorString();
+    qWarning() << "Error parsing mountainlab.default.json.";
+    abort();
+    return QJsonValue();
+    }
+    QJsonObject obj2;
+    if (QFile::exists(MLUtil::mountainlabBasePath()+"/mountainlab.user.json")) {
+    QString json2=TextFile::read(MLUtil::mountainlabBasePath()+"/mountainlab.user.json");
+    QJsonParseError err2;
+    obj2=QJsonDocument::fromJson(json1.toUtf8(),&err2).object();
+    if (err2.error!=QJsonParseError::NoError) {
+        qWarning() << err2.errorString();
+        qWarning() << "Error parsing mountainlab.user.json.";
+        abort();
+        return QJsonValue();
+    }
+    }
+    if (!group.isEmpty()) {
+    obj1=obj1[group].toObject();
+    obj2=obj2[group].toObject();
+    }
+    QJsonValue ret=obj1[key];
+    if (obj2.contains("key")) {
+    ret=obj2[key];
     }
     return ret;
 }

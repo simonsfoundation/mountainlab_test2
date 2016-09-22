@@ -722,6 +722,7 @@ ProcessResources MPDaemonPrivate::compute_process_resources_available()
                 ProcessRuntimeOpts rtopts = m_pripts[key].runtime_opts;
                 ret.num_threads -= rtopts.num_threads_allotted;
                 ret.memory_gb -= rtopts.memory_gb_allotted;
+                ret.num_processes -= 1;
             }
         }
     }
@@ -733,6 +734,7 @@ ProcessResources MPDaemonPrivate::compute_process_resources_needed(MPDaemonPript
     ProcessResources ret;
     ret.num_threads = P.num_threads_requested;
     ret.memory_gb = P.memory_gb_requested;
+    ret.num_processes = 1;
     return ret;
 }
 
@@ -836,12 +838,13 @@ bool MPDaemonPrivate::handle_processes()
         if (m_pripts[key].prtype == ProcessType) {
             if ((!m_pripts[key].is_running) && (!m_pripts[key].is_finished)) {
                 ProcessResources pr_needed = compute_process_resources_needed(m_pripts[key]);
-                if (is_at_most(pr_needed, pr_available)) {
+                if (is_at_most(pr_needed, pr_available, m_total_resources_available)) {
                     if (process_parameters_are_okay(key)) {
                         if (okay_to_run_process(key)) { //check whether there are io file conflicts at the moment
                             if (launch_pript(key)) {
                                 pr_available.num_threads -= m_pripts[key].runtime_opts.num_threads_allotted;
                                 pr_available.memory_gb -= m_pripts[key].runtime_opts.memory_gb_allotted;
+                                pr_available.num_processes -= 1;
                             }
                         }
                     }
@@ -1304,9 +1307,18 @@ MPDaemonPript pript_obj_to_struct(QJsonObject obj)
     return ret;
 }
 
-bool is_at_most(ProcessResources PR1, ProcessResources PR2)
-{
-    return ((PR1.num_threads <= PR2.num_threads) && (PR1.memory_gb <= PR2.memory_gb));
+bool is_at_most(ProcessResources PR1, ProcessResources PR2, ProcessResources total_available)
+{   
+    if (total_available.memory_gb!=0) {
+        if (PR1.memory_gb>PR2.memory_gb) return false;
+    }
+    if (total_available.num_threads!=0) {
+        if (PR1.num_threads>PR2.num_threads) return false;
+    }
+    if (total_available.num_processes!=0) {
+        if (PR1.num_processes>PR2.num_processes) return false;
+    }
+    return true;
 }
 
 QJsonObject runtime_opts_struct_to_obj(ProcessRuntimeOpts opts)

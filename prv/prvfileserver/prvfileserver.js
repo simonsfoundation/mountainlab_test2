@@ -15,14 +15,13 @@ if (!data_directory) {
 	process.exit(-1);
 }
 
-var config=JSON.parse(fs.readFileSync(__dirname+'/../prv.json.default','utf8'));
+var config=JSON.parse(fs.readFileSync(__dirname+'/../prvfileserver.default.json','utf8'));
 try {
-	var config_user=JSON.parse(fs.readFileSync(__dirname+'/../prv.json','utf8'));
+	var config_user=JSON.parse(fs.readFileSync(__dirname+'/../prvfileserver.user.json','utf8'));
 	config=extend(true,config,config_user);
 }
 catch(err) {
 }
-config=config.prvfileserver||{};
 
 config.listen_port=CLP.namedParameters['listen_port']||config.listen_port;
 

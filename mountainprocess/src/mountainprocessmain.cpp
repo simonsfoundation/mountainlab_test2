@@ -45,7 +45,6 @@ If anything crashes along the way, every involved QProcess is killed.
 
 #include "mpdaemon.h"
 #include "mpdaemoninterface.h"
-#include "scriptcontroller.h"
 
 #include <QCoreApplication>
 #include <QFile>
@@ -102,8 +101,8 @@ struct run_script_opts {
     }
 
     bool nodaemon;
-    QStringList server_urls;
-    QString server_base_path;
+    //QStringList server_urls;
+    //QString server_base_path;
     bool force_run;
     QString working_path;
 };
@@ -146,10 +145,10 @@ int main(int argc, char* argv[])
     /// TODO don't need to always load the process manager?
 
     ProcessManager* PM = ProcessManager::globalInstance();
-    QStringList server_urls = MLUtil::configResolvedPathList("mountainprocess", "server_urls");
-    PM->setServerUrls(server_urls);
-    QString server_base_path = MLUtil::configResolvedPath("server", "mdaserver_base_path");
-    PM->setServerBasePath(server_base_path);
+    //QStringList server_urls = MLUtil::configResolvedPathList("mountainprocess", "server_urls");
+    //PM->setServerUrls(server_urls);
+    //QString server_base_path = MLUtil::configResolvedPath("server", "mdaserver_base_path");
+    //PM->setServerBasePath(server_base_path);
 
     setbuf(stdout, NULL);
 
@@ -325,8 +324,8 @@ int main(int argc, char* argv[])
 
         run_script_opts opts;
         opts.nodaemon = CLP.named_parameters.contains("_nodaemon");
-        opts.server_urls = server_urls;
-        opts.server_base_path = server_base_path;
+        //opts.server_urls = server_urls;
+        //opts.server_base_path = server_base_path;
         opts.force_run = CLP.named_parameters.contains("_force_run");
         opts.working_path = QDir::currentPath();
         QJsonObject results;
@@ -380,9 +379,10 @@ int main(int argc, char* argv[])
             //log_end();
             return -1;
         }
-        QString mdaserver_base_path = MLUtil::configResolvedPath("mountainprocess", "mdaserver_base_path");
-        QString mdachunk_data_path = MLUtil::configResolvedPath("server", "mdachunk_data_path");
+        //QString mdaserver_base_path = MLUtil::configResolvedPath("mountainprocess", "mdaserver_base_path");
+        //QString mdachunk_data_path = MLUtil::configResolvedPath("mountainprocess", "mdachunk_data_path");
         //figure out what to do about this cleaner business
+        /*
         TempFileCleaner cleaner;
         cleaner.addPath(MLUtil::tempPath() + "/tmp_short_term", MAX_SHORT_TERM_GB);
         cleaner.addPath(MLUtil::tempPath() + "/tmp_long_term", MAX_LONG_TERM_GB);
@@ -390,11 +390,15 @@ int main(int argc, char* argv[])
         cleaner.addPath(mdaserver_base_path + "/tmp_long_term", MAX_LONG_TERM_GB);
         cleaner.addPath(mdachunk_data_path + "/tmp_short_term", MAX_MDACHUNK_GB);
         cleaner.addPath(mdachunk_data_path + "/tmp_long_term", MAX_MDACHUNK_GB);
+        */
         MPDaemon X;
         X.setLogPath(log_path);
         ProcessResources RR;
-        RR.num_threads = qMax(1.0, MLUtil::configValue("mountainprocess", "num_threads").toDouble());
-        RR.memory_gb = qMax(1.0, MLUtil::configValue("mountainprocess", "memory_gb").toDouble());
+        //RR.num_threads = qMax(0.0, MLUtil::configValue("mountainprocess", "max_num_simultaneous_threads").toDouble());
+        //RR.memory_gb = qMax(0.0, MLUtil::configValue("mountainprocess", "max_total_memory_gb").toDouble());
+        RR.num_threads=0;
+        RR.memory_gb=0;
+        RR.num_processes = MLUtil::configValue("mountainprocess", "max_num_simultaneous_processes").toDouble();
         X.setTotalResourcesAvailable(RR);
         if (!X.run()) {
             //log_end();
@@ -479,6 +483,7 @@ int main(int argc, char* argv[])
             printf("%s", str.toLatin1().data());
         }
     }
+    /*
     else if (arg1 == "create-prv") {
 
         if (arg2.isEmpty()) {
@@ -503,6 +508,7 @@ int main(int argc, char* argv[])
             return -1;
         }
     }
+    */
     else {
         print_usage(); //print usage information
         //log_end();
@@ -596,18 +602,10 @@ bool run_script(const QStringList& script_fnames, const QVariantMap& params, con
 
     QJSEngine engine;
 
-    ScriptController Controller;
-    Controller.setNoDaemon(opts.nodaemon);
-    Controller.setServerUrls(opts.server_urls);
-    Controller.setServerBasePath(opts.server_base_path);
-    Controller.setForceRun(opts.force_run);
-    QJSValue MP = engine.newQObject(&Controller);
-    engine.globalObject().setProperty("MP", MP);
-
     ScriptController2 Controller2;
     Controller2.setNoDaemon(opts.nodaemon);
-    Controller2.setServerUrls(opts.server_urls);
-    Controller2.setServerBasePath(opts.server_base_path);
+    //Controller2.setServerUrls(opts.server_urls);
+    //Controller2.setServerBasePath(opts.server_base_path);
     Controller2.setForceRun(opts.force_run);
     Controller2.setWorkingPath(opts.working_path);
     QJSValue MP2 = engine.newQObject(&Controller2);

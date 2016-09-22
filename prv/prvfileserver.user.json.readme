@@ -1,0 +1,9 @@
+To configure the prv file server, do the following:
+
+* Copy prvfileserver.default.json to prvfileserver.user.json
+* Modify prvfileserver.user.json
+
+Remove any parameters in prvfileserver.user.json for which you would like to use the defaults.
+
+Note that prvfileserver.default.json is maintained in the git repo whereas prvfileserver.user.json is not.
+

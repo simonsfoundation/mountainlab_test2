@@ -21,7 +21,6 @@
 #include <QThread>
 #include <QTimer>
 #include "mpdaemon.h"
-#include "scriptcontroller.h" //for resolve_file_name()
 
 struct PMProcess {
     MLProcessInfo info;
@@ -34,8 +33,8 @@ public:
 
     QMap<QString, MLProcessor> m_processors;
     QMap<QString, PMProcess> m_processes;
-    QStringList m_server_urls;
-    QString m_server_base_path;
+    //QStringList m_server_urls;
+    //QString m_server_base_path;
 
     void clear_all_processes();
     void update_process_info(QString id);
@@ -64,6 +63,7 @@ ProcessManager::~ProcessManager()
     delete d;
 }
 
+/*
 void ProcessManager::setServerUrls(const QStringList& urls)
 {
     d->m_server_urls = urls;
@@ -73,6 +73,7 @@ void ProcessManager::setServerBasePath(const QString& path)
 {
     d->m_server_base_path = path;
 }
+*/
 
 bool ProcessManager::loadProcessors(const QString& path, bool recursive)
 {
@@ -443,7 +444,24 @@ void ProcessManagerPrivate::update_process_info(QString id)
 
 QString ProcessManagerPrivate::resolve_file_name_p(QString fname)
 {
-    return resolve_file_name(m_server_urls, m_server_base_path, fname);
+    //for now I have completely removed the client/server functionality
+    return fname;
+
+    /*
+    //This is terrible, we need to fix it!
+    QString fname = fname_in;
+    foreach (QString str, server_urls) {
+        if (fname.startsWith(str + "/mdaserver")) {
+            fname = server_base_path + "/" + fname.mid((str + "/mdaserver").count());
+            if (fname.mid(server_base_path.count()).contains("..")) {
+                qWarning() << "Illegal .. in file path: " + fname;
+                fname = "";
+            }
+        }
+    }
+    */
+
+    return fname;
 }
 
 QVariantMap ProcessManagerPrivate::resolve_file_names_in_parameters(QString processor_name, const QVariantMap& parameters_in)

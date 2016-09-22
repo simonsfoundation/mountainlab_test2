@@ -11,12 +11,6 @@ TARGET = prv
 TEMPLATE = app
 
 SOURCES += prvmain.cpp \
-    prvfile.cpp \
-    cachemanager.cpp
+    prvfile.cpp
 
-INCLUDEPATH += util
-VPATH += util
-HEADERS += sumit.h clparams.h \
-    prvfile.h \
-    cachemanager.h
-SOURCES += sumit.cpp clparams.cpp
+include(../../mlcommon/mlcommon.pri)

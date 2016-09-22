@@ -1,6 +1,4 @@
-#include "clparams.h"
 #include <QFile>
-#include "sumit.h"
 #include <QDebug>
 #include <QFileInfo>
 #include <QJsonDocument>
@@ -15,6 +13,7 @@
 #include <QUrl>
 #include <QStandardPaths>
 #include <QHostInfo>
+#include <mlcommon.h>
 #include "cachemanager.h"
 #include "prvfile.h"
 
@@ -40,7 +39,6 @@ int main_download_file(const QJsonObject &obj,const QVariantMap &params);
 int main_list_subservers(const QVariantMap &params);
 int main_upload(QString src_path,QString server_url,const QVariantMap &params);
 
-QJsonObject get_config();
 QString get_tmp_path();
 QString get_server_url(QString url_or_server_name);
 QStringList get_local_search_paths();
@@ -54,7 +52,6 @@ bool is_folder(QString path);
 int main(int argc,char *argv[]) {
     QCoreApplication app(argc,argv);
 
-    QJsonObject config=get_config();
     CacheManager::globalInstance()->setLocalBasePath(get_tmp_path());
 
     CLParams CLP(argc,argv);
@@ -132,12 +129,12 @@ int main(int argc,char *argv[]) {
                 return -1;
             }
             if (src_path.endsWith(".prv")) {
-                obj=QJsonDocument::fromJson(read_text_file(src_path).toUtf8()).object();
+                obj=QJsonDocument::fromJson(TextFile::read(src_path).toUtf8()).object();
             }
             else {
                 if (arg1=="locate") {
-                    obj["original_checksum"]=sumit(src_path);
-                    obj["original_checksum_1000"]=sumit(src_path,1000);
+                    obj["original_checksum"]=MLUtil::computeSha1SumOfFile(src_path);
+                    obj["original_checksum_1000"]=MLUtil::computeSha1SumOfFileHead(src_path,1000);
                     obj["original_size"]=QFileInfo(src_path).size();
                 }
                 else {
@@ -230,7 +227,7 @@ void println(QString str) {
 
 int main_sha1sum(QString path,const QVariantMap &params) {
     Q_UNUSED(params)
-    QString checksum=sumit(path);
+    QString checksum=MLUtil::computeSha1SumOfFile(path);
     if (checksum.isEmpty()) return -1;
     println(checksum);
     return 0;
@@ -238,11 +235,11 @@ int main_sha1sum(QString path,const QVariantMap &params) {
 
 int main_stat(QString path,const QVariantMap &params) {
     Q_UNUSED(params)
-    QString checksum=sumit(path);
+    QString checksum=MLUtil::computeSha1SumOfFile(path);
     if (checksum.isEmpty()) return -1;
     QJsonObject obj;
     obj["checksum"]=checksum;
-    obj["checksum1000"]=sumit(path,1000);
+    obj["checksum1000"]=MLUtil::computeSha1SumOfFileHead(path,1000);
     obj["size"]=QFileInfo(path).size();
     println(QJsonDocument(obj).toJson());
     return 0;
@@ -269,12 +266,8 @@ int main_create_folder_prv(QString src_path,QString dst_path,const QVariantMap &
 }
 
 QStringList get_local_search_paths() {
-    QJsonObject config=get_config();
-    QJsonArray local_search_paths0=config.value("local_search_paths").toArray();
-    QStringList local_search_paths;
-    for (int i=0; i<local_search_paths0.count(); i++)
-        local_search_paths << local_search_paths0[0].toString();
-    QString temporary_path=config.value("temporary_path").toString();
+    QStringList local_search_paths=MLUtil::configResolvedPathList("prv","local_search_paths");
+    QString temporary_path=MLUtil::tempPath();
     if (!temporary_path.isEmpty()) {
         local_search_paths << temporary_path;
     }
@@ -293,8 +286,6 @@ int main_locate_file(const QJsonObject &obj,const QVariantMap &params) {
         opts.local_search_paths << params["path"].toString();
         opts.search_remotely=false;
     }
-
-    qDebug() << "---------------------------" << obj << opts.local_search_paths;
 
     QString fname_or_url=prvf.locate(opts);
     if (fname_or_url.isEmpty())
@@ -347,43 +338,15 @@ int main_download_file(const QJsonObject &obj,const QVariantMap &params) {
     return system(cmd.toUtf8().data());
 }
 
-QJsonObject get_config() {
-    QString fname1=qApp->applicationDirPath()+"/../prv.json.default";
-    QString fname2=qApp->applicationDirPath()+"/../prv.json";
-    QJsonParseError err1;
-    QJsonObject obj1=QJsonDocument::fromJson(read_text_file(fname1).toUtf8(),&err1).object();
-    if (err1.error!=QJsonParseError::NoError) {
-        qWarning() << "Error parsing configuration file: "+fname1+": "+err1.errorString();
-        abort();
-    }
-    QJsonObject obj2;
-    if (QFile::exists(fname2)) {
-        QJsonParseError err2;
-        obj2=QJsonDocument::fromJson(read_text_file(fname2).toUtf8(),&err2).object();
-        if (err2.error!=QJsonParseError::NoError) {
-            qWarning() << "Error parsing configuration file: "+fname2+": "+err2.errorString();
-            abort();
-        }
-    }
-    obj1=obj1["prv"].toObject();
-    obj2=obj2["prv"].toObject();
-    QStringList keys2=obj2.keys();
-    foreach (QString key,keys2) {
-        obj1[key]=obj2[key];
-    }
-    return obj1;
-}
-
 QString get_tmp_path() {
-    QJsonObject config=get_config();
-    QString temporary_path=config["temporary_path"].toString();
+    QString temporary_path=MLUtil::tempPath();
     if (temporary_path.isEmpty()) return "";
     QDir(temporary_path).mkdir("prv");
     return temporary_path+"/prv";
 }
 
 QString make_temporary_file() {
-    QString file_name=make_random_id(10)+".tmp";
+    QString file_name=MLUtil::makeRandomId(10)+".tmp";
     return get_tmp_path()+"/"+file_name;
 }
 
@@ -415,7 +378,7 @@ int main_upload(QString src_path,QString server_url,const QVariantMap &params) {
         println("File is empty... skipping: "+src_path);
         return 0;
     }
-    QString checksum00=sumit(src_path);
+    QString checksum00=MLUtil::computeSha1SumOfFile(src_path);
     if (checksum00.isEmpty()) {
         println("checksum is empty for file: "+src_path);
         return -1;
@@ -461,8 +424,7 @@ bool is_folder(QString path) {
 
 
 QString get_server_url(QString url_or_server_name) {
-    QJsonObject config=get_config();
-    QJsonArray remote_servers=config.value("servers").toArray();
+    QJsonArray remote_servers=MLUtil::configValue("prv","servers").toArray();
     for (int i=0; i<remote_servers.count(); i++) {
         QJsonObject server0=remote_servers[i].toObject();
         if (server0["name"].toString()==url_or_server_name) {
@@ -477,7 +439,6 @@ QString get_server_url(QString url_or_server_name) {
 }
 
 QJsonArray get_remote_servers() {
-    QJsonObject config=get_config();
-    QJsonArray remote_servers=config.value("servers").toArray();
+    QJsonArray remote_servers=MLUtil::configValue("prv","servers").toArray();
     return remote_servers;
 }
