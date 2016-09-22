@@ -550,7 +550,14 @@ public:
         parser.addOption(QCommandLineOption("checksum1000", "checksum", "checksum1000"));
         parser.addOption(QCommandLineOption("size", "size", "size"));
         QCommandLineOption pathOption("path", "path to search", "size");
-        pathOption.setHidden(true);
+
+        /*
+          @ww: Apparently setHidden was not part of Qt 5.5, so I am commenting it out.
+          The Qt5 version packaged for Ubuntu 16.04 appears to be 5.5.
+          And that is what I am using for my Docker testing
+        */
+        //pathOption.setHidden(true);
+
         parser.addOption(pathOption);
     }
     int execute(const QCommandLineParser& parser)
