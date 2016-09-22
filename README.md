@@ -22,7 +22,13 @@ Next, clone this repository and compile:
 
 > ./compile_components default
 
-When that succeeds, you can go right to the self-contained examples to test your installation.
+Add mountainlab/bin to your PATH environment variable. For example append
+
+> export PATH=/path/to/mountainlab/bin:$PATH
+
+to your ~/.bashrc file, and open a new terminal.
+
+Next you can go right to the self-contained examples to test your installation.
 
 > cd examples/003_kron_mountainsort
 
@@ -42,8 +48,32 @@ This should launch the central viewer.
 
 Linux/Ubuntu or Debian is easiest. Mac and other Linux flavors should also work. Windows is not necessarily excluded.
 
-The required packages are: 
+The required packages are: Qt5 (v5.5 or later), libfftw3-dev, octave, nodejs, npm
 
+The most up-to-date procedure for installing these packages is outlined in the mountainlab/Dockerfile. But here are the current set of operations for Ubuntu 16.04 (let me know if they are out of date):
+
+#### Qt5
+> apt-get install -y software-properties-common
+
+> apt-add-repository ppa:ubuntu-sdk-team/ppa
+
+> apt-get update
+
+> apt-get install -y qtdeclarative5-dev
+
+> apt-get install -y qt5-default qtbase5-dev qtscript5-dev make g++
+
+#### FFTW
+> apt-get install -y libfftw3-dev
+
+#### Octave
+> apt-get install -y octave
+
+#### NodeJS
+> apt-get install -y nodejs npm
+> npm install ini extend
+
+## Older information
 
 [About the software](https://mountainlab.vbulletin.net/articles/22-about-mountainlab)
 
