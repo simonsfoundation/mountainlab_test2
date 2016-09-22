@@ -568,8 +568,8 @@ QString find_file_with_checksum(QString dirpath, QString checksum, QString check
     foreach (QString fname, list) {
         QString path0 = dirpath + "/" + fname;
         if (QFileInfo(path0).size() == size_bytes) {
-            QString checksum0_1000 = MLUtil::computeSha1SumOfFileHead(path0,1000);
-            if (checksum0_1000==checksum1000) {
+            QString checksum0_1000 = MLUtil::computeSha1SumOfFileHead(path0, 1000);
+            if (checksum0_1000 == checksum1000) {
                 QString checksum1 = MLUtil::computeSha1SumOfFile(path0);
                 if (checksum1 == checksum) {
                     return path0;
@@ -588,7 +588,7 @@ QString find_file_with_checksum(QString dirpath, QString checksum, QString check
     return "";
 }
 
-QString find_file_with_checksum(const QString& checksum, const QString &checksum1000, long size_bytes)
+QString find_file_with_checksum(const QString& checksum, const QString& checksum1000, long size_bytes)
 {
     QStringList bigfile_paths = MLUtil::configResolvedPathList("mountainprocess", "bigfile_paths");
 

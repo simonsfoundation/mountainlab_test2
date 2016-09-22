@@ -497,50 +497,31 @@ QString http_get_text_curl_0(const QString& url)
 
 namespace NetUtils {
 
-QString httpPostFile(const QString& url, const QString& fileName)
+QString httpPostFile(const QUrl& url, const QString& fileName, const ProgressFunction& progressFunction)
 {
     QNetworkAccessManager manager;
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly))
         return QString::null;
-    QNetworkRequest request = QNetworkRequest(QUrl(url));
+    QNetworkRequest request = QNetworkRequest(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
     QNetworkReply* reply = manager.post(request, &file);
     QEventLoop loop;
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     // TODO: handle timeout
-    QObject::connect(reply, &QNetworkReply::uploadProgress, [reply](qint64 bytesSent, qint64 bytesTotal) {
-        if (bytesTotal == 0) return;
-
-        unsigned int prc = qRound(50*((double)bytesSent/(double)bytesTotal));
-        printf("\rUpload: ");
-        for(unsigned int i = 0; i < prc; ++i) {
-            printf("#");
-        }
-        for(unsigned int i = prc; i < 50; ++i) {
-            printf(".");
-        }
-//        printf(" %lld/%lld", bytesSent, bytesTotal);
-        fflush(stdout);
-    });
-#if 0
-    QObject::connect(reply, &QNetworkReply::downloadProgress, [reply](qint64 bytesReceived, qint64 bytesTotal) {
-       if (bytesTotal == 0) return;
-       unsigned int prc = qBound(0, qRound(50*((double)bytesReceived/(double)bytesTotal)), 50);
-       printf("\rDownload: ");
-       for(unsigned int i = 0; i < prc; ++i) {
-           printf("#");
-       }
-       for(unsigned int i = prc; i < 50; ++i) {
-           printf(".");
-       }
-//        printf(" %lld/%lld", bytesReceived, bytesTotal);
-       fflush(stdout);
-    });
-#endif
+    if (progressFunction) {
+        QObject::connect(reply, &QNetworkReply::uploadProgress, [reply, progressFunction](qint64 bytesSent, qint64 bytesTotal) {
+            progressFunction(bytesSent, bytesTotal);
+        });
+    }
     loop.exec();
     printf("\n");
     QTextStream stream(reply);
     return stream.readAll();
+}
+
+QString httpPostFile(const QString& url, const QString& fileName)
+{
+    return httpPostFile(QUrl(url), fileName);
 }
 }
