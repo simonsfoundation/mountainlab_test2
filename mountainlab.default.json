@@ -1,0 +1,21 @@
+{
+	"general":{
+		"temporary_path":"/tmp"
+	},
+	"mountainprocess":{
+		"max_num_simultaneous_processes":2,
+		"processor_paths":["mountainprocess/processors","user/processors"]
+	},
+	"prv":{
+		"local_search_paths":["examples"],
+		"servers":[
+			{"name":"datalaboratory","passcode":"","host":"http://datalaboratory.org","port":8080,"path":"/prv"},
+			{"name":"localhost","passcode":"","host":"http://localhost","port":8080,"path":"/prv"}
+		]
+	},
+	"kron":{
+		"dataset_paths":["mountainsort/example_datasets","user/datasets"],
+		"pipeline_paths":["mountainsort/pipelines","/user/pipelines"],
+		"view_program_paths":["mountainsort/view_programs","/user/view_programs"]
+	}
+}
