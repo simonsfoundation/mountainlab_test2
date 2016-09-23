@@ -21,6 +21,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QTimer>
 
 class PrvFilePrivate {
 public:
@@ -286,24 +287,40 @@ bool PrvFile::recoverFile(const QString& dst_file_path, const PrvFileRecoverOpti
     else {
         d->println(QString("Downloading %1 to %2").arg(fname_or_url).arg(dst_file_path));
         QString fname_tmp = dst_file_path + ".tmp." + MLUtil::makeRandomId(5);
-        QString cmd = QString("curl %1 > %2").arg(fname_or_url).arg(fname_tmp);
-        int ret = system(cmd.toUtf8().data());
-        if (ret < 0)
-            return false;
-        if ((QFileInfo(fname_tmp).size() != original_size) || ((!checksum1000.isEmpty()) && (MLUtil::computeSha1SumOfFileHead(fname_tmp, 1000) != checksum1000))) {
-            if (QFileInfo(fname_tmp).size() < 10000) {
-                QString txt0 = TextFile::read(fname_tmp);
-                if (txt0.startsWith("{")) {
-                    //must be an error message from the server
-                    qWarning() << txt0;
-                    return false;
-                }
-            }
-            qWarning() << QString("Problem with size or checksum1000 of downloaded file: %1 <> %2").arg(QFileInfo(fname_tmp).size()).arg(original_size);
+        QFile tmpFile(fname_tmp);
+        if (!tmpFile.open(QIODevice::WriteOnly)) {
             return false;
         }
-        else {
+        QNetworkAccessManager manager;
+        QNetworkReply *reply = manager.get(QNetworkRequest(QUrl(fname_or_url)));
+        QObject::connect(reply, &QNetworkReply::readyRead, [reply,&tmpFile]{
+           while(reply->bytesAvailable())
+               tmpFile.write(reply->read(4096));
+        });
+        QEventLoop loop;
+        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+        loop.exec();
+        if (reply->error() == QNetworkReply::NoError) {
+            while(reply->bytesAvailable())
+                tmpFile.write(reply->read(4096));
+            reply->deleteLater();
+            tmpFile.close();
+            if ((QFileInfo(fname_tmp).size() != original_size) || ((!checksum1000.isEmpty()) && (MLUtil::computeSha1SumOfFileHead(fname_tmp, 1000) != checksum1000))) {
+                if (QFileInfo(fname_tmp).size() < 10000) {
+                    QString txt0 = TextFile::read(fname_tmp);
+                    if (txt0.startsWith("{")) {
+                        //must be an error message from the server
+                        qWarning() << txt0;
+                        return false;
+                    }
+                }
+                qWarning() << QString("Problem with size or checksum1000 of downloaded file: %1 <> %2").arg(QFileInfo(fname_tmp).size()).arg(original_size);
+                return false;
+            }
             return QFile::rename(fname_tmp, dst_file_path);
+        } else {
+            tmpFile.remove();
+            return false;
         }
     }
 }
@@ -475,24 +492,23 @@ bool curl_is_installed()
 
 QString http_get_text_curl_0(const QString& url)
 {
-    if (!curl_is_installed()) {
-        qWarning() << "Problem in http request. It appears that curl is not installed.";
-        return "";
+    QNetworkAccessManager manager;
+    QNetworkReply *reply = manager.get(QNetworkRequest(QUrl(url)));
+    QEventLoop loop;
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    QTimer timeoutTimer;
+    timeoutTimer.setInterval(20000); // 20s of inactivity causes us to break the connection
+    QObject::connect(&timeoutTimer, SIGNAL(timeout()), reply, SLOT(abort()));
+    QObject::connect(reply, SIGNAL(downloadProgress(qint64,qint64)), &timeoutTimer, SLOT(start()));
+    timeoutTimer.start();
+    loop.exec();
+    if (reply->error() != QNetworkReply::NoError) {
+        reply->deleteLater();
+        return QString();
     }
-    //QString tmp_fname = make_temporary_file()+".curl";
-    QString cmd = QString("curl \"%1\"").arg(url);
-    //int exit_code = system(cmd.toLatin1().data());
-    QProcess P;
-    P.start(cmd);
-    P.waitForStarted();
-    P.waitForFinished(-1);
-    int exit_code = P.exitCode();
-    if (exit_code != 0) {
-        //QFile::remove(tmp_fname);
-        return "";
-    }
-    P.readAllStandardError();
-    return P.readAllStandardOutput();
+    QTextStream stream(reply);
+    reply->deleteLater();
+    return stream.readAll();
 }
 
 namespace NetUtils {
@@ -508,7 +524,10 @@ QString httpPostFile(const QUrl& url, const QString& fileName, const ProgressFun
     QNetworkReply* reply = manager.post(request, &file);
     QEventLoop loop;
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-    // TODO: handle timeout
+    QTimer timeoutTimer;
+    timeoutTimer.setInterval(20000); // 20s of inactivity causes us to break the connection
+    QObject::connect(&timeoutTimer, SIGNAL(timeout()), reply, SLOT(abort()));
+    QObject::connect(reply, SIGNAL(uploadProgress(qint64,qint64)), &timeoutTimer, SLOT(start()));
     if (progressFunction) {
         QObject::connect(reply, &QNetworkReply::uploadProgress, [reply, progressFunction](qint64 bytesSent, qint64 bytesTotal) {
             progressFunction(bytesSent, bytesTotal);
@@ -516,7 +535,12 @@ QString httpPostFile(const QUrl& url, const QString& fileName, const ProgressFun
     }
     loop.exec();
     printf("\n");
+    if (reply->error() != QNetworkReply::NoError) {
+        reply->deleteLater();
+        return QString();
+    }
     QTextStream stream(reply);
+    reply->deleteLater();
     return stream.readAll();
 }
 
