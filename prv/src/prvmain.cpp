@@ -415,7 +415,7 @@ public:
         parser.addOption(QCommandLineOption("create-temporary-files", "if needed, create the associated temporary files"));
         parser.addOption(QCommandLineOption("ensure-local", "if needed, copy the file to a temporary path so that it is within the search paths of the local machine."));
         parser.addOption(QCommandLineOption("ensure-remote", "if needed, upload the file to the server. Must specify --server"));
-        parser.addOption(QCommandLineOption("server", "to be used with --ensure-remote"));
+        parser.addOption(QCommandLineOption("server", "to be used with --ensure-remote", "[server name]"));
     }
     int execute(const QCommandLineParser& parser)
     {
@@ -446,11 +446,30 @@ public:
             params.insert("create-temporary-files", true);
         }
         if (is_file(src_path)) {
-            return create_file_prv(src_path, dst_path, params);
+            int ret = create_file_prv(src_path, dst_path, params);
+            if (ret != 0)
+                return ret;
+            if (parser.isSet("ensure-local")) {
+                if (!ensure_local(dst_path))
+                    return -1;
+            }
+            if (parser.isSet("ensure-remote")) {
+                if (parser.value("server").isEmpty()) {
+                    println("Error: You must set the server option when using --ensure-remote");
+                    return -1;
+                }
+                if (!ensure_remote(dst_path, parser.value("server")))
+                    return -1;
+            }
+            return 0;
         }
         else if (is_folder(src_path)) {
             if (parser.isSet("ensure-local")) {
                 println("Cannot ensure-local for folders.");
+                return -1;
+            }
+            if (parser.isSet("ensure-remote")) {
+                println("Cannot ensure-remote for folders.");
                 return -1;
             }
             return create_folder_prv(src_path, dst_path, params);
@@ -484,6 +503,21 @@ private:
         if (!PF.write(dst_path))
             return -1;
         return 0;
+    }
+
+    bool ensure_local(QString prv_fname)
+    {
+        QString cmd = "prv";
+        QStringList args;
+        args << "ensure-local" << prv_fname;
+        return (QProcess::execute(cmd, args) == 0);
+    }
+    bool ensure_remote(QString prv_fname, QString server)
+    {
+        QString cmd = "prv";
+        QStringList args;
+        args << "ensure-remote" << prv_fname << "--server=" + server;
+        return (QProcess::execute(cmd, args) == 0);
     }
 };
 
