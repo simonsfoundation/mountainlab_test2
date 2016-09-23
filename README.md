@@ -51,6 +51,9 @@ The required packages are: Qt5 (v5.5 or later), FFTW, Octave, NodeJS
 The most up-to-date procedure for installing these packages is reflected in the mountainlab/Dockerfile. But here are the current set of operations for Ubuntu 16.04 (let me know if they are out of date):
 
 #### Qt5
+
+If you are on a later version of Ubuntu (such as 16.04), you can get away with the installing Qt5 using the package manager. Otherwise, that method may not give a recent enough Qt5 version. In that case (for example if you are on 14.04, or using Mac or other Linux flavor), you should install Qt5 via qt.io website. Instructions are given in a section below.
+
 > apt-get install -y software-properties-common
 
 > apt-add-repository ppa:ubuntu-sdk-team/ppa
@@ -71,6 +74,16 @@ The most up-to-date procedure for installing these packages is reflected in the 
 > apt-get install -y nodejs npm
 
 > npm install ini extend
+
+## Installing Qt5 from qt.io
+
+As mentioned above, if you are not using a later version of Ubuntu, you probably won't get a recent enough version from the package manager. In that case follow these directions to install a recent version of Qt5:
+
+Go to [https://www.qt.io/download/|https://www.qt.io/download/] and click through that you want to install the open source version. Download and run the appropriate installer. Note that you do not need to set up a Qt account -- you can skip that step in the install wizard.
+
+We recommend installing this in your home directory, which does not require admin privileges.
+
+Once installed you will need to prepend the path to qmake to your PATH environment variable. On my system that is /home/magland/Qt/5.7/gcc_64/bin.
 
 ## Older information
 
