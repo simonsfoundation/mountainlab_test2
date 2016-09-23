@@ -23,6 +23,7 @@
 #include <QProcess>
 #include "taskprogress.h"
 #include "exportmv2filedialog.h"
+#include <QThread>
 
 class MVExportControlPrivate {
 public:
@@ -86,22 +87,6 @@ QString MVExportControl::title() const
     return "Export";
 }
 
-bool MVExportControl::ensure_local(QString prv_path)
-{
-    QString cmd = "prv";
-    QStringList args;
-    args << "ensure-local" << prv_path;
-    return (QProcess::execute(cmd, args) == 0);
-}
-
-bool MVExportControl::ensure_remote(QString prv_path, QString server)
-{
-    QString cmd = "prv";
-    QStringList args;
-    args << "ensure-remote" << prv_path << "--server=" + server;
-    return (QProcess::execute(cmd, args) == 0);
-}
-
 void MVExportControl::updateContext()
 {
 }
@@ -110,33 +95,65 @@ void MVExportControl::updateControls()
 {
 }
 
-void MVExportControl::slot_export_mv2_document()
-{
-    ExportMV2FileDialog dlg;
-    if (dlg.exec() != QDialog::Accepted)
-        return;
-    if ((dlg.ensureLocal()) || (dlg.ensureRemote())) {
-        QStringList all_prv_paths;
-        if (!mvContext()->createAllPrvFiles(all_prv_paths)) {
-            QMessageBox::warning(0, "Export .mv2 document", "Error creating .prv files");
-            return;
-        }
-        foreach (QString path, all_prv_paths) {
-            if (dlg.ensureLocal()) {
-                if (!MVExportControl::ensure_local(path)) {
-                    QMessageBox::warning(0, "Export .mv2 document", "Error ensuring local: " + path);
+class UploadStuffForMV2 : public QThread {
+public:
+    QStringList all_prv_paths;
+    ///TODO: how can we guarantee these guys won't get deleted during this potentially rather lengthy process.
+    /// They should really be in memory from the start!
+    bool do_ensure_local;
+    bool do_ensure_remote;
+    bool raw_only;
+    QString server;
+
+    void run()
+    {
+        TaskProgress task(".mv2 -- saving and/or uploading files");
+        for (int i = 0; i < all_prv_paths.count(); i++) {
+            QString path = all_prv_paths[i];
+            task.log() << QString("i = %1 / %2").arg(i + 1).arg(all_prv_paths.count());
+            task.setProgress((i * 2 + 0.5) / (all_prv_paths.count() * 2));
+            if (do_ensure_local) {
+                task.log() << "Ensuring local: " + path;
+                if (!ensure_local(path)) {
+                    task.error() << "Error ensuring local: " + path;
                     return;
                 }
             }
-            if (dlg.ensureRemote()) {
-                if (!MVExportControl::ensure_remote(path, dlg.server())) {
-                    QMessageBox::warning(0, "Export .mv2 document", QString("Error ensuring remote (%1): %2").arg(dlg.server()).arg(path));
+            task.setProgress((i * 2 + 1 + 0.5) / (all_prv_paths.count() * 2));
+            if (do_ensure_remote) {
+                task.log() << QString("Ensuring remote (%1): %2").arg(server).arg(path);
+                if (!ensure_remote(path, server)) {
+                    task.error() << QString("Error ensuring remote (%1): %2").arg(server).arg(path);
                     return;
                 }
             }
         }
     }
 
+private:
+    bool ensure_local(QString prv_path)
+    {
+        QString cmd = "prv";
+        QStringList args;
+        args << "ensure-local" << prv_path;
+        if (raw_only)
+            args << "--raw-only";
+        return (QProcess::execute(cmd, args) == 0);
+    }
+
+    bool ensure_remote(QString prv_path, QString server)
+    {
+        QString cmd = "prv";
+        QStringList args;
+        args << "ensure-remote" << prv_path << "--server=" + server;
+        if (raw_only)
+            args << "--raw-only";
+        return (QProcess::execute(cmd, args) == 0);
+    }
+};
+
+void MVExportControl::slot_export_mv2_document()
+{
     //QSettings settings("SCDA", "MountainView");
     //QString default_dir = settings.value("default_export_dir", "").toString();
     QString default_dir = QDir::currentPath();
@@ -161,6 +178,25 @@ void MVExportControl::slot_export_mv2_document()
     //    TaskProgress task("export mountainview document");
     //    task.error("Error writing .mv file: " + fname);
     //}
+
+    ExportMV2FileDialog dlg;
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+    if ((dlg.ensureLocal()) || (dlg.ensureRemote())) {
+        QStringList all_prv_paths;
+        if (!mvContext()->createAllPrvFiles(all_prv_paths)) {
+            QMessageBox::warning(0, "Export .mv2 document", "Error creating .prv files");
+            return;
+        }
+        UploadStuffForMV2* thread = new UploadStuffForMV2;
+        /// Witold, is the following line okay?
+        QObject::connect(thread, SIGNAL(finished()), this, SLOT(deleteLater()));
+        thread->all_prv_paths = all_prv_paths;
+        thread->do_ensure_local = dlg.ensureLocal();
+        thread->do_ensure_remote = dlg.ensureRemote();
+        thread->server = dlg.server();
+        thread->start();
+    }
 }
 
 void MVExportControl::slot_export_mv_document()

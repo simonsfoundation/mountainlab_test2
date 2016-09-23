@@ -49,6 +49,16 @@ Would you like to ensure that...</string>
       <widget class="QComboBox" name="server"/>
      </item>
      <item>
+      <widget class="QCheckBox" name="raw_only">
+       <property name="text">
+        <string>Send raw only (regeneration may be required upon opening)</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -70,6 +80,9 @@ Would you like to ensure that...</string>
      </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
      </property>
     </widget>
    </item>

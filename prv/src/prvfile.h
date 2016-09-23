@@ -37,7 +37,9 @@ public:
     friend class PrvFilePrivate;
     PrvFile(const QString& file_path = "");
     PrvFile(const QJsonObject& obj);
+    PrvFile(const PrvFile& other);
     virtual ~PrvFile();
+    void operator=(const PrvFile& other);
     QJsonObject object() const;
     bool read(const QString& file_path);
     bool write(const QString& file_path) const;

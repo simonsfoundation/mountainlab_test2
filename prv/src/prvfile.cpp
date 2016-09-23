@@ -37,6 +37,7 @@ public:
     QString find_file(long size, const QString& checksum, const QString& checksum1000_optional, const PrvFileLocateOptions& opts);
     QString find_remote_file(long size, const QString& checksum, const QString& checksum1000_optional, const PrvFileLocateOptions& opts);
     QString find_local_file(long size, const QString& checksum, const QString& checksum1000_optional, const PrvFileLocateOptions& opts);
+    void copy_from(const PrvFile& other);
 };
 
 PrvFile::PrvFile(const QString& file_path)
@@ -56,9 +57,21 @@ PrvFile::PrvFile(const QJsonObject& obj)
     d->m_object = obj;
 }
 
+PrvFile::PrvFile(const PrvFile& other)
+{
+    d = new PrvFilePrivate;
+    d->q = this;
+    d->copy_from(other);
+}
+
 PrvFile::~PrvFile()
 {
     delete d;
+}
+
+void PrvFile::operator=(const PrvFile& other)
+{
+    d->copy_from(other);
 }
 
 QJsonObject PrvFile::object() const
@@ -486,6 +499,12 @@ QString PrvFilePrivate::find_local_file(long size, const QString& checksum, cons
             return fname;
     }
     return "";
+}
+
+void PrvFilePrivate::copy_from(const PrvFile& other)
+{
+    m_object = other.d->m_object;
+    m_prv_file_path = other.d->m_prv_file_path;
 }
 
 bool is_url(QString txt)

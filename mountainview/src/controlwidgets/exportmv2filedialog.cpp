@@ -18,6 +18,8 @@ ExportMV2FileDialog::ExportMV2FileDialog(QWidget* parent)
     }
 
     QObject::connect(ui->ensure_remote, SIGNAL(stateChanged(int)), this, SLOT(slot_update_enabled()));
+
+    slot_update_enabled();
 }
 
 ExportMV2FileDialog::~ExportMV2FileDialog()
@@ -33,6 +35,11 @@ bool ExportMV2FileDialog::ensureLocal() const
 bool ExportMV2FileDialog::ensureRemote() const
 {
     return ui->ensure_remote->isChecked();
+}
+
+bool ExportMV2FileDialog::rawOnly() const
+{
+    return ui->raw_only->isChecked();
 }
 
 QString ExportMV2FileDialog::server() const

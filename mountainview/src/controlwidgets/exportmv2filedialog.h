@@ -16,6 +16,7 @@ public:
 
     bool ensureLocal() const;
     bool ensureRemote() const;
+    bool rawOnly() const;
     QString server() const;
 
 private slots:

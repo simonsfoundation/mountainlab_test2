@@ -19,8 +19,6 @@ public:
 
     QString title() const Q_DECL_OVERRIDE;
 
-    static bool ensure_local(QString prv_path);
-    static bool ensure_remote(QString prv_path, QString server);
 public slots:
     virtual void updateContext() Q_DECL_OVERRIDE;
     virtual void updateControls() Q_DECL_OVERRIDE;
