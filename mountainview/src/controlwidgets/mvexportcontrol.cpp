@@ -20,7 +20,9 @@
 #include <mvmainwindow.h>
 #include <QMessageBox>
 #include <QTextBrowser>
+#include <QProcess>
 #include "taskprogress.h"
+#include "exportmv2filedialog.h"
 
 class MVExportControlPrivate {
 public:
@@ -84,6 +86,22 @@ QString MVExportControl::title() const
     return "Export";
 }
 
+bool MVExportControl::ensure_local(QString prv_path)
+{
+    QString cmd = "prv";
+    QStringList args;
+    args << "ensure-local" << prv_path;
+    return (QProcess::execute(cmd, args) == 0);
+}
+
+bool MVExportControl::ensure_remote(QString prv_path, QString server)
+{
+    QString cmd = "prv";
+    QStringList args;
+    args << "ensure-remote" << prv_path << "--server=" + server;
+    return (QProcess::execute(cmd, args) == 0);
+}
+
 void MVExportControl::updateContext()
 {
 }
@@ -94,6 +112,31 @@ void MVExportControl::updateControls()
 
 void MVExportControl::slot_export_mv2_document()
 {
+    ExportMV2FileDialog dlg;
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+    if ((dlg.ensureLocal()) || (dlg.ensureRemote())) {
+        QStringList all_prv_paths;
+        if (!mvContext()->createAllPrvFiles(all_prv_paths)) {
+            QMessageBox::warning(0, "Export .mv2 document", "Error creating .prv files");
+            return;
+        }
+        foreach (QString path, all_prv_paths) {
+            if (dlg.ensureLocal()) {
+                if (!MVExportControl::ensure_local(path)) {
+                    QMessageBox::warning(0, "Export .mv2 document", "Error ensuring local: " + path);
+                    return;
+                }
+            }
+            if (dlg.ensureRemote()) {
+                if (!MVExportControl::ensure_remote(path, dlg.server())) {
+                    QMessageBox::warning(0, "Export .mv2 document", QString("Error ensuring remote (%1): %2").arg(dlg.server()).arg(path));
+                    return;
+                }
+            }
+        }
+    }
+
     //QSettings settings("SCDA", "MountainView");
     //QString default_dir = settings.value("default_export_dir", "").toString();
     QString default_dir = QDir::currentPath();

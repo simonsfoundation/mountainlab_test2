@@ -7,7 +7,9 @@
 #include "mvcontext.h"
 #include <QAction>
 #include <QDebug>
+#include <QJsonDocument>
 #include <QThread>
+#include <cachemanager.h>
 #include <taskprogress.h>
 #include "mlcommon.h"
 #include "mountainprocessrunner.h"
@@ -891,6 +893,30 @@ void MVContext::copySettingsFrom(MVContext* other)
     this->setMLProxyUrl(other->mlProxyUrl());
     this->setSampleRate(other->sampleRate());
     this->d->m_options = other->d->m_options;
+}
+
+bool MVContext::createAllPrvFiles(QStringList& paths_ret)
+{
+    QList<QJsonObject> prv_objects;
+    prv_objects << d->m_firings.toPrvObject();
+
+    QStringList tsnames = this->timeseriesNames();
+    foreach (QString tsname, tsnames) {
+        prv_objects << this->timeseries(tsname).toPrvObject();
+    }
+
+    paths_ret.clear();
+    foreach (QJsonObject obj, prv_objects) {
+        QString tmp_fname = CacheManager::globalInstance()->makeLocalFile();
+        QString json = QJsonDocument(obj).toJson();
+        if (!TextFile::write(tmp_fname, json)) {
+            qWarning() << "Unexpected problem writing text file: " + tmp_fname;
+            return false;
+        }
+        paths_ret << tmp_fname;
+    }
+
+    return true;
 }
 
 void MVContext::slot_option_changed(QString name)

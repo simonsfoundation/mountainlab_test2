@@ -21,8 +21,10 @@ TEMPLATE = app
 INCLUDEPATH += msv/plugins msv/views
 VPATH += msv/plugins msv/views
 
-HEADERS += clusterdetailplugin.h clusterdetailview.h
-SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp
+HEADERS += clusterdetailplugin.h clusterdetailview.h \
+    controlwidgets/exportmv2filedialog.h
+SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
+    controlwidgets/exportmv2filedialog.cpp
 
 HEADERS += clipsviewplugin.h mvclipsview.h
 SOURCES += clipsviewplugin.cpp mvclipsview.cpp
@@ -157,4 +159,7 @@ RESOURCES += mountainview.qrc \
   QMAKE_CXXFLAGS += -fopenmp
 }
 #-std=c++11   # AHB removed since not in GNU gcc 4.6.3
+
+FORMS += \
+    controlwidgets/exportmv2filedialog.ui
 

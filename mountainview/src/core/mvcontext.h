@@ -197,6 +197,9 @@ public:
     /////////////////////////////////////////////////
     void copySettingsFrom(MVContext* other);
 
+    /////////////////////////////////////////////////
+    bool createAllPrvFiles(QStringList& paths_ret);
+
 signals:
     void currentTimeseriesChanged();
     void timeseriesNamesChanged();
