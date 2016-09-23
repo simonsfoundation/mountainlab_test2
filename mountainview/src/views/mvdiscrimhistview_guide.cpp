@@ -316,5 +316,6 @@ MVAbstractView* MVDiscrimHistGuideFactory::createView(MVContext* context)
 
 bool MVDiscrimHistGuideFactory::isEnabled(MVContext* context) const
 {
+    Q_UNUSED(context)
     return true;
 }

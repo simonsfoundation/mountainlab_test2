@@ -21,17 +21,20 @@ public:
     DiskReadMda(const QString& path = ""); ///Constructor pointing to the .mda file specified by path (file name).
     DiskReadMda(const DiskReadMda& other); ///Copy constructor
     DiskReadMda(const Mda& X); ///Constructor based on an in-memory array. This enables passing an Mda into a function that expects a DiskReadMda.
+    DiskReadMda(const QJsonObject& prv_object);
     virtual ~DiskReadMda();
     void operator=(const DiskReadMda& other);
 
     ///Set the path (file name) of the .mda file to read.
     void setPath(const QString& file_path);
+    void setPrvObject(const QJsonObject& prv_object);
 
     void setRemoteDataType(const QString& dtype);
     void setDownloadChunkSize(long size);
     long downloadChunkSize();
 
     QString makePath() const; //not capturing the reshaping
+    QJsonObject toPrvObject() const;
 
     ///The dimensions of the array
     long N1() const;

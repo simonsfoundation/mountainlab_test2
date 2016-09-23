@@ -141,10 +141,13 @@ int main(int argc, char* argv[])
 
     CLParams CLP(argc, argv);
 
-    if (!resolve_prv_files(CLP.named_parameters)) {
-        qWarning() << "Could not resolve .prv file. Try adjusting the prv settings in mountainlab.user.json";
+    if (!prepare_prv_files(CLP.named_parameters)) {
+        qWarning() << "Could not prepare .prv files. Try adjusting the prv settings in mountainlab.user.json";
         return -1;
     }
+
+    qDebug() << "----------------------------------------";
+    qDebug() << CLP.named_parameters;
 
     QList<QColor> channel_colors;
     QStringList color_strings;
@@ -161,6 +164,10 @@ int main(int argc, char* argv[])
     QString mv_fname;
     if (CLP.unnamed_parameters.value(0).endsWith(".mv")) {
         mv_fname = CLP.unnamed_parameters.value(0);
+    }
+    QString mv2_fname;
+    if (CLP.unnamed_parameters.value(0).endsWith(".mv2")) {
+        mv2_fname = CLP.unnamed_parameters.value(0);
     }
     if (CLP.unnamed_parameters.value(0).endsWith(".smv")) {
         MVContext* mvcontext = new MVContext;
@@ -272,6 +279,11 @@ int main(int argc, char* argv[])
             QString json = TextFile::read(mv_fname);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
             context->setFromMVFileObject(obj);
+        }
+        if (!mv2_fname.isEmpty()) {
+            QString json = TextFile::read(mv2_fname);
+            QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
+            context->setFromMV2FileObject(obj);
         }
 
         if (CLP.named_parameters.contains("samplerate")) {

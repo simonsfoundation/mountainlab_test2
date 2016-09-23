@@ -90,7 +90,9 @@ public:
 
     void clear();
     void setFromMVFileObject(QJsonObject obj);
+    void setFromMV2FileObject(QJsonObject obj);
     QJsonObject toMVFileObject() const;
+    QJsonObject toMV2FileObject() const;
 
     /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;

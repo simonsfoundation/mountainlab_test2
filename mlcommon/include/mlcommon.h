@@ -89,7 +89,9 @@ T MLCompute::max(const QVector<T>& X)
     return *std::max_element(X.constBegin(), X.constEnd());
 }
 
+QString resolve_prv_object(const QJsonObject& obj);
 QString resolve_prv_file(const QString& prv_fname);
 bool resolve_prv_files(QMap<QString, QVariant>& command_line_params);
+bool prepare_prv_files(QMap<QString, QVariant>& command_line_params);
 
 #endif // TEXTFILE_H

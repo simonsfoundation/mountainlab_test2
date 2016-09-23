@@ -23,6 +23,7 @@ public slots:
     virtual void updateControls() Q_DECL_OVERRIDE;
 
 private slots:
+    void slot_export_mv2_document();
     void slot_export_mv_document();
     void slot_export_static_views();
     void slot_share_views_on_web();

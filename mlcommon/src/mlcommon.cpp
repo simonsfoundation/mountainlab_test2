@@ -765,6 +765,20 @@ QString create_file_from_prv(QString output_name, QString checksum0, QString che
     return "";
 }
 
+QString resolve_prv_object(const QJsonObject& obj)
+{
+    QString path0 = obj["original_path"].toString();
+    QString checksum0 = obj["original_checksum"].toString();
+    QString checksum0_1000 = obj["original_checksum_1000"].toString();
+    long size0 = obj["original_size"].toVariant().toLongLong();
+    QString path2 = create_file_from_prv(path0, checksum0, checksum0_1000, size0, obj["processes"].toArray());
+    if (!path2.isEmpty()) {
+        return path2;
+    }
+    qWarning() << "Unable to resolve prv object. Original path: " + path0;
+    return "";
+}
+
 QString resolve_prv_file(const QString& prv_fname)
 {
     QString json = TextFile::read(prv_fname);
@@ -775,16 +789,11 @@ QString resolve_prv_file(const QString& prv_fname)
         qWarning() << "Error parsing json." << err.errorString();
         return "";
     }
-    QString path0 = obj["original_path"].toString();
-    QString checksum0 = obj["original_checksum"].toString();
-    QString checksum0_1000 = obj["original_checksum_1000"].toString();
-    long size0 = obj["original_size"].toVariant().toLongLong();
-    QString path2 = create_file_from_prv(path0, checksum0, checksum0_1000, size0, obj["processes"].toArray());
-    if (!path2.isEmpty()) {
-        return path2;
+    QString ret = resolve_prv_object(obj);
+    if (ret.isEmpty()) {
+        qWarning() << "Unable to resolve: " + prv_fname;
     }
-    qWarning() << "Unable to resolve: " + prv_fname;
-    return "";
+    return ret;
 }
 
 bool resolve_prv_files(QMap<QString, QVariant>& command_line_params)
@@ -807,6 +816,33 @@ bool resolve_prv_files(QMap<QString, QVariant>& command_line_params)
                 printf("Resolved: %s --> %s\n", fname.toLatin1().data(), val.toString().toLatin1().data());
             }
             command_line_params[key] = val;
+        }
+    }
+    return true;
+}
+
+bool prepare_prv_files(QMap<QString, QVariant>& command_line_params)
+{
+    QStringList keys = command_line_params.keys();
+    foreach (QString key, keys) {
+        QVariant val = command_line_params[key];
+        if ((!QFile::exists(val.toString())) && (QFile::exists(val.toString() + ".prv"))) {
+            val = val.toString() + ".prv";
+            command_line_params[key] = val;
+        }
+        if (val.toString().endsWith(".prv")) {
+            QString fname = val.toString();
+            val = resolve_prv_file(fname);
+            if (val.toString().isEmpty()) {
+                qWarning() << "Error resolving .prv file: " + fname;
+                return false;
+            }
+            else {
+                printf("Resolved: %s --> %s\n", fname.toLatin1().data(), val.toString().toLatin1().data());
+            }
+
+            //this is the difference between resolve_prv_files and prepare_prv_files!!
+            //command_line_params[key] = val;
         }
     }
     return true;

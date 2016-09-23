@@ -36,6 +36,11 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
     FlowLayout* flayout = new FlowLayout;
     this->setLayout(flayout);
     {
+        QPushButton* B = new QPushButton("Export .mv2 document");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_mv2_document()));
+        flayout->addWidget(B);
+    }
+    {
         QPushButton* B = new QPushButton("Export .mv document");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_mv_document()));
         flayout->addWidget(B);
@@ -85,6 +90,34 @@ void MVExportControl::updateContext()
 
 void MVExportControl::updateControls()
 {
+}
+
+void MVExportControl::slot_export_mv2_document()
+{
+    //QSettings settings("SCDA", "MountainView");
+    //QString default_dir = settings.value("default_export_dir", "").toString();
+    QString default_dir = QDir::currentPath();
+    QString fname = QFileDialog::getSaveFileName(this, "Export mv2 document", default_dir, "*.mv2");
+    if (fname.isEmpty())
+        return;
+    //settings.setValue("default_export_dir", QFileInfo(fname).path());
+    if (QFileInfo(fname).suffix() != "mv2")
+        fname = fname + ".mv2";
+    TaskProgress task("export mv2 document");
+    task.log() << "Writing: " + fname;
+    QJsonObject obj = this->mvContext()->toMV2FileObject();
+    QString json = QJsonDocument(obj).toJson();
+    if (TextFile::write(fname, json)) {
+        task.log() << QString("Wrote %1 kilobytes").arg(json.count() * 1.0 / 1000);
+    }
+    else {
+        task.error("Error writing .mv2 file: " + fname);
+    }
+    //MVFile ff = mainWindow()->getMVFile();
+    //if (!ff.write(fname)) {
+    //    TaskProgress task("export mountainview document");
+    //    task.error("Error writing .mv file: " + fname);
+    //}
 }
 
 void MVExportControl::slot_export_mv_document()

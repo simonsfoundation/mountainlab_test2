@@ -5,11 +5,14 @@
 #include <QFile>
 #include <QCryptographicHash>
 #include <QDir>
+#include <QJsonObject>
+#include <QJsonDocument>
 #include "cachemanager.h"
 #include "taskprogress.h"
 #ifdef USE_REMOTE_READ_MDA
 #include "remotereadmda.h"
 #endif
+#include "mlcommon.h"
 
 #define MAX_PATH_LEN 10000
 #define DEFAULT_CHUNK_SIZE 1e6
@@ -36,6 +39,7 @@ public:
 #endif
 
     QString m_path;
+    QJsonObject m_prv_object;
     void construct_and_clear();
     bool read_header_if_needed();
     bool open_file_if_needed();
@@ -70,6 +74,20 @@ DiskReadMda::DiskReadMda(const Mda& X)
     d->m_memory_mda = X;
 }
 
+DiskReadMda::DiskReadMda(const QJsonObject& prv_object)
+{
+    d = new DiskReadMdaPrivate;
+    d->q = this;
+    d->construct_and_clear();
+    QString path0 = resolve_prv_object(prv_object);
+    if (path0.isEmpty()) {
+        qWarning() << "Unable to construct DiskReadMda from prv_object. Unable to resolve. Original path = " << prv_object["original_path"].toString();
+        return;
+    }
+    this->setPath(path0);
+    this->setPrvObject(prv_object);
+}
+
 DiskReadMda::~DiskReadMda()
 {
     if (d->m_file) {
@@ -102,9 +120,27 @@ void DiskReadMda::setPath(const QString& file_path)
         (*this) = X;
         return;
     }
+    else if (file_path.endsWith(".prv")) {
+        QString file_path_2 = resolve_prv_file(file_path);
+        if (!file_path_2.isEmpty()) {
+            this->setPath(file_path_2);
+            QJsonObject obj = QJsonDocument::fromJson(TextFile::read(file_path).toUtf8()).object();
+            this->setPrvObject(obj);
+            return;
+        }
+        else {
+            qWarning() << "Unable to load DiskReadMda because .prv file could not be resolved.";
+            return;
+        }
+    }
     else {
         d->m_path = file_path;
     }
+}
+
+void DiskReadMda::setPrvObject(const QJsonObject& prv_object)
+{
+    d->m_prv_object = prv_object;
 }
 
 void DiskReadMda::setRemoteDataType(const QString& dtype)
@@ -175,6 +211,21 @@ QString DiskReadMda::makePath() const
     }
 #endif
     return d->m_path;
+}
+
+QJsonObject DiskReadMda::toPrvObject() const
+{
+    if (d->m_prv_object.isEmpty()) {
+        QJsonObject ret;
+        QString path0 = this->makePath();
+        ret["original_size"] = QFileInfo(path0).size();
+        ret["original_checksum"] = MLUtil::computeSha1SumOfFile(d->m_path);
+        ret["original_checksum_1000"] = MLUtil::computeSha1SumOfFileHead(d->m_path, 1000);
+        ret["original_path"] = path0;
+        return ret;
+    }
+    else
+        return d->m_prv_object;
 }
 
 long DiskReadMda::N1() const
@@ -601,6 +652,7 @@ void DiskReadMdaPrivate::copy_from(const DiskReadMda& other)
     this->m_mda_header_total_size = other.d->m_mda_header_total_size;
     this->m_memory_mda = other.d->m_memory_mda;
     this->m_path = other.d->m_path;
+    this->m_prv_object = other.d->m_prv_object;
 #ifdef USE_REMOTE_READ_MDA
     this->m_remote_mda = other.d->m_remote_mda;
 #endif

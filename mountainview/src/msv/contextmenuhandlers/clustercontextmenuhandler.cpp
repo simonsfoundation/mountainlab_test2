@@ -221,7 +221,8 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
 void MVClusterContextMenuHandler::slot_extract_selected_clusters()
 {
     QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".mv";
-    QJsonObject obj = this->mainWindow()->mvContext()->toMVFileObject();
+    //QJsonObject obj = this->mainWindow()->mvContext()->toMVFileObject();
+    QJsonObject obj = this->mainWindow()->mvContext()->toMV2FileObject();
     QString json = QJsonDocument(obj).toJson();
     TextFile::write(tmp_fname, json);
     QString exe = qApp->applicationFilePath();

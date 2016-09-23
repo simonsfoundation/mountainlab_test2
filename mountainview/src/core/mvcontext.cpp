@@ -41,7 +41,7 @@ public:
     DiskReadMda m_firings_subset;
     double m_sample_rate = 0;
     QMap<QString, QVariant> m_options;
-    QString m_mlproxy_url;
+    QString m_mlproxy_url; //this is to disappear
     QMap<QString, QColor> m_colors;
     ClusterVisibilityRule m_visibility_rule;
     QList<OptionChangedAction> m_option_changed_actions;
@@ -58,7 +58,9 @@ public:
 };
 
 QJsonArray intlist_to_json_array(const QList<int>& X);
+QJsonArray doublelist_to_json_array(const QList<double>& X);
 QList<int> json_array_to_intlist(const QJsonArray& X);
+QList<double> json_array_to_doublelist(const QJsonArray& X);
 QJsonArray strlist_to_json_array(const QList<QString>& X);
 QList<QString> json_array_to_strlist(const QJsonArray& X);
 
@@ -162,6 +164,19 @@ QJsonObject timeseries_map_to_object(const QMap<QString, TimeseriesStruct>& TT)
     return ret;
 }
 
+QJsonObject timeseries_map_to_object_for_mv2(const QMap<QString, TimeseriesStruct>& TT)
+{
+    QJsonObject ret;
+    QStringList keys = TT.keys();
+    foreach (QString key, keys) {
+        QJsonObject obj;
+        obj["data"] = TT[key].data.toPrvObject();
+        obj["name"] = TT[key].name;
+        ret[key] = obj;
+    }
+    return ret;
+}
+
 QMap<QString, TimeseriesStruct> object_to_timeseries_map(QJsonObject X)
 {
     QMap<QString, TimeseriesStruct> ret;
@@ -170,6 +185,20 @@ QMap<QString, TimeseriesStruct> object_to_timeseries_map(QJsonObject X)
         QJsonObject obj = X[key].toObject();
         TimeseriesStruct A;
         A.data = DiskReadMda(obj["data"].toString());
+        A.name = obj["name"].toString();
+        ret[key] = A;
+    }
+    return ret;
+}
+
+QMap<QString, TimeseriesStruct> object_to_timeseries_map_for_mv2(QJsonObject X)
+{
+    QMap<QString, TimeseriesStruct> ret;
+    QStringList keys = X.keys();
+    foreach (QString key, keys) {
+        QJsonObject obj = X[key].toObject();
+        TimeseriesStruct A;
+        A.data = DiskReadMda(obj["data"].toObject());
         A.name = obj["name"].toString();
         ret[key] = A;
     }
@@ -192,6 +221,27 @@ QJsonObject MVContext::toMVFileObject() const
     X["clusters_subset"] = intlist_to_json_array(d->m_clusters_subset.toList());
     X["view_merged"] = d->m_view_merged;
     X["visible_channels"] = intlist_to_json_array(d->m_visible_channels.toList());
+    return X;
+}
+
+QJsonObject MVContext::toMV2FileObject() const
+{
+    QJsonObject X = d->m_original_object;
+    X["cluster_attributes"] = cluster_attributes_to_object(d->m_cluster_attributes);
+    X["cluster_pair_attributes"] = cluster_pair_attributes_to_object(d->m_cluster_pair_attributes);
+    X["timeseries"] = timeseries_map_to_object_for_mv2(d->m_timeseries);
+    X["current_timeseries_name"] = d->m_current_timeseries_name;
+    X["firings"] = d->m_firings.toPrvObject();
+    X["samplerate"] = d->m_sample_rate;
+    X["options"] = QJsonObject::fromVariantMap(d->m_options);
+    X["mlproxy_url"] = d->m_mlproxy_url;
+    X["visibility_rule"] = d->m_visibility_rule.toJsonObject();
+    X["electrode_geometry"] = d->m_electrode_geometry.toJsonObject();
+    X["clusters_subset"] = intlist_to_json_array(d->m_clusters_subset.toList());
+    X["view_merged"] = d->m_view_merged;
+    X["visible_channels"] = intlist_to_json_array(d->m_visible_channels.toList());
+    X["cluster_order_scores"] = doublelist_to_json_array(d->m_cluster_order_scores);
+    X["cluster_order_scores_name"] = d->m_cluster_order_scores_name;
     return X;
 }
 
@@ -236,6 +286,52 @@ void MVContext::setFromMVFileObject(QJsonObject X)
     emit this->clusterPairAttributesChanged(ClusterPair(0, 0));
     emit this->viewMergedChanged();
     emit this->visibleChannelsChanged();
+}
+
+void MVContext::setFromMV2FileObject(QJsonObject X)
+{
+    this->clear();
+    d->m_original_object = X; // to preserve unused fields
+    d->m_cluster_attributes = object_to_cluster_attributes(X["cluster_attributes"].toObject());
+    d->m_cluster_pair_attributes = object_to_cluster_pair_attributes(X["cluster_pair_attributes"].toObject());
+    d->m_timeseries = object_to_timeseries_map_for_mv2(X["timeseries"].toObject());
+    this->setCurrentTimeseriesName(X["current_timeseries_name"].toString());
+    this->setFirings(DiskReadMda(X["firings"].toObject()));
+    d->m_sample_rate = X["samplerate"].toDouble();
+    if (X.contains("options")) {
+        d->m_options = X["options"].toObject().toVariantMap();
+    }
+    d->m_mlproxy_url = X["mlproxy_url"].toString();
+    if (X.contains("visibility_rule")) {
+        this->setClusterVisibilityRule(ClusterVisibilityRule::fromJsonObject(X["visibility_rule"].toObject()));
+    }
+    d->m_electrode_geometry = ElectrodeGeometry::fromJsonObject(X["electrode_geometry"].toObject());
+    if (X.contains("clusters_subset")) {
+        this->setClustersSubset(json_array_to_intlist(X["clusters_subset"].toArray()).toSet());
+    }
+    if (X.contains("visible_channels")) {
+        this->setVisibleChannels(json_array_to_intlist(X["visible_clusters"].toArray()));
+    }
+    d->m_view_merged = X["view_merged"].toBool();
+    d->m_cluster_order_scores = json_array_to_doublelist(X["cluster_order_scores"].toArray());
+    d->m_cluster_order_scores_name = X["cluster_order_scores_name"].toString();
+    emit this->currentTimeseriesChanged();
+    emit this->timeseriesNamesChanged();
+    emit this->firingsChanged();
+    emit this->clusterMergeChanged();
+    emit this->clusterAttributesChanged(0);
+    emit this->currentEventChanged();
+    emit this->currentClusterChanged();
+    emit this->selectedClustersChanged();
+    emit this->currentTimepointChanged();
+    emit this->currentTimeRangeChanged();
+    emit this->optionChanged("");
+    emit this->clusterVisibilityChanged();
+    emit this->selectedClusterPairsChanged();
+    emit this->clusterPairAttributesChanged(ClusterPair(0, 0));
+    emit this->viewMergedChanged();
+    emit this->visibleChannelsChanged();
+    emit this->clusterOrderChanged();
 }
 
 MVEvent MVContext::currentEvent() const
@@ -978,11 +1074,29 @@ QJsonArray intlist_to_json_array(const QList<int>& X)
     return ret;
 }
 
+QJsonArray doublelist_to_json_array(const QList<double>& X)
+{
+    QJsonArray ret;
+    foreach (double x, X) {
+        ret.push_back(x);
+    }
+    return ret;
+}
+
 QList<int> json_array_to_intlist(const QJsonArray& X)
 {
     QList<int> ret;
     for (int i = 0; i < X.count(); i++) {
         ret << X[i].toInt();
+    }
+    return ret;
+}
+
+QList<double> json_array_to_doublelist(const QJsonArray& X)
+{
+    QList<double> ret;
+    for (int i = 0; i < X.count(); i++) {
+        ret << X[i].toDouble();
     }
     return ret;
 }
