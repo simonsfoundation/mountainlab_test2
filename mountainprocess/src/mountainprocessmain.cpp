@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 
     //log_begin(argc,argv);
 
-    if (!resolve_prv_files(CLP.named_parameters)) {
+    if (!resolve_prv_files(CLP.named_parameters, true)) {
         qWarning() << "Could not resolve .prv file. Try adjusting the settings in mountainlab.user.json.";
         //log_end();
         return -1;
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
     CacheManager::globalInstance()->setLocalBasePath(tmp_path);
 
     if (arg1.endsWith(".prv")) {
-        QString path0 = resolve_prv_file(arg1);
+        QString path0 = resolve_prv_file(arg1, true);
         printf("FILE: %s\n", path0.toLatin1().data());
         //log_end();
         return 0;

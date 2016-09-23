@@ -26,6 +26,7 @@ class PrvFilePrivate {
 public:
     PrvFile* q;
     QJsonObject m_object;
+    QString m_prv_file_path;
 
     bool should_store_content(QString file_path);
     bool should_store_binary_content(QString file_path);
@@ -45,6 +46,7 @@ PrvFile::PrvFile(const QString& file_path)
     if (!file_path.isEmpty()) {
         this->read(file_path);
     }
+    d->m_prv_file_path = file_path;
 }
 
 PrvFile::PrvFile(const QJsonObject& obj)
@@ -73,6 +75,7 @@ bool PrvFile::read(const QString& file_path)
         qWarning() << "Error parsing .prv file: " + file_path + ": " + err.errorString();
         return false;
     }
+    d->m_prv_file_path = file_path;
     return true;
 }
 
@@ -248,8 +251,8 @@ bool PrvFile::recoverFolder(const QString& dst_path, const PrvFileRecoverOptions
 QString PrvFile::locate(const PrvFileLocateOptions& opts)
 {
     QJsonObject obj = d->m_object;
-    if (representsFolder()) {
-        qWarning() << "Cannot try to locate a folder represented by a .prv file.";
+    if (!representsFile()) {
+        qWarning() << "Problem with prv object. Does not represent a file, so cannot attempt to locate.";
         return "";
     }
     QString checksum = obj["original_checksum"].toString();
@@ -257,6 +260,31 @@ QString PrvFile::locate(const PrvFileLocateOptions& opts)
     long original_size = obj["original_size"].toVariant().toLongLong();
     QString fname_or_url = d->find_file(original_size, checksum, checksum1000, opts);
     return fname_or_url;
+}
+
+QString PrvFile::prvFilePath() const
+{
+    return d->m_prv_file_path;
+}
+
+QString PrvFile::checksum() const
+{
+    return d->m_object["original_checksum"].toString();
+}
+
+QString PrvFile::checksum1000() const
+{
+    return d->m_object["original_checksum_1000"].toString();
+}
+
+long PrvFile::size() const
+{
+    return d->m_object["original_size"].toVariant().toLongLong();
+}
+
+QString PrvFile::originalPath() const
+{
+    return d->m_object["original_path"].toString();
 }
 
 bool PrvFile::recoverFile(const QString& dst_file_path, const PrvFileRecoverOptions& opts)
@@ -397,9 +425,11 @@ QString PrvFilePrivate::find_remote_file(long size, const QString& checksum, con
 
 QString PrvFilePrivate::find_file(long size, const QString& checksum, const QString& checksum1000_optional, const PrvFileLocateOptions& opts)
 {
-    QString local_fname = find_local_file(size, checksum, checksum1000_optional, opts);
-    if (!local_fname.isEmpty()) {
-        return local_fname;
+    if (opts.search_locally) {
+        QString local_fname = find_local_file(size, checksum, checksum1000_optional, opts);
+        if (!local_fname.isEmpty()) {
+            return local_fname;
+        }
     }
 
     if (opts.search_remotely) {

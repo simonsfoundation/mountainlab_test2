@@ -141,13 +141,10 @@ int main(int argc, char* argv[])
 
     CLParams CLP(argc, argv);
 
-    if (!prepare_prv_files(CLP.named_parameters)) {
+    if (!prepare_prv_files(CLP.named_parameters, true)) {
         qWarning() << "Could not prepare .prv files. Try adjusting the prv settings in mountainlab.user.json";
         return -1;
     }
-
-    qDebug() << "----------------------------------------";
-    qDebug() << CLP.named_parameters;
 
     QList<QColor> channel_colors;
     QStringList color_strings;

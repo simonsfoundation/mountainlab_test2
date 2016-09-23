@@ -21,6 +21,7 @@ struct PrvFileCreateOptions {
 
 struct PrvFileLocateOptions {
     QStringList local_search_paths;
+    bool search_locally = true;
     bool search_remotely = false;
     QJsonArray remote_servers;
 };
@@ -47,6 +48,12 @@ public:
     bool recoverFile(const QString& dst_file_path, const PrvFileRecoverOptions& opts);
     bool recoverFolder(const QString& dst_folder_path, const PrvFileRecoverOptions& opts);
     QString locate(const PrvFileLocateOptions& opts);
+
+    QString prvFilePath() const;
+    QString checksum() const;
+    QString checksum1000() const;
+    long size() const;
+    QString originalPath() const;
 
 private:
     PrvFilePrivate* d;
