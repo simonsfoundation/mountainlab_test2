@@ -24,7 +24,7 @@ sudo docker kill prv_container
 sudo docker rm prv_container
 
 # This is the command we will execute in the container
-cmd="nodejs /prv/prvfileserver/prvfileserver.js $abs_data_directory"
+cmd="nodejs /base/prvfileserver/prvfileserver.js $abs_data_directory"
 
 # We need to map the directory where the data are
 args="--name=prv_container --net=host --pid=host -v $abs_data_directory:$abs_data_directory"
