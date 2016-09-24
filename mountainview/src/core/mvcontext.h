@@ -198,7 +198,7 @@ public:
     void copySettingsFrom(MVContext* other);
 
     /////////////////////////////////////////////////
-    bool createAllPrvFiles(QStringList& paths_ret);
+    QMap<QString, QJsonObject> allPrvObjects();
 
 signals:
     void currentTimeseriesChanged();

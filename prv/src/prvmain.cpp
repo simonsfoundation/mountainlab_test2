@@ -593,11 +593,12 @@ public:
             parser.addPositionalArgument("file_name", "PRV file name", "[file_name]");
         }
         // --checksum=[] --checksum1000=[optional] --size=[]
-        parser.addOption(QCommandLineOption("checksum", "checksum", "checksum"));
-        parser.addOption(QCommandLineOption("checksum1000", "checksum", "checksum1000"));
-        parser.addOption(QCommandLineOption("size", "size", "size"));
+        parser.addOption(QCommandLineOption("checksum", "checksum", "[]"));
+        parser.addOption(QCommandLineOption("checksum1000", "checksum1000", "[optional]"));
+        parser.addOption(QCommandLineOption("size", "size", "[]"));
+        parser.addOption(QCommandLineOption("server", "name of the server to search", "[server name]"));
         if (m_cmd == "locate") {
-            parser.addOption(QCommandLineOption("disable-downloads", "do not allow downloads from remote servers"));
+            parser.addOption(QCommandLineOption("local-only", "do not look on remote servers"));
         }
         QCommandLineOption pathOption("path", "path to search", "size");
 
@@ -650,9 +651,11 @@ public:
             QVariantMap params;
             if (parser.isSet("path"))
                 params.insert("path", parser.value("path"));
+            if (parser.isSet("server"))
+                params.insert("server", parser.value("server"));
             if (m_cmd == "locate") {
                 bool allow_downloads = true;
-                if (parser.isSet("disable-downloads"))
+                if (parser.isSet("local-only"))
                     allow_downloads = false;
                 locate_file(obj, params, allow_downloads);
             }
@@ -673,16 +676,22 @@ private:
     {
         PrvFile prvf(obj);
         PrvFileLocateOptions opts;
-        opts.local_search_paths = get_local_search_paths();
-        opts.search_remotely = allow_downloads;
-        if (allow_downloads) {
-            opts.remote_servers = get_remote_servers();
+        if (params.contains("server")) {
+            opts.search_locally = false;
+            opts.search_remotely = true;
+            opts.remote_servers = get_remote_servers(params["server"].toString());
         }
-
-        if (params.contains("path")) {
-            opts.local_search_paths.clear();
-            opts.local_search_paths << params["path"].toString();
+        else if (params.contains("path")) {
+            opts.search_locally = true;
             opts.search_remotely = false;
+            opts.local_search_paths << params["path"].toString();
+        }
+        else {
+            opts.local_search_paths = get_local_search_paths();
+            opts.search_remotely = allow_downloads;
+            if (allow_downloads) {
+                opts.remote_servers = get_remote_servers();
+            }
         }
 
         QString fname_or_url = prvf.locate(opts);

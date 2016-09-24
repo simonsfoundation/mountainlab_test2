@@ -895,28 +895,17 @@ void MVContext::copySettingsFrom(MVContext* other)
     this->d->m_options = other->d->m_options;
 }
 
-bool MVContext::createAllPrvFiles(QStringList& paths_ret)
+QMap<QString, QJsonObject> MVContext::allPrvObjects()
 {
-    QList<QJsonObject> prv_objects;
-    prv_objects << d->m_firings.toPrvObject();
+    QMap<QString, QJsonObject> ret;
+    ret["firings"] = d->m_firings.toPrvObject();
 
     QStringList tsnames = this->timeseriesNames();
     foreach (QString tsname, tsnames) {
-        prv_objects << this->timeseries(tsname).toPrvObject();
+        ret[tsname] = this->timeseries(tsname).toPrvObject();
     }
 
-    paths_ret.clear();
-    foreach (QJsonObject obj, prv_objects) {
-        QString tmp_fname = CacheManager::globalInstance()->makeLocalFile();
-        QString json = QJsonDocument(obj).toJson();
-        if (!TextFile::write(tmp_fname, json)) {
-            qWarning() << "Unexpected problem writing text file: " + tmp_fname;
-            return false;
-        }
-        paths_ret << tmp_fname;
-    }
-
-    return true;
+    return ret;
 }
 
 void MVContext::slot_option_changed(QString name)

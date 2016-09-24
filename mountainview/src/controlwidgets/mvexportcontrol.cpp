@@ -24,6 +24,7 @@
 #include "taskprogress.h"
 #include "exportmv2filedialog.h"
 #include <QThread>
+#include "prvuploaddialog.h"
 
 class MVExportControlPrivate {
 public:
@@ -36,11 +37,20 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
     d = new MVExportControlPrivate;
     d->q = this;
 
+    QFont fnt = this->font();
+    fnt.setPixelSize(qMax(10, fnt.pixelSize() / 2));
+    this->setFont(fnt);
+
     FlowLayout* flayout = new FlowLayout;
     this->setLayout(flayout);
     {
         QPushButton* B = new QPushButton("Export .mv2 document");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_mv2_document()));
+        flayout->addWidget(B);
+    }
+    {
+        QPushButton* B = new QPushButton("PRV upload");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_prv_upload()));
         flayout->addWidget(B);
     }
     {
@@ -179,12 +189,13 @@ void MVExportControl::slot_export_mv2_document()
     //    task.error("Error writing .mv file: " + fname);
     //}
 
+    /*
     ExportMV2FileDialog dlg;
     if (dlg.exec() != QDialog::Accepted)
         return;
     if ((dlg.ensureLocal()) || (dlg.ensureRemote())) {
-        QStringList all_prv_paths;
-        if (!mvContext()->createAllPrvFiles(all_prv_paths)) {
+        QMap<QString,QJsonObject> all_prv_objects;
+        if (!mvContext()->allPrvObjects(all_prv_objects)) {
             QMessageBox::warning(0, "Export .mv2 document", "Error creating .prv files");
             return;
         }
@@ -197,6 +208,27 @@ void MVExportControl::slot_export_mv2_document()
         thread->server = dlg.server();
         thread->start();
     }
+    */
+}
+
+void MVExportControl::slot_prv_upload()
+{
+    PrvUploadDialog* dlg = new PrvUploadDialog;
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+
+    QMap<QString, QJsonObject> all_prv_objects = mvContext()->allPrvObjects();
+
+    qDebug() << all_prv_objects;
+    dlg->setPrvObjects(all_prv_objects);
+    QJsonArray servers0 = MLUtil::configValue("prv", "servers").toArray();
+    QStringList server_names;
+    foreach (QJsonValue server, servers0) {
+        server_names << server.toObject()["name"].toString();
+    }
+    dlg->setServerNames(server_names);
+
+    dlg->refresh();
+    dlg->show();
 }
 
 void MVExportControl::slot_export_mv_document()
