@@ -23,10 +23,10 @@ VPATH += msv/plugins msv/views
 
 HEADERS += clusterdetailplugin.h clusterdetailview.h \
     controlwidgets/exportmv2filedialog.h \
-    controlwidgets/prvuploaddialog.h
+    controlwidgets/prvmanagerdialog.h
 SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
     controlwidgets/exportmv2filedialog.cpp \
-    controlwidgets/prvuploaddialog.cpp
+    controlwidgets/prvmanagerdialog.cpp
 
 HEADERS += clipsviewplugin.h mvclipsview.h
 SOURCES += clipsviewplugin.cpp mvclipsview.cpp
@@ -164,5 +164,5 @@ RESOURCES += mountainview.qrc \
 
 FORMS += \
     controlwidgets/exportmv2filedialog.ui \
-    controlwidgets/prvuploaddialog.ui
+    controlwidgets/prvmanagerdialog.ui
 

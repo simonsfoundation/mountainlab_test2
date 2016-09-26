@@ -24,7 +24,7 @@
 #include "taskprogress.h"
 #include "exportmv2filedialog.h"
 #include <QThread>
-#include "prvuploaddialog.h"
+#include "prvmanagerdialog.h"
 
 class MVExportControlPrivate {
 public:
@@ -38,21 +38,33 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
     d->q = this;
 
     QFont fnt = this->font();
-    fnt.setPixelSize(qMax(10, fnt.pixelSize() / 2));
+    fnt.setPixelSize(qMax(14, fnt.pixelSize() - 6));
     this->setFont(fnt);
 
     FlowLayout* flayout = new FlowLayout;
     this->setLayout(flayout);
+    {
+        QPushButton* B = new QPushButton("PRV manager");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_prv_manager()));
+        flayout->addWidget(B);
+    }
     {
         QPushButton* B = new QPushButton("Export .mv2 document");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_mv2_document()));
         flayout->addWidget(B);
     }
     {
-        QPushButton* B = new QPushButton("PRV upload");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_prv_upload()));
+        QPushButton* B = new QPushButton("Export firings");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings()));
         flayout->addWidget(B);
     }
+    {
+        QPushButton* B = new QPushButton("Export curated firings");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_curated_firings()));
+        flayout->addWidget(B);
+    }
+
+    /*
     {
         QPushButton* B = new QPushButton("Export .mv document");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_mv_document()));
@@ -73,16 +85,13 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_file()));
         flayout->addWidget(B);
     }
-    {
-        QPushButton* B = new QPushButton("Export firings.curated.mda");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_firings_curated_file()));
-        flayout->addWidget(B);
-    }
+
     {
         QPushButton* B = new QPushButton("Export cluster_curation.mda");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_cluster_curation_file()));
         flayout->addWidget(B);
     }
+    */
 
     updateControls();
 }
@@ -183,37 +192,11 @@ void MVExportControl::slot_export_mv2_document()
     else {
         task.error("Error writing .mv2 file: " + fname);
     }
-    //MVFile ff = mainWindow()->getMVFile();
-    //if (!ff.write(fname)) {
-    //    TaskProgress task("export mountainview document");
-    //    task.error("Error writing .mv file: " + fname);
-    //}
-
-    /*
-    ExportMV2FileDialog dlg;
-    if (dlg.exec() != QDialog::Accepted)
-        return;
-    if ((dlg.ensureLocal()) || (dlg.ensureRemote())) {
-        QMap<QString,QJsonObject> all_prv_objects;
-        if (!mvContext()->allPrvObjects(all_prv_objects)) {
-            QMessageBox::warning(0, "Export .mv2 document", "Error creating .prv files");
-            return;
-        }
-        UploadStuffForMV2* thread = new UploadStuffForMV2;
-        /// Witold, is the following line okay?
-        QObject::connect(thread, SIGNAL(finished()), this, SLOT(deleteLater()));
-        thread->all_prv_paths = all_prv_paths;
-        thread->do_ensure_local = dlg.ensureLocal();
-        thread->do_ensure_remote = dlg.ensureRemote();
-        thread->server = dlg.server();
-        thread->start();
-    }
-    */
 }
 
-void MVExportControl::slot_prv_upload()
+void MVExportControl::slot_prv_manager()
 {
-    PrvUploadDialog* dlg = new PrvUploadDialog;
+    PrvManagerDialog* dlg = new PrvManagerDialog;
     dlg->setAttribute(Qt::WA_DeleteOnClose);
 
     QMap<QString, QJsonObject> all_prv_objects = mvContext()->allPrvObjects();
@@ -231,6 +214,7 @@ void MVExportControl::slot_prv_upload()
     dlg->show();
 }
 
+/*
 void MVExportControl::slot_export_mv_document()
 {
     //QSettings settings("SCDA", "MountainView");
@@ -254,6 +238,7 @@ void MVExportControl::slot_export_mv_document()
     //    task.error("Error writing .mv file: " + fname);
     //}
 }
+*/
 
 #include "computationthread.h"
 /// TODO fix the DownloadComputer2 and don't require computationthread.h
@@ -304,7 +289,7 @@ void export_file(QString source_path, QString dest_path, bool use_float64)
     C->startComputation();
 }
 
-void MVExportControl::slot_export_firings_file()
+void MVExportControl::slot_export_firings()
 {
     //QSettings settings("SCDA", "MountainView");
     //QString default_dir = settings.value("default_export_dir", "").toString();
@@ -333,11 +318,11 @@ QString get_local_path_of_firings_file_or_current_path(const DiskReadMda& X)
     return QDir::currentPath();
 }
 
-void MVExportControl::slot_export_firings_curated_file()
+void MVExportControl::slot_export_curated_firings()
 {
 
     QString default_dir = get_local_path_of_firings_file_or_current_path(mvContext()->firings());
-    QString fname = QFileDialog::getSaveFileName(this, "Export cluster curation array", default_dir + "/firings.curated.mda", "*.mda");
+    QString fname = QFileDialog::getSaveFileName(this, "Export curated firings file", default_dir + "/firings.curated.mda", "*.mda");
     if (fname.isEmpty())
         return;
     if (QFileInfo(fname).suffix() != "mda")
@@ -386,6 +371,7 @@ void MVExportControl::slot_export_firings_curated_file()
     }
 }
 
+/*
 void MVExportControl::slot_export_cluster_curation_file()
 {
     //first row is the cluster number
@@ -431,7 +417,9 @@ void MVExportControl::slot_export_cluster_curation_file()
         QMessageBox::warning(0, "Problem exporting cluster curation array", "Unable to write file: " + fname);
     }
 }
+*/
 
+/*
 void MVExportControl::slot_export_static_views()
 {
     //QSettings settings("SCDA", "MountainView");
@@ -464,3 +452,4 @@ void MVExportControl::slot_share_views_on_web()
     tb->resize(600, 400);
     tb->setHtml(html);
 }
+*/

@@ -1,5 +1,5 @@
-#include "prvuploaddialog.h"
-#include "ui_prvuploaddialog.h"
+#include "prvmanagerdialog.h"
+#include "ui_prvmanagerdialog.h"
 
 #include <QProcess>
 #include <QDebug>
@@ -12,12 +12,12 @@
 #include <QJsonDocument>
 #include "mlcommon.h"
 
-class PrvUploadDialogPrivate {
+class PrvManagerDialogPrivate {
 public:
-    PrvUploadDialog* q;
+    PrvManagerDialog* q;
     QMap<QString, QJsonObject> m_prv_objects;
     QStringList m_server_names;
-    PrvUploadDialogThread m_thread;
+    PrvManagerDialogThread m_thread;
 
     void refresh_tree();
     void ensure_local(QJsonObject prv_obj);
@@ -26,11 +26,11 @@ public:
     void restart_thread();
 };
 
-PrvUploadDialog::PrvUploadDialog(QWidget* parent)
+PrvManagerDialog::PrvManagerDialog(QWidget* parent)
     : QDialog(parent)
-    , ui(new Ui::PrvUploadDialog)
+    , ui(new Ui::PrvManagerDialog)
 {
-    d = new PrvUploadDialogPrivate;
+    d = new PrvManagerDialogPrivate;
     d->q = this;
     ui->setupUi(this);
 
@@ -40,7 +40,7 @@ PrvUploadDialog::PrvUploadDialog(QWidget* parent)
     QObject::connect(&d->m_thread, SIGNAL(results_updated()), this, SLOT(slot_results_updated()));
 }
 
-PrvUploadDialog::~PrvUploadDialog()
+PrvManagerDialog::~PrvManagerDialog()
 {
     if (d->m_thread.isRunning()) {
         d->m_thread.requestInterruption();
@@ -51,17 +51,17 @@ PrvUploadDialog::~PrvUploadDialog()
     delete d;
 }
 
-void PrvUploadDialog::setPrvObjects(const QMap<QString, QJsonObject>& prv_objects)
+void PrvManagerDialog::setPrvObjects(const QMap<QString, QJsonObject>& prv_objects)
 {
     d->m_prv_objects = prv_objects;
 }
 
-void PrvUploadDialog::setServerNames(const QStringList& server_names)
+void PrvManagerDialog::setServerNames(const QStringList& server_names)
 {
     d->m_server_names = server_names;
 }
 
-void PrvUploadDialog::refresh()
+void PrvManagerDialog::refresh()
 {
     d->refresh_tree();
 }
@@ -75,10 +75,10 @@ QString to_string(fuzzybool fb)
     return ".";
 }
 
-void PrvUploadDialog::slot_results_updated()
+void PrvManagerDialog::slot_results_updated()
 {
     d->m_thread.results_mutex.lock();
-    QMap<QString, PrvUploadDialogResult> results = d->m_thread.results;
+    QMap<QString, PrvManagerDialogResult> results = d->m_thread.results;
     d->m_thread.results_mutex.unlock();
 
     QTreeWidget* TT = ui->tree;
@@ -86,7 +86,7 @@ void PrvUploadDialog::slot_results_updated()
         QTreeWidgetItem* it = TT->topLevelItem(i);
         QString name = it->data(0, Qt::UserRole).toString();
 
-        PrvUploadDialogResult result0 = results[name];
+        PrvManagerDialogResult result0 = results[name];
         {
             int col = 2;
             it->setText(col, to_string(result0.on_local_disk));
@@ -98,7 +98,7 @@ void PrvUploadDialog::slot_results_updated()
     }
 }
 
-void PrvUploadDialog::slot_upload_to_server()
+void PrvManagerDialog::slot_upload_to_server()
 {
     QTreeWidget* TT = ui->tree;
     QTreeWidgetItem* it = TT->currentItem();
@@ -114,7 +114,7 @@ void PrvUploadDialog::slot_upload_to_server()
     d->ensure_remote(obj, server);
 }
 
-void PrvUploadDialog::slot_copy_to_local_disk()
+void PrvManagerDialog::slot_copy_to_local_disk()
 {
     QTreeWidget* TT = ui->tree;
     QTreeWidgetItem* it = TT->currentItem();
@@ -127,7 +127,7 @@ void PrvUploadDialog::slot_copy_to_local_disk()
     d->ensure_local(obj);
 }
 
-void PrvUploadDialog::slot_restart_thread()
+void PrvManagerDialog::slot_restart_thread()
 {
     d->restart_thread();
 }
@@ -148,7 +148,7 @@ QString format_file_size(long file_size)
     }
 }
 
-void PrvUploadDialogPrivate::refresh_tree()
+void PrvManagerDialogPrivate::refresh_tree()
 {
     QTreeWidget* TT = q->ui->tree;
     TT->clear();
@@ -217,9 +217,9 @@ void execute_command_in_separate_thread(QString cmd, QStringList args, QObject* 
     thread->start();
 }
 
-void PrvUploadDialogPrivate::ensure_local(QJsonObject prv_obj)
+void PrvManagerDialogPrivate::ensure_local(QJsonObject prv_obj)
 {
-    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile(MLUtil::makeRandomId(10) + ".prvuploaddlg.prv");
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile(MLUtil::makeRandomId(10) + ".PrvManagerdlg.prv");
     TextFile::write(tmp_fname, QJsonDocument(prv_obj).toJson());
     QString cmd = "prv";
     QStringList args;
@@ -236,9 +236,9 @@ void PrvUploadDialogPrivate::ensure_local(QJsonObject prv_obj)
     */
 }
 
-void PrvUploadDialogPrivate::ensure_remote(QJsonObject prv_obj, QString server)
+void PrvManagerDialogPrivate::ensure_remote(QJsonObject prv_obj, QString server)
 {
-    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile(MLUtil::makeRandomId(10) + ".prvuploaddlg.prv");
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile(MLUtil::makeRandomId(10) + ".PrvManagerdlg.prv");
     TextFile::write(tmp_fname, QJsonDocument(prv_obj).toJson());
     QString cmd = "prv";
     QStringList args;
@@ -256,7 +256,7 @@ void PrvUploadDialogPrivate::ensure_remote(QJsonObject prv_obj, QString server)
     */
 }
 
-void PrvUploadDialogPrivate::restart_thread()
+void PrvManagerDialogPrivate::restart_thread()
 {
     if (m_thread.isRunning()) {
         m_thread.requestInterruption();
@@ -278,7 +278,7 @@ QString exec_process_and_return_output(QString cmd, QStringList args)
     return P.readAll();
 }
 
-bool PrvUploadDialogThread::check_if_on_local_disk(QJsonObject prv_obj)
+bool PrvManagerDialogThread::check_if_on_local_disk(QJsonObject prv_obj)
 {
     QString cmd = "prv";
     QStringList args;
@@ -291,7 +291,7 @@ bool PrvUploadDialogThread::check_if_on_local_disk(QJsonObject prv_obj)
     return !output.isEmpty();
 }
 
-bool PrvUploadDialogThread::check_if_on_server(QJsonObject prv_obj, QString server_name)
+bool PrvManagerDialogThread::check_if_on_server(QJsonObject prv_obj, QString server_name)
 {
     QString cmd = "prv";
     QStringList args;
@@ -304,7 +304,7 @@ bool PrvUploadDialogThread::check_if_on_server(QJsonObject prv_obj, QString serv
     return !output.isEmpty();
 }
 
-void PrvUploadDialogThread::run()
+void PrvManagerDialogThread::run()
 {
     TaskProgress task("PRV Upload info...");
     QStringList names = prv_objects.keys();

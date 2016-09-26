@@ -1,5 +1,5 @@
-#ifndef PRVUPLOADDIALOG_H
-#define PRVUPLOADDIALOG_H
+#ifndef PRVMANAGERDIALOG_H
+#define PRVMANAGERDIALOG_H
 
 #include <QDialog>
 #include <QJsonObject>
@@ -8,18 +8,18 @@
 #include <QThread>
 
 namespace Ui {
-class PrvUploadDialog;
+class PrvManagerDialog;
 }
 
-class PrvUploadDialogPrivate;
-class PrvUploadDialog : public QDialog {
+class PrvManagerDialogPrivate;
+class PrvManagerDialog : public QDialog {
     Q_OBJECT
 
-    friend class PrvUploadDialogPrivate;
+    friend class PrvManagerDialogPrivate;
 
 public:
-    explicit PrvUploadDialog(QWidget* parent = 0);
-    ~PrvUploadDialog();
+    explicit PrvManagerDialog(QWidget* parent = 0);
+    ~PrvManagerDialog();
 
     void setPrvObjects(const QMap<QString, QJsonObject>& prv_objects);
     void setServerNames(const QStringList& server_names);
@@ -32,9 +32,9 @@ private slots:
     void slot_restart_thread();
 
 private:
-    Ui::PrvUploadDialog* ui;
+    Ui::PrvManagerDialog* ui;
 
-    PrvUploadDialogPrivate* d;
+    PrvManagerDialogPrivate* d;
 };
 
 enum fuzzybool {
@@ -43,12 +43,12 @@ enum fuzzybool {
     UNKNOWN
 };
 
-struct PrvUploadDialogResult {
+struct PrvManagerDialogResult {
     fuzzybool on_local_disk = UNKNOWN;
     QMap<QString, fuzzybool> on_server;
 };
 
-class PrvUploadDialogThread : public QThread {
+class PrvManagerDialogThread : public QThread {
     Q_OBJECT
 public:
     //input
@@ -57,7 +57,7 @@ public:
 
     //output
     QMutex results_mutex;
-    QMap<QString, PrvUploadDialogResult> results;
+    QMap<QString, PrvManagerDialogResult> results;
 
     void run();
 
@@ -69,4 +69,4 @@ signals:
     void results_updated();
 };
 
-#endif // PRVUPLOADDIALOG_H
+#endif // PRVMANAGERDIALOG_H
