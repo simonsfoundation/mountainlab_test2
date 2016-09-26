@@ -726,6 +726,34 @@ void MVContext::setElectrodeGeometry(const ElectrodeGeometry& geom)
     emit this->electrodeGeometryChanged();
 }
 
+void MVContext::loadClusterMetricsFromFile(QString csv_file_path)
+{
+    QStringList lines = TextFile::read(csv_file_path).split("\n", QString::SkipEmptyParts);
+    if (lines.isEmpty())
+        return;
+    QStringList metric_names = lines[0].split(",", QString::SkipEmptyParts);
+    for (int i = 1; i < lines.count(); i++) {
+        QStringList vals = lines[i].split(",", QString::SkipEmptyParts);
+        bool ok;
+        int k = vals.value(0).toInt(&ok);
+        if (ok) {
+            QJsonObject obj = this->clusterAttributes(k);
+            QJsonObject metrics = obj["metrics"].toObject();
+            for (int j = 1; j < metric_names.count(); j++) {
+                metrics[metric_names[j]] = vals.value(j).toDouble();
+            }
+            obj["metrics"] = metrics;
+            this->setClusterAttributes(k, obj);
+        }
+    }
+}
+
+void MVContext::loadClusterPairMetricsFromFile(QString csv_file_path)
+{
+    Q_UNUSED(csv_file_path);
+    // do this...
+}
+
 QSet<int> MVContext::clustersSubset() const
 {
     return d->m_clusters_subset;

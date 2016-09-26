@@ -58,6 +58,9 @@ double norm(const QVector<double>& X);
 double dotProduct(const QVector<double>& X1, const QVector<double>& X2);
 double correlation(const QVector<double>& X1, const QVector<double>& X2);
 
+double norm(const QVector<float>& X);
+double dotProduct(const QVector<float>& X1, const QVector<float>& X2);
+
 template <typename T>
 T max(const QVector<T>& X);
 double min(long N, const double* X);

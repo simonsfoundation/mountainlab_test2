@@ -8,6 +8,7 @@
 #include <QStringList>
 
 #include "clusterdetailplugin.h"
+#include "isolationmatrixplugin.h"
 
 #include "usagetracking.h"
 #include "mda.h"
@@ -318,6 +319,14 @@ int main(int argc, char* argv[])
             QString geom_path = CLP.named_parameters["geom"].toString();
             ElectrodeGeometry eg = ElectrodeGeometry::loadFromGeomFile(geom_path);
             context->setElectrodeGeometry(eg);
+        }
+        if (CLP.named_parameters.contains("cluster_metrics")) {
+            QString cluster_metrics_path = CLP.named_parameters["cluster_metrics"].toString();
+            context->loadClusterMetricsFromFile(cluster_metrics_path);
+        }
+        if (CLP.named_parameters.contains("cluster_pair_metrics")) {
+            QString cluster_pair_metrics_path = CLP.named_parameters["cluster_pair_metrics"].toString();
+            context->loadClusterMetricsFromFile(cluster_pair_metrics_path);
         }
 
         if (CLP.named_parameters.contains("clusters")) {
@@ -758,6 +767,7 @@ void set_nice_size(QWidget* W)
 void setup_main_window(MVMainWindow* W)
 {
     W->loadPlugin(new ClusterDetailPlugin);
+    W->loadPlugin(new IsolationMatrixPlugin);
     W->loadPlugin(new ClipsViewPlugin);
     W->loadPlugin(new ClusterContextMenuPlugin);
     W->registerViewFactory(new MVTemplatesView2Factory(W));

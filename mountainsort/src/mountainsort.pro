@@ -101,7 +101,11 @@ HEADERS += \
     processors/add_noise_processor.h \
     processors/cluster_scores_processor.h \
     utils/jsvm.h \
-    processors/cluster_scores.h
+    processors/cluster_scores.h \
+    processors/noise_nearest_processor.h \
+    processors/noise_nearest.h \
+    processors/ms_metrics.h \
+    processors/ms_metrics_processor.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -184,7 +188,11 @@ SOURCES += \
     processors/add_noise_processor.cpp \
     processors/cluster_scores_processor.cpp \
     utils/jsvm.cpp \
-    processors/cluster_scores.cpp
+    processors/cluster_scores.cpp \
+    processors/noise_nearest_processor.cpp \
+    processors/noise_nearest.cpp \
+    processors/ms_metrics.cpp \
+    processors/ms_metrics_processor.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \

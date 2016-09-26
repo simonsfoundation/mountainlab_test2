@@ -328,6 +328,18 @@ double MLCompute::norm(const QVector<double>& X)
     return sqrt(dotProduct(X, X));
 }
 
+double MLCompute::dotProduct(const QVector<float>& X1, const QVector<float>& X2)
+{
+    if (X1.count() != X2.count())
+        return 0;
+    return std::inner_product(X1.constBegin(), X1.constEnd(), X2.constBegin(), 0.0);
+}
+
+double MLCompute::norm(const QVector<float>& X)
+{
+    return sqrt(dotProduct(X, X));
+}
+
 double MLCompute::correlation(const QVector<double>& X1, const QVector<double>& X2)
 {
     if (X1.count() != X2.count())

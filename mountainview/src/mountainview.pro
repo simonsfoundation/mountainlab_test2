@@ -23,10 +23,16 @@ VPATH += msv/plugins msv/views
 
 HEADERS += clusterdetailplugin.h clusterdetailview.h \
     controlwidgets/exportmv2filedialog.h \
-    controlwidgets/prvmanagerdialog.h
+    controlwidgets/prvmanagerdialog.h \
+    msv/views/matrixview.h \
+    msv/views/isolationmatrixview.h \
+    msv/plugins/isolationmatrixplugin.h
 SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
     controlwidgets/exportmv2filedialog.cpp \
-    controlwidgets/prvmanagerdialog.cpp
+    controlwidgets/prvmanagerdialog.cpp \
+    msv/views/matrixview.cpp \
+    msv/views/isolationmatrixview.cpp \
+    msv/plugins/isolationmatrixplugin.cpp
 
 HEADERS += clipsviewplugin.h mvclipsview.h
 SOURCES += clipsviewplugin.cpp mvclipsview.cpp

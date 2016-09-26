@@ -12,11 +12,11 @@ void iterate_to_get_top_component(Mda& C, double& sigma, Mda& X, int num_iterati
 void iterate_to_get_top_component(Mda32& C, double& sigma, Mda32& X, int num_iterations);
 void iterate_XXt_to_get_top_component(Mda& C, double& sigma, Mda& XXt, int num_iterations);
 void iterate_XXt_to_get_top_component(Mda32& C, double& sigma, Mda32& XXt, int num_iterations);
-Mda mult_AB(Mda& A, Mda& B);
-Mda32 mult_AB(Mda32& A, Mda32& B);
-Mda mult_AtransB(Mda& A, Mda& B);
-Mda32 mult_AtransB(Mda32& A, Mda32& B);
-Mda mult_ABtrans(Mda& A, Mda& B);
+Mda mult_AB(const Mda& A, const Mda& B);
+Mda32 mult_AB(const Mda32& A, const Mda32& B);
+Mda mult_AtransB(const Mda& A, const Mda& B);
+Mda32 mult_AtransB(const Mda32& A, const Mda32& B);
+Mda mult_ABtrans(const Mda& A, const Mda& B);
 void subtract_out_rank_1(Mda& X, Mda& C);
 void subtract_out_rank_1(Mda32& X, Mda32& C);
 void subtract_out_rank_1_from_XXt(Mda& X, Mda& C);
@@ -25,7 +25,7 @@ void normalize_vector(Mda& V);
 void pca_subtract_mean(Mda& X);
 void pca_subtract_mean(Mda32& X);
 
-void pca(Mda& C, Mda& F, Mda& sigma, Mda& X, int num_features, bool subtract_mean)
+void pca(Mda& C, Mda& F, Mda& sigma, const Mda& X, int num_features, bool subtract_mean)
 {
     long M = X.N1();
     //long N = X.N2();
@@ -55,7 +55,7 @@ void pca(Mda& C, Mda& F, Mda& sigma, Mda& X, int num_features, bool subtract_mea
     F = mult_AtransB(C, X);
 }
 
-void pca(Mda32& C, Mda32& F, Mda32& sigma, Mda32& X, int num_features, bool subtract_mean)
+void pca(Mda32& C, Mda32& F, Mda32& sigma, const Mda32& X, int num_features, bool subtract_mean)
 {
     long M = X.N1();
     //long N = X.N2();
@@ -127,7 +127,7 @@ void pca_subtract_mean(Mda32& X)
     }
 }
 
-void pca_from_XXt(Mda& C, Mda& sigma, Mda& XXt, int num_features)
+void pca_from_XXt(Mda& C, Mda& sigma, const Mda& XXt, int num_features)
 {
     long M = XXt.N1();
     long K = num_features;
@@ -151,7 +151,7 @@ void pca_from_XXt(Mda& C, Mda& sigma, Mda& XXt, int num_features)
     }
 }
 
-void pca_from_XXt(Mda32& C, Mda32& sigma, Mda32& XXt, int num_features)
+void pca_from_XXt(Mda32& C, Mda32& sigma, const Mda32& XXt, int num_features)
 {
     long M = XXt.N1();
     long K = num_features;
@@ -225,7 +225,7 @@ Mda32 mult_AB(Mda32& A, Mda32& B) // gemm for two 2D MDAs.   inner part should b
     return C;
 }
 
-Mda mult_AtransB(Mda& A, Mda& B) // gemm for two 2D MDAs.   inner part should be BLAS3 call
+Mda mult_AtransB(const Mda& A, const Mda& B) // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N2();
     long L = A.N1();
@@ -235,8 +235,8 @@ Mda mult_AtransB(Mda& A, Mda& B) // gemm for two 2D MDAs.   inner part should be
         abort();
     }
     Mda C(M, N);
-    double* Aptr = A.dataPtr();
-    double* Bptr = B.dataPtr();
+    const double* Aptr = A.constDataPtr();
+    const double* Bptr = B.constDataPtr();
     double* Cptr = C.dataPtr();
     long iC = 0;
     for (long n = 0; n < N; n++) {
@@ -249,7 +249,7 @@ Mda mult_AtransB(Mda& A, Mda& B) // gemm for two 2D MDAs.   inner part should be
     return C;
 }
 
-Mda32 mult_AtransB(Mda32& A, Mda32& B) // gemm for two 2D MDAs.   inner part should be BLAS3 call
+Mda32 mult_AtransB(const Mda32& A, const Mda32& B) // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N2();
     long L = A.N1();
@@ -259,8 +259,8 @@ Mda32 mult_AtransB(Mda32& A, Mda32& B) // gemm for two 2D MDAs.   inner part sho
         abort();
     }
     Mda32 C(M, N);
-    dtype32* Aptr = A.dataPtr();
-    dtype32* Bptr = B.dataPtr();
+    const dtype32* Aptr = A.constDataPtr();
+    const dtype32* Bptr = B.constDataPtr();
     dtype32* Cptr = C.dataPtr();
     long iC = 0;
     for (long n = 0; n < N; n++) {
@@ -273,7 +273,7 @@ Mda32 mult_AtransB(Mda32& A, Mda32& B) // gemm for two 2D MDAs.   inner part sho
     return C;
 }
 
-Mda mult_ABtrans(Mda& A, Mda& B) // gemm for two 2D MDAs.   inner part should be BLAS3 call
+Mda mult_ABtrans(const Mda& A, const Mda& B) // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N1();
     long L = A.N2();
@@ -283,8 +283,8 @@ Mda mult_ABtrans(Mda& A, Mda& B) // gemm for two 2D MDAs.   inner part should be
         abort();
     }
     Mda C(M, N);
-    double* Aptr = A.dataPtr();
-    double* Bptr = B.dataPtr();
+    const double* Aptr = A.constDataPtr();
+    const double* Bptr = B.constDataPtr();
     double* Cptr = C.dataPtr();
     long iC = 0;
     for (long n = 0; n < N; n++) {
@@ -298,7 +298,7 @@ Mda mult_ABtrans(Mda& A, Mda& B) // gemm for two 2D MDAs.   inner part should be
     return C;
 }
 
-Mda32 mult_ABtrans(Mda32& A, Mda32& B) // gemm for two 2D MDAs.   inner part should be BLAS3 call
+Mda32 mult_ABtrans(const Mda32& A, const Mda32& B) // gemm for two 2D MDAs.   inner part should be BLAS3 call
 {
     long M = A.N1();
     long L = A.N2();
@@ -308,8 +308,8 @@ Mda32 mult_ABtrans(Mda32& A, Mda32& B) // gemm for two 2D MDAs.   inner part sho
         abort();
     }
     Mda32 C(M, N);
-    dtype32* Aptr = A.dataPtr();
-    dtype32* Bptr = B.dataPtr();
+    const dtype32* Aptr = A.constDataPtr();
+    const dtype32* Bptr = B.constDataPtr();
     dtype32* Cptr = C.dataPtr();
     long iC = 0;
     for (long n = 0; n < N; n++) {
@@ -589,7 +589,7 @@ void pca_unit_test()
     }
 }
 
-void whitening_matrix_from_XXt(Mda& W, Mda& XXt)
+void whitening_matrix_from_XXt(Mda& W, const Mda& XXt)
 {
     int M = XXt.N1();
     Mda components, sigma;
@@ -607,7 +607,7 @@ void whitening_matrix_from_XXt(Mda& W, Mda& XXt)
     W = mult_ABtrans(tmp, components); // output U.D.U^T is symmetric
 }
 
-void whitening_matrix_from_XXt(Mda32& W, Mda32& XXt)
+void whitening_matrix_from_XXt(Mda32& W, const Mda32& XXt)
 {
     int M = XXt.N1();
     Mda32 components, sigma;

@@ -395,7 +395,7 @@ dtype32* Mda32::dataPtr(long i1, long i2, long i3, long i4, long i5, long i6)
     return &d->m_data[i1 + N1() * i2 + N1() * N2() * i3 + N1() * N2() * N3() * i4 + N1() * N2() * N3() * N4() * i5 + N1() * N2() * N3() * N4() * N5() * i6];
 }
 
-void Mda32::getChunk(Mda32& ret, long i, long size)
+void Mda32::getChunk(Mda32& ret, long i, long size) const
 {
     // A lot of bugs fixed on 5/31/16
     long a_begin = i;
@@ -414,7 +414,7 @@ void Mda32::getChunk(Mda32& ret, long i, long size)
 
     ret.allocate(1, size);
 
-    dtype32* ptr1 = this->dataPtr();
+    const dtype32* ptr1 = this->constDataPtr();
     dtype32* ptr2 = ret.dataPtr();
 
     long ii = 0;
@@ -424,7 +424,7 @@ void Mda32::getChunk(Mda32& ret, long i, long size)
     }
 }
 
-void Mda32::getChunk(Mda32& ret, long i1, long i2, long size1, long size2)
+void Mda32::getChunk(Mda32& ret, long i1, long i2, long size1, long size2) const
 {
     // A lot of bugs fixed on 5/31/16
     long a1_begin = i1;
@@ -455,7 +455,7 @@ void Mda32::getChunk(Mda32& ret, long i1, long i2, long size1, long size2)
 
     ret.allocate(size1, size2);
 
-    dtype32* ptr1 = this->dataPtr();
+    const dtype32* ptr1 = this->constDataPtr();
     dtype32* ptr2 = ret.dataPtr();
 
     for (long ind2 = 0; ind2 <= a2_end - a2_begin; ind2++) {
@@ -469,7 +469,7 @@ void Mda32::getChunk(Mda32& ret, long i1, long i2, long size1, long size2)
     }
 }
 
-void Mda32::getChunk(Mda32& ret, long i1, long i2, long i3, long size1, long size2, long size3)
+void Mda32::getChunk(Mda32& ret, long i1, long i2, long i3, long size1, long size2, long size3) const
 {
     // A lot of bugs fixed on 5/31/16
     long a1_begin = i1;
@@ -513,7 +513,7 @@ void Mda32::getChunk(Mda32& ret, long i1, long i2, long i3, long size1, long siz
 
     ret.allocate(size1, size2, size3);
 
-    dtype32* ptr1 = this->dataPtr();
+    const dtype32* ptr1 = this->constDataPtr();
     dtype32* ptr2 = ret.dataPtr();
 
     for (long ind3 = 0; ind3 <= a3_end - a3_begin; ind3++) {

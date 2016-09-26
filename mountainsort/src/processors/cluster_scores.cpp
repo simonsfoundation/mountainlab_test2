@@ -116,7 +116,7 @@ Mda32 add_self_noise_to_clips(const DiskReadMda32& timeseries, const Mda32& clip
         timeseries.readChunk(chunk, 0, ind0, M, T);
         for (int t = 0; t < T; t++) {
             for (int m = 0; m < M; m++) {
-                ret.set(ret.get(m, t) + chunk.value(m, t) * noise_factor, m, t, i);
+                ret.set(ret.get(m, t, i) + chunk.value(m, t) * noise_factor, m, t, i);
             }
         }
     }

@@ -127,11 +127,11 @@ public:
     dtype32* dataPtr(long i1, long i2, long i3, long i4, long i5 = 0, long i6 = 0);
 
     ///Retrieve a chunk of the vectorized data of size 1xN starting at position i
-    void getChunk(Mda32& ret, long i, long N);
+    void getChunk(Mda32& ret, long i, long N) const;
     ///Retrieve a chunk of the vectorized data of size N1xN2 starting at position (i1,i2)
-    void getChunk(Mda32& ret, long i1, long i2, long N1, long N2);
+    void getChunk(Mda32& ret, long i1, long i2, long N1, long N2) const;
     ///Retrieve a chunk of the vectorized data of size N1xN2xN3 starting at position (i1,i2,i3)
-    void getChunk(Mda32& ret, long i1, long i2, long i3, long size1, long size2, long size3);
+    void getChunk(Mda32& ret, long i1, long i2, long i3, long size1, long size2, long size3) const;
 
     ///Set a chunk of the vectorized data starting at position i
     void setChunk(Mda32& X, long i);

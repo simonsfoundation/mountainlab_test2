@@ -1,4 +1,5 @@
 var exports = module.exports = {};
+var extend=require('extend');
 var common=exports;
 
 var fs=require('fs');
@@ -7,11 +8,18 @@ var child_process=require('child_process');
 
 var config=JSON.parse(fs.readFileSync(__dirname+'/../mountainlab.default.json','utf8'));
 try {
-	var config_user=JSON.parse(fs.readFileSync(__dirname+'/../mountainlab.user.json','utf8'));
+	var config_user_json=fs.readFileSync(__dirname+'/../mountainlab.user.json','utf8');
+	var config_user=JSON.parse(config_user_json);
 	config=extend(true,config,config_user);
 }
 catch(err) {
+	if (config_user_json) {
+		console.log(err);
+		console.error('Problem parsing mountainlab.user.json');
+		process.exit(-1);
+	}
 }
+console.log(config);
 
 
 exports.read_pipelines_from_text_file=function(file_path) {

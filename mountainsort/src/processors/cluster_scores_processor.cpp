@@ -18,7 +18,7 @@ cluster_scores_Processor::cluster_scores_Processor()
     d->q = this;
 
     this->setName("cluster_scores");
-    this->setVersion("0.12");
+    this->setVersion("0.13");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("cluster_scores", "cluster_pair_scores");
     this->setRequiredParameters("clip_size", "detect_threshold");

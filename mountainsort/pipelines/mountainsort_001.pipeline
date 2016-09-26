@@ -72,6 +72,13 @@ function run_mountainsort(params) {
 			min_shell_size:150,shell_increment:0
 		}).firings_out;
 
+	// Metrics
+	var metrics=Process('ms_metrics',{timeseries:pre,firings:firings3},{
+		clip_size:params.clip_size,add_noise_level:1
+	});
+	write_file(metrics.cluster_metrics,params.outpath+'/cluster_metrics.csv');
+	write_file(metrics.cluster_pair_metrics,params.outpath+'/cluster_pair_metrics.csv');
+
 	// Write the output
 	write_prv(params.raw,params.outpath+'/raw.mda.prv');
 	write_prv(filt,params.outpath+'/filt.mda.prv');
