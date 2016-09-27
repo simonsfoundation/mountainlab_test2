@@ -8,6 +8,8 @@
 
 #include "clustermetricsview.h"
 
+#include "curationprogramview.h"
+
 #include <QThread>
 #include <mountainprocessrunner.h>
 
@@ -99,4 +101,7 @@ void basic_metrics_calculator::slot_on_finished()
 {
     mv_context->loadClusterMetricsFromFile(cluster_metrics_path);
     mv_context->loadClusterPairMetricsFromFile(cluster_pair_metrics_path);
+    QString output = CurationProgramView::applyCurationProgram(mv_context);
+    qDebug() << "====================== CURATION PROGRAM ================================";
+    printf("%s\n", output.toUtf8().data());
 }

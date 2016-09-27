@@ -24,6 +24,8 @@ public:
     void runCalculation() Q_DECL_OVERRIDE;
     void onCalculationFinished() Q_DECL_OVERRIDE;
 
+    static QString applyCurationProgram(MVContext* mv_context);
+
 protected:
 private slots:
     void slot_text_changed();

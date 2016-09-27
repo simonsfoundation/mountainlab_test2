@@ -84,42 +84,49 @@ void CurationProgramView::onCalculationFinished()
     d->refresh_editor();
 }
 
+QString display_error(QJSValue result)
+{
+    QString ret;
+    ret += result.property("name").toString() + "\n";
+    ret += result.property("message").toString() + "\n";
+    ret += QString("%1 line %2\n").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
+    return ret;
+}
+
+QString CurationProgramView::applyCurationProgram(MVContext* mv_context)
+{
+    QJSEngine engine;
+    CurationProgramController controller(mv_context);
+    QJSValue CP = engine.newQObject(&controller);
+    engine.globalObject().setProperty("_CP", CP);
+
+    QString js = TextFile::read(":msv/views/curationprogram.js");
+    qDebug() << js;
+    engine.evaluate(js);
+
+    //QString program = d->m_input_editor->toPlainText();
+    QString program = mv_context->option("curation_program").toString();
+
+    QJSValue ret = engine.evaluate(program);
+    QString output;
+    output += controller.log();
+    output += "\n";
+    if (ret.isError()) {
+        output += display_error(ret);
+        output += "ERROR: " + ret.toString() + "\n";
+    }
+    return output;
+}
+
 void CurationProgramView::slot_text_changed()
 {
     QString txt = d->m_input_editor->toPlainText();
     mvContext()->setOption("curation_program", txt);
 }
 
-QString display_error(QJSValue result)
-{
-    QString ret;
-    ret+=result.property("name").toString()+"\n";
-    ret+=result.property("message").toString()+"\n";
-    ret+=QString("%1 line %2\n").arg(result.property("fileName").toString()).arg(result.property("lineNumber").toInt()); //okay
-    return ret;
-}
-
 void CurationProgramView::slot_apply()
 {
-    QJSEngine engine;
-    CurationProgramController controller(this->mvContext());
-    QJSValue CP = engine.newQObject(&controller);
-    engine.globalObject().setProperty("_CP", CP);
-
-    QString js=TextFile::read(":msv/views/curationprogram.js");
-    qDebug() << js;
-    engine.evaluate(js);
-
-    QString program = d->m_input_editor->toPlainText();
-
-    QJSValue ret = engine.evaluate(program);
-    QString output;
-    output+=controller.log();
-    output+="\n";
-    if (ret.isError()) {
-        output+=display_error(ret);
-        output += "ERROR: " + ret.toString() + "\n";
-    }
+    QString output = CurationProgramView::applyCurationProgram(this->mvContext());
     d->m_output_editor->setText(output);
 }
 

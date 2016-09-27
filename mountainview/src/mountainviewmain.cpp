@@ -329,6 +329,14 @@ int main(int argc, char* argv[])
             QString cluster_pair_metrics_path = CLP.named_parameters["cluster_pair_metrics"].toString();
             context->loadClusterMetricsFromFile(cluster_pair_metrics_path);
         }
+        if (CLP.named_parameters.contains("curation")) {
+            QString curation_program_path = CLP.named_parameters["curation"].toString();
+            QString js = TextFile::read(curation_program_path);
+            if (js.isEmpty()) {
+                qWarning() << "Curation program is empty." << curation_program_path;
+            }
+            context->setOption("curation_program", js);
+        }
 
         if (CLP.named_parameters.contains("clusters")) {
             QStringList clusters_subset_str = CLP.named_parameters["clusters"].toString().split(",", QString::SkipEmptyParts);

@@ -35,6 +35,9 @@ if (file_exists(outfolder+'/cluster_pair_metrics.csv')) {
 }
 args+=' --firings='+firings_path;
 args+=' --samplerate='+(dsparams.samplerate||0);
+if ('curation' in CLP.namedParameters) {
+	args+=' --curation='+CLP.namedParameters.curation;
+}
 args=args.split(' ');
 make_system_call('mountainview',args);
 
