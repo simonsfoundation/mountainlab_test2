@@ -4,7 +4,7 @@
 ** Created: 9/13/2016
 *******************************************************/
 
-#include "ms_metrics.h"
+#include "isolation_metrics.h"
 
 #include <diskreadmda.h>
 #include <diskreadmda32.h>
@@ -15,13 +15,13 @@
 #include "compute_templates_0.h"
 #include "jsvm.h"
 
-namespace MSMetrics {
+namespace IsolationMetrics {
 
 struct Metric {
     QList<double> values;
 };
 
-bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_path, QString cluster_pair_metrics_path, ms_metrics_opts opts)
+bool isolation_metrics(QString timeseries, QString firings, QString cluster_metrics_path, QString cluster_pair_metrics_path, isolation_metrics_opts opts)
 {
     DiskReadMda32 X(timeseries);
     DiskReadMda F(firings);
@@ -65,19 +65,8 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
                 times_k << times[i];
             }
         }
-        Mda32 clips_k = extract_clips(X, times_k, opts.clip_size);
-        Mda32 template_k = compute_mean_clip(clips_k);
-        Mda32 stdev_k = compute_stdev_clip(clips_k);
-        {
-            double min0 = template_k.minimum();
-            double max0 = template_k.maximum();
-            cluster_metrics["peak_amp"].values << qMax(qAbs(min0), qAbs(max0));
-        }
-        {
-            double min0 = stdev_k.minimum();
-            double max0 = stdev_k.maximum();
-            cluster_metrics["peak_noise"].values << qMax(qAbs(min0), qAbs(max0));
-        }
+        cluster_metrics["num_events"].values << times_k.count();
+        //cluster_metrics["firing_rate"].values << times_k.count() * opts.samplerate / (1.0 * X.N2());
     }
 
     QStringList cluster_metric_names = cluster_metrics.keys();

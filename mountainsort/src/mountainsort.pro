@@ -107,7 +107,9 @@ HEADERS += \
     processors/ms_metrics.h \
     processors/ms_metrics_processor.h \
     processors/basic_metrics_processor.h \
-    processors/basic_metrics.h
+    processors/basic_metrics.h \
+    processors/isolation_metrics_processor.h \
+    processors/isolation_metrics.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -196,7 +198,9 @@ SOURCES += \
     processors/ms_metrics.cpp \
     processors/ms_metrics_processor.cpp \
     processors/basic_metrics_processor.cpp \
-    processors/basic_metrics.cpp
+    processors/basic_metrics.cpp \
+    processors/isolation_metrics_processor.cpp \
+    processors/isolation_metrics.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \

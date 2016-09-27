@@ -69,6 +69,40 @@ Mda32 compute_mean_clip(const Mda32& clips)
     return ret;
 }
 
+Mda32 compute_stdev_clip(const Mda32& clips)
+{
+    int M = clips.N1();
+    int T = clips.N2();
+    long L = clips.N3();
+
+    Mda32 stdevs(M, T);
+    float* stdevs_ptr = stdevs.dataPtr();
+
+    const float* clips_ptr = clips.constDataPtr();
+    Mda sums(M, T);
+    Mda sumsqrs(M, T);
+    double* sums_ptr = sums.dataPtr();
+    double* sumsqrs_ptr = sumsqrs.dataPtr();
+    double count = 0;
+    for (long i = 0; i < L; i++) {
+        const float* Xptr = &clips_ptr[M * T * i];
+        for (int i = 0; i < M * T; i++) {
+            sums_ptr[i] += Xptr[i];
+            sumsqrs_ptr[i] += Xptr[i] * Xptr[i];
+        }
+        count++;
+    }
+
+    for (int i = 0; i < M * T; i++) {
+        double sum0 = sums_ptr[i];
+        double sumsqr0 = sumsqrs_ptr[i];
+        if (count) {
+            stdevs_ptr[i] = sqrt(sumsqr0 / count - (sum0 * sum0) / (count * count));
+        }
+    }
+    return stdevs;
+}
+
 Mda grab_clips_subset(const Mda& clips, const QVector<int>& inds)
 {
     int M = clips.N1();

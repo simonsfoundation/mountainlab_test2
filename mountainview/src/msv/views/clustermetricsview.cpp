@@ -76,12 +76,10 @@ void ClusterMetricsView::keyPressEvent(QKeyEvent* evt)
 
 void ClusterMetricsView::prepareMimeData(QMimeData& mimeData, const QPoint& pos)
 {
-    /*
     QByteArray ba;
     QDataStream ds(&ba, QIODevice::WriteOnly);
     ds << mvContext()->selectedClusters();
     mimeData.setData("application/x-msv-clusters", ba); // selected cluster data
-    */
 
     MVAbstractView::prepareMimeData(mimeData, pos); // call base class implementation
 }
@@ -153,7 +151,7 @@ private:
     bool operator<(const QTreeWidgetItem& other) const
     {
         int column = treeWidget()->sortColumn();
-        return text(column).toDouble() < other.text(column).toDouble();
+        return text(column).toDouble() > other.text(column).toDouble();
     }
 };
 

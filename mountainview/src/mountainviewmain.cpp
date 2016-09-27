@@ -49,6 +49,7 @@
 #include <clipsviewplugin.h>
 #include <mvclusterordercontrol.h>
 #include <clustermetricsplugin.h>
+#include <curationprogramplugin.h>
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
 /// TODO: (HIGH) blobs for populations
@@ -357,7 +358,8 @@ int main(int argc, char* argv[])
         W->setCurrentContainerName("north");
         W->openView("open-cluster-details");
         W->setCurrentContainerName("south");
-        W->openView("open-auto-correlograms");
+        //W->openView("open-auto-correlograms");
+        W->openView("open-cluster-metrics");
 
         return a.exec();
     }
@@ -772,6 +774,7 @@ void setup_main_window(MVMainWindow* W)
     W->loadPlugin(new IsolationMatrixPlugin);
     W->loadPlugin(new ClipsViewPlugin);
     W->loadPlugin(new ClusterContextMenuPlugin);
+    W->loadPlugin(new CurationProgramPlugin);
     W->registerViewFactory(new MVTemplatesView2Factory(W));
     W->registerViewFactory(new MVAutoCorrelogramsFactory(W));
     W->registerViewFactory(new MVSelectedAutoCorrelogramsFactory(W));
