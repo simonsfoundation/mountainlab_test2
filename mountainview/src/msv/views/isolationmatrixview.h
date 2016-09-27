@@ -45,16 +45,4 @@ private:
     IsolationMatrixViewPrivate* d;
 };
 
-class IsolationMatrixViewFactory : public MVAbstractViewFactory {
-    Q_OBJECT
-public:
-    IsolationMatrixViewFactory(MVMainWindow* mw, QObject* parent = 0);
-    QString id() const Q_DECL_OVERRIDE;
-    QString name() const Q_DECL_OVERRIDE;
-    QString title() const Q_DECL_OVERRIDE;
-    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
-private slots:
-    //void openClipsForTemplate();
-};
-
 #endif // IsolationMatrixView_H

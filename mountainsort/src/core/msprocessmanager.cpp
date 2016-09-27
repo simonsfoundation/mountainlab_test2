@@ -50,6 +50,7 @@
 #include "cluster_scores_processor.h"
 #include "noise_nearest_processor.h"
 #include "ms_metrics_processor.h"
+#include "basic_metrics_processor.h"
 #include <sys/stat.h>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -128,6 +129,7 @@ void MSProcessManager::loadDefaultProcessors()
     loadProcessor(new cluster_scores_Processor);
     loadProcessor(new noise_nearest_Processor);
     loadProcessor(new ms_metrics_Processor);
+    loadProcessor(new basic_metrics_Processor);
 }
 
 bool MSProcessManager::containsProcessor(const QString& processor_name) const

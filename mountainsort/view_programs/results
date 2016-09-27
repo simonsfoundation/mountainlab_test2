@@ -27,11 +27,11 @@ if (file_exists(outfolder+'/pre.mda')) {
 if (file_exists(dsfolder+'/geom.csv')) {
 	args+=' --geom='+dsfolder+'/geom.csv';
 }
-if (file_exists(dsfolder+'/cluster_metrics.csv')) {
-	args+=' --cluster_metrics='+dsfolder+'/cluster_metrics.csv';
+if (file_exists(outfolder+'/cluster_metrics.csv')) {
+	args+=' --cluster_metrics='+outfolder+'/cluster_metrics.csv';
 }
-if (file_exists(dsfolder+'/cluster_pair_metrics.csv')) {
-	args+=' --cluster_pair_metrics='+dsfolder+'/cluster_pair_metrics.csv';
+if (file_exists(outfolder+'/cluster_pair_metrics.csv')) {
+	args+=' --cluster_pair_metrics='+outfolder+'/cluster_pair_metrics.csv';
 }
 args+=' --firings='+firings_path;
 args+=' --samplerate='+(dsparams.samplerate||0);

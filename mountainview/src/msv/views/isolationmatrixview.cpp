@@ -289,39 +289,6 @@ void IsolationMatrixView::slot_update_current_elements_based_on_context()
     }
 }
 
-IsolationMatrixViewFactory::IsolationMatrixViewFactory(MVMainWindow* mw, QObject* parent)
-    : MVAbstractViewFactory(mw, parent)
-{
-}
-
-QString IsolationMatrixViewFactory::id() const
-{
-    return QStringLiteral("open-confusion-matrix");
-}
-
-QString IsolationMatrixViewFactory::name() const
-{
-    return tr("Confusion Matrix");
-}
-
-QString IsolationMatrixViewFactory::title() const
-{
-    return tr("Confusion Matrix");
-}
-
-MVAbstractView* IsolationMatrixViewFactory::createView(MVContext* context)
-{
-    IsolationMatrixView* X = new IsolationMatrixView(context);
-
-    if (!X->mvContext()) {
-        qCritical() << "mvContext is null" << __FILE__ << __LINE__;
-        delete X;
-        return 0;
-    }
-
-    return X;
-}
-
 Mda IsolationMatrixViewPrivate::row_normalize(const Mda& A)
 {
     Mda B = A;

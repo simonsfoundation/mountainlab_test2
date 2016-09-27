@@ -105,7 +105,9 @@ HEADERS += \
     processors/noise_nearest_processor.h \
     processors/noise_nearest.h \
     processors/ms_metrics.h \
-    processors/ms_metrics_processor.h
+    processors/ms_metrics_processor.h \
+    processors/basic_metrics_processor.h \
+    processors/basic_metrics.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -192,7 +194,9 @@ SOURCES += \
     processors/noise_nearest_processor.cpp \
     processors/noise_nearest.cpp \
     processors/ms_metrics.cpp \
-    processors/ms_metrics_processor.cpp
+    processors/ms_metrics_processor.cpp \
+    processors/basic_metrics_processor.cpp \
+    processors/basic_metrics.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \

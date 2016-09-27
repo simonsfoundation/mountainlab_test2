@@ -26,13 +26,17 @@ HEADERS += clusterdetailplugin.h clusterdetailview.h \
     controlwidgets/prvmanagerdialog.h \
     msv/views/matrixview.h \
     msv/views/isolationmatrixview.h \
-    msv/plugins/isolationmatrixplugin.h
+    msv/plugins/isolationmatrixplugin.h \
+    msv/views/clustermetricsview.h \
+    msv/plugins/clustermetricsplugin.h
 SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
     controlwidgets/exportmv2filedialog.cpp \
     controlwidgets/prvmanagerdialog.cpp \
     msv/views/matrixview.cpp \
     msv/views/isolationmatrixview.cpp \
-    msv/plugins/isolationmatrixplugin.cpp
+    msv/plugins/isolationmatrixplugin.cpp \
+    msv/views/clustermetricsview.cpp \
+    msv/plugins/clustermetricsplugin.cpp
 
 HEADERS += clipsviewplugin.h mvclipsview.h
 SOURCES += clipsviewplugin.cpp mvclipsview.cpp
