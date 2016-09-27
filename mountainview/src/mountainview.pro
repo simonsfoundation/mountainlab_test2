@@ -32,7 +32,8 @@ HEADERS += clusterdetailplugin.h clusterdetailview.h \
     msv/views/clustermetricsview.h \
     msv/plugins/clustermetricsplugin.h \
     msv/views/curationprogramview.h \
-    msv/plugins/curationprogramplugin.h
+    msv/plugins/curationprogramplugin.h \
+    msv/views/curationprogramcontroller.h
 SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
     controlwidgets/exportmv2filedialog.cpp \
     controlwidgets/prvmanagerdialog.cpp \
@@ -42,7 +43,8 @@ SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
     msv/views/clustermetricsview.cpp \
     msv/plugins/clustermetricsplugin.cpp \
     msv/views/curationprogramview.cpp \
-    msv/plugins/curationprogramplugin.cpp
+    msv/plugins/curationprogramplugin.cpp \
+    msv/views/curationprogramcontroller.cpp
 
 HEADERS += clipsviewplugin.h mvclipsview.h
 SOURCES += clipsviewplugin.cpp mvclipsview.cpp
@@ -181,4 +183,7 @@ RESOURCES += mountainview.qrc \
 FORMS += \
     controlwidgets/exportmv2filedialog.ui \
     controlwidgets/prvmanagerdialog.ui
+
+DISTFILES += \
+    msv/views/curationprogram.js
 

@@ -26,5 +26,6 @@
         <file>images/horizontal-zoom-in.png</file>
         <file>images/right.png</file>
         <file>images/left.png</file>
+        <file>msv/views/curationprogram.js</file>
     </qresource>
 </RCC>

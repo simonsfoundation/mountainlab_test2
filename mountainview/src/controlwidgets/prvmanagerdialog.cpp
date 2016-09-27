@@ -138,13 +138,13 @@ QString format_file_size(long file_size)
         return QString("%1 bytes").arg(file_size);
     }
     else if (file_size < 1e6) {
-        return QString("%1K").arg((long)(file_size * 1.0 / 1e3 / 100) * 100);
+        return QString("%1K").arg(((long)(file_size * 1.0 / 1e3 * 10)) / 10.0);
     }
     else if (file_size < 1e9) {
-        return QString("%1M").arg((long)(file_size * 1.0 / 1e6 / 100) * 100);
+        return QString("%1M").arg(((long)(file_size * 1.0 / 1e6 * 10)) / 10.0);
     }
     else {
-        return QString("%1G").arg((long)(file_size * 1.0 / 1e9 / 100) * 100);
+        return QString("%1G").arg(((long)(file_size * 1.0 / 1e9 * 10)) / 10.0);
     }
 }
 
@@ -287,6 +287,7 @@ bool PrvManagerDialogThread::check_if_on_local_disk(QJsonObject prv_obj)
     args << "--checksum1000=" + prv_obj["original_checksum_1000"].toString();
     args << QString("--size=%1").arg(prv_obj["original_size"].toVariant().toLongLong());
     args << "--local-only";
+    qDebug() << "AAAAAAAAAAAAAAAAA" << cmd+" "+args.join(" ");
     QString output = exec_process_and_return_output(cmd, args);
     return !output.isEmpty();
 }
