@@ -39,7 +39,7 @@ console.log ('SUBSERVERS:');
 console.log (subservers);
 console.log ('');
 
-http.createServer(function (REQ, RESP) {
+var SERVER=http.createServer(function (REQ, RESP) {
 	var url_parts = url.parse(REQ.url,true);
 	var path=url_parts.pathname;
 	var query=url_parts.query;
@@ -393,6 +393,7 @@ http.createServer(function (REQ, RESP) {
 		}
 	}
 }).listen(config.listen_port);
+SERVER.timeout=1000*60*60*24; //give it 24 hours!
 console.log ('Listening on port '+config.listen_port);
 
 function run_process_and_read_stdout(exe,args,callback) {
