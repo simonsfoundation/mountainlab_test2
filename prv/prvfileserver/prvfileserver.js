@@ -437,7 +437,6 @@ function serve_file(REQ,filename,response,opts) {
 		});
 		read_stream.on('end',function() {
 			done=true;
-			response.end();
 		});
 		REQ.socket.on('close',function() {
 			read_stream.destroy(); //stop reading the file because the request has been closed
