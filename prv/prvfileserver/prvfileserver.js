@@ -416,7 +416,8 @@ function run_process_and_read_stdout(exe,args,callback) {
 }
 
 function serve_file(REQ,filename,response,opts) {
-	response.writeHead(200, {"Access-Control-Allow-Origin":"*", "Content-Type":"application/json"});
+	var num_bytes_to_read=opts.end_byte-opts.start_byte+1;
+	response.writeHead(200, {"Access-Control-Allow-Origin":"*", "Content-Type":"application/json", "Content-Length":num_bytes_to_read});
 	fs.exists(filename,function(exists) {
 		if (!exists) {
 			response.writeHead(404, {"Content-Type": "text/plain"});
@@ -425,7 +426,7 @@ function serve_file(REQ,filename,response,opts) {
 			return;
 		}
 
-		var num_bytes_to_read=opts.end_byte-opts.start_byte+1;
+		
 		var num_bytes_read=0;
 		var read_stream=fs.createReadStream(filename,{start:opts.start_byte,end:opts.end_byte});
 		var done=false;
