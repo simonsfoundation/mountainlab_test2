@@ -717,6 +717,7 @@ QString create_file_from_prv(QString output_name, QString checksum0, QString che
         if ((path1.startsWith("http://")) || (path1.startsWith("https://"))) {
             printf("---------- Downloading %s\n", path1.toUtf8().data());
             QString path2 = download_file_to_temp_dir(path1);
+            //QString path2 = parallel_download_file_from_prvfileserver_to_temp_dir(path1,10);
             if ((!path2.isEmpty()) && (sumit(path2) == checksum0)) {
                 path1 = path2;
             }
