@@ -435,9 +435,6 @@ function serve_file(REQ,filename,response,opts) {
 				num_bytes_read+=chunk.length;
 			}
 		});
-		read_stream.on('end',function() {
-			done=true;
-		});
 		REQ.socket.on('close',function() {
 			read_stream.destroy(); //stop reading the file because the request has been closed
 			done=true;
