@@ -6,25 +6,24 @@
 #include <mvcontext.h>
 
 class CurationProgramControllerPrivate;
-class CurationProgramController : public QObject
-{
+class CurationProgramController : public QObject {
     Q_OBJECT
 public:
     friend class CurationProgramControllerPrivate;
-    CurationProgramController(MVContext *mvcontext);
+    CurationProgramController(MVContext* mvcontext);
     virtual ~CurationProgramController();
 
     QString log() const;
 
     Q_INVOKABLE QString clusterNumbers();
     Q_INVOKABLE double metric(int cluster_number, QString metric_name);
-    Q_INVOKABLE void addTag(int cluster_number,QString tag_name);
-    Q_INVOKABLE void removeTag(int cluster_number,QString tag_name);
+    Q_INVOKABLE void addTag(int cluster_number, QString tag_name);
+    Q_INVOKABLE void removeTag(int cluster_number, QString tag_name);
 
     Q_INVOKABLE void log(const QString& message);
 
 private:
-    CurationProgramControllerPrivate *d;
+    CurationProgramControllerPrivate* d;
 };
 
 #endif // CURATIONPROGRAMCONTROLLER_H

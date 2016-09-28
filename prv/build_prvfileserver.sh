@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sudo docker build -t prv -f ./Dockerfile ..
+sudo docker build $@ -t prv -f ./Dockerfile ..

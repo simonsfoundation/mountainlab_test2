@@ -287,7 +287,7 @@ bool PrvManagerDialogThread::check_if_on_local_disk(QJsonObject prv_obj)
     args << "--checksum1000=" + prv_obj["original_checksum_1000"].toString();
     args << QString("--size=%1").arg(prv_obj["original_size"].toVariant().toLongLong());
     args << "--local-only";
-    qDebug() << "AAAAAAAAAAAAAAAAA" << cmd+" "+args.join(" ");
+    qDebug() << "AAAAAAAAAAAAAAAAA" << cmd + " " + args.join(" ");
     QString output = exec_process_and_return_output(cmd, args);
     return !output.isEmpty();
 }

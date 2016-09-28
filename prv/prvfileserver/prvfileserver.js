@@ -102,7 +102,7 @@ http.createServer(function (REQ, RESP) {
 				send_json_response({success:false,error:"File does not exist: "+path});		
 				return;	
 			}
-			serve_file(fname,RESP);
+			serve_file(REQ,fname,RESP);
 		}
 		else if (method=="stat") {
 			var fname=absolute_data_directory()+"/"+path;
@@ -393,7 +393,7 @@ function run_process_and_read_stdout(exe,args,callback) {
 	});
 }
 
-function serve_file(filename,response) {
+function serve_file(REQ,filename,response) {
 	response.writeHead(200, {"Access-Control-Allow-Origin":"*", "Content-Type":"application/json"});
 	fs.exists(filename,function(exists) {
 		if (!exists) {
@@ -403,6 +403,24 @@ function serve_file(filename,response) {
 			return;
 		}
 
+		var read_stream=fs.createReadStream(filename);
+		var done=false;
+		read_stream.on('data',function(chunk) {
+			if (!done)
+				response.write(chunk,"binary");
+		});
+		read_stream.on('end',function() {
+			done=true;
+			response.end();
+		});
+		REQ.socket.on('close',function() {
+			read_stream.destroy(); //stop reading the file because the request has been closed
+			done=true;
+			response.end();
+		});
+
+
+		/*
 		fs.readFile(filename, "binary", function(err, file) {
 			if(err) {        
 				response.writeHead(500, {"Content-Type": "text/plain"});
@@ -415,6 +433,7 @@ function serve_file(filename,response) {
 			response.write(file, "binary");
 			response.end();
 		});
+		*/
 	});
 }
 

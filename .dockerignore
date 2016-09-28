@@ -1,3 +1,6 @@
 Dockerfile
 test_in_docker
-*.mda
+bin
+*/build
+*/bin
+*/*.mda
