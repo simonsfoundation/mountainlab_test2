@@ -708,6 +708,102 @@ QString download_file_to_temp_dir(QString url)
     return tmp_fname;
 }
 
+class Downloader : public QThread {
+public:
+    //input
+    QString url;
+    QString output_path;
+
+    //output
+    bool success=false;
+
+    void run() {
+        QFile::remove(output_path);
+
+        QString cmd = QString("curl %1 -o %2").arg(url).arg(output_path);
+        if (system(cmd.toUtf8().data())!=0) {
+            QFile::remove(output_path);
+        }
+        success=QFile::exists(output_path);
+    }
+};
+
+QString concatenate_files_to_temporary_file(QStringList file_paths) {
+    /// Witold, this function should be improved by streaming the read/writes
+    foreach (QString str,file_paths) {
+        if (str.isEmpty()) return "";
+    }
+
+    QString code=file_paths.join(";");
+    QString tmp_fname=CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(code) + "." + make_random_id_22(5) + ".concat.download");
+    QFile f(tmp_fname);
+    if (!f.open(QIODevice::WriteOnly)) {
+        qWarning() << __FUNCTION__ << "Unable to open file for writing: "+tmp_fname;
+        return "";
+    }
+    foreach (QString str,file_paths) {
+        QFile g(str);
+        if (!g.open(QIODevice::ReadOnly)) {
+            qWarning() << __FUNCTION__ << "Unable to open file for reading: "+str;
+            f.close();
+            return "";
+        }
+        f.write(g.readAll());
+        g.close();
+    }
+
+    f.close();
+    return tmp_fname;
+}
+
+QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url,long size,int num_downloads) {
+    qDebug() << __FILE__ << __LINE__;
+    if (!url.contains("?")) url+="?";
+    else url+="&";
+    QList<long> start_bytes;
+    QList<long> end_bytes;
+    long incr=size/num_downloads;
+    if (incr==0) incr=1;
+    long sum=0;
+    for (int i=0; i<num_downloads; i++) {
+        if (sum<size) {
+            long val=qMin(incr,size-sum);
+            start_bytes << sum;
+            end_bytes << sum+val-1;
+            sum+=val;
+        }
+    }
+    qDebug() << __FILE__ << __LINE__;
+    QList<Downloader *> downloaders;
+    qDebug() << __FILE__ << __LINE__;
+    for (int i=0; i<start_bytes.count(); i++) {
+        QString url2=url+QString("bytes=%1-%2").arg(start_bytes[i]).arg(end_bytes[i]);
+        qDebug() << url2;
+        Downloader *DD=new Downloader;
+        DD->url=url2;
+        DD->output_path=CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(url2) + "." + make_random_id_22(5) + QString(".part-%1.download").arg(i));
+        downloaders << DD;
+        DD->start();
+    }
+    qDebug() << __FILE__ << __LINE__;
+    QStringList paths;
+    for (int i=0; i<downloaders.count(); i++) {
+        downloaders[i]->wait();
+        paths << downloaders[i]->output_path;
+    }
+    qDeleteAll(downloaders);
+
+    QString ret=concatenate_files_to_temporary_file(paths);
+
+    //clean up
+    foreach (QString fname,paths) {
+        //QFile::remove(fname);
+    }
+
+    return ret;
+
+}
+
 QString create_file_from_prv(QString output_name, QString checksum0, QString checksum1000, long size0, const QJsonArray& processes, bool allow_downloads)
 {
     printf("Creating file corresponding to %s\n", output_name.toLatin1().data());
@@ -716,8 +812,11 @@ QString create_file_from_prv(QString output_name, QString checksum0, QString che
     if (!path1.isEmpty()) {
         if ((path1.startsWith("http://")) || (path1.startsWith("https://"))) {
             printf("---------- Downloading %s\n", path1.toUtf8().data());
-            QString path2 = download_file_to_temp_dir(path1);
-            //QString path2 = parallel_download_file_from_prvfileserver_to_temp_dir(path1,10);
+            //QString path2 = download_file_to_temp_dir(path1);
+            QTime timer;
+            timer.start();
+            QString path2 = parallel_download_file_from_prvfileserver_to_temp_dir(path1,size0,1);
+            qDebug() << QString("ELAPSED FOR PARALLEL DOWNLOAD: %1 seconds").arg(timer.elapsed()*1.0/1000);
             if ((!path2.isEmpty()) && (sumit(path2) == checksum0)) {
                 path1 = path2;
             }
