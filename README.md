@@ -85,6 +85,12 @@ We recommend installing this in your home directory, which does not require admi
 
 Once installed you will need to prepend the path to qmake to your PATH environment variable. On my system that is /home/magland/Qt/5.7/gcc_64/bin.
 
+## How to run spike sorting
+
+See the following article which explains how to actually perform spike sorting:
+
+[https://mountainlab.vbulletin.net/articles/15-running-spike-sorting-using-mountainlab|https://mountainlab.vbulletin.net/articles/15-running-spike-sorting-using-mountainlab]
+
 ## Older information
 
 [About the software](https://mountainlab.vbulletin.net/articles/22-about-mountainlab)
