@@ -397,7 +397,15 @@ console.log ('Listening on port '+config.listen_port);
 
 function run_process_and_read_stdout(exe,args,callback) {
 	console.log ('RUNNING:'+exe+' '+args.join(' '));
-	var P=require('child_process').spawn(exe,args);
+	var P;
+	try {
+		P=require('child_process').spawn(exe,args);
+	}
+	catch(err) {
+		console.log(err);
+		console.log("Problem launching: "+exe+" "+args.join(" "));
+		return "";
+	}
 	var txt='';
 	P.stdout.on('data',function(chunk) {
 		txt+=chunk;
