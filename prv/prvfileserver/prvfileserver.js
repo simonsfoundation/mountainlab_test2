@@ -433,6 +433,10 @@ function serve_file(REQ,filename,response,opts) {
 			if (!done) {
 				response.write(chunk,"binary");
 				num_bytes_read+=chunk.length;
+				if (num_bytes_read==num_bytes_to_read) {
+					console.log('Read '+num_bytes_read+' bytes');
+					response.write("end");
+				}
 			}
 		});
 		REQ.socket.on('close',function() {
