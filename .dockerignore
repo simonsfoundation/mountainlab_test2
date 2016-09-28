@@ -1,6 +1,5 @@
 Dockerfile
 test_in_docker
-bin
 */build
 */bin
 */*.mda

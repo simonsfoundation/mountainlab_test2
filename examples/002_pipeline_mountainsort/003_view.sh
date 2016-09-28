@@ -2,4 +2,4 @@
 
 samplerate="30000" #Hz
 
-mountainview --firings=output/firings.mda --raw=output/pre0.mda.prv --filt=output/pre1.mda.prv --pre=output/pre2.mda.prv --samplerate=$samplerate
+mountainview --firings=output/firings.mda --raw=output/raw.mda.prv --filt=output/filt.mda.prv --pre=output/pre.mda.prv --samplerate=$samplerate

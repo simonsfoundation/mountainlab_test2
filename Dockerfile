@@ -4,7 +4,7 @@ RUN apt-get install -y libfftw3-dev
 
 RUN apt-get install -y octave
 
-RUN apt-get install -y git
+RUN apt-get install -y git nano htop
 
 ADD . /home/mluser/dev/mountainlab
 WORKDIR /home/mluser/dev/mountainlab
