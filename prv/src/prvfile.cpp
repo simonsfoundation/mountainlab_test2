@@ -423,6 +423,9 @@ QString PrvFilePrivate::find_remote_file(long size, const QString& checksum, con
         QString url_path = server0["path"].toString();
         QString url0 = host + ":" + QString::number(port) + url_path + QString("/?a=locate&checksum=%1&checksum1000=%2&size=%3").arg(checksum).arg(checksum1000_optional).arg(size);
         url0 += "&passcode=" + server0["passcode"].toString();
+        if (opts.verbose) {
+            qDebug() << url0;
+        }
         QString txt = http_get_text_curl_0(url0);
         if (!txt.isEmpty()) {
             if (!txt.contains(" ")) { //filter out error messages (good idea, or not?)
@@ -439,15 +442,25 @@ QString PrvFilePrivate::find_remote_file(long size, const QString& checksum, con
 QString PrvFilePrivate::find_file(long size, const QString& checksum, const QString& checksum1000_optional, const PrvFileLocateOptions& opts)
 {
     if (opts.search_locally) {
+        if (opts.verbose)
+            printf("Searching locally...\n");
         QString local_fname = find_local_file(size, checksum, checksum1000_optional, opts);
         if (!local_fname.isEmpty()) {
+            if (opts.verbose) {
+                printf("Found file: %s\n", local_fname.toUtf8().data());
+            }
             return local_fname;
         }
     }
 
     if (opts.search_remotely) {
+        if (opts.verbose)
+            printf("Searching remotely...\n");
         QString remote_url = find_remote_file(size, checksum, checksum1000_optional, opts);
         if (!remote_url.isEmpty()) {
+            if (opts.verbose) {
+                printf("Found remote file: %s\n", remote_url.toUtf8().data());
+            }
             return remote_url;
         }
     }

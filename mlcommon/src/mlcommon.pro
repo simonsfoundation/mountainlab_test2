@@ -17,12 +17,14 @@ VPATH += ../include
 HEADERS += mlcommon.h sumit.h \
     ../include/mda/mda32.h \
     ../include/mda/diskreadmda32.h \
-    ../include/mliterator.h
+    ../include/mliterator.h \
+    prvfiledownload.h
 
 SOURCES += \
     mlcommon.cpp sumit.cpp \
     mda/mda32.cpp \
-    mda/diskreadmda32.cpp
+    mda/diskreadmda32.cpp \
+    prvfiledownload.cpp
 
 INCLUDEPATH += ../include/mda
 VPATH += ../include/mda

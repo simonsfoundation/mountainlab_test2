@@ -597,6 +597,7 @@ public:
         parser.addOption(QCommandLineOption("checksum1000", "checksum1000", "[optional]"));
         parser.addOption(QCommandLineOption("size", "size", "[]"));
         parser.addOption(QCommandLineOption("server", "name of the server to search", "[server name]"));
+        parser.addOption(QCommandLineOption("verbose", "verbose"));
         if (m_cmd == "locate") {
             parser.addOption(QCommandLineOption("local-only", "do not look on remote servers"));
         }
@@ -615,6 +616,8 @@ public:
     {
         QStringList args = parser.positionalArguments();
         args.removeFirst(); // remove command name
+
+        bool verbose = parser.isSet("verbose");
 
         QJsonObject obj;
         if (parser.isSet("checksum")) {
@@ -647,6 +650,9 @@ public:
                 }
             }
         }
+        if (verbose) {
+            qDebug() << QJsonDocument(obj).toJson();
+        }
         if (obj.contains("original_checksum")) {
             QVariantMap params;
             if (parser.isSet("path"))
@@ -657,7 +663,7 @@ public:
                 bool allow_downloads = true;
                 if (parser.isSet("local-only"))
                     allow_downloads = false;
-                locate_file(obj, params, allow_downloads);
+                locate_file(obj, params, allow_downloads, verbose);
             }
             else
                 download_file(obj, params);
@@ -672,7 +678,7 @@ public:
 private:
     QString m_cmd;
 
-    int locate_file(const QJsonObject& obj, const QVariantMap& params, bool allow_downloads) const
+    int locate_file(const QJsonObject& obj, const QVariantMap& params, bool allow_downloads, bool verbose) const
     {
         PrvFile prvf(obj);
         PrvFileLocateOptions opts;
@@ -694,6 +700,7 @@ private:
             }
         }
 
+        opts.verbose = verbose;
         QString fname_or_url = prvf.locate(opts);
         if (fname_or_url.isEmpty())
             return -1;

@@ -144,10 +144,16 @@ int main(int argc, char* argv[])
 
     CLParams CLP(argc, argv);
 
-    if (!prepare_prv_files(CLP.named_parameters, true)) {
-        qWarning() << "Could not prepare .prv files. Try adjusting the prv settings in mountainlab.user.json";
-        return -1;
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
+    {
+        TaskProgressView TPV;
+        TPV.show();
+        if (!prepare_prv_files(CLP.named_parameters, true)) {
+            qWarning() << "Could not prepare .prv files. Try adjusting the prv settings in mountainlab.user.json";
+            return -1;
+        }
     }
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 
     QList<QColor> channel_colors;
     QStringList color_strings;
@@ -228,6 +234,7 @@ int main(int argc, char* argv[])
         return a.exec();
     }
 
+    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
         if (arg2 == "remotereadmda") {
@@ -280,6 +287,8 @@ int main(int argc, char* argv[])
             context->setFromMVFileObject(obj);
         }
         if (!mv2_fname.isEmpty()) {
+            TaskProgressView TPV;
+            TPV.show();
             QString json = TextFile::read(mv2_fname);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
             context->setFromMV2FileObject(obj);

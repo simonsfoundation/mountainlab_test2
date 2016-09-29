@@ -23,6 +23,7 @@
 #include <QProcess>
 #include <QJsonArray>
 #include <QSettings>
+#include "prvfiledownload.h"
 
 #ifdef QT_GUI_LIB
 #include <QtNetwork/QNetworkAccessManager>
@@ -715,36 +716,39 @@ public:
     QString output_path;
 
     //output
-    bool success=false;
+    bool success = false;
 
-    void run() {
+    void run()
+    {
         QFile::remove(output_path);
 
         QString cmd = QString("curl -s %1 -o %2").arg(url).arg(output_path);
-        if (system(cmd.toUtf8().data())!=0) {
+        if (system(cmd.toUtf8().data()) != 0) {
             QFile::remove(output_path);
         }
-        success=QFile::exists(output_path);
+        success = QFile::exists(output_path);
     }
 };
 
-QString concatenate_files_to_temporary_file(QStringList file_paths) {
+QString concatenate_files_to_temporary_file(QStringList file_paths)
+{
     /// Witold, this function should be improved by streaming the read/writes
-    foreach (QString str,file_paths) {
-        if (str.isEmpty()) return "";
+    foreach (QString str, file_paths) {
+        if (str.isEmpty())
+            return "";
     }
 
-    QString code=file_paths.join(";");
-    QString tmp_fname=CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(code) + "." + make_random_id_22(5) + ".concat.download");
+    QString code = file_paths.join(";");
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(code) + "." + make_random_id_22(5) + ".concat.download");
     QFile f(tmp_fname);
     if (!f.open(QIODevice::WriteOnly)) {
-        qWarning() << __FUNCTION__ << "Unable to open file for writing: "+tmp_fname;
+        qWarning() << __FUNCTION__ << "Unable to open file for writing: " + tmp_fname;
         return "";
     }
-    foreach (QString str,file_paths) {
+    foreach (QString str, file_paths) {
         QFile g(str);
         if (!g.open(QIODevice::ReadOnly)) {
-            qWarning() << __FUNCTION__ << "Unable to open file for reading: "+str;
+            qWarning() << __FUNCTION__ << "Unable to open file for reading: " + str;
             f.close();
             return "";
         }
@@ -756,7 +760,35 @@ QString concatenate_files_to_temporary_file(QStringList file_paths) {
     return tmp_fname;
 }
 
-QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url,long size,int num_downloads) {
+QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url, long size, int num_downloads)
+{
+
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".parallel_download";
+    PrvFileDownload::PrvParallelDownloader downloader;
+    downloader.destination_file_name = tmp_fname;
+    downloader.size = size;
+    downloader.source_url = url;
+    downloader.num_threads = num_downloads;
+
+    downloader.start();
+    bool done = false;
+    while (!done) {
+        if (downloader.wait(100)) {
+            done = true;
+        }
+        else {
+            if (MLUtil::inGuiThread()) {
+                qApp->processEvents();
+            }
+        }
+    }
+
+    if (downloader.success)
+        return tmp_fname;
+    else
+        return "";
+
+    /*
     if (num_downloads==1) {
         return download_file_to_temp_dir(url);
     }
@@ -803,7 +835,7 @@ QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url,long s
     }
 
     return ret;
-
+    */
 }
 
 QString create_file_from_prv(QString output_name, QString checksum0, QString checksum1000, long size0, const QJsonArray& processes, bool allow_downloads)
@@ -817,8 +849,8 @@ QString create_file_from_prv(QString output_name, QString checksum0, QString che
             //QString path2 = download_file_to_temp_dir(path1);
             QTime timer;
             timer.start();
-            QString path2 = parallel_download_file_from_prvfileserver_to_temp_dir(path1,size0,20);
-            qDebug() << QString("ELAPSED FOR PARALLEL DOWNLOAD: %1 seconds").arg(timer.elapsed()*1.0/1000);
+            QString path2 = parallel_download_file_from_prvfileserver_to_temp_dir(path1, size0, 20);
+            qDebug() << QString("ELAPSED FOR PARALLEL DOWNLOAD: %1 seconds").arg(timer.elapsed() * 1.0 / 1000);
             if ((!path2.isEmpty()) && (sumit(path2) == checksum0)) {
                 path1 = path2;
             }
