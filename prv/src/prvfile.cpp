@@ -529,7 +529,7 @@ QString http_get_text_curl_0(const QString& url)
         return "";
     }
     //QString tmp_fname = make_temporary_file()+".curl";
-    QString cmd = QString("curl \"%1\"").arg(url);
+    QString cmd = QString("curl --connect-timeout 2 \"%1\"").arg(url);
     //int exit_code = system(cmd.toLatin1().data());
     QProcess P;
     P.start(cmd);

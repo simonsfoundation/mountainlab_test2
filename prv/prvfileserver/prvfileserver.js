@@ -181,8 +181,26 @@ var SERVER=http.createServer(function (REQ, RESP) {
 				send_json_response({error:true,error:"Invalid checksum."});
 				return;
 			}
+			
+			var part_number=0;
+			var num_parts=0;
+			if ('part' in query) {
+				var vals=query.part.split('_of_');
+				if (vals.length!=2) {
+					send_json_response({error:true,error:"Incorrect part parameter: "+query.part});
+					return;		
+				}
+				part_number=Number(vals[0]);
+				num_parts=Number(vals[1]);
+				if ((part_number<=0)||(num_parts<=0)) {
+					send_json_response({error:true,error:"Incorrect part parameter: "+query.part});
+					return;			
+				}
+			}
+
 			mkdir_if_needed(absolute_data_directory()+'/uploads');
 			var new_fname=absolute_data_directory()+'/uploads/'+checksum;
+
 			var tmp_fname=new_fname+'.'+make_random_id(5)+'.upload.tmp';
 			{
 				var write_stream;
@@ -238,26 +256,67 @@ var SERVER=http.createServer(function (REQ, RESP) {
 					}
 				});
 				write_stream.on('finish',function() {
-					console.log ('Write stream has finished.');
-					if (get_file_size(tmp_fname)!=num_bytes_received) {
-						send_json_response({success:false,error:'Unexpected size compared with num bytes received '+get_file_size(tmp_fname)+' <> '+num_bytes_received});
-						remove_file(tmp_fname);
-						return;
+					console.log ('Finished writing: '+tmp_fname);
+					if (!part_number) {
+						if (get_file_size(tmp_fname)!=num_bytes_received) {
+							send_json_response({success:false,error:'Unexpected size compared with num bytes received '+get_file_size(tmp_fname)+' <> '+num_bytes_received});
+							remove_file(tmp_fname);
+							return;
+						}
+						compute_file_checksum(tmp_fname,function(computed_checksum) {
+							if (computed_checksum!=checksum) {
+								send_json_response({success:false,error:'Unexpected checksum '+computed_checksum+' <> '+checksum});
+								remove_file(tmp_fname);
+								return;
+							}
+							if (!rename_file(tmp_fname,new_fname)) {
+								send_json_response({success:false,error:'Unable to rename file '+tmp_fname+' '+new_fname});
+								remove_file(tmp_fname);
+								return;
+							}
+							fs.writeFileSync(new_fname+'.info',info,'utf8');
+							send_json_response({success:true,message:'received '+num_bytes_received+' bytes'});
+						});
 					}
-					compute_file_checksum(tmp_fname,function(computed_checksum) {
-						if (computed_checksum!=checksum) {
-							send_json_response({success:false,error:'Unexpected checksum '+computed_checksum+' <> '+checksum});
+					else {
+						var new_fname_plus=new_fname+'-part_'+part_number+'_of_'+num_parts;
+						if (!rename_file(tmp_fname,new_fname_plus)) {
+							send_json_response({success:false,error:'Unable to rename file '+tmp_fname+' '+new_fname_plus});
 							remove_file(tmp_fname);
 							return;
 						}
-						if (!rename_file(tmp_fname,new_fname)) {
-							send_json_response({success:false,error:'Unable to rename file '+tmp_fname+' '+new_fname});
-							remove_file(tmp_fname);
-							return;
+						if (all_parts_are_present(new_fname,num_parts)) {
+							var another_tmp_fname=new_fname+make_random_id(5)+'.concat-upload.tmp';
+							concatenate_parts(new_fname,num_parts,another_tmp_fname,function(ret) {
+								if (!ret.success) {
+									send_json_response(ret);
+									return;
+								}
+								if (get_file_size(another_tmp_fname)!=size) {
+									send_json_response({success:false,error:'Unexpected size after upload concatenation: '+get_file_size(another_tmp_fname)+' <> '+size});
+									remove_file(another_tmp_fname);
+									return;
+								}
+								compute_file_checksum(another_tmp_fname,function(computed_checksum) {
+									if (computed_checksum!=checksum) {
+										send_json_response({success:false,error:'Unexpected checksum after upload concatenation '+computed_checksum+' <> '+checksum});
+										remove_file(another_tmp_fname);
+										return;
+									}
+									if (!rename_file(another_tmp_fname,new_fname)) {
+										send_json_response({success:false,error:'Unable to rename file after upload concatenation '+another_tmp_fname+' '+new_fname});
+										remove_file(another_tmp_fname);
+										return;
+									}
+									fs.writeFileSync(new_fname+'.info',info,'utf8');
+									send_json_response({success:true,message:'received and concatenated '+size+' bytes'});
+								});
+							});
 						}
-						fs.writeFileSync(new_fname+'.info',info,'utf8');
-						send_json_response({success:true,message:'received '+num_bytes_received+' bytes'});
-					});
+						else {
+							send_json_response({success:true,message:'received '+num_bytes_received+' bytes from part '+part_number+' of '+num_parts});
+						}
+					}
 				});
 			}
 		}
@@ -391,6 +450,44 @@ var SERVER=http.createServer(function (REQ, RESP) {
 		else {
 			send_text_response(text);
 		}
+	}
+
+	function all_parts_are_present(base_name,num_parts) {
+		for (var part=1; part<=num_parts; part++) {
+			if (!fs.existsSync(base_name+'-part_'+part+'_of_'+num_parts))
+				return false;
+		}
+		return true;
+	}
+	function concatenate_parts(new_fname,num_parts,tmp_fname,callback) {
+		var write_stream=fs.createWriteStream(tmp_fname);
+		var error_happened=false;
+		write_stream.on('error',function(err) {
+			error_happened=true;
+			var errstr='ERROR: '+JSON.stringify(err);
+			console.log (errstr);
+			write_stream.end();
+			callback({success:false,error:'Error writing to '+tmp_fname+': '+errstr});
+			return;
+		});
+
+		write_stream.on('finish',function() {
+			if (error_happened) return;
+			callback({success:true});
+		});
+		for (var part=1; part<=num_parts; part++) {
+			var fname=new_fname+'-part_'+part+'_of_'+num_parts;
+			var data=fs.readFileSync(fname,'binary');
+			if (!data) {
+				error_happened=true;
+				write_stream.end();
+				callback({success:false,error:'Error reading data from '+fname});
+				return;	
+			}
+			write_stream.write(data,'binary');
+			remove_file(fname);
+		}
+		write_stream.end();
 	}
 }).listen(config.listen_port);
 SERVER.timeout=1000*60*60*24; //give it 24 hours!

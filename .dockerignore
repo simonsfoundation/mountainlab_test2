@@ -3,3 +3,9 @@ test_in_docker
 */build
 */bin
 */*.mda
+*/*/*.mda
+*/*/*/*.mda
+*/*/*/*/*.mda
+*/*/*/*/*/*.mda
+*/*/*/*/*/*/*.mda
+tmp

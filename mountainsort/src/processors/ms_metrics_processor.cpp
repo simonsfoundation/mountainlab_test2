@@ -52,6 +52,5 @@ bool ms_metrics_Processor::run(const QMap<QString, QVariant>& params)
     QString firings_path = params["firings"].toString();
     QString cluster_metrics_path = params["cluster_metrics"].toString();
     QString cluster_pair_metrics_path = params["cluster_pair_metrics"].toString();
-    qDebug() << __FILE__ << __LINE__;
     return MSMetrics::ms_metrics(timeseries_path, firings_path, cluster_metrics_path, cluster_pair_metrics_path, opts);
 }

@@ -414,7 +414,6 @@ int main(int argc, char* argv[])
             return -1;
     }
     else if (arg1 == "daemon-restart") { //Restart the daemon
-        qDebug() << __FILE__ << __LINE__ << "@@@@@@@@@@@@@@@@@@@";
         MPDaemonInterface X;
         if (!X.stop())
             return -1;
