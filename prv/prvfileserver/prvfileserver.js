@@ -469,12 +469,15 @@ var SERVER=http.createServer(function (REQ, RESP) {
 			return;
 		}
 		setTimeout(function() {
-			wait_until_all_parts_are_present(REQ,base_name,num_parts,callback);
-			if (!REQ.socket.connected) {
-				console.log('Request socket is no longer connected. Returning from wait_until_all_parts_are_present()');
-				callback();
-				return;
+			if (!all_parts_are_present(base_name,num_parts)) {
+				if (!REQ.socket.connected) {
+					console.log('Request socket is no longer connected. Returning from wait_until_all_parts_are_present()');
+					callback();
+					return;
+				}
 			}
+			wait_until_all_parts_are_present(REQ,base_name,num_parts,callback);
+			
 		},100);
 	}
 	function all_parts_are_present(base_name,num_parts) {
