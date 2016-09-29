@@ -7,12 +7,161 @@
 #ifndef MLNETWORK_H
 #define MLNETWORK_H
 
+#include <QFile>
+#include <QMutex>
+#include <QNetworkReply>
 #include <QString>
+#include <QThread>
+#include <QTime>
+#include <taskprogress.h>
 
-class MLNetwork {
+namespace MLNetwork {
+
+QString httpGetTextSync(QString url);
+QString httpGetBinaryFileSync(QString url);
+QString httpPostFileSync(QString file_name,QString url);
+QString httpPostFileParallelSync(QString file_name,QString url,int num_threads=10);
+
+class Runner : public QObject {
+    Q_OBJECT
 public:
-    static QString httpGetText(const QString& url);
-    static QString httpGetBinaryFile(const QString& url);
+    virtual void start()=0;
+    bool isFinished();
+    bool waitForFinished(long msec);
+    void requestStop();
+    bool stopRequested() const;
+signals:
+    void finished();
+protected:
+    void setFinished();
+private:
+    bool m_is_finished=false;
+    bool m_stop_requested=false;
 };
+
+class Downloader : public Runner {
+    Q_OBJECT
+public:
+    virtual ~Downloader();
+
+    //input
+    QString source_url;
+    QString destination_file_name;
+    long size = 0; //optional, if known
+
+    //output
+    bool success = false;
+    QString error;
+
+    void start();
+    double elapsed_msec();
+    long num_bytes_downloaded();
+signals:
+    void progress();
+private slots:
+    void slot_reply_error();
+    void slot_reply_ready_read();
+    void slot_reply_finished();
+private:
+    long m_num_bytes_downloaded = 0;
+    QTime m_timer;
+    TaskProgress m_task;
+    QNetworkReply* m_reply=0;
+    QString m_tmp_fname;
+    QFile *m_file=0;
+};
+
+class PrvParallelDownloader : public Runner {
+    Q_OBJECT
+public:
+    virtual ~PrvParallelDownloader();
+
+    //input
+    QString source_url; //must be prv protocol
+    QString destination_file_name;
+    long size = 0; //mandatory
+    int num_threads = 10;
+
+    //output
+    bool success = true;
+    QString error;
+
+    void start();
+    double elapsed_msec();
+    long num_bytes_downloaded();
+private slots:
+    void slot_downloader_progress();
+    void slot_downloader_finished();
+private:
+    QMutex m_mutex;
+    QTime m_timer;
+    long m_num_bytes_downloaded = 0;
+
+    TaskProgress m_task;
+    QList<Downloader*> m_downloaders;
+};
+
+class Uploader : public Runner {
+    Q_OBJECT
+public:
+    virtual ~Uploader();
+
+    //input
+    QString source_file_name;
+    QString destination_url;
+    long start_byte=-1;
+    long end_byte=-1;
+
+    //output
+    bool success=false;
+    QString response_text;
+    QString error;
+
+    void start();
+    double elapsed_msec();
+    long num_bytes_uploaded();
+signals:
+    void progress();
+private:
+    QMutex m_mutex;
+    long m_num_bytes_uploaded = 0;
+    QTime m_timer;
+
+    QNetworkReply *m_reply=0;
+    TaskProgress m_task;
+    QFile *m_file=0;
+};
+
+class PrvParallelUploader : public Runner {
+    Q_OBJECT
+public:
+    virtual ~PrvParallelUploader();
+
+    //input
+    QString source_file_name;
+    QString destination_url;
+    int num_threads=10;
+
+    //output
+    bool success=true;
+    QString response_text;
+    QString error;
+
+    void start();
+    double elapsed_msec();
+    long num_bytes_uploaded();
+private slots:
+    void slot_uploader_progress();
+    void slot_uploader_finished();
+private:
+    long m_size=0;
+    long m_num_bytes_uploaded = 0;
+    QTime m_timer;
+    TaskProgress m_task;
+
+    QList<Uploader*> m_uploaders;
+};
+
+}
 
 #endif // MLNETWORK_H

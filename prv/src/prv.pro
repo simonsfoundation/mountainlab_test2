@@ -14,3 +14,5 @@ SOURCES += prvmain.cpp \
     prvfile.cpp
 
 include(../../mlcommon/mlcommon.pri)
+include(../../mlcommon/mlnetwork.pri)
+include(../../mlcommon/taskprogress.pri)

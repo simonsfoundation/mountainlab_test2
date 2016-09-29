@@ -397,7 +397,7 @@ void RemoteReadMdaPrivate::download_info_if_needed()
     //QString url=file_url_for_remote_path(m_path);
     QString url = m_path;
     QString url2 = url + "?a=info&output=text";
-    QString txt = MLNetwork::httpGetText(url2);
+    QString txt = MLNetwork::httpGetTextSync(url2);
     QStringList lines = txt.split("\n");
     QStringList sizes = lines.value(0).split(",");
     m_info.N1 = sizes.value(0).toLong();
@@ -432,7 +432,7 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
         return fname;
     QString url = m_path;
     QString url0 = url + QString("?a=readChunk&output=text&index=%1&size=%2&datatype=%3").arg((long)(ii * m_download_chunk_size)).arg(size).arg(m_remote_datatype);
-    QString binary_url = MLNetwork::httpGetText(url0).trimmed();
+    QString binary_url = MLNetwork::httpGetTextSync(url0).trimmed();
     if (binary_url.isEmpty())
         return "";
 
@@ -443,18 +443,18 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
     }
 
     task.log() << "binary_url:" << binary_url;
-    QString mda_fname = MLNetwork::httpGetBinaryFile(binary_url);
-    if (mda_fname.isEmpty())
+    QString tmp_mda_fname = MLNetwork::httpGetBinaryFileSync(binary_url);
+    if (tmp_mda_fname.isEmpty())
         return "";
-    DiskReadMda tmp(mda_fname);
+    DiskReadMda tmp(tmp_mda_fname);
     if (tmp.totalSize() != size) {
         task.error() << "Unexpected total size problem: " << tmp.totalSize() << size;
         qWarning() << "Unexpected total size problem: " << tmp.totalSize() << size;
-        QFile::remove(mda_fname);
+        QFile::remove(tmp_mda_fname);
         return "";
     }
     if (m_remote_datatype == "float32_q8") {
-        QString dynamic_range_fname = MLNetwork::httpGetBinaryFile(binary_url + ".q8");
+        QString dynamic_range_fname = MLNetwork::httpGetBinaryFileSync(binary_url + ".q8");
         if (dynamic_range_fname.isEmpty()) {
             qWarning() << "problem downloading .q8 file: " + binary_url + ".q8";
             task.error() << "problem downloading .q8 file: " + binary_url + ".q8";
@@ -466,18 +466,21 @@ QString RemoteReadMdaPrivate::download_chunk_at_index(long ii)
             task.error() << QString("Problem in .q8 file. Unexpected size %1: ").arg(dynamic_range.totalSize()) + binary_url + ".q8";
             return "";
         }
-        Mda chunk(mda_fname);
+        Mda chunk(tmp_mda_fname);
         unquantize8(chunk, dynamic_range.value(0), dynamic_range.value(1));
         if (!chunk.write32(fname)) {
+            QFile::remove(tmp_mda_fname);
             qWarning() << "Unable to write file: " + fname;
             task.error() << "Unable to write file: " + fname;
             return "";
         }
+        QFile::remove(tmp_mda_fname);
     }
     else {
-        if (!QFile::rename(mda_fname, fname)) {
-            qWarning() << "Unable to rename file: " << mda_fname << fname;
-            task.error() << "Unable to rename file: " << mda_fname << fname;
+        if (!QFile::rename(tmp_mda_fname, fname)) {
+            QFile::remove(tmp_mda_fname);
+            qWarning() << "Unable to rename file: " << tmp_mda_fname << fname;
+            task.error() << "Unable to rename file: " << tmp_mda_fname << fname;
             return "";
         }
     }

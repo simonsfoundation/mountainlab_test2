@@ -143,8 +143,6 @@ int main(int argc, char* argv[])
     setbuf(stdout, 0);
 
     CLParams CLP(argc, argv);
-
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     {
         TaskProgressView TPV;
         TPV.show();
@@ -153,7 +151,6 @@ int main(int argc, char* argv[])
             return -1;
         }
     }
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
 
     QList<QColor> channel_colors;
     QStringList color_strings;
@@ -200,7 +197,6 @@ int main(int argc, char* argv[])
                     QJsonObject SV = static_views[ii].toObject();
                     QString container = SV["container"].toString();
                     QString title = SV["title"].toString();
-                    qDebug() << "TITLE:::" << title;
                     QJsonObject SVdata = SV["data"].toObject();
                     QString view_type = SVdata["view-type"].toString();
                     qDebug() << "OPENING VIEW: " + view_type << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
@@ -234,7 +230,6 @@ int main(int argc, char* argv[])
         return a.exec();
     }
 
-    qDebug() << __FUNCTION__ << __FILE__ << __LINE__;
     if (CLP.unnamed_parameters.value(0) == "unit_test") {
         QString arg2 = CLP.unnamed_parameters.value(1);
         if (arg2 == "remotereadmda") {

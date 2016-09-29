@@ -23,7 +23,7 @@
 #include <QProcess>
 #include <QJsonArray>
 #include <QSettings>
-#include "prvfiledownload.h"
+#include "mlnetwork.h"
 
 #ifdef QT_GUI_LIB
 #include <QtNetwork/QNetworkAccessManager>
@@ -650,6 +650,7 @@ QString make_temporary_output_file_name(QString processor_name, QMap<QString, QV
 
 void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QString, QVariant> outputs, QMap<QString, QVariant> parameters, bool force_run)
 {
+    TaskProgress task("Running: "+processor_name);
     QStringList args;
     args << "run-process" << processor_name;
     {
@@ -674,8 +675,18 @@ void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QS
         args << "--_force_run";
     }
     QString exe = MLUtil::mountainlabBasePath() + "/mountainprocess/bin/mountainprocess";
-    qDebug() << "Running process:" << args.join(" ");
-    QProcess::execute(exe, args);
+    task.log() << "Running process:" << args.join(" ");
+    QProcess P;
+    P.start(exe, args);
+    if (!P.waitForStarted()) {
+        task.error() << "Problem starting process.";
+        return;
+    }
+    while (!P.waitForFinished(100)) {
+        if (MLUtil::inGuiThread()) {
+            qApp->processEvents();
+        }
+    }
 }
 
 QString system_call_return_output(QString cmd)
@@ -689,12 +700,10 @@ QString system_call_return_output(QString cmd)
 
 QString locate_file_with_checksum(QString checksum, QString checksum1000, long size, bool allow_downloads)
 {
-    qDebug() << "locate_file_with_checksum" << checksum << checksum1000 << size;
     QString extra_args = "";
     if (!allow_downloads)
         extra_args += "--disable-downloads";
     QString cmd = QString("prv locate --checksum=%1 --checksum1000=%2 --size=%3 %4").arg(checksum).arg(checksum1000).arg(size).arg(extra_args);
-    qDebug() << cmd;
     return system_call_return_output(cmd);
 }
 
@@ -764,7 +773,7 @@ QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url, long 
 {
 
     QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".parallel_download";
-    PrvFileDownload::PrvParallelDownloader downloader;
+    MLNetwork::PrvParallelDownloader downloader;
     downloader.destination_file_name = tmp_fname;
     downloader.size = size;
     downloader.source_url = url;
@@ -773,7 +782,7 @@ QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url, long 
     downloader.start();
     bool done = false;
     while (!done) {
-        if (downloader.wait(100)) {
+        if (downloader.waitForFinished(100)) {
             done = true;
         }
         else {
@@ -840,6 +849,8 @@ QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url, long 
 
 QString create_file_from_prv(QString output_name, QString checksum0, QString checksum1000, long size0, const QJsonArray& processes, bool allow_downloads)
 {
+    int num_download_threads=10;
+
     printf("Creating file corresponding to %s\n", output_name.toLatin1().data());
     //QString path1 = find_file_with_checksum(checksum0, checksum1000, size0);
     QString path1 = locate_file_with_checksum(checksum0, checksum1000, size0, allow_downloads);
@@ -849,8 +860,8 @@ QString create_file_from_prv(QString output_name, QString checksum0, QString che
             //QString path2 = download_file_to_temp_dir(path1);
             QTime timer;
             timer.start();
-            QString path2 = parallel_download_file_from_prvfileserver_to_temp_dir(path1, size0, 20);
-            qDebug() << QString("ELAPSED FOR PARALLEL DOWNLOAD: %1 seconds").arg(timer.elapsed() * 1.0 / 1000);
+
+            QString path2 = parallel_download_file_from_prvfileserver_to_temp_dir(path1, size0, num_download_threads);
             if ((!path2.isEmpty()) && (sumit(path2) == checksum0)) {
                 path1 = path2;
             }

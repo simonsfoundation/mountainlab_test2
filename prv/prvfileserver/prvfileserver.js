@@ -200,6 +200,11 @@ var SERVER=http.createServer(function (REQ, RESP) {
 
 			mkdir_if_needed(absolute_data_directory()+'/uploads');
 			var new_fname=absolute_data_directory()+'/uploads/'+checksum;
+			var new_fname_plus=new_fname;
+			if (part_number) {
+				new_fname_plus=new_fname_plus+'-part_'+part_number+'_of_'+num_parts;
+				remove_file(new_fname_plus);
+			}
 
 			var tmp_fname=new_fname+'.'+make_random_id(5)+'.upload.tmp';
 			{
@@ -239,11 +244,13 @@ var SERVER=http.createServer(function (REQ, RESP) {
 					if (!ok) return;
 					console.log ('End of request.');
 					ended=true;
-					if (num_bytes_received!=size) {
-						send_json_response({success:false,error:'Unexpected num bytes received '+num_bytes_received+' <> '+size});
-						write_stream.end();
-						remove_file(tmp_fname);
-						return;
+					if (!part_number) {
+						if (num_bytes_received!=size) {
+							send_json_response({success:false,error:'Unexpected num bytes received '+num_bytes_received+' <> '+size});
+							write_stream.end();
+							remove_file(tmp_fname);
+							return;
+						}
 					}
 					write_stream.end();
 				});
@@ -279,38 +286,41 @@ var SERVER=http.createServer(function (REQ, RESP) {
 						});
 					}
 					else {
-						var new_fname_plus=new_fname+'-part_'+part_number+'_of_'+num_parts;
 						if (!rename_file(tmp_fname,new_fname_plus)) {
 							send_json_response({success:false,error:'Unable to rename file '+tmp_fname+' '+new_fname_plus});
 							remove_file(tmp_fname);
 							return;
 						}
-						if (all_parts_are_present(new_fname,num_parts)) {
-							var another_tmp_fname=new_fname+make_random_id(5)+'.concat-upload.tmp';
-							concatenate_parts(new_fname,num_parts,another_tmp_fname,function(ret) {
-								if (!ret.success) {
-									send_json_response(ret);
-									return;
+						if (part_number==num_parts) {
+							wait_until_all_parts_are_present(REQ,new_fname,num_parts,function() {
+								if (all_parts_are_present(new_fname,num_parts)) {
+									var another_tmp_fname=new_fname+'.'+make_random_id(5)+'.concat-upload.tmp';
+									concatenate_parts(new_fname,num_parts,another_tmp_fname,function(ret) {
+										if (!ret.success) {
+											send_json_response(ret);
+											return;
+										}
+										if (get_file_size(another_tmp_fname)!=size) {
+											send_json_response({success:false,error:'Unexpected size after upload concatenation: '+get_file_size(another_tmp_fname)+' <> '+size});
+											remove_file(another_tmp_fname);
+											return;
+										}
+										compute_file_checksum(another_tmp_fname,function(computed_checksum) {
+											if (computed_checksum!=checksum) {
+												send_json_response({success:false,error:'Unexpected checksum after upload concatenation '+computed_checksum+' <> '+checksum});
+												remove_file(another_tmp_fname);
+												return;
+											}
+											if (!rename_file(another_tmp_fname,new_fname)) {
+												send_json_response({success:false,error:'Unable to rename file after upload concatenation '+another_tmp_fname+' '+new_fname});
+												remove_file(another_tmp_fname);
+												return;
+											}
+											fs.writeFileSync(new_fname+'.info',info,'utf8');
+											send_json_response({success:true,concatenated:true,message:'received and concatenated '+size+' bytes'});
+										});
+									});
 								}
-								if (get_file_size(another_tmp_fname)!=size) {
-									send_json_response({success:false,error:'Unexpected size after upload concatenation: '+get_file_size(another_tmp_fname)+' <> '+size});
-									remove_file(another_tmp_fname);
-									return;
-								}
-								compute_file_checksum(another_tmp_fname,function(computed_checksum) {
-									if (computed_checksum!=checksum) {
-										send_json_response({success:false,error:'Unexpected checksum after upload concatenation '+computed_checksum+' <> '+checksum});
-										remove_file(another_tmp_fname);
-										return;
-									}
-									if (!rename_file(another_tmp_fname,new_fname)) {
-										send_json_response({success:false,error:'Unable to rename file after upload concatenation '+another_tmp_fname+' '+new_fname});
-										remove_file(another_tmp_fname);
-										return;
-									}
-									fs.writeFileSync(new_fname+'.info',info,'utf8');
-									send_json_response({success:true,message:'received and concatenated '+size+' bytes'});
-								});
 							});
 						}
 						else {
@@ -452,6 +462,21 @@ var SERVER=http.createServer(function (REQ, RESP) {
 		}
 	}
 
+	function wait_until_all_parts_are_present(REQ,base_name,num_parts,callback) {
+		if (all_parts_are_present(base_name,num_parts)) {
+			console.log('ALL PARTS ARE PRESENT!');
+			callback();
+			return;
+		}
+		setTimeout(function() {
+			if (!REQ.socket.connected) {
+				console.log('Request socket is no longer connected. Returning from wait_until_all_parts_are_present()');
+				callback();
+				return;
+			}
+			wait_until_all_parts_are_present(REQ,base_name,num_parts,callback);
+		},100);
+	}
 	function all_parts_are_present(base_name,num_parts) {
 		for (var part=1; part<=num_parts; part++) {
 			if (!fs.existsSync(base_name+'-part_'+part+'_of_'+num_parts))
@@ -460,34 +485,50 @@ var SERVER=http.createServer(function (REQ, RESP) {
 		return true;
 	}
 	function concatenate_parts(new_fname,num_parts,tmp_fname,callback) {
-		var write_stream=fs.createWriteStream(tmp_fname);
-		var error_happened=false;
-		write_stream.on('error',function(err) {
-			error_happened=true;
-			var errstr='ERROR: '+JSON.stringify(err);
-			console.log (errstr);
-			write_stream.end();
-			callback({success:false,error:'Error writing to '+tmp_fname+': '+errstr});
-			return;
-		});
-
+		console.log('concatenating parts...');
+		var had_error=false;
+		var num_bytes_written=0;
+		var write_stream=fs.createWriteStream(tmp_fname,{defaultEncoding:'binary'});
 		write_stream.on('finish',function() {
-			if (error_happened) return;
+			if (had_error) return;
+			console.log('Wrote '+num_bytes_written+' bytes to concatenated file.');
 			callback({success:true});
 		});
-		for (var part=1; part<=num_parts; part++) {
-			var fname=new_fname+'-part_'+part+'_of_'+num_parts;
-			var data=fs.readFileSync(fname,'binary');
-			if (!data) {
-				error_happened=true;
+
+		write_stream.on('error',function() {
+			if (had_error) return;
+			had_error=true;
+			callback({success:false,error:'Problem writing to write_stream: '+tmp_fname});
+		});
+		var part=0;
+		append_next_part();
+		function append_next_part() {
+			part++;
+			if (part>num_parts) {
 				write_stream.end();
-				callback({success:false,error:'Error reading data from '+fname});
-				return;	
+				return;
 			}
-			write_stream.write(data,'binary');
-			remove_file(fname);
+			var fname=new_fname+'-part_'+part+'_of_'+num_parts;
+			if (!fs.existsSync(fname)) {
+				callback({success:false,error:'Unexpected problem. Part does not exist: '+fname});
+				had_error=true;
+				return;
+			}
+			var read_stream=fs.createReadStream(fname);
+			read_stream.on('data',function(chunk) {
+				num_bytes_written+=chunk.length;
+				write_stream.write(chunk);
+			});
+			read_stream.on('end',function() {
+				remove_file(fname);
+				append_next_part();
+			});
+			read_stream.on('error',function() {
+				if (had_error) return;
+				had_error=true;
+				callback({success:false,error:'Problem reading from write_stream: '+fname});
+			});
 		}
-		write_stream.end();
 	}
 }).listen(config.listen_port);
 SERVER.timeout=1000*60*60*24; //give it 24 hours!
@@ -533,8 +574,9 @@ function serve_file(REQ,filename,response,opts) {
 				response.write(chunk,"binary");
 				num_bytes_read+=chunk.length;
 				if (num_bytes_read==num_bytes_to_read) {
-					console.log('Read '+num_bytes_read+' bytes');
-					response.write("end");
+					console.log('Read '+num_bytes_read+' bytes from '+filename+' ('+opts.start_byte+','+opts.end_byte+')');
+					done=true;
+					response.end();
 				}
 			}
 		});

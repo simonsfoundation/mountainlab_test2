@@ -18,6 +18,7 @@
 #include "cachemanager.h"
 #include "prvfile.h"
 #include "mlcommon.h"
+#include "mlnetwork.h"
 
 QString get_tmp_path();
 QString get_server_url(QString url_or_server_name);
@@ -371,6 +372,11 @@ private:
         QString info_json = QJsonDocument(info).toJson();
         query.addQueryItem("info", QUrl::toPercentEncoding(info_json.toUtf8()));
         url.setQuery(query);
+
+        //QString ret=MLNetwork::httpPostFileSync(path,url.toString());
+        QString ret=MLNetwork::httpPostFileParallelSync(path,url.toString());
+
+        /*
         QString ret = NetUtils::httpPostFile(url, path, [](qint64 bytesSent, qint64 bytesTotal) {
                 if (bytesTotal == 0) {
                 printf("\33[2K\r");
@@ -382,6 +388,8 @@ private:
                 for(unsigned int i = prc; i < 50; ++i) printf(".");
                 fflush(stdout);
         });
+        */
+
         if (ret.isEmpty()) {
             qWarning() << "Problem posting file to: " + url.toString();
             return -1;
