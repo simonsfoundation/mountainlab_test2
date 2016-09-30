@@ -650,7 +650,7 @@ QString make_temporary_output_file_name(QString processor_name, QMap<QString, QV
 
 void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QString, QVariant> outputs, QMap<QString, QVariant> parameters, bool force_run)
 {
-    TaskProgress task("Running: "+processor_name);
+    TaskProgress task("Running: " + processor_name);
     QStringList args;
     args << "run-process" << processor_name;
     {
@@ -849,7 +849,7 @@ QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url, long 
 
 QString create_file_from_prv(QString output_name, QString checksum0, QString checksum1000, long size0, const QJsonArray& processes, bool allow_downloads)
 {
-    int num_download_threads=10;
+    int num_download_threads = 10;
 
     printf("Creating file corresponding to %s\n", output_name.toLatin1().data());
     //QString path1 = find_file_with_checksum(checksum0, checksum1000, size0);

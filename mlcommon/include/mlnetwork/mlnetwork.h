@@ -19,24 +19,26 @@ namespace MLNetwork {
 
 QString httpGetTextSync(QString url);
 QString httpGetBinaryFileSync(QString url);
-QString httpPostFileSync(QString file_name,QString url);
-QString httpPostFileParallelSync(QString file_name,QString url,int num_threads=10);
+QString httpPostFileSync(QString file_name, QString url);
+QString httpPostFileParallelSync(QString file_name, QString url, int num_threads = 10);
 
 class Runner : public QObject {
     Q_OBJECT
 public:
-    virtual void start()=0;
+    virtual void start() = 0;
     bool isFinished();
     bool waitForFinished(long msec);
     void requestStop();
     bool stopRequested() const;
 signals:
     void finished();
+
 protected:
     void setFinished();
+
 private:
-    bool m_is_finished=false;
-    bool m_stop_requested=false;
+    bool m_is_finished = false;
+    bool m_stop_requested = false;
 };
 
 class Downloader : public Runner {
@@ -62,13 +64,14 @@ private slots:
     void slot_reply_error();
     void slot_reply_ready_read();
     void slot_reply_finished();
+
 private:
     long m_num_bytes_downloaded = 0;
     QTime m_timer;
     TaskProgress m_task;
-    QNetworkReply* m_reply=0;
+    QNetworkReply* m_reply = 0;
     QString m_tmp_fname;
-    QFile *m_file=0;
+    QFile* m_file = 0;
 };
 
 class PrvParallelDownloader : public Runner {
@@ -92,6 +95,7 @@ public:
 private slots:
     void slot_downloader_progress();
     void slot_downloader_finished();
+
 private:
     QMutex m_mutex;
     QTime m_timer;
@@ -109,11 +113,11 @@ public:
     //input
     QString source_file_name;
     QString destination_url;
-    long start_byte=-1;
-    long end_byte=-1;
+    long start_byte = -1;
+    long end_byte = -1;
 
     //output
-    bool success=false;
+    bool success = false;
     QString response_text;
     QString error;
 
@@ -122,14 +126,15 @@ public:
     long num_bytes_uploaded();
 signals:
     void progress();
+
 private:
     QMutex m_mutex;
     long m_num_bytes_uploaded = 0;
     QTime m_timer;
 
-    QNetworkReply *m_reply=0;
+    QNetworkReply* m_reply = 0;
     TaskProgress m_task;
-    QFile *m_file=0;
+    QFile* m_file = 0;
 };
 
 class PrvParallelUploader : public Runner {
@@ -140,10 +145,10 @@ public:
     //input
     QString source_file_name;
     QString destination_url;
-    int num_threads=10;
+    int num_threads = 10;
 
     //output
-    bool success=true;
+    bool success = true;
     QString response_text;
     QString error;
 
@@ -153,15 +158,15 @@ public:
 private slots:
     void slot_uploader_progress();
     void slot_uploader_finished();
+
 private:
-    long m_size=0;
+    long m_size = 0;
     long m_num_bytes_uploaded = 0;
     QTime m_timer;
     TaskProgress m_task;
 
     QList<Uploader*> m_uploaders;
 };
-
 }
 
 #endif // MLNETWORK_H

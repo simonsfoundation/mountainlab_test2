@@ -374,7 +374,7 @@ private:
         url.setQuery(query);
 
         //QString ret=MLNetwork::httpPostFileSync(path,url.toString());
-        QString ret=MLNetwork::httpPostFileParallelSync(path,url.toString());
+        QString ret = MLNetwork::httpPostFileParallelSync(path, url.toString());
 
         /*
         QString ret = NetUtils::httpPostFile(url, path, [](qint64 bytesSent, qint64 bytesTotal) {
