@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTime>
+#include <QApplication>
 #include <QCoreApplication>
 #include <QThread>
 #include <QDir>
@@ -15,6 +16,7 @@
 #include <QHostInfo>
 #include <QCommandLineParser>
 #include <QUrlQuery>
+#include <taskprogressview.h>
 #include "cachemanager.h"
 #include "prvfile.h"
 #include "mlcommon.h"
@@ -1012,9 +1014,25 @@ private:
 
 } // namespace PrvCommands
 
+bool has_gui_flag(int argc, char* argv[])
+{
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--gui") == 0)
+            return true;
+    }
+    return false;
+}
+
 int main(int argc, char* argv[])
 {
-    QCoreApplication app(argc, argv);
+    //bool gui_mode=has_gui_flag(argc,argv);
+    bool gui_mode = true;
+    QApplication app(argc, argv, gui_mode);
+
+    if (gui_mode) {
+        TaskProgressView* TPV = new TaskProgressView;
+        TPV->show();
+    }
 
     CacheManager::globalInstance()->setLocalBasePath(get_tmp_path());
 

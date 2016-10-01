@@ -12,9 +12,16 @@ class ResolvePrvsDialogPrivate;
 class ResolvePrvsDialog : public QDialog {
     Q_OBJECT
 public:
+    enum Choice {
+        OpenPrvGui,
+        AutomaticallyDownloadAndRegenerate,
+        ProceedAnyway
+    };
+
     friend class ResolvePrvsDialogPrivate;
     ResolvePrvsDialog();
     virtual ~ResolvePrvsDialog();
+    Choice choice() const;
 
 private:
     ResolvePrvsDialogPrivate* d;

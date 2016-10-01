@@ -7,6 +7,7 @@
 #include <QProcess>
 #include <QStringList>
 #include <resolveprvsdialog.h>
+#include "cachemanager.h"
 
 #include "clusterdetailplugin.h"
 #include "isolationmatrixplugin.h"
@@ -135,6 +136,9 @@ QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColo
 void set_nice_size(QWidget* W);
 bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QJsonObject obj);
 bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QList<PrvRecord> prvs);
+
+void try_to_automatically_download_and_regenerate_prv_objects(QJsonObject obj);
+void try_to_automatically_download_and_regenerate_prv_objects(QList<PrvRecord> prvs);
 
 int main(int argc, char* argv[])
 {
@@ -294,11 +298,30 @@ int main(int argc, char* argv[])
             TPV.show();
             QString json = TextFile::read(mv2_fname);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
-            if (!check_whether_prv_objects_need_to_be_downloaded_or_regenerated(obj)) {
-                ResolvePrvsDialog dlg;
-                if (dlg.exec() != QDialog::Accepted) {
-                    return -1;
+            bool done_checking = false;
+            while (!done_checking) {
+                if (check_whether_prv_objects_need_to_be_downloaded_or_regenerated(obj)) {
+                    ResolvePrvsDialog dlg;
+                    if (dlg.exec() == QDialog::Accepted) {
+                        if (dlg.choice() == ResolvePrvsDialog::OpenPrvGui) {
+                            int exit_code = system(("prv-gui " + mv2_fname).toUtf8().data());
+                            Q_UNUSED(exit_code)
+                            done_checking = false; //check again
+                        }
+                        else if (dlg.choice() == ResolvePrvsDialog::AutomaticallyDownloadAndRegenerate) {
+                            try_to_automatically_download_and_regenerate_prv_objects(obj);
+                            done_checking = false; //check again
+                        }
+                        else {
+                            done_checking = true;
+                        }
+                    }
+                    else {
+                        return -1;
+                    }
                 }
+                else
+                    done_checking = true;
             }
             context->setFromMV2FileObject(obj);
         }
@@ -840,7 +863,6 @@ QString check_if_on_local_disk(PrvRecord prv)
 
 bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QList<PrvRecord> prvs)
 {
-    bool there_is_a_need = false;
     foreach (PrvRecord prv, prvs) {
         QString path = check_if_on_local_disk(prv);
         if (path.isEmpty()) {
@@ -848,4 +870,39 @@ bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QList<PrvRec
         }
     }
     return false;
+}
+
+void try_to_automatically_download_and_regenerate_prv_objects(QJsonObject obj)
+{
+    QList<PrvRecord> prvs = find_prvs("", obj);
+    return try_to_automatically_download_and_regenerate_prv_objects(prvs);
+}
+
+void system_call_keeping_gui_alive(QString cmd, QString task_label)
+{
+    if (task_label.isEmpty())
+        task_label = "Running " + cmd;
+    TaskProgress task(task_label);
+    task.log() << cmd;
+    QProcess P;
+    P.setReadChannelMode(QProcess::MergedChannels);
+    P.start(cmd);
+    while (!P.waitForFinished(10)) {
+        qApp->processEvents();
+    }
+    task.log() << P.readAll();
+}
+
+void try_to_automatically_download_and_regenerate_prv_objects(QList<PrvRecord> prvs)
+{
+    foreach (PrvRecord prv, prvs) {
+        if (check_if_on_local_disk(prv).isEmpty()) {
+            QString src_fname = CacheManager::globalInstance()->makeLocalFile() + ".tmp.prv";
+            QString dst_fname = src_fname + ".recover";
+            TextFile::write(src_fname, QJsonDocument(prv.original_object).toJson());
+            QString cmd = QString("prv recover %1 %2").arg(src_fname).arg(dst_fname);
+            system_call_keeping_gui_alive(cmd.toLatin1().data(), "Recovering " + prv.label);
+            QFile::remove(src_fname);
+        }
+    }
 }
