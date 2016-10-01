@@ -79,7 +79,12 @@ DiskReadMda32::DiskReadMda32(const QJsonObject& prv_object)
     d = new DiskReadMda32Private;
     d->q = this;
     d->construct_and_clear();
-    QString path0 = resolve_prv_object(prv_object, true);
+
+    //do not allow downloads or processing because now this is handled in a separate gui, as it should!!!
+    bool allow_downloads = false;
+    bool allow_processing = false;
+
+    QString path0 = resolve_prv_object(prv_object, allow_downloads, allow_processing);
     if (path0.isEmpty()) {
         qWarning() << "Unable to construct DiskReadMda from prv_object. Unable to resolve. Original path = " << prv_object["original_path"].toString();
         return;
@@ -121,7 +126,11 @@ void DiskReadMda32::setPath(const QString& file_path)
         return;
     }
     else if (file_path.endsWith(".prv")) {
-        QString file_path_2 = resolve_prv_file(file_path, true);
+        //do not allow downloads or processing because now this is handled in a separate gui, as it should!!!
+        bool allow_downloads = false;
+        bool allow_processing = false;
+
+        QString file_path_2 = resolve_prv_file(file_path, allow_downloads, allow_processing);
         if (!file_path_2.isEmpty()) {
             this->setPath(file_path_2);
             QJsonObject obj = QJsonDocument::fromJson(TextFile::read(file_path).toUtf8()).object();

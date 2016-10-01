@@ -25,7 +25,6 @@ public slots:
 
 private slots:
     void slot_export_mv2_document();
-    void slot_prv_manager();
     void slot_export_firings();
     void slot_export_curated_firings();
 

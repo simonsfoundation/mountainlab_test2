@@ -836,9 +836,7 @@ public:
         parser.addOption(QCommandLineOption("download-if-needed", "download file from a remote server if needed"));
         parser.addOption(QCommandLineOption("download-and-regenerate-if-needed", "download file from a remote server if needed"));
         parser.addOption(QCommandLineOption("raw-only", "if processing provenance is available, only upload the raw files."));
-        if (m_cmd == "ensure-remote") {
-            parser.addOption(QCommandLineOption("server", "name or url of server", "[name|url]"));
-        }
+        parser.addOption(QCommandLineOption("server", "name or url of server", "[name|url]"));
     }
     int execute(const QCommandLineParser& parser)
     {
@@ -933,7 +931,7 @@ public:
             // has been enabled
             if (parser.isSet("regenerate-if-needed")) {
                 println("Attempting to regenerate file.");
-                QString tmp_path = resolve_prv_file(prv_file.prvFilePath(), false);
+                QString tmp_path = resolve_prv_file(prv_file.prvFilePath(), false, true);
                 if (!tmp_path.isEmpty()) {
                     println("Generated file: " + tmp_path);
                     if (m_cmd == "ensure-remote") {
@@ -954,6 +952,9 @@ public:
                 println("Attempting to download file.");
                 PrvFileRecoverOptions opts;
                 opts.locate_opts.remote_servers = get_remote_servers();
+                if (!parser.value("server").isEmpty()) {
+                    opts.locate_opts.remote_servers = get_remote_servers(parser.value("server"));
+                }
                 opts.locate_opts.search_locally = false;
                 opts.locate_opts.search_remotely = true;
                 opts.recover_all_prv_files = false;
@@ -975,7 +976,7 @@ public:
             // if this option has been enabled
             if (parser.isSet("download-and-regenerate-if-needed")) {
                 println("Attempting to download and regenerate file.");
-                QString tmp_path = resolve_prv_file(prv_file.prvFilePath(), true);
+                QString tmp_path = resolve_prv_file(prv_file.prvFilePath(), true, true);
                 if (!tmp_path.isEmpty()) {
                     println("Generated file: " + tmp_path);
                     if (m_cmd == "ensure-remote") {

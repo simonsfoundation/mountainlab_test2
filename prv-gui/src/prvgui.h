@@ -6,10 +6,17 @@
 #ifndef PRVGUI_H
 #define PRVGUI_H
 
+#include <QJsonObject>
+#include <QMutex>
+#include <QString>
+#include <QThread>
+#include <QVariantMap>
+
 struct PrvProcessRecord;
 struct PrvRecord {
-    PrvRecord() {}
     PrvRecord(QString label_in, QJsonObject obj);
+
+    QJsonObject original_object;
 
     QString label; //not really part of prv, but very useful for display
 
@@ -51,6 +58,8 @@ QString to_prv_code(PrvRecord prv);
 struct PrvGuiWorkerThreadResult {
     fuzzybool on_local_disk = UNKNOWN;
     QMap<QString, fuzzybool> on_server;
+    QString local_path;
+    QMap<QString, QVariant> server_urls;
 };
 
 class PrvGuiWorkerThread : public QThread {
@@ -67,13 +76,14 @@ public:
     void run();
 
 private:
-    bool check_if_on_local_disk(PrvRecord prv);
-    bool check_if_on_server(PrvRecord prv, QString server_name);
+    QString check_if_on_local_disk(PrvRecord prv);
+    QString check_if_on_server(PrvRecord prv, QString server_name);
 
 signals:
     void results_updated();
 };
 
 QList<PrvRecord> find_prvs(QString label, const QJsonValue& X);
+QString exec_process_and_return_output(QString cmd, QStringList args);
 
 #endif // PRVGUI_H

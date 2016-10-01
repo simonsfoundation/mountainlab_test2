@@ -25,7 +25,6 @@ VPATH += msv/plugins msv/views
 
 HEADERS += clusterdetailplugin.h clusterdetailview.h \
     controlwidgets/exportmv2filedialog.h \
-    controlwidgets/prvmanagerdialog.h \
     msv/views/matrixview.h \
     msv/views/isolationmatrixview.h \
     msv/plugins/isolationmatrixplugin.h \
@@ -33,10 +32,10 @@ HEADERS += clusterdetailplugin.h clusterdetailview.h \
     msv/plugins/clustermetricsplugin.h \
     msv/views/curationprogramview.h \
     msv/plugins/curationprogramplugin.h \
-    msv/views/curationprogramcontroller.h
+    msv/views/curationprogramcontroller.h \
+    core/resolveprvsdialog.h
 SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
     controlwidgets/exportmv2filedialog.cpp \
-    controlwidgets/prvmanagerdialog.cpp \
     msv/views/matrixview.cpp \
     msv/views/isolationmatrixview.cpp \
     msv/plugins/isolationmatrixplugin.cpp \
@@ -44,7 +43,12 @@ SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
     msv/plugins/clustermetricsplugin.cpp \
     msv/views/curationprogramview.cpp \
     msv/plugins/curationprogramplugin.cpp \
-    msv/views/curationprogramcontroller.cpp
+    msv/views/curationprogramcontroller.cpp \
+    core/resolveprvsdialog.cpp
+
+INCLUDEPATH += ../../prv-gui/src
+HEADERS += ../../prv-gui/src/prvgui.h
+SOURCES += ../../prv-gui/src/prvgui.cpp
 
 HEADERS += clipsviewplugin.h mvclipsview.h
 SOURCES += clipsviewplugin.cpp mvclipsview.cpp
@@ -182,7 +186,8 @@ RESOURCES += mountainview.qrc \
 
 FORMS += \
     controlwidgets/exportmv2filedialog.ui \
-    controlwidgets/prvmanagerdialog.ui
+    controlwidgets/prvmanagerdialog.ui \
+    controlwidgets/resolveprvsdialog.ui
 
 DISTFILES += \
     msv/views/curationprogram.js

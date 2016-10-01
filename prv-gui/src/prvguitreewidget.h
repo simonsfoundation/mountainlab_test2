@@ -26,6 +26,10 @@ public:
     virtual ~PrvGuiTreeWidget();
     void setPrvs(const QList<PrvRecord>& prvs);
     void setServerNames(QStringList names);
+    void refresh();
+    QList<PrvRecord> selectedPrvs();
+    QStringList serverNames() const;
+    QVariantMap currentItemDetails() const; //not a great way to do this
 private slots:
     void slot_update_tree_data();
 

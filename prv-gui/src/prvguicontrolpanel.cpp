@@ -5,18 +5,18 @@
 *******************************************************/
 
 #include "prvguicontrolpanel.h"
-#include "qaccordion.h"
+#include "qAccordion/qaccordion.h"
 
 class PrvGuiControlPanelPrivate {
 public:
-    PrvGuiControlPanel *q;
-    QAccordion *m_accordion;
+    PrvGuiControlPanel* q;
+    QAccordion* m_accordion;
 };
 
 PrvGuiControlPanel::PrvGuiControlPanel()
 {
-    d=new PrvGuiControlPanelPrivate;
-    d->q=this;
+    d = new PrvGuiControlPanelPrivate;
+    d->q = this;
 
     d->m_accordion = new QAccordion;
     d->m_accordion->setMultiActive(true);
@@ -25,7 +25,7 @@ PrvGuiControlPanel::PrvGuiControlPanel()
     SA->setWidget(d->m_accordion);
     SA->setWidgetResizable(true);
 
-    QVBoxLayout *vlayout=new QVBoxLayout;
+    QVBoxLayout* vlayout = new QVBoxLayout;
     vlayout->addWidget(SA);
     this->setLayout(vlayout);
 }
@@ -35,7 +35,7 @@ PrvGuiControlPanel::~PrvGuiControlPanel()
     delete d;
 }
 
-void PrvGuiControlPanel::addControlWidget(QString label, QWidget *W)
+void PrvGuiControlPanel::addControlWidget(QString label, QWidget* W)
 {
     QFrame* frame = new QFrame;
     QHBoxLayout* frame_layout = new QHBoxLayout;
@@ -44,7 +44,7 @@ void PrvGuiControlPanel::addControlWidget(QString label, QWidget *W)
     ContentPane* CP = new ContentPane(label, frame);
     CP->setMaximumHeight(1000);
     d->m_accordion->addContentPane(CP);
-    bool start_open=true;
+    bool start_open = true;
     if (start_open) {
         CP->openContentPane();
     }

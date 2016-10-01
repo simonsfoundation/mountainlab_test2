@@ -9,15 +9,15 @@
 #include <QWidget>
 
 class PrvGuiControlPanelPrivate;
-class PrvGuiControlPanel : public QWidget
-{
+class PrvGuiControlPanel : public QWidget {
 public:
     friend class PrvGuiControlPanelPrivate;
     PrvGuiControlPanel();
     virtual ~PrvGuiControlPanel();
-    void addControlWidget(QString label, QWidget *W);
+    void addControlWidget(QString label, QWidget* W);
+
 private:
-    PrvGuiControlPanelPrivate *d;
+    PrvGuiControlPanelPrivate* d;
 };
 
 #endif // PRVGUICONTROLPANEL_H

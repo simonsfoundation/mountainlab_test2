@@ -24,7 +24,6 @@
 #include "taskprogress.h"
 #include "exportmv2filedialog.h"
 #include <QThread>
-#include "prvmanagerdialog.h"
 
 class MVExportControlPrivate {
 public:
@@ -43,11 +42,6 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
 
     FlowLayout* flayout = new FlowLayout;
     this->setLayout(flayout);
-    {
-        QPushButton* B = new QPushButton("PRV manager");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_prv_manager()));
-        flayout->addWidget(B);
-    }
     {
         QPushButton* B = new QPushButton("Export .mv2 document");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_mv2_document()));
@@ -192,26 +186,6 @@ void MVExportControl::slot_export_mv2_document()
     else {
         task.error("Error writing .mv2 file: " + fname);
     }
-}
-
-void MVExportControl::slot_prv_manager()
-{
-    PrvManagerDialog* dlg = new PrvManagerDialog;
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
-
-    QMap<QString, QJsonObject> all_prv_objects = mvContext()->allPrvObjects();
-
-    qDebug() << all_prv_objects;
-    dlg->setPrvObjects(all_prv_objects);
-    QJsonArray servers0 = MLUtil::configValue("prv", "servers").toArray();
-    QStringList server_names;
-    foreach (QJsonValue server, servers0) {
-        server_names << server.toObject()["name"].toString();
-    }
-    dlg->setServerNames(server_names);
-
-    dlg->refresh();
-    dlg->show();
 }
 
 /*

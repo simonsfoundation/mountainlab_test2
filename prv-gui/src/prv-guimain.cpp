@@ -48,6 +48,7 @@ int main(int argc, char* argv[])
     W.setPrvs(prvs);
     W.setServerNames(server_names);
     W.showMaximized();
+    W.refresh();
 
     return app.exec();
 }

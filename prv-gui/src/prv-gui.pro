@@ -13,7 +13,13 @@ SOURCES += prv-guimain.cpp \
     ../../mountainview/src/core/taskprogressview.cpp \
     prvguicontrolpanel.cpp \
     prvguitreewidget.cpp \
-    prvgui.cpp
+    prvgui.cpp \
+    prvguimaincontrolwidget.cpp \
+    prvguiuploaddialog.cpp \
+    prvupload.cpp \
+    prvdownload.cpp \
+    prvguidownloaddialog.cpp \
+    prvguiitemdetailwidget.cpp
 
 include(../../mlcommon/mlcommon.pri)
 include(../../mlcommon/mlnetwork.pri)
@@ -25,7 +31,13 @@ HEADERS += \
     ../../mountainview/src/core/taskprogressview.h \
     prvguicontrolpanel.h \
     prvguitreewidget.h \
-    prvgui.h
+    prvgui.h \
+    prvguimaincontrolwidget.h \
+    prvguiuploaddialog.h \
+    prvupload.h \
+    prvdownload.h \
+    prvguidownloaddialog.h \
+    prvguiitemdetailwidget.h
 
 INCLUDEPATH += ../../mountainview/src/3rdparty/qaccordion/include
 VPATH += ../../mountainview/src/3rdparty/qaccordion
@@ -33,3 +45,6 @@ HEADERS += include/qAccordion/qaccordion.h include/qAccordion/contentpane.h incl
 SOURCES += src/qaccordion.cpp src/contentpane.cpp src/clickableframe.cpp
 
 RESOURCES += icons/qaccordionicons.qrc
+
+FORMS += \
+    prvguiuploaddialog.ui prvguidownloaddialog.ui

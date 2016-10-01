@@ -35,6 +35,8 @@ PrvGuiTreeWidget::PrvGuiTreeWidget()
     d = new PrvGuiTreeWidgetPrivate;
     d->q = this;
 
+    this->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
     QObject::connect(&d->m_worker_thread, SIGNAL(results_updated()), this, SLOT(slot_update_tree_data()));
 
     d->refresh_tree();
@@ -55,13 +57,45 @@ PrvGuiTreeWidget::~PrvGuiTreeWidget()
 void PrvGuiTreeWidget::setPrvs(const QList<PrvRecord>& prvs)
 {
     d->m_prvs = prvs;
-    d->refresh_tree();
 }
 
 void PrvGuiTreeWidget::setServerNames(QStringList names)
 {
     d->m_server_names = names;
+}
+
+void PrvGuiTreeWidget::refresh()
+{
     d->refresh_tree();
+}
+
+QList<PrvRecord> PrvGuiTreeWidget::selectedPrvs()
+{
+    QList<PrvRecord> ret;
+    QList<QTreeWidgetItem*> items = this->selectedItems();
+    foreach (QTreeWidgetItem* it, items) {
+        PrvRecord prv = PrvRecord::fromVariantMap(it->data(0, Qt::UserRole).toMap());
+        ret << prv;
+    }
+    return ret;
+}
+
+QStringList PrvGuiTreeWidget::serverNames() const
+{
+    return d->m_server_names;
+}
+
+QVariantMap PrvGuiTreeWidget::currentItemDetails() const
+{
+    QVariantMap ret;
+    QTreeWidgetItem* it = this->currentItem();
+    if (!it)
+        return ret;
+    PrvRecord prv = PrvRecord::fromVariantMap(it->data(0, Qt::UserRole).toMap());
+    ret["prv"] = prv.toVariantMap();
+    ret["local_path"] = it->data(0, Qt::UserRole + 1);
+    ret["server_urls"] = it->data(0, Qt::UserRole + 2);
+    return ret;
 }
 
 void PrvGuiTreeWidget::slot_update_tree_data()
@@ -150,7 +184,7 @@ QTreeWidgetItem* make_tree_item_from_prv(PrvRecord prv, int column_count, const 
 
 void PrvGuiTreeWidgetPrivate::refresh_tree()
 {
-    QTreeWidget* TT = this;
+    QTreeWidget* TT = q;
     TT->clear();
 
     QStringList headers;
@@ -203,13 +237,17 @@ void PrvGuiTreeWidgetPrivate::update_tree_item_data(QTreeWidgetItem* it, QMap<QS
         it->setText(col, to_string(result0.on_local_disk));
         it->setForeground(col, to_color(result0.on_local_disk));
         it->setForeground(0, to_color(result0.on_local_disk));
+        it->setToolTip(col, result0.local_path);
     }
     for (int a = 0; a < m_server_names.count(); a++) {
         int col = 4 + a;
         fuzzybool tmp = result0.on_server.value(m_server_names[a], UNKNOWN);
         it->setText(col, to_string(tmp));
         it->setForeground(col, to_color(tmp));
+        it->setToolTip(col, result0.server_urls.value(m_server_names[a]).toString());
     }
+    it->setData(0, Qt::UserRole + 1, result0.local_path);
+    it->setData(0, Qt::UserRole + 2, result0.server_urls);
     for (int a = 0; a < it->childCount(); a++) {
         update_tree_item_data(it->child(a), results);
     }

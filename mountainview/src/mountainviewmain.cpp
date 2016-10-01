@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QStringList>
+#include <resolveprvsdialog.h>
 
 #include "clusterdetailplugin.h"
 #include "isolationmatrixplugin.h"
@@ -50,6 +51,7 @@
 #include <mvclusterordercontrol.h>
 #include <clustermetricsplugin.h>
 #include <curationprogramplugin.h>
+#include "prvgui.h"
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
 /// TODO: (HIGH) blobs for populations
@@ -131,6 +133,8 @@ QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColo
 #include "mvexportcontrol.h"
 
 void set_nice_size(QWidget* W);
+bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QJsonObject obj);
+bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QList<PrvRecord> prvs);
 
 int main(int argc, char* argv[])
 {
@@ -146,7 +150,11 @@ int main(int argc, char* argv[])
     {
         TaskProgressView TPV;
         TPV.show();
-        if (!prepare_prv_files(CLP.named_parameters, true)) {
+
+        //do not allow downloads or processing because now this is handled in a separate gui, as it should!!!
+        bool allow_downloads = false;
+        bool allow_processing = false;
+        if (!prepare_prv_files(CLP.named_parameters, allow_downloads, allow_processing)) {
             qWarning() << "Could not prepare .prv files. Try adjusting the prv settings in mountainlab.user.json";
             return -1;
         }
@@ -286,6 +294,12 @@ int main(int argc, char* argv[])
             TPV.show();
             QString json = TextFile::read(mv2_fname);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
+            if (!check_whether_prv_objects_need_to_be_downloaded_or_regenerated(obj)) {
+                ResolvePrvsDialog dlg;
+                if (dlg.exec() != QDialog::Accepted) {
+                    return -1;
+                }
+            }
             context->setFromMV2FileObject(obj);
         }
 
@@ -803,4 +817,35 @@ void setup_main_window(MVMainWindow* W)
     W->registerViewFactory(new MVDiscrimHistFactory(W));
     W->registerViewFactory(new MVDiscrimHistGuideFactory(W));
     W->registerViewFactory(new MVFireTrackFactory(W));
+}
+
+bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QJsonObject obj)
+{
+    QList<PrvRecord> prvs = find_prvs("", obj);
+    return check_whether_prv_objects_need_to_be_downloaded_or_regenerated(prvs);
+}
+
+QString check_if_on_local_disk(PrvRecord prv)
+{
+    QString cmd = "prv";
+    QStringList args;
+    args << "locate";
+    args << "--checksum=" + prv.checksum;
+    args << "--checksum1000=" + prv.checksum1000;
+    args << QString("--size=%1").arg(prv.size);
+    args << "--local-only";
+    QString output = exec_process_and_return_output(cmd, args);
+    return output;
+}
+
+bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QList<PrvRecord> prvs)
+{
+    bool there_is_a_need = false;
+    foreach (PrvRecord prv, prvs) {
+        QString path = check_if_on_local_disk(prv);
+        if (path.isEmpty()) {
+            return true;
+        }
+    }
+    return false;
 }

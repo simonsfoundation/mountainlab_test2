@@ -6,6 +6,14 @@
 
 #include "prvgui.h"
 
+#include <QColor>
+#include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QProcess>
+#include <taskprogress.h>
+
 QString to_string(fuzzybool fb)
 {
     if (fb == YES)
@@ -43,10 +51,11 @@ void PrvGuiWorkerThread::run()
         long size = prv.size;
         {
             task.log() << "check if on local disk" << name << size;
-            bool is = check_if_on_local_disk(prv);
+            QString local_path = check_if_on_local_disk(prv);
+            results[prv_code].local_path = local_path;
             {
                 QMutexLocker locker(&results_mutex);
-                if (is)
+                if (!local_path.isEmpty())
                     results[prv_code].on_local_disk = YES;
                 else
                     results[prv_code].on_local_disk = NO;
@@ -57,10 +66,11 @@ void PrvGuiWorkerThread::run()
             task.log() << "check if on server" << name << server_name;
             if (QThread::currentThread()->isInterruptionRequested())
                 return;
-            bool is = check_if_on_server(prv, server_name);
+            QString server_url = check_if_on_server(prv, server_name);
+            results[prv_code].server_urls[server_name] = server_url;
             {
                 QMutexLocker locker(&results_mutex);
-                if (is)
+                if (!server_url.isEmpty())
                     results[prv_code].on_server[server_name] = YES;
                 else
                     results[prv_code].on_server[server_name] = NO;
@@ -80,7 +90,7 @@ QString exec_process_and_return_output(QString cmd, QStringList args)
     return P.readAll();
 }
 
-bool PrvGuiWorkerThread::check_if_on_local_disk(PrvRecord prv)
+QString PrvGuiWorkerThread::check_if_on_local_disk(PrvRecord prv)
 {
     QString cmd = "prv";
     QStringList args;
@@ -90,10 +100,10 @@ bool PrvGuiWorkerThread::check_if_on_local_disk(PrvRecord prv)
     args << QString("--size=%1").arg(prv.size);
     args << "--local-only";
     QString output = exec_process_and_return_output(cmd, args);
-    return !output.isEmpty();
+    return output;
 }
 
-bool PrvGuiWorkerThread::check_if_on_server(PrvRecord prv, QString server_name)
+QString PrvGuiWorkerThread::check_if_on_server(PrvRecord prv, QString server_name)
 {
     QString cmd = "prv";
     QStringList args;
@@ -103,7 +113,7 @@ bool PrvGuiWorkerThread::check_if_on_server(PrvRecord prv, QString server_name)
     args << QString("--size=%1").arg(prv.size);
     args << "--server=" + server_name;
     QString output = exec_process_and_return_output(cmd, args);
-    return !output.isEmpty();
+    return output;
 }
 
 QList<PrvRecord> find_prvs(QString label, const QJsonValue& X)
@@ -208,6 +218,7 @@ PrvProcessRecord PrvProcessRecord::fromVariantMap(QVariantMap X)
 
 PrvRecord::PrvRecord(QString label_in, QJsonObject obj)
 {
+    this->original_object = obj;
     this->label = label_in;
     this->original_path = obj["original_path"].toString();
     this->checksum = obj["original_checksum"].toString();
@@ -218,8 +229,6 @@ PrvRecord::PrvRecord(QString label_in, QJsonObject obj)
     foreach (QJsonValue val, X) {
         QJsonObject P = val.toObject();
         this->processes << PrvProcessRecord(P);
-        qDebug() << "::::::::::::::::::::::::::::::::::" << label_in << this->processes.count() << this->processes.value(0).outputs.count();
-        qDebug() << P;
     }
 }
 
@@ -245,14 +254,12 @@ QVariantMap PrvRecord::toVariantMap() const
 
 PrvRecord PrvRecord::fromVariantMap(QVariantMap X)
 {
-    PrvRecord ret;
-
-    ret.label = X["label"].toString();
-
-    ret.checksum = X["checksum"].toString();
-    ret.checksum1000 = X["checksum1000"].toString();
-    ret.size = X["size"].toLongLong();
-    ret.original_path = X["original_path"].toString();
+    QJsonObject obj;
+    obj["original_checksum"] = X["checksum"].toString();
+    obj["original_checksum_1000"] = X["checksum1000"].toString();
+    obj["original_size"] = X["size"].toLongLong();
+    obj["original_path"] = X["original_path"].toString();
+    PrvRecord ret(X["label"].toString(), obj);
 
     QList<PrvProcessRecord> processes0;
     QVariantList list = X["processes"].toList();
