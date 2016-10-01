@@ -1,18 +1,10 @@
 /******************************************************
 ** See the accompanying README and LICENSE files
 ** Author(s): Jeremy Magland
-** Created: 9/29/2016
+** Created: 10/1/2016
 *******************************************************/
-#ifndef PRVGUIMAINWINDOW_H
-#define PRVGUIMAINWINDOW_H
-
-#include <QJsonObject>
-#include <QList>
-#include <QMap>
-#include <QMutex>
-#include <QThread>
-#include <QWidget>
-#include <QVariant>
+#ifndef PRVGUI_H
+#define PRVGUI_H
 
 struct PrvProcessRecord;
 struct PrvRecord {
@@ -46,30 +38,15 @@ struct PrvProcessRecord {
     static PrvProcessRecord fromVariantMap(QVariantMap X);
 };
 
-class PrvGuiMainWindowPrivate;
-class PrvGuiMainWindow : public QWidget {
-    Q_OBJECT
-public:
-    friend class PrvGuiMainWindowPrivate;
-    PrvGuiMainWindow();
-    virtual ~PrvGuiMainWindow();
-    void setPrvs(const QList<PrvRecord>& prvs);
-    void setServerNames(QStringList names);
-private slots:
-    void slot_update_tree_data();
-
-protected:
-    void resizeEvent(QResizeEvent *evt);
-
-private:
-    PrvGuiMainWindowPrivate* d;
-};
-
 enum fuzzybool {
     YES,
     NO,
     UNKNOWN
 };
+
+QString to_string(fuzzybool fb);
+QColor to_color(fuzzybool fb);
+QString to_prv_code(PrvRecord prv);
 
 struct PrvGuiWorkerThreadResult {
     fuzzybool on_local_disk = UNKNOWN;
@@ -99,4 +76,4 @@ signals:
 
 QList<PrvRecord> find_prvs(QString label, const QJsonValue& X);
 
-#endif // PRVGUIMAINWINDOW_H
+#endif // PRVGUI_H
