@@ -1028,7 +1028,13 @@ bool has_gui_flag(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     bool gui_mode=has_gui_flag(argc,argv);
-    QApplication app(argc, argv, gui_mode);
+    QCoreApplication *app;
+    if (gui_mode) {
+        app=new QApplication(argc,argv);
+    }
+    else {
+        app=new QCoreApplication(argc,argv);
+    }
 
     if (gui_mode) {
         TaskProgressView* TPV = new TaskProgressView;
@@ -1048,11 +1054,11 @@ int main(int argc, char* argv[])
     cmdParser.addCommand(new PrvCommands::UploadCommand);
     cmdParser.addCommand(new PrvCommands::EnsureLocalRemoteCommand("ensure-local"));
     cmdParser.addCommand(new PrvCommands::EnsureLocalRemoteCommand("ensure-remote"));
-    if (!cmdParser.process(app)) {
+    if (!cmdParser.process(*app)) {
         return cmdParser.result();
     }
     if (gui_mode) {
-        return app.exec();
+        return app->exec();
     }
     else {
         return cmdParser.result();
