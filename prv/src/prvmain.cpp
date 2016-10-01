@@ -1026,7 +1026,7 @@ bool has_gui_flag(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     //bool gui_mode=has_gui_flag(argc,argv);
-    bool gui_mode = true;
+    bool gui_mode = false;
     QApplication app(argc, argv, gui_mode);
 
     if (gui_mode) {
@@ -1050,7 +1050,12 @@ int main(int argc, char* argv[])
     if (!cmdParser.process(app)) {
         return cmdParser.result();
     }
-    return cmdParser.result();
+    if (gui_mode) {
+        return app.exec();
+    }
+    else {
+        return cmdParser.result();
+    }
 }
 
 void print(QString str)
