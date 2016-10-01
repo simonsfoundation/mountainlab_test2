@@ -267,7 +267,7 @@ var SERVER=http.createServer(function (REQ, RESP) {
 						compute_file_checksum(tmp_fname,function(computed_checksum) {
 							if (computed_checksum!=checksum) {
 								send_json_response({success:false,error:'Unexpected checksum '+computed_checksum+' <> '+checksum});
-								remove_file(tmp_fname);
+								//remove_file(tmp_fname); //TODO: put this back in after debugging
 								return;
 							}
 							if (!rename_file(tmp_fname,new_fname)) {
