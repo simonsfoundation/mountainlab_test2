@@ -251,6 +251,7 @@ public:
         parser.addOption(QCommandLineOption(
             QStringList() << QStringLiteral("exclude") << QStringLiteral("e"),
             QStringLiteral("file patterns to exclude from upload (can be given multiple times)"), "exclude"));
+        parser.addOption(QCommandLineOption("gui","gui"));
     }
     int execute(const QCommandLineParser& parser)
     {
@@ -608,6 +609,7 @@ public:
         parser.addOption(QCommandLineOption("size", "size", "[]"));
         parser.addOption(QCommandLineOption("server", "name of the server to search", "[server name]"));
         parser.addOption(QCommandLineOption("verbose", "verbose"));
+        parser.addOption(QCommandLineOption("gui","gui"));
         if (m_cmd == "locate") {
             parser.addOption(QCommandLineOption("local-only", "do not look on remote servers"));
         }
@@ -1025,8 +1027,7 @@ bool has_gui_flag(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    //bool gui_mode=has_gui_flag(argc,argv);
-    bool gui_mode = false;
+    bool gui_mode=has_gui_flag(argc,argv);
     QApplication app(argc, argv, gui_mode);
 
     if (gui_mode) {

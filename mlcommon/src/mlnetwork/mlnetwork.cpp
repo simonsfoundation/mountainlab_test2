@@ -417,6 +417,7 @@ void PrvParallelDownloader::start()
         connect(DD, SIGNAL(progress()), this, SLOT(slot_downloader_progress()));
         connect(DD, SIGNAL(finished()), this, SLOT(slot_downloader_finished()));
         m_task.log() << "Starting " + url2;
+        m_task.log() << "";
         DD->start();
     }
 

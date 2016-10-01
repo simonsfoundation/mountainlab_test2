@@ -243,7 +243,6 @@ var SERVER=http.createServer(function (REQ, RESP) {
 				REQ.on('end',function() {
 					if (!ok) return;
 					console.log ('End of request.');
-					ended=true;
 					if (!part_number) {
 						if (num_bytes_received!=size) {
 							send_json_response({success:false,error:'Unexpected num bytes received '+num_bytes_received+' <> '+size});
@@ -255,12 +254,7 @@ var SERVER=http.createServer(function (REQ, RESP) {
 					write_stream.end();
 				});
 				REQ.socket.on('close',function() {
-					if (!ended) {
-						send_json_response({success:false,error:'Request socket closed before end.'});
-						write_stream.end();
-						remove_file(tmp_fname);
-						return;
-					}
+					console.log('socket closed.');
 				});
 				write_stream.on('finish',function() {
 					console.log ('Finished writing: '+tmp_fname);
