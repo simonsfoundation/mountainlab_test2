@@ -10,7 +10,7 @@
 
 namespace PrvDownload {
 
-void initiateDownloadFromServer(QString server_name, PrvRecord prv);
+bool initiateDownloadFromServer(QString server_name, PrvRecord prv);
 }
 
 #endif // PRVDOWNLOAD_H

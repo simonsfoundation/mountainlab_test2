@@ -4,7 +4,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTime>
-#include <QApplication>
 #include <QCoreApplication>
 #include <QThread>
 #include <QDir>
@@ -16,7 +15,6 @@
 #include <QHostInfo>
 #include <QCommandLineParser>
 #include <QUrlQuery>
-#include <taskprogressview.h>
 #include "cachemanager.h"
 #include "prvfile.h"
 #include "mlcommon.h"
@@ -251,7 +249,6 @@ public:
         parser.addOption(QCommandLineOption(
             QStringList() << QStringLiteral("exclude") << QStringLiteral("e"),
             QStringLiteral("file patterns to exclude from upload (can be given multiple times)"), "exclude"));
-        parser.addOption(QCommandLineOption("gui","gui"));
     }
     int execute(const QCommandLineParser& parser)
     {
@@ -609,7 +606,6 @@ public:
         parser.addOption(QCommandLineOption("size", "size", "[]"));
         parser.addOption(QCommandLineOption("server", "name of the server to search", "[server name]"));
         parser.addOption(QCommandLineOption("verbose", "verbose"));
-        parser.addOption(QCommandLineOption("gui","gui"));
         if (m_cmd == "locate") {
             parser.addOption(QCommandLineOption("local-only", "do not look on remote servers"));
         }
@@ -952,7 +948,7 @@ public:
 
             ////////////////////////////////////////////////////////////////////////////////
             // Next we see whether we can download it if this option has been enabled
-            if (parser.isSet("download-if-needed")) {
+            if ((parser.isSet("download-if-needed"))||(!parser.value("server").isEmpty())) {
                 println("Attempting to download file.");
                 PrvFileRecoverOptions opts;
                 opts.locate_opts.remote_servers = get_remote_servers();
@@ -1016,30 +1012,9 @@ private:
 
 } // namespace PrvCommands
 
-bool has_gui_flag(int argc, char* argv[])
-{
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--gui") == 0)
-            return true;
-    }
-    return false;
-}
-
 int main(int argc, char* argv[])
 {
-    bool gui_mode=has_gui_flag(argc,argv);
-    QCoreApplication *app;
-    if (gui_mode) {
-        app=new QApplication(argc,argv);
-    }
-    else {
-        app=new QCoreApplication(argc,argv);
-    }
-
-    if (gui_mode) {
-        TaskProgressView* TPV = new TaskProgressView;
-        TPV->show();
-    }
+    QCoreApplication app(argc,argv);
 
     CacheManager::globalInstance()->setLocalBasePath(get_tmp_path());
 
@@ -1054,15 +1029,10 @@ int main(int argc, char* argv[])
     cmdParser.addCommand(new PrvCommands::UploadCommand);
     cmdParser.addCommand(new PrvCommands::EnsureLocalRemoteCommand("ensure-local"));
     cmdParser.addCommand(new PrvCommands::EnsureLocalRemoteCommand("ensure-remote"));
-    if (!cmdParser.process(*app)) {
+    if (!cmdParser.process(app)) {
         return cmdParser.result();
     }
-    if (gui_mode) {
-        return app->exec();
-    }
-    else {
-        return cmdParser.result();
-    }
+    return cmdParser.result();
 }
 
 void print(QString str)

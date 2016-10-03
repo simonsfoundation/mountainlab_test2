@@ -10,7 +10,7 @@
 
 namespace PrvUpload {
 
-void initiateUploadToServer(QString server_name, PrvRecord prv);
+bool initiateUploadToServer(QString server_name, PrvRecord prv);
 }
 
 void execute_command_in_separate_thread(QString cmd, QStringList args, QObject* on_finished_receiver = 0, const char* sig_or_slot = 0);

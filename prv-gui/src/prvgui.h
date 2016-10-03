@@ -12,6 +12,9 @@
 #include <QThread>
 #include <QVariantMap>
 
+
+QString get_server_url_for_name(QString server_name);
+
 struct PrvProcessRecord;
 struct PrvRecord {
     PrvRecord(QString label_in, QJsonObject obj);
@@ -29,6 +32,8 @@ struct PrvRecord {
 
     QVariantMap toVariantMap() const;
     static PrvRecord fromVariantMap(QVariantMap X);
+    QString find_local_file();
+    QString find_remote_url(QString server_name);
 };
 
 struct PrvProcessRecord {
@@ -76,7 +81,6 @@ public:
     void run();
 
 private:
-    QString check_if_on_local_disk(PrvRecord prv);
     QString check_if_on_server(PrvRecord prv, QString server_name);
 
 signals:

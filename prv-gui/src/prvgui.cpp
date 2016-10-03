@@ -13,6 +13,7 @@
 #include <QJsonValue>
 #include <QProcess>
 #include <taskprogress.h>
+#include "mlcommon.h"
 
 QString to_string(fuzzybool fb)
 {
@@ -51,7 +52,7 @@ void PrvGuiWorkerThread::run()
         long size = prv.size;
         {
             task.log() << "check if on local disk" << name << size;
-            QString local_path = check_if_on_local_disk(prv);
+            QString local_path = prv.find_local_file();
             results[prv_code].local_path = local_path;
             {
                 QMutexLocker locker(&results_mutex);
@@ -87,20 +88,7 @@ QString exec_process_and_return_output(QString cmd, QStringList args)
     P.start(cmd, args);
     P.waitForStarted();
     P.waitForFinished(-1);
-    return P.readAll();
-}
-
-QString PrvGuiWorkerThread::check_if_on_local_disk(PrvRecord prv)
-{
-    QString cmd = "prv";
-    QStringList args;
-    args << "locate";
-    args << "--checksum=" + prv.checksum;
-    args << "--checksum1000=" + prv.checksum1000;
-    args << QString("--size=%1").arg(prv.size);
-    args << "--local-only";
-    QString output = exec_process_and_return_output(cmd, args);
-    return output;
+    return P.readAll().trimmed();
 }
 
 QString PrvGuiWorkerThread::check_if_on_server(PrvRecord prv, QString server_name)
@@ -270,4 +258,45 @@ PrvRecord PrvRecord::fromVariantMap(QVariantMap X)
     ret.processes = processes0;
 
     return ret;
+}
+
+QString PrvRecord::find_local_file()
+{
+    QString cmd = "prv";
+    QStringList args;
+    args << "locate";
+    args << "--checksum=" + this->checksum;
+    args << "--checksum1000=" + this->checksum1000;
+    args << QString("--size=%1").arg(this->size);
+    args << "--local-only";
+    QString output = exec_process_and_return_output(cmd, args);
+    return output;
+}
+
+QString PrvRecord::find_remote_url(QString server_name)
+{
+    QString cmd = "prv";
+    QStringList args;
+    args << "locate";
+    args << "--checksum=" + this->checksum;
+    args << "--checksum1000=" + this->checksum1000;
+    args << QString("--size=%1").arg(this->size);
+    args << "--server="+server_name;
+    QString output = exec_process_and_return_output(cmd, args);
+    return output;
+}
+
+QString get_server_url_for_name(QString server_name) {
+    QJsonArray remote_servers = MLUtil::configValue("prv", "servers").toArray();
+    for (int i = 0; i < remote_servers.count(); i++) {
+        QJsonObject server0 = remote_servers[i].toObject();
+        if (server0["name"].toString() == server_name) {
+            QString host = server0["host"].toString();
+            int port = server0["port"].toInt();
+            QString url_path = server0["path"].toString();
+            QString url0 = host + ":" + QString::number(port) + url_path;
+            return url0;
+        }
+    }
+    return "";
 }

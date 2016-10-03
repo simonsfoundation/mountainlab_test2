@@ -26,6 +26,8 @@ Downloader::~Downloader()
 
 void Downloader::start()
 {
+    m_task.setLabel("Downloading: "+source_url);
+
     //initialize private variables
     m_timer.start();
     m_num_bytes_downloaded = 0;
@@ -48,6 +50,7 @@ void Downloader::start()
     if (m_reply->error() != QNetworkReply::NoError) {
         success = false;
         error = QString("Error in network request (%1): %2").arg(source_url).arg(m_reply->errorString());
+        m_task.error() << error;
         m_reply->abort();
         this->setFinished();
         return;
@@ -58,6 +61,7 @@ void Downloader::start()
     if (!m_file->open(QIODevice::WriteOnly)) {
         success = false;
         error = QString("Error opening temporary file: %1").arg(m_tmp_fname);
+        m_task.error() << error;
         m_reply->abort();
         this->setFinished();
         return;
@@ -268,6 +272,14 @@ void Uploader::start()
 
     //QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     QObject::connect(m_reply, &QNetworkReply::finished, [&]() {
+        if (success) {
+            QJsonObject response=QJsonDocument::fromJson(response_text.toUtf8()).object();
+            success=response["success"].toBool();
+            error=response["error"].toString();
+            if (!success) {
+                m_task.error() << error;
+            }
+        }
         setFinished();
     });
 }
@@ -299,6 +311,7 @@ void Downloader::slot_reply_error()
         return;
     success = false;
     error = QString("Error in reply (%1): %2").arg(source_url).arg(m_reply->errorString());
+    m_task.error() << error;
     m_reply->abort();
     this->setFinished();
 }
@@ -345,7 +358,7 @@ void Downloader::slot_reply_finished()
         this->setFinished();
         return;
     }
-    m_task.setLabel(QString("Downloaded %1 MB in %2 sec").arg(m_num_bytes_downloaded * 1.0 / 1e6).arg(m_timer.elapsed() * 1.0 / 1000));
+    m_task.log() << QString("Downloaded %1 MB in %2 sec").arg(m_num_bytes_downloaded * 1.0 / 1e6).arg(m_timer.elapsed() * 1.0 / 1000);
     this->setFinished();
 }
 
@@ -379,7 +392,7 @@ bool concatenate_files(QStringList file_paths, QString dest_path)
 
 void PrvParallelDownloader::start()
 {
-    m_task.setLabel("Parallel Downloading " + source_url);
+    m_task.setLabel("Parallel Downloading:::: " + source_url);
 
     m_timer.start();
     m_num_bytes_downloaded = 0;
@@ -390,6 +403,8 @@ void PrvParallelDownloader::start()
         url += "?";
     else
         url += "&";
+
+    m_task.log() << "size:" << size << "num_threads:" << num_threads;
 
     //get the start and end bytes
     QList<long> start_bytes;
@@ -407,8 +422,12 @@ void PrvParallelDownloader::start()
         }
     }
 
+    m_task.log() << "start_bytes:" << start_bytes;
+    m_task.log() << "end_bytes:" << end_bytes;
+
     for (int i = 0; i < start_bytes.count(); i++) {
         QString url2 = url + QString("bytes=%1-%2").arg(start_bytes[i]).arg(end_bytes[i]);
+        m_task.log() << "Starting downloader: "+url2;
         Downloader* DD = new Downloader;
         DD->source_url = url2;
         DD->destination_file_name = CacheManager::globalInstance()->makeLocalFile() + ".PrvParallelDownloader";
@@ -542,6 +561,17 @@ void PrvParallelDownloader::slot_downloader_finished()
     }
     if (all_finished) {
         //for the response text, either use the one where concatentated=true, or the one where success!=true
+        QStringList file_names;
+        for (int i=0; i<m_downloaders.count(); i++) {
+            file_names << m_downloaders[i]->destination_file_name;
+        }
+        m_task.log() << "Concatenating files" << file_names << this->destination_file_name;
+        if (!concatenate_files(file_names,this->destination_file_name)) {
+            m_task.error() << "Error concatenating files";
+        }
+        foreach (QString file,file_names) {
+            QFile::remove(file);
+        }
         this->setFinished();
     }
 }
@@ -565,6 +595,8 @@ void PrvParallelUploader::start()
     else
         url += "&";
 
+    url+="a=upload&";
+
     long size = QFileInfo(source_file_name).size();
     m_size = size;
 
@@ -585,7 +617,7 @@ void PrvParallelUploader::start()
     }
 
     for (int i = 0; i < start_bytes.count(); i++) {
-        QString url2 = url + QString("part=%1_of_%2").arg(i + 1).arg(start_bytes.count());
+        QString url2 = url + QString("part=%1_of_%2&").arg(i + 1).arg(start_bytes.count());
         Uploader* UU = new Uploader;
         UU->source_file_name = source_file_name;
         UU->start_byte = start_bytes[i];
@@ -634,6 +666,7 @@ void PrvParallelUploader::slot_uploader_finished()
                     //record the error on only the first non-success
                     success = false;
                     error = m_uploaders[i]->error;
+                    response_text=m_uploaders[i]->response_text;
                 }
                 for (int j = 0; j < m_uploaders.count(); j++) {
                     m_uploaders[j]->requestStop();
@@ -645,21 +678,43 @@ void PrvParallelUploader::slot_uploader_finished()
         }
     }
     if (all_finished) {
-        //for the response text, either use the one where concatentated=true, or the one where success!=true
-        response_text = "";
-        for (int i = 0; i < m_uploaders.count(); i++) {
-            QJsonObject response_object = QJsonDocument::fromJson(m_uploaders[i]->response_text.toUtf8()).object();
-            if (response_object["success"].toBool()) {
-                if (response_object["concatenated"].toBool()) {
-                    response_text = m_uploaders[i]->response_text;
-                }
-            }
-            else {
-                response_text = m_uploaders[i]->response_text;
-            }
+        if (success) {
+            //append the url so it can take some (more) query parameters
+            QString url = destination_url;
+            if (!url.contains("?"))
+                url += "?";
+            else
+                url += "&";
+            url+="a=concat-upload&";
+            url+=QString("num_parts=%1&").arg(this->num_threads);
+            connect(&m_concat_upload, SIGNAL(finished()), this, SLOT(slot_concat_upload_finished()));
+            m_task.log() << "Submitting concatenation request: "+url;
+            m_concat_upload.destination_file_name=CacheManager::globalInstance()->makeLocalFile();
+            m_concat_upload.source_url=url;
+            m_concat_upload.start();
         }
-        this->setFinished();
+        else {
+            this->setFinished();
+        }
     }
+}
+
+void PrvParallelUploader::slot_concat_upload_finished()
+{
+    m_task.log() << "concat upload finished.";
+    if (!m_concat_upload.success) {
+        success=false;
+        error=m_concat_upload.error;
+        m_task.error() << error;
+    }
+    else {
+        m_task.log() << response_text;
+        response_text=TextFile::read(m_concat_upload.destination_file_name);
+        QJsonObject response=QJsonDocument::fromJson(response_text.toUtf8()).object();
+        success=response["success"].toBool();
+        error=response["error"].toString();
+    }
+    this->setFinished();
 }
 
 QString httpGetTextSync(QString url)

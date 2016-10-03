@@ -153,6 +153,54 @@ var SERVER=http.createServer(function (REQ, RESP) {
 				send_as_text_or_link(txt);
 			});	
 		}
+		else if (method=="concat-upload") {
+			if (!config.enable_uploads) {
+				send_json_response({error:true,error:'Uploads are not enabled on this server.'});
+				return;
+			}
+			var checksum=query.checksum;
+			var size=Number(query.size);
+			if ((!checksum)||(!size)) {
+				send_json_response({error:true,error:"Invalid query."});
+				return;
+			}
+			if (!is_valid_checksum(checksum)) {
+				send_json_response({error:true,error:"Invalid checksum."});
+				return;
+			}
+			var num_parts=Number(query.num_parts);
+			if (!num_parts) {
+				send_json_response({error:true,error:"Invalid value for num_parts: "+num_parts});
+				return;	
+			}
+			var new_fname=absolute_data_directory()+'/uploads/'+checksum;
+			var another_tmp_fname=new_fname+'.'+make_random_id(5)+'.concat-upload.tmp';
+			concatenate_parts(new_fname,num_parts,another_tmp_fname,function(ret) {
+				if (!ret.success) {
+					send_json_response(ret);
+					return;
+				}
+				if (get_file_size(another_tmp_fname)!=size) {
+					send_json_response({success:false,error:'Unexpected size after upload concatenation: '+get_file_size(another_tmp_fname)+' <> '+size});
+					remove_file(another_tmp_fname);
+					return;
+				}
+				compute_file_checksum(another_tmp_fname,function(computed_checksum) {
+					if (computed_checksum!=checksum) {
+						send_json_response({success:false,error:'Unexpected checksum after upload concatenation '+computed_checksum+' <> '+checksum});
+						remove_file(another_tmp_fname);
+						return;
+					}
+					if (!rename_file(another_tmp_fname,new_fname)) {
+						send_json_response({success:false,error:'Unable to rename file after upload concatenation '+another_tmp_fname+' '+new_fname});
+						remove_file(another_tmp_fname);
+						return;
+					}
+					fs.writeFileSync(new_fname+'.info',info,'utf8');
+					send_json_response({success:true,concatenated:true,message:'concatenated '+size+' bytes'});
+				});
+			});
+		}
 		else if (method=="list-subservers") {
 			list_subservers();
 		}
@@ -285,6 +333,8 @@ var SERVER=http.createServer(function (REQ, RESP) {
 							remove_file(tmp_fname);
 							return;
 						}
+						send_json_response({success:true,message:'received '+num_bytes_received+' bytes from part '+part_number+' of '+num_parts});
+						/*
 						if (part_number==num_parts) {
 							wait_until_all_parts_are_present(REQ,new_fname,num_parts,function() {
 								if (all_parts_are_present(new_fname,num_parts)) {
@@ -320,6 +370,7 @@ var SERVER=http.createServer(function (REQ, RESP) {
 						else {
 							send_json_response({success:true,message:'received '+num_bytes_received+' bytes from part '+part_number+' of '+num_parts});
 						}
+						*/
 					}
 				});
 			}
@@ -456,6 +507,7 @@ var SERVER=http.createServer(function (REQ, RESP) {
 		}
 	}
 
+	/*
 	function wait_until_all_parts_are_present(REQ,base_name,num_parts,callback) {
 		if (all_parts_are_present(base_name,num_parts)) {
 			console.log('ALL PARTS ARE PRESENT!');
@@ -481,6 +533,7 @@ var SERVER=http.createServer(function (REQ, RESP) {
 		}
 		return true;
 	}
+	*/
 	function concatenate_parts(new_fname,num_parts,tmp_fname,callback) {
 		console.log('concatenating parts...');
 		var had_error=false;

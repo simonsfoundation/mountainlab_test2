@@ -158,6 +158,7 @@ public:
 private slots:
     void slot_uploader_progress();
     void slot_uploader_finished();
+    void slot_concat_upload_finished();
 
 private:
     long m_size = 0;
@@ -166,6 +167,7 @@ private:
     TaskProgress m_task;
 
     QList<Uploader*> m_uploaders;
+    Downloader m_concat_upload;
 };
 }
 
