@@ -22,9 +22,8 @@
 #include <QTextBrowser>
 #include <QProcess>
 #include "taskprogress.h"
-#include "exportmv2filedialog.h"
 #include <QThread>
-#include "prvmanagerdialog.h"
+#include <cachemanager.h>
 
 class MVExportControlPrivate {
 public:
@@ -44,11 +43,6 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
     FlowLayout* flayout = new FlowLayout;
     this->setLayout(flayout);
     {
-        QPushButton* B = new QPushButton("PRV manager");
-        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_prv_manager()));
-        flayout->addWidget(B);
-    }
-    {
         QPushButton* B = new QPushButton("Export .mv2 document");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_mv2_document()));
         flayout->addWidget(B);
@@ -61,6 +55,11 @@ MVExportControl::MVExportControl(MVContext* context, MVMainWindow* mw)
     {
         QPushButton* B = new QPushButton("Export curated firings");
         connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_export_curated_firings()));
+        flayout->addWidget(B);
+    }
+    {
+        QPushButton* B = new QPushButton("Open PRV manager");
+        connect(B, SIGNAL(clicked(bool)), this, SLOT(slot_open_prv_manager()));
         flayout->addWidget(B);
     }
 
@@ -103,7 +102,7 @@ MVExportControl::~MVExportControl()
 
 QString MVExportControl::title() const
 {
-    return "Export";
+    return "Export / Upload / Download";
 }
 
 void MVExportControl::updateContext()
@@ -187,31 +186,12 @@ void MVExportControl::slot_export_mv2_document()
     QJsonObject obj = this->mvContext()->toMV2FileObject();
     QString json = QJsonDocument(obj).toJson();
     if (TextFile::write(fname, json)) {
+        this->mvContext()->setMV2FileName(fname);
         task.log() << QString("Wrote %1 kilobytes").arg(json.count() * 1.0 / 1000);
     }
     else {
         task.error("Error writing .mv2 file: " + fname);
     }
-}
-
-void MVExportControl::slot_prv_manager()
-{
-    PrvManagerDialog* dlg = new PrvManagerDialog;
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
-
-    QMap<QString, QJsonObject> all_prv_objects = mvContext()->allPrvObjects();
-
-    qDebug() << all_prv_objects;
-    dlg->setPrvObjects(all_prv_objects);
-    QJsonArray servers0 = MLUtil::configValue("prv", "servers").toArray();
-    QStringList server_names;
-    foreach (QJsonValue server, servers0) {
-        server_names << server.toObject()["name"].toString();
-    }
-    dlg->setServerNames(server_names);
-
-    dlg->refresh();
-    dlg->show();
 }
 
 /*
@@ -369,6 +349,23 @@ void MVExportControl::slot_export_curated_firings()
     if (!F2.write64(fname)) {
         QMessageBox::warning(0, "Problem exporting firings curated file", "Unable to write file: " + fname);
     }
+}
+
+void MVExportControl::slot_open_prv_manager()
+{
+    QString fname = this->mvContext()->mv2FileName();
+    if (fname.isEmpty()) {
+        fname = CacheManager::globalInstance()->makeLocalFile() + ".prv";
+        QJsonObject obj = this->mvContext()->toMV2FileObject();
+        QString json = QJsonDocument(obj).toJson();
+        if (!TextFile::write(fname, json)) {
+            TaskProgress errtask;
+            errtask.error("Error writing .mv2 file: " + fname);
+            return;
+        }
+    }
+    int exit_code = system(("prv-gui " + fname).toUtf8().data());
+    Q_UNUSED(exit_code)
 }
 
 /*

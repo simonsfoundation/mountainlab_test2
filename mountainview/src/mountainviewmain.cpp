@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QStringList>
+#include <resolveprvsdialog.h>
+#include "cachemanager.h"
 
 #include "clusterdetailplugin.h"
 #include "isolationmatrixplugin.h"
@@ -50,6 +52,7 @@
 #include <mvclusterordercontrol.h>
 #include <clustermetricsplugin.h>
 #include <curationprogramplugin.h>
+#include "prvgui.h"
 
 /// TODO (LOW) option to turn on/off 8-bit quantization per view
 /// TODO: (HIGH) blobs for populations
@@ -131,6 +134,11 @@ QList<QColor> generate_colors_old(const QColor& bg, const QColor& fg, int noColo
 #include "mvexportcontrol.h"
 
 void set_nice_size(QWidget* W);
+bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QJsonObject obj);
+bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QList<PrvRecord> prvs);
+
+void try_to_automatically_download_and_regenerate_prv_objects(QJsonObject obj);
+void try_to_automatically_download_and_regenerate_prv_objects(QList<PrvRecord> prvs);
 
 int main(int argc, char* argv[])
 {
@@ -143,10 +151,17 @@ int main(int argc, char* argv[])
     setbuf(stdout, 0);
 
     CLParams CLP(argc, argv);
+    {
+        TaskProgressView TPV;
+        TPV.show();
 
-    if (!prepare_prv_files(CLP.named_parameters, true)) {
-        qWarning() << "Could not prepare .prv files. Try adjusting the prv settings in mountainlab.user.json";
-        return -1;
+        //do not allow downloads or processing because now this is handled in a separate gui, as it should!!!
+        bool allow_downloads = false;
+        bool allow_processing = false;
+        if (!prepare_prv_files(CLP.named_parameters, allow_downloads, allow_processing)) {
+            qWarning() << "Could not prepare .prv files. Try adjusting the prv settings in mountainlab.user.json";
+            return -1;
+        }
     }
 
     QList<QColor> channel_colors;
@@ -194,7 +209,6 @@ int main(int argc, char* argv[])
                     QJsonObject SV = static_views[ii].toObject();
                     QString container = SV["container"].toString();
                     QString title = SV["title"].toString();
-                    qDebug() << "TITLE:::" << title;
                     QJsonObject SVdata = SV["data"].toObject();
                     QString view_type = SVdata["view-type"].toString();
                     qDebug() << "OPENING VIEW: " + view_type << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
@@ -280,9 +294,37 @@ int main(int argc, char* argv[])
             context->setFromMVFileObject(obj);
         }
         if (!mv2_fname.isEmpty()) {
+            TaskProgressView TPV;
+            TPV.show();
             QString json = TextFile::read(mv2_fname);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
+            bool done_checking = false;
+            while (!done_checking) {
+                if (check_whether_prv_objects_need_to_be_downloaded_or_regenerated(obj)) {
+                    ResolvePrvsDialog dlg;
+                    if (dlg.exec() == QDialog::Accepted) {
+                        if (dlg.choice() == ResolvePrvsDialog::OpenPrvGui) {
+                            int exit_code = system(("prv-gui " + mv2_fname).toUtf8().data());
+                            Q_UNUSED(exit_code)
+                            done_checking = false; //check again
+                        }
+                        else if (dlg.choice() == ResolvePrvsDialog::AutomaticallyDownloadAndRegenerate) {
+                            try_to_automatically_download_and_regenerate_prv_objects(obj);
+                            done_checking = false; //check again
+                        }
+                        else {
+                            done_checking = true;
+                        }
+                    }
+                    else {
+                        return -1;
+                    }
+                }
+                else
+                    done_checking = true;
+            }
             context->setFromMV2FileObject(obj);
+            context->setMV2FileName(mv2_fname);
         }
 
         if (CLP.named_parameters.contains("samplerate")) {
@@ -799,4 +841,69 @@ void setup_main_window(MVMainWindow* W)
     W->registerViewFactory(new MVDiscrimHistFactory(W));
     W->registerViewFactory(new MVDiscrimHistGuideFactory(W));
     W->registerViewFactory(new MVFireTrackFactory(W));
+}
+
+bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QJsonObject obj)
+{
+    QList<PrvRecord> prvs = find_prvs("", obj);
+    return check_whether_prv_objects_need_to_be_downloaded_or_regenerated(prvs);
+}
+
+QString check_if_on_local_disk(PrvRecord prv)
+{
+    QString cmd = "prv";
+    QStringList args;
+    args << "locate";
+    args << "--checksum=" + prv.checksum;
+    args << "--checksum1000=" + prv.checksum1000;
+    args << QString("--size=%1").arg(prv.size);
+    args << "--local-only";
+    QString output = exec_process_and_return_output(cmd, args);
+    return output;
+}
+
+bool check_whether_prv_objects_need_to_be_downloaded_or_regenerated(QList<PrvRecord> prvs)
+{
+    foreach (PrvRecord prv, prvs) {
+        QString path = check_if_on_local_disk(prv);
+        if (path.isEmpty()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void try_to_automatically_download_and_regenerate_prv_objects(QJsonObject obj)
+{
+    QList<PrvRecord> prvs = find_prvs("", obj);
+    return try_to_automatically_download_and_regenerate_prv_objects(prvs);
+}
+
+void system_call_keeping_gui_alive(QString cmd, QString task_label)
+{
+    if (task_label.isEmpty())
+        task_label = "Running " + cmd;
+    TaskProgress task(task_label);
+    task.log() << cmd;
+    QProcess P;
+    P.setReadChannelMode(QProcess::MergedChannels);
+    P.start(cmd);
+    while (!P.waitForFinished(10)) {
+        qApp->processEvents();
+    }
+    task.log() << P.readAll();
+}
+
+void try_to_automatically_download_and_regenerate_prv_objects(QList<PrvRecord> prvs)
+{
+    foreach (PrvRecord prv, prvs) {
+        if (check_if_on_local_disk(prv).isEmpty()) {
+            QString src_fname = CacheManager::globalInstance()->makeLocalFile() + ".tmp.prv";
+            QString dst_fname = src_fname + ".recover";
+            TextFile::write(src_fname, QJsonDocument(prv.original_object).toJson());
+            QString cmd = QString("prv recover %1 %2").arg(src_fname).arg(dst_fname);
+            system_call_keeping_gui_alive(cmd.toLatin1().data(), "Recovering " + prv.label);
+            QFile::remove(src_fname);
+        }
+    }
 }

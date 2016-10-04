@@ -23,6 +23,7 @@
 #include <QProcess>
 #include <QJsonArray>
 #include <QSettings>
+#include "mlnetwork.h"
 
 #ifdef QT_GUI_LIB
 #include <QtNetwork/QNetworkAccessManager>
@@ -649,6 +650,7 @@ QString make_temporary_output_file_name(QString processor_name, QMap<QString, QV
 
 void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QString, QVariant> outputs, QMap<QString, QVariant> parameters, bool force_run)
 {
+    TaskProgress task("Running: " + processor_name);
     QStringList args;
     args << "run-process" << processor_name;
     {
@@ -673,8 +675,18 @@ void run_process(QString processor_name, QMap<QString, QVariant> inputs, QMap<QS
         args << "--_force_run";
     }
     QString exe = MLUtil::mountainlabBasePath() + "/mountainprocess/bin/mountainprocess";
-    qDebug() << "Running process:" << args.join(" ");
-    QProcess::execute(exe, args);
+    task.log() << "Running process:" << args.join(" ");
+    QProcess P;
+    P.start(exe, args);
+    if (!P.waitForStarted()) {
+        task.error() << "Problem starting process.";
+        return;
+    }
+    while (!P.waitForFinished(100)) {
+        if (MLUtil::inGuiThread()) {
+            qApp->processEvents();
+        }
+    }
 }
 
 QString system_call_return_output(QString cmd)
@@ -688,10 +700,9 @@ QString system_call_return_output(QString cmd)
 
 QString locate_file_with_checksum(QString checksum, QString checksum1000, long size, bool allow_downloads)
 {
-    qDebug() << "locate_file_with_checksum" << checksum << checksum1000 << size;
     QString extra_args = "";
     if (!allow_downloads)
-        extra_args += "--disable-downloads";
+        extra_args += "--local-only";
     QString cmd = QString("prv locate --checksum=%1 --checksum1000=%2 --size=%3 %4").arg(checksum).arg(checksum1000).arg(size).arg(extra_args);
     qDebug() << cmd;
     return system_call_return_output(cmd);
@@ -715,36 +726,39 @@ public:
     QString output_path;
 
     //output
-    bool success=false;
+    bool success = false;
 
-    void run() {
+    void run()
+    {
         QFile::remove(output_path);
 
         QString cmd = QString("curl -s %1 -o %2").arg(url).arg(output_path);
-        if (system(cmd.toUtf8().data())!=0) {
+        if (system(cmd.toUtf8().data()) != 0) {
             QFile::remove(output_path);
         }
-        success=QFile::exists(output_path);
+        success = QFile::exists(output_path);
     }
 };
 
-QString concatenate_files_to_temporary_file(QStringList file_paths) {
+QString concatenate_files_to_temporary_file(QStringList file_paths)
+{
     /// Witold, this function should be improved by streaming the read/writes
-    foreach (QString str,file_paths) {
-        if (str.isEmpty()) return "";
+    foreach (QString str, file_paths) {
+        if (str.isEmpty())
+            return "";
     }
 
-    QString code=file_paths.join(";");
-    QString tmp_fname=CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(code) + "." + make_random_id_22(5) + ".concat.download");
+    QString code = file_paths.join(";");
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile(MLUtil::computeSha1SumOfString(code) + "." + make_random_id_22(5) + ".concat.download");
     QFile f(tmp_fname);
     if (!f.open(QIODevice::WriteOnly)) {
-        qWarning() << __FUNCTION__ << "Unable to open file for writing: "+tmp_fname;
+        qWarning() << __FUNCTION__ << "Unable to open file for writing: " + tmp_fname;
         return "";
     }
-    foreach (QString str,file_paths) {
+    foreach (QString str, file_paths) {
         QFile g(str);
         if (!g.open(QIODevice::ReadOnly)) {
-            qWarning() << __FUNCTION__ << "Unable to open file for reading: "+str;
+            qWarning() << __FUNCTION__ << "Unable to open file for reading: " + str;
             f.close();
             return "";
         }
@@ -756,7 +770,35 @@ QString concatenate_files_to_temporary_file(QStringList file_paths) {
     return tmp_fname;
 }
 
-QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url,long size,int num_downloads) {
+QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url, long size, int num_downloads)
+{
+
+    QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".parallel_download";
+    MLNetwork::PrvParallelDownloader downloader;
+    downloader.destination_file_name = tmp_fname;
+    downloader.size = size;
+    downloader.source_url = url;
+    downloader.num_threads = num_downloads;
+
+    downloader.start();
+    bool done = false;
+    while (!done) {
+        if (downloader.waitForFinished(100)) {
+            done = true;
+        }
+        else {
+            if (MLUtil::inGuiThread()) {
+                qApp->processEvents();
+            }
+        }
+    }
+
+    if (downloader.success)
+        return tmp_fname;
+    else
+        return "";
+
+    /*
     if (num_downloads==1) {
         return download_file_to_temp_dir(url);
     }
@@ -803,11 +845,13 @@ QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url,long s
     }
 
     return ret;
-
+    */
 }
 
-QString create_file_from_prv(QString output_name, QString checksum0, QString checksum1000, long size0, const QJsonArray& processes, bool allow_downloads)
+QString create_file_from_prv(QString output_name, QString checksum0, QString checksum1000, long size0, const QJsonArray& processes, bool allow_downloads, bool allow_processing)
 {
+    int num_download_threads = 10;
+
     printf("Creating file corresponding to %s\n", output_name.toLatin1().data());
     //QString path1 = find_file_with_checksum(checksum0, checksum1000, size0);
     QString path1 = locate_file_with_checksum(checksum0, checksum1000, size0, allow_downloads);
@@ -817,8 +861,8 @@ QString create_file_from_prv(QString output_name, QString checksum0, QString che
             //QString path2 = download_file_to_temp_dir(path1);
             QTime timer;
             timer.start();
-            QString path2 = parallel_download_file_from_prvfileserver_to_temp_dir(path1,size0,20);
-            qDebug() << QString("ELAPSED FOR PARALLEL DOWNLOAD: %1 seconds").arg(timer.elapsed()*1.0/1000);
+
+            QString path2 = parallel_download_file_from_prvfileserver_to_temp_dir(path1, size0, num_download_threads);
             if ((!path2.isEmpty()) && (sumit(path2) == checksum0)) {
                 path1 = path2;
             }
@@ -831,64 +875,66 @@ QString create_file_from_prv(QString output_name, QString checksum0, QString che
             return path1;
         }
     }
-    for (int i = 0; i < processes.count(); i++) {
-        QJsonObject process0 = processes[i].toObject();
+    if (allow_processing) {
+        for (int i = 0; i < processes.count(); i++) {
+            QJsonObject process0 = processes[i].toObject();
 
-        QString processor_name = process0["processor_name"].toString();
-        QJsonObject outputs = process0["outputs"].toObject();
-        QJsonObject inputs = process0["inputs"].toObject();
-        QJsonObject parameters = process0["parameters"].toObject();
-        QStringList input_pnames = inputs.keys();
-        QStringList output_pnames = outputs.keys();
-        QStringList parameter_pnames = parameters.keys();
+            QString processor_name = process0["processor_name"].toString();
+            QJsonObject outputs = process0["outputs"].toObject();
+            QJsonObject inputs = process0["inputs"].toObject();
+            QJsonObject parameters = process0["parameters"].toObject();
+            QStringList input_pnames = inputs.keys();
+            QStringList output_pnames = outputs.keys();
+            QStringList parameter_pnames = parameters.keys();
 
-        foreach (QString opname, output_pnames) {
-            if (outputs[opname].toObject()["original_path"].toString() == output_name) {
-                QMap<QString, QVariant> args_inputs;
-                QMap<QString, QVariant> args_outputs;
-                QMap<QString, QVariant> args_parameters;
+            foreach (QString opname, output_pnames) {
+                if (outputs[opname].toObject()["original_path"].toString() == output_name) {
+                    QMap<QString, QVariant> args_inputs;
+                    QMap<QString, QVariant> args_outputs;
+                    QMap<QString, QVariant> args_parameters;
 
-                foreach (QString ipname, input_pnames) {
-                    QJsonObject input0 = inputs[ipname].toObject();
-                    QString name0 = input0["original_path"].toString();
-                    QString checksum0 = input0["original_checksum"].toString();
-                    QString checksum0_1000 = input0["original_checksum_1000"].toString();
-                    long size0 = input0["original_size"].toVariant().toLongLong();
-                    QString path0 = create_file_from_prv(name0, checksum0, checksum0_1000, size0, processes, allow_downloads);
-                    if (path0.isEmpty())
+                    foreach (QString ipname, input_pnames) {
+                        QJsonObject input0 = inputs[ipname].toObject();
+                        QString name0 = input0["original_path"].toString();
+                        QString checksum0 = input0["original_checksum"].toString();
+                        QString checksum0_1000 = input0["original_checksum_1000"].toString();
+                        long size0 = input0["original_size"].toVariant().toLongLong();
+                        QString path0 = create_file_from_prv(name0, checksum0, checksum0_1000, size0, processes, allow_downloads, allow_processing);
+                        if (path0.isEmpty())
+                            return "";
+                        args_inputs[ipname] = path0;
+                    }
+
+                    foreach (QString ppname, parameter_pnames) {
+                        args_parameters[ppname] = parameters[ppname].toVariant(); //important to do it this way instead of toString
+                    }
+
+                    foreach (QString opname2, output_pnames) {
+                        args_outputs[opname2] = make_temporary_output_file_name(processor_name, args_inputs, args_parameters, opname2);
+                    }
+
+                    //should we always force_run here? (I guess so)
+                    run_process(processor_name, args_inputs, args_outputs, args_parameters, true);
+                    QString output_path = args_outputs[opname].toString();
+                    if (!QFile::exists(output_path)) {
+                        qWarning() << "Output file does not exist after running process: " + output_path;
                         return "";
-                    args_inputs[ipname] = path0;
+                    }
+                    return output_path;
                 }
-
-                foreach (QString ppname, parameter_pnames) {
-                    args_parameters[ppname] = parameters[ppname].toVariant(); //important to do it this way instead of toString
-                }
-
-                foreach (QString opname2, output_pnames) {
-                    args_outputs[opname2] = make_temporary_output_file_name(processor_name, args_inputs, args_parameters, opname2);
-                }
-
-                //should we always force_run here? (I guess so)
-                run_process(processor_name, args_inputs, args_outputs, args_parameters, true);
-                QString output_path = args_outputs[opname].toString();
-                if (!QFile::exists(output_path)) {
-                    qWarning() << "Output file does not exist after running process: " + output_path;
-                    return "";
-                }
-                return output_path;
             }
         }
     }
     return "";
 }
 
-QString resolve_prv_object(const QJsonObject& obj, bool allow_downloads)
+QString resolve_prv_object(const QJsonObject& obj, bool allow_downloads, bool allow_processing)
 {
     QString path0 = obj["original_path"].toString();
     QString checksum0 = obj["original_checksum"].toString();
     QString checksum0_1000 = obj["original_checksum_1000"].toString();
     long size0 = obj["original_size"].toVariant().toLongLong();
-    QString path2 = create_file_from_prv(path0, checksum0, checksum0_1000, size0, obj["processes"].toArray(), allow_downloads);
+    QString path2 = create_file_from_prv(path0, checksum0, checksum0_1000, size0, obj["processes"].toArray(), allow_downloads, allow_processing);
     if (!path2.isEmpty()) {
         return path2;
     }
@@ -896,7 +942,7 @@ QString resolve_prv_object(const QJsonObject& obj, bool allow_downloads)
     return "";
 }
 
-QString resolve_prv_file(const QString& prv_fname, bool allow_downloads)
+QString resolve_prv_file(const QString& prv_fname, bool allow_downloads, bool allow_processing)
 {
     QString json = TextFile::read(prv_fname);
     QJsonParseError err;
@@ -906,14 +952,14 @@ QString resolve_prv_file(const QString& prv_fname, bool allow_downloads)
         qWarning() << "Error parsing json." << err.errorString();
         return "";
     }
-    QString ret = resolve_prv_object(obj, allow_downloads);
+    QString ret = resolve_prv_object(obj, allow_downloads, allow_processing);
     if (ret.isEmpty()) {
         qWarning() << "Unable to resolve: " + prv_fname;
     }
     return ret;
 }
 
-bool resolve_prv_files(QMap<QString, QVariant>& command_line_params, bool allow_downloads)
+bool resolve_prv_files(QMap<QString, QVariant>& command_line_params, bool allow_downloads, bool allow_processing)
 {
     QStringList keys = command_line_params.keys();
     foreach (QString key, keys) {
@@ -924,7 +970,7 @@ bool resolve_prv_files(QMap<QString, QVariant>& command_line_params, bool allow_
         }
         if (val.toString().endsWith(".prv")) {
             QString fname = val.toString();
-            val = resolve_prv_file(fname, allow_downloads);
+            val = resolve_prv_file(fname, allow_downloads, allow_processing);
             if (val.toString().isEmpty()) {
                 qWarning() << "Error resolving .prv file: " + fname;
                 return false;
@@ -938,7 +984,7 @@ bool resolve_prv_files(QMap<QString, QVariant>& command_line_params, bool allow_
     return true;
 }
 
-bool prepare_prv_files(QMap<QString, QVariant>& command_line_params, bool allow_downloads)
+bool prepare_prv_files(QMap<QString, QVariant>& command_line_params, bool allow_downloads, bool allow_processing)
 {
     QStringList keys = command_line_params.keys();
     foreach (QString key, keys) {
@@ -949,7 +995,7 @@ bool prepare_prv_files(QMap<QString, QVariant>& command_line_params, bool allow_
         }
         if (val.toString().endsWith(".prv")) {
             QString fname = val.toString();
-            val = resolve_prv_file(fname, allow_downloads);
+            val = resolve_prv_file(fname, allow_downloads, allow_processing);
             if (val.toString().isEmpty()) {
                 qWarning() << "Error resolving .prv file: " + fname;
                 return false;

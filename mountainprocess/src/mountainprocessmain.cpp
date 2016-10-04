@@ -245,7 +245,12 @@ int main(int argc, char* argv[])
 
     //log_begin(argc,argv);
 
-    if (!resolve_prv_files(CLP.named_parameters, true)) {
+    // Do not allow downloads or processing to resolve prv files
+    // since this is now handled in a separate gui -- as it very much should!!!
+    bool allow_downloads = false;
+    bool allow_processing = false;
+
+    if (!resolve_prv_files(CLP.named_parameters, allow_downloads, allow_processing)) {
         qWarning() << "Could not resolve .prv file. Try adjusting the settings in mountainlab.user.json.";
         //log_end();
         return -1;
@@ -260,7 +265,7 @@ int main(int argc, char* argv[])
     CacheManager::globalInstance()->setLocalBasePath(tmp_path);
 
     if (arg1.endsWith(".prv")) {
-        QString path0 = resolve_prv_file(arg1, true);
+        QString path0 = resolve_prv_file(arg1, allow_downloads, allow_processing);
         printf("FILE: %s\n", path0.toLatin1().data());
         //log_end();
         return 0;

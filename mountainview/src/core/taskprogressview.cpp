@@ -373,7 +373,7 @@ void TaskProgressView::showLogMessages(const QModelIndex& index)
     dlg->setWindowTitle(tr("Log messages for %1").arg(index.data().toString()));
     QPlainTextEdit* te = new QPlainTextEdit;
     QFont f;
-    f.setPointSize(f.pointSize() - 2);
+    f.setPointSize(f.pointSize() + 2);
     te->setFont(f);
     te->setReadOnly(true);
     QDialogButtonBox* bb = new QDialogButtonBox;
@@ -383,7 +383,9 @@ void TaskProgressView::showLogMessages(const QModelIndex& index)
     QVBoxLayout* l = new QVBoxLayout(dlg);
     l->addWidget(te);
     l->addWidget(bb);
-    te->setPlainText(index.data(TaskManager::TaskProgressModel::LogRole).toString());
+    QString txt = index.data(TaskManager::TaskProgressModel::LogRole).toString(); //jfm
+    txt = txt.split("\\n").join("\n");
+    te->setPlainText(txt);
     QRect r = QApplication::desktop()->screenGeometry(dlg);
     r.setWidth(r.width() / 2);
     r.setHeight(r.height() / 2);

@@ -24,6 +24,7 @@ struct PrvFileLocateOptions {
     bool search_locally = true;
     bool search_remotely = false;
     QJsonArray remote_servers;
+    bool verbose = false;
 };
 
 struct PrvFileRecoverOptions {

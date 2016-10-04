@@ -93,6 +93,8 @@ public:
     void setFromMV2FileObject(QJsonObject obj);
     QJsonObject toMVFileObject() const;
     QJsonObject toMV2FileObject() const;
+    void setMV2FileName(QString fname) const;
+    QString mv2FileName() const;
 
     /////////////////////////////////////////////////
     ClusterMerge clusterMerge() const;
