@@ -4,10 +4,10 @@ TEMPLATE = subdirs
 # qmake
 # qmake "COMPONENTS = mountainview mountainbrowser"
 
-#COMPONENTS = mdaconvert  mountainprocess mountainview mountainbrowser prv
+#COMPONENTS = mdaconvert  mountainprocess mountainview mountainbrowser prv prv-gui
 
 isEmpty(COMPONENTS) {
-    COMPONENTS = mdaconvert mountainprocess mountainsort mountainview mountaincompare prv
+    COMPONENTS = mdaconvert mountainprocess mountainsort mountainview mountaincompare prv prv-gui
     #we intentionally exclude mountainbrowser -- use: qmake "COMPONENTS = mountainbrowser"
 }
 
@@ -30,5 +30,6 @@ SUBDIRS += $$ifcomponent(mountainsort,mountainsort/src/mountainsort.pro)
 SUBDIRS += $$ifcomponent(mountainview,mountainview/src/mountainview.pro)
 SUBDIRS += $$ifcomponent(mountaincompare,mountaincompare/src/mountaincompare.pro)
 SUBDIRS += $$ifcomponent(prv,prv/src/prv.pro)
+SUBDIRS += $$ifcomponent(prv-gui,prv/src/prv-gui.pro)
 
 CONFIG(debug, debug|release) { SUBDIRS += tests }
