@@ -25,11 +25,17 @@ public:
     PrvGuiTreeWidget();
     virtual ~PrvGuiTreeWidget();
     void setPrvs(const QList<PrvRecord>& prvs);
+    QList<PrvRecord> prvs() const;
     void setServerNames(QStringList names);
+    void replacePrv(QString original_path, const PrvRecord& prv_new);
     void refresh();
+    bool isDirty() const;
+    void setDirty(bool val);
     QList<PrvRecord> selectedPrvs();
     QStringList serverNames() const;
     QVariantMap currentItemDetails() const; //not a great way to do this
+signals:
+    void dirtyChanged();
 private slots:
     void slot_update_tree_data();
 

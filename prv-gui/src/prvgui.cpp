@@ -264,7 +264,7 @@ PrvRecord PrvRecord::fromVariantMap(QVariantMap X)
     return ret;
 }
 
-QString PrvRecord::find_local_file()
+QString PrvRecord::find_local_file() const
 {
     QString cmd = "prv";
     QStringList args;
@@ -277,7 +277,7 @@ QString PrvRecord::find_local_file()
     return output;
 }
 
-QString PrvRecord::find_remote_url(QString server_name)
+QString PrvRecord::find_remote_url(QString server_name) const
 {
     QString cmd = "prv";
     QStringList args;

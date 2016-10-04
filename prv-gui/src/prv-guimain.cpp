@@ -30,22 +30,16 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    QJsonParseError err;
-    QJsonObject obj = QJsonDocument::fromJson(TextFile::read(fname).toUtf8(), &err).object();
-    if (err.error != QJsonParseError::NoError) {
-        printf("Error parsing JSON text.\n");
-        return -1;
-    }
-
     QJsonArray servers0 = MLUtil::configValue("prv", "servers").toArray();
     QStringList server_names;
     foreach (QJsonValue server, servers0) {
         server_names << server.toObject()["name"].toString();
     }
 
-    QList<PrvRecord> prvs = find_prvs(QFileInfo(fname).fileName(), obj);
     PrvGuiMainWindow W;
-    W.setPrvs(prvs);
+    if (!W.loadPrv(fname)) {
+        return -1;
+    }
     W.setServerNames(server_names);
     W.showMaximized();
     W.refresh();

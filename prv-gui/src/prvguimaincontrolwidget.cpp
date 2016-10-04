@@ -6,6 +6,7 @@
 
 #include "prvguidownloaddialog.h"
 #include "prvguimaincontrolwidget.h"
+#include "prvguitreewidget.h"
 #include "prvguiuploaddialog.h"
 #include <QGridLayout>
 #include <QPushButton>
@@ -17,23 +18,28 @@
 #include <QFile>
 #include <QFileInfo>
 #include "mlcommon.h"
+#include <QCoreApplication>
 
 class PrvGuiMainControlWidgetPrivate {
 public:
     PrvGuiMainControlWidget* q;
+    PrvGuiMainWindow* m_main_window;
     PrvGuiTreeWidget* m_tree;
     QList<QAbstractButton*> m_all_buttons;
 
     void update_enabled();
     QAbstractButton* find_button(QString name);
     QPushButton* create_push_button(QString name, QString label);
-    bool regenerate_prv(PrvRecord& prv);
+    bool regenerate_prv(const PrvRecord& prv);
 };
 
-PrvGuiMainControlWidget::PrvGuiMainControlWidget(PrvGuiTreeWidget* TW)
+PrvGuiMainControlWidget::PrvGuiMainControlWidget(PrvGuiMainWindow* MW)
 {
     d = new PrvGuiMainControlWidgetPrivate;
     d->q = this;
+
+    d->m_main_window = MW;
+    d->m_tree = MW->tree();
 
     QGridLayout* grid_layout = new QGridLayout;
     this->setLayout(grid_layout);
@@ -61,8 +67,20 @@ PrvGuiMainControlWidget::PrvGuiMainControlWidget(PrvGuiTreeWidget* TW)
         QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_regenerate()));
         grid_layout->addWidget(button, row, 0, 1, 1);
     }
+    row++;
 
-    d->m_tree = TW;
+    {
+        QPushButton* button = d->create_push_button("save", "Save");
+        QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_save()));
+        grid_layout->addWidget(button, row, 0, 1, 1);
+    }
+    {
+        QPushButton* button = d->create_push_button("saveas", "Save as...");
+        QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_save_as()));
+        grid_layout->addWidget(button, row, 1, 1, 1);
+    }
+    row++;
+
     QObject::connect(d->m_tree, SIGNAL(itemSelectionChanged()), this, SLOT(slot_update_enabled()));
 
     d->update_enabled();
@@ -123,12 +141,24 @@ void PrvGuiMainControlWidget::slot_regenerate()
     }
 }
 
+void PrvGuiMainControlWidget::slot_save()
+{
+    d->m_main_window->savePrv(d->m_main_window->prvFileName());
+}
+
+void PrvGuiMainControlWidget::slot_save_as()
+{
+}
+
 void PrvGuiMainControlWidgetPrivate::update_enabled()
 {
     QList<PrvRecord> prvs = m_tree->selectedPrvs();
     find_button("search_again")->setEnabled(true);
     find_button("upload")->setEnabled(!prvs.isEmpty());
     find_button("download")->setEnabled(!prvs.isEmpty());
+    find_button("enabled")->setEnabled(!prvs.isEmpty());
+    find_button("save")->setEnabled(m_tree->isDirty());
+    find_button("saveas")->setEnabled(m_tree->isDirty());
 }
 
 QAbstractButton* PrvGuiMainControlWidgetPrivate::find_button(QString name)
@@ -150,7 +180,7 @@ QPushButton* PrvGuiMainControlWidgetPrivate::create_push_button(QString name, QS
     return button;
 }
 
-int find_process_corresponding_to_output(QList<PrvProcessRecord> processes, QString original_path, QString output_pname)
+int find_process_corresponding_to_output(QList<PrvProcessRecord> processes, QString original_path, QString& output_pname)
 {
     for (int i = 0; i < processes.count(); i++) {
         PrvProcessRecord P = processes[i];
@@ -202,16 +232,20 @@ QString run_process(PrvProcessRecord& P, QString& output_pname)
     T.start();
     while (!T.isFinished()) {
         T.wait(10);
+        qApp->processEvents();
     }
 
     QString fname = outputs0[output_pname].toString();
     if (!QFile::exists(fname)) {
+        qWarning() << "+++++++++++++++++ Problem in run_process. File does not exist: " + fname;
+        qDebug() << outputs0 << output_pname;
         return "";
     }
+
     return fname;
 }
 
-bool PrvGuiMainControlWidgetPrivate::regenerate_prv(PrvRecord& prv)
+bool PrvGuiMainControlWidgetPrivate::regenerate_prv(const PrvRecord& prv)
 {
     TaskProgress task("Regenerating " + prv.label);
     QString path0 = prv.find_local_file();
@@ -243,7 +277,7 @@ bool PrvGuiMainControlWidgetPrivate::regenerate_prv(PrvRecord& prv)
 
     QString output_file_path = run_process(P, output_pname);
     if (output_file_path.isEmpty()) {
-        task.error() << "Problem running process: " + P.processor_name;
+        task.error() << "Problem running process ****: " + P.processor_name;
         return false;
     }
 
@@ -257,7 +291,8 @@ bool PrvGuiMainControlWidgetPrivate::regenerate_prv(PrvRecord& prv)
         task.log() << str;
         printf("%s\n", str.toUtf8().data());
     }
-    prv = prv_new;
+    m_tree->replacePrv(prv.original_path, prv_new);
+    m_tree->refresh();
 
     return true;
 }

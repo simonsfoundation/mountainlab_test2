@@ -7,14 +7,14 @@
 #define PRVGUIMAINCONTROLWIDGET_H
 
 #include <QWidget>
-#include "prvguitreewidget.h"
+#include "prvguimainwindow.h"
 
 class PrvGuiMainControlWidgetPrivate;
 class PrvGuiMainControlWidget : public QWidget {
     Q_OBJECT
 public:
     friend class PrvGuiMainControlWidgetPrivate;
-    PrvGuiMainControlWidget(PrvGuiTreeWidget* TW);
+    PrvGuiMainControlWidget(PrvGuiMainWindow* MW);
     virtual ~PrvGuiMainControlWidget();
 
 private slots:
@@ -23,6 +23,8 @@ private slots:
     void slot_upload();
     void slot_download();
     void slot_regenerate();
+    void slot_save();
+    void slot_save_as();
 
 private:
     PrvGuiMainControlWidgetPrivate* d;

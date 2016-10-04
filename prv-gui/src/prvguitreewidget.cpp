@@ -22,12 +22,15 @@ public:
     PrvGuiTreeWidget* q;
     QList<PrvRecord> m_prvs;
     QStringList m_server_names;
+    bool m_dirty = false;
 
     PrvGuiWorkerThread m_worker_thread;
 
     void refresh_tree();
     void restart_worker_thread();
     void update_tree_item_data(QTreeWidgetItem* it, QMap<QString, PrvGuiWorkerThreadResult> results);
+    void replace_prv_in_processes(QList<PrvProcessRecord>& processes, QString original_path, const PrvRecord& prv_new);
+    void replace_prv_in_process(PrvProcessRecord& P, QString original_path, const PrvRecord& prv_new);
 };
 
 PrvGuiTreeWidget::PrvGuiTreeWidget()
@@ -57,6 +60,12 @@ PrvGuiTreeWidget::~PrvGuiTreeWidget()
 void PrvGuiTreeWidget::setPrvs(const QList<PrvRecord>& prvs)
 {
     d->m_prvs = prvs;
+    this->setDirty(true);
+}
+
+QList<PrvRecord> PrvGuiTreeWidget::prvs() const
+{
+    return d->m_prvs;
 }
 
 void PrvGuiTreeWidget::setServerNames(QStringList names)
@@ -64,9 +73,76 @@ void PrvGuiTreeWidget::setServerNames(QStringList names)
     d->m_server_names = names;
 }
 
+void PrvGuiTreeWidgetPrivate::replace_prv_in_process(PrvProcessRecord& P, QString original_path, const PrvRecord& prv_new)
+{
+    {
+        QStringList keys = P.inputs.keys();
+        foreach (QString key, keys) {
+            if (P.inputs[key].original_path == original_path) {
+                if (P.inputs[key].checksum != prv_new.checksum) {
+                    P.inputs[key] = prv_new;
+                    q->setDirty(true);
+                }
+            }
+            else {
+                replace_prv_in_processes(P.inputs[key].processes, original_path, prv_new);
+            }
+        }
+    }
+    {
+        QStringList keys = P.outputs.keys();
+        foreach (QString key, keys) {
+            if (P.outputs[key].original_path == original_path) {
+                if (P.outputs[key].checksum != prv_new.checksum) {
+                    P.outputs[key] = prv_new;
+                    q->setDirty(true);
+                }
+            }
+            else {
+                replace_prv_in_processes(P.outputs[key].processes, original_path, prv_new);
+            }
+        }
+    }
+}
+
+void PrvGuiTreeWidgetPrivate::replace_prv_in_processes(QList<PrvProcessRecord>& processes, QString original_path, const PrvRecord& prv_new)
+{
+    for (int i = 0; i < processes.count(); i++) {
+        replace_prv_in_process(processes[i], original_path, prv_new);
+    }
+}
+
+void PrvGuiTreeWidget::replacePrv(QString original_path, const PrvRecord& prv_new)
+{
+    for (int i = 0; i < d->m_prvs.count(); i++) {
+        if (d->m_prvs[i].original_path == original_path) {
+            if (d->m_prvs[i].checksum != prv_new.checksum) {
+                d->m_prvs[i] = prv_new;
+                setDirty(true);
+            }
+        }
+        else {
+            d->replace_prv_in_processes(d->m_prvs[i].processes, original_path, prv_new);
+        }
+    }
+}
+
 void PrvGuiTreeWidget::refresh()
 {
     d->refresh_tree();
+}
+
+bool PrvGuiTreeWidget::isDirty() const
+{
+    return d->m_dirty;
+}
+
+void PrvGuiTreeWidget::setDirty(bool val)
+{
+    if (d->m_dirty == val)
+        return;
+    d->m_dirty = val;
+    emit dirtyChanged();
 }
 
 QList<PrvRecord> PrvGuiTreeWidget::selectedPrvs()
@@ -164,7 +240,6 @@ QTreeWidgetItem* make_tree_item_from_prv(PrvRecord prv, int column_count, const 
     for (int i = 0; i < prv.processes.count(); i++) {
         QMap<QString, PrvRecord> inputs = prv.processes[i].inputs;
         QMap<QString, PrvRecord> outputs = prv.processes[i].outputs;
-        qDebug() << prv.label << prv.processes.count() << outputs.count();
         if (outputs_include_checksum(outputs, prv.checksum)) {
             foreach (PrvRecord inp, inputs) {
                 dependencies << inp;
@@ -173,7 +248,6 @@ QTreeWidgetItem* make_tree_item_from_prv(PrvRecord prv, int column_count, const 
             }
         }
     }
-    qDebug() << "Dependencies count" << dependencies.count();
     for (int i = 0; i < dependencies.count(); i++) {
         QTreeWidgetItem* it2 = make_tree_item_from_prv(dependencies[i], column_count, prv.processes);
         it2->setText(1, dep_processor_names[i] + ' ' + dep_processor_versions[i]);

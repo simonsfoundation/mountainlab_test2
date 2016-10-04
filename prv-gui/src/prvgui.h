@@ -18,6 +18,14 @@ struct PrvProcessRecord;
 struct PrvRecord {
     PrvRecord() {}
     PrvRecord(QString label_in, QJsonObject obj);
+    PrvRecord(const PrvRecord& other)
+    {
+        copy_from(other);
+    }
+    void operator=(const PrvRecord& other)
+    {
+        copy_from(other);
+    }
 
     QJsonObject original_object;
 
@@ -32,13 +40,33 @@ struct PrvRecord {
 
     QVariantMap toVariantMap() const;
     static PrvRecord fromVariantMap(QVariantMap X);
-    QString find_local_file();
-    QString find_remote_url(QString server_name);
+    QString find_local_file() const;
+    QString find_remote_url(QString server_name) const;
+
+private:
+    void copy_from(const PrvRecord& other)
+    {
+        original_object = other.original_object;
+        label = other.label;
+        checksum = other.checksum;
+        size = other.size;
+        checksum1000 = other.checksum1000;
+        original_path = other.original_path;
+        processes = other.processes;
+    }
 };
 
 struct PrvProcessRecord {
     PrvProcessRecord() {}
     PrvProcessRecord(QJsonObject obj);
+    PrvProcessRecord(const PrvProcessRecord& other)
+    {
+        copy_from(other);
+    }
+    void operator=(const PrvProcessRecord& other)
+    {
+        copy_from(other);
+    }
 
     QString processor_name;
     QString processor_version;
@@ -48,6 +76,16 @@ struct PrvProcessRecord {
 
     QVariantMap toVariantMap() const;
     static PrvProcessRecord fromVariantMap(QVariantMap X);
+
+private:
+    void copy_from(const PrvProcessRecord& other)
+    {
+        processor_name = other.processor_name;
+        processor_version = other.processor_version;
+        inputs = other.inputs;
+        outputs = other.outputs;
+        parameters = other.parameters;
+    }
 };
 
 enum fuzzybool {

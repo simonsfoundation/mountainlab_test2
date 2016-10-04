@@ -15,6 +15,7 @@
 #include <QVariant>
 
 #include "prvgui.h"
+#include "prvguitreewidget.h"
 
 class PrvGuiMainWindowPrivate;
 class PrvGuiMainWindow : public QWidget {
@@ -23,10 +24,17 @@ public:
     friend class PrvGuiMainWindowPrivate;
     PrvGuiMainWindow();
     virtual ~PrvGuiMainWindow();
-    void setPrvs(const QList<PrvRecord>& prvs);
+    bool loadPrv(QString prv_file_name);
+    bool savePrv(QString prv_file_name);
     void setServerNames(QStringList names);
     void refresh();
+    PrvGuiTreeWidget* tree();
+    QString prvFileName() const;
+    void setPrvFileName(QString fname);
+signals:
+    void prvFileNameChanged();
 private slots:
+    void slot_update_window_title();
 
 protected:
     void resizeEvent(QResizeEvent* evt);
