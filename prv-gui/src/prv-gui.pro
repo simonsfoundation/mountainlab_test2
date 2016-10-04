@@ -39,6 +39,10 @@ HEADERS += \
     prvguidownloaddialog.h \
     prvguiitemdetailwidget.h
 
+INCLUDEPATH += ../../mountainview/src/core
+HEADERS += ../../mountainview/src/core/mountainprocessrunner.h
+SOURCES += ../../mountainview/src/core/mountainprocessrunner.cpp
+
 INCLUDEPATH += ../../mountainview/src/3rdparty/qaccordion/include
 VPATH += ../../mountainview/src/3rdparty/qaccordion
 HEADERS += include/qAccordion/qaccordion.h include/qAccordion/contentpane.h include/qAccordion/clickableframe.h

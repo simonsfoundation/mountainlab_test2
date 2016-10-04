@@ -948,7 +948,7 @@ public:
 
             ////////////////////////////////////////////////////////////////////////////////
             // Next we see whether we can download it if this option has been enabled
-            if ((parser.isSet("download-if-needed"))||(!parser.value("server").isEmpty())) {
+            if ((parser.isSet("download-if-needed")) || (!parser.value("server").isEmpty())) {
                 println("Attempting to download file.");
                 PrvFileRecoverOptions opts;
                 opts.locate_opts.remote_servers = get_remote_servers();
@@ -1014,7 +1014,7 @@ private:
 
 int main(int argc, char* argv[])
 {
-    QCoreApplication app(argc,argv);
+    QCoreApplication app(argc, argv);
 
     CacheManager::globalInstance()->setLocalBasePath(get_tmp_path());
 

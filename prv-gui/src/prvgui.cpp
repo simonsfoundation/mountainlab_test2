@@ -148,13 +148,13 @@ PrvProcessRecord::PrvProcessRecord(QJsonObject obj)
     QStringList ikeys = inputs.keys();
     foreach (QString ikey, ikeys) {
         PrvRecord rec(ikey, inputs[ikey].toObject());
-        this->inputs << rec;
+        this->inputs[ikey] = rec;
     }
 
     QStringList okeys = outputs.keys();
     foreach (QString okey, okeys) {
         PrvRecord rec(okey, outputs[okey].toObject());
-        this->outputs << rec;
+        this->outputs[okey] = rec;
     }
 }
 
@@ -162,14 +162,16 @@ QVariantMap PrvProcessRecord::toVariantMap() const
 {
     QVariantMap ret;
 
-    QVariantList inputs0;
-    foreach (PrvRecord inp, this->inputs) {
-        inputs0 << inp.toVariantMap();
+    QVariantMap inputs0;
+    QStringList ikeys = this->inputs.keys();
+    foreach (QString ikey, ikeys) {
+        inputs0[ikey] = this->inputs[ikey].toVariantMap();
     }
 
-    QVariantList outputs0;
-    foreach (PrvRecord out, this->outputs) {
-        outputs0 << out.toVariantMap();
+    QVariantMap outputs0;
+    QStringList okeys = this->outputs.keys();
+    foreach (QString okey, okeys) {
+        outputs0[okey] = this->outputs[okey].toVariantMap();
     }
 
     ret["processor_name"] = processor_name;
@@ -188,15 +190,17 @@ PrvProcessRecord PrvProcessRecord::fromVariantMap(QVariantMap X)
     ret.processor_name = X["processor_name"].toString();
     ret.processor_version = X["processor_version"].toString();
     {
-        QVariantList list = X["inputs"].toList();
-        foreach (QVariant item, list) {
-            ret.inputs << PrvRecord::fromVariantMap(item.toMap());
+        QVariantMap map = X["inputs"].toMap();
+        QStringList keys = map.keys();
+        foreach (QString key, keys) {
+            ret.inputs[key] = PrvRecord::fromVariantMap(map[key].toMap());
         }
     }
     {
-        QVariantList list = X["outputs"].toList();
-        foreach (QVariant item, list) {
-            ret.outputs << PrvRecord::fromVariantMap(item.toMap());
+        QVariantMap map = X["outputs"].toMap();
+        QStringList keys = map.keys();
+        foreach (QString key, keys) {
+            ret.outputs[key] = PrvRecord::fromVariantMap(map[key].toMap());
         }
     }
     ret.parameters = X["parameters"].toMap();
@@ -281,12 +285,13 @@ QString PrvRecord::find_remote_url(QString server_name)
     args << "--checksum=" + this->checksum;
     args << "--checksum1000=" + this->checksum1000;
     args << QString("--size=%1").arg(this->size);
-    args << "--server="+server_name;
+    args << "--server=" + server_name;
     QString output = exec_process_and_return_output(cmd, args);
     return output;
 }
 
-QString get_server_url_for_name(QString server_name) {
+QString get_server_url_for_name(QString server_name)
+{
     QJsonArray remote_servers = MLUtil::configValue("prv", "servers").toArray();
     for (int i = 0; i < remote_servers.count(); i++) {
         QJsonObject server0 = remote_servers[i].toObject();

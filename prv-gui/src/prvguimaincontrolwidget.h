@@ -22,6 +22,7 @@ private slots:
     void slot_update_enabled();
     void slot_upload();
     void slot_download();
+    void slot_regenerate();
 
 private:
     PrvGuiMainControlWidgetPrivate* d;

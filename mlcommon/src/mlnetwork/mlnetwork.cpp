@@ -26,7 +26,7 @@ Downloader::~Downloader()
 
 void Downloader::start()
 {
-    m_task.setLabel("Downloading: "+source_url);
+    m_task.setLabel("Downloading: " + source_url);
 
     //initialize private variables
     m_timer.start();
@@ -427,7 +427,7 @@ void PrvParallelDownloader::start()
 
     for (int i = 0; i < start_bytes.count(); i++) {
         QString url2 = url + QString("bytes=%1-%2").arg(start_bytes[i]).arg(end_bytes[i]);
-        m_task.log() << "Starting downloader: "+url2;
+        m_task.log() << "Starting downloader: " + url2;
         Downloader* DD = new Downloader;
         DD->source_url = url2;
         DD->destination_file_name = CacheManager::globalInstance()->makeLocalFile() + ".PrvParallelDownloader";
@@ -562,14 +562,14 @@ void PrvParallelDownloader::slot_downloader_finished()
     if (all_finished) {
         //for the response text, either use the one where concatentated=true, or the one where success!=true
         QStringList file_names;
-        for (int i=0; i<m_downloaders.count(); i++) {
+        for (int i = 0; i < m_downloaders.count(); i++) {
             file_names << m_downloaders[i]->destination_file_name;
         }
         m_task.log() << "Concatenating files" << file_names << this->destination_file_name;
-        if (!concatenate_files(file_names,this->destination_file_name)) {
+        if (!concatenate_files(file_names, this->destination_file_name)) {
             m_task.error() << "Error concatenating files";
         }
-        foreach (QString file,file_names) {
+        foreach (QString file, file_names) {
             QFile::remove(file);
         }
         this->setFinished();
@@ -595,7 +595,7 @@ void PrvParallelUploader::start()
     else
         url += "&";
 
-    url+="a=upload&";
+    url += "a=upload&";
 
     long size = QFileInfo(source_file_name).size();
     m_size = size;
@@ -666,7 +666,7 @@ void PrvParallelUploader::slot_uploader_finished()
                     //record the error on only the first non-success
                     success = false;
                     error = m_uploaders[i]->error;
-                    response_text=m_uploaders[i]->response_text;
+                    response_text = m_uploaders[i]->response_text;
                 }
                 for (int j = 0; j < m_uploaders.count(); j++) {
                     m_uploaders[j]->requestStop();
@@ -685,12 +685,12 @@ void PrvParallelUploader::slot_uploader_finished()
                 url += "?";
             else
                 url += "&";
-            url+="a=concat-upload&";
-            url+=QString("num_parts=%1&").arg(this->num_threads);
+            url += "a=concat-upload&";
+            url += QString("num_parts=%1&").arg(this->num_threads);
             connect(&m_concat_upload, SIGNAL(finished()), this, SLOT(slot_concat_upload_finished()));
-            m_task.log() << "Submitting concatenation request: "+url;
-            m_concat_upload.destination_file_name=CacheManager::globalInstance()->makeLocalFile();
-            m_concat_upload.source_url=url;
+            m_task.log() << "Submitting concatenation request: " + url;
+            m_concat_upload.destination_file_name = CacheManager::globalInstance()->makeLocalFile();
+            m_concat_upload.source_url = url;
             m_concat_upload.start();
         }
         else {
@@ -703,16 +703,16 @@ void PrvParallelUploader::slot_concat_upload_finished()
 {
     m_task.log() << "concat upload finished.";
     if (!m_concat_upload.success) {
-        success=false;
-        error=m_concat_upload.error;
+        success = false;
+        error = m_concat_upload.error;
         m_task.error() << error;
     }
     else {
         m_task.log() << response_text;
-        response_text=TextFile::read(m_concat_upload.destination_file_name);
-        QJsonObject response=QJsonDocument::fromJson(response_text.toUtf8()).object();
-        success=response["success"].toBool();
-        error=response["error"].toString();
+        response_text = TextFile::read(m_concat_upload.destination_file_name);
+        QJsonObject response = QJsonDocument::fromJson(response_text.toUtf8()).object();
+        success = response["success"].toBool();
+        error = response["error"].toString();
     }
     this->setFinished();
 }

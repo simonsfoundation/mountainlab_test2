@@ -12,11 +12,11 @@
 #include <QThread>
 #include <QVariantMap>
 
-
 QString get_server_url_for_name(QString server_name);
 
 struct PrvProcessRecord;
 struct PrvRecord {
+    PrvRecord() {}
     PrvRecord(QString label_in, QJsonObject obj);
 
     QJsonObject original_object;
@@ -42,8 +42,8 @@ struct PrvProcessRecord {
 
     QString processor_name;
     QString processor_version;
-    QList<PrvRecord> inputs;
-    QList<PrvRecord> outputs;
+    QMap<QString, PrvRecord> inputs;
+    QMap<QString, PrvRecord> outputs;
     QVariantMap parameters;
 
     QVariantMap toVariantMap() const;

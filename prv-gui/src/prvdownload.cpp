@@ -14,24 +14,24 @@
 
 bool PrvDownload::initiateDownloadFromServer(QString server_name, PrvRecord prv)
 {
-    TaskProgress task("Download from server: "+server_name);
-    QString local_path=prv.find_local_file();
+    TaskProgress task("Download from server: " + server_name);
+    QString local_path = prv.find_local_file();
     if (!local_path.isEmpty()) {
-        task.log() << "Already on local disk: "+local_path;
+        task.log() << "Already on local disk: " + local_path;
         return false;
     }
-    QString remote_url=prv.find_remote_url(server_name);
+    QString remote_url = prv.find_remote_url(server_name);
     if (remote_url.isEmpty()) {
-        task.error() << "Unable to find on remote server: "+server_name;
+        task.error() << "Unable to find on remote server: " + server_name;
         return false;
     }
 
-    MLNetwork::PrvParallelDownloader *downloader=new MLNetwork::PrvParallelDownloader;
-    QObject::connect(downloader,SIGNAL(finished()),downloader,SLOT(deleteLater()));
-    downloader->destination_file_name=CacheManager::globalInstance()->makeLocalFile(prv.checksum+".download_from_server");
-    downloader->source_url=remote_url;
-    downloader->size=prv.size;
-    downloader->num_threads=5;
+    MLNetwork::PrvParallelDownloader* downloader = new MLNetwork::PrvParallelDownloader;
+    QObject::connect(downloader, SIGNAL(finished()), downloader, SLOT(deleteLater()));
+    downloader->destination_file_name = CacheManager::globalInstance()->makeLocalFile(prv.checksum + ".download_from_server");
+    downloader->source_url = remote_url;
+    downloader->size = prv.size;
+    downloader->num_threads = 5;
     downloader->start();
 
     return true;

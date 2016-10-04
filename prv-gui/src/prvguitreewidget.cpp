@@ -134,10 +134,11 @@ QString shorten(QString str, int num1, int num2)
     return str.mid(0, num1) + " ... " + str.mid(str.count() - num2);
 }
 
-bool outputs_include_checksum(QList<PrvRecord> outputs, QString checksum)
+bool outputs_include_checksum(QMap<QString, PrvRecord> outputs, QString checksum)
 {
-    foreach (PrvRecord out, outputs) {
-        if (out.checksum == checksum)
+    QStringList keys = outputs.keys();
+    foreach (QString key, keys) {
+        if (outputs[key].checksum == checksum)
             return true;
     }
     return false;
@@ -161,8 +162,8 @@ QTreeWidgetItem* make_tree_item_from_prv(PrvRecord prv, int column_count, const 
     QStringList dep_processor_versions;
 
     for (int i = 0; i < prv.processes.count(); i++) {
-        QList<PrvRecord> inputs = prv.processes[i].inputs;
-        QList<PrvRecord> outputs = prv.processes[i].outputs;
+        QMap<QString, PrvRecord> inputs = prv.processes[i].inputs;
+        QMap<QString, PrvRecord> outputs = prv.processes[i].outputs;
         qDebug() << prv.label << prv.processes.count() << outputs.count();
         if (outputs_include_checksum(outputs, prv.checksum)) {
             foreach (PrvRecord inp, inputs) {
