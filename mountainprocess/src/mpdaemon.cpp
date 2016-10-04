@@ -212,6 +212,7 @@ bool MPDaemon::run()
     d->writeLogRecord("start-daemon");
     QTimer timer;
     timer.setInterval(100);
+    timer.start();
     connect(&timer, SIGNAL(timeout()), this, SLOT(iterate()));
     qApp->exec();
     d->m_is_running = false;
