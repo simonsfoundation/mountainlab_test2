@@ -351,6 +351,7 @@ void Downloader::slot_reply_finished()
         delete m_file;
         m_file = 0;
     }
+    qDebug() << "Renaming file: "+m_tmp_fname+" "+destination_file_name;
     if (!QFile::rename(m_tmp_fname, destination_file_name)) {
         success = false;
         error = "Unable to rename file: " + m_tmp_fname + " " + destination_file_name;
@@ -364,6 +365,8 @@ void Downloader::slot_reply_finished()
 
 bool concatenate_files(QStringList file_paths, QString dest_path)
 {
+    qDebug() << "concatenating files" << file_paths << dest_path;
+
     /// Witold, this function should be improved by streaming the read/writes
     foreach (QString str, file_paths) {
         if (str.isEmpty())
@@ -382,13 +385,41 @@ bool concatenate_files(QStringList file_paths, QString dest_path)
             f.close();
             return false;
         }
-        f.write(g.readAll());
+        long chunk_size=1e5;
+        QTime timer;
+        timer.start();
+        while (!g.atEnd()) {
+            QByteArray data0=g.read(chunk_size);
+            f.write(data0);
+        }
         g.close();
     }
 
     f.close();
     return true;
 }
+
+class ConcatenateThread : public QThread {
+public:
+    QStringList file_names;
+    QString dest_file_name;
+
+    void run() {
+        TaskProgress task("Concatenating files");
+        task.log() << file_names;
+        task.log() << dest_file_name;
+        if (!concatenate_files(file_names,dest_file_name)) {
+            task.error() << "Problem concatenating files";
+            return;
+        }
+        foreach (QString file, file_names) {
+            if (!QFile::remove(file)) {
+                qWarning() << "Problem removing file: "+file;
+            }
+        }
+    }
+};
+
 
 void PrvParallelDownloader::start()
 {
@@ -566,14 +597,24 @@ void PrvParallelDownloader::slot_downloader_finished()
             file_names << m_downloaders[i]->destination_file_name;
         }
         m_task.log() << "Concatenating files" << file_names << this->destination_file_name;
-        if (!concatenate_files(file_names, this->destination_file_name)) {
-            m_task.error() << "Error concatenating files";
-        }
-        foreach (QString file, file_names) {
-            QFile::remove(file);
-        }
-        this->setFinished();
+
+        ConcatenateThread *T=new ConcatenateThread;
+        T->file_names=file_names;
+        T->dest_file_name=this->destination_file_name;
+        QObject::connect(T,SIGNAL(finished()),this,SLOT(slot_concatenate_finished()));
+        QObject::connect(T,SIGNAL(finished()),T,SLOT(deleteLater()));
+        T->start();
     }
+}
+
+void PrvParallelDownloader::slot_concatenate_finished()
+{
+    if (!QFile::exists(this->destination_file_name)) {
+        m_task.error() << "Problem concatenating files. File does not exist: "+this->destination_file_name;
+        this->setFinished();
+        return;
+    }
+    this->setFinished();
 }
 
 PrvParallelUploader::~PrvParallelUploader()
@@ -816,4 +857,7 @@ void Runner::setFinished()
     m_is_finished = true;
     emit this->finished();
 }
+
+
+
 }

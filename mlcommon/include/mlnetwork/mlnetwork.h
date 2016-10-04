@@ -95,6 +95,7 @@ public:
 private slots:
     void slot_downloader_progress();
     void slot_downloader_finished();
+    void slot_concatenate_finished();
 
 private:
     QMutex m_mutex;
