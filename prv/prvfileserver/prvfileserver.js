@@ -621,14 +621,27 @@ function serve_file(REQ,filename,response,opts) {
 		var done=false;
 		read_stream.on('data',function(chunk) {
 			if (!done) {
-				response.write(chunk,"binary");
+				if (!response.write(chunk,"binary"))
+					read_stream.pause();
 				num_bytes_read+=chunk.length;
 				if (num_bytes_read==num_bytes_to_read) {
 					console.log('Read '+num_bytes_read+' bytes from '+filename+' ('+opts.start_byte+','+opts.end_byte+')');
 					done=true;
 					response.end();
 				}
+				else if (num_bytes_read>num_bytes_to_read) {
+					console.log('Unexpected error. num_bytes_read > num_bytes_to_read: '+num_bytes_read+' '+num_bytes_to_read);
+					read_stream.destroy();
+					done=true;
+					response.end();
+				}
 			}
+		});
+		read_stream.on('end',function() {
+
+		});
+		read_stream.on('drain',function() {
+			read_stream.resume();
 		});
 		REQ.socket.on('close',function() {
 			read_stream.destroy(); //stop reading the file because the request has been closed
