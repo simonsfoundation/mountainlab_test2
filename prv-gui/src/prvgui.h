@@ -91,6 +91,7 @@ private:
 enum fuzzybool {
     YES,
     NO,
+    REGENERATABLE,
     UNKNOWN
 };
 
@@ -127,5 +128,6 @@ signals:
 
 QList<PrvRecord> find_prvs(QString label, const QJsonValue& X);
 QString exec_process_and_return_output(QString cmd, QStringList args);
+int find_process_corresponding_to_output(QList<PrvProcessRecord> processes, QString original_path, QString& output_pname);
 
 #endif // PRVGUI_H

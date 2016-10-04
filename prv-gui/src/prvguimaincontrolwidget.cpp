@@ -16,6 +16,7 @@
 #include "prvupload.h"
 #include "prvdownload.h"
 #include <QFile>
+#include <QFileDialog>
 #include <QFileInfo>
 #include "mlcommon.h"
 #include <QCoreApplication>
@@ -44,19 +45,23 @@ PrvGuiMainControlWidget::PrvGuiMainControlWidget(PrvGuiMainWindow* MW)
     QGridLayout* grid_layout = new QGridLayout;
     this->setLayout(grid_layout);
     int row = 0;
+
     {
-        QPushButton* button = d->create_push_button("search_again", "Search again");
+        QPushButton* button = d->create_push_button("refresh", "Refresh");
         QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_refresh_tree()));
         grid_layout->addWidget(button, row, 0, 1, 2);
     }
     row++;
+
     {
         QPushButton* button = d->create_push_button("upload", "Upload...");
+        button->setToolTip("Upload selected items to a server");
         QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_upload()));
         grid_layout->addWidget(button, row, 0, 1, 1);
     }
     {
         QPushButton* button = d->create_push_button("download", "Download...");
+        button->setToolTip("Download selected items from a server");
         QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_download()));
         grid_layout->addWidget(button, row, 1, 1, 1);
     }
@@ -64,6 +69,7 @@ PrvGuiMainControlWidget::PrvGuiMainControlWidget(PrvGuiMainWindow* MW)
 
     {
         QPushButton* button = d->create_push_button("regenerate", "Regenerate...");
+        button->setToolTip("Regenerate selected items using processing");
         QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_regenerate()));
         grid_layout->addWidget(button, row, 0, 1, 1);
     }
@@ -71,11 +77,13 @@ PrvGuiMainControlWidget::PrvGuiMainControlWidget(PrvGuiMainWindow* MW)
 
     {
         QPushButton* button = d->create_push_button("save", "Save");
+        button->setToolTip("Save the .prv file. Modifications may have occurred when files were regenerated.");
         QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_save()));
         grid_layout->addWidget(button, row, 0, 1, 1);
     }
     {
         QPushButton* button = d->create_push_button("saveas", "Save as...");
+        button->setToolTip("Save the .prv file. Modifications may have occurred when files were regenerated.");
         QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_save_as()));
         grid_layout->addWidget(button, row, 1, 1, 1);
     }
@@ -148,6 +156,10 @@ void PrvGuiMainControlWidget::slot_save()
 
 void PrvGuiMainControlWidget::slot_save_as()
 {
+    QString fname = QFileDialog::getSaveFileName(this, "Save PRV file as", d->m_main_window->prvFileName(), "*.prv");
+    if (fname.isEmpty())
+        return;
+    d->m_main_window->savePrv(fname);
 }
 
 void PrvGuiMainControlWidgetPrivate::update_enabled()
@@ -156,9 +168,8 @@ void PrvGuiMainControlWidgetPrivate::update_enabled()
     find_button("search_again")->setEnabled(true);
     find_button("upload")->setEnabled(!prvs.isEmpty());
     find_button("download")->setEnabled(!prvs.isEmpty());
-    find_button("enabled")->setEnabled(!prvs.isEmpty());
     find_button("save")->setEnabled(m_tree->isDirty());
-    find_button("saveas")->setEnabled(m_tree->isDirty());
+    find_button("saveas")->setEnabled(true);
 }
 
 QAbstractButton* PrvGuiMainControlWidgetPrivate::find_button(QString name)
@@ -178,21 +189,6 @@ QPushButton* PrvGuiMainControlWidgetPrivate::create_push_button(QString name, QS
     button->setProperty("name", name);
     m_all_buttons << button;
     return button;
-}
-
-int find_process_corresponding_to_output(QList<PrvProcessRecord> processes, QString original_path, QString& output_pname)
-{
-    for (int i = 0; i < processes.count(); i++) {
-        PrvProcessRecord P = processes[i];
-        QStringList okeys = P.outputs.keys();
-        foreach (QString okey, okeys) {
-            if (P.outputs[okey].original_path == original_path) {
-                output_pname = okey;
-                return i;
-            }
-        }
-    }
-    return -1;
 }
 
 class run_process_thread : public QThread {
@@ -267,6 +263,7 @@ bool PrvGuiMainControlWidgetPrivate::regenerate_prv(const PrvRecord& prv)
     QStringList ikeys = P.inputs.keys();
     foreach (QString ikey, ikeys) {
         PrvRecord prv0 = P.inputs[ikey];
+        prv0.processes.append(prv.processes);
         task.log() << "Input " + ikey;
         if (!regenerate_prv(prv0)) {
             task.error() << "Problem regenerating input: " + ikey + ": " + prv0.original_path;

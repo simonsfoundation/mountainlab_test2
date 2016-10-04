@@ -13,6 +13,8 @@
 #include <QHBoxLayout>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QMessageBox>
+#include <QCloseEvent>
 #include <QMutex>
 #include <QProcess>
 #include <QSplitter>
@@ -119,6 +121,7 @@ void replace_prv(QJsonObject& prv_object, QString original_path, QString new_che
 
 bool PrvGuiMainWindow::savePrv(QString prv_file_name)
 {
+    qDebug() << __FILE__ << __LINE__ << "-----------------------------------------------------" << prv_file_name;
     QList<PrvRecord> prvs = d->m_tree->prvs();
     for (int i = 0; i < prvs.count(); i++) {
         replace_prv(d->m_original_object, prvs[i].original_path, prvs[i].checksum, prvs[i].size, prvs[i].checksum1000);
@@ -130,6 +133,8 @@ bool PrvGuiMainWindow::savePrv(QString prv_file_name)
     }
     this->setPrvFileName(prv_file_name);
     d->m_tree->setDirty(false);
+
+    return true;
 }
 
 PrvGuiTreeWidget* PrvGuiMainWindow::tree()
@@ -148,6 +153,28 @@ void PrvGuiMainWindow::setPrvFileName(QString fname)
         return;
     d->m_prv_file_name = fname;
     emit prvFileNameChanged();
+}
+
+void PrvGuiMainWindow::closeEvent(QCloseEvent* evt)
+{
+    if (d->m_tree->isDirty()) {
+        QString question = QString("Do you want to save changes to %1 before closing?").arg(d->m_prv_file_name);
+        QMessageBox::StandardButton res = QMessageBox::question(this, "Close prv-gui?", question, QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes, QMessageBox::Yes);
+        if (res == QMessageBox::Yes) {
+            if (this->savePrv(d->m_prv_file_name)) {
+                evt->accept();
+            }
+            else {
+                evt->ignore();
+            }
+        }
+        else if (res == QMessageBox::Cancel) {
+            evt->ignore();
+        }
+        else {
+            evt->accept();
+        }
+    }
 }
 
 void PrvGuiMainWindow::slot_update_window_title()

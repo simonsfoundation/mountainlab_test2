@@ -55,6 +55,7 @@ public:
     QSet<int> m_visible_channels;
     QList<double> m_cluster_order_scores;
     QString m_cluster_order_scores_name;
+    QString m_mv2_file_name;
 
     void update_current_and_selected_clusters_according_to_merged();
 };
@@ -247,6 +248,16 @@ QJsonObject MVContext::toMV2FileObject() const
     return X;
 }
 
+void MVContext::setMV2FileName(QString fname) const
+{
+    d->m_mv2_file_name = fname;
+}
+
+QString MVContext::mv2FileName() const
+{
+    return d->m_mv2_file_name;
+}
+
 void MVContext::setFromMVFileObject(QJsonObject X)
 {
     this->clear();
@@ -317,6 +328,7 @@ void MVContext::setFromMV2FileObject(QJsonObject X)
     d->m_view_merged = X["view_merged"].toBool();
     d->m_cluster_order_scores = json_array_to_doublelist(X["cluster_order_scores"].toArray());
     d->m_cluster_order_scores_name = X["cluster_order_scores_name"].toString();
+
     emit this->currentTimeseriesChanged();
     emit this->timeseriesNamesChanged();
     emit this->firingsChanged();

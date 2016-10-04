@@ -324,6 +324,7 @@ int main(int argc, char* argv[])
                     done_checking = true;
             }
             context->setFromMV2FileObject(obj);
+            context->setMV2FileName(mv2_fname);
         }
 
         if (CLP.named_parameters.contains("samplerate")) {

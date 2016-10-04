@@ -584,5 +584,6 @@ QList<QAction*> MVSpikeSprayFactory::actions(const QMimeData& md)
 
 void MVSpikeSprayFactory::updateEnabled(MVContext* context)
 {
+    Q_UNUSED(context)
     //setEnabled(!mvContext()->selectedClusters().isEmpty());
 }

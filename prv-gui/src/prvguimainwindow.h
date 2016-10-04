@@ -31,6 +31,10 @@ public:
     PrvGuiTreeWidget* tree();
     QString prvFileName() const;
     void setPrvFileName(QString fname);
+
+protected:
+    void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
+
 signals:
     void prvFileNameChanged();
 private slots:

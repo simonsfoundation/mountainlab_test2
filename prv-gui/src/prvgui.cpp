@@ -21,6 +21,8 @@ QString to_string(fuzzybool fb)
         return "YES";
     if (fb == NO)
         return "x";
+    if (fb == REGENERATABLE)
+        return "R";
     return ".";
 }
 
@@ -30,12 +32,34 @@ QColor to_color(fuzzybool fb)
         return Qt::darkGreen;
     if (fb == NO)
         return Qt::darkRed;
-    return ".";
+    if (fb == REGENERATABLE)
+        return Qt::darkBlue;
+    return Qt::black;
 }
 
 QString to_prv_code(PrvRecord prv)
 {
     return prv.checksum + ":" + QString("%1").arg(prv.size);
+}
+
+bool check_if_regeneratable(const PrvRecord& prv)
+{
+    QString output_pname;
+    int index = find_process_corresponding_to_output(prv.processes, prv.original_path, output_pname);
+    if (index < 0)
+        return false;
+    PrvProcessRecord P = prv.processes[index];
+    QStringList ikeys = P.inputs.keys();
+    foreach (QString ikey, ikeys) {
+        PrvRecord prv0 = P.inputs[ikey];
+        prv0.processes.append(prv.processes);
+        if (prv0.find_local_file().isEmpty()) {
+            if (!check_if_regeneratable(prv0)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void PrvGuiWorkerThread::run()
@@ -58,8 +82,12 @@ void PrvGuiWorkerThread::run()
                 QMutexLocker locker(&results_mutex);
                 if (!local_path.isEmpty())
                     results[prv_code].on_local_disk = YES;
-                else
-                    results[prv_code].on_local_disk = NO;
+                else {
+                    if (check_if_regeneratable(prv))
+                        results[prv_code].on_local_disk = REGENERATABLE;
+                    else
+                        results[prv_code].on_local_disk = NO;
+                }
             }
             emit results_updated();
         }
@@ -304,4 +332,19 @@ QString get_server_url_for_name(QString server_name)
         }
     }
     return "";
+}
+
+int find_process_corresponding_to_output(QList<PrvProcessRecord> processes, QString original_path, QString& output_pname)
+{
+    for (int i = 0; i < processes.count(); i++) {
+        PrvProcessRecord P = processes[i];
+        QStringList okeys = P.outputs.keys();
+        foreach (QString okey, okeys) {
+            if (P.outputs[okey].original_path == original_path) {
+                output_pname = okey;
+                return i;
+            }
+        }
+    }
+    return -1;
 }

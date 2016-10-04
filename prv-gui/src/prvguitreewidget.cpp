@@ -53,7 +53,8 @@ PrvGuiTreeWidget::~PrvGuiTreeWidget()
 {
     d->m_worker_thread.requestInterruption();
     d->m_worker_thread.wait(2000);
-    d->m_worker_thread.terminate();
+    if (d->m_worker_thread.isRunning())
+        d->m_worker_thread.terminate();
     delete d;
 }
 
@@ -295,7 +296,8 @@ void PrvGuiTreeWidgetPrivate::restart_worker_thread()
     if (m_worker_thread.isRunning()) {
         m_worker_thread.requestInterruption();
         m_worker_thread.wait(5000);
-        m_worker_thread.terminate();
+        if (m_worker_thread.isRunning())
+            m_worker_thread.terminate();
     }
     m_worker_thread.prvs = m_prvs;
     m_worker_thread.server_names = m_server_names;

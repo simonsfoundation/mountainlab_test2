@@ -27,6 +27,7 @@ private slots:
     void slot_export_mv2_document();
     void slot_export_firings();
     void slot_export_curated_firings();
+    void slot_open_prv_manager();
 
     /*
     void slot_export_mv_document();

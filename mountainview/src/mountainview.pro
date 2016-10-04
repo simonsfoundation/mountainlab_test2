@@ -24,7 +24,6 @@ INCLUDEPATH += msv/plugins msv/views
 VPATH += msv/plugins msv/views
 
 HEADERS += clusterdetailplugin.h clusterdetailview.h \
-    controlwidgets/exportmv2filedialog.h \
     msv/views/matrixview.h \
     msv/views/isolationmatrixview.h \
     msv/plugins/isolationmatrixplugin.h \
@@ -35,7 +34,6 @@ HEADERS += clusterdetailplugin.h clusterdetailview.h \
     msv/views/curationprogramcontroller.h \
     core/resolveprvsdialog.h
 SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
-    controlwidgets/exportmv2filedialog.cpp \
     msv/views/matrixview.cpp \
     msv/views/isolationmatrixview.cpp \
     msv/plugins/isolationmatrixplugin.cpp \
@@ -185,7 +183,6 @@ RESOURCES += mountainview.qrc \
 #-std=c++11   # AHB removed since not in GNU gcc 4.6.3
 
 FORMS += \
-    controlwidgets/exportmv2filedialog.ui \
     controlwidgets/prvmanagerdialog.ui \
     controlwidgets/resolveprvsdialog.ui
 
