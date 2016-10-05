@@ -832,9 +832,9 @@ public:
     void prepareParser(QCommandLineParser& parser)
     {
         parser.addPositionalArgument("file_name", "PRV file name", "[file_name]");
-        parser.addOption(QCommandLineOption("regenerate-if-needed", "recreate file using processing if needed"));
+        //parser.addOption(QCommandLineOption("regenerate-if-needed", "recreate file using processing if needed"));
         parser.addOption(QCommandLineOption("download-if-needed", "download file from a remote server if needed"));
-        parser.addOption(QCommandLineOption("download-and-regenerate-if-needed", "download file from a remote server if needed"));
+        //parser.addOption(QCommandLineOption("download-and-regenerate-if-needed", "download file from a remote server if needed"));
         parser.addOption(QCommandLineOption("raw-only", "if processing provenance is available, only upload the raw files."));
         parser.addOption(QCommandLineOption("server", "name or url of server", "[name|url]"));
     }
@@ -926,6 +926,7 @@ public:
             }
             ////////////////////////////////////////////////////////////////////////////////
 
+            /*
             ////////////////////////////////////////////////////////////////////////////////
             // Next we see whether we can recreate it using local processing, if this option
             // has been enabled
@@ -945,6 +946,7 @@ public:
                 }
             }
             ////////////////////////////////////////////////////////////////////////////////
+            */
 
             ////////////////////////////////////////////////////////////////////////////////
             // Next we see whether we can download it if this option has been enabled
@@ -971,6 +973,7 @@ public:
             }
             ////////////////////////////////////////////////////////////////////////////////
 
+            /*
             ////////////////////////////////////////////////////////////////////////////////
             // Next we see whether we can use a combination of downloads and processing
             // if this option has been enabled
@@ -990,6 +993,7 @@ public:
                 }
             }
             ////////////////////////////////////////////////////////////////////////////////
+            */
 
             println("Unable to find file on local machine. Original path: " + prv_file.originalPath());
             return -1;

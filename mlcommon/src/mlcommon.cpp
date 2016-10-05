@@ -848,6 +848,7 @@ QString parallel_download_file_from_prvfileserver_to_temp_dir(QString url, long 
     */
 }
 
+/*
 QString create_file_from_prv(QString output_name, QString checksum0, QString checksum1000, long size0, const QJsonArray& processes, bool allow_downloads, bool allow_processing)
 {
     int num_download_threads = 10;
@@ -1010,6 +1011,7 @@ bool prepare_prv_files(QMap<QString, QVariant>& command_line_params, bool allow_
     }
     return true;
 }
+*/
 
 QString MLUtil::configResolvedPath(const QString& group, const QString& key)
 {
@@ -1059,4 +1061,13 @@ QJsonValue MLUtil::configValue(const QString& group, const QString& key)
         ret = obj2[key];
     }
     return ret;
+}
+
+QString locate_prv(const QJsonObject& obj)
+{
+    QString path0 = obj["original_path"].toString();
+    QString checksum0 = obj["original_checksum"].toString();
+    QString checksum0_1000 = obj["original_checksum_1000"].toString();
+    long size0 = obj["original_size"].toVariant().toLongLong();
+    return locate_file_with_checksum(checksum0, checksum0_1000, size0, false);
 }

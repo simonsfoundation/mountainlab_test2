@@ -307,7 +307,7 @@ QString PrvRecord::find_local_file() const
 
 QString PrvRecord::find_remote_url(QString server_name) const
 {
-    QJsonObject obj=get_server_object_for_name(server_name);
+    QJsonObject obj = get_server_object_for_name(server_name);
     QString cmd = "prv";
     QStringList args;
     args << "locate";

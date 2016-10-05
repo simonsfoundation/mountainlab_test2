@@ -224,6 +224,7 @@ var SERVER=http.createServer(function (REQ, RESP) {
 	else if(REQ.method=='POST') {
 		console.log('POST: '+REQ.url);
 		if (method=='upload') {
+			///TODO: check the passcode for uploads
 			if (!config.enable_uploads) {
 				send_json_response({error:true,error:'Uploads are not enabled on this server.'});
 				return;

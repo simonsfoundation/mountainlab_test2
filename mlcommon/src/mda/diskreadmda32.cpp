@@ -81,11 +81,12 @@ DiskReadMda32::DiskReadMda32(const QJsonObject& prv_object)
     d->construct_and_clear();
 
     //do not allow downloads or processing because now this is handled in a separate gui, as it should!!!
-    bool allow_downloads = false;
-    bool allow_processing = false;
+    //bool allow_downloads = false;
+    //bool allow_processing = false;
 
     this->setPrvObject(prv_object); //important to do this anyway (even if resolve fails) so we can retrieve it later with toPrvObject()
-    QString path0 = resolve_prv_object(prv_object, allow_downloads, allow_processing);
+    //QString path0 = resolve_prv_object(prv_object, allow_downloads, allow_processing);
+    QString path0 = locate_prv(prv_object);
     if (path0.isEmpty()) {
         qWarning() << "Unable to construct DiskReadMda from prv_object. Unable to resolve. Original path = " << prv_object["original_path"].toString();
         return;
@@ -127,14 +128,15 @@ void DiskReadMda32::setPath(const QString& file_path)
     }
     else if (file_path.endsWith(".prv")) {
         //do not allow downloads or processing because now this is handled in a separate gui, as it should!!!
-        bool allow_downloads = false;
-        bool allow_processing = false;
+        //bool allow_downloads = false;
+        //bool allow_processing = false;
 
         //important to do this first so that we can retrieve it with toPrvObject()
         QJsonObject obj = QJsonDocument::fromJson(TextFile::read(file_path).toUtf8()).object();
         this->setPrvObject(obj);
 
-        QString file_path_2 = resolve_prv_file(file_path, allow_downloads, allow_processing);
+        //QString file_path_2 = resolve_prv_file(file_path, allow_downloads, allow_processing);
+        QString file_path_2 = locate_prv(obj);
         if (!file_path_2.isEmpty()) {
             this->setPath(file_path_2);
             return;

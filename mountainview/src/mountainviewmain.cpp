@@ -366,12 +366,12 @@ int main(int argc, char* argv[])
                 dc.setClustersSubset(clusters_subset.toSet());
             }
 
-            QJsonObject mv2=dc.toMV2FileObject();
-            QString debug=QJsonDocument(mv2["timeseries"].toObject()).toJson();
-            printf("%s\n",debug.toUtf8().data());
-            mv2_fname=CacheManager::globalInstance()->makeLocalFile()+".mv2";
-            QString mv2_text=QJsonDocument(mv2).toJson();
-            TextFile::write(mv2_fname,mv2_text);
+            QJsonObject mv2 = dc.toMV2FileObject();
+            QString debug = QJsonDocument(mv2["timeseries"].toObject()).toJson();
+            printf("%s\n", debug.toUtf8().data());
+            mv2_fname = CacheManager::globalInstance()->makeLocalFile() + ".mv2";
+            QString mv2_text = QJsonDocument(mv2).toJson();
+            TextFile::write(mv2_fname, mv2_text);
         }
 
         if (!mv_fname.isEmpty()) {
@@ -413,8 +413,6 @@ int main(int argc, char* argv[])
             context->setFromMV2FileObject(obj);
             context->setMV2FileName(mv2_fname);
         }
-
-
 
         set_nice_size(W);
 

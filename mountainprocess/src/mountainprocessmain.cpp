@@ -112,6 +112,8 @@ double compute_peak_cpu_pct(const QList<MonitorStats>& stats);
 //void log_begin(int argc,char* argv[]);
 //void //log_end();
 
+bool handle_prv_files(const QVariantMap& clparams, QJsonObject& missing_prvs);
+
 int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
@@ -121,13 +123,32 @@ int main(int argc, char* argv[])
 
     // Do not allow downloads or processing to resolve prv files
     // since this is now handled in a separate gui -- as it very much should!!!
-    bool allow_downloads = false;
-    bool allow_processing = false;
+    //bool allow_downloads = false;
+    //bool allow_processing = false;
 
+    /*
     if (!resolve_prv_files(CLP.named_parameters, allow_downloads, allow_processing)) {
         qWarning() << "Could not resolve .prv file. Try adjusting the settings in mountainlab.user.json.";
         //log_end();
         return -1;
+    }
+    */
+    QJsonObject missing_prvs;
+    if (!handle_prv_files(CLP.named_parameters, missing_prvs)) {
+        if (missing_prvs.keys().isEmpty())
+            return -1;
+        if (CLP.named_parameters.contains("prvgui")) {
+            QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".prvs";
+            QString json = QJsonDocument(missing_prvs).toJson();
+            TextFile::write(tmp_fname, json);
+            QString cmd = QString("prv-gui %1").arg(tmp_fname);
+            QProcess::startDetached(cmd);
+        }
+        else {
+            QString msg = QString("%1 prvs could not be found. To resolve these using the GUI, run this command again with the --prvgui option.");
+            printf("%s", msg.toUtf8().data());
+            return -1;
+        }
     }
 
     QString arg1 = CLP.unnamed_parameters.value(0);
@@ -137,12 +158,14 @@ int main(int argc, char* argv[])
     QString tmp_path = MLUtil::tempPath();
     CacheManager::globalInstance()->setLocalBasePath(tmp_path);
 
+    /*
     if (arg1.endsWith(".prv")) {
         QString path0 = resolve_prv_file(arg1, allow_downloads, allow_processing);
         printf("FILE: %s\n", path0.toLatin1().data());
         //log_end();
         return 0;
     }
+    */
 
     qInstallMessageHandler(mountainprocessMessageOutput);
 
@@ -925,6 +948,35 @@ QString get_daemon_state_summary(const QJsonObject& state)
     }
 
     return ret;
+}
+
+bool handle_prv_files(const QVariantMap& clparams, QJsonObject& missing_prvs)
+{
+    QStringList keys = clparams.keys();
+    foreach (QString key, keys) {
+        QString val = clparams[key].toString();
+        if (val.endsWith(".prv")) {
+            QString txt = TextFile::read(val);
+            if (txt.isEmpty()) {
+                qWarning() << "Unable to read .prv file: " + val;
+                return false;
+            }
+            QJsonParseError err;
+            QJsonObject obj = QJsonDocument::fromJson(txt.toUtf8(), &err).object();
+            if (err.error != QJsonParseError::NoError) {
+                qWarning() << "Error parsing .prv file: " + val;
+                return false;
+            }
+            QString path0 = locate_prv(obj);
+            if (path0.isEmpty()) {
+                missing_prvs[key] = obj;
+            }
+        }
+    }
+    if (!missing_prvs.isEmpty()) {
+        return false;
+    }
+    return true;
 }
 
 /*
