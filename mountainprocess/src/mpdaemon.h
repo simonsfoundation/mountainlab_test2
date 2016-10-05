@@ -43,7 +43,6 @@ public:
 
 private slots:
     void slot_pript_qprocess_finished();
-    void slot_pript_qprocess_error_occurred(QProcess::ProcessError err);
     void slot_qprocess_output();
     void iterate();
 

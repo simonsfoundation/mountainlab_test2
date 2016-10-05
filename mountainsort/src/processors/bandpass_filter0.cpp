@@ -34,15 +34,17 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
     DiskWriteMda Y(MDAIO_TYPE_FLOAT32, output_path, M, N);
 
     int num_threads = omp_get_max_threads();
-    long memory_size = 100 * 1e9;
-    long chunk_size = qMin(N * 1.0, qMax(1e4 * 1.0, memory_size * 1.0 / (M * 4 * num_threads)));
+    long memory_size = 1 * 1e9;
+    long chunk_size = memory_size * 1.0 / (M * 4 * num_threads);
+    chunk_size = qMin(N * 1.0, qMax(1e4 * 1.0, chunk_size * 1.0));
     long overlap_size = chunk_size / 5;
-    printf("************ Using chunk size / overlap size: %ld / %ld\n", chunk_size, overlap_size);
+    printf("************ Using chunk size / overlap size: %ld / %ld (num threads=%d)\n", chunk_size, overlap_size, num_threads);
 
     {
         QTime timer_status;
         timer_status.start();
         long num_timepoints_handled = 0;
+        long bytes_allocated = 0;
 #pragma omp parallel for
         for (long timepoint = 0; timepoint < N; timepoint += chunk_size) {
             QMap<QString, long> elapsed_times_local;
@@ -52,6 +54,7 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
                 QTime timer;
                 timer.start();
                 X.readChunk(chunk, 0, timepoint - overlap_size, M, chunk_size + 2 * overlap_size);
+                bytes_allocated += chunk.totalSize() * 4; //for debugging, if needed
                 elapsed_times["readChunk"] += timer.elapsed();
             }
             {
@@ -79,7 +82,7 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
                     elapsed_times["writeChunk"] += timer.elapsed();
                 }
                 num_timepoints_handled += qMin(chunk_size, N - timepoint);
-                if ((timer_status.elapsed() > 5000) || (num_timepoints_handled == N) || (timepoint == 0)) {
+                if ((timer_status.elapsed() > 1000) || (num_timepoints_handled == N) || (timepoint == 0)) {
                     printf("%ld/%ld (%d%%) - Elapsed(s): RC:%g, BPF:%g, GC:%g, WC:%g, Total:%g, %d threads\n",
                         num_timepoints_handled, N,
                         (int)(num_timepoints_handled * 1.0 / N * 100),
@@ -91,6 +94,7 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
                         omp_get_num_threads());
                     timer_status.restart();
                 }
+                bytes_allocated -= chunk.totalSize() * 4;
             }
         }
     }

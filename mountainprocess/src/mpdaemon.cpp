@@ -25,10 +25,12 @@
 #include <signal.h>
 #include "localserver.h"
 
+static bool stopDaemon = false;
+
 void sighandler(int num)
 {
     if (num == SIGINT || num == SIGTERM)
-        qApp->quit();
+        stopDaemon = true;
 }
 
 class MPDaemonPrivate;
@@ -91,6 +93,7 @@ public:
     QStringList get_input_paths(MPDaemonPript P);
     QStringList get_output_paths(MPDaemonPript P);
     bool startServer();
+    void write_daemon_state();
     QByteArray getState();
     bool stop_or_remove_pript(const QString& key);
     void write_pript_file(const MPDaemonPript& P);
@@ -168,14 +171,23 @@ MPDaemon::MPDaemon()
     d->m_total_resources_available.memory_gb = 8;
 }
 
+void kill_process_and_children(QProcess* P)
+{
+    int pid = P->processId();
+    QString cmd = QString("CPIDS=$(pgrep -P %1); (sleep 33 && kill -KILL $CPIDS &); kill -TERM $CPIDS").arg(pid);
+    system(cmd.toUtf8().data());
+}
+
 MPDaemon::~MPDaemon()
 {
     debug_log(__FUNCTION__, __FILE__, __LINE__);
 
     foreach (MPDaemonPript P, d->m_pripts) {
         if (P.qprocess) {
-            if (P.qprocess->state() == QProcess::Running)
-                P.qprocess->terminate(); // I think it's okay to terminate a process. It won't cause this program to crash.
+            if (P.qprocess->state() == QProcess::Running) {
+                //P.qprocess->terminate(); // I think it's okay to terminate a process. It won't cause this program to crash.
+                kill_process_and_children(P.qprocess);
+            }
         }
     }
     d->releaseServer();
@@ -203,22 +215,44 @@ bool MPDaemon::run()
         qWarning() << "Unexpected problem in MPDaemon:run(). Daemon is already running.";
         return false;
     }
+
     if (!d->startServer()) { //this also checks whether another daemon is running,
         return false;
     }
     signal(SIGINT, sighandler);
     signal(SIGTERM, sighandler);
+
     d->m_is_running = true;
+
     d->writeLogRecord("start-daemon");
-    QTimer timer;
-    timer.setInterval(100);
-    timer.start();
-    connect(&timer, SIGNAL(timeout()), this, SLOT(iterate()));
-    qApp->exec();
-    d->m_is_running = false;
+
+    QTime timer1;
+    timer1.start();
+    QTime timer2;
+    timer2.start();
+    long num_cycles = 0;
+    while (!stopDaemon && d->m_is_running) {
+        if (timer1.elapsed() > 5000) {
+            d->writeLogRecord("timer1", "num_cycles", (long long)num_cycles);
+            num_cycles = 0;
+            timer1.restart();
+            printf(".");
+        }
+        if (timer2.elapsed() > 10 * 60000) {
+            d->writeLogRecord("timer2");
+            timer2.restart();
+            printf("\n");
+        }
+        iterate();
+        qApp->processEvents();
+        MPDaemon::wait(100);
+        num_cycles++;
+    }
+
     d->writeLogRecord("stop-daemon");
     signal(SIGINT, SIG_DFL);
     signal(SIGTERM, SIG_DFL);
+
     return true;
 }
 
@@ -324,6 +358,23 @@ void MPDaemon::wait(qint64 msec)
     usleep(msec * 1000);
 }
 
+// This slot is called whenever the contents of the temporary directory "daemon_commands" is called
+// Other runs of mountainprocess will write command files to this directory in order to queue scripts and processes, etc
+// We iterate through all .command files in the directory. They are sorted alphabetically by name, so the first created will be the first processed
+// If it has been more than 20 seconds since the file was created/modified, then we delete it
+// This avoids re-executing commands from previous runs, since there is no reason it should take >20 seconds to notice the file
+// But obviously this is not very elegant. This probably should be improved
+// The idea is that mpdaemon itself doesn't do any heavy processing, so it should remain responsive
+// However if all the CPU's are being used by other processes, I suppose this could become an issue.
+// maybe we should abort here?
+// read and parse the JSON content of the command file
+// if all goes well, we process the command
+// the daemon is a single-thread process, so the whole loop will stop as we process the command
+// as mentioned above, this is why rely on NO heavy processing being done by the daemon
+// basically the daemon is responsible for managing queued processes and scripts, and launching
+// other instances of mountainprocess, and managing those QProcess's
+// finally, remove the command so we don't execute it again.
+// should we abort here?
 void MPDaemon::slot_pript_qprocess_finished()
 {
     debug_log(__FUNCTION__, __FILE__, __LINE__);
@@ -404,60 +455,6 @@ void MPDaemon::slot_pript_qprocess_finished()
     }
 }
 
-void MPDaemon::slot_pript_qprocess_error_occurred(QProcess::ProcessError err)
-{
-    debug_log(__FUNCTION__, __FILE__, __LINE__);
-
-    QProcess* P = qobject_cast<QProcess*>(sender());
-    if (!P)
-        return;
-    QString pript_id = P->property("pript_id").toString();
-    MPDaemonPript* S;
-    if (d->m_pripts.contains(pript_id)) {
-        S = &d->m_pripts[pript_id];
-    }
-    else {
-        d->writeLogRecord("error", "message", "Unexpected problem in slot_pript_qprocess_error_occurred. Unable to find script or process with id: " + pript_id);
-        qCritical() << "Unexpected problem in slot_pript_qprocess_error_occurred. Unable to find script or process with id: " + pript_id;
-        return;
-    }
-    S->success = false;
-    if (err == QProcess::Crashed)
-        S->error = "Process crashed";
-    else
-        S->error = "Error in process";
-
-    d->finish_and_finalize(*S);
-
-    QJsonObject obj0;
-    obj0["pript_id"] = pript_id;
-    obj0["reason"] = "finished";
-    obj0["success"] = S->success;
-    obj0["error"] = S->error;
-    if (S->prtype == ScriptType) {
-        d->writeLogRecord("stop-script", obj0);
-        printf("  Script %s stopped with qprocess error ", pript_id.toLatin1().data());
-    }
-    else {
-        d->writeLogRecord("stop-process", obj0);
-        printf("  Process %s %s stopped with qprocess error ", S->processor_name.toLatin1().data(), pript_id.toLatin1().data());
-    }
-    if (S->success)
-        printf("successfully\n");
-    else
-        printf("with error: %s\n", S->error.toLatin1().data());
-    if (S->qprocess) {
-        S->qprocess = 0;
-    }
-    if (S->stdout_file) {
-        if (S->stdout_file->isOpen()) {
-            S->stdout_file->close();
-        }
-        delete S->stdout_file;
-        S->stdout_file = 0;
-    }
-}
-
 void MPDaemon::slot_qprocess_output()
 {
 
@@ -483,7 +480,7 @@ void MPDaemonPrivate::process_command(QJsonObject obj)
     QString command = obj.value("command").toString();
     if (command == "stop") {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
-        qApp->quit();
+        m_is_running = false;
     }
     else if (command == "queue-script") {
         debug_log(__FUNCTION__, __FILE__, __LINE__);
@@ -686,7 +683,6 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     }
 
     QObject::connect(qprocess, SIGNAL(finished(int)), q, SLOT(slot_pript_qprocess_finished()));
-    QObject::connect(qprocess, SIGNAL(errorOccurred(QProcess::ProcessError)), q, SLOT(slot_pript_qprocess_error_occurred()));
 
     debug_log(__FUNCTION__, __FILE__, __LINE__);
 
@@ -978,6 +974,61 @@ bool MPDaemonPrivate::startServer()
     return true;
 }
 
+void MPDaemonPrivate::write_daemon_state()
+{
+    static long num = 1;
+    QString timestamp = MPDaemon::makeTimestamp();
+    QString fname = QString("%1/daemon_state/%2.%3.json").arg(MPDaemon::daemonPath()).arg(timestamp).arg(num, 7, 10, QChar('0'));
+    num++;
+
+    QJsonObject state;
+
+    state["is_running"] = m_is_running;
+
+    {
+        QJsonObject scripts;
+        QJsonObject processes;
+        QStringList keys = m_pripts.keys();
+        foreach (QString key, keys) {
+            if (m_pripts[key].prtype == ScriptType)
+                scripts[key] = pript_struct_to_obj(m_pripts[key], AbbreviatedRecord);
+            else
+                processes[key] = pript_struct_to_obj(m_pripts[key], AbbreviatedRecord);
+        }
+        state["scripts"] = scripts;
+        state["processes"] = processes;
+    }
+
+    QString json = QJsonDocument(state).toJson();
+    TextFile::write(fname + ".tmp", json);
+    /// Witold I don't think rename is an atomic operation. Is there a way to guarantee that I don't read the file halfway through the rename?
+    /// Jeremy: rename is atomic, at least when done within the same file system
+    QFile::rename(fname + ".tmp", fname);
+
+    //remove the pripts that have been finished for a while
+    {
+        QStringList keys = m_pripts.keys();
+        foreach (QString key, keys) {
+            if (m_pripts[key].is_finished) {
+                double elapsed_sec = m_pripts[key].timestamp_finished.secsTo(QDateTime::currentDateTime());
+                if (elapsed_sec > 20) {
+                    m_pripts.remove(key);
+                }
+            }
+        }
+    }
+
+    //finally, clean up
+    QStringList list = QDir(MPDaemon::daemonPath() + "/daemon_state").entryList(QStringList("*.json"), QDir::Files, QDir::Name);
+    foreach (QString fname, list) {
+        QString path0 = MPDaemon::daemonPath() + "/daemon_state/" + fname;
+        qint64 secs = QFileInfo(path0).lastModified().secsTo(QDateTime::currentDateTime());
+        if ((secs <= -60) || (secs >= 60)) { //I feel a bit paranoid. That's why I allow some future stuff.
+            QFile::remove(path0);
+        }
+    }
+}
+
 QByteArray MPDaemonPrivate::getState()
 {
     QJsonObject state;
@@ -1009,7 +1060,8 @@ bool MPDaemonPrivate::stop_or_remove_pript(const QString& key)
     if ((PP->is_running)) {
         if (PP->qprocess) {
             qWarning() << "Terminating qprocess: " + key;
-            PP->qprocess->terminate(); // I think it's okay to terminate a process. It won't cause this program to crash.
+            //PP->qprocess->terminate(); // I think it's okay to terminate a process. It won't cause this program to crash.
+            kill_process_and_children(PP->qprocess);
             delete PP->qprocess;
         }
         finish_and_finalize(*PP);
@@ -1076,7 +1128,8 @@ void MPDaemonPrivate::stop_orphan_processes_and_scripts()
                     }
 
                     m_pripts[key].qprocess->disconnect(); //so we don't go into the finished slot
-                    m_pripts[key].qprocess->terminate();
+                    //m_pripts[key].qprocess->terminate();
+                    kill_process_and_children(m_pripts[key].qprocess);
                     delete m_pripts[key].qprocess;
                     finish_and_finalize(m_pripts[key]);
                     m_pripts.remove(key);
@@ -1109,15 +1162,22 @@ bool MPDaemon::waitForFinishedAndWriteOutput(QProcess* P)
 {
     debug_log(__FUNCTION__, __FILE__, __LINE__);
 
-    auto func = [P]() {
+    P->waitForStarted();
+    while (P->state() == QProcess::Running) {
+        P->waitForReadyRead(100);
         QByteArray str = P->readAll();
-        if (!str.isEmpty())
-            printf("%s", str.constData());
-    };
-    QMetaObject::Connection c = connect(P, &QProcess::readyRead, func);
-    P->waitForFinished();
-    func();
-    disconnect(c);
+        if (str.count() > 0) {
+            printf("%s", str.data());
+        }
+        qApp->processEvents();
+    }
+    {
+        P->waitForReadyRead();
+        QByteArray str = P->readAll();
+        if (str.count() > 0) {
+            printf("%s", str.data());
+        }
+    }
     return (P->state() != QProcess::Running);
 }
 
@@ -1306,6 +1366,7 @@ bool MountainProcessServerClient::handleMessage(const QByteArray& ba)
         return getState();
     }
     m_priv->process_command(obj);
+    //        qDebug().noquote() << ba;
     writeMessage("OK");
     return true;
 }
