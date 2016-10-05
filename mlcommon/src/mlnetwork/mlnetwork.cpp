@@ -14,7 +14,11 @@
 
 namespace MLNetwork {
 
-static QNetworkAccessManager s_manager;
+static QNetworkAccessManager *s_manager=0;
+QNetworkAccessManager *manager() {
+    if (!s_manager) s_manager=new QNetworkAccessManager;
+    return s_manager;
+}
 
 Downloader::~Downloader()
 {
@@ -39,7 +43,7 @@ void Downloader::start()
     m_tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".Downloader";
 
     //make the http request
-    m_reply = s_manager.get(QNetworkRequest(QUrl(source_url)));
+    m_reply = manager()->get(QNetworkRequest(QUrl(source_url)));
 
     qDebug() << "STARTED DOWNLOAD::::" << source_url;
     QObject::connect(m_reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(slot_reply_error()));
@@ -207,7 +211,7 @@ void Uploader::start()
 
     QNetworkRequest request = QNetworkRequest(destination_url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
-    m_reply = s_manager.post(request, FCR);
+    m_reply = manager()->post(request, FCR);
 
     //check for an immediate error (not sure if this ever happens)
     if (m_reply->error() != QNetworkReply::NoError) {
