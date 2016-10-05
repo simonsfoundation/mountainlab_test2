@@ -5,16 +5,20 @@ var	url=require('url');
 var http=require('http');
 var fs=require('fs');
 
-//use > npm install extend
+// npm install extend
 var extend=require('extend');
 
 CLP=new CLParams(process.argv);
+
+// The first argument is the data directory -- the base path from which files will be served
 var data_directory=CLP.unnamedParameters[0]||'';
 if (!data_directory) {
 	console.log ('First argument must be the data directory.');
 	process.exit(-1);
 }
 
+// Read the prvfileserver.default.json for configuration
+// Then extend it by the prvfileserver.user.json, if it exists
 var config=JSON.parse(fs.readFileSync(__dirname+'/../prvfileserver.default.json','utf8'));
 try {
 	var config_user=JSON.parse(fs.readFileSync(__dirname+'/../prvfileserver.user.json','utf8'));
@@ -23,27 +27,26 @@ try {
 catch(err) {
 }
 
+// The listen port either comes from the configuration or the command-line options
 config.listen_port=CLP.namedParameters['listen_port']||config.listen_port;
 
+// The subservers, so that we have a network of servers
 var subservers=config.subservers||[];
 
+// Exit this program when the user presses ctrl+C
 process.on('SIGINT', function() {
     process.exit();
 });
 
-console.log ('CONFIG:');
-console.log (config);
-console.log ('');
-
-console.log ('SUBSERVERS:');
-console.log (subservers);
-console.log ('');
-
+// Create the web server!
 var SERVER=http.createServer(function (REQ, RESP) {
+
+	//parse the url of the request
 	var url_parts = url.parse(REQ.url,true);
 	var path=url_parts.pathname;
 	var query=url_parts.query;
-	console.log(query);
+	
+	//by default, the method will be 'download'
 	var method=query.a||'download';	
 	var info=query.info||'{}';
 
@@ -63,35 +66,40 @@ var SERVER=http.createServer(function (REQ, RESP) {
 	}
 	else if (REQ.method=='GET') {
 		console.log ('GET: '+REQ.url);
+		
 		{
+			// If there is a passcode for this server, we first check to see if the query matches
+			// Very week security, but it serves purpose now, so that labs may choose to not make data public
 			if (config.passcode) {
 				if (query.passcode!=config.passcode) {
-					send_json_response({success:false,error:'Incorrect passcode'});
+					send_json_response({success:false,error:'Incorrect passcode: '+query.passcode});
 					return;
 				}
 			}
 		}
+
 		if (config.url_path) {
+			// Next, if there is a url path, we check to see if that path matches
 			if (path.indexOf(config.url_path)!==0) {
 				send_json_response({success:false,error:'Unexpected path: '+path});
 				return;
 			}
-			path=path.slice(config.url_path.length);
+			path=path.slice(config.url_path.length); // now let's take everything after that path
 		}
 
+		// This recursion index is a precaution in case there is a cycle in the subserver configuration
 		var recursion_index=0;
-		if (is_an_integer_between(Number(query.recursion_index),0,1000)) {
-			recursion_index=Number(query.recursion_index);
+		if (is_an_integer_between(Number(query.recursion_index),0,1000)) { //make sure it is a number
+			recursion_index=Number(query.recursion_index); // read it from the url query
 		}
 		else {
-			recursion_index=Number(config.max_recursion||5);
-			if (!is_an_integer_between(recursion_index,0,1000)) {
+			recursion_index=Number(config.max_recursion||5); //by default we set it to 5
+			if (!is_an_integer_between(recursion_index,0,1000)) { //now it really should be a number
 				send_text_response('Unexpected problem with recursion_index: '+recursion_index);
 				return;
 			}
 		}
-
-		if (recursion_index<=0) {
+		if (recursion_index<=0) { //when we get down to zero, we must have a cycle subserver dependency.
 			send_text_response('WARNING: max recursion reached. You probably have cyclic dependencies!!');
 			return;
 		}

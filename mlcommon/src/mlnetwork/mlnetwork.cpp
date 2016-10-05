@@ -253,6 +253,7 @@ void Uploader::start()
             return;
         }
         QByteArray X=m_reply->readAll();
+        m_task.log() << X;
         response_text+=X;
     });
 
@@ -272,6 +273,7 @@ void Uploader::start()
 
     //QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     QObject::connect(m_reply, &QNetworkReply::finished, [&]() {
+        m_task.log() << "Finished" << response_text;
         if (success) {
             QJsonObject response=QJsonDocument::fromJson(response_text.toUtf8()).object();
             success=response["success"].toBool();
@@ -457,7 +459,8 @@ void PrvParallelDownloader::start()
     m_task.log() << "end_bytes:" << end_bytes;
 
     for (int i = 0; i < start_bytes.count(); i++) {
-        QString url2 = url + QString("bytes=%1-%2").arg(start_bytes[i]).arg(end_bytes[i]);
+        QString url2 = url + QString("bytes=%1-%2&").arg(start_bytes[i]).arg(end_bytes[i]);
+        url2+=QString("passcode=%1").arg(passcode);
         m_task.log() << "Starting downloader: " + url2;
         Downloader* DD = new Downloader;
         DD->source_url = url2;
