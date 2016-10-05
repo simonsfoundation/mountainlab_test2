@@ -460,7 +460,6 @@ void PrvParallelDownloader::start()
 
     for (int i = 0; i < start_bytes.count(); i++) {
         QString url2 = url + QString("bytes=%1-%2&").arg(start_bytes[i]).arg(end_bytes[i]);
-        url2+=QString("passcode=%1").arg(passcode);
         m_task.log() << "Starting downloader: " + url2;
         Downloader* DD = new Downloader;
         DD->source_url = url2;
