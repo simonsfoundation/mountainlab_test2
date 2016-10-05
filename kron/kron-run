@@ -73,6 +73,9 @@ function run_pipeline(pipeline,dataset,callback) {
 	if ('_force_run' in CLP.namedParameters) {
 		args+=' --_force_run='+CLP.namedParameters['_force_run'];
 	}
+	if ('_prvgui' in CLP.namedParameters) {
+		args+=' --_prvgui';	
+	}
 	args+=' --outpath='+outpath0;
 	args+=' --_script_output='+outpath0+'/pipeline_output.json';
 	var arguments0=pipeline.arguments.split(' ');

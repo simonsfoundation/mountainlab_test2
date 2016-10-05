@@ -137,16 +137,18 @@ int main(int argc, char* argv[])
     if (!handle_prv_files(CLP.named_parameters, missing_prvs)) {
         if (missing_prvs.keys().isEmpty())
             return -1;
-        if (CLP.named_parameters.contains("prvgui")) {
+        if (CLP.named_parameters.contains("_prvgui")) {
             QString tmp_fname = CacheManager::globalInstance()->makeLocalFile() + ".prvs";
             QString json = QJsonDocument(missing_prvs).toJson();
             TextFile::write(tmp_fname, json);
             QString cmd = QString("prv-gui %1").arg(tmp_fname);
             QProcess::startDetached(cmd);
+            return -1;
         }
         else {
-            QString msg = QString("%1 prvs could not be found. To resolve these using the GUI, run this command again with the --prvgui option.");
-            printf("%s", msg.toUtf8().data());
+            qDebug() << missing_prvs.keys();
+            QString msg = QString("One or more prvs could not be found. To resolve these using the GUI, run this command again with the --_prvgui option.");
+            printf("%s\n", msg.toUtf8().data());
             return -1;
         }
     }
