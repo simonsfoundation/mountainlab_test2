@@ -423,7 +423,6 @@ QString PrvFilePrivate::find_remote_file(long size, const QString& checksum, con
         QString url_path = server0["path"].toString();
         QString passcode = server0["passcode"].toString();
         QString url0 = host + ":" + QString::number(port) + url_path + QString("/?a=locate&checksum=%1&checksum1000=%2&size=%3&passcode=%4").arg(checksum).arg(checksum1000_optional).arg(size).arg(passcode);
-        url0 += "&passcode=" + server0["passcode"].toString();
         if (opts.verbose) {
             qDebug() << url0;
         }
