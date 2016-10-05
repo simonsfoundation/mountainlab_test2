@@ -359,7 +359,7 @@ private:
         }
         QUrl url(server_url);
         QUrlQuery query;
-        query.addQueryItem("a", "upload");
+        //query.addQueryItem("a", "upload");
         query.addQueryItem("checksum", checksum00);
         query.addQueryItem("size", QString::number(size0));
         QJsonObject info;

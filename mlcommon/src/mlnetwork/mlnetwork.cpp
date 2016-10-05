@@ -729,7 +729,7 @@ void PrvParallelUploader::slot_uploader_finished()
             else
                 url += "&";
             url += "a=concat-upload&";
-            url += QString("num_parts=%1&").arg(this->num_threads);
+            url += QString("num_parts=%1&").arg(m_uploaders.count());
             connect(&m_concat_upload, SIGNAL(finished()), this, SLOT(slot_concat_upload_finished()));
             m_task.log() << "Submitting concatenation request: " + url;
             m_concat_upload.destination_file_name = CacheManager::globalInstance()->makeLocalFile();
