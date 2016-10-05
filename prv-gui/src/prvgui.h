@@ -12,6 +12,7 @@
 #include <QThread>
 #include <QVariantMap>
 
+QJsonObject get_server_object_for_name(QString server_name);
 QString get_server_url_for_name(QString server_name);
 
 struct PrvProcessRecord;

@@ -404,6 +404,60 @@ void MPDaemon::slot_pript_qprocess_finished()
     }
 }
 
+void MPDaemon::slot_pript_qprocess_error_occurred(QProcess::ProcessError err)
+{
+    debug_log(__FUNCTION__, __FILE__, __LINE__);
+
+    QProcess* P = qobject_cast<QProcess*>(sender());
+    if (!P)
+        return;
+    QString pript_id = P->property("pript_id").toString();
+    MPDaemonPript* S;
+    if (d->m_pripts.contains(pript_id)) {
+        S = &d->m_pripts[pript_id];
+    }
+    else {
+        d->writeLogRecord("error", "message", "Unexpected problem in slot_pript_qprocess_error_occurred. Unable to find script or process with id: " + pript_id);
+        qCritical() << "Unexpected problem in slot_pript_qprocess_error_occurred. Unable to find script or process with id: " + pript_id;
+        return;
+    }
+    S->success = false;
+    if (err == QProcess::Crashed)
+        S->error = "Process crashed";
+    else
+        S->error = "Error in process";
+
+    d->finish_and_finalize(*S);
+
+    QJsonObject obj0;
+    obj0["pript_id"] = pript_id;
+    obj0["reason"] = "finished";
+    obj0["success"] = S->success;
+    obj0["error"] = S->error;
+    if (S->prtype == ScriptType) {
+        d->writeLogRecord("stop-script", obj0);
+        printf("  Script %s stopped with qprocess error ", pript_id.toLatin1().data());
+    }
+    else {
+        d->writeLogRecord("stop-process", obj0);
+        printf("  Process %s %s stopped with qprocess error ", S->processor_name.toLatin1().data(), pript_id.toLatin1().data());
+    }
+    if (S->success)
+        printf("successfully\n");
+    else
+        printf("with error: %s\n", S->error.toLatin1().data());
+    if (S->qprocess) {
+        S->qprocess = 0;
+    }
+    if (S->stdout_file) {
+        if (S->stdout_file->isOpen()) {
+            S->stdout_file->close();
+        }
+        delete S->stdout_file;
+        S->stdout_file = 0;
+    }
+}
+
 void MPDaemon::slot_qprocess_output()
 {
 
@@ -632,6 +686,7 @@ bool MPDaemonPrivate::launch_pript(QString pript_id)
     }
 
     QObject::connect(qprocess, SIGNAL(finished(int)), q, SLOT(slot_pript_qprocess_finished()));
+    QObject::connect(qprocess, SIGNAL(errorOccurred(QProcess::ProcessError)), q, SLOT(slot_pript_qprocess_error_occurred()));
 
     debug_log(__FUNCTION__, __FILE__, __LINE__);
 
@@ -1054,7 +1109,7 @@ bool MPDaemon::waitForFinishedAndWriteOutput(QProcess* P)
 {
     debug_log(__FUNCTION__, __FILE__, __LINE__);
 
-    auto func = [P](){
+    auto func = [P]() {
         QByteArray str = P->readAll();
         if (!str.isEmpty())
             printf("%s", str.constData());

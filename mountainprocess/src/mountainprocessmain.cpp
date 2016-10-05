@@ -114,11 +114,12 @@ double compute_peak_cpu_pct(const QList<MonitorStats>& stats);
 
 class MountainProcess {
 public:
-    MountainProcess() {
-
+    MountainProcess()
+    {
     }
 
-    bool list_processors() {
+    bool list_processors()
+    {
         ProcessManager* PM = ProcessManager::globalInstance();
         if (!initialize_process_manager()) { //load the processor plugins etc
             //log_end();
@@ -132,7 +133,8 @@ public:
         //log_end();
         return true;
     }
-    bool spec(const QString &name) {
+    bool spec(const QString& name)
+    {
         ProcessManager* PM = ProcessManager::globalInstance();
         if (!initialize_process_manager()) { //load the processor plugins etc
             //log_end();
@@ -144,8 +146,9 @@ public:
         return true;
     }
 
-    bool daemon_start() {
-        /*
+    bool daemon_start()
+    {
+/*
          *  The following magic ensures we detach from the parent process
          *  and from the controlling terminal. This is to prevent process
          *  that spawned us to wait for our children to complete.
@@ -197,19 +200,22 @@ public:
         return X.run();
     }
 
-    bool daemon_stop() {
+    bool daemon_stop()
+    {
         MPDaemonInterface X;
         return X.stop();
     }
 
-    bool daemon_restart() {
+    bool daemon_restart()
+    {
         MPDaemonInterface X;
         if (!X.stop() || !X.start())
             return false;
         printf("Daemon has been restarted.\n");
         return true;
     }
-    bool daemon_state() {
+    bool daemon_state()
+    {
         MPDaemonInterface X;
         QJsonObject state = X.getDaemonState();
         QString json = QJsonDocument(state).toJson();
@@ -218,14 +224,16 @@ public:
         return true;
     }
 
-    bool daemon_state_summary() {
+    bool daemon_state_summary()
+    {
         MPDaemonInterface X;
         QString txt = get_daemon_state_summary(X.getDaemonState());
         printf("%s", qPrintable(txt));
         //log_end();
         return true;
     }
-    bool clear_processing() {
+    bool clear_processing()
+    {
         MPDaemonInterface X;
         X.clearProcessing();
         //log_end();
@@ -233,7 +241,6 @@ public:
     }
 
 private:
-
 };
 
 int retCode(bool v) { return v ? 0 : -1; }
@@ -467,9 +474,11 @@ int main(int argc, char* argv[])
     }
     else if (arg1 == "daemon-start") {
         return retCode(prog.daemon_start());
-    } else if (arg1 == "daemon-stop") { //Stop the daemon
+    }
+    else if (arg1 == "daemon-stop") { //Stop the daemon
         return retCode(prog.daemon_stop());
-    } else if (arg1 == "daemon-restart") { //Restart the daemon
+    }
+    else if (arg1 == "daemon-restart") { //Restart the daemon
         return retCode(prog.daemon_restart());
     }
     /*

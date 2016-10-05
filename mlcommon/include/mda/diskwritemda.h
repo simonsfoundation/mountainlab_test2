@@ -7,6 +7,7 @@
 #define DISKWRITEMDA_H
 
 #include "mda.h"
+#include "mda32.h"
 
 #include <QString>
 #include <mdaio.h>
@@ -32,6 +33,10 @@ public:
     void writeChunk(Mda& X, long i);
     void writeChunk(Mda& X, long i1, long i2);
     void writeChunk(Mda& X, long i1, long i2, long i3);
+
+    void writeChunk(Mda32& X, long i);
+    void writeChunk(Mda32& X, long i1, long i2);
+    void writeChunk(Mda32& X, long i1, long i2, long i3);
 
 private:
     DiskWriteMdaPrivate* d;

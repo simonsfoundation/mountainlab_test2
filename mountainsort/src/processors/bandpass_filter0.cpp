@@ -10,35 +10,34 @@
 #include <QTime>
 
 #ifdef USE_SSE2
+#include <diskreadmda32.h>
 #include <emmintrin.h>
 #include <immintrin.h>
 #endif
 
-Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_max, double freq_wid);
-bool do_fft_1d_r2c(int M, int N, double* out, double* in);
-bool do_ifft_1d_c2r(int M, int N, double* out, double* in);
-void multiply_complex_by_real_kernel(int M, int N, double* Y, double* kernel);
+Mda32 do_bandpass_filter0(Mda32& X, double samplerate, double freq_min, double freq_max, double freq_wid);
+bool do_fft_1d_r2c(int M, int N, float* out, float* in);
+bool do_ifft_1d_c2r(int M, int N, float* out, float* in);
+void multiply_complex_by_real_kernel(int M, int N, float* Y, double* kernel);
 void define_kernel(int N, double* kernel, double samplefreq, double freq_min, double freq_max, double freq_wid);
 
-bool bandpass_filter0(const QString& input_path, const QString& output_path, double samplerate, double freq_min, double freq_max, double freq_wid, const long processingChunkSize, const long chunkOverlapSize)
+bool bandpass_filter0(const QString& input_path, const QString& output_path, double samplerate, double freq_min, double freq_max, double freq_wid)
 {
     QTime timer_total;
     timer_total.start();
     QMap<QString, long> elapsed_times;
 
-    DiskReadMda X(input_path);
+    DiskReadMda32 X(input_path);
     const long M = X.N1();
     const long N = X.N2();
 
-    /// TODO tell sb that I changed -1 to 0 here
-    long chunk_size = processingChunkSize > 0 ? processingChunkSize : PROCESSING_CHUNK_SIZE;
-    long overlap_size = chunkOverlapSize > 0 ? chunkOverlapSize : PROCESSING_CHUNK_OVERLAP_SIZE;
-    if (N < chunk_size) {
-        chunk_size = N + 1; // +1 is to prevent triggering another chunk
-        // note we leave the overlap_size as is, to remove end effects
-    }
-
     DiskWriteMda Y(MDAIO_TYPE_FLOAT32, output_path, M, N);
+
+    int num_threads = omp_get_max_threads();
+    long memory_size = 100 * 1e9;
+    long chunk_size = qMin(N * 1.0, qMax(1e4 * 1.0, memory_size * 1.0 / (M * 4 * num_threads)));
+    long overlap_size = chunk_size / 5;
+    printf("************ Using chunk size / overlap size: %ld / %ld\n", chunk_size, overlap_size);
 
     {
         QTime timer_status;
@@ -47,7 +46,7 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
 #pragma omp parallel for
         for (long timepoint = 0; timepoint < N; timepoint += chunk_size) {
             QMap<QString, long> elapsed_times_local;
-            Mda chunk;
+            Mda32 chunk;
 #pragma omp critical(lock1)
             {
                 QTime timer;
@@ -61,7 +60,7 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
                 chunk = do_bandpass_filter0(chunk, samplerate, freq_min, freq_max, freq_wid);
                 elapsed_times_local["do_bandpass_filter0"] += timer.elapsed();
             }
-            Mda chunk2;
+            Mda32 chunk2;
             {
                 QTime timer;
                 timer.start();
@@ -99,9 +98,9 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
     return true;
 }
 
-void multiply_by_factor(long N, double* X, double factor)
+void multiply_by_factor(long N, float* X, double factor)
 {
-    long start = 0;
+    /*long start = 0;
 #ifdef USE_SSE2
     __m128d factor_m128 = _mm_load_pd1(&factor);
     for (; start < (N / 2) * 2; start += 2) {
@@ -111,21 +110,22 @@ void multiply_by_factor(long N, double* X, double factor)
         _mm_store_pd(chunk, result);
     }
 #endif
-    for (long i = start; i < N; i++)
+*/
+    for (long i = 0; i < N; i++)
         X[i] *= factor;
 }
 
-Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_max, double freq_wid)
+Mda32 do_bandpass_filter0(Mda32& X, double samplerate, double freq_min, double freq_max, double freq_wid)
 {
     long M = X.N1();
     long N = X.N2();
     long MN = M * N;
-    Mda Y(M, N);
-    double* Xptr = X.dataPtr();
-    double* Yptr = Y.dataPtr();
+    Mda32 Y(M, N);
+    float* Xptr = X.dataPtr();
+    float* Yptr = Y.dataPtr();
 
     double* kernel0 = (double*)allocate(sizeof(double) * N);
-    double* Xhat = (double*)allocate(sizeof(double) * MN * 2);
+    float* Xhat = (float*)allocate(sizeof(float) * MN * 2);
     define_kernel(N, kernel0, samplerate, freq_min, freq_max, freq_wid);
 
     do_fft_1d_r2c(M, N, Xhat, Xptr);
@@ -140,7 +140,7 @@ Mda do_bandpass_filter0(Mda& X, double samplerate, double freq_min, double freq_
     return Y;
 }
 
-bool do_fft_1d_r2c(int M, int N, double* out, double* in)
+bool do_fft_1d_r2c(int M, int N, float* out, float* in)
 {
     /*
 	if (num_threads>1) {
@@ -229,7 +229,7 @@ bool do_fft_1d_r2c(int M, int N, double* out, double* in)
     return true;
 }
 
-bool do_ifft_1d_c2r(int M, int N, double* out, double* in)
+bool do_ifft_1d_c2r(int M, int N, float* out, float* in)
 {
     /*
 	if (num_threads>1) {
@@ -282,10 +282,11 @@ bool do_ifft_1d_c2r(int M, int N, double* out, double* in)
     return true;
 }
 
-void multiply_complex_by_real_kernel(int M, int N, double* Y, double* kernel)
+void multiply_complex_by_real_kernel(int M, int N, float* Y, double* kernel)
 {
-    int bb = 0;
-    int aa = 0;
+    long bb = 0;
+    long aa = 0;
+    /*
 #ifdef USE_SSE2
     for (int i = 0; i < N; i++) {
         __m128d kernel_m128 = _mm_load_pd1(kernel + aa);
@@ -298,15 +299,16 @@ void multiply_complex_by_real_kernel(int M, int N, double* Y, double* kernel)
         aa++;
     }
 #else
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < M; j++) {
+*/
+    for (long i = 0; i < N; i++) {
+        for (long j = 0; j < M; j++) {
             Y[bb * 2] *= kernel[aa];
             Y[bb * 2 + 1] *= kernel[aa];
             bb++;
         }
         aa++;
     }
-#endif
+    //#endif
 }
 
 void define_kernel(int N, double* kernel, double samplefreq, double freq_min, double freq_max, double freq_wid)

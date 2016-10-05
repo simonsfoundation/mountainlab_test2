@@ -54,6 +54,8 @@ bool PrvUpload::initiateUploadToServer(QString server_name, PrvRecord prv)
         return -1;
     }
 
+    QString checksum00_1000 = MLUtil::computeSha1SumOfFileHead(local_path, 1000);
+
     QString server_url = get_server_url_for_name(server_name);
     if (server_url.isEmpty()) {
         TaskProgress err;
@@ -61,10 +63,15 @@ bool PrvUpload::initiateUploadToServer(QString server_name, PrvRecord prv)
         return -1;
     }
 
+    QJsonObject server0 = get_server_object_for_name(server_name);
+    QString passcode = server0.value("passcode").toString();
+
     QUrl url(server_url);
     QUrlQuery query;
     query.addQueryItem("checksum", checksum00);
     query.addQueryItem("size", QString::number(size0));
+    query.addQueryItem("checksum1000", checksum00_1000);
+    query.addQueryItem("passcode", passcode);
 
     QJsonObject info;
     info["src_path"] = local_path;

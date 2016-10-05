@@ -320,18 +320,26 @@ QString PrvRecord::find_remote_url(QString server_name) const
 
 QString get_server_url_for_name(QString server_name)
 {
+    QJsonObject server0 = get_server_object_for_name(server_name);
+    QString host = server0["host"].toString();
+    if (host.isEmpty())
+        return "";
+    int port = server0["port"].toInt();
+    QString url_path = server0["path"].toString();
+    QString url0 = host + ":" + QString::number(port) + url_path;
+    return url0;
+}
+
+QJsonObject get_server_object_for_name(QString server_name)
+{
     QJsonArray remote_servers = MLUtil::configValue("prv", "servers").toArray();
     for (int i = 0; i < remote_servers.count(); i++) {
         QJsonObject server0 = remote_servers[i].toObject();
         if (server0["name"].toString() == server_name) {
-            QString host = server0["host"].toString();
-            int port = server0["port"].toInt();
-            QString url_path = server0["path"].toString();
-            QString url0 = host + ":" + QString::number(port) + url_path;
-            return url0;
+            return server0;
         }
     }
-    return "";
+    return QJsonObject();
 }
 
 int find_process_corresponding_to_output(QList<PrvProcessRecord> processes, QString original_path, QString& output_pname)
