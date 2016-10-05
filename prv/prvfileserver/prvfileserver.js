@@ -106,12 +106,15 @@ var SERVER=http.createServer(function (REQ, RESP) {
 
 		if (method=="download") {
 			var fname=absolute_data_directory()+"/"+path;
+			console.log ('Download: '+fname);
 			if (!require('fs').existsSync(fname)) {
+				console.log ('Files does not exist: '+fname);
 				send_json_response({success:false,error:"File does not exist: "+path});		
 				return;	
 			}
 			var opts={};
 			if (query.bytes) {
+				//request a subset of bytes
 				var vals=query.bytes.split('-');
 				if (vals.length!=2) {
 					send_json_response({success:false,error:"Error in bytes parameter: "+query.bytes});		
@@ -121,9 +124,11 @@ var SERVER=http.createServer(function (REQ, RESP) {
 				opts.end_byte=Number(vals[1]);
 			}
 			else {
+				//otherwise get the entire file
 				opts.start_byte=0;
 				opts.end_byte=get_file_size(fname)-1;
 			}
+			//serve the file
 			serve_file(REQ,fname,RESP,opts);
 		}
 		else if (method=="stat") {
@@ -613,8 +618,10 @@ function run_process_and_read_stdout(exe,args,callback) {
 }
 
 function serve_file(REQ,filename,response,opts) {
+	//the number of bytes to read
 	var num_bytes_to_read=opts.end_byte-opts.start_byte+1;
-	response.writeHead(200, {"Access-Control-Allow-Origin":"*", "Content-Type":"application/json", "Content-Length":num_bytes_to_read});
+
+	//check if file exists
 	fs.exists(filename,function(exists) {
 		if (!exists) {
 			response.writeHead(404, {"Content-Type": "text/plain"});
@@ -623,32 +630,47 @@ function serve_file(REQ,filename,response,opts) {
 			return;
 		}
 
+		//write the header for binary data
+		response.writeHead(200, {"Access-Control-Allow-Origin":"*", "Content-Type":"application/octet-stream", "Content-Length":num_bytes_to_read});
 		
+		//keep track of how many bytes we have read
 		var num_bytes_read=0;
+
+		//start reading the file asynchronously
 		var read_stream=fs.createReadStream(filename,{start:opts.start_byte,end:opts.end_byte});
 		var done=false;
 		read_stream.on('data',function(chunk) {
-			if (!done) {
-				if (!response.write(chunk,"binary"))
-					read_stream.pause();
-				num_bytes_read+=chunk.length;
-				if (num_bytes_read==num_bytes_to_read) {
-					console.log('Read '+num_bytes_read+' bytes from '+filename+' ('+opts.start_byte+','+opts.end_byte+')');
-					done=true;
-					response.end();
-				}
-				else if (num_bytes_read>num_bytes_to_read) {
-					console.log('Unexpected error. num_bytes_read > num_bytes_to_read: '+num_bytes_read+' '+num_bytes_to_read);
-					read_stream.destroy();
-					done=true;
-					response.end();
-				}
+			if (done) return;
+			if (!response.write(chunk,"binary")) {
+				//if return is false, then we need to pause
+				//the reading and wait for the drain event on the write stream
+				read_stream.pause();
+			}
+			//increment number of bytes read
+			num_bytes_read+=chunk.length;
+			if (num_bytes_read==num_bytes_to_read) {
+				//we have read everything, hurray!
+				console.log('Read '+num_bytes_read+' bytes from '+filename+' ('+opts.start_byte+','+opts.end_byte+')');
+				done=true;
+				//end the response
+				response.end();
+			}
+			else if (num_bytes_read>num_bytes_to_read) {
+				//This should not happen
+				console.log('Unexpected error. num_bytes_read > num_bytes_to_read: '+num_bytes_read+' '+num_bytes_to_read);
+				read_stream.destroy();
+				done=true;
+				response.end();
 			}
 		});
 		read_stream.on('end',function() {
 
 		});
-		read_stream.on('drain',function() {
+		read_stream.on('error',function() {
+			console.log('Error in read stream: '+filename);
+		});
+		response.on('drain',function() {
+			//see above where the read stream was paused
 			read_stream.resume();
 		});
 		REQ.socket.on('close',function() {
@@ -656,22 +678,6 @@ function serve_file(REQ,filename,response,opts) {
 			done=true;
 			response.end();
 		});
-
-
-		/*
-		fs.readFile(filename, "binary", function(err, file) {
-			if(err) {        
-				response.writeHead(500, {"Content-Type": "text/plain"});
-				response.write(err + "\n");
-				response.end();
-				return;
-			}
-
-			//response.writeHead(200);
-			response.write(file, "binary");
-			response.end();
-		});
-		*/
 	});
 }
 

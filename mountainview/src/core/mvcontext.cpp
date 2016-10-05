@@ -173,6 +173,7 @@ QJsonObject timeseries_map_to_object_for_mv2(const QMap<QString, TimeseriesStruc
     QStringList keys = TT.keys();
     foreach (QString key, keys) {
         QJsonObject obj;
+        qDebug() << "-0------------------------------------------" << key << TT[key].name << TT[key].data.makePath() << TT[key].data.toPrvObject();
         obj["data"] = TT[key].data.toPrvObject();
         obj["name"] = TT[key].name;
         ret[key] = obj;

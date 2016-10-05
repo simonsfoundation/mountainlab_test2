@@ -156,11 +156,24 @@ int main(int argc, char* argv[])
         TPV.show();
 
         //do not allow downloads or processing because now this is handled in a separate gui, as it should!!!
+        /*
         bool allow_downloads = false;
         bool allow_processing = false;
         if (!prepare_prv_files(CLP.named_parameters, allow_downloads, allow_processing)) {
             qWarning() << "Could not prepare .prv files. Try adjusting the prv settings in mountainlab.user.json";
             return -1;
+        }
+        */
+
+        // add on a .prv if the [file] does not exist, but the [file].prv does
+        // TODO this is very sloppy and dangerous... should not be done here. Should rather be done in kron-view
+        QStringList keys = CLP.named_parameters.keys();
+        foreach (QString key, keys) {
+            QVariant val = CLP.named_parameters[key].toString();
+            if ((!QFile::exists(val.toString())) && (QFile::exists(val.toString() + ".prv"))) {
+                val = val.toString() + ".prv";
+                CLP.named_parameters[key] = val;
+            }
         }
     }
 
@@ -288,6 +301,79 @@ int main(int argc, char* argv[])
         context->setClusterColors(label_colors);
         MVMainWindow* W = new MVMainWindow(context);
 
+        if (mv2_fname.isEmpty()) {
+            qDebug() << CLP.named_parameters;
+            MVContext dc; //dummy context
+            if (CLP.named_parameters.contains("samplerate")) {
+                dc.setSampleRate(CLP.named_parameters.value("samplerate", 0).toDouble());
+            }
+            if (CLP.named_parameters.contains("firings")) {
+                QString firings_path = CLP.named_parameters["firings"].toString();
+                dc.setFirings(DiskReadMda(firings_path));
+                W->setWindowTitle(firings_path);
+            }
+            if (CLP.named_parameters.contains("raw")) {
+                QString raw_path = CLP.named_parameters["raw"].toString();
+                dc.addTimeseries("Raw Data", DiskReadMda(raw_path));
+                dc.setCurrentTimeseriesName("Raw Data");
+            }
+            if (CLP.named_parameters.contains("filt")) {
+                QString filt_path = CLP.named_parameters["filt"].toString();
+                dc.addTimeseries("Filtered Data", DiskReadMda(filt_path));
+                dc.setCurrentTimeseriesName("Filtered Data");
+            }
+            if (CLP.named_parameters.contains("pre")) {
+                QString pre_path = CLP.named_parameters["pre"].toString();
+                dc.addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
+                dc.setCurrentTimeseriesName("Preprocessed Data");
+            }
+            if (CLP.named_parameters.contains("mlproxy_url")) {
+                QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
+                dc.setMLProxyUrl(mlproxy_url);
+            }
+            if (CLP.named_parameters.contains("window_title")) {
+                QString window_title = CLP.named_parameters["window_title"].toString();
+                W->setWindowTitle(window_title);
+            }
+            if (CLP.named_parameters.contains("geom")) {
+                QString geom_path = CLP.named_parameters["geom"].toString();
+                ElectrodeGeometry eg = ElectrodeGeometry::loadFromGeomFile(geom_path);
+                dc.setElectrodeGeometry(eg);
+            }
+            if (CLP.named_parameters.contains("cluster_metrics")) {
+                QString cluster_metrics_path = CLP.named_parameters["cluster_metrics"].toString();
+                dc.loadClusterMetricsFromFile(cluster_metrics_path);
+            }
+            if (CLP.named_parameters.contains("cluster_pair_metrics")) {
+                QString cluster_pair_metrics_path = CLP.named_parameters["cluster_pair_metrics"].toString();
+                dc.loadClusterMetricsFromFile(cluster_pair_metrics_path);
+            }
+            if (CLP.named_parameters.contains("curation")) {
+                QString curation_program_path = CLP.named_parameters["curation"].toString();
+                QString js = TextFile::read(curation_program_path);
+                if (js.isEmpty()) {
+                    qWarning() << "Curation program is empty." << curation_program_path;
+                }
+                dc.setOption("curation_program", js);
+            }
+
+            if (CLP.named_parameters.contains("clusters")) {
+                QStringList clusters_subset_str = CLP.named_parameters["clusters"].toString().split(",", QString::SkipEmptyParts);
+                QList<int> clusters_subset;
+                foreach (QString label, clusters_subset_str) {
+                    clusters_subset << label.toInt();
+                }
+                dc.setClustersSubset(clusters_subset.toSet());
+            }
+
+            QJsonObject mv2=dc.toMV2FileObject();
+            QString debug=QJsonDocument(mv2["timeseries"].toObject()).toJson();
+            printf("%s\n",debug.toUtf8().data());
+            mv2_fname=CacheManager::globalInstance()->makeLocalFile()+".mv2";
+            QString mv2_text=QJsonDocument(mv2).toJson();
+            TextFile::write(mv2_fname,mv2_text);
+        }
+
         if (!mv_fname.isEmpty()) {
             QString json = TextFile::read(mv_fname);
             QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
@@ -296,10 +382,11 @@ int main(int argc, char* argv[])
         if (!mv2_fname.isEmpty()) {
             TaskProgressView TPV;
             TPV.show();
-            QString json = TextFile::read(mv2_fname);
-            QJsonObject obj = QJsonDocument::fromJson(json.toLatin1()).object();
             bool done_checking = false;
+            QJsonObject obj;
             while (!done_checking) {
+                QString json = TextFile::read(mv2_fname);
+                obj = QJsonDocument::fromJson(json.toLatin1()).object();
                 if (check_whether_prv_objects_need_to_be_downloaded_or_regenerated(obj)) {
                     ResolvePrvsDialog dlg;
                     if (dlg.exec() == QDialog::Accepted) {
@@ -327,67 +414,7 @@ int main(int argc, char* argv[])
             context->setMV2FileName(mv2_fname);
         }
 
-        if (CLP.named_parameters.contains("samplerate")) {
-            context->setSampleRate(CLP.named_parameters.value("samplerate", 0).toDouble());
-        }
-        if (CLP.named_parameters.contains("firings")) {
-            QString firings_path = CLP.named_parameters["firings"].toString();
-            context->setFirings(DiskReadMda(firings_path));
-            W->setWindowTitle(firings_path);
-        }
-        if (CLP.named_parameters.contains("raw")) {
-            QString raw_path = CLP.named_parameters["raw"].toString();
-            context->addTimeseries("Raw Data", DiskReadMda(raw_path));
-            context->setCurrentTimeseriesName("Raw Data");
-        }
-        if (CLP.named_parameters.contains("filt")) {
-            QString filt_path = CLP.named_parameters["filt"].toString();
-            context->addTimeseries("Filtered Data", DiskReadMda(filt_path));
-            context->setCurrentTimeseriesName("Filtered Data");
-        }
-        if (CLP.named_parameters.contains("pre")) {
-            QString pre_path = CLP.named_parameters["pre"].toString();
-            context->addTimeseries("Preprocessed Data", DiskReadMda(pre_path));
-            context->setCurrentTimeseriesName("Preprocessed Data");
-        }
-        if (CLP.named_parameters.contains("mlproxy_url")) {
-            QString mlproxy_url = CLP.named_parameters.value("mlproxy_url", "").toString();
-            context->setMLProxyUrl(mlproxy_url);
-        }
-        if (CLP.named_parameters.contains("window_title")) {
-            QString window_title = CLP.named_parameters["window_title"].toString();
-            W->setWindowTitle(window_title);
-        }
-        if (CLP.named_parameters.contains("geom")) {
-            QString geom_path = CLP.named_parameters["geom"].toString();
-            ElectrodeGeometry eg = ElectrodeGeometry::loadFromGeomFile(geom_path);
-            context->setElectrodeGeometry(eg);
-        }
-        if (CLP.named_parameters.contains("cluster_metrics")) {
-            QString cluster_metrics_path = CLP.named_parameters["cluster_metrics"].toString();
-            context->loadClusterMetricsFromFile(cluster_metrics_path);
-        }
-        if (CLP.named_parameters.contains("cluster_pair_metrics")) {
-            QString cluster_pair_metrics_path = CLP.named_parameters["cluster_pair_metrics"].toString();
-            context->loadClusterMetricsFromFile(cluster_pair_metrics_path);
-        }
-        if (CLP.named_parameters.contains("curation")) {
-            QString curation_program_path = CLP.named_parameters["curation"].toString();
-            QString js = TextFile::read(curation_program_path);
-            if (js.isEmpty()) {
-                qWarning() << "Curation program is empty." << curation_program_path;
-            }
-            context->setOption("curation_program", js);
-        }
 
-        if (CLP.named_parameters.contains("clusters")) {
-            QStringList clusters_subset_str = CLP.named_parameters["clusters"].toString().split(",", QString::SkipEmptyParts);
-            QList<int> clusters_subset;
-            foreach (QString label, clusters_subset_str) {
-                clusters_subset << label.toInt();
-            }
-            context->setClustersSubset(clusters_subset.toSet());
-        }
 
         set_nice_size(W);
 
