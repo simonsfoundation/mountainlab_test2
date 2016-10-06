@@ -328,6 +328,11 @@ long DiskReadMda::totalSize() const
     return d->total_size();
 }
 
+MDAIO_HEADER DiskReadMda::mdaioHeader() const
+{
+    return d->m_header;
+}
+
 bool DiskReadMda::reshape(long N1b, long N2b, long N3b, long N4b, long N5b, long N6b)
 {
     long size_b = N1b * N2b * N3b * N4b * N5b * N6b;

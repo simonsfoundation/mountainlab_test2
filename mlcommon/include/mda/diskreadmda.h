@@ -7,6 +7,7 @@
 #define DISKREADMDA_H
 
 #include "mda.h"
+#include "mdaio.h"
 
 class DiskReadMdaPrivate;
 /**
@@ -44,6 +45,8 @@ public:
     long N5() const;
     long N6() const;
     long totalSize() const; //product of N1..N6
+
+    MDAIO_HEADER mdaioHeader() const;
 
     bool reshape(long N1b, long N2b, long N3b = 1, long N4b = 1, long N5b = 1, long N6b = 1);
     DiskReadMda reshaped(long N1b, long N2b, long N3b = 1, long N4b = 1, long N5b = 1, long N6b = 1);

@@ -80,7 +80,7 @@ void PrvGuiWorkerThread::run()
             results[prv_code].local_path = local_path;
             {
                 QMutexLocker locker(&results_mutex);
-                if ((!local_path.isEmpty())&&(QFile::exists(local_path)))
+                if ((!local_path.isEmpty()) && (QFile::exists(local_path)))
                     results[prv_code].on_local_disk = YES;
                 else {
                     if (check_if_regeneratable(prv))

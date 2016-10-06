@@ -14,9 +14,11 @@
 
 namespace MLNetwork {
 
-static QNetworkAccessManager *s_manager=0;
-QNetworkAccessManager *manager() {
-    if (!s_manager) s_manager=new QNetworkAccessManager;
+static QNetworkAccessManager* s_manager = 0;
+QNetworkAccessManager* manager()
+{
+    if (!s_manager)
+        s_manager = new QNetworkAccessManager;
     return s_manager;
 }
 
@@ -212,9 +214,11 @@ void Uploader::start()
     QNetworkRequest request = QNetworkRequest(destination_url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
     long content_length;
-    if ((start_byte>=0)&&(end_byte>=0)) content_length=end_byte-start_byte+1;
-    else content_length=m_file->size();
-    request.setHeader(QNetworkRequest::ContentLengthHeader,QString("%1").arg(content_length));
+    if ((start_byte >= 0) && (end_byte >= 0))
+        content_length = end_byte - start_byte + 1;
+    else
+        content_length = m_file->size();
+    request.setHeader(QNetworkRequest::ContentLengthHeader, QString("%1").arg(content_length));
     m_reply = manager()->post(request, FCR);
 
     //check for an immediate error (not sure if this ever happens)
