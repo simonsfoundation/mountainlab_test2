@@ -121,7 +121,6 @@ void replace_prv(QJsonObject& prv_object, QString original_path, QString new_che
 
 bool PrvGuiMainWindow::savePrv(QString prv_file_name)
 {
-    qDebug() << __FILE__ << __LINE__ << "-----------------------------------------------------" << prv_file_name;
     QList<PrvRecord> prvs = d->m_tree->prvs();
     for (int i = 0; i < prvs.count(); i++) {
         replace_prv(d->m_original_object, prvs[i].original_path, prvs[i].checksum, prvs[i].size, prvs[i].checksum1000);
@@ -153,6 +152,11 @@ void PrvGuiMainWindow::setPrvFileName(QString fname)
         return;
     d->m_prv_file_name = fname;
     emit prvFileNameChanged();
+}
+
+void PrvGuiMainWindow::searchAgain(QString checksum, long size, QString server)
+{
+    d->m_tree->searchAgain(checksum,size,server);
 }
 
 void PrvGuiMainWindow::closeEvent(QCloseEvent* evt)
@@ -211,6 +215,11 @@ void PrvGuiMainWindow::setServerNames(QStringList names)
 void PrvGuiMainWindow::refresh()
 {
     d->m_tree->refresh();
+}
+
+void PrvGuiMainWindow::startAllSearches()
+{
+    d->m_tree->startAllSearches();
 }
 
 void PrvGuiMainWindow::resizeEvent(QResizeEvent* evt)

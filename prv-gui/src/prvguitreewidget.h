@@ -29,11 +29,13 @@ public:
     void setServerNames(QStringList names);
     void replacePrv(QString original_path, const PrvRecord& prv_new);
     void refresh();
+    void startAllSearches();
     bool isDirty() const;
     void setDirty(bool val);
     QList<PrvRecord> selectedPrvs();
     QStringList serverNames() const;
     QVariantMap currentItemDetails() const; //not a great way to do this
+    void searchAgain(QString checksum,long size,QString server);
 signals:
     void dirtyChanged();
 private slots:

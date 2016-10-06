@@ -18,13 +18,15 @@ public:
     virtual ~PrvGuiMainControlWidget();
 
 private slots:
-    void slot_refresh_tree();
+    void slot_search_again();
     void slot_update_enabled();
     void slot_upload();
     void slot_download();
     void slot_regenerate();
     void slot_save();
     void slot_save_as();
+
+    void slot_uploader_finished();
 
 private:
     PrvGuiMainControlWidgetPrivate* d;

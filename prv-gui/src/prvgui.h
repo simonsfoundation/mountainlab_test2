@@ -23,10 +23,6 @@ struct PrvRecord {
     {
         copy_from(other);
     }
-    void operator=(const PrvRecord& other)
-    {
-        copy_from(other);
-    }
 
     QJsonObject original_object;
 
@@ -61,10 +57,6 @@ struct PrvProcessRecord {
     PrvProcessRecord() {}
     PrvProcessRecord(QJsonObject obj);
     PrvProcessRecord(const PrvProcessRecord& other)
-    {
-        copy_from(other);
-    }
-    void operator=(const PrvProcessRecord& other)
     {
         copy_from(other);
     }

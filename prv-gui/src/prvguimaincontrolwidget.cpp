@@ -20,6 +20,7 @@
 #include <QFileInfo>
 #include "mlcommon.h"
 #include <QCoreApplication>
+#include "mlnetwork.h"
 
 class PrvGuiMainControlWidgetPrivate {
 public:
@@ -47,8 +48,8 @@ PrvGuiMainControlWidget::PrvGuiMainControlWidget(PrvGuiMainWindow* MW)
     int row = 0;
 
     {
-        QPushButton* button = d->create_push_button("refresh", "Refresh");
-        QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_refresh_tree()));
+        QPushButton* button = d->create_push_button("search again", "Search again");
+        QObject::connect(button, SIGNAL(clicked(bool)), this, SLOT(slot_search_again()));
         grid_layout->addWidget(button, row, 0, 1, 2);
     }
     row++;
@@ -99,9 +100,9 @@ PrvGuiMainControlWidget::~PrvGuiMainControlWidget()
     delete d;
 }
 
-void PrvGuiMainControlWidget::slot_refresh_tree()
+void PrvGuiMainControlWidget::slot_search_again()
 {
-    d->m_tree->refresh();
+    d->m_tree->startAllSearches();
 }
 
 void PrvGuiMainControlWidget::slot_update_enabled()
@@ -118,7 +119,13 @@ void PrvGuiMainControlWidget::slot_upload()
         TaskProgress task("Uploading files to server: " + dlg.selectedServer());
         for (int i = 0; i < prvs.count(); i++) {
             task.setProgress((i + 0.3) / prvs.count());
-            PrvUpload::initiateUploadToServer(dlg.selectedServer(), prvs[i]);
+            MLNetwork::PrvParallelUploader *uploader=PrvUpload::initiateUploadToServer(dlg.selectedServer(), prvs[i]);
+            if (uploader) {
+                uploader->setProperty("checksum",prvs[i].checksum);
+                uploader->setProperty("size",(long long)prvs[i].size);
+                uploader->setProperty("server",dlg.selectedServer());
+                QObject::connect(uploader,SIGNAL(finished()),this,SLOT(slot_uploader_finished));
+            }
         }
     }
 }
@@ -160,6 +167,16 @@ void PrvGuiMainControlWidget::slot_save_as()
     if (fname.isEmpty())
         return;
     d->m_main_window->savePrv(fname);
+}
+
+void PrvGuiMainControlWidget::slot_uploader_finished()
+{
+    MLNetwork::PrvParallelUploader *uploader=qobject_cast<MLNetwork::PrvParallelUploader *>(sender());
+    if (!uploader) return;
+    QString checksum=uploader->property("checksum").toString();
+    long size=uploader->property("checksum").toLongLong();
+    QString server=uploader->property("server").toString();
+    d->m_main_window->searchAgain(checksum,size,server);
 }
 
 void PrvGuiMainControlWidgetPrivate::update_enabled()

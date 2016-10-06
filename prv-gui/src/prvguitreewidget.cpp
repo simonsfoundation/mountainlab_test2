@@ -4,14 +4,17 @@
 ** Created: 9/29/2016
 *******************************************************/
 
+#include "locatemanager.h"
 #include "prvguitreewidget.h"
 
+#include <QApplication>
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QJsonArray>
 #include <QMutex>
 #include <QProcess>
 #include <QSplitter>
+#include <QTimer>
 #include <QTreeWidget>
 #include <taskprogress.h>
 #include "taskprogressview.h"
@@ -24,13 +27,16 @@ public:
     QStringList m_server_names;
     bool m_dirty = false;
 
-    PrvGuiWorkerThread m_worker_thread;
+    //PrvGuiWorkerThread m_worker_thread;
+    LocateManager m_locate_manager;
 
-    void refresh_tree();
-    void restart_worker_thread();
-    void update_tree_item_data(QTreeWidgetItem* it, QMap<QString, PrvGuiWorkerThreadResult> results);
+    void create_tree();
+    //void restart_worker_thread();
+    void update_tree_item_data(QTreeWidgetItem* it);
     void replace_prv_in_processes(QList<PrvProcessRecord>& processes, QString original_path, const PrvRecord& prv_new);
     void replace_prv_in_process(PrvProcessRecord& P, QString original_path, const PrvRecord& prv_new);
+    QTreeWidgetItem* make_tree_item_from_prv(PrvRecord prv, int column_count, const QList<PrvProcessRecord>& additional_processes);
+    void start_all_searches();
 };
 
 PrvGuiTreeWidget::PrvGuiTreeWidget()
@@ -40,9 +46,17 @@ PrvGuiTreeWidget::PrvGuiTreeWidget()
 
     this->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    QObject::connect(&d->m_worker_thread, SIGNAL(results_updated()), this, SLOT(slot_update_tree_data()));
+    //QObject::connect(&d->m_locate_manager,SIGNAL(searchStatesUpdated()),this,SLOT(slot_update_tree_data()));
 
-    d->refresh_tree();
+    // Somehow we need to do it this way rather than listening to the searchStatesUpdated signal.
+    // Otherwise, it crashes in a way that is very difficult for me to debug (failed after >2 hours)
+    // Witold: why????
+    QTimer *timer=new QTimer;
+    timer->setInterval(1000);
+    QObject::connect(timer,SIGNAL(timeout()),this,SLOT(slot_update_tree_data()));
+    timer->start();
+
+    d->create_tree();
 
     QFont fnt = this->font();
     fnt.setPixelSize(18);
@@ -51,10 +65,12 @@ PrvGuiTreeWidget::PrvGuiTreeWidget()
 
 PrvGuiTreeWidget::~PrvGuiTreeWidget()
 {
+    /*
     d->m_worker_thread.requestInterruption();
     d->m_worker_thread.wait(2000);
     if (d->m_worker_thread.isRunning())
         d->m_worker_thread.terminate();
+        */
     delete d;
 }
 
@@ -130,7 +146,12 @@ void PrvGuiTreeWidget::replacePrv(QString original_path, const PrvRecord& prv_ne
 
 void PrvGuiTreeWidget::refresh()
 {
-    d->refresh_tree();
+    d->create_tree();
+}
+
+void PrvGuiTreeWidget::startAllSearches()
+{
+    d->start_all_searches();
 }
 
 bool PrvGuiTreeWidget::isDirty() const
@@ -175,16 +196,22 @@ QVariantMap PrvGuiTreeWidget::currentItemDetails() const
     return ret;
 }
 
+void PrvGuiTreeWidget::searchAgain(QString checksum, long size, QString server)
+{
+    d->m_locate_manager.startSearchForPrv(checksum,size,server);
+    slot_update_tree_data();
+}
+
 void PrvGuiTreeWidget::slot_update_tree_data()
 {
-    d->m_worker_thread.results_mutex.lock();
-    QMap<QString, PrvGuiWorkerThreadResult> results = d->m_worker_thread.results;
-    d->m_worker_thread.results_mutex.unlock();
+    //d->m_worker_thread.results_mutex.lock();
+    //QMap<QString, PrvGuiWorkerThreadResult> results = d->m_worker_thread.results;
+    //d->m_worker_thread.results_mutex.unlock();
 
     QTreeWidget* TT = this;
     for (int i = 0; i < TT->topLevelItemCount(); i++) {
         QTreeWidgetItem* it = TT->topLevelItem(i);
-        d->update_tree_item_data(it, results);
+        d->update_tree_item_data(it);
     }
 }
 
@@ -221,7 +248,7 @@ bool outputs_include_checksum(QMap<QString, PrvRecord> outputs, QString checksum
     return false;
 }
 
-QTreeWidgetItem* make_tree_item_from_prv(PrvRecord prv, int column_count, const QList<PrvProcessRecord>& additional_processes)
+QTreeWidgetItem* PrvGuiTreeWidgetPrivate::make_tree_item_from_prv(PrvRecord prv, int column_count, const QList<PrvProcessRecord>& additional_processes)
 {
     prv.processes.append(additional_processes);
 
@@ -258,7 +285,18 @@ QTreeWidgetItem* make_tree_item_from_prv(PrvRecord prv, int column_count, const 
     return it;
 }
 
-void PrvGuiTreeWidgetPrivate::refresh_tree()
+void PrvGuiTreeWidgetPrivate::start_all_searches()
+{
+    for (int i = 0; i < m_prvs.count(); i++) {
+        PrvRecord prv = m_prvs[i];
+        m_locate_manager.startSearchForPrv(prv.checksum,prv.size,"");
+        foreach (QString server,m_server_names) {
+            m_locate_manager.startSearchForPrv(prv.checksum,prv.size,server);
+        }
+    }
+}
+
+void PrvGuiTreeWidgetPrivate::create_tree()
 {
     QTreeWidget* TT = q;
     TT->clear();
@@ -288,9 +326,12 @@ void PrvGuiTreeWidgetPrivate::refresh_tree()
     minwid = 100;
     TT->setColumnWidth(2, qMax(TT->columnWidth(2), minwid));
 
-    restart_worker_thread();
+    //q->slot_update_tree_data();
+
+    //restart_worker_thread();
 }
 
+/*
 void PrvGuiTreeWidgetPrivate::restart_worker_thread()
 {
     if (m_worker_thread.isRunning()) {
@@ -303,29 +344,40 @@ void PrvGuiTreeWidgetPrivate::restart_worker_thread()
     m_worker_thread.server_names = m_server_names;
     m_worker_thread.start();
 }
+*/
 
-void PrvGuiTreeWidgetPrivate::update_tree_item_data(QTreeWidgetItem* it, QMap<QString, PrvGuiWorkerThreadResult> results)
+void PrvGuiTreeWidgetPrivate::update_tree_item_data(QTreeWidgetItem* it)
 {
     PrvRecord prv = PrvRecord::fromVariantMap(it->data(0, Qt::UserRole).toMap());
 
-    PrvGuiWorkerThreadResult result0 = results.value(to_prv_code(prv));
+    //PrvGuiWorkerThreadResult result0 = results.value(to_prv_code(prv));
+
+    QString local_path;
+    QVariantMap server_urls;
     {
+        fuzzybool state=m_locate_manager.getSearchState(prv,"");
+        QString result_path=m_locate_manager.getResultPathOrUrl(prv,"");
+        local_path=result_path;
         int col = 3;
-        it->setText(col, to_string(result0.on_local_disk));
-        it->setForeground(col, to_color(result0.on_local_disk));
-        it->setForeground(0, to_color(result0.on_local_disk));
-        it->setToolTip(col, result0.local_path);
+        it->setText(col, to_string(state));
+        it->setForeground(col, to_color(state));
+        it->setForeground(0, to_color(state));
+        it->setToolTip(col, result_path);
+
     }
     for (int a = 0; a < m_server_names.count(); a++) {
+        fuzzybool state=m_locate_manager.getSearchState(prv,m_server_names[a]);
+        QString result_path=m_locate_manager.getResultPathOrUrl(prv,m_server_names[a]);
+        server_urls[m_server_names[a]]=result_path;
         int col = 4 + a;
-        fuzzybool tmp = result0.on_server.value(m_server_names[a], UNKNOWN);
-        it->setText(col, to_string(tmp));
-        it->setForeground(col, to_color(tmp));
-        it->setToolTip(col, result0.server_urls.value(m_server_names[a]).toString());
+        it->setText(col, to_string(state));
+        it->setForeground(col, to_color(state));
+        it->setToolTip(col, result_path);
     }
-    it->setData(0, Qt::UserRole + 1, result0.local_path);
-    it->setData(0, Qt::UserRole + 2, result0.server_urls);
+    it->setData(0, Qt::UserRole + 1, local_path);
+    it->setData(0, Qt::UserRole + 2, server_urls);
+
     for (int a = 0; a < it->childCount(); a++) {
-        update_tree_item_data(it->child(a), results);
+        update_tree_item_data(it->child(a));
     }
 }

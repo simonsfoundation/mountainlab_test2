@@ -19,7 +19,9 @@ SOURCES += prv-guimain.cpp \
     prvupload.cpp \
     prvdownload.cpp \
     prvguidownloaddialog.cpp \
-    prvguiitemdetailwidget.cpp
+    prvguiitemdetailwidget.cpp \
+    locatemanager.cpp \
+    locatemanagerworker.cpp
 
 include(../../mlcommon/mlcommon.pri)
 include(../../mlcommon/mlnetwork.pri)
@@ -37,7 +39,9 @@ HEADERS += \
     prvupload.h \
     prvdownload.h \
     prvguidownloaddialog.h \
-    prvguiitemdetailwidget.h
+    prvguiitemdetailwidget.h \
+    locatemanager.h \
+    locatemanagerworker.h
 
 INCLUDEPATH += ../../mountainview/src/core
 HEADERS += ../../mountainview/src/core/mountainprocessrunner.h

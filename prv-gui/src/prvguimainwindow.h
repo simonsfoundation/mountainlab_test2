@@ -28,9 +28,12 @@ public:
     bool savePrv(QString prv_file_name);
     void setServerNames(QStringList names);
     void refresh();
+    void startAllSearches();
     PrvGuiTreeWidget* tree();
     QString prvFileName() const;
     void setPrvFileName(QString fname);
+
+    void searchAgain(QString checksum,long size,QString server);
 
 protected:
     void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;

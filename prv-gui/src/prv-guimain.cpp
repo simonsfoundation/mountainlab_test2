@@ -43,6 +43,7 @@ int main(int argc, char* argv[])
     W.setServerNames(server_names);
     W.showMaximized();
     W.refresh();
+    W.startAllSearches();
 
     return app.exec();
 }

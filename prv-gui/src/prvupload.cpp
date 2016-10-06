@@ -32,26 +32,26 @@ QString get_user_name_0()
 #endif
 }
 
-bool PrvUpload::initiateUploadToServer(QString server_name, PrvRecord prv)
+MLNetwork::PrvParallelUploader* PrvUpload::initiateUploadToServer(QString server_name, PrvRecord prv)
 {
     QString local_path = prv.find_local_file();
     if (local_path.isEmpty()) {
         TaskProgress err;
         err.error() << "Unable to find local file corresponding to prv: " + prv.label;
-        return false;
+        return 0;
     }
     QFileInfo finfo = local_path;
     long size0 = finfo.size();
     if (size0 == 0) {
         TaskProgress err;
         err.error() << "File is empty: " + local_path;
-        return false;
+        return 0;
     }
     QString checksum00 = MLUtil::computeSha1SumOfFile(local_path);
     if (checksum00.isEmpty()) {
         TaskProgress err;
         err.error() << "Checksum is empty for: " + local_path;
-        return -1;
+        return 0;
     }
 
     QString checksum00_1000 = MLUtil::computeSha1SumOfFileHead(local_path, 1000);
@@ -60,7 +60,7 @@ bool PrvUpload::initiateUploadToServer(QString server_name, PrvRecord prv)
     if (server_url.isEmpty()) {
         TaskProgress err;
         err.error() << "Unable to find server url in configuration for: " + server_name;
-        return -1;
+        return 0;
     }
 
     QJsonObject server0 = get_server_object_for_name(server_name);
@@ -92,7 +92,7 @@ bool PrvUpload::initiateUploadToServer(QString server_name, PrvRecord prv)
     uploader->num_threads = 5;
     uploader->start();
 
-    return true;
+    return uploader;
 
     /*
     QString tmp_fname = CacheManager::globalInstance()->makeLocalFile(MLUtil::makeRandomId(10) + ".PrvManagerdlg.prv");
