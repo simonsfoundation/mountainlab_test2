@@ -287,8 +287,19 @@ QTreeWidgetItem* PrvGuiTreeWidgetPrivate::make_tree_item_from_prv(PrvRecord prv,
 
 void PrvGuiTreeWidgetPrivate::start_all_searches()
 {
+    QList<PrvRecord> all_prvs;
     for (int i = 0; i < m_prvs.count(); i++) {
         PrvRecord prv = m_prvs[i];
+        all_prvs << prv;
+        for (int i=0; i<prv.processes.count(); i++) {
+            QStringList ikeys=prv.processes[i].inputs.keys();
+            foreach (QString ikey,ikeys) {
+                all_prvs << prv.processes[i].inputs[ikey];
+            }
+        }
+    }
+    for (int i = 0; i < all_prvs.count(); i++) {
+        PrvRecord prv = all_prvs[i];
         m_locate_manager.startSearchForPrv(prv.checksum, prv.size, "");
         foreach (QString server, m_server_names) {
             m_locate_manager.startSearchForPrv(prv.checksum, prv.size, server);
