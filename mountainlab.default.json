@@ -11,6 +11,7 @@
 		"local_search_paths":["examples"],
 		"servers":[
 			{"name":"datalaboratory","passcode":"","host":"http://datalaboratory.org","port":8080,"path":"/prv"},
+			{"name":"river","passcode":"","host":"http://river.simonsfoundation.org","port":8080,"path":"/prv"},
 			{"name":"localhost","passcode":"","host":"http://localhost","port":8080,"path":"/prv"}
 		]
 	},
