@@ -89,7 +89,7 @@ Once installed you will need to prepend the path to qmake to your PATH environme
 
 See the following article which explains how to actually perform spike sorting:
 
-[https://mountainlab.vbulletin.net/articles/15-running-spike-sorting-using-mountainlab|https://mountainlab.vbulletin.net/articles/15-running-spike-sorting-using-mountainlab]
+https://mountainlab.vbulletin.net/articles/15-running-spike-sorting-using-mountainlab
 
 ## Older information
 
