@@ -51,9 +51,9 @@ PrvGuiTreeWidget::PrvGuiTreeWidget()
     // Somehow we need to do it this way rather than listening to the searchStatesUpdated signal.
     // Otherwise, it crashes in a way that is very difficult for me to debug (failed after >2 hours)
     // Witold: why????
-    QTimer *timer=new QTimer;
+    QTimer* timer = new QTimer;
     timer->setInterval(1000);
-    QObject::connect(timer,SIGNAL(timeout()),this,SLOT(slot_update_tree_data()));
+    QObject::connect(timer, SIGNAL(timeout()), this, SLOT(slot_update_tree_data()));
     timer->start();
 
     d->create_tree();
@@ -198,7 +198,7 @@ QVariantMap PrvGuiTreeWidget::currentItemDetails() const
 
 void PrvGuiTreeWidget::searchAgain(QString checksum, long size, QString server)
 {
-    d->m_locate_manager.startSearchForPrv(checksum,size,server);
+    d->m_locate_manager.startSearchForPrv(checksum, size, server);
     slot_update_tree_data();
 }
 
@@ -289,9 +289,9 @@ void PrvGuiTreeWidgetPrivate::start_all_searches()
 {
     for (int i = 0; i < m_prvs.count(); i++) {
         PrvRecord prv = m_prvs[i];
-        m_locate_manager.startSearchForPrv(prv.checksum,prv.size,"");
-        foreach (QString server,m_server_names) {
-            m_locate_manager.startSearchForPrv(prv.checksum,prv.size,server);
+        m_locate_manager.startSearchForPrv(prv.checksum, prv.size, "");
+        foreach (QString server, m_server_names) {
+            m_locate_manager.startSearchForPrv(prv.checksum, prv.size, server);
         }
     }
 }
@@ -355,20 +355,19 @@ void PrvGuiTreeWidgetPrivate::update_tree_item_data(QTreeWidgetItem* it)
     QString local_path;
     QVariantMap server_urls;
     {
-        fuzzybool state=m_locate_manager.getSearchState(prv,"");
-        QString result_path=m_locate_manager.getResultPathOrUrl(prv,"");
-        local_path=result_path;
+        fuzzybool state = m_locate_manager.getSearchState(prv, "");
+        QString result_path = m_locate_manager.getResultPathOrUrl(prv, "");
+        local_path = result_path;
         int col = 3;
         it->setText(col, to_string(state));
         it->setForeground(col, to_color(state));
         it->setForeground(0, to_color(state));
         it->setToolTip(col, result_path);
-
     }
     for (int a = 0; a < m_server_names.count(); a++) {
-        fuzzybool state=m_locate_manager.getSearchState(prv,m_server_names[a]);
-        QString result_path=m_locate_manager.getResultPathOrUrl(prv,m_server_names[a]);
-        server_urls[m_server_names[a]]=result_path;
+        fuzzybool state = m_locate_manager.getSearchState(prv, m_server_names[a]);
+        QString result_path = m_locate_manager.getResultPathOrUrl(prv, m_server_names[a]);
+        server_urls[m_server_names[a]] = result_path;
         int col = 4 + a;
         it->setText(col, to_string(state));
         it->setForeground(col, to_color(state));

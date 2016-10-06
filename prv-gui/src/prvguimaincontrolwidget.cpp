@@ -119,12 +119,12 @@ void PrvGuiMainControlWidget::slot_upload()
         TaskProgress task("Uploading files to server: " + dlg.selectedServer());
         for (int i = 0; i < prvs.count(); i++) {
             task.setProgress((i + 0.3) / prvs.count());
-            MLNetwork::PrvParallelUploader *uploader=PrvUpload::initiateUploadToServer(dlg.selectedServer(), prvs[i]);
+            MLNetwork::PrvParallelUploader* uploader = PrvUpload::initiateUploadToServer(dlg.selectedServer(), prvs[i]);
             if (uploader) {
-                uploader->setProperty("checksum",prvs[i].checksum);
-                uploader->setProperty("size",(long long)prvs[i].size);
-                uploader->setProperty("server",dlg.selectedServer());
-                QObject::connect(uploader,SIGNAL(finished()),this,SLOT(slot_uploader_finished));
+                uploader->setProperty("checksum", prvs[i].checksum);
+                uploader->setProperty("size", (long long)prvs[i].size);
+                uploader->setProperty("server", dlg.selectedServer());
+                QObject::connect(uploader, SIGNAL(finished()), this, SLOT(slot_uploader_finished));
             }
         }
     }
@@ -171,12 +171,13 @@ void PrvGuiMainControlWidget::slot_save_as()
 
 void PrvGuiMainControlWidget::slot_uploader_finished()
 {
-    MLNetwork::PrvParallelUploader *uploader=qobject_cast<MLNetwork::PrvParallelUploader *>(sender());
-    if (!uploader) return;
-    QString checksum=uploader->property("checksum").toString();
-    long size=uploader->property("checksum").toLongLong();
-    QString server=uploader->property("server").toString();
-    d->m_main_window->searchAgain(checksum,size,server);
+    MLNetwork::PrvParallelUploader* uploader = qobject_cast<MLNetwork::PrvParallelUploader*>(sender());
+    if (!uploader)
+        return;
+    QString checksum = uploader->property("checksum").toString();
+    long size = uploader->property("checksum").toLongLong();
+    QString server = uploader->property("server").toString();
+    d->m_main_window->searchAgain(checksum, size, server);
 }
 
 void PrvGuiMainControlWidgetPrivate::update_enabled()

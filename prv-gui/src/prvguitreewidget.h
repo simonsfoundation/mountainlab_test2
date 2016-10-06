@@ -35,7 +35,7 @@ public:
     QList<PrvRecord> selectedPrvs();
     QStringList serverNames() const;
     QVariantMap currentItemDetails() const; //not a great way to do this
-    void searchAgain(QString checksum,long size,QString server);
+    void searchAgain(QString checksum, long size, QString server);
 signals:
     void dirtyChanged();
 private slots:
