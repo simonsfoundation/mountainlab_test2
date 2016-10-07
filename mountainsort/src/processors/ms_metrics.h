@@ -13,11 +13,11 @@
 struct ms_metrics_opts {
     QList<int> cluster_numbers;
     int clip_size = 50;
-    double add_noise_level = 1;
+    double add_noise_level = 0.5;
 };
 
 namespace MSMetrics {
-bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics, QString cluster_pair_metrics, ms_metrics_opts opts);
+bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics, QString cluster_pair_metrics_path, ms_metrics_opts opts);
 }
 
 #endif // ms_metrics_H

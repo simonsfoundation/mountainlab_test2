@@ -37,6 +37,18 @@ private slots:
     //void openClipsForTemplate();
 };
 
+class ClusterPairMetricsFactory : public MVAbstractViewFactory {
+    Q_OBJECT
+public:
+    ClusterPairMetricsFactory(MVMainWindow* mw, QObject* parent = 0);
+    QString id() const Q_DECL_OVERRIDE;
+    QString name() const Q_DECL_OVERRIDE;
+    QString title() const Q_DECL_OVERRIDE;
+    MVAbstractView* createView(MVContext* context) Q_DECL_OVERRIDE;
+private slots:
+    //void openClipsForTemplate();
+};
+
 class basic_metrics_calculator : public QThread {
     Q_OBJECT
 public:

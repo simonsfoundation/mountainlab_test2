@@ -14,6 +14,7 @@
 #include "msmisc.h"
 #include "compute_templates_0.h"
 #include "jsvm.h"
+#include "noise_nearest.h"
 
 namespace MSMetrics {
 
@@ -56,6 +57,12 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
         }
     }
 
+    noise_nearest_opts nn_opts;
+    nn_opts.cluster_numbers = opts.cluster_numbers;
+    nn_opts.clip_size = opts.clip_size;
+    nn_opts.add_noise_level = opts.add_noise_level;
+    Mda isolation_matrix = NoiseNearest::compute_isolation_matrix(timeseries, firings, nn_opts);
+
     QMap<QString, Metric> cluster_metrics;
     for (int i = 0; i < opts.cluster_numbers.count(); i++) {
         int k = opts.cluster_numbers[i];
@@ -78,6 +85,22 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
             double max0 = stdev_k.maximum();
             cluster_metrics["peak_noise"].values << qMax(qAbs(min0), qAbs(max0));
         }
+        {
+            double numer = isolation_matrix.value(i, opts.cluster_numbers.count());
+            double denom = times_k.count();
+            if (!denom)
+                denom = 1;
+            double val = numer / denom;
+            cluster_metrics["noise_overlap"].values << val;
+        }
+        {
+            double numer = isolation_matrix.value(i, i);
+            double denom = times_k.count();
+            if (!denom)
+                denom = 1;
+            double val = numer / denom;
+            cluster_metrics["isolation"].values << val;
+        }
     }
 
     QStringList cluster_metric_names = cluster_metrics.keys();
@@ -94,7 +117,53 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
         return false;
     }
 
-    TextFile::write(cluster_pair_metrics_path, "");
+    //////////////////////////////////////////////////////////////
+    QMap<QString, Metric> cluster_pair_metrics;
+    for (int i1 = 0; i1 < opts.cluster_numbers.count(); i1++) {
+        for (int i2 = 0; i2 < opts.cluster_numbers.count(); i2++) {
+            int k1 = opts.cluster_numbers[i1];
+            //int k2 = opts.cluster_numbers[i2];
+            QVector<double> times_k1;
+            for (long i = 0; i < times.count(); i++) {
+                if (labels[i] == k1) {
+                    times_k1 << times[i];
+                }
+            }
+            double numer = isolation_matrix.value(i1, i2);
+            double denom = times_k1.count();
+            if (!denom)
+                denom = 1;
+            double val = numer / denom;
+            if (val < 0.05)
+                val = 0; //to save space in the .mv2 file, don't include anything less than 5%
+            cluster_pair_metrics["isolation_matrix"].values << val;
+        }
+    }
+
+    QStringList cluster_pair_metric_names = cluster_pair_metrics.keys();
+    QString cluster_pair_metric_txt = "cluster1,cluster2," + cluster_pair_metric_names.join(",") + "\n";
+    int jj = 0;
+    for (int i1 = 0; i1 < opts.cluster_numbers.count(); i1++) {
+        for (int i2 = 0; i2 < opts.cluster_numbers.count(); i2++) {
+            bool has_something_non_zero = false;
+            foreach (QString name, cluster_pair_metric_names) {
+                if (cluster_pair_metrics[name].values[jj])
+                    has_something_non_zero = true;
+            }
+            if ((has_something_non_zero) && (i1 != i2)) {
+                QString line = QString("%1,%2").arg(opts.cluster_numbers[i1]).arg(opts.cluster_numbers[i2]);
+                foreach (QString name, cluster_pair_metric_names) {
+                    line += QString(",%1").arg(cluster_pair_metrics[name].values[jj]);
+                }
+                cluster_pair_metric_txt += line + "\n";
+            }
+            jj++;
+        }
+    }
+    if (!TextFile::write(cluster_pair_metrics_path, cluster_pair_metric_txt)) {
+        qWarning() << "Problem writing output file: " + cluster_pair_metrics_path;
+        return false;
+    }
 
     return true;
 }

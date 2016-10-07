@@ -11,6 +11,7 @@
 #include "curationprogramview.h"
 
 #include <QThread>
+#include <clusterpairmetricsview.h>
 #include <mountainprocessrunner.h>
 
 class ClusterMetricsPluginPrivate {
@@ -43,6 +44,7 @@ void compute_basic_metrics(MVContext* mv_context);
 void ClusterMetricsPlugin::initialize(MVMainWindow* mw)
 {
     mw->registerViewFactory(new ClusterMetricsFactory(mw));
+    mw->registerViewFactory(new ClusterPairMetricsFactory(mw));
     compute_basic_metrics(mw->mvContext());
 }
 
@@ -69,6 +71,32 @@ QString ClusterMetricsFactory::title() const
 MVAbstractView* ClusterMetricsFactory::createView(MVContext* context)
 {
     ClusterMetricsView* X = new ClusterMetricsView(context);
+    return X;
+}
+
+ClusterPairMetricsFactory::ClusterPairMetricsFactory(MVMainWindow* mw, QObject* parent)
+    : MVAbstractViewFactory(mw, parent)
+{
+}
+
+QString ClusterPairMetricsFactory::id() const
+{
+    return QStringLiteral("open-cluster-pair-metrics");
+}
+
+QString ClusterPairMetricsFactory::name() const
+{
+    return tr("Cluster Pair Metrics");
+}
+
+QString ClusterPairMetricsFactory::title() const
+{
+    return tr("Cluster Metrics");
+}
+
+MVAbstractView* ClusterPairMetricsFactory::createView(MVContext* context)
+{
+    ClusterPairMetricsView* X = new ClusterPairMetricsView(context);
     return X;
 }
 

@@ -763,8 +763,27 @@ void MVContext::loadClusterMetricsFromFile(QString csv_file_path)
 
 void MVContext::loadClusterPairMetricsFromFile(QString csv_file_path)
 {
-    Q_UNUSED(csv_file_path);
-    // do this...
+    QStringList lines = TextFile::read(csv_file_path).split("\n", QString::SkipEmptyParts);
+    if (lines.isEmpty())
+        return;
+    QStringList metric_names = lines[0].split(",", QString::SkipEmptyParts);
+    for (int i = 1; i < lines.count(); i++) {
+        QStringList vals = lines[i].split(",", QString::SkipEmptyParts);
+        bool ok;
+        int k1 = vals.value(0).toInt(&ok);
+        if (ok) {
+            int k2 = vals.value(1).toInt(&ok);
+            if (ok) {
+                QJsonObject obj = this->clusterPairAttributes(ClusterPair(k1, k2));
+                QJsonObject metrics = obj["metrics"].toObject();
+                for (int j = 2; j < metric_names.count(); j++) {
+                    metrics[metric_names[j]] = vals.value(j).toDouble();
+                }
+                obj["metrics"] = metrics;
+                this->setClusterPairAttributes(ClusterPair(k1, k2), obj);
+            }
+        }
+    }
 }
 
 QSet<int> MVContext::clustersSubset() const

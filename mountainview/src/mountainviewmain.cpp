@@ -346,7 +346,7 @@ int main(int argc, char* argv[])
             }
             if (CLP.named_parameters.contains("cluster_pair_metrics")) {
                 QString cluster_pair_metrics_path = CLP.named_parameters["cluster_pair_metrics"].toString();
-                dc.loadClusterMetricsFromFile(cluster_pair_metrics_path);
+                dc.loadClusterPairMetricsFromFile(cluster_pair_metrics_path);
             }
             if (CLP.named_parameters.contains("curation")) {
                 QString curation_program_path = CLP.named_parameters["curation"].toString();

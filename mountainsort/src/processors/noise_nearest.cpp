@@ -157,6 +157,67 @@ Mda32 concat_clips(const Mda32& clips1, const Mda32& clips2);
 
 bool noise_nearest(QString timeseries, QString firings, QString confusion_matrix, noise_nearest_opts opts)
 {
+    Mda CM = compute_isolation_matrix(timeseries, firings, opts);
+
+    printf("Writing output...\n");
+    return CM.write64(confusion_matrix);
+}
+
+Mda32 concat_clips(const Mda32& clips1, const Mda32& clips2)
+{
+    Mda32 ret(clips1.N1(), clips1.N2(), clips1.N3() + clips2.N3());
+    for (long i = 0; i < clips1.N3(); i++) {
+        Mda32 tmp;
+        clips1.getChunk(tmp, 0, 0, i, clips1.N1(), clips1.N2(), 1);
+        ret.setChunk(tmp, 0, 0, i);
+    }
+    for (long i = 0; i < clips2.N3(); i++) {
+        Mda32 tmp;
+        clips2.getChunk(tmp, 0, 0, i, clips2.N1(), clips2.N2(), 1);
+        ret.setChunk(tmp, 0, 0, i + clips1.N3());
+    }
+    return ret;
+}
+
+Mda32 add_self_noise_to_clips(const DiskReadMda32& timeseries, const Mda32& clips, double noise_factor)
+{
+    Mda32 ret = clips;
+    int M = clips.N1();
+    int T = clips.N2();
+    QList<long> rand_inds;
+    for (long i = 0; i < clips.N3(); i++) {
+        rand_inds << T + (qrand() % timeseries.N2() - T * 2);
+    }
+    qSort(rand_inds); //good to do this so we don't random access the timeseries too much
+    //could this add a bad bias?? don't really know.
+    //one way around this is to randomize the order these are applied to the clips
+    for (long i = 0; i < clips.N3(); i++) {
+        long ind0 = rand_inds[i];
+        Mda32 chunk;
+        timeseries.readChunk(chunk, 0, ind0, M, T);
+        for (int t = 0; t < T; t++) {
+            for (int m = 0; m < M; m++) {
+                ret.set(ret.get(m, t, i) + chunk.value(m, t) * noise_factor, m, t, i);
+            }
+        }
+    }
+    return ret;
+}
+
+Mda32 add_noise_to(const Mda32& X, double noise_level)
+{
+    Mda32 noise(X.N1(), X.N2(), X.N3());
+    generate_randn(noise.totalSize(), noise.dataPtr());
+
+    Mda32 ret(X.N1(), X.N2(), X.N3());
+    for (long i = 0; i < ret.totalSize(); i++) {
+        ret.set(noise.get(i) * noise_level + X.value(i), i);
+    }
+    return ret;
+}
+
+Mda compute_isolation_matrix(QString timeseries, QString firings, noise_nearest_opts opts)
+{
     DiskReadMda32 X(timeseries);
     DiskReadMda F(firings);
     int num_features = 0;
@@ -267,60 +328,6 @@ bool noise_nearest(QString timeseries, QString firings, QString confusion_matrix
         }
     }
 
-    printf("Writing output...\n");
-    return CM.write64(confusion_matrix);
-}
-
-Mda32 concat_clips(const Mda32& clips1, const Mda32& clips2)
-{
-    Mda32 ret(clips1.N1(), clips1.N2(), clips1.N3() + clips2.N3());
-    for (long i = 0; i < clips1.N3(); i++) {
-        Mda32 tmp;
-        clips1.getChunk(tmp, 0, 0, i, clips1.N1(), clips1.N2(), 1);
-        ret.setChunk(tmp, 0, 0, i);
-    }
-    for (long i = 0; i < clips2.N3(); i++) {
-        Mda32 tmp;
-        clips2.getChunk(tmp, 0, 0, i, clips2.N1(), clips2.N2(), 1);
-        ret.setChunk(tmp, 0, 0, i + clips1.N3());
-    }
-    return ret;
-}
-
-Mda32 add_self_noise_to_clips(const DiskReadMda32& timeseries, const Mda32& clips, double noise_factor)
-{
-    Mda32 ret = clips;
-    int M = clips.N1();
-    int T = clips.N2();
-    QList<long> rand_inds;
-    for (long i = 0; i < clips.N3(); i++) {
-        rand_inds << T + (qrand() % timeseries.N2() - T * 2);
-    }
-    qSort(rand_inds); //good to do this so we don't random access the timeseries too much
-    //could this add a bad bias?? don't really know.
-    //one way around this is to randomize the order these are applied to the clips
-    for (long i = 0; i < clips.N3(); i++) {
-        long ind0 = rand_inds[i];
-        Mda32 chunk;
-        timeseries.readChunk(chunk, 0, ind0, M, T);
-        for (int t = 0; t < T; t++) {
-            for (int m = 0; m < M; m++) {
-                ret.set(ret.get(m, t, i) + chunk.value(m, t) * noise_factor, m, t, i);
-            }
-        }
-    }
-    return ret;
-}
-
-Mda32 add_noise_to(const Mda32& X, double noise_level)
-{
-    Mda32 noise(X.N1(), X.N2(), X.N3());
-    generate_randn(noise.totalSize(), noise.dataPtr());
-
-    Mda32 ret(X.N1(), X.N2(), X.N3());
-    for (long i = 0; i < ret.totalSize(); i++) {
-        ret.set(noise.get(i) * noise_level + X.value(i), i);
-    }
-    return ret;
+    return CM;
 }
 }

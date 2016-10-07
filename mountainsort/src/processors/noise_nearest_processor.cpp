@@ -18,7 +18,7 @@ noise_nearest_Processor::noise_nearest_Processor()
     d->q = this;
 
     this->setName("noise_nearest");
-    this->setVersion("0.14");
+    this->setVersion("0.16");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("confusion_matrix");
     this->setRequiredParameters("clip_size");

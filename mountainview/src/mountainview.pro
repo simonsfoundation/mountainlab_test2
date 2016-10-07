@@ -27,7 +27,7 @@ HEADERS += clusterdetailplugin.h clusterdetailview.h \
     msv/views/matrixview.h \
     msv/views/isolationmatrixview.h \
     msv/plugins/isolationmatrixplugin.h \
-    msv/views/clustermetricsview.h \
+    msv/views/clustermetricsview.h msv/views/clusterpairmetricsview.h \
     msv/plugins/clustermetricsplugin.h \
     msv/views/curationprogramview.h \
     msv/plugins/curationprogramplugin.h \
@@ -37,7 +37,7 @@ SOURCES += clusterdetailplugin.cpp clusterdetailview.cpp \
     msv/views/matrixview.cpp \
     msv/views/isolationmatrixview.cpp \
     msv/plugins/isolationmatrixplugin.cpp \
-    msv/views/clustermetricsview.cpp \
+    msv/views/clustermetricsview.cpp msv/views/clusterpairmetricsview.cpp \
     msv/plugins/clustermetricsplugin.cpp \
     msv/views/curationprogramview.cpp \
     msv/plugins/curationprogramplugin.cpp \

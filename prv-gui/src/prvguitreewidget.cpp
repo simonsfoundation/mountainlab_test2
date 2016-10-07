@@ -291,9 +291,9 @@ void PrvGuiTreeWidgetPrivate::start_all_searches()
     for (int i = 0; i < m_prvs.count(); i++) {
         PrvRecord prv = m_prvs[i];
         all_prvs << prv;
-        for (int i=0; i<prv.processes.count(); i++) {
-            QStringList ikeys=prv.processes[i].inputs.keys();
-            foreach (QString ikey,ikeys) {
+        for (int i = 0; i < prv.processes.count(); i++) {
+            QStringList ikeys = prv.processes[i].inputs.keys();
+            foreach (QString ikey, ikeys) {
                 all_prvs << prv.processes[i].inputs[ikey];
             }
         }

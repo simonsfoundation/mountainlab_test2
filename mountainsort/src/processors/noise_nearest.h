@@ -13,10 +13,11 @@
 struct noise_nearest_opts {
     int clip_size = 50;
     QList<int> cluster_numbers;
-    double add_noise_level = 1;
+    double add_noise_level = 0.5;
 };
 
 namespace NoiseNearest {
+Mda compute_isolation_matrix(QString timeseries_path, QString firings_path, noise_nearest_opts opts);
 bool noise_nearest(QString timeseries, QString firings, QString confusion_matrix, noise_nearest_opts opts);
 }
 
