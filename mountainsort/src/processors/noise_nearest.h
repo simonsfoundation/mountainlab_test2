@@ -13,7 +13,7 @@
 struct noise_nearest_opts {
     int clip_size = 50;
     QList<int> cluster_numbers;
-    double add_noise_level = 0.5;
+    double add_noise_level = 0.25;
 };
 
 namespace NoiseNearest {

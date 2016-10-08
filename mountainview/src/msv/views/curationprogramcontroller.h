@@ -17,6 +17,11 @@ public:
 
     Q_INVOKABLE QString clusterNumbers();
     Q_INVOKABLE double metric(int cluster_number, QString metric_name);
+    Q_INVOKABLE void setMetric(int cluster_number, QString metric_name, double val);
+    Q_INVOKABLE QString clusterPairs();
+    Q_INVOKABLE double pairMetric(int k1, int k2, QString metric_name);
+    Q_INVOKABLE void setPairMetric(int k1, int k2, QString metric_name, double val);
+    Q_INVOKABLE bool hasTag(int cluster_number, QString tag_name);
     Q_INVOKABLE void addTag(int cluster_number, QString tag_name);
     Q_INVOKABLE void removeTag(int cluster_number, QString tag_name);
 

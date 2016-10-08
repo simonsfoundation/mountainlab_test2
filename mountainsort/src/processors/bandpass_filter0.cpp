@@ -34,7 +34,7 @@ bool bandpass_filter0(const QString& input_path, const QString& output_path, dou
     DiskWriteMda Y(MDAIO_TYPE_FLOAT32, output_path, M, N);
 
     int num_threads = omp_get_max_threads();
-    long memory_size = 1 * 1e9;
+    long memory_size = 0.1 * 1e9;
     long chunk_size = memory_size * 1.0 / (M * 4 * num_threads);
     chunk_size = qMin(N * 1.0, qMax(1e4 * 1.0, chunk_size * 1.0));
     long overlap_size = chunk_size / 5;

@@ -191,10 +191,10 @@ void ClusterPairMetricsViewPrivate::refresh_tree()
         //if (q->mvContext()->clusterPairIsVisible(pair)) {
         NumericSortTreeWidgetItem* it = new NumericSortTreeWidgetItem(m_tree);
         QJsonObject metrics = q->mvContext()->clusterPairAttributes(pair)["metrics"].toObject();
-        it->setText(0, QString("%1").arg(pair.kmin()));
-        it->setText(1, QString("%2").arg(pair.kmax()));
-        it->setData(0, Qt::UserRole, pair.kmin());
-        it->setData(0, Qt::UserRole, pair.kmax());
+        it->setText(0, QString("%1").arg(pair.k1()));
+        it->setText(1, QString("%2").arg(pair.k2()));
+        it->setData(0, Qt::UserRole, pair.k1());
+        it->setData(0, Qt::UserRole, pair.k2());
         for (int j = 0; j < metric_names.count(); j++) {
             it->setText(j + 2, QString("%1").arg(metrics[metric_names[j]].toDouble()));
         }

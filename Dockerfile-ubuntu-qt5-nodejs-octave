@@ -1,0 +1,8 @@
+FROM magland/ubuntu-qt5-nodejs
+
+RUN apt-get install -y libfftw3-dev
+
+RUN apt-get install -y octave
+
+RUN apt-get install -y git nano htop
+

@@ -134,8 +134,8 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
             if (!denom)
                 denom = 1;
             double val = numer / denom;
-            if (val < 0.05)
-                val = 0; //to save space in the .mv2 file, don't include anything less than 5%
+            if (val < 0.01)
+                val = 0; //to save space in the .mv2 file, don't include anything less than 1%
             cluster_pair_metrics["isolation_matrix"].values << val;
         }
     }

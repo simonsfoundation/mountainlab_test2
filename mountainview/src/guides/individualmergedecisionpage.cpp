@@ -159,7 +159,7 @@ void IndividualMergeDecisionPage::slot_add_merge_candidate_tag()
 {
     ClusterPair pair = d->m_cluster_pairs.value(d->m_current_cluster_pair_index);
     QSet<QString> tags = d->m_context->clusterPairTags(pair);
-    if ((pair.kmin()) && (pair.kmax())) {
+    if ((pair.k1()) && (pair.k2())) {
         tags.insert("merge_candidate");
     }
     d->m_context->setClusterPairTags(pair, tags);
@@ -169,7 +169,7 @@ void IndividualMergeDecisionPage::slot_remove_merge_candidate_tag()
 {
     ClusterPair pair = d->m_cluster_pairs.value(d->m_current_cluster_pair_index);
     QSet<QString> tags = d->m_context->clusterPairTags(pair);
-    if ((pair.kmin()) && (pair.kmax())) {
+    if ((pair.k1()) && (pair.k2())) {
         tags.remove("merge_candidate");
     }
     d->m_context->setClusterPairTags(pair, tags);
@@ -179,7 +179,7 @@ void IndividualMergeDecisionPage::slot_add_mua_and_reject_tags()
 {
     ClusterPair pair = d->m_cluster_pairs.value(d->m_current_cluster_pair_index);
     QList<int> ks;
-    ks << pair.kmin() << pair.kmax();
+    ks << pair.k1() << pair.k2();
     foreach (int k, ks) {
         QSet<QString> tags = d->m_context->clusterTags(k);
         tags.insert("mua");
@@ -196,8 +196,8 @@ void IndividualMergeDecisionPage::slot_update_candidates()
 void IndividualMergeDecisionPagePrivate::update_controls()
 {
     ClusterPair pair = m_cluster_pairs.value(m_current_cluster_pair_index);
-    if ((pair.kmin()) && (pair.kmax())) {
-        m_pair_edit->setText(QString("%1/%2").arg(pair.kmin()).arg(pair.kmax()));
+    if ((pair.k1()) && (pair.k2())) {
+        m_pair_edit->setText(QString("%1/%2").arg(pair.k1()).arg(pair.k2()));
     }
     else {
         m_pair_edit->setText("");

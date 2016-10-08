@@ -14,7 +14,8 @@ function run_mountainsort(params) {
 		num_features:10,
 		num_features2:10,
 		adjacency_radius:0,
-		whiten:true
+		whiten:true,
+		metrics_noise_level:0.25
 	});
 
 	var adjacency_matrix='';
@@ -74,7 +75,7 @@ function run_mountainsort(params) {
 
 	// Metrics
 	var metrics=Process('ms_metrics',{timeseries:pre,firings:firings3},{
-		clip_size:params.clip_size,add_noise_level:0.5
+		clip_size:params.clip_size,add_noise_level:params.metrics_noise_level
 	});
 	write_file(metrics.cluster_metrics,params.outpath+'/cluster_metrics.csv');
 	write_file(metrics.cluster_pair_metrics,params.outpath+'/cluster_pair_metrics.csv');

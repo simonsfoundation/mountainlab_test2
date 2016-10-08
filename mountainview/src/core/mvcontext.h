@@ -57,8 +57,8 @@ struct ClusterPair {
     ClusterPair(const ClusterPair& other);
 
     void set(int k1, int k2);
-    int kmin() const;
-    int kmax() const;
+    int k1() const;
+    int k2() const;
     void operator=(const ClusterPair& other);
     bool operator==(const ClusterPair& other) const;
     bool operator<(const ClusterPair& other) const;
@@ -66,7 +66,7 @@ struct ClusterPair {
     static ClusterPair fromString(const QString& str);
 
 private:
-    int m_kmin = 0, m_kmax = 0;
+    int m_k1 = 0, m_k2 = 0;
 };
 uint qHash(const ClusterPair& pair);
 

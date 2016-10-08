@@ -382,8 +382,8 @@ void MVExportControl::slot_export_cluster_curation_file()
         }
         QList<ClusterPair> pairs = mvContext()->clusterPairAttributesKeys();
         foreach (ClusterPair pair, pairs) {
-            clusters_set.insert(pair.kmin());
-            clusters_set.insert(pair.kmax());
+            clusters_set.insert(pair.k1());
+            clusters_set.insert(pair.k2());
         }
     }
     QList<int> clusters = clusters_set.toList();

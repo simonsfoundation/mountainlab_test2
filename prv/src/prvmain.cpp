@@ -11,7 +11,7 @@
 #include <QSettings>
 #include <QProcess>
 #include <QUrl>
-#include <QStandardPaths>
+//#include <QStandardPaths>
 #include <QHostInfo>
 #include <QCommandLineParser>
 #include <QUrlQuery>
@@ -35,9 +35,10 @@ QString get_user_name()
 #ifdef Q_OS_LINUX
     return qgetenv("USER");
 #else
-    // WW: not a standard way to fetch username
-    QStringList home_path = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
-    return home_path.first().split(QDir::separator()).last();
+    return "user-name-not-implemented-yet-on-non-linux";
+// WW: not a standard way to fetch username
+//QStringList home_path = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
+//return home_path.first().split(QDir::separator()).last();
 #endif
 }
 

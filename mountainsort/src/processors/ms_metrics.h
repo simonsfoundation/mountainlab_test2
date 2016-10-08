@@ -13,7 +13,7 @@
 struct ms_metrics_opts {
     QList<int> cluster_numbers;
     int clip_size = 50;
-    double add_noise_level = 0.5;
+    double add_noise_level = 0.25;
 };
 
 namespace MSMetrics {

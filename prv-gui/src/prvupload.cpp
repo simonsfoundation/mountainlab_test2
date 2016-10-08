@@ -26,9 +26,10 @@ QString get_user_name_0()
 #ifdef Q_OS_LINUX
     return qgetenv("USER");
 #else
-    // WW: not a standard way to fetch username
-    QStringList home_path = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
-    return home_path.first().split(QDir::separator()).last();
+    return "user-name-not-supported-yet-in-non-linux";
+// WW: not a standard way to fetch username
+//QStringList home_path = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
+//return home_path.first().split(QDir::separator()).last();
 #endif
 }
 

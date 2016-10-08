@@ -90,7 +90,7 @@ QList<QAction*> MVClusterContextMenuHandler::actions(const QMimeData& md)
                 for (int i=0; i<pairs.count(); i++) {
                     QSet<QString> tags=context->clusterPairTags(pairs[i]);
                     if (tags.contains("merged")) {
-                        if ((clusters.contains(pairs[i].kmin()))||(clusters.contains(pairs[i].kmax()))) {
+                        if ((clusters.contains(pairs[i].k1()))||(clusters.contains(pairs[i].k2()))) {
                             tags.remove("merged");
                         }
                     }

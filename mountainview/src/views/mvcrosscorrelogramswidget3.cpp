@@ -433,8 +433,8 @@ void MVCrossCorrelogramsWidget3Computer::compute()
     else if (options.mode == Selected_Cross_Correlograms3) {
         for (int i = 0; i < options.pairs.count(); i++) {
             Correlogram3 CC;
-            CC.k1 = options.pairs[i].kmin();
-            CC.k2 = options.pairs[i].kmax();
+            CC.k1 = options.pairs[i].k1();
+            CC.k2 = options.pairs[i].k2();
             this->correlograms << CC;
         }
     }
@@ -840,8 +840,8 @@ QJsonObject CrossCorrelogramOptions3::toJsonObject()
     ret["ks"] = MLUtil::toJsonValue(ks);
     QList<int> tmp;
     for (int i = 0; i < pairs.count(); i++) {
-        tmp << pairs[i].kmin();
-        tmp << pairs[i].kmax();
+        tmp << pairs[i].k1();
+        tmp << pairs[i].k2();
     }
     ret["pairs"] = MLUtil::toJsonValue(tmp);
     return ret;

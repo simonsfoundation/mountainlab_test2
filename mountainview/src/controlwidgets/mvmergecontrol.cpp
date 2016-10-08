@@ -113,14 +113,14 @@ void MVMergeControlPrivate::do_merge_or_unmerge(bool merge)
             for (int i1 = 0; i1 < selected_clusters.count() - 1; i1++) {
                 int i2 = i1 + 1;
                 ClusterPair pair(selected_clusters[i1], selected_clusters[i2]);
-                if (CM.representativeLabel(pair.kmin()) != CM.representativeLabel(pair.kmax())) {
+                if (CM.representativeLabel(pair.k1()) != CM.representativeLabel(pair.k2())) {
                     //not already merged
                     QSet<QString> tags = q->mvContext()->clusterPairTags(pair);
                     tags.insert("merged");
                     q->mvContext()->setClusterPairTags(pair, tags);
                     QSet<int> tmp;
-                    tmp.insert(pair.kmin());
-                    tmp.insert(pair.kmax());
+                    tmp.insert(pair.k1());
+                    tmp.insert(pair.k2());
                     CM.merge(tmp);
                 }
             }
@@ -129,7 +129,7 @@ void MVMergeControlPrivate::do_merge_or_unmerge(bool merge)
             QSet<int> selected_clusters_set = selected_clusters.toSet();
             QList<ClusterPair> keys = q->mvContext()->clusterPairAttributesKeys();
             foreach (ClusterPair pair, keys) {
-                if ((selected_clusters_set.contains(pair.kmin())) || (selected_clusters_set.contains(pair.kmax()))) {
+                if ((selected_clusters_set.contains(pair.k1())) || (selected_clusters_set.contains(pair.k2()))) {
                     QSet<QString> tags = q->mvContext()->clusterPairTags(pair);
                     tags.remove("merged");
                     q->mvContext()->setClusterPairTags(pair, tags);
