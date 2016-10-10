@@ -7,7 +7,7 @@ This will create two folders: examples and BIGFILES
 
 *** Run sorting and view results
 kron-run ms example1
-kron-view results ms example1
+kron-view results ms example1 --curation=curation.script
 kron-view ground_truth example1
 kron-view compare_truth ms example1
 kron-view table_truth ms example1

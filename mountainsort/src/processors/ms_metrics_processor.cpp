@@ -18,11 +18,11 @@ ms_metrics_Processor::ms_metrics_Processor()
     d->q = this;
 
     this->setName("ms_metrics");
-    this->setVersion("0.27");
+    this->setVersion("0.38");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("cluster_metrics", "cluster_pair_metrics");
     this->setRequiredParameters("clip_size");
-    this->setRequiredParameters("add_noise_level");
+    //this->setRequiredParameters("add_noise_level");
     //this->setOptionalParameters("cluster_numbers", "max_comparisons_per_cluster");
     //this->setOptionalParameters("ms_metrics_only");
 }
@@ -47,7 +47,7 @@ bool ms_metrics_Processor::run(const QMap<QString, QVariant>& params)
     foreach (QString num, cluster_numbers_str) {
         opts.cluster_numbers << num.toInt();
     }
-    opts.add_noise_level = params["add_noise_level"].toDouble();
+    //opts.add_noise_level = params["add_noise_level"].toDouble();
     QString timeseries_path = params["timeseries"].toString();
     QString firings_path = params["firings"].toString();
     QString cluster_metrics_path = params["cluster_metrics"].toString();

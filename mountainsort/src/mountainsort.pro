@@ -58,7 +58,6 @@ HEADERS += \
     processors/mv_firings_filter.h \
     processors/extract_clips_processor.h \
     processors/mv_subfirings_processor.h \
-    ../../mlcommon/src/cachemanager/cachemanager.h \
     processors/extract_clips_features_processor.h \
     processors/compute_detectability_scores_processor.h \
     processors/compute_detectability_scores.h \
@@ -109,7 +108,8 @@ HEADERS += \
     processors/basic_metrics_processor.h \
     processors/basic_metrics.h \
     processors/isolation_metrics_processor.h \
-    processors/isolation_metrics.h
+    processors/isolation_metrics.h \
+    processors/kdtree.h
 
 SOURCES += \
     core/msprocessmanager.cpp \
@@ -145,7 +145,6 @@ SOURCES += \
     processors/mv_firings_filter.cpp \
     processors/extract_clips_processor.cpp \
     processors/mv_subfirings_processor.cpp \
-    ../../mlcommon/src/cachemanager/cachemanager.cpp \
     processors/extract_clips_features_processor.cpp \
     processors/compute_detectability_scores_processor.cpp \
     processors/compute_detectability_scores.cpp \
@@ -200,7 +199,8 @@ SOURCES += \
     processors/basic_metrics_processor.cpp \
     processors/basic_metrics.cpp \
     processors/isolation_metrics_processor.cpp \
-    processors/isolation_metrics.cpp
+    processors/isolation_metrics.cpp \
+    processors/kdtree.cpp
 #!macx {
 #SOURCES_NOCXX11 += \ #see below
 #    isosplit/isosplit2.cpp \

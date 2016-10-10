@@ -70,18 +70,6 @@ public:
         m_right_tree=new KdTree;
         m_right_tree->create(X,indices_right);
     }
-    long datapointCount() const {
-        if ((!m_left_tree)&&(!m_right_tree)) {
-            //leaf node
-            return m_leaf_indices.count();
-        }
-        else {
-            long ret=0;
-            if (m_left_tree) ret+=m_left_tree->datapointCount();
-            if (m_right_tree) ret+=m_right_tree->datapointCount();
-            return ret;
-        }
-    }
     QList<long> allIndices() const {
         if ((!m_left_tree)&&(!m_right_tree)) {
             //leaf node

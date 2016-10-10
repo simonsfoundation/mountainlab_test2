@@ -1,0 +1,41 @@
+// Remove all rejected and MUA tags
+for (var i in clusters) {
+	clusters[i].removeTag('rejected');
+	clusters[i].removeTag('MUA');
+}
+
+console.log('\nnoise_overlap');
+for (var i in clusters) {	
+	if (clusters[i].metric('noise_overlap')>0.1) {
+		console.log('REJECT: '+clusters[i].k());
+		clusters[i].addTag('rejected');
+	}
+}
+
+console.log('\npeak_noise');
+for (var i in clusters) {	
+	if (clusters[i].metric('peak_noise')>30) {
+		console.log('REJECT: '+clusters[i].k());
+		clusters[i].addTag('rejected');
+	}
+}
+
+console.log('\nfiring_rate');
+for (var i in clusters) {	
+	if (clusters[i].metric('firing_rate')<0.1) {
+		console.log('REJECT: '+clusters[i].k());
+		clusters[i].addTag('rejected');
+	}
+}
+
+console.log('\nOverlap');
+for (var i in clusterPairs) {
+	var CP=clusterPairs[i];
+	var overlap=CP.metric('overlap');
+	if (overlap>0.2) {
+		if (!CP.cluster1().hasTag('rejected')) {
+			console.log('MUA: '+CP.k1()+','+CP.k2()+' '+overlap);
+			CP.cluster1().addTag('MUA');
+		}
+	}
+}
