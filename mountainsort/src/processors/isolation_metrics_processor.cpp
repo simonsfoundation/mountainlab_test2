@@ -18,7 +18,7 @@ isolation_metrics_Processor::isolation_metrics_Processor()
     d->q = this;
 
     this->setName("isolation_metrics");
-    this->setVersion("0.1");
+    this->setVersion("0.11");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("cluster_metrics", "cluster_pair_metrics");
     this->setOptionalParameters("cluster_numbers");
