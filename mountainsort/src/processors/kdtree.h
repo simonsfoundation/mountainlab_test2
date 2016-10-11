@@ -4,17 +4,17 @@
 #include "mda32.h"
 
 class KdTreePrivate;
-class KdTree
-{
+class KdTree {
 public:
     friend class KdTreePrivate;
     KdTree();
     virtual ~KdTree();
-    void create(const Mda32 &X);
+    void create(const Mda32& X);
     QList<long> allIndices() const;
-    QList<long> findApproxKNearestNeighbors(const Mda32 &X,const QVector<float> &p,int K,int exhaustive_search_num) const;
+    QList<long> findApproxKNearestNeighbors(const Mda32& X, const QVector<float>& p, int K, int exhaustive_search_num) const;
+
 private:
-    KdTreePrivate *d;
+    KdTreePrivate* d;
 };
 
 #endif // KDTREE_H

@@ -21,30 +21,36 @@ namespace NoiseNearest {
 
 class KdTree {
 public:
-    virtual ~KdTree() {
-        if (m_left_tree) delete m_left_tree;
-        if (m_right_tree) delete m_right_tree;
+    virtual ~KdTree()
+    {
+        if (m_left_tree)
+            delete m_left_tree;
+        if (m_right_tree)
+            delete m_right_tree;
     }
-    void create(const Mda32 &X) {
+    void create(const Mda32& X)
+    {
         QList<long> indices;
-        for (long i=0; i<X.N2(); i++)
-            indices <<i;
-        create(X,indices);
+        for (long i = 0; i < X.N2(); i++)
+            indices << i;
+        create(X, indices);
     }
 
-    void create(const Mda32 &X,const QList<long> &indices) {
-        if (indices.isEmpty()) return;
+    void create(const Mda32& X, const QList<long>& indices)
+    {
+        if (indices.isEmpty())
+            return;
 
-        m_num_datapoints=indices.count();
+        m_num_datapoints = indices.count();
 
-        int M=X.N1();
+        int M = X.N1();
         //define the projection direction
-        m_projection_direction=get_projection_direction(X);
+        m_projection_direction = get_projection_direction(X);
         //compute the inner product of the points with the projection direction
-        const float *ptr=X.constDataPtr();
+        const float* ptr = X.constDataPtr();
         QVector<float> vals(indices.count());
         for (long i = 0; i < indices.count(); i++) {
-            vals[i]=MLCompute::dotProduct(M, m_projection_direction.data(), &ptr[indices[i]*M]);
+            vals[i] = MLCompute::dotProduct(M, m_projection_direction.data(), &ptr[indices[i] * M]);
         }
         //sort the values and create the cutoff as the median value
         QVector<float> vals_sorted = vals;
@@ -60,72 +66,77 @@ public:
                 indices_right << indices[i];
         }
         //if one of these is the empty set, then we are done -- effectively a leaf node
-        if ((indices_left.isEmpty())||(indices_right.isEmpty())) {
-            m_leaf_indices=indices;
+        if ((indices_left.isEmpty()) || (indices_right.isEmpty())) {
+            m_leaf_indices = indices;
             return;
         }
         //create the left and right trees
-        m_left_tree=new KdTree;
-        m_left_tree->create(X,indices_left);
-        m_right_tree=new KdTree;
-        m_right_tree->create(X,indices_right);
+        m_left_tree = new KdTree;
+        m_left_tree->create(X, indices_left);
+        m_right_tree = new KdTree;
+        m_right_tree->create(X, indices_right);
     }
-    QList<long> allIndices() const {
-        if ((!m_left_tree)&&(!m_right_tree)) {
+    QList<long> allIndices() const
+    {
+        if ((!m_left_tree) && (!m_right_tree)) {
             //leaf node
             return m_leaf_indices;
         }
         else {
             QList<long> ret;
-            if (m_left_tree) ret.append(m_left_tree->allIndices());
-            if (m_right_tree) ret.append(m_right_tree->allIndices());
+            if (m_left_tree)
+                ret.append(m_left_tree->allIndices());
+            if (m_right_tree)
+                ret.append(m_right_tree->allIndices());
             return ret;
         }
     }
 
-    QList<long> findApproxKNearestNeighbors(const Mda32 &X,const QVector<float> &p,int K,int exhaustive_search_num) const {
-        int M=X.N1();
-        const float *ptr=X.constDataPtr();
-        if ((m_num_datapoints<=exhaustive_search_num)||(!m_left_tree)||(!m_right_tree)) {
+    QList<long> findApproxKNearestNeighbors(const Mda32& X, const QVector<float>& p, int K, int exhaustive_search_num) const
+    {
+        int M = X.N1();
+        const float* ptr = X.constDataPtr();
+        if ((m_num_datapoints <= exhaustive_search_num) || (!m_left_tree) || (!m_right_tree)) {
             //we are now going to do an exaustive search
-            QList<long> indices=allIndices();
-            long num=indices.count(); //should be same as m_num_datapoints
+            QList<long> indices = allIndices();
+            long num = indices.count(); //should be same as m_num_datapoints
             QVector<double> distsqrs(num);
-            for (long i=0; i<num; i++) {
-                distsqrs[i]=compute_distsqr(M,p.data(),&ptr[i*M]);
+            for (long i = 0; i < num; i++) {
+                distsqrs[i] = compute_distsqr(M, p.data(), &ptr[i * M]);
             }
-            QList<long> inds=get_sort_indices(distsqrs);
+            QList<long> inds = get_sort_indices(distsqrs);
             QList<long> ret;
-            for (int i=0; (i<inds.count())&&(i<K); i++) {
+            for (int i = 0; (i < inds.count()) && (i < K); i++) {
                 ret << indices[inds[i]];
             }
             return ret;
         }
         else {
-            float val=MLCompute::dotProduct(M,p.data(),m_projection_direction.data());
-            if (val<m_cutoff) {
-                return m_left_tree->findApproxKNearestNeighbors(X,p,K,exhaustive_search_num);
+            float val = MLCompute::dotProduct(M, p.data(), m_projection_direction.data());
+            if (val < m_cutoff) {
+                return m_left_tree->findApproxKNearestNeighbors(X, p, K, exhaustive_search_num);
             }
             else {
-                return m_right_tree->findApproxKNearestNeighbors(X,p,K,exhaustive_search_num);
+                return m_right_tree->findApproxKNearestNeighbors(X, p, K, exhaustive_search_num);
             }
         }
     }
 
 private:
     QList<long> m_leaf_indices;
-    KdTree *m_left_tree=0;
-    KdTree *m_right_tree=0;
-    float m_cutoff=0;
+    KdTree* m_left_tree = 0;
+    KdTree* m_right_tree = 0;
+    float m_cutoff = 0;
     QVector<float> m_projection_direction;
-    long m_num_datapoints=0;
+    long m_num_datapoints = 0;
 
-    static QVector<float> get_projection_direction(const Mda32 &X) {
-        int M=X.N1();
+    static QVector<float> get_projection_direction(const Mda32& X)
+    {
+        int M = X.N1();
         QVector<float> ret(M);
-        for (int i=0; i<M; i++) {
-            double randval=(qrand()%RAND_MAX)*1.0/RAND_MAX;
-            ret[i]=randval*2-1;
+        for (int i = 0; i < M; i++) {
+            double randval = (qrand() % RAND_MAX) * 1.0 / RAND_MAX;
+            ret[i] = randval * 2 - 1;
         }
         return ret;
         /*
@@ -137,10 +148,11 @@ private:
         return ret;
         */
     }
-    static double compute_distsqr(int M,const float *x,const float *y) {
-        double ret=0;
-        for (int i=0; i<M; i++) {
-            ret+=(x[i]-y[i])*(x[i]-y[i]);
+    static double compute_distsqr(int M, const float* x, const float* y)
+    {
+        double ret = 0;
+        for (int i = 0; i < M; i++) {
+            ret += (x[i] - y[i]) * (x[i] - y[i]);
         }
         return ret;
     }
@@ -180,8 +192,8 @@ public:
                     inds2 << i;
             }
             if ((inds1.isEmpty()) || (inds2.isEmpty())) {
-        //must have been an exact equality in decision tree -- happens if two times are identical in the random events
-        //qWarning() << "There must have been an exact equality in DecisionTree" << inds1.count() << inds2.count();
+                //must have been an exact equality in decision tree -- happens if two times are identical in the random events
+                //qWarning() << "There must have been an exact equality in DecisionTree" << inds1.count() << inds2.count();
                 m_label = labels.value(0);
                 return;
             }
@@ -345,16 +357,17 @@ Mda32 add_noise_to(const Mda32& X, double noise_level)
     return ret;
 }
 
-int get_majority_label(QList<int> labels) {
-    QMap<int,int> counts;
-    for (int i=0; i<labels.count(); i++) {
-        counts[labels[i]]=counts.value(labels[i])+1;
+int get_majority_label(QList<int> labels)
+{
+    QMap<int, int> counts;
+    for (int i = 0; i < labels.count(); i++) {
+        counts[labels[i]] = counts.value(labels[i]) + 1;
     }
-    int best=0;
-    QList<int> keys=counts.keys();
-    foreach (int key,keys) {
-        if (counts[key]>counts[best]) {
-            best=key;
+    int best = 0;
+    QList<int> keys = counts.keys();
+    foreach (int key, keys) {
+        if (counts[key] > counts[best]) {
+            best = key;
         }
     }
     return best;
@@ -365,8 +378,8 @@ Mda compute_isolation_matrix(QString timeseries, QString firings, noise_nearest_
     DiskReadMda32 X(timeseries);
     DiskReadMda F(firings);
     int num_features = 20;
-    int K_nearest=5;
-    int exhaustive_search_num=15;
+    int K_nearest = 5;
+    int exhaustive_search_num = 15;
 
     //define opts.cluster_numbers in case it is empty
     QVector<int> labels0;
@@ -450,19 +463,20 @@ Mda compute_isolation_matrix(QString timeseries, QString firings, noise_nearest_
 
     printf("Classifying noised events...\n");
     QVector<int> labels_after_noise;
-    QTime timer; timer.start();
-    for (long i=0; i<FF_clips_plus_noise.N2(); i++) {
-        if (timer.elapsed()>5000) {
-            printf("%d%% %ld\n",(int)(i*1.0/FF_clips_plus_noise.N2()*100),i);
+    QTime timer;
+    timer.start();
+    for (long i = 0; i < FF_clips_plus_noise.N2(); i++) {
+        if (timer.elapsed() > 5000) {
+            printf("%d%% %ld\n", (int)(i * 1.0 / FF_clips_plus_noise.N2() * 100), i);
             timer.restart();
         }
         QVector<float> p(FF_clips_plus_noise.N1());
-        for (int j=0; j<FF_clips_plus_noise.N1(); j++) {
-            p[j]=FF_clips_plus_noise.value(j,i);
+        for (int j = 0; j < FF_clips_plus_noise.N1(); j++) {
+            p[j] = FF_clips_plus_noise.value(j, i);
         }
-        QList<long> nearest=KdT.findApproxKNearestNeighbors(FF_clips,p,K_nearest,exhaustive_search_num);
+        QList<long> nearest = KdT.findApproxKNearestNeighbors(FF_clips, p, K_nearest, exhaustive_search_num);
         QList<int> labels0;
-        for (int a=0; a<nearest.count(); a++) {
+        for (int a = 0; a < nearest.count(); a++) {
             labels0 << labels[nearest[a]];
         }
         labels_after_noise << get_majority_label(labels0);
@@ -493,7 +507,6 @@ Mda compute_isolation_matrix(QString timeseries, QString firings, noise_nearest_
 
     return CM;
 }
-
 
 Mda compute_isolation_matrix_old(QString timeseries, QString firings, noise_nearest_opts opts)
 {

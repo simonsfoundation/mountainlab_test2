@@ -25,9 +25,9 @@ struct Metric {
     QList<double> values;
 };
 
-double compute_noise_overlap(const DiskReadMda32 &X,const QVector<double> &times,ms_metrics_opts opts);
-double compute_overlap(const DiskReadMda32 &X,const QVector<double> &times1,const QVector<double> &times2,ms_metrics_opts opts);
-QSet<QString> get_pairs_to_consider(const DiskReadMda32 &X,const DiskReadMda &F,ms_metrics_opts opts);
+double compute_noise_overlap(const DiskReadMda32& X, const QVector<double>& times, ms_metrics_opts opts);
+double compute_overlap(const DiskReadMda32& X, const QVector<double>& times1, const QVector<double>& times2, ms_metrics_opts opts);
+QSet<QString> get_pairs_to_consider(const DiskReadMda32& X, const DiskReadMda& F, ms_metrics_opts opts);
 
 bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_path, QString cluster_pair_metrics_path, ms_metrics_opts opts)
 {
@@ -74,10 +74,11 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
 
     printf("Cluster metrics...\n");
     QMap<QString, Metric> cluster_metrics;
-    QTime timer; timer.start();
+    QTime timer;
+    timer.start();
     for (int i = 0; i < opts.cluster_numbers.count(); i++) {
-        if (timer.elapsed()>5000) {
-            qDebug() << QString("Cluster %1 of %2").arg(i+1).arg(opts.cluster_numbers.count());
+        if (timer.elapsed() > 5000) {
+            qDebug() << QString("Cluster %1 of %2").arg(i + 1).arg(opts.cluster_numbers.count());
             timer.restart();
         }
         int k = opts.cluster_numbers[i];
@@ -101,7 +102,7 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
             cluster_metrics["peak_noise"].values << qMax(qAbs(min0), qAbs(max0));
         }
         {
-            cluster_metrics["noise_overlap"].values << compute_noise_overlap(X,times_k,opts);
+            cluster_metrics["noise_overlap"].values << compute_noise_overlap(X, times_k, opts);
         }
         /*
         {
@@ -137,15 +138,16 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
         return false;
     }
 
-    QSet<QString> pairs_to_consider=get_pairs_to_consider(X,F,opts);
+    QSet<QString> pairs_to_consider = get_pairs_to_consider(X, F, opts);
 
     //////////////////////////////////////////////////////////////
     printf("Cluster pair metrics...\n");
     QMap<QString, Metric> cluster_pair_metrics;
-    QTime timer1; timer1.start();
+    QTime timer1;
+    timer1.start();
     for (int i1 = 0; i1 < opts.cluster_numbers.count(); i1++) {
-        if (timer1.elapsed()>5000) {
-            qDebug() << QString("Cluster pair metrics %1 of %2").arg(i1+1).arg(opts.cluster_numbers.count());
+        if (timer1.elapsed() > 5000) {
+            qDebug() << QString("Cluster pair metrics %1 of %2").arg(i1 + 1).arg(opts.cluster_numbers.count());
             timer1.restart();
         }
         for (int i2 = 0; i2 < opts.cluster_numbers.count(); i2++) {
@@ -164,8 +166,8 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
                         times_k2 << times[i];
                     }
                 }
-                double val=compute_overlap(X,times_k1,times_k2,opts);
-                if (val>=0.05) {
+                double val = compute_overlap(X, times_k1, times_k2, opts);
+                if (val >= 0.01) { //to save some space in the file
                     cluster_pair_metrics["overlap"].values << val;
                 }
                 else {
@@ -206,137 +208,134 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
     return true;
 }
 
-long random_time(long N,int clip_size) {
-    if (N<=clip_size*2) return N/2;
-    return clip_size+(qrand()%(N-clip_size*2));
+long random_time(long N, int clip_size)
+{
+    if (N <= clip_size * 2)
+        return N / 2;
+    return clip_size + (qrand() % (N - clip_size * 2));
 }
 
-QVector<double> sample(const QVector<double> &times,long num) {
+QVector<double> sample(const QVector<double>& times, long num)
+{
     QVector<double> random_values(times.count());
-    for (long i=0; i<times.count(); i++) {
-        random_values[i]=sin(i*12+i*i);
+    for (long i = 0; i < times.count(); i++) {
+        random_values[i] = sin(i * 12 + i * i);
     }
-    QList<long> inds=get_sort_indices(random_values);
+    QList<long> inds = get_sort_indices(random_values);
     QVector<double> ret;
-    for (long i=0; (i<num)&&(i<inds.count()); i++) {
+    for (long i = 0; (i < num) && (i < inds.count()); i++) {
         ret << times[inds[i]];
     }
     return ret;
 }
 
-double compute_noise_overlap(const DiskReadMda32 &X,const QVector<double> &times,ms_metrics_opts opts) {
-    int num_features=6;
-    int K_nearest=8;
-    int exhaustive_search_num=K_nearest*2;
-    int max_num_to_use=200;
+double compute_noise_overlap(const DiskReadMda32& X, const QVector<double>& times, ms_metrics_opts opts)
+{
+    int num_to_use = qMin(opts.max_num_to_use, times.count());
+    QVector<double> times_subset = sample(times, num_to_use);
 
-    int num_to_use=qMin(max_num_to_use,times.count());
-    QVector<double> times_subset=sample(times,num_to_use);
-
-    QVector<double> all_times=times_subset;
+    QVector<double> all_times = times_subset;
     QVector<int> all_labels; //0 and 1
 
-    for (long i=0; i<times_subset.count(); i++) {
+    for (long i = 0; i < times_subset.count(); i++) {
         all_labels << 1;
     }
     //equal amount of random clips
-    for (long i=0; i<times_subset.count(); i++) {
-        all_times << random_time(X.N2(),opts.clip_size);
+    for (long i = 0; i < times_subset.count(); i++) {
+        all_times << random_time(X.N2(), opts.clip_size);
         all_labels << 0;
     }
 
-    Mda32 all_clips=extract_clips(X,all_times,opts.clip_size);
+    Mda32 all_clips = extract_clips(X, all_times, opts.clip_size);
 
-    Mda32 all_clips_reshaped(all_clips.N1()*all_clips.N2(),all_clips.N3());
+    Mda32 all_clips_reshaped(all_clips.N1() * all_clips.N2(), all_clips.N3());
     long NNN = all_clips.totalSize();
     for (long iii = 0; iii < NNN; iii++) {
         all_clips_reshaped.set(all_clips.get(iii), iii);
     }
 
-    bool subtract_mean=false;
+    bool subtract_mean = false;
     Mda32 FF;
     Mda32 CC, sigma;
-    pca(CC, FF, sigma, all_clips_reshaped, num_features, subtract_mean);
+    pca(CC, FF, sigma, all_clips_reshaped, opts.num_features, subtract_mean);
 
     KdTree tree;
     tree.create(FF);
-    double num_correct=0;
-    double num_total=0;
-    for (long i=0; i<FF.N2(); i++) {
+    double num_correct = 0;
+    double num_total = 0;
+    for (long i = 0; i < FF.N2(); i++) {
         QVector<float> p;
-        for (int j=0; j<FF.N1(); j++) {
-            p << FF.value(j,i);
+        for (int j = 0; j < FF.N1(); j++) {
+            p << FF.value(j, i);
         }
-        QList<long> indices=tree.findApproxKNearestNeighbors(FF,p,K_nearest,exhaustive_search_num);
-        for (int a=0; a<indices.count(); a++) {
-            if (indices[a]!=i) {
-                if (all_labels[indices[a]]==all_labels[i])
+        QList<long> indices = tree.findApproxKNearestNeighbors(FF, p, opts.K_nearest, opts.exhaustive_search_num);
+        for (int a = 0; a < indices.count(); a++) {
+            if (indices[a] != i) {
+                if (all_labels[indices[a]] == all_labels[i])
                     num_correct++;
                 num_total++;
             }
         }
     }
-    if (!num_total) return 0;
-    return 1 - (num_correct*1.0/num_total);
+    if (!num_total)
+        return 0;
+    return 1 - (num_correct * 1.0 / num_total);
 }
 
-double compute_overlap(const DiskReadMda32 &X,const QVector<double> &times1,const QVector<double> &times2,ms_metrics_opts opts) {
-    int num_features=6;
-    int K_nearest=8;
-    int exhaustive_search_num=K_nearest*2;
-    int max_num_to_use=200;
-    int min_num_to_use=100;
-
-    int num_to_use=qMin(qMin(max_num_to_use,times1.count()),times2.count());
-    if (num_to_use<min_num_to_use) return 0;
-    QVector<double> times1_subset=sample(times1,num_to_use);
-    QVector<double> times2_subset=sample(times2,num_to_use);
+double compute_overlap(const DiskReadMda32& X, const QVector<double>& times1, const QVector<double>& times2, ms_metrics_opts opts)
+{
+    int num_to_use = qMin(qMin(opts.max_num_to_use, times1.count()), times2.count());
+    if (num_to_use < opts.min_num_to_use)
+        return 0;
+    QVector<double> times1_subset = sample(times1, num_to_use);
+    QVector<double> times2_subset = sample(times2, num_to_use);
 
     QVector<double> all_times;
     QVector<int> all_labels; //1 and 2
 
-    for (long i=0; i<times1_subset.count(); i++) {
+    for (long i = 0; i < times1_subset.count(); i++) {
         all_times << times1_subset[i];
         all_labels << 1;
     }
-    for (long i=0; i<times2_subset.count(); i++) {
+    for (long i = 0; i < times2_subset.count(); i++) {
         all_times << times2_subset[i];
         all_labels << 2;
     }
 
-    Mda32 all_clips=extract_clips(X,all_times,opts.clip_size);
+    Mda32 all_clips = extract_clips(X, all_times, opts.clip_size);
 
-    Mda32 all_clips_reshaped(all_clips.N1()*all_clips.N2(),all_clips.N3());
+    Mda32 all_clips_reshaped(all_clips.N1() * all_clips.N2(), all_clips.N3());
     long NNN = all_clips.totalSize();
     for (long iii = 0; iii < NNN; iii++) {
         all_clips_reshaped.set(all_clips.get(iii), iii);
     }
 
-    bool subtract_mean=false;
+    bool subtract_mean = false;
     Mda32 FF;
     Mda32 CC, sigma;
-    pca(CC, FF, sigma, all_clips_reshaped, num_features, subtract_mean);
+    pca(CC, FF, sigma, all_clips_reshaped, opts.num_features, subtract_mean);
 
     KdTree tree;
     tree.create(FF);
-    double num_correct=0;
-    double num_total=0;
-    for (long i=0; i<all_times.count(); i++) {
+    double num_correct = 0;
+    double num_total = 0;
+    for (long i = 0; i < all_times.count(); i++) {
         QVector<float> p;
-        for (int j=0; j<FF.N1(); j++) {
-            p << FF.value(j,i);
+        for (int j = 0; j < FF.N1(); j++) {
+            p << FF.value(j, i);
         }
-        QList<long> indices=tree.findApproxKNearestNeighbors(FF,p,K_nearest,exhaustive_search_num);
-        for (int a=0; a<indices.count(); a++) {
-            if (indices[a]!=i) {
-                if (all_labels[indices[a]]==all_labels[i])
+        QList<long> indices = tree.findApproxKNearestNeighbors(FF, p, opts.K_nearest, opts.exhaustive_search_num);
+        for (int a = 0; a < indices.count(); a++) {
+            if (indices[a] != i) {
+                if (all_labels[indices[a]] == all_labels[i])
                     num_correct++;
                 num_total++;
             }
         }
     }
-    if (!num_total) return 0;
-    return 1 - (num_correct*1.0/num_total);
+    if (!num_total)
+        return 0;
+    return 1 - (num_correct * 1.0 / num_total);
 }
 
 QVector<long> find_label_inds(const QVector<int>& labels, int k)
@@ -367,21 +366,22 @@ bool peaks_are_within_range_to_consider(double p11, double p12, double p21, doub
         (peaks_are_within_range_to_consider(p11, p12, opts)) && (peaks_are_within_range_to_consider(p21, p22, opts)) && (peaks_are_within_range_to_consider(p11, p21, opts)) && (peaks_are_within_range_to_consider(p12, p22, opts)));
 }
 
-QSet<QString> get_pairs_to_consider(const DiskReadMda32 &X,const DiskReadMda &F,ms_metrics_opts opts) {
+QSet<QString> get_pairs_to_consider(const DiskReadMda32& X, const DiskReadMda& F, ms_metrics_opts opts)
+{
     QVector<int> peakchans;
     QVector<double> times;
     QVector<int> labels;
-    for (long i=0; i<F.N2(); i++) {
-        peakchans << F.value(0,i);
-        times << F.value(1,i);
-        labels << F.value(2,i);
+    for (long i = 0; i < F.N2(); i++) {
+        peakchans << F.value(0, i);
+        times << F.value(1, i);
+        labels << F.value(2, i);
     }
 
     //compute the average waveforms (aka templates)
     Mda32 templates = compute_templates_0(X, times, labels, opts.clip_size);
-    int M=templates.N1();
-    int T=templates.N2();
-    int K=templates.N3();
+    int M = templates.N1();
+    int T = templates.N2();
+    int K = templates.N3();
 
     Mda32 channel_peaks(M, K);
     for (int k = 0; k < K; k++) {
@@ -426,6 +426,4 @@ QSet<QString> get_pairs_to_consider(const DiskReadMda32 &X,const DiskReadMda &F,
     }
     return ret;
 }
-
 }
-
