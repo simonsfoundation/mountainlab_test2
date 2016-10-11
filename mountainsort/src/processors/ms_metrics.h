@@ -13,10 +13,9 @@
 struct ms_metrics_opts {
     QList<int> cluster_numbers;
     int clip_size = 50;
-    double min_peak_ratio_to_consider = 0.7;
     int num_features = 10;
     int K_nearest = 6;
-    int exhaustive_search_num = 300;
+    int exhaustive_search_num = 100;
     int max_num_to_use = 500;
     int min_num_to_use = 100;
 };

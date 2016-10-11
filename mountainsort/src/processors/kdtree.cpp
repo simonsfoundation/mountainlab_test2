@@ -83,8 +83,8 @@ void KdTreePrivate::create(const Mda32& X, const QList<long>& indices)
     //sort the values and create the cutoff as the median value
     QVector<float> vals_sorted = vals;
     qSort(vals_sorted);
-    m_cutoff_1 = vals_sorted.value(vals_sorted.count() * 2 / 7);
-    m_cutoff_2 = vals_sorted.value(vals_sorted.count() * 6 / 7);
+    m_cutoff_1 = vals_sorted.value(vals_sorted.count() * 3 / 7);
+    m_cutoff_2 = vals_sorted.value(vals_sorted.count() * 4 / 7);
     //decide which points go to the left and right
     QList<long> indices_left;
     QList<long> indices_center;

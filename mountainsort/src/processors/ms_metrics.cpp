@@ -27,7 +27,6 @@ struct Metric {
 
 double compute_noise_overlap(const DiskReadMda32& X, const QVector<double>& times, ms_metrics_opts opts);
 double compute_overlap(const DiskReadMda32& X, const QVector<double>& times1, const QVector<double>& times2, ms_metrics_opts opts);
-QSet<QString> get_pairs_to_consider(const DiskReadMda32& X, const DiskReadMda& F, ms_metrics_opts opts);
 
 bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_path, QString cluster_pair_metrics_path, ms_metrics_opts opts)
 {
@@ -138,8 +137,6 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
         return false;
     }
 
-    QSet<QString> pairs_to_consider = get_pairs_to_consider(X, F, opts);
-
     //////////////////////////////////////////////////////////////
     printf("Cluster pair metrics...\n");
     QMap<QString, Metric> cluster_pair_metrics;
@@ -153,26 +150,22 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
         for (int i2 = 0; i2 < opts.cluster_numbers.count(); i2++) {
             int k1 = opts.cluster_numbers[i1];
             int k2 = opts.cluster_numbers[i2];
-            if (pairs_to_consider.contains(QString("%1-%2").arg(k1).arg(k2))) {
-                QVector<double> times_k1;
-                for (long i = 0; i < times.count(); i++) {
-                    if (labels[i] == k1) {
-                        times_k1 << times[i];
-                    }
+
+            QVector<double> times_k1;
+            for (long i = 0; i < times.count(); i++) {
+                if (labels[i] == k1) {
+                    times_k1 << times[i];
                 }
-                QVector<double> times_k2;
-                for (long i = 0; i < times.count(); i++) {
-                    if (labels[i] == k2) {
-                        times_k2 << times[i];
-                    }
+            }
+            QVector<double> times_k2;
+            for (long i = 0; i < times.count(); i++) {
+                if (labels[i] == k2) {
+                    times_k2 << times[i];
                 }
-                double val = compute_overlap(X, times_k1, times_k2, opts);
-                if (val >= 0.01) { //to save some space in the file
-                    cluster_pair_metrics["overlap"].values << val;
-                }
-                else {
-                    cluster_pair_metrics["overlap"].values << 0;
-                }
+            }
+            double val = compute_overlap(X, times_k1, times_k2, opts);
+            if (val >= 0.01) { //to save some space in the file
+                cluster_pair_metrics["overlap"].values << val;
             }
             else {
                 cluster_pair_metrics["overlap"].values << 0;
@@ -344,85 +337,6 @@ QVector<long> find_label_inds(const QVector<int>& labels, int k)
     for (int i = 0; i < labels.count(); i++) {
         if (labels[i] == k)
             ret << i;
-    }
-    return ret;
-}
-
-bool peaks_are_within_range_to_consider(double p1, double p2, ms_metrics_opts opts)
-{
-    if ((!p1) || (!p2))
-        return false;
-    double ratio = p1 / p2;
-    if (ratio > 1)
-        ratio = 1 / ratio;
-    if (ratio < 0)
-        return false;
-    return (ratio > opts.min_peak_ratio_to_consider);
-}
-
-bool peaks_are_within_range_to_consider(double p11, double p12, double p21, double p22, ms_metrics_opts opts)
-{
-    return (
-        (peaks_are_within_range_to_consider(p11, p12, opts)) && (peaks_are_within_range_to_consider(p21, p22, opts)) && (peaks_are_within_range_to_consider(p11, p21, opts)) && (peaks_are_within_range_to_consider(p12, p22, opts)));
-}
-
-QSet<QString> get_pairs_to_consider(const DiskReadMda32& X, const DiskReadMda& F, ms_metrics_opts opts)
-{
-    QVector<int> peakchans;
-    QVector<double> times;
-    QVector<int> labels;
-    for (long i = 0; i < F.N2(); i++) {
-        peakchans << F.value(0, i);
-        times << F.value(1, i);
-        labels << F.value(2, i);
-    }
-
-    //compute the average waveforms (aka templates)
-    Mda32 templates = compute_templates_0(X, times, labels, opts.clip_size);
-    int M = templates.N1();
-    int T = templates.N2();
-    int K = templates.N3();
-
-    Mda32 channel_peaks(M, K);
-    for (int k = 0; k < K; k++) {
-        for (int m = 0; m < M; m++) {
-            double peak_value = 0;
-            for (int t = 0; t < T; t++) {
-                double val = templates.value(m, t, k);
-                if (qAbs(val) > qAbs(peak_value)) {
-                    peak_value = val;
-                }
-            }
-            channel_peaks.setValue(peak_value, m, k);
-        }
-    }
-
-    //find the candidate pairs for merging
-    QSet<QString> ret;
-    for (int k1 = 1; k1 <= K; k1++) {
-        QVector<long> inds1 = find_label_inds(labels, k1);
-        if (!inds1.isEmpty()) {
-
-            for (int k2 = 1; k2 <= K; k2++) {
-                ret.insert(QString("%1-%2").arg(k1).arg(k2));
-                /*
-                QVector<long> inds2 = find_label_inds(labels, k2);
-                if (!inds2.isEmpty()) {
-                    int peakchan1 = peakchans[inds1[0]]; //the peak channel should be the same for all events with this labels, so we just need to look at the first one
-                    int peakchan2 = peakchans[inds2[0]];
-                    if (peakchan1 != peakchan2) { //only attempt to merge if the peak channels are different -- that's why it's called "merge_across_channels"
-                        double val11 = channel_peaks.value(peakchan1 - 1, k1-1);
-                        double val12 = channel_peaks.value(peakchan2 - 1, k1-1);
-                        double val21 = channel_peaks.value(peakchan1 - 1, k2-1);
-                        double val22 = channel_peaks.value(peakchan2 - 1, k2-1);
-                        if (peaks_are_within_range_to_consider(val11, val12, val21, val22, opts)) {
-                            ret.insert(QString("%1-%2").arg(k1).arg(k2));
-                        }
-                    }
-                }
-                */
-            }
-        }
     }
     return ret;
 }
