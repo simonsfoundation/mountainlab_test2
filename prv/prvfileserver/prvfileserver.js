@@ -152,8 +152,10 @@ var SERVER=http.createServer(function (REQ, RESP) {
 				send_json_response({success:false,error:"Invalid query."});	
 				return;
 			}
+			console.log('+++++++++++++++++ DEBUG0');
 			run_process_and_read_stdout(__dirname+'/../bin/prv',['locate','--path='+absolute_data_directory(),'--checksum='+query.checksum,'--size='+query.size,'--checksum1000='+(query.checksum1000||'')],function(txt) {
 				txt=txt.trim();
+				console.log('+++++++++++++++++ DEBUG1: '+txt);
 				if (txt) {
 					if (config.passcode)
 						txt=txt+'?passcode='+config.passcode;
@@ -163,6 +165,7 @@ var SERVER=http.createServer(function (REQ, RESP) {
 					return;
 				}
 				if (txt) txt=txt.slice(absolute_data_directory().length+1);
+				console.log('DEBUG2: '+txt);
 				send_as_text_or_link(txt);
 			});	
 		}
@@ -594,7 +597,11 @@ var SERVER=http.createServer(function (REQ, RESP) {
 			});
 		}
 	}
-}).listen(config.listen_port);
+});
+if (config.listen_hostname)
+	SERVER.listen(config.listen_port,config.listen_hostname);
+else
+	SERVER.listen(config.listen_port);
 SERVER.timeout=1000*60*60*24; //give it 24 hours!
 console.log ('Listening on port '+config.listen_port);
 
