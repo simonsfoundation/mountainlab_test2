@@ -277,6 +277,11 @@ QJsonObject make_prv_object_2(QString path)
         qWarning() << "Unable to find file (for prv):" << path;
         return QJsonObject();
     }
+    if (path.endsWith(".prv")) {
+        //this important section added on 10/12/16 by jfm
+        QString json = TextFile::read(path);
+        return QJsonDocument::fromJson(json.toUtf8()).object();
+    }
     QJsonObject obj;
     obj["original_path"] = path;
     obj["original_checksum"] = MLUtil::computeSha1SumOfFile(path);
