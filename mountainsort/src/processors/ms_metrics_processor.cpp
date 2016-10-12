@@ -18,7 +18,7 @@ ms_metrics_Processor::ms_metrics_Processor()
     d->q = this;
 
     this->setName("ms_metrics");
-    this->setVersion("0.53");
+    this->setVersion("0.58");
     this->setInputFileParameters("timeseries", "firings");
     this->setOutputFileParameters("cluster_metrics", "cluster_pair_metrics");
     this->setRequiredParameters("clip_size");

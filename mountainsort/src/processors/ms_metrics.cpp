@@ -27,6 +27,7 @@ struct Metric {
 
 double compute_noise_overlap(const DiskReadMda32& X, const QVector<double>& times, ms_metrics_opts opts);
 double compute_overlap(const DiskReadMda32& X, const QVector<double>& times1, const QVector<double>& times2, ms_metrics_opts opts);
+QSet<QString> get_pairs_to_compare(const DiskReadMda32& X, const DiskReadMda& F, int num_comparisons_per_cluster, ms_metrics_opts opts);
 
 bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_path, QString cluster_pair_metrics_path, ms_metrics_opts opts)
 {
@@ -137,6 +138,9 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
         return false;
     }
 
+    printf("get pairs to compare...\n");
+    QSet<QString> pairs_to_compare = get_pairs_to_compare(X, F, 5, opts);
+
     //////////////////////////////////////////////////////////////
     printf("Cluster pair metrics...\n");
     QMap<QString, Metric> cluster_pair_metrics;
@@ -151,21 +155,26 @@ bool ms_metrics(QString timeseries, QString firings, QString cluster_metrics_pat
             int k1 = opts.cluster_numbers[i1];
             int k2 = opts.cluster_numbers[i2];
 
-            QVector<double> times_k1;
-            for (long i = 0; i < times.count(); i++) {
-                if (labels[i] == k1) {
-                    times_k1 << times[i];
+            if (pairs_to_compare.contains(QString("%1-%2").arg(k1).arg(k2))) {
+                QVector<double> times_k1;
+                for (long i = 0; i < times.count(); i++) {
+                    if (labels[i] == k1) {
+                        times_k1 << times[i];
+                    }
                 }
-            }
-            QVector<double> times_k2;
-            for (long i = 0; i < times.count(); i++) {
-                if (labels[i] == k2) {
-                    times_k2 << times[i];
+                QVector<double> times_k2;
+                for (long i = 0; i < times.count(); i++) {
+                    if (labels[i] == k2) {
+                        times_k2 << times[i];
+                    }
                 }
-            }
-            double val = compute_overlap(X, times_k1, times_k2, opts);
-            if (val >= 0.01) { //to save some space in the file
-                cluster_pair_metrics["overlap"].values << val;
+                double val = compute_overlap(X, times_k1, times_k2, opts);
+                if (val >= 0.01) { //to save some space in the file
+                    cluster_pair_metrics["overlap"].values << val;
+                }
+                else {
+                    cluster_pair_metrics["overlap"].values << 0;
+                }
             }
             else {
                 cluster_pair_metrics["overlap"].values << 0;
@@ -338,6 +347,58 @@ QVector<long> find_label_inds(const QVector<int>& labels, int k)
         if (labels[i] == k)
             ret << i;
     }
+    return ret;
+}
+
+double distsqr_between_templates(const Mda32& X, const Mda32& Y)
+{
+    double ret = 0;
+    for (long i = 0; i < X.totalSize(); i++) {
+        double tmp = X.get(i) - Y.get(i);
+        ret += tmp * tmp;
+    }
+    return ret;
+}
+
+QSet<QString> get_pairs_to_compare(const DiskReadMda32& X, const DiskReadMda& F, int num_comparisons_per_cluster, ms_metrics_opts opts)
+{
+    QSet<QString> ret;
+
+    QSet<int> cluster_numbers_set;
+    for (int i = 0; i < opts.cluster_numbers.count(); i++) {
+        cluster_numbers_set.insert(opts.cluster_numbers[i]);
+    }
+
+    QVector<double> times;
+    QVector<int> labels;
+    for (long i = 0; i < F.N2(); i++) {
+        int label0 = (int)F.value(2, i);
+        if (cluster_numbers_set.contains(label0)) {
+            //inds << i;
+            times << F.value(1, i);
+            labels << label0;
+        }
+    }
+
+    Mda32 templates0 = compute_templates_0(X, times, labels, opts.clip_size);
+
+    for (int i1 = 0; i1 < opts.cluster_numbers.count(); i1++) {
+        int k1 = opts.cluster_numbers[i1];
+        Mda32 template1;
+        templates0.getChunk(template1, 0, 0, k1 - 1, template1.N1(), template1.N2(), 1);
+        QVector<double> dists;
+        for (int i2 = 0; i2 < opts.cluster_numbers.count(); i2++) {
+            Mda32 template2;
+            int k2 = opts.cluster_numbers[i2];
+            templates0.getChunk(template2, 0, 0, k2 - 1, template2.N1(), template2.N2(), 1);
+            dists << distsqr_between_templates(template1, template2);
+        }
+        QList<long> inds = get_sort_indices(dists);
+        for (int a = 0; (a < inds.count()) && (a < num_comparisons_per_cluster); a++) {
+            ret.insert(QString("%1-%2").arg(k1).arg(opts.cluster_numbers[inds[a]]));
+        }
+    }
+
     return ret;
 }
 }
